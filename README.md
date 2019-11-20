@@ -1,19 +1,18 @@
-# Bazel Eclipse Feature
+# Bazel Eclipse Feature (BEF)
 
-This is the Eclipse Feature for [Bazel](http://bazel.io).
+This is the Eclipse Feature for developing [Bazel](http://bazel.io) projects in Eclipse.
 The Bazel Eclipse Feature supports importing, building, and testing Java projects that are built using the Bazel build system.
 
 This project is supported by Salesforce.
 
-## Feature Status and Roadmap
+## BEF Status and Roadmap
 
 Active development of this feature is currently being done by a team within Salesforce.
 You can track our past/current/future work using these links:
 
-- [bazel-eclipse roadmap](https://github.com/salesforce/bazel-eclipse/wiki)
-- [bazel-eclipse issues](https://github.com/salesforce/bazel-eclipse/issues)
+- [BEF project management](https://github.com/salesforce/bazel-eclipse/projects)
 
-:fire: currently the feature is still in development and only works on small, Java-only workspaces. There are known scalability issues, and current development is only focused on Java projects.
+:fire: currently the feature is still in development. There are known scalability issues, and current development is focused on Java projects that follow [certain file layout conventions](docs/conforming_java_packages.md).
 
 ## Using the Feature
 
@@ -22,7 +21,7 @@ For detailed installation and setup instructions, see this page:
 - [Installing Eclipse and the Bazel Eclipse Feature](docs/install.md)
 - [Bazel Eclipse Feature User's Guide](docs/using_the_feature.md)
 
-## Developing the Feature
+## Contributing to the Feature
 
 We welcome outside contributions.
 As with any OSS project, please contact our team prior to starting any major refactoring or feature work,
@@ -32,9 +31,9 @@ To start developing this feature, follow the instructions on our Dev Guide.
 
 - [Bazel Eclipse Feature Dev Guide](docs/dev/dev_guide.md)
 
-To find known technical debt and known bugs that need work, please look at:
+To find planned features, known technical debt and known bugs that need work, please look at:
 
-- [Tracked Issues](https://github.com/salesforce/bazel-eclipse/issues)
+- [BEF project management](https://github.com/salesforce/bazel-eclipse/projects)
 - TODO comments in the code base; smaller ideas are tracked using simple TODO comments
 
 ## History and Credit

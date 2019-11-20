@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="**/BUILD|**/BUILD.bazel" kind="src" path="src/main/java"/>
+	<classpathentry excluding="**/BUILD|**/BUILD.bazel" kind="src" output="testbin" path="src/test/java">
+		<attributes>
+			<attribute name="test" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/plugin-abstractions"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/plugin-command"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/plugin-deps"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/plugin-model"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/plugin-testdeps">
+		<attributes>
+			<attribute name="test" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

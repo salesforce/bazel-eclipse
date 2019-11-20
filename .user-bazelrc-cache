@@ -1,0 +1,36 @@
+# **********************************
+# CACHING
+# **********************************
+
+#
+# This caching configuration is maintained as a separate bazelrc file for several reasons:
+#
+# 1. Depending on network speed (in an office, at home, on a beach) a user may or may not
+#    benefit from using the remote cache. Having cache configuration declared in this
+#    .user-bazelrc-cache file (which is .gitignored) allows each user decide whether or not
+#    to use remote cache.
+# 2. Only CI nodes are authorized to populate the cache. Currently, the only way to
+#    allow CI nodes to authenticate with Bazel cache is to pass the username/password via
+#    HTTP Basic, which means the URL below needs to be configured with the username/password.
+#    We don't want that in plaintext, so our CI overwrites this file dynamically with the
+#    securely stored credentials. Having cache settings as a dedicated file makes that easy.
+
+
+# Local Disk Cache (use if your network speed is slow)
+#  Enable the local disk cache by default
+build --disk_cache=/tmp/bazelcache/bazel-eclipse
+build --remote_upload_local_results=true
+
+# Remote Build Cache
+#  Use if you are on a fast network
+
+# Read-only remote cache configuration
+#  Dev machines do not upload new cache entries.
+#build --remote_http_cache=https://your_remote_cache_host.yourcompany.com:443/cache
+#build --remote_upload_local_results=false
+
+# Read-write remote cache configuration
+#  Only CI has the ACL to populate cache.
+#  Replace the username and password variables with the actuals in the URL below.
+#build --remote_http_cache=https://USER:PWD@your_remote_cache_host.yourcompany.com:443/cache
+#build --remote_upload_local_results=true

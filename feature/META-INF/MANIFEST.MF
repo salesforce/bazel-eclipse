@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+Purpose: this.file.is.needed.to.generate.ant.build.xml.from.eclipse.sdks
+See-Also: threebuilds.md_for_more_information

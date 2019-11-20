@@ -1,0 +1,11 @@
+steps:
+- name: gcr.io/cloud-builders/bazel
+  args: ['run', '//tools/release:unzip-updatesite', '--', '/workspace/bazel-updatesite']
+- name: gcr.io/cloud-builders/gsutil
+  args: ['-m', 'rsync', '-r', '-c', '-d', '/workspace/bazel-updatesite', 'gs://eclipse.bazel.build/updatesite']
+- name: gcr.io/cloud-builders/gsutil
+  args: ['web', 'set', '-m', 'index.html', '-e', '404.html', 'gs://eclipse.bazel.build']
+- name: gcr.io/cloud-builders/gsutil
+  args: ['-m', 'acl', 'ch', '-R', '-u', 'AllUsers:R', 'gs://eclipse.bazel.build']
+
+timeout: 3600s
