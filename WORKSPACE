@@ -1,5 +1,6 @@
 workspace(name = "bazel_eclipse_feature")
 
+
 # ---------------------------------------------
 # Bazel version check
 # Ensure people are running with a good-enough version of Bazel

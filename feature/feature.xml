@@ -13,13 +13,13 @@
       nl="en_US"
       arch="x86_64">
 
-   <description url="https://git.soma.salesforce.com/services/bazel-eclipse">
+   <description url="https://github.com/salesforce/bazel-eclipse">
       The Bazel Eclipse Feature supports importing, building, and testing Java projects that are built using the Bazel build system.
    </description>
 
-   <copyright url="https://git.soma.salesforce.com/services/bazel-eclipse">
+   <copyright url="https://github.com/salesforce/bazel-eclipse">
       Copyright 2016 The Bazel Authors. All rights reserved.
-Copyright 2018-9 Salesforce. All rights reserved.
+      Copyright 2018-9 Salesforce. All rights reserved.
    </copyright>
 
    <license url="http://www.apache.org/licenses/LICENSE-2.0">
@@ -227,7 +227,7 @@ Copyright 2018-9 Salesforce. All rights reserved.
    </license>
 
    <url>
-      <discovery label="Salesforce internal Git repository" url="https://git.soma.salesforce.com/services/bazel-eclipse"/>
+      <discovery label="Salesforce internal Git repository" url="https://github.com/salesforce/bazel-eclipse"/>
    </url>
 
    <plugin

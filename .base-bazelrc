@@ -2,5 +2,5 @@
 # JDK
 # **********************************
 
-# See the document docs/dev/jdk.md for an explanation of why we target JDK 8
+# See the document //docs/dev/jdk.md for an explanation of why we target JDK 8
 build --javacopt="-source 8 -target 8"

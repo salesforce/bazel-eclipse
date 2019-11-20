@@ -1,7 +1,5 @@
 # Build Configuration File
 
-
-
 # WORKSPACE settings go here (applied to ALL build envs)
 # These are standardized by the feature commiters as required for all builds.
 import .base-bazelrc

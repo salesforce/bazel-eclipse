@@ -13,4 +13,5 @@ This package contains the code necessary to invoke Bazel commands on the Bazel w
 As covered in the architecture document, when source files change in Eclipse, a command line build is invoked using Bazel.
 Any errors are parsed from the output and added to the Eclipse Problems view.
 
+
 This package contains all the code to do this.

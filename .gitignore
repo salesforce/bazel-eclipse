@@ -6,6 +6,10 @@ bazel-sfdc-bazel
 bazel-testlogs
 bazel-bazel-eclipse
 
+# Bazel config files
+.company-bazelrc
+.user-bazelrc
+.user-bazelrc-cache
 
 # Log files
 *.log
@@ -22,7 +26,6 @@ dist
 # Eclipse
 .settings
 eclipse.sh
-eclipseartifacts
 
 # OS
 .DS_Store
