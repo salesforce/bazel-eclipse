@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Bazel Eclipse Abstractions Plugin
+Bundle-SymbolicName: com.salesforce.bazel.eclipse.abstractions;singleton:=true
+Automatic-Module-Name: com.salesforce.bazel.eclipse.abstractions
+Bundle-Version: 0.0.6.qualifier
+Export-Package: com.salesforce.bazel.eclipse.abstractions;version="0.0.6.qualifier"
+Import-Package: com.salesforce.bazel.eclipse.model;version="0.0.6.qualifier"
+Bundle-Vendor: Salesforce
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+

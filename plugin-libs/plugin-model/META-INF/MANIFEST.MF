@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Bazel Eclipse Model Plugin
+Bundle-SymbolicName: com.salesforce.bazel.eclipse.model;singleton:=true
+Automatic-Module-Name: com.salesforce.bazel.eclipse.model
+Bundle-Version: 0.0.6.qualifier
+Export-Package:  com.salesforce.bazel.eclipse.model;version="0.0.6.qualifier",
+ com.salesforce.bazel.eclipse.logging;version="0.0.6.qualifier"
+Import-Package: com.google.common.base,
+ com.google.common.collect,
+ com.salesforce.bazel.eclipse.logging,
+ org.json,
+ org.slf4j
+Bundle-Vendor: Salesforce
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

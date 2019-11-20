@@ -1,0 +1,31 @@
+# Bazel
+bazel-bin
+bazel-genfiles
+bazel-out
+bazel-sfdc-bazel
+bazel-testlogs
+bazel-bazel-eclipse
+
+
+# Log files
+*.log
+
+# Built Artifacts
+*.zip
+*.tar.gz
+*.rar
+*.class
+bin
+testbin
+dist
+
+# Eclipse
+.settings
+eclipse.sh
+eclipseartifacts
+
+# OS
+.DS_Store
+
+# Eclipse cleaner script (//tools/eclipse)
+my_env.sh
