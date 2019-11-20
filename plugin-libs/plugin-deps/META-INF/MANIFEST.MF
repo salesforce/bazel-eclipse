@@ -1,0 +1,25 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Bazel Eclipse Dev Deps Plugin
+Automatic-Module-Name: com.salesforce.bazel.eclipse.deps
+Bundle-SymbolicName: com.salesforce.bazel.eclipse.deps;singleton:=true
+Bundle-Version: 0.0.6.qualifier
+Bundle-Vendor: Salesforce
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: lib/guava-21.0.jar,
+ lib/json-20160212.jar,
+ lib/logback-classic-1.0.7.jar,
+ lib/logback-core-1.0.7.jar,
+ lib/slf4j-api-1.7.7.jar
+Export-Package: ch.qos.logback.classic;version="1.0.7",
+ ch.qos.logback.classic.joran;version="1.0.7",
+ ch.qos.logback.core;version="1.0.7",
+ ch.qos.logback.core.joran;version="1.0.7",
+ ch.qos.logback.core.joran.spi;version="1.0.7",
+ ch.qos.logback.core.spi;version="1.0.7",
+ com.google.common.base;version="21.0",
+ com.google.common.collect;version="21.0",
+ org.json;version="20160212",
+ org.slf4j;version="1.7.7",
+ org.slf4j.helpers;version="1.7.7"

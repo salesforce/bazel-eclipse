@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer"
+            id="com.salesforce.bazel.eclipse.BAZEL_CONTAINER">
+      </classpathContainerInitializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.ide.projectConfigurators">
+      <projectConfigurator
+            class="com.salesforce.bazel.eclipse.config.BazelProjectConfigurator"
+            label="Bazel">
+         <activeWhen>
+            <hasFileRecursively filename="BUILD"/>
+         </activeWhen>
+      </projectConfigurator>
+   </extension>
+   
+   <extension point="org.eclipse.jdt.launching.classpathProviders">
+      <classpathProvider 
+          id="com.salesforce.bazel.eclipse.launchconfig.classpathProvider"
+          class="com.salesforce.bazel.eclipse.launch.BazelRuntimeClasspathProvider"/>
+      <classpathProvider 
+          id="com.salesforce.bazel.eclipse.launchconfig.sourcepathProvider"
+          class="org.eclipse.jdt.launching.StandardSourcePathProvider"/>
+   </extension>
+   
+   
+   <extension point="org.eclipse.ui.importWizards">
+     <category id="org.eclipse.ui.Basic" name="%category.general.name"/>
+     <category id="org.eclipse.bazel" name="Bazel"/>
+
+     <wizard id="com.salesforce.bazel.eclipse.wizard.BazelImportWizard"
+             class="com.salesforce.bazel.eclipse.wizard.BazelImportWizard"
+             icon="resources/import_bazel_workspace.gif"
+             category="org.eclipse.bazel"
+             name="Import Bazel Workspace">
+        <description>Import Bazel Workspace</description>
+     </wizard>
+   </extension>
+   
+   
+   <extension
+         id="com.salesforce.bazel.eclipse.bazelNature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="com.salesforce.bazel.eclipse.BazelNature">
+         </run>
+      </runtime>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="com.salesforce.bazel.eclipse.preferences.BazelPreferencePage"
+            id="com.salesforce.bazel.eclipse.preferences"
+            name="Bazel Plugin Preferences">
+      </page>
+   </extension>
+   
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.salesforce.bazel.eclipse.preferences.BazelPreferenceInitializer">
+      </initializer>
+   </extension>
+   
+   <extension id="com.salesforce.bazel.eclipse.bazelmarker"
+         point="org.eclipse.core.resources.markers">
+         <super type="org.eclipse.core.resources.problemmarker"/>
+         <persistent value="true"/>
+    </extension>
+   
+   <extension
+         id="com.salesforce.bazel.eclipse.builder"
+         point="org.eclipse.core.resources.builders">
+      <builder
+            callOnEmptyDelta="false"
+            hasNature="false"
+            isConfigurable="false"
+            supportsConfigurations="false">
+         <run
+               class="com.salesforce.bazel.eclipse.builder.BazelBuilder">
+         </run>
+      </builder>
+   </extension>
+   <extension
+         id="com.salesforce.bazel.eclipse.launch"
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            delegate="com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationDelegate"
+            id="com.salesforce.bazel.eclipse.launch"
+            modes="run,debug"
+            name="Bazel Target">
+      </launchConfigurationType>
+   </extension>
+   <extension
+         id="com.salesforce.bazel.eclipse.launch.tab"
+         point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+      <launchConfigurationTabGroup
+            class="com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationTabGroup"
+            id="com.salesforce.bazel.eclipse.launch.tab"
+            type="com.salesforce.bazel.eclipse.launch">
+      </launchConfigurationTabGroup>
+   </extension>
+   
+   <extension
+    point="org.eclipse.debug.ui.launchShortcuts">
+    <shortcut
+        class="com.salesforce.bazel.eclipse.launch.BazelTargetLaunchShortcut"
+        category="com.salesforce.bazel.eclipse.launch"
+        icon="icons/bazelicon.png"
+        id="com.salesforce.bazel.eclipse.launch.shortcut"
+        label="Bazel Target"
+        modes="run, debug">
+        <contextualLaunch>
+            <enablement>
+                <with
+                    variable="selection">
+                    <count
+                        value="+">
+                    </count>
+                    <iterate>
+                       <and>
+	                       <adapt type="org.eclipse.core.resources.IResource">
+					         <test
+					               property="org.eclipse.core.resources.path"
+					               value="*/src/main/java*">
+					         </test>
+					       </adapt>
+					       <or>
+					       <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
+					       <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+					       </or>
+				       </and>
+                    </iterate>
+                </with>
+            </enablement>
+        </contextualLaunch>
+    </shortcut>
+    <shortcut
+        class="com.salesforce.bazel.eclipse.launch.BazelJunitTargetLaunchShortcut"
+        category="com.salesforce.bazel.eclipse.launch"
+        icon="icons/bazelicon.png"
+        id="com.salesforce.bazel.eclipse.launch.junit.shortcut"
+        label="JUnit Bazel Target"
+        modes="run, debug">
+        <contextualLaunch>
+            <enablement>
+                <with
+                    variable="selection">
+                    <count
+                        value="+">
+                    </count>
+                    <iterate>
+                     <or>
+                       <and>
+	                       <adapt type="org.eclipse.core.resources.IResource">
+					         <test
+					               property="org.eclipse.core.resources.path"
+					               value="*/src/test/java*">
+					         </test>
+					       </adapt>
+					       <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
+				       </and>
+                       <and>
+	                       <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+	                       <test property="com.salesforce.bazel.eclipse.isTestJavaElement"/>
+                       </and>
+                     </or>
+                    </iterate>
+                </with>
+            </enablement>
+        </contextualLaunch>
+    </shortcut>
+   </extension>
+   
+   <extension point="org.eclipse.ui.commands">
+      <command
+            name="Bazel Target"
+            categoryId="org.eclipse.debug.ui.category.run"
+            id="com.salesforce.bazel.eclipse.launch.shortcut.run"/>
+   </extension>
+   <extension point="org.eclipse.ui.bindings">
+     <key 
+         sequence="M1+M3+X B"
+         contextId="org.eclipse.ui.globalScope"
+         commandId="com.salesforce.bazel.eclipse.launch.shortcut.run"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+   </extension>
+   
+   <extension point="org.eclipse.ui.commands">
+      <command
+            name="Bazel Target"
+            categoryId="org.eclipse.debug.ui.category.debug"
+            id="com.salesforce.bazel.eclipse.launch.shortcut.debug" />
+   </extension>
+   <extension point="org.eclipse.ui.bindings">
+   <sequenceModifier
+         find="M4"
+         replace="M2"
+         platforms="gtk,motif" />
+    <key 
+         sequence="M4+M1+M3+D B"
+         contextId="org.eclipse.ui.globalScope"
+         commandId="com.salesforce.bazel.eclipse.launch.shortcut.debug"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+   </extension>
+   
+   <extension point="org.eclipse.core.expressions.propertyTesters">
+    <propertyTester
+        id="org.eclipse.jdt.ui.IJavaElementTypeExtender"
+        type="org.eclipse.jdt.core.IJavaElement"
+        namespace="com.salesforce.bazel.eclipse"
+        properties="isTestJavaElement"
+        class="com.salesforce.bazel.eclipse.util.JavaElementPropertyTester">
+     </propertyTester>
+   </extension>
+</plugin>
