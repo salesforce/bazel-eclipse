@@ -1,6 +1,6 @@
 # Bazel Eclipse Feature
 
-This is the Eclipse Feature for [Bazel](http://bazel.io).
+This is the Eclipse Feature for developing [Bazel](http://bazel.io) projects in Eclipse.
 The Bazel Eclipse Feature supports importing, building, and testing Java projects that are built using the Bazel build system.
 
 This project is supported by Salesforce.
