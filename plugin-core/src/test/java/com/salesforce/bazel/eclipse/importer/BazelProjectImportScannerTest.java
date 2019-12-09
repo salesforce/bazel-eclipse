@@ -40,11 +40,11 @@ public class BazelProjectImportScannerTest {
 
     @Test
     public void testHappyPath() throws Exception {
-//        File tmpWorkspaceDir = tmpFolder.newFolder();
-//        File tmpOutputBase = tmpFolder.newFolder();
+        File tmpWorkspaceDir = tmpFolder.newFolder();
+        File tmpOutputBase = tmpFolder.newFolder();
         
-        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws");
-        File tmpOutputBase = new File("/tmp/bazeltest/bin");
+//        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws");
+//        File tmpOutputBase = new File("/tmp/bazeltest/bin");
         
         
         new TestBazelWorkspaceFactory(tmpWorkspaceDir, tmpOutputBase).javaPackages(5).genrulePackages(2).build();
