@@ -50,7 +50,6 @@ Next, follow these steps to install it in your Eclipse IDE.
 - Click the *Archive* button
 - Locate the file *bazel-eclipse-feature.zip* and click *Open*
 - Give the location a name, like *Bazel-Eclipse updatesite*
-- **Bug workaround:** uncheck the *Group items by category* box, otherwise you won't see the feature in the dialog
 - Check the box next to the *Bazel Eclipse Feature* item, then hit *Next*
 - Click *Next/Agree/Finish* until it completes.
 - Restart Eclipse
