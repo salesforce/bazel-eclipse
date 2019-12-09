@@ -10,7 +10,9 @@ Eclipse features and plugins are packaged as an *update site*, which is either:
 
 ## Available Releases
 
-We do not currently host an Eclipse Update Site for this feature, but this page will eventually contain links for when we do.
+We do not currently host an Eclipse Update Site for this feature, but we do offer pre-built binaries:
+
+- [Bazel Eclipse Feature releases](https://github.com/salesforce/bazel-eclipse/releases)
 
 ## Build the Bazel Eclipse Feature yourself
 
