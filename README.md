@@ -21,11 +21,16 @@ For detailed installation and setup instructions, see this page:
 - [Installing Eclipse and the Bazel Eclipse Feature](docs/install.md)
 - [Bazel Eclipse Feature User's Guide](docs/using_the_feature.md)
 
-## Contributing to the Feature
+## Community, Support and Contributions
+
+You may join and post to our discussion forum here:
+
+- [Bazel Eclipse Feature discussion group](https://groups.google.com/forum/#!forum/bazel-eclipse-discuss)
 
 We welcome outside contributions.
 As with any OSS project, please contact our team prior to starting any major refactoring or feature work,
   as your efforts may conflict with ongoing work or plans of ours.
+We expect major changes to the Bazel Classpath Container for 1.1, so please avoid working in that area for now.
 
 To start developing this feature, follow the instructions on our Dev Guide.
 
