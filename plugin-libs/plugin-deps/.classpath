@@ -8,8 +8,5 @@
 	</classpathentry>
 	<classpathentry exported="true" kind="lib" path="lib/guava-21.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/json-20160212.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/slf4j-api-1.7.7.jar"/>
-        <classpathentry exported="true" kind="lib" path="lib/logback-core-1.0.7.jar"/>
-        <classpathentry exported="true" kind="lib" path="lib/logback-classic-1.0.7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

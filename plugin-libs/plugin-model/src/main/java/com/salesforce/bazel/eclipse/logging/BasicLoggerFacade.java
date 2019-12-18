@@ -35,42 +35,48 @@
  */
 package com.salesforce.bazel.eclipse.logging;
 
-import org.slf4j.LoggerFactory;
+// we will revisit this later, see https://github.com/salesforce/bazel-eclipse/issues/10 
+// import org.slf4j.LoggerFactory;
 
 /**
  * 
- * Default facade that only logs to slf4j api
+ * Default facade that crudely logs to stdout/stderr.
  * 
- * @author Blaine Buxton
- *
  */
-public class Slf4jLoggerFacade extends LoggerFacade {
+public class BasicLoggerFacade extends LoggerFacade {
 
     @Override
     public void error(Class<?> from, String message, Object... args) {
-        LoggerFactory.getLogger(from).error(message, args);
+        // LoggerFactory.getLogger(from).error(message, args);
+        System.err.println(formatMsg(from, message, args));
     }
 
     @Override
     public void error(Class<?> from, String message, Throwable exception, Object... args) {
-        LoggerFactory.getLogger(from).error(message, exception, args);
+        //LoggerFactory.getLogger(from).error(message, exception, args);
+        System.err.println(formatMsg(from, message, args));
     }
 
     @Override
     public void warn(Class<?> from, String message, Object... args) {
-        LoggerFactory.getLogger(from).warn(message, args);
-
+        // LoggerFactory.getLogger(from).warn(message, args);
+        System.out.println(formatMsg(from, message, args));
     }
 
     @Override
     public void info(Class<?> from, String message, Object... args) {
-        LoggerFactory.getLogger(from).info(message, args);
+        // LoggerFactory.getLogger(from).info(message, args);
+        System.out.println(formatMsg(from, message, args));
     }
 
     @Override
     public void debug(Class<?> from, String message, Object... args) {
-        LoggerFactory.getLogger(from).debug(message, args);
-
+        // LoggerFactory.getLogger(from).debug(message, args);
+        // System.out.println(formatMsg(from, message, args));
     }
 
+    private String formatMsg(Class<?> from, String message, Object... args) {
+        return "["+from.getName()+"] "+message;
+    }
+    
 }

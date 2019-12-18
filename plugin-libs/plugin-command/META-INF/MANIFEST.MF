@@ -11,8 +11,7 @@ Import-Package: com.google.common.base,
  com.google.common.collect,
  com.salesforce.bazel.eclipse.abstractions;version="1.1.0.qualifier",
  com.salesforce.bazel.eclipse.logging;version="1.1.0.qualifier",
- com.salesforce.bazel.eclipse.model;version="1.1.0.qualifier",
- org.slf4j
+ com.salesforce.bazel.eclipse.model;version="1.1.0.qualifier"
 Bundle-Vendor: Salesforce
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

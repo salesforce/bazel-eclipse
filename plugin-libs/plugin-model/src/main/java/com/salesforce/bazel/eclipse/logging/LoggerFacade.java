@@ -44,7 +44,7 @@ package com.salesforce.bazel.eclipse.logging;
  *
  */
 public abstract class LoggerFacade {
-    static LoggerFacade instance = new Slf4jLoggerFacade();
+    static LoggerFacade instance = new BasicLoggerFacade();
 
     /**
      * Default instance, this can change - DO NOT CACHE or STORE

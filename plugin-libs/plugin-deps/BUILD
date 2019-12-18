@@ -25,36 +25,35 @@ java_import(
     ],
 )
 
-# SLF4J-API is a weird one. It comes along for free in the Eclipse SDK
-java_import(
-    name = "org_slf4j_slf4j_api",
-    jars = [
-        "lib/slf4j-api-1.7.7.jar",
-    ],
-    visibility = [
-        "//visibility:public",
-    ],
-)
+#java_import(
+#    name = "org_slf4j_slf4j_api",
+#    jars = [
+#        "lib/slf4j-api-1.7.7.jar",
+#    ],
+#    visibility = [
+#        "//visibility:public",
+#    ],
+#)
 
-java_import(
-    name = "ch_qos_logback_logback_core",
-    jars = [
-        "lib/logback-core-1.0.7.jar",
-    ],
-    visibility = [
-        "//visibility:public",
-    ],
-)
+#java_import(
+#    name = "ch_qos_logback_logback_core",
+#    jars = [
+#        "lib/logback-core-1.0.7.jar",
+#    ],
+#    visibility = [
+#        "//visibility:public",
+#    ],
+#)
 
-java_import(
-    name = "ch_qos_logback_logback_classic",
-    jars = [
-        "lib/logback-classic-1.0.7.jar",
-    ],
-    visibility = [
-        "//visibility:public",
-    ],
-)
+#java_import(
+#    name = "ch_qos_logback_logback_classic",
+#    jars = [
+#        "lib/logback-classic-1.0.7.jar",
+#    ],
+#    visibility = [
+#        "//visibility:public",
+#    ],
+#)
 
 eclipse_plugin(
     name = "com.salesforce.bazel.eclipse.deps",
@@ -67,6 +66,5 @@ eclipse_plugin(
     deps = [
       ":com_google_guava",
       ":org_json_json",
-      ":org_slf4j_slf4j_api",
     ],
 )

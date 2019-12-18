@@ -16,7 +16,6 @@ java_library(
 
         "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-deps:org_json_json",
-        "//plugin-libs/plugin-deps:org_slf4j_slf4j_api",
     ],
 )
 
@@ -31,7 +30,6 @@ eclipse_plugin(
     deps = [
     "//plugin-libs/plugin-deps:com_google_guava",
     "//plugin-libs/plugin-deps:org_json_json",
-    "//plugin-libs/plugin-deps:org_slf4j_slf4j_api",
     ],
 )
 

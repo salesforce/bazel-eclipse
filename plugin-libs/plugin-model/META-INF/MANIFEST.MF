@@ -9,8 +9,7 @@ Export-Package:  com.salesforce.bazel.eclipse.model;version="1.1.0.qualifier",
 Import-Package: com.google.common.base,
  com.google.common.collect,
  com.salesforce.bazel.eclipse.logging,
- org.json,
- org.slf4j
+ org.json
 Bundle-Vendor: Salesforce
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

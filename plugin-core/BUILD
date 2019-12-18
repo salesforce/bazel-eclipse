@@ -15,16 +15,13 @@ eclipse_plugin(
     version = VERSION,
     visibility = ["//visibility:public"],
     # include this p2.inf entry only if you want to manually control the contents of this file, otherwise it is auto generated
-    classpath_resources = ['META-INF/p2.inf', 'plugin.xml'],
+    classpath_resources = ['plugin.xml'],
     deps = [
         "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
 
         "//plugin-libs/plugin-deps:com_google_guava",
-        "//plugin-libs/plugin-deps:org_slf4j_slf4j_api",
-        "//plugin-libs/plugin-deps:ch_qos_logback_logback_classic",
-        "//plugin-libs/plugin-deps:ch_qos_logback_logback_core",
     ],
 )
 
