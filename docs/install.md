@@ -9,6 +9,15 @@ This section will eventually contain a matrix of supported configurations.
 But at this point, we are not that organized.
 Install a recent copy of whatever is asked for below, unless a specific version is noted.
 
+### Supported Platforms
+
+We will support you on:
+- Mac - reasonably recent OS versions
+- Linux - reasonably recent OS version of a major distro (Ubuntu, Mint, etc)
+
+Windows support is tracked as [Issue 36](https://github.com/salesforce/bazel-eclipse/issues/36), see that work item for current status.
+Other platforms may also work, but you may need to contribute patches if there are issues.
+
 ### Installing a JDK
 
 At this time, we don't have specific guidance on what JDK version you should be using.
