@@ -46,9 +46,9 @@ public final class AspectOutputJars {
     private final String srcjar; // source_jar
 
     AspectOutputJars(JSONObject obj) {
+        this.jar = obj.has("jar") ? obj.getString("jar") : null;
         this.ijar = obj.has("interface_jar") ? obj.getString("interface_jar") : null;
-        this.jar = obj.getString("jar");
-        this.srcjar = obj.has("srcjar") ? obj.getString("srcjar") : null;
+        this.srcjar = obj.has("source_jar") ? obj.getString("source_jar") : null;
     }
 
     @Override
@@ -56,10 +56,10 @@ public final class AspectOutputJars {
         StringBuffer builder = new StringBuffer();
         builder.append("JavaTargetOutputJars(jar = ").append(jar);
         if (ijar != null) {
-            builder.append(", ijar = ").append(ijar);
+            builder.append(", interface_jar = ").append(ijar);
         }
         if (srcjar != null) {
-            builder.append(", srcjar = ").append(srcjar);
+            builder.append(", source_jar = ").append(srcjar);
         }
         return builder.append(")").toString();
     }
