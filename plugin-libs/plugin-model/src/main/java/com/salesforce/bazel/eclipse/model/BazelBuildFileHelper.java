@@ -57,7 +57,7 @@ public class BazelBuildFileHelper {
      * If you change the contents of this list, please also update TestBazelWorkspaceCreator.java.
      */
     public static final String[] JAVA_PROJECT_INDICATORS =
-            { "java_binary", "java_library", "java_test", "springboot", "springboot_test" };
+            { "java_binary", "java_library", "java_test", "java_web_test_suite", "springboot", "springboot_test" };
 
     /**
      * Parses a File, presumed to be a Bazel BUILD file, looking for indications that it contains Java rules.

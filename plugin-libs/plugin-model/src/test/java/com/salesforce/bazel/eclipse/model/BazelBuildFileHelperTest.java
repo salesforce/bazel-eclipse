@@ -51,6 +51,7 @@ public class BazelBuildFileHelperTest {
         assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("java_binary("));
         assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("java_library("));
         assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("java_test("));
+        assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("java_web_test_suite("));
         assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("springboot"));
         assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("springboot_test("));
 

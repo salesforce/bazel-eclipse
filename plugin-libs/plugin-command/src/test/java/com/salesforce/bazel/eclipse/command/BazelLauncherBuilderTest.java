@@ -116,6 +116,27 @@ public class BazelLauncherBuilderTest {
     }
 
     @Test
+    public void testBuildSeleniumTestCommand() throws Exception {
+        TestBazelCommandEnvironmentFactory env = createEnv();
+        BazelLabel label = new BazelLabel("//a/b/c");
+        TargetKind targetKind = TargetKind.JAVA_WEB_TEST_SUITE;
+        
+        BazelLauncherBuilder launcherBuilder = env.bazelWorkspaceCommandRunner.getBazelLauncherBuilder();
+        launcherBuilder.setLabel(label);
+        launcherBuilder.setTargetKind(targetKind);
+        launcherBuilder.setArgs(Collections.emptyMap());
+
+        addBazelCommandOutput(env, "test", "bazel test result");
+        
+        List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
+
+        assertEquals(env.bazelExecutable.getAbsolutePath(), cmdTokens.get(0));
+        assertEquals("test", cmdTokens.get(1));
+        assertTrue(cmdTokens.contains(label.getLabel()));
+        assertFalse(cmdTokens.toString().contains("debug"));
+    }
+    
+    @Test
     public void testBuildTestCommandWithFilter() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelLabel label = new BazelLabel("//a/b/c");

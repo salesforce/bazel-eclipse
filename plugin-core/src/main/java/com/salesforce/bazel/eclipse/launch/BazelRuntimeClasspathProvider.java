@@ -83,7 +83,8 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
     
     // computeUnresolvedClassPathEntries() is called multiple times while trying to run a single test, 
     // we need this variable to keep track of when to open the error dialog
-    public static AtomicBoolean canOpen = new AtomicBoolean(true); 
+    public static AtomicBoolean canOpenErrorDialog = new AtomicBoolean(true);
+    
     /**
      * Compute classpath entries for test
      */
@@ -145,9 +146,10 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                 Display.getDefault().asyncExec(new Runnable() {
                     @Override
                     public void run() {
-                        if(canOpen.get()) {
-                            canOpen.set(false);
-                            MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target", "One or all of the tests trying to be executed are not part of a Bazel java_test target");
+                        if(canOpenErrorDialog.get()) {
+                            canOpenErrorDialog.set(false);
+                            MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target", 
+                                "One or all of the tests trying to be executed are not part of a Bazel Java test target");
                         }
                     }
                 });

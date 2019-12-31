@@ -75,8 +75,22 @@ public enum TargetKind {
         public boolean isTestable() {
             return true;
         }
-    };
+    },
 
+    // Selenium https://github.com/bazelbuild/rules_webtesting
+    JAVA_WEB_TEST_SUITE("java_web_test_suite") {
+
+        @Override
+        public boolean isRunnable() {
+            return false;
+        }
+
+        @Override
+        public boolean isTestable() {
+            return true;
+        }
+    };
+    
     private final String targetKind;
 
     private TargetKind(String targetKind) {
