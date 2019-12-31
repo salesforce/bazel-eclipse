@@ -53,12 +53,14 @@ public class AspectPackageInfosTest {
         AspectPackageInfo lib = getAspectPackageInfo("foo1", TargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
         AspectPackageInfo test = getAspectPackageInfo("foo2", TargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
         AspectPackageInfo bin = getAspectPackageInfo("foo3", TargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
+        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", TargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin);
+        AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
 
         assertSame(lib, apis.lookupByLabel("foo1"));
         assertSame(test, apis.lookupByLabel("foo2"));
         assertSame(bin, apis.lookupByLabel("foo3"));
+        assertSame(seleniumTest, apis.lookupByLabel("foo4"));
         assertNull(apis.lookupByLabel("blah"));
     }
 
@@ -67,22 +69,27 @@ public class AspectPackageInfosTest {
         AspectPackageInfo lib = getAspectPackageInfo("foo1", TargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
         AspectPackageInfo test = getAspectPackageInfo("foo2", TargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
         AspectPackageInfo bin = getAspectPackageInfo("foo3", TargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
+        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", TargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin);
+        AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
 
         Collection<AspectPackageInfo> infos = apis.lookupByTargetKind(EnumSet.of(TargetKind.JAVA_TEST));
-
         assertEquals(1, infos.size());
         assertSame(test, infos.iterator().next());
-    }
+
+        infos = apis.lookupByTargetKind(EnumSet.of(TargetKind.JAVA_WEB_TEST_SUITE));
+        assertEquals(1, infos.size());
+        assertSame(seleniumTest, infos.iterator().next());
+}
 
     @Test
     public void testLookupByTargetKind__multipleTargetKinds() {
         AspectPackageInfo lib = getAspectPackageInfo("foo1", TargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
         AspectPackageInfo test = getAspectPackageInfo("foo2", TargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
         AspectPackageInfo bin = getAspectPackageInfo("foo3", TargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
+        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", TargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin);
+        AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
 
         Collection<AspectPackageInfo> infos =
                 apis.lookupByTargetKind(EnumSet.of(TargetKind.JAVA_TEST, TargetKind.JAVA_BINARY));

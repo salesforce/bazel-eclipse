@@ -172,7 +172,7 @@ public final class AspectPackageInfo {
     }
 
     /**
-     * Kind of the target (e.g., java_test or java_binary).
+     * Kind of the target (e.g., java_test, java_binary, java_web_test_suite, etc).
      */
     public String getKind() {
         return kind;

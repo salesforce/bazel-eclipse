@@ -106,6 +106,33 @@ public class BazelLaunchConfigurationDelegateFTest {
         assertEquals("//projects/libs/javalib0", cmdLine[13]);
     }
 
+    @Test
+    public void testHappySeleniumLaunch() throws Exception {
+        // setup functional test env
+        MockEclipse mockEclipse = createMockEnvironment();
+        ILaunchConfiguration launchConfig = createLaunchConfiguration("selenium");
+        ILaunch launch = new MockILaunch(launchConfig);
+        IProgressMonitor progress = new EclipseWorkProgressMonitor();
+        addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), "test", "bazel test result");
+        BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
+        
+        // method under test
+        delegate.launch(launchConfig, "debug", launch, progress);
+
+        // verify
+        MockResourceHelper mockResourceHelper = mockEclipse.getMockResourceHelper();
+        String[] cmdLine = mockResourceHelper.lastExecCommandLine;
+        assertTrue(cmdLine[0].contains("bazel"));
+        assertEquals("test", cmdLine[1]);
+        assertTrue(cmdLine[2].contains("test_output"));
+        // there are a bunch of other flags passed as well 3-8
+        assertTrue(cmdLine[9].contains("testvalue"));
+        assertTrue(cmdLine[10].contains("testvalue"));
+        assertTrue(cmdLine[11].contains("testvalue"));
+        assertEquals("--", cmdLine[12]);
+        assertEquals("//projects/libs/javalib0", cmdLine[13]);
+    }
+    
     // HELPERS
 
     private MockEclipse createMockEnvironment() throws Exception {
@@ -132,6 +159,8 @@ public class BazelLaunchConfigurationDelegateFTest {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_test");
         } else if ("run".equals(verb)) {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_binary");
+        } else if ("selenium".equals(verb)) {
+            testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_web_test_suite");
         }
 
         Map<String, String> args = new TreeMap<>();
