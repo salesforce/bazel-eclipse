@@ -104,15 +104,17 @@ public class BazelEclipseProjectFactory {
     public static AtomicBoolean importInProgress = new AtomicBoolean(false);
 
     /**
-     * Imports a workspace. This version does not yet allow the user to be selective - it imports all Java packages that
-     * it finds in the workspace.
+     * Imports a workspace.
      *
      * @return the list of Eclipse IProject objects created during import; by contract the first element in the list is
      *         the IProject object created for the 'bazel workspace' project node which is a special container project
      */
     public static List<IProject> importWorkspace(BazelPackageInfo bazelWorkspaceRootPackageInfo,
             List<BazelPackageInfo> selectedBazelPackages, WorkProgressMonitor progressMonitor,
-            IProgressMonitor monitor) {
+          IProgressMonitor monitor) {
+
+        // TODO change this to do import off of the UI thread https://github.com/salesforce/bazel-eclipse/issues/49
+
         URI eclipseProjectLocation = null;
         String bazelWorkspaceRoot = bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory().getAbsolutePath();
         File bazelWorkspaceRootDirectory = new File(bazelWorkspaceRoot);
@@ -244,9 +246,7 @@ public class BazelEclipseProjectFactory {
         }
 
         try {
-            // TODO this seems to be the right place to configure the project for Search to avoid such directories as .git and bazel-*
-
-            // TODO investigate using the configure() hook in the BazelNature for the configuration part of this createProject() method 
+            // TODO investigate using the configure() hook in the BazelNature for the configuration part of this createProject() method
             IJavaProject eclipseJavaProject =
                     BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(eclipseProject);
             createBazelClasspathForEclipseProject(new Path(bazelWorkspaceRoot), packageFSPath, packageSourceCodeFSPaths,
@@ -342,12 +342,12 @@ public class BazelEclipseProjectFactory {
             resourceHelper.createFolderLink(projectSourceFolder, realSourceDir, IResource.NONE, null);
 
             IPath outputDir = null; // null is a legal value, it means use the default
-            boolean isTestSource = false; 
+            boolean isTestSource = false;
             if (path.endsWith("src/test/java")) { // NON_CONFORMING PROJECT SUPPORT
                 isTestSource = true;
                 outputDir = new Path(eclipseProject.getPath().toOSString() + "/testbin");
             }
-            
+
             IPath sourceDir = projectSourceFolder.getFullPath();
             IClasspathEntry sourceClasspathEntry = BazelPluginActivator.getJavaCoreHelper().newSourceEntry(sourceDir, outputDir, isTestSource);
             classpathEntries.add(sourceClasspathEntry);
