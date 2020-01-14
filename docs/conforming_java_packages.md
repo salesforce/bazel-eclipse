@@ -80,3 +80,23 @@ See the [BEF project planning epics](https://github.com/salesforce/bazel-eclipse
 - [Relax src/main/... and src/test/... package layout requirements](https://github.com/salesforce/bazel-eclipse/issues/8)
 - [Support Bazel Java modules with multiple BUILD files](https://github.com/salesforce/bazel-eclipse/issues/24)
 - [Support multiple classpaths within a Java Eclipse project](https://github.com/salesforce/bazel-eclipse/issues/23)
+
+### Recommended Java Conventions
+
+In addition to the mandated conventions above, there are additional recommended conventions for Java repositories.
+
+**Prohibit Implicit Test Dependencies**
+
+Sadly, Bazel by default adds implicit, unspecified, dependencies to all *java_test* targets.
+Currently, that dependency list include *junit* and *hamcrest* libraries.
+There are ways for Bazel Eclipse Feature to support this (see [Issue #43](https://github.com/salesforce/bazel-eclipse/issues/43)) but it is best not to rely on that.
+
+Fortunately, Bazel has a flag to disable this problematic behavior.
+Before importing your Bazel workspace into Eclipse, we recommend fixing any instances of implicit Java dependencies.
+Set [explicit_java_test_deps to true](https://docs.bazel.build/versions/master/command-line-reference.html#flag--explicit_java_test_deps) in your *.bazelrc* file:
+
+```
+build --explicit_java_test_deps=true
+```
+
+and then run ```bazel clean``` and then ```bazel build //...``` to find and fix all of the broken targets.
