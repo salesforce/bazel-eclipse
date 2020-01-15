@@ -70,7 +70,7 @@ import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationExc
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
-import com.salesforce.bazel.eclipse.model.AspectOutputJars;
+import com.salesforce.bazel.eclipse.model.AspectOutputJarSet;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -179,7 +179,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                     if (otherProject == null) {
                         // no project found that houses the sources of this bazel target, add the jars to the classpath
                         // this means that this is an external jar, or a jar produced by a bazel target that was not imported
-                        for (AspectOutputJars jarSet : packageInfo.getGeneratedJars()) {
+                        for (AspectOutputJarSet jarSet : packageInfo.getGeneratedJars()) {
                             IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspaceCmdRunner, progressMonitor, jarSet); 
                             if (cpEntry != null) {
                                 classpathEntries.add(cpEntry);
@@ -188,7 +188,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                                 bazelWorkspaceCmdRunner.flushAspectInfoCache(bazelTargetsForProject);
                             }
                         }
-                        for (AspectOutputJars jarSet : packageInfo.getJars()) {
+                        for (AspectOutputJarSet jarSet : packageInfo.getJars()) {
                             IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspaceCmdRunner, progressMonitor, jarSet);
                             if (cpEntry != null) {
                                 classpathEntries.add(cpEntry);
@@ -342,7 +342,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
     }
 
     private IClasspathEntry jarsToClasspathEntry(BazelWorkspaceCommandRunner bazelCommandRunner, WorkProgressMonitor progressMonitor, 
-            AspectOutputJars jarSet) {
+            AspectOutputJarSet jarSet) {
         IClasspathEntry cpEntry = null;
         File bazelOutputBase = bazelCommandRunner.getBazelWorkspaceOutputBase(progressMonitor);
         File bazelExecRoot = bazelCommandRunner.getBazelWorkspaceExecRoot(progressMonitor);
@@ -357,12 +357,12 @@ public class BazelClasspathContainer implements IClasspathContainer {
 
     @SuppressWarnings("unused")
     private IClasspathEntry[] jarsToClasspathEntries(BazelWorkspaceCommandRunner bazelCommandRunner, WorkProgressMonitor progressMonitor, 
-            Set<AspectOutputJars> jars) {
+            Set<AspectOutputJarSet> jars) {
         IClasspathEntry[] entries = new IClasspathEntry[jars.size()];
         int i = 0;
         File bazelOutputBase = bazelCommandRunner.getBazelWorkspaceOutputBase(progressMonitor);
         File bazelExecRoot = bazelCommandRunner.getBazelWorkspaceExecRoot(progressMonitor);
-        for (AspectOutputJars j : jars) {
+        for (AspectOutputJarSet j : jars) {
             IPath jarPath = getJarPathOnDisk(bazelOutputBase, bazelExecRoot, j.getJar());
             if (jarPath != null) {
                 IPath srcJarPath = getJarPathOnDisk(bazelOutputBase, bazelExecRoot, j.getSrcJar());

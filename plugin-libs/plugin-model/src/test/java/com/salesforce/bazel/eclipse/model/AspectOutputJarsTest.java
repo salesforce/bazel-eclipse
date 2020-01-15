@@ -22,7 +22,7 @@ public class AspectOutputJarsTest {
     public void testDeserializationHappy() {
         JSONObject jars = createJarsArray(GUAVA_JAR, GUAVA_IJAR, GUAVA_SJAR);
         
-        AspectOutputJars parsedJars = new AspectOutputJars(jars);
+        AspectOutputJarSet parsedJars = new AspectOutputJarSet(jars);
         assertEquals(GUAVA_JAR, parsedJars.getJar());
         assertEquals(GUAVA_IJAR, parsedJars.getInterfaceJar());
         assertEquals(GUAVA_SJAR, parsedJars.getSrcJar());
@@ -32,7 +32,7 @@ public class AspectOutputJarsTest {
     public void testDeserializationNullJar() {
         JSONObject jars = createJarsArray(null, GUAVA_IJAR, GUAVA_SJAR);
         
-        AspectOutputJars parsedJars = new AspectOutputJars(jars);
+        AspectOutputJarSet parsedJars = new AspectOutputJarSet(jars);
         assertNull(parsedJars.getJar());
         assertEquals(GUAVA_IJAR, parsedJars.getInterfaceJar());
         assertEquals(GUAVA_SJAR, parsedJars.getSrcJar());
@@ -42,7 +42,7 @@ public class AspectOutputJarsTest {
     public void testDeserializationNullIJar() {
         JSONObject jars = createJarsArray(GUAVA_JAR, null, GUAVA_SJAR);
         
-        AspectOutputJars parsedJars = new AspectOutputJars(jars);
+        AspectOutputJarSet parsedJars = new AspectOutputJarSet(jars);
         assertEquals(GUAVA_JAR, parsedJars.getJar());
         assertNull(parsedJars.getInterfaceJar());
         assertEquals(GUAVA_SJAR, parsedJars.getSrcJar());
@@ -52,7 +52,7 @@ public class AspectOutputJarsTest {
     public void testDeserializationNullSJar() {
         JSONObject jars = createJarsArray(GUAVA_JAR, GUAVA_IJAR, null);
         
-        AspectOutputJars parsedJars = new AspectOutputJars(jars);
+        AspectOutputJarSet parsedJars = new AspectOutputJarSet(jars);
         assertEquals(GUAVA_JAR, parsedJars.getJar());
         assertEquals(GUAVA_IJAR, parsedJars.getInterfaceJar());
         assertNull(parsedJars.getSrcJar());
