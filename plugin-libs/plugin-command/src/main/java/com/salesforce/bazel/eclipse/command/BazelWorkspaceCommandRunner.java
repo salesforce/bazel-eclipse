@@ -58,6 +58,7 @@ import com.salesforce.bazel.eclipse.logging.LoggerFacade;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
 import com.salesforce.bazel.eclipse.model.BazelOutputParser;
+import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.eclipse.model.BazelWorkspaceMetadataStrategy;
 
 /**
@@ -200,7 +201,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * Returns the execution root of the current Bazel workspace.
      */
-    public File getBazelWorkspaceExecRoot() {
+    public File computeBazelWorkspaceExecRoot() {
 
         if (bazelExecRootDirectory == null) {
             try {
@@ -221,7 +222,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * Returns the output base of the current Bazel workspace.
      */
-    public File getBazelWorkspaceOutputBase() {
+    public File computeBazelWorkspaceOutputBase() {
         if (bazelOutputBaseDirectory == null) {
             try {
                 ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
@@ -242,7 +243,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * Returns the bazel-bin of the current Bazel workspace.
      */
-    public File getBazelWorkspaceBin() {
+    public File computeBazelWorkspaceBin() {
         if (bazelBinDirectory == null) {
             try {
                 ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
@@ -258,6 +259,24 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         }
         return bazelBinDirectory;
     }
+    
+    /**
+     * Returns the explicitly set options in the workspace config files (.bazelrc et al)
+     */
+    public void populateBazelWorkspaceCommandOptions(BazelWorkspaceCommandOptions commandOptions) {
+        try {
+            ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
+            // to get the options, the verb could be info, build, test etc but 'test' gives us the most coverage of the contexts for options 
+            argBuilder.add("test").add("--announce_rc");
+            
+            List<String> outputLines = bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory, null, 
+                argBuilder.build(), (t) -> t);
+            commandOptions.parseOptionsFromOutput(outputLines);
+        } catch (Exception anyE) {
+            throw new IllegalStateException(anyE);
+        }
+    }
+
     
     /**
      * These arguments are added to all "bazel build" commands that run for the purpose of building code. 

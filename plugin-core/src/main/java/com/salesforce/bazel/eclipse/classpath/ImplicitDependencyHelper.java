@@ -12,6 +12,7 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
 
 /**
  * Bazel generally requires BUILD file authors to list all dependencies explicitly.
@@ -48,7 +49,13 @@ public class ImplicitDependencyHelper {
             AspectPackageInfo packageInfo) {
         Set<IClasspathEntry> deps = new HashSet<>();
         
-        // TODO ideally we would only do this if --explicit_java_test_deps=false, but how to compute that?
+        // java_test targets do not have implicit deps if .bazelrc has --explicit_java_test_deps=true
+        BazelWorkspaceCommandOptions commandOptions = bazelWorkspace.getBazelWorkspaceCommandOptions();
+        String explicitDepsOption = commandOptions.getOption("explicit_java_test_deps");
+        if ("true".equals(explicitDepsOption)) {
+            // the workspace is configured to disallow implicit deps (hooray) so we can bail now 
+            return deps;
+        }
         
         // HAMCREST and JUNIT
         // These implicit deps come from the test runner.

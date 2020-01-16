@@ -170,7 +170,7 @@ public class WorkspaceWizardPage extends WizardPage {
                 if (wr != null) {
                     workspaceRoot.setText(wr);
                     DirectoryTreeContentProvider.setFileTreeRoot(directories, new File(wr));
-                    BazelWorkspace bazelWorkspace = new BazelWorkspace(new File(getWorkspaceRoot()), new RealOperatingEnvironmentDetectionStrategy());
+                    BazelWorkspace bazelWorkspace = new BazelWorkspace(null, new File(getWorkspaceRoot()), new RealOperatingEnvironmentDetectionStrategy());
                     completionProvider.setBazelInstance(BazelPluginActivator.getBazelCommandManager()
                             .getWorkspaceCommandRunner(bazelWorkspace));
                 }

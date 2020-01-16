@@ -3,19 +3,28 @@ package com.salesforce.bazel.eclipse.model;
 import java.io.File;
 
 public class BazelWorkspace {
-
-    // COLLABORATORS
+    
+    // DATA
     
     /**
      * The location on disk for the workspace.
      */
     private final File bazelWorkspaceRootDirectory;
+
+    /**
+     * Workspace name, as assigned in the WORKSPACE file or computed from directory name
+     */
+    private final String name;
     
+    // COLLABORATORS
+
     /**
      * Strategy delegate that can compute the data for file paths
      */
     private BazelWorkspaceMetadataStrategy metadataStrategy;
 
+    
+    
     // COMPUTED DATA
     
     /**
@@ -52,11 +61,17 @@ public class BazelWorkspace {
      * The OS identifier used in file system constructs: darwin, linux, windows
      */
     private String operatingSystemFoldername;
+    
+    /**
+     * List of Bazel command options that apply for all workspace commands (i.e. from .bazelrc) 
+     */
+    private BazelWorkspaceCommandOptions commandOptions;
 
     
     // CTORS AND INITIALIZERS
     
-    public BazelWorkspace(File bazelWorkspaceRootDirectory, OperatingEnvironmentDetectionStrategy osEnvStrategy) {
+    public BazelWorkspace(String name, File bazelWorkspaceRootDirectory, OperatingEnvironmentDetectionStrategy osEnvStrategy) {
+        this.name = name;
         this.bazelWorkspaceRootDirectory = bazelWorkspaceRootDirectory;
         this.operatingSystem = osEnvStrategy.getOperatingSystemName();
         this.operatingSystemFoldername = osEnvStrategy.getOperatingSystemDirectoryName(this.operatingSystem);
@@ -76,24 +91,28 @@ public class BazelWorkspace {
     public boolean hasBazelWorkspaceRootDirectory() {
         return this.bazelWorkspaceRootDirectory != null;
     }
+    
+    public String getName() {
+        return this.name;
+    }
 
     public File getBazelExecRootDirectory() {
         if (this.bazelExecRootDirectory == null && metadataStrategy != null) {
-            this.bazelExecRootDirectory = metadataStrategy.getBazelWorkspaceExecRoot();
+            this.bazelExecRootDirectory = metadataStrategy.computeBazelWorkspaceExecRoot();
         }
         return this.bazelExecRootDirectory;
     }
 
     public File getBazelOutputBaseDirectory() {
         if (this.bazelOutputBaseDirectory == null && metadataStrategy != null) {
-            this.bazelOutputBaseDirectory = metadataStrategy.getBazelWorkspaceOutputBase();
+            this.bazelOutputBaseDirectory = metadataStrategy.computeBazelWorkspaceOutputBase();
         }
         return this.bazelOutputBaseDirectory;
     }
 
     public File getBazelBinDirectory() {
         if (this.bazelBinDirectory == null && metadataStrategy != null) {
-            this.bazelBinDirectory = metadataStrategy.getBazelWorkspaceBin();
+            this.bazelBinDirectory = metadataStrategy.computeBazelWorkspaceBin();
         }
         return this.bazelBinDirectory;
     }
@@ -106,4 +125,11 @@ public class BazelWorkspace {
         return operatingSystemFoldername;
     }
 
+    public BazelWorkspaceCommandOptions getBazelWorkspaceCommandOptions() {
+        if (this.commandOptions == null) {
+            this.commandOptions = new BazelWorkspaceCommandOptions(this);
+            metadataStrategy.populateBazelWorkspaceCommandOptions(this.commandOptions);
+        }
+        return this.commandOptions;
+    }
 }

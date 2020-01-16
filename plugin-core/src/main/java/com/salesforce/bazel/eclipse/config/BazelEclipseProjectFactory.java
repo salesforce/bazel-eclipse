@@ -124,24 +124,18 @@ public class BazelEclipseProjectFactory {
         subMonitor.setTaskName("Getting the Aspect Information for targets");
         subMonitor.split(1);
 
+        String bazelWorkspaceName = getBazelWorkspaceName(bazelWorkspaceRoot);
+        String eclipseProjectNameForBazelWorkspace = BazelNature.BAZELWORKSPACE_PROJECT_BASENAME+" (" + bazelWorkspaceName + ")";
+
         // Many collaborators need the Bazel workspace directory location, so we stash it in an accessible global location
         // currently we only support one Bazel workspace in an Eclipse workspace
-        BazelPluginActivator.getInstance().setBazelWorkspaceRootDirectory(bazelWorkspaceRootDirectory);
+        BazelPluginActivator.getInstance().setBazelWorkspaceRootDirectory(bazelWorkspaceName, bazelWorkspaceRootDirectory);
 
         // Set the flag that an import is in progress
         importInProgress.set(true);
 
         // clear out state flag in the Bazel classpath initializer in case there was a previous failed import run
         BazelClasspathContainerInitializer.isCorrupt.set(false);
-
-        String eclipseProjectNameForBazelWorkspace = BazelNature.BAZELWORKSPACE_PROJECT_BASENAME;
-        // TODO pull the workspace name out of the WORKSPACE file, until then use the directory name (e.g. bazel-demo)
-        int lastSlash = bazelWorkspaceRoot.lastIndexOf(File.separator);
-        if (lastSlash >= 0 && (bazelWorkspaceRoot.length() - lastSlash) > 3) {
-            // add the directory name to the label, if it is meaningful (>3 chars)
-            eclipseProjectNameForBazelWorkspace = BazelNature.BAZELWORKSPACE_PROJECT_BASENAME+
-                    " (" + bazelWorkspaceRoot.substring(lastSlash + 1) + ")";
-        }
 
         // TODO send this message to the EclipseConsole so the user actually sees it
         LOG.info("Starting import of [{}]. This may take some time, please be patient.",
@@ -180,6 +174,17 @@ public class BazelEclipseProjectFactory {
         importInProgress.set(false);
 
         return importedProjectsList;
+    }
+    
+    public static String getBazelWorkspaceName(String bazelWorkspaceRootDirectory) {
+        // TODO pull the workspace name out of the WORKSPACE file, until then use the directory name (e.g. bazel-demo)
+        String bazelWorkspaceName = "workspace";
+        int lastSlash = bazelWorkspaceRootDirectory.lastIndexOf(File.separator);
+        if (lastSlash >= 0 && (bazelWorkspaceRootDirectory.length() - lastSlash) > 3) {
+            // add the directory name to the label, if it is meaningful (>3 chars)
+            bazelWorkspaceName = bazelWorkspaceRootDirectory.substring(lastSlash + 1);
+        }
+        return bazelWorkspaceName;
     }
 
     private static void importBazelWorkspacePackagesAsProjects(BazelPackageInfo packageInfo, String bazelWorkspaceRoot,

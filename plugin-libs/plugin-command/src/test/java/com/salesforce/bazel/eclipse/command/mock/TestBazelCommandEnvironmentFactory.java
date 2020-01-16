@@ -91,7 +91,7 @@ public class TestBazelCommandEnvironmentFactory {
             bazelExecutable.bazelExecutableFile);
         bazelCommandManager.setBazelExecutablePath(bazelExecutable.bazelExecutableFile.getAbsolutePath());
         
-        BazelWorkspace bazelWorkspace = new BazelWorkspace(testWorkspace.dirWorkspaceRoot, Mockito.mock(OperatingEnvironmentDetectionStrategy.class));
+        BazelWorkspace bazelWorkspace = new BazelWorkspace("test", testWorkspace.dirWorkspaceRoot, Mockito.mock(OperatingEnvironmentDetectionStrategy.class));
         this.globalCommandRunner = bazelCommandManager.getGlobalCommandRunner();
         this.bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
     }

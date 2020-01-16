@@ -11,16 +11,20 @@ public interface BazelWorkspaceMetadataStrategy {
     /**
      * Returns the execution root of the current Bazel workspace.
      */   
-    public File getBazelWorkspaceExecRoot();
+    public File computeBazelWorkspaceExecRoot();
     
     /**
      * Returns the output base of the current Bazel workspace.
      */    
-    public File getBazelWorkspaceOutputBase();
+    public File computeBazelWorkspaceOutputBase();
 
     /**
      * Returns the bazel-bin of the current Bazel workspace.
      */
-    public File getBazelWorkspaceBin();
+    public File computeBazelWorkspaceBin();
 
+    /**
+     * Returns the explicitly set option in the workspace config files (.bazelrc et al)
+     */
+    public void populateBazelWorkspaceCommandOptions(BazelWorkspaceCommandOptions commandOptions);
 }
