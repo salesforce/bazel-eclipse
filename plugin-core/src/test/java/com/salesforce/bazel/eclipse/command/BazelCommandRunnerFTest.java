@@ -45,10 +45,9 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.BazelCommandManager;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
+import com.salesforce.bazel.eclipse.mock.MockEclipse;
+import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 
 public class BazelCommandRunnerFTest {
     @Rule
@@ -71,8 +70,9 @@ public class BazelCommandRunnerFTest {
         BazelPluginActivator.getInstance().setBazelWorkspaceRootDirectory(mockEclipse.getBazelWorkspaceRoot());
         
         // run the method under test
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
-        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(BazelPluginActivator.getBazelWorkspaceRootDirectory());
+        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
         
         // verify
         assertNotNull(bazelWorkspaceCmdRunner);
@@ -82,8 +82,8 @@ public class BazelCommandRunnerFTest {
         
         // verify command runner 'bazel info' commands
         File expectedBazelOutputBase = mockEclipse.getBazelOutputBase();
-        assertEquals(expectedBazelOutputBase.getAbsolutePath(), bazelWorkspaceCmdRunner.getBazelWorkspaceOutputBase(null).getAbsolutePath());
+        assertEquals(expectedBazelOutputBase.getAbsolutePath(), bazelWorkspace.getBazelOutputBaseDirectory().getAbsolutePath());
         File expectedBazelExecutionRoot = mockEclipse.getBazelExecutionRoot();
-        assertEquals(expectedBazelExecutionRoot.getAbsolutePath(), bazelWorkspaceCmdRunner.getBazelWorkspaceExecRoot(null).getAbsolutePath());
+        assertEquals(expectedBazelExecutionRoot.getAbsolutePath(), bazelWorkspace.getBazelExecRootDirectory().getAbsolutePath());
     }
 }

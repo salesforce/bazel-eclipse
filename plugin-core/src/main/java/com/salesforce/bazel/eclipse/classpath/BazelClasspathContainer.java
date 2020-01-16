@@ -65,14 +65,15 @@ import org.osgi.service.prefs.BackingStoreException;
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
-import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.model.AspectOutputJarSet;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
+import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 
@@ -94,6 +95,9 @@ public class BazelClasspathContainer implements IClasspathContainer {
     private long cachePutTimeMillis = 0;
     
     private static List<BazelClasspathContainer> instances = new ArrayList<>();
+    
+    private ImplicitDependencyHelper implicitDependencyHelper = new ImplicitDependencyHelper();
+    
     
     public BazelClasspathContainer(IProject eclipseProject, IJavaProject eclipseJavaProject)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
@@ -163,8 +167,9 @@ public class BazelClasspathContainer implements IClasspathContainer {
             List<IClasspathEntry> classpathEntries = new ArrayList<>();
             Set<IPath> projectsAddedToClasspath = new HashSet<>();
     
+            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
             BazelCommandManager commandFacade = BazelPluginActivator.getBazelCommandManager();
-            BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = commandFacade.getWorkspaceCommandRunner(BazelPluginActivator.getBazelWorkspaceRootDirectory());
+            BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = commandFacade.getWorkspaceCommandRunner(bazelWorkspace);
             
             try {
                 IProject eclipseIProject = eclipseProject.getProject();
@@ -180,7 +185,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                         // no project found that houses the sources of this bazel target, add the jars to the classpath
                         // this means that this is an external jar, or a jar produced by a bazel target that was not imported
                         for (AspectOutputJarSet jarSet : packageInfo.getGeneratedJars()) {
-                            IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspaceCmdRunner, progressMonitor, jarSet); 
+                            IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspace, progressMonitor, jarSet); 
                             if (cpEntry != null) {
                                 classpathEntries.add(cpEntry);
                             } else {
@@ -189,7 +194,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                             }
                         }
                         for (AspectOutputJarSet jarSet : packageInfo.getJars()) {
-                            IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspaceCmdRunner, progressMonitor, jarSet);
+                            IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspace, progressMonitor, jarSet);
                             if (cpEntry != null) {
                                 classpathEntries.add(cpEntry);
                             } else {
@@ -197,6 +202,11 @@ public class BazelClasspathContainer implements IClasspathContainer {
                                 bazelWorkspaceCmdRunner.flushAspectInfoCache(bazelTargetsForProject);
                             }
                         }
+                        
+                        // some rule types have hidden dependencies that we need to add
+                        Set<IClasspathEntry> implicitDeps = implicitDependencyHelper.computeImplicitDependencies(eclipseIProject, packageInfo);
+                        classpathEntries.addAll(implicitDeps);
+                        
                     } else if (eclipseProject.getProject().getFullPath().equals(otherProject.getProject().getFullPath())) {
                         // the project referenced is actually the the current project that this classpath container is for - nothing to do
                     } else {
@@ -245,12 +255,13 @@ public class BazelClasspathContainer implements IClasspathContainer {
     }
 
     public boolean isValid() throws BackingStoreException, IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        File bazelWorkspaceRootDirectory = BazelPluginActivator.getBazelWorkspaceRootDirectory();
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        File bazelWorkspaceRootDirectory = bazelWorkspace.getBazelWorkspaceRootDirectory();
         if (bazelWorkspaceRootDirectory == null) {
             return false;
         }
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
-        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspaceRootDirectory);
+        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
         
         if (bazelWorkspaceCmdRunner != null) {
             if (this.eclipseProject.getName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME)) {
@@ -259,6 +270,9 @@ public class BazelClasspathContainer implements IClasspathContainer {
             List<String> targets =
                     BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(this.eclipseProject.getProject(), false);
             List<BazelMarkerDetails> details = bazelWorkspaceCmdRunner.runBazelBuild(targets, null, Collections.emptyList());
+            for (BazelMarkerDetails detail : details) {
+                BazelPluginActivator.error(detail.toString());
+            }
             return details.isEmpty();
 
         }
@@ -289,7 +303,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
         IWorkspaceRoot rootResource = eclipseWorkspace.getRoot();
         IProject[] projects = rootResource.getProjects();
 
-        String absoluteSourcePathString = BazelPluginActivator.getBazelWorkspaceRootDirectory().getAbsolutePath() + File.separator + sourcePath;
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        String absoluteSourcePathString = bazelWorkspace.getBazelWorkspaceRootDirectory().getAbsolutePath() + File.separator + sourcePath;
         Path absoluteSourcePath = new File(absoluteSourcePathString).toPath();
 
         for (IProject project : projects) {
@@ -341,11 +356,11 @@ public class BazelClasspathContainer implements IClasspathContainer {
         return false;
     }
 
-    private IClasspathEntry jarsToClasspathEntry(BazelWorkspaceCommandRunner bazelCommandRunner, WorkProgressMonitor progressMonitor, 
+    private IClasspathEntry jarsToClasspathEntry(BazelWorkspace bazelWorkspace, WorkProgressMonitor progressMonitor, 
             AspectOutputJarSet jarSet) {
         IClasspathEntry cpEntry = null;
-        File bazelOutputBase = bazelCommandRunner.getBazelWorkspaceOutputBase(progressMonitor);
-        File bazelExecRoot = bazelCommandRunner.getBazelWorkspaceExecRoot(progressMonitor);
+        File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
+        File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
         IPath jarPath = getJarPathOnDisk(bazelOutputBase, bazelExecRoot, jarSet.getJar());
         if (jarPath != null) {
             IPath srcJarPath = getJarPathOnDisk(bazelOutputBase, bazelExecRoot, jarSet.getSrcJar());
@@ -356,12 +371,12 @@ public class BazelClasspathContainer implements IClasspathContainer {
     }
 
     @SuppressWarnings("unused")
-    private IClasspathEntry[] jarsToClasspathEntries(BazelWorkspaceCommandRunner bazelCommandRunner, WorkProgressMonitor progressMonitor, 
+    private IClasspathEntry[] jarsToClasspathEntries(BazelWorkspace bazelWorkspace, WorkProgressMonitor progressMonitor, 
             Set<AspectOutputJarSet> jars) {
         IClasspathEntry[] entries = new IClasspathEntry[jars.size()];
         int i = 0;
-        File bazelOutputBase = bazelCommandRunner.getBazelWorkspaceOutputBase(progressMonitor);
-        File bazelExecRoot = bazelCommandRunner.getBazelWorkspaceExecRoot(progressMonitor);
+        File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
+        File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
         for (AspectOutputJarSet j : jars) {
             IPath jarPath = getJarPathOnDisk(bazelOutputBase, bazelExecRoot, j.getJar());
             if (jarPath != null) {

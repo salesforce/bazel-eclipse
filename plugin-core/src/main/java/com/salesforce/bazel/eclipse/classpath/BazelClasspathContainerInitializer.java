@@ -107,6 +107,8 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 return;
             }
             for(IProject project: importedProjects) {
+                // TODO we need a checkbox pref to disable this; if a user in the field hits an import bug, it may be useful for them
+                // to check the 'disable import cleanup on error' checkbox so they can at least get some usable projects out of their import
                 project.delete(true, null);
             }            
         }

@@ -25,8 +25,12 @@ package com.salesforce.bazel.eclipse.command.mock;
 
 import java.io.File;
 
+import org.mockito.Mockito;
+
 import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.eclipse.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.model.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
 
 /**
@@ -87,8 +91,9 @@ public class TestBazelCommandEnvironmentFactory {
             bazelExecutable.bazelExecutableFile);
         bazelCommandManager.setBazelExecutablePath(bazelExecutable.bazelExecutableFile.getAbsolutePath());
         
+        BazelWorkspace bazelWorkspace = new BazelWorkspace(testWorkspace.dirWorkspaceRoot, Mockito.mock(OperatingEnvironmentDetectionStrategy.class));
         this.globalCommandRunner = bazelCommandManager.getGlobalCommandRunner();
-        this.bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(testWorkspace.dirWorkspaceRoot);
+        this.bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
     }
     
 }
