@@ -61,14 +61,15 @@ import com.google.common.collect.Multimap;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
-import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
+import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 
 /**
@@ -92,7 +93,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         progressMonitor.beginTask("Bazel build", 1);
         
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
-        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(BazelPluginActivator.getBazelWorkspaceRootDirectory());
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
         
         try {
             boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project), progressMonitor, monitor);
@@ -117,7 +119,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         // TODO: revisit if we want to clean only once when multiple targets are selected
         
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
-        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(BazelPluginActivator.getBazelWorkspaceRootDirectory());
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
         
         if (bazelWorkspaceCmdRunner == null) {
             super.clean(monitor);

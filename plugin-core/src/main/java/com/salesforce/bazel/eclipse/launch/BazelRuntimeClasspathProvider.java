@@ -60,9 +60,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.BazelCommandManager;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 
 /**
  * Provide the runtime classpath for JUnit tests. These are obtained from the test rule's generated param files that
@@ -132,7 +131,8 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
             throws CoreException{
         List<IRuntimeClasspathEntry> result = new ArrayList<>();
         IJavaProject project = JavaRuntime.getJavaProject(configuration);
-        File base = getBazelWorkspaceExecRoot(project);
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();        
+        File base = bazelWorkspace.getBazelOutputBaseDirectory();
 
         String testClassName = configuration.getAttribute("org.eclipse.jdt.launching.MAIN_TYPE", (String) null);
         String suffix = getParamsJarSuffix(isSource);
@@ -194,40 +194,15 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
     File findParamsJar(IJavaProject project, String paramsName, String target) {
         String targetPath = target.split(":")[0];
         // testJar for bazel's iterative test rules
-        File paramsFile = new File(new File(new File(getBazelBin(project), targetPath), "src/test/java"), paramsName);
+        File bazelBinDir = BazelPluginActivator.getBazelWorkspace().getBazelBinDirectory();
+        File paramsFile = new File(new File(new File(bazelBinDir, targetPath), "src/test/java"), paramsName);
         if (!paramsFile.exists()) {
             // testJar for single test rule
             //TODO: Add support for test rules where testName is not the same as testClass 
             String testJarName = paramsName.substring(paramsName.lastIndexOf(File.separator)+1);
-            paramsFile = new File(new File(getBazelBin(project), targetPath), testJarName);
+            paramsFile = new File(new File(bazelBinDir, targetPath), testJarName);
         }
         return paramsFile;
-    }
-
-    /**
-     * Obtain the output base for the project as defined by bazel
-     * 
-     * @param project
-     * @return
-     */
-    File getBazelWorkspaceExecRoot(IJavaProject project) throws CoreException {
-        BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
-        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(BazelPluginActivator.getBazelWorkspaceRootDirectory());
-        
-        return bazelWorkspaceCmdRunner.getBazelWorkspaceOutputBase(null);
-    }
-
-    /**
-     * Obtain the bazel-bin directory under the workspace root
-     * 
-     * @param project
-     * @return
-     */
-    File getBazelBin(IJavaProject project) {
-        BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
-        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(BazelPluginActivator.getBazelWorkspaceRootDirectory());
-        
-        return bazelWorkspaceCmdRunner.getBazelWorkspaceBin(null);
     }
 
     /**

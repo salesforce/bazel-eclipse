@@ -51,6 +51,9 @@ import com.salesforce.bazel.eclipse.command.CommandBuilder;
 import com.salesforce.bazel.eclipse.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
+import com.salesforce.bazel.eclipse.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.model.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.eclipse.model.RealOperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferencePage;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -79,11 +82,11 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     private static BazelPluginActivator plugin;
 
     /**
-     * The location on disk that stores the Bazel workspace associated with the Eclipse workspace.
+     * The Bazel workspace that is in scope.
      * Currently, we only support one Bazel workspace in an Eclipse workspace so this is a static singleton.
      */
-    private static File bazelWorkspaceRootDirectory = null;
-
+    private static BazelWorkspace bazelWorkspace = null;
+    
     /**
      * Facade that enables the plugin to execute the bazel command line tool outside of a workspace
      */
@@ -103,6 +106,11 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * JavaCoreHelper is a useful singleton for working with Java projects in the Eclipse workspace
      */
     private static JavaCoreHelper javaCoreHelper;
+    
+    /**
+     * Looks up the operating environment (e.g. OS type)
+     */
+    private static OperatingEnvironmentDetectionStrategy osEnvStrategy;
 
     // LIFECYCLE
     
@@ -123,8 +131,9 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         CommandBuilder  commandBuilder = new ShellCommandBuilder(consoleFactory);
         ResourceHelper eclipseResourceHelper = new EclipseResourceHelper();
         JavaCoreHelper eclipseJavaCoreHelper = new EclipseJavaCoreHelper();
+        OperatingEnvironmentDetectionStrategy osEnvStrategy = new RealOperatingEnvironmentDetectionStrategy();
         
-        startInternal(aspectLocation, commandBuilder, consoleFactory, eclipseResourceHelper, eclipseJavaCoreHelper);
+        startInternal(aspectLocation, commandBuilder, consoleFactory, eclipseResourceHelper, eclipseJavaCoreHelper, osEnvStrategy);
     }
 
     /**
@@ -133,12 +142,13 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * the passed collaborators are all the real ones, when running mock tests the collaborators are mocks.
      */
     public void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory, 
-            ResourceHelper rh, JavaCoreHelper javac) throws Exception {
+            ResourceHelper rh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv) throws Exception {
 
         // global collaborators
         resourceHelper = rh;
         plugin = this;
         javaCoreHelper = javac;
+        osEnvStrategy = osEnv;
 
         // Get the bazel executable path from the settings, defaults to /usr/local/bin/bazel
         IPreferenceStore prefsStore =  resourceHelper.getPreferenceStore(this);
@@ -188,7 +198,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * related to Bazel or Bazel Java projects.
      */
     public static boolean hasBazelWorkspaceRootDirectory() {
-        return bazelWorkspaceRootDirectory != null;
+        return bazelWorkspace.hasBazelWorkspaceRootDirectory();
+    }
+
+    /**
+     * Returns the model abstraction for the Bazel workspace
+     */
+    public static BazelWorkspace getBazelWorkspace() {
+        return bazelWorkspace;
     }
 
     /**
@@ -196,38 +213,26 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * in this location. Prior to importing/opening a Bazel workspace, this location will be null
      */
     public static File getBazelWorkspaceRootDirectory() {
-        return bazelWorkspaceRootDirectory;
-    }
-
-    /**
-     * Returns the location on disk where the Bazel workspace is located. There must be a WORKSPACE file
-     * in this location. Prior to importing/opening a Bazel workspace, this location will be null
-     */
-    public static String getBazelWorkspaceRootDirectoryPath() {
-        if (bazelWorkspaceRootDirectory == null) {
-            new Throwable().printStackTrace();
-            BazelPluginActivator.error("BazelPluginActivator was asked for the Bazel workspace root directory before it is determined.");
-            return null;
-        }
-        return bazelWorkspaceRootDirectory.getAbsolutePath();
+        return bazelWorkspace.getBazelWorkspaceRootDirectory();
     }
 
     /**
      * Sets the location on disk where the Bazel workspace is located. There must be a WORKSPACE file
      * in this location. Changing this location is a big deal, so use this method only during setup/import.
      */
-    public void setBazelWorkspaceRootDirectory(File dir) {
-        File workspaceFile = new File(dir, "WORKSPACE");
+    public void setBazelWorkspaceRootDirectory(File rootDirectory) {
+        File workspaceFile = new File(rootDirectory, "WORKSPACE");
         if (!workspaceFile.exists()) {
             new Throwable().printStackTrace();
-            BazelPluginActivator.error("BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: "+dir.getAbsolutePath());
+            BazelPluginActivator.error("BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: "+rootDirectory.getAbsolutePath());
             return;
         }
-        bazelWorkspaceRootDirectory = dir;
+        bazelWorkspace = new BazelWorkspace(rootDirectory, osEnvStrategy);
+        bazelWorkspace.setBazelWorkspaceMetadataStrategy(getWorkspaceCommandRunner());
 
         // write it to the preferences file
         IPreferenceStore prefsStore =  resourceHelper.getPreferenceStore(this);
-        prefsStore.setValue(BAZEL_WORKSPACE_PATH_PREF_NAME, dir.getAbsolutePath());
+        prefsStore.setValue(BAZEL_WORKSPACE_PATH_PREF_NAME, rootDirectory.getAbsolutePath());
     }
     
     
@@ -244,8 +249,8 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      */
     public BazelWorkspaceCommandRunner getWorkspaceCommandRunner() {
         if (bazelWorkspaceCommandRunner == null) {
-            if (bazelWorkspaceRootDirectory != null) {
-                bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspaceRootDirectory);
+            if (bazelWorkspace.hasBazelWorkspaceRootDirectory()) {
+                bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
             }
         }
         return bazelWorkspaceCommandRunner;

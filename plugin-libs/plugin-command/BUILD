@@ -53,6 +53,7 @@ java_library(
     deps = [
         ":plugin-command",
         "//plugin-libs/plugin-abstractions",
+        "//plugin-libs/plugin-model",
         "//plugin-libs/plugin-testdeps",
 
         "//plugin-libs/plugin-testdeps:org_junit_junit",
@@ -94,9 +95,11 @@ java_test(
         "//plugin-libs/plugin-model",
         "//plugin-libs/plugin-testdeps",
 
+        "//plugin-libs/plugin-testdeps:com_google_truth",
+        "//plugin-libs/plugin-testdeps:net_bytebuddy_byte_buddy",
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
-        "//plugin-libs/plugin-testdeps:com_google_truth",
+        "//plugin-libs/plugin-testdeps:org_objenesis_objenesis",
     ],
 )
 
@@ -127,9 +130,11 @@ java_test(
         "//plugin-libs/plugin-model",
         "//plugin-libs/plugin-testdeps",
 
+        "//plugin-libs/plugin-testdeps:com_google_truth",
+        "//plugin-libs/plugin-testdeps:net_bytebuddy_byte_buddy",
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
-        "//plugin-libs/plugin-testdeps:com_google_truth",
+        "//plugin-libs/plugin-testdeps:org_objenesis_objenesis",
     ],
 )
 
@@ -144,8 +149,10 @@ java_test(
         "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-testdeps",
 
+        "//plugin-libs/plugin-testdeps:com_google_truth",
+        "//plugin-libs/plugin-testdeps:net_bytebuddy_byte_buddy",
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
-        "//plugin-libs/plugin-testdeps:com_google_truth",
+        "//plugin-libs/plugin-testdeps:org_objenesis_objenesis",
     ],
 )

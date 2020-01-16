@@ -76,6 +76,7 @@ import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfos;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
+import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
 /**
@@ -199,7 +200,11 @@ public class BazelEclipseProjectFactory {
         }
 
         for (BazelPackageInfo childPackageInfo : packageInfo.getChildPackageInfos()) {
-            importBazelWorkspacePackagesAsProjects(childPackageInfo, bazelWorkspaceRoot, importedProjectsList);
+            try {
+                importBazelWorkspacePackagesAsProjects(childPackageInfo, bazelWorkspaceRoot, importedProjectsList);
+            } catch (Exception anyE) {
+                anyE.printStackTrace();
+            }
         }
     }
 
@@ -514,8 +519,9 @@ public class BazelEclipseProjectFactory {
      */
     private static AspectPackageInfos precomputeBazelAspectsForWorkspace(IProject rootEclipseProject, List<BazelPackageInfo> selectedBazelPackages,
             WorkProgressMonitor progressMonitor) {
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
-        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(BazelPluginActivator.getBazelWorkspaceRootDirectory());
+        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
         // figure out which Bazel targets will be imported, and generated AspectPackageInfos for each
         // The AspectPackageInfos have useful information that we use during import

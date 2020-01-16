@@ -58,6 +58,7 @@ import com.salesforce.bazel.eclipse.logging.LoggerFacade;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
 import com.salesforce.bazel.eclipse.model.BazelOutputParser;
+import com.salesforce.bazel.eclipse.model.BazelWorkspaceMetadataStrategy;
 
 /**
  * An instance of the Bazel command interface for a specific workspace. Provides the API to run Bazel commands on a
@@ -66,7 +67,7 @@ import com.salesforce.bazel.eclipse.model.BazelOutputParser;
  * There is also an instance of this class that is not associated with a workspace (the global runner) but it is limited
  * in the commands it can run. It is intended only to run commands like the Bazel version check.
  */
-public class BazelWorkspaceCommandRunner {
+public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrategy {
     static final LogHelper LOG = LogHelper.log(BazelWorkspaceCommandRunner.class);;
     
     // WORKSPACE CONFIG
@@ -198,18 +199,15 @@ public class BazelWorkspaceCommandRunner {
     
     /**
      * Returns the execution root of the current Bazel workspace.
-     *
-     * @param progressMonitor
-     *            can be null
      */
-    public File getBazelWorkspaceExecRoot(WorkProgressMonitor progressMonitor) {
+    public File getBazelWorkspaceExecRoot() {
 
         if (bazelExecRootDirectory == null) {
             try {
                 ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
                 argBuilder.add("info").add("execution_root");
                 
-                List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, 
+                List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, 
                     argBuilder.build(), (t) -> t);
                 outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
                 bazelExecRootDirectory = new File(String.join("", outputLines));
@@ -222,17 +220,14 @@ public class BazelWorkspaceCommandRunner {
 
     /**
      * Returns the output base of the current Bazel workspace.
-     *
-     * @param progressMonitor
-     *            can be null
      */
-    public File getBazelWorkspaceOutputBase(WorkProgressMonitor progressMonitor) {
+    public File getBazelWorkspaceOutputBase() {
         if (bazelOutputBaseDirectory == null) {
             try {
                 ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
                 argBuilder.add("info").add("output_base");
                 
-                List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, 
+                List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, 
                     argBuilder.build(), (t) -> t);
                 outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
                 bazelOutputBaseDirectory = new File(String.join("", outputLines));
@@ -246,17 +241,14 @@ public class BazelWorkspaceCommandRunner {
 
     /**
      * Returns the bazel-bin of the current Bazel workspace.
-     *
-     * @param progressMonitor
-     *            can be null
      */
-    public File getBazelWorkspaceBin(WorkProgressMonitor progressMonitor) {
+    public File getBazelWorkspaceBin() {
         if (bazelBinDirectory == null) {
             try {
                 ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
                 argBuilder.add("info").add("bazel-bin");
                 
-                List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, 
+                List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, 
                     argBuilder.build(), (t) -> t);
                 outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
                 bazelBinDirectory = new File(String.join("", outputLines));

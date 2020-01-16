@@ -42,6 +42,7 @@ import java.util.TreeMap;
 
 import com.salesforce.bazel.eclipse.abstractions.BazelAspectLocation;
 import com.salesforce.bazel.eclipse.abstractions.CommandConsoleFactory;
+import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 
 /**
  * API for calling bazel commands.
@@ -92,12 +93,13 @@ public class BazelCommandManager {
     public BazelWorkspaceCommandRunner getGlobalCommandRunner() {
         return genericCommandRunner;
     }
-    
+
     /**
      * Returns a {@link BazelWorkspaceCommandRunner} for the given Eclipse workspace directory. It looks for the
      * enclosing workspace and returns the instance that corresponds to it. If not in a Bazel workspace, returns null.
      */
-    public BazelWorkspaceCommandRunner getWorkspaceCommandRunner(File bazelWorkspaceRootDirectory) {
+    public BazelWorkspaceCommandRunner getWorkspaceCommandRunner(BazelWorkspace bazelWorkspace) {
+        File bazelWorkspaceRootDirectory = bazelWorkspace.getBazelWorkspaceRootDirectory();
         BazelWorkspaceCommandRunner workspaceCommandRunner = workspaceCommandRunners.get(bazelWorkspaceRootDirectory);
         if (workspaceCommandRunner == null) {
             File bazelExecutable = null;
@@ -114,6 +116,7 @@ public class BazelCommandManager {
         }
         return workspaceCommandRunner;
     }
+    
 
     
     // BAZEL EXECUTABLE
