@@ -140,8 +140,13 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
         IRunnableWithProgress op = new IRunnableWithProgress() {
             @Override
             public void run(IProgressMonitor monitor) {
-                BazelEclipseProjectFactory.importWorkspace(workspaceRootProject, bazelPackagesToImport, progressMonitor,
-                    monitor);
+                try {
+                    BazelEclipseProjectFactory.importWorkspace(workspaceRootProject, bazelPackagesToImport, progressMonitor,
+                        monitor);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    MessageDialog.openError(new Shell(), "Error", e.getMessage());
+                }
             }
         };
 
@@ -149,7 +154,7 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
             new ProgressMonitorDialog(new Shell()).run(true, true, op);
         } catch (InvocationTargetException e) {
             MessageDialog.openError(new Shell(), "Error", e.getTargetException().getMessage());
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             MessageDialog.openError(new Shell(), "Error", e.getMessage());
         }
 
