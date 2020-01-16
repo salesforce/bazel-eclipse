@@ -202,13 +202,15 @@ public class BazelClasspathContainer implements IClasspathContainer {
                                 bazelWorkspaceCmdRunner.flushAspectInfoCache(bazelTargetsForProject);
                             }
                         }
+                                                
+                    } else if (eclipseProject.getProject().getFullPath().equals(otherProject.getProject().getFullPath())) {
+                        // the project referenced is actually the the current project that this classpath container is for
                         
                         // some rule types have hidden dependencies that we need to add
-                        Set<IClasspathEntry> implicitDeps = implicitDependencyHelper.computeImplicitDependencies(eclipseIProject, packageInfo);
+                        // if our Eclipse project has any of those rules, we need to add in the dependencies to our classpath
+                        Set<IClasspathEntry> implicitDeps = implicitDependencyHelper.computeImplicitDependencies(eclipseIProject, bazelWorkspace, packageInfo);
                         classpathEntries.addAll(implicitDeps);
                         
-                    } else if (eclipseProject.getProject().getFullPath().equals(otherProject.getProject().getFullPath())) {
-                        // the project referenced is actually the the current project that this classpath container is for - nothing to do
                     } else {
                         // otherProject != null
                         // add the referenced project to the classpath, directly as a project classpath entry
