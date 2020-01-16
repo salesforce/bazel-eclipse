@@ -67,7 +67,7 @@ public class BazelCommandRunnerFTest {
         MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_PriorToImport_JavaPackages(testTempDir, 5);
         
         // the Bazel commands will run after the bazel root directory is chosen in the UI, so simulate the selection here
-        BazelPluginActivator.getInstance().setBazelWorkspaceRootDirectory(mockEclipse.getBazelWorkspaceRoot());
+        BazelPluginActivator.getInstance().setBazelWorkspaceRootDirectory("test", mockEclipse.getBazelWorkspaceRoot());
         
         // run the method under test
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();

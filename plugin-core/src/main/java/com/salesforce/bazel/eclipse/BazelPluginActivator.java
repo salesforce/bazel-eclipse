@@ -50,6 +50,7 @@ import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.command.CommandBuilder;
 import com.salesforce.bazel.eclipse.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl;
+import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.model.OperatingEnvironmentDetectionStrategy;
@@ -169,7 +170,8 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         // Get the bazel workspace path from the settings, defaults to /usr/local/bin/bazel
         String bazelWorkspacePathFromPrefs = prefsStore.getString(BAZEL_WORKSPACE_PATH_PREF_NAME);
         if (bazelWorkspacePathFromPrefs != null && !bazelWorkspacePathFromPrefs.isEmpty()) {
-            this.setBazelWorkspaceRootDirectory(new File(bazelWorkspacePathFromPrefs));
+            String workspaceName = BazelEclipseProjectFactory.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
+            this.setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
         }
 }
     
@@ -220,14 +222,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * Sets the location on disk where the Bazel workspace is located. There must be a WORKSPACE file
      * in this location. Changing this location is a big deal, so use this method only during setup/import.
      */
-    public void setBazelWorkspaceRootDirectory(File rootDirectory) {
+    public void setBazelWorkspaceRootDirectory(String workspaceName, File rootDirectory) {
         File workspaceFile = new File(rootDirectory, "WORKSPACE");
         if (!workspaceFile.exists()) {
             new Throwable().printStackTrace();
             BazelPluginActivator.error("BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: "+rootDirectory.getAbsolutePath());
             return;
         }
-        bazelWorkspace = new BazelWorkspace(rootDirectory, osEnvStrategy);
+        bazelWorkspace = new BazelWorkspace(workspaceName, rootDirectory, osEnvStrategy);
         bazelWorkspace.setBazelWorkspaceMetadataStrategy(getWorkspaceCommandRunner());
 
         // write it to the preferences file
