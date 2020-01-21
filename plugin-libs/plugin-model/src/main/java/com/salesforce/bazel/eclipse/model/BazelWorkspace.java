@@ -69,7 +69,13 @@ public class BazelWorkspace {
 
     
     // CTORS AND INITIALIZERS
-    
+
+    public BazelWorkspace(String name, File bazelWorkspaceRootDirectory, OperatingEnvironmentDetectionStrategy osEnvStrategy,
+            BazelWorkspaceMetadataStrategy metadataStrategy) {
+        this(name, bazelWorkspaceRootDirectory, osEnvStrategy);
+        this.metadataStrategy = metadataStrategy;
+    }
+
     public BazelWorkspace(String name, File bazelWorkspaceRootDirectory, OperatingEnvironmentDetectionStrategy osEnvStrategy) {
         this.name = name;
         this.bazelWorkspaceRootDirectory = bazelWorkspaceRootDirectory;
