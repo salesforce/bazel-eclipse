@@ -113,7 +113,7 @@ public class BazelCommandExecutorTest {
         outputbaseDir.mkdirs();
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(workspaceDir, outputbaseDir).javaPackages(1).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
-        env.createTestEnvironment(workspace, testDir);
+        env.createTestEnvironment(workspace, testDir, null);
         
         return env;
     }

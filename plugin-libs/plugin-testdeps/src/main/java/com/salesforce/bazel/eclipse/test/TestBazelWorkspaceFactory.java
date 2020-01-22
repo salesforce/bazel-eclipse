@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,8 +23,13 @@ import java.util.TreeSet;
  */
 public class TestBazelWorkspaceFactory {
     
+    // INPUTS
     public String workspaceName = "test_workspace";
-
+    public Map<String, String> commandOptions = new HashMap<>();
+    public int numberJavaPackages = 0;
+    public int numberGenrulePackages = 0;
+    
+    // OUTPUTS
     // directories
     public final File dirWorkspaceRoot; // provided by test, will contain WORKSPACE and subdirs will have .java files and BUILD files
     public final File dirOutputBase;    // provided by test
@@ -34,10 +40,8 @@ public class TestBazelWorkspaceFactory {
     public File dirOutputPathPlatform;  // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild
     public File dirBazelBin;            // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild/bin
     public File dirBazelTestLogs;       // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild/testlogs
-
-    private int numberJavaPackages = 0;
-    private int numberGenrulePackages = 0;
     
+    // map of package path (projects/libs/javalib0) to the directory containing the package on the file system
     public Map<String, File> createdPackages = new TreeMap<>();
     // map of package path (projects/libs/javalib0) to the set of absolute paths for the aspect files for the package and deps
     public Map<String, Set<String>> aspectFileSets= new TreeMap<>();
@@ -79,6 +83,15 @@ public class TestBazelWorkspaceFactory {
         return this;
     }
     
+    /**
+     * Simplified construct similar to BazelWorkspaceCommandOptions. It allows you to create test workspaces
+     * with specific command option features enabled. 
+     */
+    public TestBazelWorkspaceFactory options(Map<String, String> options) {
+        this.commandOptions = options;
+        return this;
+    }
+    
     public TestBazelWorkspaceFactory build() throws Exception {
         
         // Create the outputbase structure
@@ -101,26 +114,40 @@ public class TestBazelWorkspaceFactory {
             throw anyE;
         }
         
+        // make the test runner jar file, just in case a project in this workspace uses it (see ImplicitDependencyHelper)
+        File testRunnerDir = new File(this.dirBazelBin, "external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools");
+        testRunnerDir.mkdirs();
+        File testRunnerJar = new File(testRunnerDir, "Runner_deploy-ijar.jar");
+        try {
+            testRunnerJar.createNewFile();
+            System.out.println("TESTRUNNER: created at: "+testRunnerJar.getAbsolutePath());
+        } catch (Exception anyE) {
+            System.err.println("Could not create the TestRunner jar file for the test Bazel workspace at location: "+testRunnerJar.getAbsolutePath());
+            anyE.printStackTrace();
+            throw anyE;
+        }
+        boolean explicitJavaTestDeps = "true".equals(commandOptions.get("explicit_java_test_deps"));
+        
         String previousJavaLibTarget = null;
         String previousAspectFilePath = null;
         for (int i=0; i<numberJavaPackages; i++) {
             String packageName = "javalib"+i;
             String packageRelativePath = libsRelativePath+"/"+packageName;
-            File javaLib = new File(libsDir, packageName);
-            javaLib.mkdir();
+            File javaPackageDir = new File(libsDir, packageName);
+            javaPackageDir.mkdir();
             
             // we will be collecting locations of Aspect json files for this package
             Set<String> packageAspectFiles = new TreeSet<>();
             
             // create the BUILD file
-            File buildFile = new File(javaLib, "BUILD");
+            File buildFile = new File(javaPackageDir, "BUILD");
             buildFile.createNewFile();
-            TestJavaRuleCreator.createJavaBuildFile(buildFile, packageName, i);
+            TestJavaRuleCreator.createJavaBuildFile(commandOptions, buildFile, packageName, i);
             
             // main source
             List<String> sourceFiles = new ArrayList<>();
             String srcMainPath = "src/main/java/com/salesforce/fruit"+i;
-            File javaSrcMainDir = new File(javaLib, srcMainPath);
+            File javaSrcMainDir = new File(javaPackageDir, srcMainPath);
             javaSrcMainDir.mkdirs();
             // Apple.java
             File javaFile1 = new File(javaSrcMainDir, "Apple"+i+".java");
@@ -136,7 +163,7 @@ public class TestBazelWorkspaceFactory {
             // main fruit source aspect
             String extraDep = previousJavaLibTarget != null ? "    \"//"+previousJavaLibTarget+"\",\n" : null;
             String aspectFilePath_mainsource = TestAspectFileCreator.createJavaAspectFile(dirOutputBase, packageRelativePath, 
-                packageName, packageName, extraDep, sourceFiles, true);
+                packageName, packageName, extraDep, sourceFiles, true, explicitJavaTestDeps);
             packageAspectFiles.add(aspectFilePath_mainsource);
             
             // add aspects for maven jars (just picked a couple of typical maven jars to use)
@@ -148,7 +175,7 @@ public class TestBazelWorkspaceFactory {
             // test source
             List<String> testSourceFiles = new ArrayList<>();
             String srcTestPath = "src/test/java/com/salesforce/fruit"+i;
-            File javaSrcTestDir = new File(javaLib, srcTestPath);
+            File javaSrcTestDir = new File(javaPackageDir, srcTestPath);
             javaSrcTestDir.mkdirs();
             File javaTestFile1 = new File(javaSrcTestDir, "Apple"+i+"Test.java");
             javaTestFile1.createNewFile();
@@ -160,16 +187,18 @@ public class TestBazelWorkspaceFactory {
             testSourceFiles.add(bananaTestSrc);
             
             // test fruit source aspect
-            String aspectFilePath_testsource = TestAspectFileCreator.createJavaAspectFile(dirOutputBase, libsRelativePath+"/"+packageName, packageName, packageName, 
-                null, testSourceFiles, false);
+            String aspectFilePath_testsource = TestAspectFileCreator.createJavaAspectFile(dirOutputBase, libsRelativePath+"/"+packageName, 
+                packageName, packageName, null, testSourceFiles, false, explicitJavaTestDeps);
             packageAspectFiles.add(aspectFilePath_testsource);
             
-            // add aspects for test maven jars
-            String aspectFilePath_junit = TestAspectFileCreator.createJavaAspectFileForMavenJar(dirOutputBase, "junit_junit", "junit-4.12");
-            packageAspectFiles.add(aspectFilePath_junit);
-            String aspectFilePath_hamcrest = TestAspectFileCreator.createJavaAspectFileForMavenJar(dirOutputBase, "org_hamcrest_hamcrest_core", "hamcrest-core-1.3");
-            packageAspectFiles.add(aspectFilePath_hamcrest);
-
+            // add aspects for test maven jars if we have explicit java test deps mode enabled
+            if (explicitJavaTestDeps) {
+                String aspectFilePath_junit = TestAspectFileCreator.createJavaAspectFileForMavenJar(dirOutputBase, "junit_junit", "junit-4.12");
+                packageAspectFiles.add(aspectFilePath_junit);
+                String aspectFilePath_hamcrest = TestAspectFileCreator.createJavaAspectFileForMavenJar(dirOutputBase, "org_hamcrest_hamcrest_core", "hamcrest-core-1.3");
+                packageAspectFiles.add(aspectFilePath_hamcrest);
+            }
+            
             // we chain the libs together to test inter project deps
             // add the previous aspect file
             if (previousAspectFilePath != null) {
@@ -180,7 +209,7 @@ public class TestBazelWorkspaceFactory {
             previousAspectFilePath = aspectFilePath_mainsource;
             
             // finish
-            createdPackages.put(packageName, javaLib);
+            createdPackages.put(packageName, javaPackageDir);
             aspectFileSets.put(packageRelativePath, packageAspectFiles);
         }
         
