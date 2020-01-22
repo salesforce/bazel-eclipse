@@ -3,9 +3,9 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Bazel Eclipse Model Plugin
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.model;singleton:=true
 Automatic-Module-Name: com.salesforce.bazel.eclipse.model
-Bundle-Version: 1.1.0.qualifier
-Export-Package:  com.salesforce.bazel.eclipse.model;version="1.1.0.qualifier",
- com.salesforce.bazel.eclipse.logging;version="1.1.0.qualifier"
+Bundle-Version: 1.0.2.qualifier
+Export-Package:  com.salesforce.bazel.eclipse.model;version="1.0.2.qualifier",
+ com.salesforce.bazel.eclipse.logging;version="1.0.2.qualifier"
 Import-Package: com.google.common.base,
  com.google.common.collect,
  com.salesforce.bazel.eclipse.logging,
