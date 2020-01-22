@@ -17,7 +17,7 @@ import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
 /**
  * Bazel generally requires BUILD file authors to list all dependencies explicitly.
  * However, there are a few legacy cases in which dependencies are implied.
- * For example, java_test implicitly brings in junit and hamcrest libraries.
+ * For example, java_test implicitly brings in junit, hamcrest, javax.annotation libraries.
  * <p>
  * This is unfortunate because external tools that need to construct the dependency
  * graph (ahem, that's us, for JDT) we need to know to append the implicit dependencies
@@ -57,9 +57,9 @@ public class ImplicitDependencyHelper {
             return deps;
         }
         
-        // HAMCREST and JUNIT
-        // These implicit deps come from the test runner.
-        // Ultimately we need to get this jar onto the classpath:
+        // HAMCREST, JUNIT, JAVAX.ANNOTATION
+        // These implicit deps are leaked into the classpath by the java_test test runner.
+        // To faithfully declare the classpath for Eclipse JDT, we ultimately we need to get this jar onto the JDT classpath:
         //     bazel-bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_darwin/java_tools/Runner_deploy-ijar.jar
         // which comes in from the transitive graph (not sure how the toolchain points to the TestRunner though):
         // java_test => @bazel_tools//tools/jdk:current_java_toolchain => @remote_java_tools_darwin//:toolchain  ?=> TestRunner 

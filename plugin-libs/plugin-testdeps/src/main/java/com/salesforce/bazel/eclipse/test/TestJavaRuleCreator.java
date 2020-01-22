@@ -52,7 +52,7 @@ public class TestJavaRuleCreator {
         sb.append("   visibility = [\"//visibility:public\"],\n");
         if (explicitJavaTestDeps) {
             // see ImplicitDependencyHelper.java for more details about this block
-            sb.append("   deps = [ \"@junit_junit//jar\", \"@org_hamcrest_hamcrest_core//jar\", \"@ch_qos_logback_logback_core//jar\", ],\n");
+            sb.append("   deps = [ \"@junit_junit//jar\", \"@org_hamcrest_hamcrest_core//jar\", ],\n");
         }
         sb.append(")");
         return sb.toString();
