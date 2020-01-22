@@ -193,7 +193,7 @@ public class BazelLauncherBuilderTest {
         outputbaseDir.mkdirs();
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(workspaceDir, outputbaseDir).javaPackages(3).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
-        env.createTestEnvironment(workspace, testDir);
+        env.createTestEnvironment(workspace, testDir, null);
         
         return env;
     }

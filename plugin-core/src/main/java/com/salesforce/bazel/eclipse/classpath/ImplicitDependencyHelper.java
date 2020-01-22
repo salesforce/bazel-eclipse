@@ -28,7 +28,7 @@ import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
  * considerations for this class.
  * <p>
  * This code is isolated from the classpath container code because this is somewhat of a
- * hack and it is nice to have it isolated.
+ * hack and it is nice to have it isolated. 
  */
 public class ImplicitDependencyHelper {
 
@@ -76,6 +76,8 @@ public class ImplicitDependencyHelper {
     String computeFilePathForRunnerJar(BazelWorkspace bazelWorkspace, AspectPackageInfo packageInfo) {
         // The IJ plugin gets this path somehow from query/aspect but we are going to wedge it in via path here since we need to
         // overhaul our query/aspect in the near future TODO stop using file system hacking for implicit deps
+        // Because of the way we are doing this, there is no aspect json file written on disk that we can consume.
+        // Just write the path to the file directly.
 
         File bazelBinDir = bazelWorkspace.getBazelBinDirectory();
         File testRunnerDir = new File(bazelBinDir, "external/bazel_tools/tools/jdk/_ijar/TestRunner");

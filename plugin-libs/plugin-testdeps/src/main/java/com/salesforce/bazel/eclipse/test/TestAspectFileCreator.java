@@ -18,7 +18,7 @@ public class TestAspectFileCreator {
      * @return the absolute File path to the file
      */
     static String createJavaAspectFile(File outputBase, String packageRelativePath, String packageName, String targetName, 
-            String extraDependencies, List<String> sources, boolean isJavaLibrary) {
+            String extraDependencies, List<String> sources, boolean isJavaLibrary, boolean explicitJavaTestDeps) {
 
         String aspectJsonFilename = targetName+".bzleclipse-build.json";
         
@@ -30,7 +30,8 @@ public class TestAspectFileCreator {
         if (isJavaLibrary) { // this boolean is not enough when we add java_binary, springboot
             json = createAspectJsonForJavaLibraryTarget(packageRelativePath, packageName, targetName, extraDependencies, sources);
         } else {
-            json = createAspectJsonForJavaTestTarget(packageRelativePath, packageName, targetName, targetName+"-test", extraDependencies, sources);
+            json = createAspectJsonForJavaTestTarget(packageRelativePath, packageName, targetName, targetName+"-test", 
+                extraDependencies, sources, explicitJavaTestDeps);
         }
         
         File aspectJsonFile = createJavaAspectFileWithThisJson(outputBase, packageRelativePath, aspectJsonFilename, json);
@@ -108,8 +109,15 @@ public class TestAspectFileCreator {
      * }
      */
     static String createAspectJsonForJavaTestTarget(String packageRelativePath, String packageName, String targetName, String testTargetName, 
-            String extraDependencies, List<String> sources) {
-        String dependencies = "\"@junit_junit//jar:jar\",\n    \"org_hamcrest_hamcrest_core//jar:jar\",\n    " +
+            String extraDependencies, List<String> sources, boolean explicitJavaTestDeps) {
+        String explicitDependencies = "";
+        if (explicitJavaTestDeps) {
+            // See ImplicitDependencyHelper.java
+            // if the workspace is configured to disallow implicit test deps, the BUILD file (and thus the aspect) needs to
+            // explicitly include junit/hamcrest
+            explicitDependencies = "\"@junit_junit//jar:jar\",\n    \"org_hamcrest_hamcrest_core//jar:jar\",\n    ";
+        }
+        String dependencies = explicitDependencies +
              "\":"+targetName+"\",\n";
         if (extraDependencies != null) {
             dependencies = dependencies + extraDependencies;
@@ -120,7 +128,7 @@ public class TestAspectFileCreator {
         String interfacejar = null;
         String sourcejar = "bazel-out/darwin-fastbuild/bin/"+packageRelativePath+"/lib"+testTargetName+"-src.jar";
         
-        return createAspectJsonForJavaArtifact(packageRelativePath+"/BUILD", dependencies, sources, mainClass, label, "java_library", jar, interfacejar, sourcejar);
+        return createAspectJsonForJavaArtifact(packageRelativePath+"/BUILD", dependencies, sources, mainClass, label, "java_test", jar, interfacejar, sourcejar);
         
     }   
 

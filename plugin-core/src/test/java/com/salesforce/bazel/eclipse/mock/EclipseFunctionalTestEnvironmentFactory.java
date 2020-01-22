@@ -27,7 +27,9 @@ package com.salesforce.bazel.eclipse.mock;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
 
@@ -54,14 +56,22 @@ public class EclipseFunctionalTestEnvironmentFactory {
      * <li>Everything else in base initialized state
      * </ul>
      */
-    public static MockEclipse createMockEnvironment_PriorToImport_JavaPackages(File testTempDir, int numberOfJavaPackages) throws Exception {
+    public static MockEclipse createMockEnvironment_PriorToImport_JavaPackages(File testTempDir, int numberOfJavaPackages,
+            boolean explicitJavaTestDeps) throws Exception {
         // build out a Bazel workspace with specified number of Java packages, and a couple of genrules packages just to test that they get ignored
         File wsDir = new File(testTempDir, MockEclipse.BAZEL_WORKSPACE_NAME);
         wsDir.mkdirs();
         File outputbaseDir = new File(testTempDir, "outputbase");
         outputbaseDir.mkdirs();
+        
+        // simulate flags from .bazelrc
+        Map<String, String> commandOptions = new HashMap<>();
+        if (explicitJavaTestDeps) {
+            commandOptions.put("explicit_java_test_deps", "true");
+        }
+        
         TestBazelWorkspaceFactory bazelWorkspaceCreator = new TestBazelWorkspaceFactory(wsDir, outputbaseDir).
-                javaPackages(numberOfJavaPackages).genrulePackages(2);
+                javaPackages(numberOfJavaPackages).genrulePackages(2).options(commandOptions);
         bazelWorkspaceCreator.build();
 
         // create the mock Eclipse runtime
@@ -79,9 +89,11 @@ public class EclipseFunctionalTestEnvironmentFactory {
      * <li>Each Bazel Java package is an imported Eclipse Java project with Bazel nature
      * </ul>
      */
-    public static MockEclipse createMockEnvironment_Imported_All_JavaPackages(File testTempDir, int numberOfJavaPackages, boolean computeClasspaths) throws Exception {
+    public static MockEclipse createMockEnvironment_Imported_All_JavaPackages(File testTempDir, int numberOfJavaPackages, 
+            boolean computeClasspaths, boolean explicitJavaTestDeps) throws Exception {
         // create base configuration, which includes the real bazel workspace on disk
-        MockEclipse mockEclipse = createMockEnvironment_PriorToImport_JavaPackages(testTempDir, numberOfJavaPackages);
+        MockEclipse mockEclipse = createMockEnvironment_PriorToImport_JavaPackages(testTempDir, numberOfJavaPackages,
+            explicitJavaTestDeps);
 
         // scan the bazel workspace filesystem to build the list of Java projects
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();

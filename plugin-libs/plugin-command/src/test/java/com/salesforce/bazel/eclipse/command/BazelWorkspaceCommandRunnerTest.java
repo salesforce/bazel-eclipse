@@ -65,7 +65,7 @@ public class BazelWorkspaceCommandRunnerTest {
         outputbaseDir.mkdirs();
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(workspaceDir, outputbaseDir).javaPackages(3).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
-        env.createTestEnvironment(workspace, testDir);
+        env.createTestEnvironment(workspace, testDir, null);
 
         // verify that the command runner has the Bazel exec path
         assertEquals(env.bazelExecutable.getAbsolutePath(), BazelWorkspaceCommandRunner.getBazelExecutablePath());
@@ -77,8 +77,8 @@ public class BazelWorkspaceCommandRunnerTest {
         targets.add("//projects/libs/javalib0:*");
         Map<String, AspectPackageInfo> aspectMap = workspaceRunner.getAspectPackageInfos("javalib0", targets, new MockWorkProgressMonitor(),
             "testWorkspaceRunner");
-        // aspect infos returned for: guava, slf4j, hamcrest, junit, javalib0, javalib0-test
-        assertEquals(6, aspectMap.size());
+        // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
+        assertEquals(4, aspectMap.size());
         
         // run a clean, should not throw an exception
         workspaceRunner.runBazelClean(new MockWorkProgressMonitor());

@@ -144,7 +144,10 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      */
     public void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory, 
             ResourceHelper rh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv) throws Exception {
-
+        // reset internal state (this is so tests run in a clean env)
+        bazelWorkspace = null;
+        bazelWorkspaceCommandRunner = null;
+        
         // global collaborators
         resourceHelper = rh;
         plugin = this;

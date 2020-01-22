@@ -66,7 +66,8 @@ public class BazelEclipseProjectFactoryFTest {
         // create the mock Eclipse runtime in the correct state, which is two java projects javalib0 and javalib1
         int numberOfJavaPackages = 2;
         boolean computeClasspaths = true;
-        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir, numberOfJavaPackages, computeClasspaths);
+        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(
+            testTempDir, numberOfJavaPackages, computeClasspaths, false);
         workspace_IProject = mockEclipse.getImportedProject("Bazel Workspace ("+MockEclipse.BAZEL_WORKSPACE_NAME+")");
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");

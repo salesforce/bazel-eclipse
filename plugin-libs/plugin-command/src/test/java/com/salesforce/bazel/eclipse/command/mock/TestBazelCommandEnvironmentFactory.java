@@ -24,6 +24,7 @@
 package com.salesforce.bazel.eclipse.command.mock;
 
 import java.io.File;
+import java.util.Map;
 
 import org.mockito.Mockito;
 
@@ -64,14 +65,14 @@ public class TestBazelCommandEnvironmentFactory {
         
         TestBazelWorkspaceFactory testWorkspace = new TestBazelWorkspaceFactory(workspaceDir, outputBase, "bazel_command_executor_test");
         testWorkspace.build();
-        createTestEnvironment(testWorkspace, tempDir);
+        createTestEnvironment(testWorkspace, tempDir, null);
     }
     
     /**
      * Creates a testing environment based on a test workspace passed in from the caller. If you are testing
      * commands in the context of actual Bazel packages (e.g. Java) this is the form to use.
      */
-    public void createTestEnvironment(TestBazelWorkspaceFactory testWorkspace, File tempDir) {
+    public void createTestEnvironment(TestBazelWorkspaceFactory testWorkspace, File tempDir, Map<String, String> commandOptions) {
         this.testWorkspace = testWorkspace;
         
         File execDir = new File(tempDir, "executable");
@@ -82,7 +83,7 @@ public class TestBazelCommandEnvironmentFactory {
         this.commandConsole = new MockCommandConsole();
 
         this.commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace.dirWorkspaceRoot, testWorkspace.dirOutputBase, 
-            testWorkspace.dirExecRoot, testWorkspace.dirBazelBin);
+            testWorkspace.dirExecRoot, testWorkspace.dirBazelBin, commandOptions);
         // when the workspace factory built out the Bazel workspace file system, it wrote a collection of aspect json files
         // we need to tell the MockCommandBuilder where they are, since it will need to return them in command results
         this.commandBuilder.addAspectJsonFileResponses(this.testWorkspace.aspectFileSets);
@@ -92,6 +93,8 @@ public class TestBazelCommandEnvironmentFactory {
         bazelCommandManager.setBazelExecutablePath(bazelExecutable.bazelExecutableFile.getAbsolutePath());
         
         BazelWorkspace bazelWorkspace = new BazelWorkspace("test", testWorkspace.dirWorkspaceRoot, Mockito.mock(OperatingEnvironmentDetectionStrategy.class));
+        bazelWorkspace.setBazelWorkspaceMetadataStrategy(bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace));
+        
         this.globalCommandRunner = bazelCommandManager.getGlobalCommandRunner();
         this.bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
     }

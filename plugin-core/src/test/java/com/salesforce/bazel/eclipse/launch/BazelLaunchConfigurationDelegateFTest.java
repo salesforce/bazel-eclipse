@@ -145,7 +145,8 @@ public class BazelLaunchConfigurationDelegateFTest {
         // create the mock Eclipse runtime in the correct state
         int numberOfJavaPackages = 2;
         boolean computeClasspaths = true; 
-        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir, numberOfJavaPackages, computeClasspaths);
+        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(
+            testTempDir, numberOfJavaPackages, computeClasspaths, false);
         
         return mockEclipse;
     }
