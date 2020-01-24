@@ -6,7 +6,7 @@
 <feature
       id="com.salesforce.bazel.eclipse.feature"
       label="Bazel Eclipse Feature"
-      version="1.0.3.qualifier"
+      version="1.0.4.qualifier"
       provider-name="Salesforce"
       >
 
