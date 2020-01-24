@@ -177,18 +177,18 @@ public class BazelWorkspaceAspectHelper {
         
         AspectPackageInfo aspectInfo = aspectInfoCache_current.get(target);
         if (aspectInfo != null) {
-            LOG.info("ASPECT CACHE HIT target: {}", target + logstr);
+            LOG.info("ASPECT CACHE HIT target: " + target + logstr);
             resultMap.put(target, aspectInfo);
             this.numberCacheHits++;
         } else {
-            LOG.info("ASPECT CACHE MISS target: {}", target + logstr);
+            LOG.info("ASPECT CACHE MISS target: " + target + logstr);
             List<String> lookupTargets = new ArrayList<>();
             lookupTargets.add(target);
             List<String> discoveredAspectFilePaths = generateAspectPackageInfoFiles(lookupTargets, progressMonitor);
             ImmutableMap<String, AspectPackageInfo> map = AspectPackageInfo.loadAspectFilePaths(discoveredAspectFilePaths);
             resultMap.putAll(map);
             for (String resultTarget : map.keySet()) {
-                LOG.info("ASPECT CACHE LOAD target: {}", resultTarget + logstr);
+                LOG.info("ASPECT CACHE LOAD target: " + resultTarget + logstr);
                 aspectInfoCache_current.put(resultTarget, map.get(resultTarget));
                 aspectInfoCache_lastgood.put(resultTarget, map.get(resultTarget));
             }
@@ -202,7 +202,7 @@ public class BazelWorkspaceAspectHelper {
                 if (aspectInfo != null) {
                     resultMap.put(target, aspectInfo);
                 } else {
-                    LOG.info("ASPECT CACHE FAIL target: {}", target + logstr);
+                    LOG.info("ASPECT CACHE FAIL target: " + target + logstr);
                 }
             }
         }

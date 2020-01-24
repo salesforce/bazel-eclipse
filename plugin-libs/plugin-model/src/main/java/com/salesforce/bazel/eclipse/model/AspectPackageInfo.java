@@ -57,15 +57,20 @@ import com.google.common.collect.ImmutableMap;
  * The JSON document format is like this:
  *
  * <pre>
- &#64;org_slf4j_slf4j_api//jar:jar=AspectPackageInfo(
-  label = @org_slf4j_slf4j_api//jar:jar,
-  location = external/org_slf4j_slf4j_api/jar/BUILD.bazel,
-  kind = java_import,
-  jars = [Jars(jar = external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar, ijar = bazel-out/darwin-fastbuild/genfiles/external/org_slf4j_slf4j_api/jar/_ijar/jar/external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25-ijar.jar)],
-  generatedJars = [],
-  deps = [],
-  sources = []
- )
+ {
+   "build_file_artifact_location":"helloworld/BUILD",
+   "dependencies":["//proto:helloworld_java_proto"],
+   "generated_jars":[],
+   "jars":[
+     {"interface_jar":"bazel-out/darwin-fastbuild/bin/helloworld/libhelloworld-hjar.jar",
+      "jar":"bazel-out/darwin-fastbuild/bin/helloworld/libhelloworld.jar",
+      "source_jar":"bazel-out/darwin-fastbuild/bin/helloworld/libhelloworld-src.jar"
+     }
+    ],
+    "kind":"java_library",
+    "label":"//helloworld:helloworld",
+    "sources":["helloworld/src/main/java/helloworld/HelloWorld.java"]
+ }
  * </pre>
  * <p>
  * See resources/bzleclipse_aspect.bzl for the code that creates the JSON files
