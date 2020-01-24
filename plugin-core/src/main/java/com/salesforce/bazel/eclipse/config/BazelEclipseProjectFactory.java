@@ -36,6 +36,7 @@
 package com.salesforce.bazel.eclipse.config;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -349,7 +350,13 @@ public class BazelEclipseProjectFactory {
             IPath realSourceDir = Path.fromOSString(bazelWorkspacePath + File.separator + path);
             IFolder projectSourceFolder =
                     createFoldersForRelativePackagePath(eclipseProject.getProject(), bazelPackageFSPath, path);
-            resourceHelper.createFolderLink(projectSourceFolder, realSourceDir, IResource.NONE, null);
+            try {
+                resourceHelper.createFolderLink(projectSourceFolder, realSourceDir, IResource.NONE, null);
+            } catch (Exception anyE) {
+                // this can happen in degenerate cases such as source directory is the root of the project
+                anyE.printStackTrace();
+                continue;
+            }
 
             IPath outputDir = null; // null is a legal value, it means use the default
             boolean isTestSource = false;
@@ -377,27 +384,28 @@ public class BazelEclipseProjectFactory {
 
     private static IFolder createFoldersForRelativePackagePath(IProject project, String bazelPackageFSPath,
             String packageSourceCodeFSRelativePath) {
-        // figure out the src folder path under the Bazel Package, typically src/[main|test]/java, but we don't have to
-        // assume/hardcode that here
+
         if (!packageSourceCodeFSRelativePath.startsWith(bazelPackageFSPath)) {
-            throw new IllegalStateException("src code path exepcted to be under bazel package path");
+            throw new IllegalStateException("src code path "+packageSourceCodeFSRelativePath+" expected to be under bazel package path "+bazelPackageFSPath);
         }
-        if (packageSourceCodeFSRelativePath.equals(bazelPackageFSPath)) {
-            throw new IllegalStateException("did not expect src code path to be equals to the bazel package path");
-        }
-        String sourceDirectoryPath = packageSourceCodeFSRelativePath.substring(bazelPackageFSPath.length() + 1); // +1 for '/'
-        String[] pathComponents = sourceDirectoryPath.split(File.separator);
+
         IFolder currentFolder = null;
-        for (int i = 0; i < pathComponents.length; i++) {
-            String pathComponent = pathComponents[i];
-            if (currentFolder == null) {
-                currentFolder = project.getFolder(pathComponent);
-            } else {
-                currentFolder = currentFolder.getFolder(pathComponent);
-            }
-            if (i < (pathComponents.length - 1)) {
-                // don't create the last folder - that happens as part of "linking" it
-                create(currentFolder);
+        if (packageSourceCodeFSRelativePath.equals(bazelPackageFSPath)) {
+            currentFolder = project.getFolder(packageSourceCodeFSRelativePath);
+        } else {
+            String sourceDirectoryPath = packageSourceCodeFSRelativePath.substring(bazelPackageFSPath.length() + 1); // +1 for '/'
+            String[] pathComponents = sourceDirectoryPath.split(File.separator);
+            for (int i = 0; i < pathComponents.length; i++) {
+                String pathComponent = pathComponents[i];
+                if (currentFolder == null) {
+                    currentFolder = project.getFolder(pathComponent);
+                } else {
+                    currentFolder = currentFolder.getFolder(pathComponent);
+                }
+                if (i < (pathComponents.length - 1)) {
+                    // don't create the last folder - that happens as part of "linking" it
+                    create(currentFolder);
+                }
             }
         }
         return currentFolder;
@@ -487,9 +495,11 @@ public class BazelEclipseProjectFactory {
 
         // add this node buildable target
         String bazelPackageRootDirectory = packageNode.getWorkspaceRootDirectory().getAbsolutePath();
+        File packageDirectory = new File(packageNode.getWorkspaceRootDirectory(), packageNode.getBazelPackageFSRelativePath());
 
         // TODO here is where we assume that the Java project is conforming  NON_CONFORMING PROJECT SUPPORT
         // https://git.soma.salesforce.com/services/bazel-eclipse/blob/master/docs/conforming_java_packages.md
+        // tracked as ISSUE #8  https://github.com/salesforce/bazel-eclipse/issues/8
         String mainSrcRelPath = packageNode.getBazelPackageFSRelativePath() + File.separator + "src" + File.separator
                 + "main" + File.separator + "java";
         File mainSrcDir = new File(bazelPackageRootDirectory + File.separator + mainSrcRelPath);
@@ -504,6 +514,11 @@ public class BazelEclipseProjectFactory {
             packageSourceCodeFSPaths.add(testSrcRelPath);
             foundSourceCodePaths = true;
         }
+        
+        // proto files are generally in the toplevel folder, lets check for those now
+        if (packageDirectory.list(new BEFSourceCodeFilter()).length > 0) {
+            packageSourceCodeFSPaths.add(packageNode.getBazelPackageFSRelativePath());
+        }
 
         if (foundSourceCodePaths) {
             BazelLabel packageTarget = new BazelLabel(packageNode.getBazelPackageName());
@@ -513,6 +528,19 @@ public class BazelEclipseProjectFactory {
                 packageTarget = packageTarget.toPackageWildcardLabel();
             }
             bazelTargets.add(packageTarget.getLabel());
+        }
+    }
+    
+    /**
+     * This eventually looks for java files when we implement https://github.com/salesforce/bazel-eclipse/issues/8
+     */
+    private static class BEFSourceCodeFilter implements FilenameFilter {
+        @Override
+        public boolean accept(File dir, String name) {
+            if (name.endsWith(".proto")) {
+                return true;
+            }
+            return false;
         }
     }
 

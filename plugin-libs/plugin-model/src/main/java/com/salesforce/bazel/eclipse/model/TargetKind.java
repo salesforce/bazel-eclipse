@@ -89,6 +89,46 @@ public enum TargetKind {
         public boolean isTestable() {
             return true;
         }
+    },
+    
+    JAVA_PROTO_LIBRARY("java_proto_library") {
+
+        @Override
+        public boolean isRunnable() {
+            return false;
+        }
+
+        @Override
+        public boolean isTestable() {
+            return false;
+        }
+    },
+    
+    JAVA_LITE_PROTO_LIBRARY("java_lite_proto_library") {
+
+        @Override
+        public boolean isRunnable() {
+            return false;
+        }
+
+        @Override
+        public boolean isTestable() {
+            return false;
+        }
+    },
+    
+    
+    JAVA_GRPC_LIBRARY("java_grpc_library") {
+
+        @Override
+        public boolean isRunnable() {
+            return false;
+        }
+
+        @Override
+        public boolean isTestable() {
+            return false;
+        }
     };
     
     private final String targetKind;
