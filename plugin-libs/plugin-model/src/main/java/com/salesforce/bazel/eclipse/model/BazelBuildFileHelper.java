@@ -53,11 +53,10 @@ public class BazelBuildFileHelper {
      * The line must begin with one of these tokens (leading whitespace is ignored). This prevents false positives when
      * comments include one of these tokens. Also, this means that just loading a Java rule in a load() statement is not
      * enough to trigger the detector.
-     * <p>
-     * If you change the contents of this list, please also update TestBazelWorkspaceCreator.java.
      */
     public static final String[] JAVA_PROJECT_INDICATORS =
-            { "java_binary", "java_library", "java_test", "java_web_test_suite", "springboot", "springboot_test" };
+            { "java_binary", "java_library", "java_test", "java_web_test_suite", "springboot", "springboot_test", 
+                    "java_proto_library", "java_lite_proto_library", "java_grpc_library" };
 
     /**
      * Parses a File, presumed to be a Bazel BUILD file, looking for indications that it contains Java rules.
