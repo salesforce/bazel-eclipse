@@ -45,6 +45,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
 /**
@@ -91,6 +92,16 @@ public class EclipseResourceHelper implements ResourceHelper {
         }
         
         return eclipseProjectPrefs;
+    }
+    
+    @Override
+    public boolean isBazelRootProject(IProject project) {
+        try {
+            // fix to not be based on string comparison?
+            return project.getDescription().getName().startsWith(BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME);
+        } catch (CoreException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     /**

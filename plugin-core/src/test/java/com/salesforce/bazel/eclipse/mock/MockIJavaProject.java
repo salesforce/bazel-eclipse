@@ -109,7 +109,7 @@ public class MockIJavaProject implements IJavaProject {
             // not consistent with real Eclipse so we should investigate
             
             try {
-              BazelClasspathContainer classpathContainer = new BazelClasspathContainer(iproject, this);
+              BazelClasspathContainer classpathContainer = new BazelClasspathContainer(iproject);
               this.resolvedEntries = classpathContainer.getClasspathEntries();
             } catch (Exception anyE) {
               throw new IllegalStateException(anyE);

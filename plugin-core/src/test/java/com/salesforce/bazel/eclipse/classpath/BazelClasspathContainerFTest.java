@@ -38,6 +38,8 @@ package com.salesforce.bazel.eclipse.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.util.Set;
@@ -54,13 +56,13 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
 public class BazelClasspathContainerFTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
     
     private IProject workspace_IProject;
-    private IJavaProject workspace_JavaIProject;
     private IProject javalib0_IProject;
     private IJavaProject javalib0_IJavaProject;
     private IProject javalib1_IProject;
@@ -190,10 +192,12 @@ public class BazelClasspathContainerFTest {
     public void testClasspath_BazelWorkspaceProject() throws Exception {
         boolean explicitJavaTestDeps = false;
         setupMockEnvironmentForClasspathTest("tcpbwp", explicitJavaTestDeps);
-                
-        BazelClasspathContainer classpathContainer = new BazelClasspathContainer(workspace_IProject, workspace_JavaIProject);
+        ResourceHelper resourceHelper = mock(ResourceHelper.class);
+        when(resourceHelper.isBazelRootProject(workspace_IProject)).thenReturn(true);
+
+        BazelClasspathContainer classpathContainer = new BazelClasspathContainer(workspace_IProject, resourceHelper);
         IClasspathEntry[] entries = classpathContainer.getClasspathEntries();
-        
+
         assertNotNull(entries);
         assertEquals(0, entries.length);
     }
@@ -216,7 +220,6 @@ public class BazelClasspathContainerFTest {
             testTempDir, numberOfJavaPackages, computeClasspaths, explicitJavaTestDeps);
         
         workspace_IProject = mockEclipse.getImportedProject("Bazel Workspace ("+MockEclipse.BAZEL_WORKSPACE_NAME+")");
-        workspace_JavaIProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(workspace_IProject);
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");
         javalib0_IJavaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(javalib0_IProject);
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");

@@ -117,7 +117,6 @@ public class BazelEclipseProjectFactory {
 
         // TODO change this to do import off of the UI thread https://github.com/salesforce/bazel-eclipse/issues/49
 
-        URI eclipseProjectLocation = null;
         String bazelWorkspaceRoot = bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory().getAbsolutePath();
         File bazelWorkspaceRootDirectory = new File(bazelWorkspaceRoot);
 
@@ -126,7 +125,6 @@ public class BazelEclipseProjectFactory {
         subMonitor.split(1);
 
         String bazelWorkspaceName = getBazelWorkspaceName(bazelWorkspaceRoot);
-        String eclipseProjectNameForBazelWorkspace = BazelNature.BAZELWORKSPACE_PROJECT_BASENAME+" (" + bazelWorkspaceName + ")";
 
         // Many collaborators need the Bazel workspace directory location, so we stash it in an accessible global location
         // currently we only support one Bazel workspace in an Eclipse workspace
@@ -139,17 +137,11 @@ public class BazelEclipseProjectFactory {
         BazelClasspathContainerInitializer.isCorrupt.set(false);
 
         // TODO send this message to the EclipseConsole so the user actually sees it
-        LOG.info("Starting import of [{}]. This may take some time, please be patient.",
-            eclipseProjectNameForBazelWorkspace);
+        LOG.info("Starting import of [{}]. This may take some time, please be patient.", bazelWorkspaceName);
 
         // create the Eclipse project for the Bazel workspace (directory that contains the WORKSPACE file)
-        IProject rootEclipseProject = BazelEclipseProjectFactory.createEclipseProjectForBazelPackage(
-            eclipseProjectNameForBazelWorkspace, eclipseProjectLocation, bazelWorkspaceRoot, "",
-            Collections.emptyList(), Collections.emptyList(), JAVA_LANG_VERSION);
-        if (rootEclipseProject == null) {
-            throw new RuntimeException(
-                    "Could not create the root workspace project. Look back in the log for more details.");
-        }
+        IProject rootEclipseProject = createEclipseRootWorkspaceProject(bazelWorkspaceName, bazelWorkspaceRoot, 
+            JAVA_LANG_VERSION, selectedBazelPackages);
         List<IProject> importedProjectsList = new ArrayList<>();
         importedProjectsList.add(rootEclipseProject);
 
@@ -215,6 +207,22 @@ public class BazelEclipseProjectFactory {
     }
 
     /**
+     * Creates the root project that contains the WORKSPACE file.
+     */
+    private static IProject createEclipseRootWorkspaceProject(String bazelWorkspaceName, String bazelWorkspaceRoot, int javaLanguageVersion, List<BazelPackageInfo> importedBazelPackages) {
+        String rootProjectName = BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME+" (" + bazelWorkspaceName + ")";
+        final URI eclipseProjectLocation = null; // let Eclipse use the default location
+        final String packageFSPath = ""; // the root
+        IProject rootProject = createEclipseProjectForBazelPackage(rootProjectName, eclipseProjectLocation, bazelWorkspaceRoot, packageFSPath,
+            Collections.emptyList(), Collections.emptyList(), javaLanguageVersion);
+        if (rootProject == null) {
+            throw new IllegalStateException("Could not create the root workspace project. Look back in the log for more details.");            
+        }                
+        linkFiles(bazelWorkspaceRoot, packageFSPath, rootProject, "WORKSPACE");                
+        return rootProject;
+    }
+    
+    /**
      * Create a Bazel Eclipse project. This method adds the natures to the project, saves the list of targets and the
      * workspace root to the project settings, make Bazel the default builder instead of ECJ and create the classpath
      * using ide build informations from Bazel.
@@ -235,7 +243,7 @@ public class BazelEclipseProjectFactory {
      * @param javaLanguageVersion
      *            the Java version to use in the classpath
      */
-    public static IProject createEclipseProjectForBazelPackage(String projectName, URI eclipseProjectLocation,
+    private static IProject createEclipseProjectForBazelPackage(String projectName, URI eclipseProjectLocation,
             String bazelWorkspaceRoot, String packageFSPath, List<String> packageSourceCodeFSPaths,
             List<String> bazelTargets, int javaLanguageVersion) {
 
@@ -264,7 +272,7 @@ public class BazelEclipseProjectFactory {
                 eclipseJavaProject, javaLanguageVersion);
 
             // lets link to (== include in the project) some well known files
-            linkFiles(bazelWorkspaceRoot, packageFSPath, eclipseProject, "WORKSPACE", "BUILD");
+            linkFiles(bazelWorkspaceRoot, packageFSPath, eclipseProject, "BUILD");
         } catch (CoreException e) {
             LOG.error(e.getMessage(), e);
             eclipseProject = null;

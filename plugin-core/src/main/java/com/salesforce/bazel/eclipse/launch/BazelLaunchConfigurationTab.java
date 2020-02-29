@@ -60,7 +60,6 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.TypedBazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
@@ -232,7 +231,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         ElementListSelectionDialog dialog = new ElementListSelectionDialog(getShell(), BAZEL_PROJECT_LABEL_PROVIDER);
         dialog.setTitle("Select Project");
         dialog.setMessage("Select Project");
-        dialog.setElements(BazelEclipseProjectSupport.getAllJavaBazelProjects());
+        dialog.setElements(BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects());
 
         IJavaProject javaProject = getSelectedProject();
         if (javaProject != null) {
