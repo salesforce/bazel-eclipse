@@ -177,6 +177,11 @@ public interface ResourceHelper {
     IResource findMemberInWorkspace(IWorkspaceRoot workspaceRoot, IPath path);
     
     /**
+     * Returns true if the specified project is the special root project that represents the Bazel Workspace.
+     */
+    boolean isBazelRootProject(IProject project);
+    
+    /**
      * Gets the preferences object from the IProject
      */
     Preferences getProjectBazelPreferences(IProject project);

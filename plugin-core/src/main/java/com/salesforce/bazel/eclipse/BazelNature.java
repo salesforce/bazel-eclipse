@@ -47,12 +47,6 @@ public class BazelNature implements IProjectNature {
     public static final String BAZEL_NATURE_ID = "com.salesforce.bazel.eclipse.bazelNature"; //$NON-NLS-1$
     private IProject project;
     
-    /**
-     * We create a special Eclipse project to represent the Bazel workspace. This is the base name of the project.
-     * The actual name of the workspace is added to this string, like "Bazel Workspace (acme)"
-     */
-    public static final String BAZELWORKSPACE_PROJECT_BASENAME = "Bazel Workspace";
-
     @Override
     public void configure() throws CoreException {
         // TODO we aren't doing anything right now for BazelNature configure hook, seems like it should be used for something

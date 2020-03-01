@@ -62,7 +62,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
-import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
@@ -88,8 +87,9 @@ public class BazelClasspathContainer implements IClasspathContainer {
 
     private final IPath eclipseProjectPath;
     private final IProject eclipseProject;
-    private final IJavaProject eclipseJavaProject;
     private final String eclipseProjectName;
+    private final boolean eclipseProjectIsRoot;
+    private final ResourceHelper resourceHelper;
     
     private IClasspathEntry[] cachedEntries;
     private long cachePutTimeMillis = 0;
@@ -98,14 +98,20 @@ public class BazelClasspathContainer implements IClasspathContainer {
     
     private ImplicitDependencyHelper implicitDependencyHelper = new ImplicitDependencyHelper();
     
+    public BazelClasspathContainer(IProject eclipseProject)
+            throws IOException, InterruptedException, BackingStoreException, JavaModelException,
+            BazelCommandLineToolConfigurationException {
+        this(eclipseProject, BazelPluginActivator.getResourceHelper());
+    }
     
-    public BazelClasspathContainer(IProject eclipseProject, IJavaProject eclipseJavaProject)
+    BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
         this.eclipseProject = eclipseProject;
-        this.eclipseJavaProject = eclipseJavaProject;
         this.eclipseProjectName = eclipseProject.getName();
         this.eclipseProjectPath = eclipseProject.getLocation();
+        this.eclipseProjectIsRoot = resourceHelper.isBazelRootProject(eclipseProject);
+        this.resourceHelper = resourceHelper;
         
         instances.add(this);
     }
@@ -157,7 +163,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
             // TODO figure out a way to get access to an Eclipse progress monitor here
             WorkProgressMonitor progressMonitor = new EclipseWorkProgressMonitor(null);
     
-            if (this.eclipseJavaProject.getElementName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME)) {
+            if (this.eclipseProjectIsRoot) {
                 // this project is the artificial container to hold Bazel workspace scoped assets (e.g. the WORKSPACE file)
                 return new IClasspathEntry[] {};
             }
@@ -266,7 +272,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
         
         if (bazelWorkspaceCmdRunner != null) {
-            if (this.eclipseProject.getName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME)) {
+            if (this.eclipseProjectIsRoot) {
                 return true;
             }
             List<String> targets =
@@ -299,9 +305,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
     private IJavaProject getSourceProjectForSourcePath(BazelWorkspaceCommandRunner bazelCommandRunner, String sourcePath) {
 
         // TODO this code is messy, why get workspace root two different ways, and is there a better way to handle source paths?
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-        IWorkspaceRoot eclipseWorkspaceRoot = resourceHelper.getEclipseWorkspaceRoot();
-        IWorkspace eclipseWorkspace = resourceHelper.getEclipseWorkspace();
+        IWorkspaceRoot eclipseWorkspaceRoot = this.resourceHelper.getEclipseWorkspaceRoot();
+        IWorkspace eclipseWorkspace = this.resourceHelper.getEclipseWorkspace();
         IWorkspaceRoot rootResource = eclipseWorkspace.getRoot();
         IProject[] projects = rootResource.getProjects();
 
@@ -320,7 +325,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 if (entry.getEntryKind() != IClasspathEntry.CPE_SOURCE) {
                     continue;
                 }
-                IResource res = BazelPluginActivator.getResourceHelper().findMemberInWorkspace(eclipseWorkspaceRoot, entry.getPath());
+                IResource res = this.resourceHelper.findMemberInWorkspace(eclipseWorkspaceRoot, entry.getPath());
                 if (res == null) {
                     continue;
                 }
@@ -429,8 +434,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
      * References are used by Eclipse code refactoring among other things. 
      */
     private void addProjectReference(IProject thisProject, IProject thatProject) {
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-        IProjectDescription projectDescription =  resourceHelper.getProjectDescription(thisProject);
+        IProjectDescription projectDescription = this.resourceHelper.getProjectDescription(thisProject);
         IProject[] existingRefsArray = projectDescription.getReferencedProjects();
         boolean hasRef = false;
         String otherProjectName = thatProject.getName();

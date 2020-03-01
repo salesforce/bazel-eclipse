@@ -45,6 +45,11 @@ public class MockJavaCoreHelper implements JavaCoreHelper {
     Map<String, MockIJavaProject> javaProjects = new TreeMap<>();
     
     // IMPLEMENTED METHODS
+
+    @Override
+    public IJavaProject[] getAllBazelJavaProjects() {
+        return javaProjects.keySet().toArray(new IJavaProject[] {});
+    }
     
     @Override
     public IJavaProject getJavaProjectForProject(IProject project) {
@@ -101,11 +106,6 @@ public class MockJavaCoreHelper implements JavaCoreHelper {
     @Override
     public IClasspathEntry newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath) {
         return new MockIClasspathEntry(IClasspathEntry.CPE_LIBRARY, path);
-    }
-
-    @Override
-    public IJavaProject[] getAllJavaProjects() {
-        return javaProjects.keySet().toArray(new IJavaProject[] {});
     }
     
     // UNIMPLEMENTED METHODS

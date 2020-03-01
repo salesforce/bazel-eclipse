@@ -23,8 +23,12 @@
  */
 package com.salesforce.bazel.eclipse.runtime.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClasspathAttribute;
@@ -35,8 +39,10 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
+import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
 /**
  * Facade for the Eclipse JavaCore singleton.
@@ -108,12 +114,25 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
         return JavaCore.newLibraryEntry(path, sourceAttachmentPath, sourceAttachmentRootPath);
     }
 
-    public IJavaProject[] getAllJavaProjects() {
-        IWorkspaceRoot eclipseWorkspaceRoot = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot();
+    @Override
+    public IJavaProject[] getAllBazelJavaProjects() {
+        // cache all of this?
+        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
+        IWorkspaceRoot eclipseWorkspaceRoot = resourceHelper.getEclipseWorkspaceRoot();
         try {
             IJavaModel eclipseWorkspaceJavaModel = this.getJavaModelForWorkspace(eclipseWorkspaceRoot); 
-            return eclipseWorkspaceJavaModel.getJavaProjects();
-        } catch (JavaModelException ex) {
+            IJavaProject[] javaProjects = eclipseWorkspaceJavaModel.getJavaProjects();
+            List<IJavaProject> bazelProjects = new ArrayList<>(javaProjects.length - 1); // -1 because the root project will be excluded, most likely all other projects qualify
+            for (IJavaProject candidate : javaProjects) {
+                IProject p = candidate.getProject();
+                if (p.getNature(BazelNature.BAZEL_NATURE_ID) != null) {
+                    if (!resourceHelper.isBazelRootProject(p)) {
+                        bazelProjects.add(candidate);
+                    }
+                }
+            }
+            return bazelProjects.toArray(new IJavaProject[bazelProjects.size()]);
+        } catch (CoreException ex) {
             throw new IllegalStateException(ex);
         }
     }

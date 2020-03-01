@@ -33,18 +33,14 @@
  */
 package com.salesforce.bazel.eclipse.config;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.preferences.IScopeContext;
-import org.eclipse.jdt.core.IJavaProject;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
 import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 
 /**
@@ -83,20 +79,6 @@ public class BazelEclipseProjectSupport {
     }
     
     /**
-     * Returns all Java Projects that have a Bazel Nature.
-     */
-    public static IJavaProject[] getAllJavaBazelProjects() {
-        IJavaProject[] javaProjects = BazelPluginActivator.getJavaCoreHelper().getAllJavaProjects();
-        List<IJavaProject> bazelProjects = new ArrayList<>(javaProjects.length);
-        for (IJavaProject project : javaProjects) {
-            if (isBazelProject(project.getProject())) {
-                bazelProjects.add(project);
-            }
-        }
-        return bazelProjects.toArray(new IJavaProject[bazelProjects.size()]);
-    }
-
-    /**
      * List of Bazel build flags for this Eclipse project, taken from the project configuration
      */
     public static List<String> getBazelBuildFlagsForEclipseProject(IProject eclipseProject) {
@@ -122,13 +104,4 @@ public class BazelEclipseProjectSupport {
             throw new IllegalStateException(ex);
         }
     }
-
-    private static boolean isBazelProject(IProject project) {
-        try {
-            return project.getNature(BazelNature.BAZEL_NATURE_ID) != null;
-        } catch (CoreException ex) {
-            return false;
-        }
-    }
-
 }

@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -184,7 +183,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private static Set<IProject> getDownstreamProjectsOf(IProject upstream) {
         Set<IProject> downstreams = new HashSet<>();
-        for (IJavaProject project : getAllJavaProjects()) {
+        for (IJavaProject project : BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects()) {
             try {
                 for (String requiredProjectName : project.getRequiredProjectNames()) {
                     if (upstream.getProject().getName().equals(requiredProjectName)) {
@@ -196,15 +195,6 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             }
         }
         return downstreams;
-    }
-
-    private static IJavaProject[] getAllJavaProjects() {
-        IWorkspaceRoot workspaceRoot = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot();
-        try {
-            return BazelPluginActivator.getJavaCoreHelper().getJavaModelForWorkspace(workspaceRoot).getJavaProjects();
-        } catch (JavaModelException ex) {
-            throw new IllegalStateException(ex);
-        }
     }
 
     private void publishProblemMarkers(IProject project, IProgressMonitor monitor, Collection<BazelMarkerDetails> errors, Collection<BazelLabel> labels) {

@@ -99,6 +99,11 @@ public class MockResourceHelper implements ResourceHelper {
     }
     
     @Override
+    public boolean isBazelRootProject(IProject project) {
+        return false;
+    }
+    
+    @Override
     public IProject createProject(IProject newProject, IProjectDescription description, IProgressMonitor monitor)
             throws CoreException {
 

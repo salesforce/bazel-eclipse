@@ -74,7 +74,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 return;
             }
             
-            BazelClasspathContainer container = new BazelClasspathContainer(eclipseProject, eclipseJavaProject);
+            BazelClasspathContainer container = new BazelClasspathContainer(eclipseProject);
             if (container.isValid()) {
                 BazelPluginActivator.getJavaCoreHelper().setClasspathContainer(eclipseProjectPath, new IJavaProject[] { eclipseJavaProject },
                     new IClasspathContainer[] { container }, null);
