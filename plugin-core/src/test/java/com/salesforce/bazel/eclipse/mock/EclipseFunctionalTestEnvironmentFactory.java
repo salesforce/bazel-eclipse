@@ -36,6 +36,7 @@ import org.eclipse.core.resources.IProject;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.importer.BazelProjectImportScanner;
 import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
+import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
@@ -100,7 +101,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
         BazelPackageInfo workspaceRootProject = scanner.getProjects(mockEclipse.getBazelWorkspaceRoot());
         
         // choose the list of Bazel packages to import, in this case we assume the user selected all Java packages
-        List<BazelPackageInfo> bazelPackagesToImport = new ArrayList<>();
+        List<BazelPackageLocation> bazelPackagesToImport = new ArrayList<>();
         bazelPackagesToImport.add(workspaceRootProject);
         addBazelPackageInfosToSelectedList(workspaceRootProject, bazelPackagesToImport);
                 
@@ -119,7 +120,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
         return mockEclipse;
     }
     
-    private static void addBazelPackageInfosToSelectedList(BazelPackageInfo currentNode, List<BazelPackageInfo> bazelPackagesToImport) {
+    private static void addBazelPackageInfosToSelectedList(BazelPackageInfo currentNode, List<BazelPackageLocation> bazelPackagesToImport) {
         Collection<BazelPackageInfo> children = currentNode.getChildPackageInfos();
         for (BazelPackageInfo child : children) {
             // eventually this method should accept filter criteria, but for now we are just importing all packages

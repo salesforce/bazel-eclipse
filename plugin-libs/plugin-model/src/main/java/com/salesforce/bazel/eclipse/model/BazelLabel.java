@@ -50,7 +50,7 @@ public class BazelLabel {
     private final String label;
 
     /**
-     * A BazelLabel instance can be created with any syntacticly valid Bazel Label String.
+     * A BazelLabel instance can be created with any syntactically valid Bazel Label String.
      * </p>
      * Examples:<br>
      * //foo/blah:t1<br>
