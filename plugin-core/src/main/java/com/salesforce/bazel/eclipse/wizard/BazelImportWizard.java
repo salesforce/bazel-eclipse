@@ -65,6 +65,7 @@ import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
+import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.eclipse.util.SelectionUtil;
 
@@ -129,7 +130,7 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
         BazelPackageInfo workspaceRootProject = page.workspaceRootPackage;
 
         Object[] selectedBazelPackages = page.projectTree.projectTreeViewer.getCheckedElements();
-        List<BazelPackageInfo> bazelPackagesToImport =
+        List<BazelPackageLocation> bazelPackagesToImport =
                 Arrays.asList(selectedBazelPackages).stream().filter(bpi -> bpi != workspaceRootProject)
                         .map(bpi -> (BazelPackageInfo) bpi).collect(Collectors.toList());
 

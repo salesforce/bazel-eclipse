@@ -76,7 +76,7 @@ import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfos;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
+import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
@@ -111,8 +111,8 @@ public class BazelEclipseProjectFactory {
      * @return the list of Eclipse IProject objects created during import; by contract the first element in the list is
      *         the IProject object created for the 'bazel workspace' project node which is a special container project
      */
-    public static List<IProject> importWorkspace(BazelPackageInfo bazelWorkspaceRootPackageInfo,
-            List<BazelPackageInfo> selectedBazelPackages, WorkProgressMonitor progressMonitor,
+    public static List<IProject> importWorkspace(BazelPackageLocation bazelWorkspaceRootPackageInfo,
+            List<BazelPackageLocation> selectedBazelPackages, WorkProgressMonitor progressMonitor,
           IProgressMonitor monitor) {
 
         // TODO change this to do import off of the UI thread https://github.com/salesforce/bazel-eclipse/issues/49
@@ -152,8 +152,8 @@ public class BazelEclipseProjectFactory {
 
         // finally, create an Eclipse Project for each Bazel Package being imported
         subMonitor.setTaskName("Importing bazel packages: ");
-        for (BazelPackageInfo childPackageInfo : selectedBazelPackages) {
-            subMonitor.subTask("Importing " + childPackageInfo.getBazelPackageName());
+        for (BazelPackageLocation childPackageInfo : selectedBazelPackages) {
+            subMonitor.subTask("Importing " + childPackageInfo.getBazelPackageFSRelativePath());
             if (childPackageInfo.isWorkspaceRoot()) {
                 // the workspace root node has already been created (above)
                 continue;
@@ -180,7 +180,7 @@ public class BazelEclipseProjectFactory {
         return bazelWorkspaceName;
     }
 
-    private static void importBazelWorkspacePackagesAsProjects(BazelPackageInfo packageInfo, String bazelWorkspaceRoot,
+    private static void importBazelWorkspacePackagesAsProjects(BazelPackageLocation packageInfo, String bazelWorkspaceRoot,
             List<IProject> importedProjectsList) {
         List<String> packageSourceCodeFSPaths = new ArrayList<>();
         List<String> packageBazelTargets = new ArrayList<>();
@@ -196,20 +196,12 @@ public class BazelEclipseProjectFactory {
         if (eclipseProject != null) {
             importedProjectsList.add(eclipseProject);
         }
-
-        for (BazelPackageInfo childPackageInfo : packageInfo.getChildPackageInfos()) {
-            try {
-                importBazelWorkspacePackagesAsProjects(childPackageInfo, bazelWorkspaceRoot, importedProjectsList);
-            } catch (Exception anyE) {
-                anyE.printStackTrace();
-            }
-        }
     }
 
     /**
      * Creates the root project that contains the WORKSPACE file.
      */
-    private static IProject createEclipseRootWorkspaceProject(String bazelWorkspaceName, String bazelWorkspaceRoot, int javaLanguageVersion, List<BazelPackageInfo> importedBazelPackages) {
+    private static IProject createEclipseRootWorkspaceProject(String bazelWorkspaceName, String bazelWorkspaceRoot, int javaLanguageVersion, List<BazelPackageLocation> importedBazelPackages) {
         String rootProjectName = BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME+" (" + bazelWorkspaceName + ")";
         final URI eclipseProjectLocation = null; // let Eclipse use the default location
         final String packageFSPath = ""; // the root
@@ -497,7 +489,7 @@ public class BazelEclipseProjectFactory {
      *
      * bazelTargets: the list of Bazel labels to associate with the given packageNode
      */
-    private static void computePackageSourceCodePaths(BazelPackageInfo packageNode,
+    private static void computePackageSourceCodePaths(BazelPackageLocation packageNode,
             List<String> packageSourceCodeFSPaths, List<String> bazelTargets) {
         boolean foundSourceCodePaths = false;
 
@@ -529,7 +521,7 @@ public class BazelEclipseProjectFactory {
         }
 
         if (foundSourceCodePaths) {
-            BazelLabel packageTarget = new BazelLabel(packageNode.getBazelPackageName());
+            BazelLabel packageTarget = new BazelLabel(packageNode.getBazelPackageFSRelativePath());
             if (packageTarget.isPackageDefault()) {
                 // if the label is //foo, we want foo:* so that we pick up all targets in the
                 // BUILD file, instead of only the default package target
@@ -558,7 +550,7 @@ public class BazelEclipseProjectFactory {
      * this at an early point in the Bazel Eclipse Feature history, but this no longer is necessary. Retaining the code
      * just in case we find it useful again.
      */
-    private static AspectPackageInfos precomputeBazelAspectsForWorkspace(IProject rootEclipseProject, List<BazelPackageInfo> selectedBazelPackages,
+    private static AspectPackageInfos precomputeBazelAspectsForWorkspace(IProject rootEclipseProject, List<BazelPackageLocation> selectedBazelPackages,
             WorkProgressMonitor progressMonitor) {
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
@@ -567,7 +559,7 @@ public class BazelEclipseProjectFactory {
         // figure out which Bazel targets will be imported, and generated AspectPackageInfos for each
         // The AspectPackageInfos have useful information that we use during import
         List<String> packageBazelTargets = new ArrayList<>();
-        for (BazelPackageInfo childPackageInfo : selectedBazelPackages) {
+        for (BazelPackageLocation childPackageInfo : selectedBazelPackages) {
             BazelEclipseProjectFactory.computePackageSourceCodePaths(childPackageInfo, new ArrayList<>(),
                 packageBazelTargets);
         }

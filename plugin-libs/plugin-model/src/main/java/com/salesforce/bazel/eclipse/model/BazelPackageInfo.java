@@ -56,7 +56,7 @@ import java.util.Map;
  * 
  * @author plaird
  */
-public class BazelPackageInfo {
+public class BazelPackageInfo implements BazelPackageLocation {
 
     private final String relativeWorkspacePath;
     private final File directory;
@@ -192,6 +192,7 @@ public class BazelPackageInfo {
      * 
      * @return true if the root, false otherwise
      */
+    @Override
     public boolean isWorkspaceRoot() {
         return this.isWorkspaceRoot;
     }
@@ -201,6 +202,7 @@ public class BazelPackageInfo {
      * 
      * @return the root directory
      */
+    @Override
     public File getWorkspaceRootDirectory() {
         // now is a good time to check that the root directory is still there
         if (!this.workspaceRoot.exists()) {
@@ -251,6 +253,7 @@ public class BazelPackageInfo {
      * 
      * e.g. "projects/libs/apple" or "projects\libs\apple"
      */
+    @Override
     public String getBazelPackageFSRelativePath() {
         return relativeWorkspacePath;
     }
@@ -324,6 +327,7 @@ public class BazelPackageInfo {
      * <p>
      * e.g. if "//projects/libs/apple" is the package name, will return 'apple'
      */
+    @Override
     public String getBazelPackageNameLastSegment() {
         if (computedPackageNameLastSegment != null) {
             return computedPackageNameLastSegment;
