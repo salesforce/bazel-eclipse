@@ -88,7 +88,7 @@ public class BazelWorkspace {
     }
     
     // GETTERS AND SETTERS    
-    
+
 
     public File getBazelWorkspaceRootDirectory() {
         return this.bazelWorkspaceRootDirectory;

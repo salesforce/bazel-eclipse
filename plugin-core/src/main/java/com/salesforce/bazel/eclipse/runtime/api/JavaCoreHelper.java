@@ -186,9 +186,11 @@ public interface JavaCoreHelper {
     IJavaProject getJavaProjectForProject(IProject project);
 
     /**
-     * Gets the list of all Bazel Java projects in the Workspace, <b>EXCLUDING</b> the Root Bazel WORKSPACE project. 
+     * Gets the list of all Bazel Java projects in the Workspace.
+     * 
+     * @param includeRootProject  if true, the project representing the Bazel WORKSPACE root is also included
      */
-    IJavaProject[] getAllBazelJavaProjects();
+    IJavaProject[] getAllBazelJavaProjects(boolean includeBazelWorkspaceRootProject);
 
     /**
      * Creates and returns a new classpath entry of kind <code>CPE_SOURCE</code>

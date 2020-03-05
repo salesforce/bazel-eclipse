@@ -184,4 +184,14 @@
         class="com.salesforce.bazel.eclipse.util.JavaElementPropertyTester">
      </propertyTester>
    </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.salesforce.bazel.eclipse.projectview.ProjectViewEditor"
+            default="false"
+            filenames="bazelproject"
+            id="com.salesforce.bazel.eclipse.projectview"
+            name="ProjectView">
+      </editor>
+   </extension>
 </plugin>

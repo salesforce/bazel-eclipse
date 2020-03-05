@@ -130,13 +130,15 @@ public class BazelImportWizardPage extends WizardPage {
             // get the selected location
             // when the wizard is first opened, the location field is blank and we have a null root package
             if (this.locationControl.rootDirectory != null) {
-                this.workspaceRootPackage  = projectScanner.getProjects(this.locationControl.rootDirectory);
+                this.projectTree.setRootWorkspaceDirectory(this.locationControl.rootDirectory);
+                this.workspaceRootPackage = projectScanner.getProjects(this.locationControl.rootDirectory);
                 if (workspaceRootPackage != null) {
                     // make sure the user chose a Bazel workspace
                     newEclipseProjects.add(workspaceRootPackage);
                     newFilesystemLocations.add(workspaceRootPackage.getBazelPackageFSAbsolutePath());
                     this.projectTree.projectTreeViewer.setInput(newEclipseProjects);
                     this.projectTree.projectTreeViewer.expandAll();
+                    this.projectTree.importProjectViewButton.setEnabled(true);
                     if (workspaceRootPackage.getChildPackageInfos().size() < 10) {
                         // short term usability hack, enable all for import if there are less than 10 Bazel packages
                         this.projectTree.projectTreeViewer.setAllChecked(true);

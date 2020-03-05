@@ -36,7 +36,6 @@
 package com.salesforce.bazel.eclipse.builder;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -51,8 +50,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -83,18 +80,16 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     public static final String BUILDER_NAME = "com.salesforce.bazel.eclipse.builder";
 
-    private final BazelMarkerManagerSingleton markerManager = BazelMarkerManagerSingleton.getInstance();
-
     @Override
     protected IProject[] build(int kind, Map<String, String> args, IProgressMonitor monitor) throws CoreException {
         WorkProgressMonitor progressMonitor = new EclipseWorkProgressMonitor(monitor);
         IProject project = getProject();
         progressMonitor.beginTask("Bazel build", 1);
-        
+
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
-        
+
         try {
             boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project), progressMonitor, monitor);
             if (buildSuccessful && !importInProgress()) {
@@ -154,7 +149,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             List<BazelMarkerDetails> errors = cmdRunner.runBazelBuild(bazelTargets, progressMonitor, bazelBuildFlags);
             Multimap<IProject, BazelMarkerDetails> errorsByProject = paritionErrorsByProject(errors, projectToLabels);
             for (IProject project : projects) {
-                publishProblemMarkers(project, monitor, errorsByProject.get(project), projectToLabels.get(project));
+                BazelEclipseProjectSupport.publishProblemMarkers(project, monitor, errorsByProject.get(project), projectToLabels.get(project));
             }
             return errors.isEmpty();
         }
@@ -183,7 +178,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private static Set<IProject> getDownstreamProjectsOf(IProject upstream) {
         Set<IProject> downstreams = new HashSet<>();
-        for (IJavaProject project : BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects()) {
+        for (IJavaProject project : BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false)) {
             try {
                 for (String requiredProjectName : project.getRequiredProjectNames()) {
                     if (upstream.getProject().getName().equals(requiredProjectName)) {
@@ -195,24 +190,6 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             }
         }
         return downstreams;
-    }
-
-    private void publishProblemMarkers(IProject project, IProgressMonitor monitor, Collection<BazelMarkerDetails> errors, Collection<BazelLabel> labels) {
-        run(monitor, new WorkspaceModifyOperation() {
-            @Override
-            protected void execute(IProgressMonitor monitor) throws CoreException {
-                markerManager.clearProblemMarkersForProject(project);
-                markerManager.publishProblemMarkersForProject(project, errors, labels);
-            }
-        });
-    }
-
-    private static void run(IProgressMonitor monitor, IRunnableWithProgress runnable) {
-        try {
-            runnable.run(monitor);
-        } catch (InvocationTargetException | InterruptedException e) {
-            LOG.error(e.getMessage(), e);
-        }
     }
 
     private boolean importInProgress() {

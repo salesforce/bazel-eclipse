@@ -44,29 +44,20 @@
 
 package com.salesforce.bazel.eclipse.wizard;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkingSet;
 
-import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
-import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
-import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.eclipse.util.SelectionUtil;
 
 /**
@@ -134,30 +125,7 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
                 Arrays.asList(selectedBazelPackages).stream().filter(bpi -> bpi != workspaceRootProject)
                         .map(bpi -> (BazelPackageInfo) bpi).collect(Collectors.toList());
 
-        // TODO implement progress monitor for the import
-        // this.getContainer().run()
-
-        WorkProgressMonitor progressMonitor = new EclipseWorkProgressMonitor(null);
-        IRunnableWithProgress op = new IRunnableWithProgress() {
-            @Override
-            public void run(IProgressMonitor monitor) {
-                try {
-                    BazelEclipseProjectFactory.importWorkspace(workspaceRootProject, bazelPackagesToImport, progressMonitor,
-                        monitor);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    MessageDialog.openError(new Shell(), "Error", e.getMessage());
-                }
-            }
-        };
-
-        try {
-            new ProgressMonitorDialog(new Shell()).run(true, true, op);
-        } catch (InvocationTargetException e) {
-            MessageDialog.openError(new Shell(), "Error", e.getTargetException().getMessage());
-        } catch (Exception e) {
-            MessageDialog.openError(new Shell(), "Error", e.getMessage());
-        }
+        BazelProjectImporter.run(workspaceRootProject, bazelPackagesToImport);
 
         return true;
     }

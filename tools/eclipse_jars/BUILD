@@ -30,6 +30,7 @@ java_import( name = 'org_eclipse_equinox_common', jars = ['jars/org.eclipse.equi
 java_import( name = 'org_eclipse_equinox_registry', jars = ['jars/org.eclipse.equinox.registry_3.8.100.v20180827-1235.jar'], visibility = ['//visibility:public'],)
 java_import( name = 'org_eclipse_equinox_preferences', jars = ['jars/org.eclipse.equinox.preferences_3.7.200.v20180827-1235.jar'], visibility = ['//visibility:public'],)
 java_import( name = 'org_eclipse_jface', jars = ['jars/org.eclipse.jface_3.14.100.v20180828-0836.jar'], visibility = ['//visibility:public'],)
+java_import( name = 'org_eclipse_jface_text', jars = ['jars/org.eclipse.jface.text_3.15.200.v20190408-1954.jar'], visibility = ['//visibility:public'],)
 
 java_import( name = 'org_eclipse_jdt_compiler_apt', jars = ['jars/org.eclipse.jdt.compiler.apt_1.3.300.v20180905-0315.jar'], visibility = ['//visibility:public'],)
 java_import( name = 'org_eclipse_jdt_compiler_tool', jars = ['jars/org.eclipse.jdt.compiler.tool_1.2.300.v20180905-0319.jar'], visibility = ['//visibility:public'],)
@@ -41,8 +42,11 @@ java_import( name = 'org_eclipse_osgi', jars = ['jars/org.eclipse.osgi_3.13.100.
 java_import( name = 'org_eclipse_osgi_compatibility_state', jars = ['jars/org.eclipse.osgi.compatibility.state_1.1.200.v20180827-1536.jar'], visibility = ['//visibility:public'],)
 
 java_import( name = 'org_eclipse_swt', jars = ['jars/org.eclipse.swt_3.108.0.v20180904-1901.jar'], visibility = ['//visibility:public'],)
+java_import( name = 'org_eclipse_text', jars = ['jars/org.eclipse.text_3.8.200.v20190320-0724.jar'], visibility = ['//visibility:public'],)
 java_import( name = 'org_eclipse_ui', jars = ['jars/org.eclipse.ui_3.110.0.v20180828-1350.jar'], visibility = ['//visibility:public'],)
 java_import( name = 'org_eclipse_ui_console', jars = ['jars/org.eclipse.ui.console_3.8.100.v20180821-1744.jar'], visibility = ['//visibility:public'],)
+java_import( name = 'org_eclipse_ui_editors', jars = ['jars/org.eclipse.ui.editors_3.11.400.v20190218-1547.jar'], visibility = ['//visibility:public'],)
 java_import( name = 'org_eclipse_ui_ide', jars = ['jars/org.eclipse.ui.ide_3.14.100.v20180828-1350.jar'], visibility = ['//visibility:public'],)
 java_import( name = 'org_eclipse_ui_views', jars = ['jars/org.eclipse.ui.views_3.9.200.v20180828-0837.jar'], visibility = ['//visibility:public'],)
 java_import( name = 'org_eclipse_ui_workbench', jars = ['jars/org.eclipse.ui.workbench_3.112.0.v20180906-1121.jar'], visibility = ['//visibility:public'],)
+java_import( name = 'org_eclipse_ui_workbench_texteditor', jars = ['jars/org.eclipse.ui.workbench.texteditor_3.11.300.v20190218-2126.jar'], visibility = ['//visibility:public'],)

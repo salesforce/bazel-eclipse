@@ -126,3 +126,13 @@ java_test(
         "//plugin-libs/plugin-testdeps:com_google_truth",
     ],
 )
+
+java_test(
+    name = "ProjectViewTest",
+    srcs = [
+        "src/main/java/com/salesforce/bazel/eclipse/model/BazelPackageLocation.java",
+        "src/main/java/com/salesforce/bazel/eclipse/model/projectview/ProjectView.java",
+        "src/main/java/com/salesforce/bazel/eclipse/model/projectview/ProjectViewPackageLocation.java",
+        "src/test/java/com/salesforce/bazel/eclipse/model/projectview/ProjectViewTest.java",
+    ],
+)

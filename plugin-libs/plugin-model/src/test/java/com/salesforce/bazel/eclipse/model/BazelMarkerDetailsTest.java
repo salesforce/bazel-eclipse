@@ -54,6 +54,17 @@ public class BazelMarkerDetailsTest {
     }
     
     @Test
+    public void getResourcePathRelativeToBazelPackage__rootPackage() {
+        BazelMarkerDetails details =
+                new BazelMarkerDetails("/bazelproject", 1, "desc");
+
+        String path = details.getResourcePathRelativeToBazelPackage(
+            Collections.singletonList(new BazelLabel("//...")));
+
+        assertEquals("/bazelproject", path);
+    }
+    
+    @Test
     public void getResourcePathRelativeToBazelPackage__matchingBazelPackagePrefix() {
         BazelMarkerDetails details =
                 new BazelMarkerDetails("projects/libs/cake/abstractions_foo/src/main/java/com/MyClass.java", 1, "desc");

@@ -45,10 +45,19 @@
 
 package com.salesforce.bazel.eclipse.wizard;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
@@ -65,21 +74,27 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Tree;
 
 import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
+import com.salesforce.bazel.eclipse.model.projectview.ProjectView;
+import com.salesforce.bazel.eclipse.model.projectview.ProjectViewConstants;
 
 /**
  * Builds and handles interaction with the project tree view on the Bazel import workspace wizard.
  */
 public class BazelImportWizardProjectTree {
     private static final Object[] EMPTY = new Object[0];
+    
+    private String rootWorkspaceDirectory;
 
     private Button btnSelectTree;
     private Button btnDeselectTree;
+    Button importProjectViewButton;
 
     BazelImportWizardPage page;
     BazelImportWizardLabelProvider labelProvider;
@@ -253,6 +268,57 @@ public class BazelImportWizardProjectTree {
             }
         });
 
+        importProjectViewButton = new Button(composite, SWT.NONE);
+        importProjectViewButton.setEnabled(false);
+        importProjectViewButton.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, true));
+        importProjectViewButton.setText("Import Project View");
+        importProjectViewButton.addSelectionListener(new SelectionAdapter() {
+            public void widgetSelected(SelectionEvent e) {
+                FileDialog dialog = new FileDialog(page.getShell());
+                dialog.setText("Locate the Project View file to import");
+                dialog.setFileName(ProjectViewConstants.PROJECT_VIEW_FILE_NAME);
+                dialog.setFilterPath(BazelImportWizardProjectTree.this.rootWorkspaceDirectory);
+                String path = dialog.open();
+                if (path != null) {
+                    Set<BazelPackageInfo> packagesToImport = new HashSet<>();                        
+                    ProjectView projectView = new ProjectView(new File(BazelImportWizardProjectTree.this.rootWorkspaceDirectory), readFile(path));
+                    Set<String> projectViewPaths = projectView.getPackages().stream().map(p -> p.getBazelPackageFSRelativePath()).collect(Collectors.toSet());                        
+                    for (BazelPackageInfo bpi : getAllBazelPackageInfos()) {
+                        if (projectViewPaths.contains(bpi.getBazelPackageFSRelativePath())) {
+                            packagesToImport.add(bpi);
+                        }                            
+                    }
+                    for (BazelPackageInfo bpi : packagesToImport) {
+                        projectTreeViewer.setChecked(bpi, true);
+                    }                    
+                    MessageDialog.openInformation(page.getShell(), "Imported Project View", "Selected " + packagesToImport.size() + " Bazel Packages to import");
+                    page.setPageComplete();
+                }
+            }
+        });
+    }
+    
+    private static String readFile(String path) {
+        try {
+            return Files.readString(Paths.get(path));
+        } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+    
+    private List<BazelPackageInfo> getAllBazelPackageInfos() {
+        // seems hacky - but this will change again as we update the import UI
+        setAllChecked(true);
+        try {
+            return Arrays.stream(projectTreeViewer.getCheckedElements())
+                .filter(el -> (el instanceof BazelPackageInfo))
+                .map(el -> (BazelPackageInfo)el)
+                .collect(Collectors.toList());
+        } finally {
+            setAllChecked(false);
+        }
+        
+        
     }
 
     public void updateCheckedState() {
@@ -337,5 +403,9 @@ public class BazelImportWizardProjectTree {
         setSubtreeChecked(selection.getFirstElement(), checked);
         updateCheckedState();
         page.setPageComplete();
+    }
+    
+    void setRootWorkspaceDirectory(String rootWorkspaceDirectory) {
+        this.rootWorkspaceDirectory = rootWorkspaceDirectory;
     }
 }
