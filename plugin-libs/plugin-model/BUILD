@@ -110,6 +110,7 @@ java_test(
     srcs = [
         "src/main/java/com/salesforce/bazel/eclipse/model/BazelPackageInfo.java",
         "src/test/java/com/salesforce/bazel/eclipse/model/BazelPackageInfoTest.java",
+        "src/main/java/com/salesforce/bazel/eclipse/model/BazelPackageLocation.java",
     ],
 )
 
