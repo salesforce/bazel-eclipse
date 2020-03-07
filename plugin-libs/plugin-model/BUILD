@@ -115,19 +115,6 @@ java_test(
 )
 
 java_test(
-    name = "ProjectViewTest",
-    srcs = ["src/test/java/com/salesforce/bazel/eclipse/model/projectviews/ProjectViewTest.java"],
-    resources = ["src/test/resources/bazel.projectview"],
-    deps = [
-        ":plugin-model",
-
-        "//plugin-libs/plugin-testdeps:org_hamcrest_core",
-        "//plugin-libs/plugin-testdeps:org_junit_junit",
-        "//plugin-libs/plugin-testdeps:com_google_truth",
-    ],
-)
-
-java_test(
     name = "LogHelperTest",
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/logging/CaptureLoggerFacade.java",
             "src/test/java/com/salesforce/bazel/eclipse/logging/LogHelperTest.java"],
