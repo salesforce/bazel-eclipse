@@ -231,7 +231,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         ElementListSelectionDialog dialog = new ElementListSelectionDialog(getShell(), BAZEL_PROJECT_LABEL_PROVIDER);
         dialog.setTitle("Select Project");
         dialog.setMessage("Select Project");
-        dialog.setElements(BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects());
+        dialog.setElements(BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false));
 
         IJavaProject javaProject = getSelectedProject();
         if (javaProject != null) {

@@ -47,7 +47,7 @@ public class MockJavaCoreHelper implements JavaCoreHelper {
     // IMPLEMENTED METHODS
 
     @Override
-    public IJavaProject[] getAllBazelJavaProjects() {
+    public IJavaProject[] getAllBazelJavaProjects(boolean includeBazelWorkspaceRootProject) {
         return javaProjects.keySet().toArray(new IJavaProject[] {});
     }
     

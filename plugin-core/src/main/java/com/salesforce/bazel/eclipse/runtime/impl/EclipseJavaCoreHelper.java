@@ -115,18 +115,18 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
     }
 
     @Override
-    public IJavaProject[] getAllBazelJavaProjects() {
+    public IJavaProject[] getAllBazelJavaProjects(boolean includeBazelWorkspaceRootProject) {
         // cache all of this?
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         IWorkspaceRoot eclipseWorkspaceRoot = resourceHelper.getEclipseWorkspaceRoot();
         try {
             IJavaModel eclipseWorkspaceJavaModel = this.getJavaModelForWorkspace(eclipseWorkspaceRoot); 
             IJavaProject[] javaProjects = eclipseWorkspaceJavaModel.getJavaProjects();
-            List<IJavaProject> bazelProjects = new ArrayList<>(javaProjects.length - 1); // -1 because the root project will be excluded, most likely all other projects qualify
+            List<IJavaProject> bazelProjects = new ArrayList<>(javaProjects.length);
             for (IJavaProject candidate : javaProjects) {
                 IProject p = candidate.getProject();
                 if (p.getNature(BazelNature.BAZEL_NATURE_ID) != null) {
-                    if (!resourceHelper.isBazelRootProject(p)) {
+                    if (includeBazelWorkspaceRootProject || !resourceHelper.isBazelRootProject(p)) {
                         bazelProjects.add(candidate);
                     }
                 }

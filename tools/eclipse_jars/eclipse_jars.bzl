@@ -56,6 +56,7 @@ _ECLIPSE_PLUGIN_DEPS = {
   "org.eclipse.equinox.registry": { "version": "3.8.100.v20180827-1235", "sha256": "938cd42fa4a12a5544e74b455b016b8b925205b499af9f873238622d78473033" },
   "org.eclipse.equinox.preferences": { "version": "3.7.200.v20180827-1235", "sha256": "93c227ed2b6780d605ff48e93add77db00083f9b98a19392c6123b08caadbabd" },
   "org.eclipse.jface": { "version": "3.14.100.v20180828-0836", "sha256": "372e38db82d248af007563578ceab3a7c0251057b0f2e2abc5fe337bf846d808" },
+  "org.eclipse.jface.text": { "version": "3.15.200.v20190408-1954", "sha256": "c4b46593ce9f303e3e9176b6beb4d8165b5dbd9cb3dbcc01da2b7c6f63d59cb6" },
 
   "org.eclipse.jdt.compiler.apt": { "version": "1.3.300.v20180905-0315", "sha256": "9a5290e6effec1d53bcf7ff49b11165cb43fa297161b2a303e25921e75784e1e" },
   "org.eclipse.jdt.compiler.tool": { "version": "1.2.300.v20180905-0319", "sha256": "59ae66ab605c460495575ba7ef7d558ee761e482382e19b840079c3658a06383" },
@@ -67,11 +68,14 @@ _ECLIPSE_PLUGIN_DEPS = {
   "org.eclipse.osgi.compatibility.state": { "version": "1.1.200.v20180827-1536", "sha256": "82c7c897203277bb8c1914654553909f4018c6b93fc861edeb5a5042a1b468a4" },
 
   "org.eclipse.swt": { "version": "3.108.0.v20180904-1901", "sha256": "d8e5fab8d6933c595718e06c3545e4a3d9be201df93e96cddb8d753076637c20" },
+  "org.eclipse.text": { "version": "3.8.200.v20190320-0724", "sha256": "04ff3ca1b4629ee58e934590c4d7912078c464d9c5d946a50dd3bb4d64abc601" },
   "org.eclipse.ui": { "version": "3.110.0.v20180828-1350", "sha256": "010a20415a99c9764e44a3dbfe323afd55af867dd9e2e5995882650f16955b90" },
   "org.eclipse.ui.console": { "version": "3.8.100.v20180821-1744", "sha256": "d1a11a939dd370d6f54a49501a97a73753dd415c9f645a72c323e03edced5c9b"},
+  "org.eclipse.ui.editors": { "version": "3.11.400.v20190218-1547", "sha256": "f156218582f2ba5440e0466fee437c5903ff2ad8f673fbe180a00618f49c4ebd" },
   "org.eclipse.ui.ide": { "version": "3.14.100.v20180828-1350", "sha256": "339800ef411b0b29dde342fd71216932d8c0a88d40d0c1237a7ba6912698224b" },
   "org.eclipse.ui.views": { "version": "3.9.200.v20180828-0837", "sha256": "7e288eda038961940f432bfa6c5b53571e97824b2f755a08e7e893688b45f075" },
   "org.eclipse.ui.workbench": { "version": "3.112.0.v20180906-1121", "sha256": "4283006bac8be991cbe336666c2fabb8a557e6be4253390b79ca671f87155f7c" },
+  "org.eclipse.ui.workbench.texteditor": { "version": "3.11.300.v20190218-2126", "sha256": "507bba6afad0e4331a6b9b0b46d8b87aaf8b5217bcb4d581f489f44cd41c5ac0" },
 
   # NEED TO ADD ANOTHER ECLIPSE JAR?
   # Find the version of that dep from the Eclipse SDK plugins dir (version is in the filename)

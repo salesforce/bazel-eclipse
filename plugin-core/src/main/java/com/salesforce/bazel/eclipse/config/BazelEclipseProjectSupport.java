@@ -33,15 +33,24 @@
  */
 package com.salesforce.bazel.eclipse.config;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.preferences.IScopeContext;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.builder.BazelMarkerManagerSingleton;
+import com.salesforce.bazel.eclipse.model.BazelLabel;
+import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
 
 /**
  * Support class that provides interaction methods for existing Eclipse Bazel projects.
@@ -50,6 +59,8 @@ public class BazelEclipseProjectSupport {
     static final String WORKSPACE_ROOT_PROPERTY = "bazel.workspace.root";
     static final String TARGET_PROPERTY_PREFIX = "bazel.target";
     static final String BUILDFLAG_PROPERTY_PREFIX = "bazel.build.flag";
+
+    private static final BazelMarkerManagerSingleton MARKER_MANAGER = BazelMarkerManagerSingleton.getInstance();
 
     /**
      * List the Bazel targets configured for this Eclipse project. Each project configured for Bazel is configured to
@@ -93,6 +104,30 @@ public class BazelEclipseProjectSupport {
             }
         }
         return listBuilder.build();
+    }
+    
+    /**
+     * Publishes problem markers for the specified project.
+     */
+    public static void publishProblemMarkers(IProject project, IProgressMonitor monitor, Collection<BazelMarkerDetails> errors, Collection<BazelLabel> labels) {
+        runWithProgress(monitor, new WorkspaceModifyOperation() {
+            @Override
+            protected void execute(IProgressMonitor monitor) throws CoreException {
+                MARKER_MANAGER.clearProblemMarkersForProject(project);
+                MARKER_MANAGER.publishProblemMarkersForProject(project, errors, labels);
+            }
+        });
+    }
+
+    /**
+     * Boilerplate to run a IRunnableWithProgress and deal with checked exceptions.
+     */
+    public static void runWithProgress(IProgressMonitor monitor, IRunnableWithProgress runnable) {
+        try {
+            runnable.run(monitor);
+        } catch (InvocationTargetException | InterruptedException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     // HELPERS

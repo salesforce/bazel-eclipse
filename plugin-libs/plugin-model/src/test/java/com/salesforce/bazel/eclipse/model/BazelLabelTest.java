@@ -49,6 +49,8 @@ public class BazelLabelTest {
         assertTrue(new BazelLabel("foo").isPackageDefault());
         assertTrue(new BazelLabel("//foo/blah").isPackageDefault());
         assertFalse(new BazelLabel("blah:t").isPackageDefault());
+        assertFalse(new BazelLabel("//...").isPackageDefault());
+        assertFalse(new BazelLabel("//:*").isPackageDefault());
     }
 
     @Test
@@ -57,6 +59,8 @@ public class BazelLabelTest {
         assertTrue(new BazelLabel("//foo/blah:t1").isConcrete());
         assertFalse(new BazelLabel("blah/...").isConcrete());
         assertFalse(new BazelLabel("blah:*").isConcrete());
+        assertFalse(new BazelLabel("//...").isConcrete());
+        assertFalse(new BazelLabel("//:*").isConcrete());
     }
 
     @Test
@@ -66,6 +70,8 @@ public class BazelLabelTest {
         assertEquals("foo/blah", new BazelLabel("foo/blah:t1").getPackagePath());
         assertEquals("blah", new BazelLabel("blah/...").getPackagePath());
         assertEquals("blah", new BazelLabel("blah:*").getPackagePath());
+        assertEquals("", new BazelLabel("//...").getPackagePath());
+        assertEquals("", new BazelLabel("//:*").getPackagePath());
     }
 
     @Test
@@ -75,6 +81,8 @@ public class BazelLabelTest {
         assertEquals("blah", new BazelLabel("foo/blah:t1").getPackageName());
         assertEquals("blah", new BazelLabel("blah/...").getPackageName());
         assertEquals("blah", new BazelLabel("blah:*").getPackageName());
+        assertEquals("", new BazelLabel("//...").getPackageName());
+        assertEquals("", new BazelLabel("//:*").getPackageName());
     }
 
     @Test
@@ -84,6 +92,8 @@ public class BazelLabelTest {
         assertEquals("t1", new BazelLabel("foo/blah:t1").getTargetName());
         assertEquals(null, new BazelLabel("blah/...").getTargetName());
         assertEquals(null, new BazelLabel("blah:*").getTargetName());
+        assertEquals(null, new BazelLabel("//...").getTargetName());
+        assertEquals(null, new BazelLabel("//:*").getTargetName());
     }
 
     @Test
@@ -91,6 +101,8 @@ public class BazelLabelTest {
         assertEquals("//foo", new BazelLabel("foo").getLabel());
         assertEquals("//foo/blah", new BazelLabel("//foo/blah").getLabel());
         assertEquals("//foo/blah:t1", new BazelLabel("foo/blah:t1").getLabel());
+        assertEquals("//...", new BazelLabel("//...").getLabel());
+        assertEquals("//:*", new BazelLabel("//:*").getLabel());
     }
 
     @Test
@@ -103,6 +115,7 @@ public class BazelLabelTest {
         assertEquals("test123", new BazelLabel("test123").getLastComponentOfTargetName());
         assertEquals("test123", new BazelLabel("foo:test123").getLastComponentOfTargetName());
         assertEquals("blah", new BazelLabel("foo:src/foo/blah").getLastComponentOfTargetName());
+        assertEquals(null, new BazelLabel("//...").getLastComponentOfTargetName());
     }
 
     @Test

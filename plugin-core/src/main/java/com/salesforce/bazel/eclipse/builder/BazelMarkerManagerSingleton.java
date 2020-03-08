@@ -98,7 +98,6 @@ public class BazelMarkerManagerSingleton {
         if(singletonInstance == null) {
             singletonInstance = new BazelMarkerManagerSingleton();
         }
-        return singletonInstance;
-        
+        return singletonInstance;        
     }
 }

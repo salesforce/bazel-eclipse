@@ -95,9 +95,12 @@ public class BazelLabel {
      */
     public String getPackagePath() {
         String packagePath = this.label;
-        int i = packagePath.lastIndexOf("/...");
+        int i = packagePath.lastIndexOf("...");
         if (i != -1) {
             packagePath = packagePath.substring(0, i);
+            if (packagePath.endsWith("/")) {
+                packagePath = packagePath.substring(0, packagePath.length() - 1);
+            }
         } else {
             i = this.label.lastIndexOf(":");
             if (i != -1) {
@@ -150,6 +153,9 @@ public class BazelLabel {
      */
     public String getLastComponentOfTargetName() {
         String targetName = getTargetName();
+        if (targetName == null) {
+            return null;
+        }
         int i = targetName.lastIndexOf("/");
         if (i != -1) {
             return targetName.substring(i + 1); // ok because target name cannot end with '/'
