@@ -300,7 +300,7 @@ public class BazelImportWizardProjectTree {
     
     private static String readFile(String path) {
         try {
-            return Files.readString(Paths.get(path));
+            return new String(Files.readAllBytes(Paths.get(path)));
         } catch (IOException ex) {
             throw new IllegalStateException(ex);
         }
