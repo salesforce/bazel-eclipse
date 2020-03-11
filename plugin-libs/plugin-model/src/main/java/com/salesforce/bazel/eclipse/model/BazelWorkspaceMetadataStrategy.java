@@ -1,6 +1,7 @@
 package com.salesforce.bazel.eclipse.model;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Worker interface for a delegate that can retrieve metadata for the BazelWorkspace.
@@ -27,4 +28,9 @@ public interface BazelWorkspaceMetadataStrategy {
      * Returns the explicitly set option in the workspace config files (.bazelrc et al)
      */
     public void populateBazelWorkspaceCommandOptions(BazelWorkspaceCommandOptions commandOptions);
+    
+    /**
+     * Return the result of the bazel query
+     */
+    public List<String> computeBazelQuery(String query);
 }

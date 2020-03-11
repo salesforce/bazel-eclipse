@@ -82,4 +82,9 @@ public class MockBazelWorkspaceMetadataStrategy implements BazelWorkspaceMetadat
         commandOptions.parseOptionsFromOutput(this.optionLines);
     }
 
+	@Override
+	public List<String> computeBazelQuery(String query) {
+		return null;
+	}
+
 }

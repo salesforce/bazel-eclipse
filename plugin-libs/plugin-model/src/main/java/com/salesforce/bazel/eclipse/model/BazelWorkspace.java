@@ -1,6 +1,8 @@
 package com.salesforce.bazel.eclipse.model;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BazelWorkspace {
     
@@ -114,6 +116,16 @@ public class BazelWorkspace {
             this.bazelOutputBaseDirectory = metadataStrategy.computeBazelWorkspaceOutputBase();
         }
         return this.bazelOutputBaseDirectory;
+    }
+    
+    public List<String> getTargetsForBazelQuery(String query) {
+    	List<String> results = new ArrayList<String>();
+    	for(String line: metadataStrategy.computeBazelQuery(query)) {
+    		if (line.startsWith("//")) {
+                results.add(line);
+            }
+    	}
+    	return results;
     }
 
     public File getBazelBinDirectory() {
