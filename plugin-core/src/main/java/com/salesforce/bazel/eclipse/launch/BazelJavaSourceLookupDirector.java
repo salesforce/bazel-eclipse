@@ -33,6 +33,8 @@
  */
 package com.salesforce.bazel.eclipse.launch;
 
+import java.util.List;
+
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.sourcelookup.AbstractSourceLookupDirector;
@@ -50,10 +52,12 @@ import org.eclipse.jdt.launching.sourcelookup.containers.JavaSourceLookupPartici
  */
 public class BazelJavaSourceLookupDirector extends AbstractSourceLookupDirector {
 
-    private final IJavaProject project;
+    private final IJavaProject mainProject;
+    private final List<IJavaProject> otherProjects;
 
-    public BazelJavaSourceLookupDirector(IJavaProject project) {
-        this.project = project;
+    public BazelJavaSourceLookupDirector(IJavaProject mainProject, List<IJavaProject> otherProjects) {
+        this.mainProject = mainProject;
+        this.otherProjects = otherProjects;
         setSourcePathComputer(
             getLaunchManager().getSourcePathComputer("org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"));
     }
@@ -61,8 +65,12 @@ public class BazelJavaSourceLookupDirector extends AbstractSourceLookupDirector 
     @Override
     public void initializeParticipants() {
         addParticipants(new ISourceLookupParticipant[] { new JavaSourceLookupParticipant() });
-        ISourceContainer sourceContainer = new JavaProjectSourceContainer(project);
-        setSourceContainers(new ISourceContainer[] { sourceContainer });
+        ISourceContainer[] sourceContainers = new JavaProjectSourceContainer[otherProjects.size() + 1];
+        sourceContainers[0] = new JavaProjectSourceContainer(mainProject);
+        for (int i = 0; i < otherProjects.size(); i++) {
+            sourceContainers[i+1] = new JavaProjectSourceContainer(otherProjects.get(i));
+        }
+        setSourceContainers(sourceContainers);
     }
 
     private static ILaunchManager getLaunchManager() {
