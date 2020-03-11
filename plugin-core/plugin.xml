@@ -141,6 +141,42 @@
             </enablement>
         </contextualLaunch>
     </shortcut>
+    
+    <shortcut
+    class="com.salesforce.bazel.eclipse.launch.BazelJunitTargetLaunchShortcut"
+    category="com.salesforce.bazel.eclipse.launch"
+    icon="resources/bazelicon.gif"
+    id="com.salesforce.bazel.eclipse.launch.junit.shortcut"
+    label="JUnit Bazel Target"
+    modes="run, debug">
+	    <contextualLaunch>
+	        <enablement>
+	            <with
+	                variable="selection">
+	                <count
+	                    value="+">
+	                </count>
+	                <iterate>
+	                 <or>
+	                   <and>
+	                       <adapt type="org.eclipse.core.resources.IResource">
+					         <test
+					               property="org.eclipse.core.resources.path"
+					               value="*/src/test/java*">
+					         </test>
+					       </adapt>
+					       <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
+				       </and>
+	                   <and>
+	                       <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+	                       <test property="com.salesforce.bazel.eclipse.isTestJavaElement"/>
+	                   </and>
+	                 </or>
+	                </iterate>
+	            </with>
+	        </enablement>
+	    </contextualLaunch>
+    </shortcut>
    </extension>
    
    <extension point="org.eclipse.ui.commands">

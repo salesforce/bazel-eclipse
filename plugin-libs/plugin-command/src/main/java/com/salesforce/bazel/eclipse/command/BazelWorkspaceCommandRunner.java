@@ -38,6 +38,7 @@ package com.salesforce.bazel.eclipse.command;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -150,6 +151,13 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * workspace specific.
      */
     private List<String> buildOptions = Collections.emptyList();
+    
+    /**
+     * This is to cache the last query and return the query result without actually computing it. This is required 
+     * because computeUnresolvedPath tries to compute the bazel query multiple time
+     */
+    private String query;
+    private List<String> queryResults;
 
     
     
@@ -218,6 +226,36 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         }
         return bazelExecRootDirectory;
     }
+    
+    
+    /**
+     * Returns the list of targets for the given bazel query
+     * 
+     * @param query is a String with the bazel query
+     */
+    @Override
+    public List<String> computeBazelQuery(String query) {
+    	
+    	if (this.query !=null && this.query.equals(query) ) {
+    		return this.queryResults;
+    	}
+    	
+        List<String> results = new ArrayList<>();
+        try {
+        	ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
+            argBuilder.add("query").add(query);
+            
+            results = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, argBuilder.build(), (t) -> t);
+
+        } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException e) {
+            throw new IllegalStateException(e);
+        }
+        //update cached values
+        this.query = query;
+        this.queryResults = results;
+        
+        return results;
+    }
 
     /**
      * Returns the output base of the current Bazel workspace.
@@ -226,7 +264,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         if (bazelOutputBaseDirectory == null) {
             try {
                 ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
-                argBuilder.add("info").add("output_base");
+                argBuilder.add("info").add("execution_root");
                 
                 List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, 
                     argBuilder.build(), (t) -> t);
