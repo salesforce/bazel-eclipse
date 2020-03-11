@@ -36,9 +36,11 @@ package com.salesforce.bazel.eclipse.launch;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -184,21 +186,25 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
 
     private static void connectDebugger(ILaunchConfiguration configuration, IProject project, IProgressMonitor monitor,
             ILaunch launch) {
+        // logic below copied and adapted from
+        // https://github.com/eclipse/eclipse.jdt.debug/blob/master/org.eclipse.jdt.launching/launching/org/eclipse/jdt/internal/launching/JavaRemoteApplicationLaunchConfigurationDelegate.java
+        
+        IJavaProject mainProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
+        List<IJavaProject> otherProjects = getOtherJavaProjects(mainProject);
+        ISourceLookupDirector sourceLocator = new BazelJavaSourceLookupDirector(mainProject, otherProjects);
         try {
-
-            // logic below copied and adapted from
-            // https://github.com/eclipse/eclipse.jdt.debug/blob/master/org.eclipse.jdt.launching/launching/org/eclipse/jdt/internal/launching/JavaRemoteApplicationLaunchConfigurationDelegate.java
-            IJavaProject eclipseJavaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
-            ISourceLookupDirector sourceLocator = new BazelJavaSourceLookupDirector(eclipseJavaProject);
             sourceLocator.initializeDefaults(configuration);
             launch.setSourceLocator(sourceLocator);
-
             IVMConnector connector = JavaRuntime.getDefaultVMConnector();
-
             connector.connect(getConnectorDebugArgs(), monitor, launch);
         } catch (CoreException ex) {
             throw new IllegalStateException(ex);
         }
+    }
+    
+    private static List<IJavaProject> getOtherJavaProjects(IJavaProject mainProject) {
+        return Arrays.stream(BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false))
+                .filter(p -> p != mainProject).collect(Collectors.toList());
     }
 
     private static int getAvailablePort() {
