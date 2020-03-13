@@ -82,8 +82,6 @@ public class BazelCommandRunnerFTest {
         assertEquals(expectedBazelWorkspaceRoot.getAbsolutePath(), BazelPluginActivator.getBazelWorkspaceRootDirectory().getAbsolutePath());
         
         // verify command runner 'bazel info' commands
-        File expectedBazelOutputBase = mockEclipse.getBazelOutputBase();
-        assertEquals(expectedBazelOutputBase.getAbsolutePath(), bazelWorkspace.getBazelOutputBaseDirectory().getAbsolutePath());
         File expectedBazelExecutionRoot = mockEclipse.getBazelExecutionRoot();
         assertEquals(expectedBazelExecutionRoot.getAbsolutePath(), bazelWorkspace.getBazelExecRootDirectory().getAbsolutePath());
     }
