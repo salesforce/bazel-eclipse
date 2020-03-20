@@ -254,6 +254,9 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      */
     public BazelWorkspaceCommandRunner getWorkspaceCommandRunner() {
         if (bazelWorkspaceCommandRunner == null) {
+            if (bazelWorkspace == null) {
+                return null;
+            }
             if (bazelWorkspace.hasBazelWorkspaceRootDirectory()) {
                 bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
             }
