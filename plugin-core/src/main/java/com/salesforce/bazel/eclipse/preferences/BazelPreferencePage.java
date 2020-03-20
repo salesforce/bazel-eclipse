@@ -44,7 +44,6 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 
 /**
  * Page to configure the Bazel Eclipse plugin. The only configuration parameter is the path to the Bazel binary so this
@@ -58,20 +57,27 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
 
     private static class BazelBinaryFieldEditor extends FileFieldEditor {
         BazelBinaryFieldEditor(Composite parent) {
-            super(BAZEL_PATH_PREF_NAME, "Path to the &Bazel binary:", true, parent);
-            setValidateStrategy(VALIDATE_ON_FOCUS_LOST);
+            super(BAZEL_PATH_PREF_NAME, "Path to the &Bazel binary:", true, VALIDATE_ON_KEY_STROKE, parent);
         }
 
         @Override
         protected boolean doCheckState() {
+            return isValid();
+        }
+        
+        @Override
+        public boolean isValid() {
             try {
-                BazelPluginActivator activator = BazelPluginActivator.getInstance();
-                BazelWorkspaceCommandRunner runner = activator.getWorkspaceCommandRunner();
-                if (runner == null) {
-                    String bazelPath = getStringValue();
-                    return new File(bazelPath).exists();
+                String bazelPath = getStringValue();
+                File bazelExecutable = new File(bazelPath);
+                if (!bazelExecutable.exists()) {
+                    setErrorMessage(bazelPath + " does not exist");
+                    return false;
                 }
-                runner.runBazelVersionCheck();
+                if (!bazelExecutable.canExecute()) {
+                    setErrorMessage(bazelPath + " is not an executable");
+                    return false;
+                }
                 return true;
             } catch (Exception e) {
                 setErrorMessage(e.getMessage());
