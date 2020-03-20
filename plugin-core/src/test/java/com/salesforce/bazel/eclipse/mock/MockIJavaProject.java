@@ -544,4 +544,10 @@ public class MockIJavaProject implements IJavaProject {
         throw new UnsupportedOperationException(UOE_MSG);
     }
 
+
+	@Override
+	public IModuleDescription getOwnModuleDescription() throws JavaModelException {
+		throw new UnsupportedOperationException(UOE_MSG);
+	}
+
 }

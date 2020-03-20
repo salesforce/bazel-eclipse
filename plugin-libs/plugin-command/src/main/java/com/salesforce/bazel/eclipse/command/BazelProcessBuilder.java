@@ -30,7 +30,7 @@ import java.util.List;
 
 /**
  * A lightweight wrapper around java.lang.ProcessBuilder. To make functional testing
- * possible where ProcessBuilder shoudl be mocked (it is a final class) we created this thin
+ * possible where ProcessBuilder should be mocked (it is a final class) we created this thin
  * wrapper around it exposing the methods that we use. This class gets mocked during 
  * some test executions.
  */
