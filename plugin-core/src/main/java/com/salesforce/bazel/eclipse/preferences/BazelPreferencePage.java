@@ -35,6 +35,8 @@
  */
 package com.salesforce.bazel.eclipse.preferences;
 
+import java.io.File;
+
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.swt.widgets.Composite;
@@ -42,7 +44,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 
 /**
  * Page to configure the Bazel Eclipse plugin. The only configuration parameter is the path to the Bazel binary so this
@@ -63,9 +65,15 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
         @Override
         protected boolean doCheckState() {
             try {
-                BazelPluginActivator.getInstance().getWorkspaceCommandRunner().runBazelVersionCheck();
+                BazelPluginActivator activator = BazelPluginActivator.getInstance();
+                BazelWorkspaceCommandRunner runner = activator.getWorkspaceCommandRunner();
+                if (runner == null) {
+                    String bazelPath = getStringValue();
+                    return new File(bazelPath).exists();
+                }
+                runner.runBazelVersionCheck();
                 return true;
-            } catch (BazelCommandLineToolConfigurationException e) {
+            } catch (Exception e) {
                 setErrorMessage(e.getMessage());
                 return false;
             }
