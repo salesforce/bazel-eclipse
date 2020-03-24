@@ -33,16 +33,22 @@
  */
 package com.salesforce.bazel.eclipse.launch;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.sourcelookup.AbstractSourceLookupDirector;
 import org.eclipse.debug.core.sourcelookup.ISourceContainer;
 import org.eclipse.debug.core.sourcelookup.ISourceLookupParticipant;
+import org.eclipse.debug.core.sourcelookup.containers.ExternalArchiveSourceContainer;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 import org.eclipse.jdt.launching.sourcelookup.containers.JavaSourceLookupParticipant;
+
+import com.salesforce.bazel.eclipse.BazelPluginActivator;
 
 /**
  * Copied and adapted from org.eclipse.jdt.internal.launching.JavaSourceLookupDirector.
@@ -52,25 +58,40 @@ import org.eclipse.jdt.launching.sourcelookup.containers.JavaSourceLookupPartici
  */
 public class BazelJavaSourceLookupDirector extends AbstractSourceLookupDirector {
 
+    private static final String JAVA_SRC_PATH_COMP = "org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer";
+
     private final IJavaProject mainProject;
     private final List<IJavaProject> otherProjects;
 
     public BazelJavaSourceLookupDirector(IJavaProject mainProject, List<IJavaProject> otherProjects) {
         this.mainProject = mainProject;
         this.otherProjects = otherProjects;
-        setSourcePathComputer(
-            getLaunchManager().getSourcePathComputer("org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"));
+        setSourcePathComputer(getLaunchManager().getSourcePathComputer(JAVA_SRC_PATH_COMP));
     }
 
     @Override
     public void initializeParticipants() {
         addParticipants(new ISourceLookupParticipant[] { new JavaSourceLookupParticipant() });
-        ISourceContainer[] sourceContainers = new JavaProjectSourceContainer[otherProjects.size() + 1];
-        sourceContainers[0] = new JavaProjectSourceContainer(mainProject);
-        for (int i = 0; i < otherProjects.size(); i++) {
-            sourceContainers[i+1] = new JavaProjectSourceContainer(otherProjects.get(i));
+        List<ISourceContainer> sourceContainers = new ArrayList<>();
+        sourceContainers.add(new JavaProjectSourceContainer(this.mainProject));
+        addSourceJarsForDependencies(this.mainProject, sourceContainers);
+        for (IJavaProject project : this.otherProjects) {
+            sourceContainers.add(new JavaProjectSourceContainer(project));
+            addSourceJarsForDependencies(project, sourceContainers);
         }
-        setSourceContainers(sourceContainers);
+        setSourceContainers(sourceContainers.toArray(new ISourceContainer[sourceContainers.size()]));
+    }
+
+    private static void addSourceJarsForDependencies(IJavaProject project, List<ISourceContainer> sourceContainers) {
+        IClasspathEntry[] resolvedClasspath = BazelPluginActivator.getJavaCoreHelper().getResolvedClasspath(project, true);
+        for (IClasspathEntry e : resolvedClasspath) {
+            if (e.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+                IPath sourceAttachmentPath = e.getSourceAttachmentPath();
+                if (sourceAttachmentPath != null) {
+                    sourceContainers.add(new ExternalArchiveSourceContainer(sourceAttachmentPath.toOSString(), false));
+                }
+            }
+        }
     }
 
     private static ILaunchManager getLaunchManager() {

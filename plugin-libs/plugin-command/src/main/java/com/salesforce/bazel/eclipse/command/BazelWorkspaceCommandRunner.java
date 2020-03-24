@@ -264,7 +264,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         if (bazelOutputBaseDirectory == null) {
             try {
                 ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
-                argBuilder.add("info").add("execution_root");
+                argBuilder.add("info").add("output_base");
                 
                 List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, 
                     argBuilder.build(), (t) -> t);

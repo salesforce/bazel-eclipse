@@ -184,7 +184,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
 
         BazelLabel target = getSelectedTarget();
         if (target != null) {
-            dialog.setInitialSelections(new Object[] { target.toString() });
+            dialog.setInitialSelections(new Object[] { target });
         }
         if (dialog.open() == Window.OK) {
             return (BazelLabel) dialog.getFirstResult();
@@ -313,12 +313,13 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
     private ILabelProvider BAZEL_LABEL_LABEL_PROVIDER = new DefaultLabelProvider() {
         @Override
         public String getText(Object element) {
-            // lets also show the target type next to each label, for example:
-            // //projects/libs/scone:app (java_binrary)
-            // //projects/libs/scone/abstractions:mytest1 (java_test)
             BazelLabel label = ((BazelLabel)element);
             TargetKind targetKind = BazelLaunchConfigurationTab.this.lookupLabelKind(label);
-            return label.getLabel() + " (" + targetKind.getKind() + ")";
+            return toFriendlyLabelRepresentation(label, targetKind);
         }
     };
+
+    private static String toFriendlyLabelRepresentation(BazelLabel label, TargetKind targetKind) {
+        return label.getLastComponentOfTargetName() + " (" + targetKind.getKind() + ") - " + label.getLabel();
+    }
 }
