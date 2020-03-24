@@ -88,7 +88,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
             List<BazelPackageLocation> currentlyImportedPackages = getPackages(currentlyImportedProjects);
             List<BazelPackageLocation> packagesToImport = projectView.getPackages();
             
-            if (new HashSet<>(currentlyImportedPackages).equals(new HashSet<>(packagesToImport))) {
+            if (currentlyImportedPackages != null && new HashSet<>(currentlyImportedPackages).equals(new HashSet<>(packagesToImport))) {
                 LOG.info("The Bazel Packages in the " + ProjectViewConstants.PROJECT_VIEW_FILE_NAME + " file match the set of Eclipse Projects currently imported");
             } else {
                 boolean ok = MessageDialog.openConfirm(this.getSite().getShell(), "Update Imported Projects", CONFIRMATION_TEXT);
@@ -104,6 +104,12 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
         List<BazelPackageLocation> packageLocations = new ArrayList<>(projects.length);
         for (IJavaProject project : projects) {
             // get the target to get at the package path
+            List<String> targets = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(project.getProject(), false);
+            if (targets == null || targets.isEmpty()) {
+                // this shouldn't happen, but if it does, we do not want to blow up here
+                // instead return null to force re-import
+                return null;
+            }
             String target = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(project.getProject(), false).get(0);
             BazelLabel label = new BazelLabel(target);
             packageLocations.add(new ProjectViewPackageLocation(this.rootDirectory, label.getPackagePath()));
