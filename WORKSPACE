@@ -22,7 +22,7 @@ load_eclipse_deps()
 # Maven/Nexus Deps
 # ---------------------------------------------
 
-# Do not add any Maven dependencies here.
+# Do not add any Maven dependencies here (maven_jar, maven_install, jvm_maven_import_external).
 
 # Most deps are managed in the //plugin-libs/plugin-deps and //plugin-libs/plugin-testdeps
 # projects. They are managed there so that both build systems (Bazel, Eclipse SDK) use the
