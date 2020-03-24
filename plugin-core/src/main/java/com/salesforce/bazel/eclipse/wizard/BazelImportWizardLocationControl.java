@@ -44,6 +44,7 @@
 // adapted from M2Eclipse org.eclipse.m2e.core.ui.internal.wizards.MavenImportWizardPage
 package com.salesforce.bazel.eclipse.wizard;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +54,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
@@ -62,9 +64,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
@@ -95,7 +97,7 @@ public class BazelImportWizardLocationControl {
         if (showLocation || locations == null || locations.isEmpty()) {
             final Label selectRootDirectoryLabel = new Label(composite, SWT.NONE);
             selectRootDirectoryLabel.setLayoutData(new GridData());
-            selectRootDirectoryLabel.setText("Workspace Directory:");
+            selectRootDirectoryLabel.setText("WORKSPACE File:");
 
             rootDirectoryCombo = new Combo(composite, SWT.NONE);
             rootDirectoryCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -112,19 +114,25 @@ public class BazelImportWizardLocationControl {
             browseButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
             browseButton.addSelectionListener(new SelectionAdapter() {
                 public void widgetSelected(SelectionEvent e) {
-                    DirectoryDialog dialog = new DirectoryDialog(page.getShell(), SWT.NONE);
-                    dialog.setText("Locate the root directory of the Bazel workspace");
+                    FileDialog dialog = new FileDialog(page.getShell());
+                    dialog.setFileName("WORKSPACE");
+                    dialog.setText("Locate the Bazel WORKSPACE file");
                     String path = rootDirectoryCombo.getText();
                     if (path.length() == 0) {
                         path = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot().getLocation().toPortableString();
                     }
                     dialog.setFilterPath(path);
 
-                    String result = dialog.open();
-                    if (result != null) {
-                        rootDirectoryCombo.setText(result);
-                        if (rootDirectoryChanged()) {
-                            page.scanProjects();
+                    String selectedFile = dialog.open();
+                    if (selectedFile != null) {
+                        File workspaceFile = new File(selectedFile);
+                        if (!workspaceFile.isFile() || !workspaceFile.getName().equals("WORKSPACE")) {
+                            MessageDialog.openError(page.getShell(), "Import WORKSPACE", "You must select a Bazel WORKSPACE File");                            
+                        } else {
+                            rootDirectoryCombo.setText(workspaceFile.getParentFile().getAbsolutePath());
+                            if (rootDirectoryChanged()) {
+                                page.scanProjects();
+                            }
                         }
                     }
                 }
