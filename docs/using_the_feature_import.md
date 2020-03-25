@@ -6,7 +6,7 @@ Note that there is no IDE support for creating a new Bazel Workspace from the ID
 ### Limitations
 
 There are a set of known limitations and known issues with Bazel package import.
-The work item that will address each limitation is linked from each section. 
+The work item that will address each limitation is linked from each section.
 
 #### Limitation: Only one Bazel workspace can be imported in an Eclipse workspace
 
@@ -61,6 +61,17 @@ Then, in the IDE the flow for import matches the familiar Maven import process:
 - Click *Finish*, and your Bazel packages will be imported as Eclipse projects.
 
 \* Example: if you have two Java projects in your workspace *LibA* and *LibB*, and *LibB* depends on *LibA*. You can import just *LibB*. The feature will set the classpath correctly to consume the built *LibA* artifact.
+
+### Project Views
+
+The Bazel Eclipse Feature has implemented support for the [Project View](https://ij.bazel.build/docs/project-views.html) file from the IntelliJ Bazel plugin.
+A Project View allows a team to share standard a common definition of Bazel packages to import into the IDE.
+When working on a large Bazel workspace, this is a more convenient way of onboarding a new team member, as a team will likely only work on a small subset of packages in the Bazel workspace.
+Manually locating those packages in the import tree control UI would be tedious.
+It is easier to point the new team member to a Project View file for their Bazel workspace import.
+
+You can identify a Project View file to use in the Import Wizard UI (under the tree control).
+Currently, BEF supports the *directories* stanza, and [Issue 68](https://github.com/salesforce/bazel-eclipse/issues/68) will provide for *targets* support.
 
 ### Next Topic: Manage your Project Configuration
 
