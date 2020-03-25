@@ -32,13 +32,22 @@ You can also debug it, with breakpoints, by launching as a *Debug Configuration*
 
 ## Running Tests from the IDE
 
-Follow these steps:
+There are several paths to run (or debug) tests from BEF.
 
-1. Navigate to *Run As...* and click the *New* button for *Bazel Target*
+Method 1: top level Run menu
+
+1. Navigate to the *Run* menu, choose *Run As...* and click the *New* button for *Bazel Target*
 1. Select the project, and then the test target from the drop down.
 1. You should now be able to run the test.
 
 You can also debug it, with breakpoints, by launching as a *Debug Configuration*.
 
-:warning: the standard JUnit Launcher (*Run As JUnit Test*) does not work.
+Method 2: Package Explorer context menu
+
+1. In the Package Explorer view, click on the test folder (*src/test/java*), a test Java package (*com.salesforce.hello*), or a specific test class (*HelloWorldTest.java*)
+1. Right click on it, and find the *Run As* or *Debug As* item in the context menu
+1. Choose *JUnit Bazel Target*
+1. The JUnit view will populate with the test results
+
+:warning: the standard JUnit Launcher *JUnit Test* does not work.
 [Issue 18](https://github.com/salesforce/bazel-eclipse/issues/18) tracks that work item.
