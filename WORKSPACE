@@ -7,7 +7,7 @@ workspace(name = "bazel_eclipse_feature")
 # ---------------------------------------------
 
 load("//tools/bazel_versioncheck:versioncheck.bzl", "versions")
-versions.check("1.0.0")
+versions.check("2.2.0")
 
 
 # ---------------------------------------------
