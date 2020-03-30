@@ -55,7 +55,7 @@ The Bazel Eclipse Feature sits alongside the JDT componentns in Eclipse to be th
   Bazel Java projects and the JDT.
 It hooks into Bazel to compute classpaths and find Java source files.
 
-![Bazel Eclipse Feature and JDT Architecture Diagram](bazel_eclipse_feature_arch.png)
+![Bazel Eclipse Feature and JDT Architecture Diagram](BEF_Arch.png)
 
 
 ### Invokes command line Bazel to perform the build

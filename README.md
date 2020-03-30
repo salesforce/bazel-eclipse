@@ -21,6 +21,8 @@ For detailed installation and setup instructions, see this page:
 - [Installing Eclipse and the Bazel Eclipse Feature](docs/install.md)
 - [Bazel Eclipse Feature User's Guide](docs/using_the_feature.md)
 
+![BEF Screen Shot](docs/bef_fullimage.png)
+
 ## Community, Support and Contributions
 
 You may join and post to our discussion forum here:
