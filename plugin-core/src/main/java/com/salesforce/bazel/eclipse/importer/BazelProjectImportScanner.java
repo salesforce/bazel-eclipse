@@ -34,6 +34,7 @@
 package com.salesforce.bazel.eclipse.importer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 
 import com.salesforce.bazel.eclipse.config.BazelProjectConfigurator;
@@ -90,7 +91,14 @@ public class BazelProjectImportScanner {
             // this is the initialization state of the wizard
             return null;
         }
-        return getProjects(new File(rootDirectory));
+        File workspaceRootDir = new File(rootDirectory);
+        try {
+            workspaceRootDir = workspaceRootDir.getCanonicalFile(); 
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            return null;
+        }
+        return getProjects(workspaceRootDir);
     }
     
     /**

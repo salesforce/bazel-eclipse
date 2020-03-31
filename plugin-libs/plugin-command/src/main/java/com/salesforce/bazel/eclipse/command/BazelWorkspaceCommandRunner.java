@@ -220,6 +220,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
                     argBuilder.build(), (t) -> t);
                 outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
                 bazelExecRootDirectory = new File(String.join("", outputLines));
+                bazelExecRootDirectory = getCanonicalFileSafely(bazelExecRootDirectory);
             } catch (Exception anyE) {
                 throw new IllegalStateException(anyE);
             }
@@ -270,7 +271,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
                     argBuilder.build(), (t) -> t);
                 outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
                 bazelOutputBaseDirectory = new File(String.join("", outputLines));
-
+                bazelOutputBaseDirectory = getCanonicalFileSafely(bazelOutputBaseDirectory);
             } catch (Exception anyE) {
                 throw new IllegalStateException(anyE);
             }
@@ -291,6 +292,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
                     argBuilder.build(), (t) -> t);
                 outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
                 bazelBinDirectory = new File(String.join("", outputLines));
+                bazelBinDirectory = getCanonicalFileSafely(bazelBinDirectory);
             } catch (Exception anyE) {
                 throw new IllegalStateException(anyE);
             }
@@ -518,6 +520,21 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             }
             return keep ? line : null;
         }
+    }
+    
+    /**
+     * Resolve softlinks and other abstractions in the workspace paths.
+     */
+    private File getCanonicalFileSafely(File directory) {
+        if (directory == null) {
+            return null;
+        }
+        try {
+            directory = directory.getCanonicalFile();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        return directory;
     }
 
     private LoggerFacade getLogger() {

@@ -40,8 +40,8 @@ public class BazelProjectImportScannerTest {
 
     @Test
     public void testHappyPath() throws Exception {
-        File tmpWorkspaceDir = tmpFolder.newFolder();
-        File tmpOutputBase = tmpFolder.newFolder();
+        File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
+        File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
         
 //        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws");
 //        File tmpOutputBase = new File("/tmp/bazeltest/bin");
@@ -59,7 +59,7 @@ public class BazelProjectImportScannerTest {
     
     @Test(expected = IllegalArgumentException.class)
     public void testEmptyDirectory() throws Exception {
-        File tmpWorkspaceDir = tmpFolder.newFolder();
+        File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
         
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();
         scanner.getProjects(tmpWorkspaceDir);
@@ -67,8 +67,8 @@ public class BazelProjectImportScannerTest {
 
     @Test
     public void testNoJavaProjects() throws Exception {
-        File tmpWorkspaceDir = tmpFolder.newFolder();
-        File tmpOutputBase = tmpFolder.newFolder();
+        File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
+        File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
         new TestBazelWorkspaceFactory(tmpWorkspaceDir, tmpOutputBase).javaPackages(0).genrulePackages(2).build();
         
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();
@@ -79,8 +79,8 @@ public class BazelProjectImportScannerTest {
     
     @Test
     public void testNoProjects() throws Exception {
-        File tmpWorkspaceDir = tmpFolder.newFolder();
-        File workspaceFile = new File(tmpWorkspaceDir, "WORKSPACE");
+        File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
+        File workspaceFile = new File(tmpWorkspaceDir, "WORKSPACE").getCanonicalFile();
         workspaceFile.createNewFile();
         
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();
