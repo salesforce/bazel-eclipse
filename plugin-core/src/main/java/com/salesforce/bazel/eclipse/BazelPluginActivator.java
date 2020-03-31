@@ -170,11 +170,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             }
         });
 
-        // Get the bazel workspace path from the settings, defaults to /usr/local/bin/bazel
+        // Get the bazel workspace path from the settings
         String bazelWorkspacePathFromPrefs = prefsStore.getString(BAZEL_WORKSPACE_PATH_PREF_NAME);
         if (bazelWorkspacePathFromPrefs != null && !bazelWorkspacePathFromPrefs.isEmpty()) {
             String workspaceName = BazelEclipseProjectFactory.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
             this.setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
+        } else {
+            LOG.warn("Eclipse workspace is damaged, workspace path property is missing: " + BAZEL_WORKSPACE_PATH_PREF_NAME);
+            throw new IllegalStateException("Missing property: " + BAZEL_WORKSPACE_PATH_PREF_NAME);
         }
 }
     
