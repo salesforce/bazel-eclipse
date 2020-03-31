@@ -69,7 +69,7 @@ public class BazelAspectLocationImpl implements BazelAspectLocation {
                 throw new IllegalStateException("Could not load location [" + url + "]");
             }
 
-            return new File(resolved.getPath());
+            return BazelProjectHelper.getCanonicalFileSafely(new File(resolved.getPath()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

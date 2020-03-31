@@ -1,6 +1,7 @@
 package com.salesforce.bazel.eclipse.model;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,13 +81,28 @@ public class BazelWorkspace {
 
     public BazelWorkspace(String name, File bazelWorkspaceRootDirectory, OperatingEnvironmentDetectionStrategy osEnvStrategy) {
         this.name = name;
-        this.bazelWorkspaceRootDirectory = bazelWorkspaceRootDirectory;
+        this.bazelWorkspaceRootDirectory = getCanonicalFileSafely(bazelWorkspaceRootDirectory);
         this.operatingSystem = osEnvStrategy.getOperatingSystemName();
         this.operatingSystemFoldername = osEnvStrategy.getOperatingSystemDirectoryName(this.operatingSystem);
     }
     
     public void setBazelWorkspaceMetadataStrategy(BazelWorkspaceMetadataStrategy metadataStrategy) {
         this.metadataStrategy = metadataStrategy;
+    }
+    
+    /**
+     * Resolve softlinks and other abstractions in the workspace path.
+     */
+    private File getCanonicalFileSafely(File directory) {
+        if (directory == null) {
+            return null;
+        }
+        try {
+            directory = directory.getCanonicalFile();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        return directory;
     }
     
     // GETTERS AND SETTERS    

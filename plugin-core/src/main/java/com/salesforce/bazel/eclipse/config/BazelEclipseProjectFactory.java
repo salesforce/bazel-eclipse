@@ -119,7 +119,7 @@ public class BazelEclipseProjectFactory {
           IProgressMonitor monitor) {
 
         String bazelWorkspaceRoot = bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory().getAbsolutePath();
-        File bazelWorkspaceRootDirectory = new File(bazelWorkspaceRoot);
+        File bazelWorkspaceRootDirectory = BazelProjectHelper.getCanonicalFileSafely(new File(bazelWorkspaceRoot));
 
         SubMonitor subMonitor = SubMonitor.convert(monitor, selectedBazelPackages.size());
         subMonitor.setTaskName("Getting the Aspect Information for targets");

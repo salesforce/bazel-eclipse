@@ -103,7 +103,7 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
                     // great, this dir is a Bazel package (but this may be a non-Java package)
                     // scan the BUILD file looking for java rules, only add if this is a java project
                     if (BazelBuildFileHelper.hasJavaRules(dirFile)) {
-                        buildFileLocations.add(dir);
+                        buildFileLocations.add(BazelProjectHelper.getCanonicalFileSafely(dir));
                     }
                 } else if (dirFile.isDirectory()) {
                     findBuildFileLocations(dirFile, monitor, buildFileLocations, depth + 1);

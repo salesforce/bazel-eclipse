@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -88,7 +88,7 @@ public class BazelEclipseProjectSupport {
 
         return listBuilder.build();
     }
-    
+
     /**
      * List of Bazel build flags for this Eclipse project, taken from the project configuration
      */
@@ -96,7 +96,7 @@ public class BazelEclipseProjectSupport {
         // Get the list of build flags from the preferences
         IScopeContext eclipseProjectScope = BazelPluginActivator.getResourceHelper().getProjectScopeContext(eclipseProject);
         Preferences eclipseProjectNode = eclipseProjectScope.getNode(BazelPluginActivator.PLUGIN_ID);
-        
+
         ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
         for (String property : getKeys(eclipseProjectNode)) {
             if (property.startsWith(BUILDFLAG_PROPERTY_PREFIX)) {
@@ -105,7 +105,7 @@ public class BazelEclipseProjectSupport {
         }
         return listBuilder.build();
     }
-    
+
     /**
      * Publishes problem markers for the specified project.
      */
@@ -131,7 +131,7 @@ public class BazelEclipseProjectSupport {
     }
 
     // HELPERS
-    
+
     private static String[] getKeys(Preferences prefs) {
         try {
             return prefs.keys();
