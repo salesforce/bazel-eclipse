@@ -98,7 +98,7 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
                     continue;
                 }
 
-                if ("BUILD".equals(dirFile.getName())) {
+                if (isBuildFile(dirFile)) {
 
                     // great, this dir is a Bazel package (but this may be a non-Java package)
                     // scan the BUILD file looking for java rules, only add if this is a java project
@@ -118,6 +118,16 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
         if (depth == 0 && f.isDirectory() && f.getName().startsWith("bazel-")) {
             // this is a Bazel internal directory at the root of the project dir, ignore
             // TODO should this use one of the ignore directory facilities at the bottom of this class?
+            return true;
+        }
+        return false;
+    }
+    
+    private static boolean isBuildFile(File candidate) {
+        if ("BUILD".equals(candidate.getName())) {
+            return true;
+        }
+        if ("BUILD.bazel".equals(candidate.getName())) {
             return true;
         }
         return false;

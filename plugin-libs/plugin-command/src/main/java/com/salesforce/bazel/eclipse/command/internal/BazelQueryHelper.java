@@ -128,7 +128,7 @@ public class BazelQueryHelper {
             if (files != null) {
                 for (File d : files) {
                     builder.add(prefix + d.getName() + "/");
-                    if (new File(d, "BUILD").exists()) {
+                    if (new File(d, "BUILD").exists() || new File(d, "BUILD.bazel").exists()) {
                         builder.add(prefix + d.getName() + ":");
                     }
                 }

@@ -195,8 +195,15 @@ public class BazelEclipseProjectFactory {
             bazelWorkspaceRoot, packageFSPath, packageSourceCodeFSPaths, packageBazelTargets, JAVA_LANG_VERSION);
 
         if (eclipseProject != null) {
-            linkFiles(bazelWorkspaceRoot, packageFSPath, eclipseProject, "BUILD");
-            importedProjectsList.add(eclipseProject);
+            boolean foundFile = linkFile(bazelWorkspaceRoot, packageFSPath, eclipseProject, "BUILD");
+            if (!foundFile) {
+                foundFile = linkFile(bazelWorkspaceRoot, packageFSPath, eclipseProject, "BUILD.bazel");
+            }
+            if (foundFile) {
+                importedProjectsList.add(eclipseProject);
+            } else {
+                LOG.error("Could not find BUILD file for package {}", packageInfo.getBazelPackageFSRelativePath());
+            }
         }
     }
 
@@ -213,9 +220,19 @@ public class BazelEclipseProjectFactory {
         if (rootProject == null) {
             throw new IllegalStateException("Could not create the root workspace project. Look back in the log for more details.");            
         }                
+        
+        boolean linkedFile = false;
         IFile workspaceFile = BazelPluginActivator.getResourceHelper().getProjectFile(rootProject, "WORKSPACE");
         if (!workspaceFile.exists()) {
-            linkFiles(bazelWorkspaceRoot, packageFSPath, rootProject, "WORKSPACE");    
+            linkedFile = linkFile(bazelWorkspaceRoot, packageFSPath, rootProject, "WORKSPACE"); 
+            if (!linkedFile) {
+                workspaceFile = BazelPluginActivator.getResourceHelper().getProjectFile(rootProject, "WORKSPACE.bazel");
+                if (!workspaceFile.exists()) {
+                    linkedFile = linkFile(bazelWorkspaceRoot, packageFSPath, rootProject, "WORKSPACE.bazel");
+                }
+            }
+        }
+        if (linkedFile) {
             writeProjectViewFile(bazelWorkspaceRoot, rootProject, importedBazelPackages, monitor);
         }
         return rootProject;
@@ -315,40 +332,41 @@ public class BazelEclipseProjectFactory {
         eclipseProject.setDescription(eclipseProjectDescription, null);
     }
 
-    private static void linkFiles(String bazelWorkspaceRoot, String packageFSPath, IProject eclipseProject, String... fileNames) {
+    private static boolean linkFile(String bazelWorkspaceRoot, String packageFSPath, IProject eclipseProject, String fileName) {
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
+        boolean retval = true;
 
-        for (String fileName : fileNames) {
-            File f = new File(new File(bazelWorkspaceRoot, packageFSPath), fileName);
-            if (f.exists()) {
-                IFile projectFile = resourceHelper.getProjectFile(eclipseProject, fileName);
-                if (projectFile.exists()) {
-                    // What has happened is the user imported the Bazel workspace into Eclipse, but then deleted it from their Eclipse workspace at some point.
-                    // Now they are trying to import it again. Like the IntelliJ plugin we are refusing to do so, but perhaps we will
-                    // support this once we are convinced that we are safe to import over an old imported version of the Bazel workspace.
-                    // For now, just bail, with a good message.
-                    String logMsg =
-                            "You have imported this Bazel workspace into Eclipse previously, but then deleted it from your Eclipse workspace. "
-                                    + "This left files on the filesystem in your Eclipse workspace directory and the feature currently does not support overwriting an old imported Bazel workspace. "
-                                    + "\nTo import this Bazel workspace, use file system tools to delete the associated Bazel Eclipse project files from the "
-                                    + "Eclipse workspace directory, and then try to import again. \nFile: "
-                                    + projectFile.getFullPath();
-                    // TODO throwing this exception just writes a log message, we need a modal error popup for this error
-                    throw new IllegalStateException(logMsg);
-                }
-                try {
-                    resourceHelper.createFileLink(projectFile, Path.fromOSString(f.getAbsolutePath()), IResource.NONE, null);
-                } catch (Exception anyE) {
-                    // TODO throwing this exception just writes a log message, we need a modal error popup for this error
-                    BazelPluginActivator.error("Failure to link file ["+f.getAbsolutePath()+"] for project ["+
-                            eclipseProject.getName()+"]");
-                    throw anyE;
-                }
-            } else {
-                BazelPluginActivator.error("Tried to link a non-existant file ["+f.getAbsolutePath()+"] for project ["+
-                        eclipseProject.getName()+"]");
+        File f = new File(new File(bazelWorkspaceRoot, packageFSPath), fileName);
+        if (f.exists()) {
+            IFile projectFile = resourceHelper.getProjectFile(eclipseProject, fileName);
+            if (projectFile.exists()) {
+                // What has happened is the user imported the Bazel workspace into Eclipse, but then deleted it from their Eclipse workspace at some point.
+                // Now they are trying to import it again. Like the IntelliJ plugin we are refusing to do so, but perhaps we will
+                // support this once we are convinced that we are safe to import over an old imported version of the Bazel workspace. TODO
+                // For now, just bail, with a good message.
+                String logMsg =
+                        "You have imported this Bazel workspace into Eclipse previously, but then deleted it from your Eclipse workspace. "
+                                + "This left files on the filesystem in your Eclipse workspace directory and the feature currently does not support overwriting an old imported Bazel workspace. "
+                                + "\nTo import this Bazel workspace, use file system tools to delete the associated Bazel Eclipse project files from the "
+                                + "Eclipse workspace directory, and then try to import again. \nFile: "
+                                + projectFile.getFullPath();
+                // TODO throwing this exception just writes a log message, we need a modal error popup for this error
+                throw new IllegalStateException(logMsg);
             }
+            try {
+                resourceHelper.createFileLink(projectFile, Path.fromOSString(f.getAbsolutePath()), IResource.NONE, null);
+            } catch (Exception anyE) {
+                // TODO throwing this exception just writes a log message, we need a modal error popup for this error
+                BazelPluginActivator.error("Failure to link file ["+f.getAbsolutePath()+"] for project ["+
+                        eclipseProject.getName()+"]");
+                throw anyE;
+            }
+        } else {
+            BazelPluginActivator.error("Tried to link a non-existant file ["+f.getAbsolutePath()+"] for project ["+
+                    eclipseProject.getName()+"]");
+            retval = false;
         }
+        return retval;
     }
 
     // bazelPackageFSPath: the relative path from the Bazel WORKSPACE root, to the  Bazel Package being processed

@@ -67,7 +67,9 @@ public class BazelPackageInfo implements BazelPackageLocation {
     protected BazelPackageInfo workspaceRootNode;
 
     public static final String WORKSPACE_FILENAME = "WORKSPACE";
+    public static final String WORKSPACE_FILENAME_ALT = "WORKSPACE.bazel";
     public static final String BUILD_FILENAME = "BUILD";
+    public static final String BUILD_FILENAME_ALT = "BUILD.bazel";
 
     private String computedPackageName = null;
     private String computedPackageNameLastSegment = null;
@@ -94,8 +96,11 @@ public class BazelPackageInfo implements BazelPackageLocation {
         this.workspaceRoot = rootDirectory;
         File workspaceFile = new File(this.workspaceRoot, WORKSPACE_FILENAME);
         if (!workspaceFile.exists()) {
-            throw new IllegalArgumentException("The path [" + rootDirectory.getAbsolutePath() + "] does not contain a "
-                    + WORKSPACE_FILENAME + " file.");
+            workspaceFile = new File(this.workspaceRoot, WORKSPACE_FILENAME_ALT);
+            if (!workspaceFile.exists()) {
+                throw new IllegalArgumentException("The path [" + rootDirectory.getAbsolutePath() + "] does not contain a "
+                        + WORKSPACE_FILENAME + " file.");
+            }
         }
 
         this.parent = null;
@@ -151,6 +156,12 @@ public class BazelPackageInfo implements BazelPackageLocation {
         if (workspaceFile.exists()) {
             throw new IllegalArgumentException(
                     "The path [" + this.directory.getAbsolutePath() + "] contains a " + WORKSPACE_FILENAME
+                            + " file. Nested workspaces are not supported by BazelPackageInfo at this time");
+        }
+        workspaceFile = new File(this.directory, WORKSPACE_FILENAME_ALT);
+        if (workspaceFile.exists()) {
+            throw new IllegalArgumentException(
+                    "The path [" + this.directory.getAbsolutePath() + "] contains a " + WORKSPACE_FILENAME_ALT
                             + " file. Nested workspaces are not supported by BazelPackageInfo at this time");
         }
 

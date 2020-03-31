@@ -113,7 +113,8 @@ public class SelectionUtil {
 
         IFile file = getType(element, IFile.class);
         if (file != null) {
-            if ("BUILD".equals(file.getFullPath().lastSegment())) {
+            String lastSegment = file.getFullPath().lastSegment();
+            if ("BUILD".equals(lastSegment) || "BUILD.bazel".equals(lastSegment)) {
                 return POM_FILE;
             }
         }
