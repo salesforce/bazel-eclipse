@@ -58,7 +58,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
      * </ul>
      */
     public static MockEclipse createMockEnvironment_PriorToImport_JavaPackages(File testTempDir, int numberOfJavaPackages,
-            boolean explicitJavaTestDeps) throws Exception {
+            boolean explicitJavaTestDeps, boolean useAltConfigFileNames) throws Exception {
         // build out a Bazel workspace with specified number of Java packages, and a couple of genrules packages just to test that they get ignored
         File wsDir = new File(testTempDir, MockEclipse.BAZEL_WORKSPACE_NAME);
         wsDir.mkdirs();
@@ -72,7 +72,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
         }
         
         TestBazelWorkspaceFactory bazelWorkspaceCreator = new TestBazelWorkspaceFactory(wsDir, outputbaseDir).
-                javaPackages(numberOfJavaPackages).genrulePackages(2).options(commandOptions);
+                javaPackages(numberOfJavaPackages).genrulePackages(2).options(commandOptions).useAltConfigFileNames(useAltConfigFileNames);
         bazelWorkspaceCreator.build();
 
         // create the mock Eclipse runtime
@@ -94,7 +94,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
             boolean computeClasspaths, boolean explicitJavaTestDeps) throws Exception {
         // create base configuration, which includes the real bazel workspace on disk
         MockEclipse mockEclipse = createMockEnvironment_PriorToImport_JavaPackages(testTempDir, numberOfJavaPackages,
-            explicitJavaTestDeps);
+            explicitJavaTestDeps, false);
 
         // scan the bazel workspace filesystem to build the list of Java projects
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();

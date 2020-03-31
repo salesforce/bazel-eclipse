@@ -25,6 +25,8 @@ public class TestBazelWorkspaceFactory {
     
     // INPUTS
     public String workspaceName = "test_workspace";
+    public String workspaceFilename = "WORKSPACE";
+    public String buildFilename = "BUILD";
     public Map<String, String> commandOptions = new HashMap<>();
     public int numberJavaPackages = 0;
     public int numberGenrulePackages = 0;
@@ -72,6 +74,16 @@ public class TestBazelWorkspaceFactory {
         this.workspaceName = workspaceName;
     }
 
+    public TestBazelWorkspaceFactory useAltConfigFileNames(boolean useAltName) {
+        if (useAltName) {
+            workspaceFilename = "WORKSPACE.bazel";
+            buildFilename = "BUILD.bazel";
+        } else {
+            workspaceFilename = "WORKSPACE";
+            buildFilename = "BUILD";
+        }
+        return this;
+    }
     
     public TestBazelWorkspaceFactory javaPackages(int count) {
         numberJavaPackages = count;
@@ -105,7 +117,7 @@ public class TestBazelWorkspaceFactory {
         String libsRelativePath = "projects/libs";
         
         // make the WORKSPACE file
-        File workspaceFile = new File(dirWorkspaceRoot, "WORKSPACE");
+        File workspaceFile = new File(dirWorkspaceRoot, this.workspaceFilename);
         try {
             workspaceFile.createNewFile();
         } catch (Exception anyE) {
@@ -140,7 +152,7 @@ public class TestBazelWorkspaceFactory {
             Set<String> packageAspectFiles = new TreeSet<>();
             
             // create the BUILD file
-            File buildFile = new File(javaPackageDir, "BUILD");
+            File buildFile = new File(javaPackageDir, this.buildFilename);
             buildFile.createNewFile();
             TestJavaRuleCreator.createJavaBuildFile(commandOptions, buildFile, packageName, i);
             
@@ -217,7 +229,7 @@ public class TestBazelWorkspaceFactory {
             String packageName = "genrulelib"+i;
             File genruleLib = new File(libsDir, packageName);
             genruleLib.mkdir();
-            File buildFile = new File(genruleLib, "BUILD");
+            File buildFile = new File(genruleLib, this.buildFilename);
             buildFile.createNewFile();
             createGenruleBuildFile(buildFile, packageName, i);
             

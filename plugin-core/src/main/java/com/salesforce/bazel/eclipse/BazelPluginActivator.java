@@ -228,9 +228,12 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     public void setBazelWorkspaceRootDirectory(String workspaceName, File rootDirectory) {
         File workspaceFile = new File(rootDirectory, "WORKSPACE");
         if (!workspaceFile.exists()) {
-            new Throwable().printStackTrace();
-            BazelPluginActivator.error("BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: "+rootDirectory.getAbsolutePath());
-            return;
+            workspaceFile = new File(rootDirectory, "WORKSPACE.bazel");
+            if (!workspaceFile.exists()) {
+                new Throwable().printStackTrace();
+                BazelPluginActivator.error("BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: "+rootDirectory.getAbsolutePath());
+                return;
+            }
         }
         bazelWorkspace = new BazelWorkspace(workspaceName, rootDirectory, osEnvStrategy);
         bazelWorkspace.setBazelWorkspaceMetadataStrategy(getWorkspaceCommandRunner());

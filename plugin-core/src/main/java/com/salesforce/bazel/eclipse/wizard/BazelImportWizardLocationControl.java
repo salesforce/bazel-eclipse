@@ -126,7 +126,7 @@ public class BazelImportWizardLocationControl {
                     String selectedFile = dialog.open();
                     if (selectedFile != null) {
                         File workspaceFile = new File(selectedFile);
-                        if (!workspaceFile.isFile() || !workspaceFile.getName().equals("WORKSPACE")) {
+                        if (!workspaceFile.isFile() || !hasWorkspaceFilename(workspaceFile)) {
                             MessageDialog.openError(page.getShell(), "Import WORKSPACE", "You must select a Bazel WORKSPACE File");                            
                         } else {
                             rootDirectoryCombo.setText(workspaceFile.getParentFile().getAbsolutePath());
@@ -208,6 +208,16 @@ public class BazelImportWizardLocationControl {
             }
             combos.add(combo);
         }
+    }
+    
+    private boolean hasWorkspaceFilename(File candidateWorkspaceFile) {
+        if (candidateWorkspaceFile.getName().equals("WORKSPACE")) {
+            return true;
+        }
+        if (candidateWorkspaceFile.getName().equals("WORKSPACE.bazel")) {
+            return true;
+        }
+        return false;
     }
 
 }

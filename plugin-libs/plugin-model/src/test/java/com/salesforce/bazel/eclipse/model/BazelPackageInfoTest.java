@@ -50,7 +50,7 @@ public class BazelPackageInfoTest {
 
     @Test
     public void testGetChildPackageInfos() throws IOException {
-        BazelPackageInfo root = getRootBazelPackageInfo();
+        BazelPackageInfo root = getRootBazelPackageInfo(false);
 
         BazelPackageInfo child1 = getBazelPackageInfo(root, "sayhello");
         BazelPackageInfo child2 = getBazelPackageInfo(root, "sayhello_again");
@@ -60,9 +60,50 @@ public class BazelPackageInfoTest {
         assertTrue(root.getChildPackageInfos().contains(child2));
     }
 
-    private BazelPackageInfo getRootBazelPackageInfo() throws IOException {
+    @Test
+    public void testGetChildPackageInfosWithWorkspaceDotBazel() throws IOException {
+        BazelPackageInfo root = getRootBazelPackageInfo(true);
+
+        BazelPackageInfo child1 = getBazelPackageInfo(root, "sayhello");
+        BazelPackageInfo child2 = getBazelPackageInfo(root, "sayhello_again");
+
+        assertEquals(2, root.getChildPackageInfos().size());
+        assertTrue(root.getChildPackageInfos().contains(child1));
+        assertTrue(root.getChildPackageInfos().contains(child2));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNestedWorkspace() throws IOException {
+        BazelPackageInfo root = getRootBazelPackageInfo(true);
+
+        File nestedWSDir = tmpDir.newFolder("root", "nestedWS");
+        new File(nestedWSDir, "WORKSPACE").createNewFile();
+        
+        // will throw, as we don't support nested workspaces yet
+        new BazelPackageInfo(root, "nestedWS");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNestedWorkspaceWithWorkspaceDotBazel() throws IOException {
+        BazelPackageInfo root = getRootBazelPackageInfo(true);
+
+        File nestedWSDir = tmpDir.newFolder("root", "nestedWS");
+        new File(nestedWSDir, "WORKSPACE.bazel").createNewFile();
+        
+        // will throw, as we don't support nested workspaces yet
+        new BazelPackageInfo(root, "nestedWS");
+    }
+    
+    
+    // HELPERS
+    
+    private BazelPackageInfo getRootBazelPackageInfo(boolean useAltWsFilename) throws IOException {
         File f = tmpDir.newFolder("root");
-        new File(f, "WORKSPACE").createNewFile();
+        if (useAltWsFilename) {
+            new File(f, "WORKSPACE.bazel").createNewFile();
+        } else {
+            new File(f, "WORKSPACE").createNewFile();
+        }
         return new BazelPackageInfo(f);
     }
 
