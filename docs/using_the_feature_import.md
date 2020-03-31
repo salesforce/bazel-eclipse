@@ -15,6 +15,19 @@ If you do development in multiple Bazel workspaces, you will need to have multip
 
 This issue tracks this limitation: [Support multiple Bazel workspaces in a single Eclipse workspace](https://github.com/salesforce/bazel-eclipse/issues/25)
 
+#### Limitation: Only the Workspace JDK Source Level is Honored
+
+Currently, only the workspace global *javacopt* setting will be honored.
+If not present, JDK 11 will be assumed.
+For example, if this is in your *.bazelrc* file, JDK 8 will be in every project's build path after import:
+
+```
+build --javacopt=-source 8 -target 10
+```
+
+After import, you are free to change the JDK for each project using the Eclipse Build Path user interface.
+Please see [Support package level JDK configuration for Build Path](https://github.com/salesforce/bazel-eclipse/issues/89) for status on improvement.
+
 #### Limitation: Only Import Conforming Java Packages
 
 Before you proceed, please note that at this time the feature is not robust enough to build just any Bazel package.
