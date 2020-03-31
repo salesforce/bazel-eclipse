@@ -71,6 +71,7 @@ import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.builder.BazelBuilder;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer;
+import com.salesforce.bazel.eclipse.classpath.JavaLanguageLevelHelper;
 import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
@@ -79,6 +80,7 @@ import com.salesforce.bazel.eclipse.model.AspectPackageInfos;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.eclipse.model.projectview.ProjectView;
 import com.salesforce.bazel.eclipse.model.projectview.ProjectViewConstants;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -91,14 +93,8 @@ import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 public class BazelEclipseProjectFactory {
     static final LogHelper LOG = LogHelper.log(BazelEclipseProjectFactory.class);
 
-    // TODO do an analysis of the workspace to determine the correct JDK to bind into the bazel project
     static final String STANDARD_VM_CONTAINER_PREFIX = "org.eclipse.jdt.launching.JRE_CONTAINER/"
-            + "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.";
-
-    /**
-     * The Java version to assign to the classpath of each created Java Eclipse project.
-     */
-    private static final int JAVA_LANG_VERSION = 8;
+            + "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-";
 
     /**
      * Alternate code path that we no longer use, but retained for possible future use.
@@ -140,8 +136,16 @@ public class BazelEclipseProjectFactory {
         // TODO send this message to the EclipseConsole so the user actually sees it
         LOG.info("Starting import of [{}]. This may take some time, please be patient.", bazelWorkspaceName);
 
+        // get the Workspace options (.bazelrc)
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        BazelWorkspaceCommandOptions options = bazelWorkspace.getBazelWorkspaceCommandOptions();
+        
+        // determine the Java levels
+        String javacoptString = options.getContextualOption("build", "javacopt");
+        int sourceLevel = JavaLanguageLevelHelper.getSourceLevelAsInt(javacoptString);
+        
         // create the Eclipse project for the Bazel workspace (directory that contains the WORKSPACE file)
-        IProject rootEclipseProject = createEclipseRootWorkspaceProject(bazelWorkspaceName, bazelWorkspaceRoot, JAVA_LANG_VERSION, 
+        IProject rootEclipseProject = createEclipseRootWorkspaceProject(bazelWorkspaceName, bazelWorkspaceRoot, sourceLevel, 
                 selectedBazelPackages, monitor);
         List<IProject> importedProjectsList = new ArrayList<>();
         importedProjectsList.add(rootEclipseProject);
@@ -159,7 +163,7 @@ public class BazelEclipseProjectFactory {
                 // the workspace root node has already been created (above)
                 continue;
             }
-            importBazelWorkspacePackagesAsProjects(childPackageInfo, bazelWorkspaceRoot, importedProjectsList);
+            importBazelWorkspacePackagesAsProjects(childPackageInfo, bazelWorkspaceRoot, importedProjectsList, sourceLevel);
             subMonitor.split(1);
         }
 
@@ -182,7 +186,7 @@ public class BazelEclipseProjectFactory {
     }
 
     private static void importBazelWorkspacePackagesAsProjects(BazelPackageLocation packageInfo, String bazelWorkspaceRoot,
-            List<IProject> importedProjectsList) {
+            List<IProject> importedProjectsList, int javaLanguageVersion) {
         List<String> packageSourceCodeFSPaths = new ArrayList<>();
         List<String> packageBazelTargets = new ArrayList<>();
         BazelEclipseProjectFactory.computePackageSourceCodePaths(packageInfo, packageSourceCodeFSPaths,
@@ -192,7 +196,7 @@ public class BazelEclipseProjectFactory {
         URI eclipseProjectLocation = null; // let Eclipse use the default location
         String packageFSPath = packageInfo.getBazelPackageFSRelativePath();
         IProject eclipseProject = createEclipseProjectForBazelPackage(eclipseProjectNameForBazelPackage, eclipseProjectLocation,
-            bazelWorkspaceRoot, packageFSPath, packageSourceCodeFSPaths, packageBazelTargets, JAVA_LANG_VERSION);
+            bazelWorkspaceRoot, packageFSPath, packageSourceCodeFSPaths, packageBazelTargets, javaLanguageVersion);
 
         if (eclipseProject != null) {
             boolean foundFile = linkFile(bazelWorkspaceRoot, packageFSPath, eclipseProject, "BUILD");
@@ -407,8 +411,14 @@ public class BazelEclipseProjectFactory {
         classpathEntries.add(bazelClasspathContainerEntry);
 
         // add in a JDK to the classpath
-        classpathEntries.add(BazelPluginActivator.getJavaCoreHelper()
-                .newContainerEntry(new Path(STANDARD_VM_CONTAINER_PREFIX + javaLanguageLevel)));
+        String jdk;
+        if (javaLanguageLevel < 9) {
+            jdk = STANDARD_VM_CONTAINER_PREFIX+"1."+javaLanguageLevel;
+        } else {
+            jdk = STANDARD_VM_CONTAINER_PREFIX+javaLanguageLevel;
+        }
+        
+        classpathEntries.add(BazelPluginActivator.getJavaCoreHelper().newContainerEntry(new Path(jdk)));
 
         IClasspathEntry[] newClasspath = classpathEntries.toArray(new IClasspathEntry[classpathEntries.size()]);
         eclipseProject.setRawClasspath(newClasspath, null);
