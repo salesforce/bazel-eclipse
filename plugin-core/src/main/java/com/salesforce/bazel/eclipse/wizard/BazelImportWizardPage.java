@@ -48,13 +48,18 @@ package com.salesforce.bazel.eclipse.wizard;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
+import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.importer.BazelProjectImportScanner;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
+import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
 
 /**
@@ -143,6 +148,7 @@ public class BazelImportWizardPage extends WizardPage {
                         // short term usability hack, enable all for import if there are less than 10 Bazel packages
                         this.projectTree.projectTreeViewer.setAllChecked(true);
                     }
+                    uncheckAlreadyImportedProjects(this.projectTree.projectTreeViewer, this.workspaceRootPackage);
                 } else {
                     this.projectTree.projectTreeViewer.setAllChecked(true);
                 }
@@ -162,4 +168,32 @@ public class BazelImportWizardPage extends WizardPage {
         }
     }
 
+    
+    private void uncheckAlreadyImportedProjects(CheckboxTreeViewer projectTreeViewer, BazelPackageInfo rootBazelPackage) {
+        List<BazelPackageInfo> importedBazelPackages = getImportedBazelPackages(rootBazelPackage);
+
+        if (importedBazelPackages.size() > 0) {
+            projectTreeViewer.setChecked(rootBazelPackage, false);
+            projectTreeViewer.setGrayed(rootBazelPackage, true);
+            for (BazelPackageInfo alreadyImportedPackage : importedBazelPackages) {
+                projectTreeViewer.setChecked(alreadyImportedPackage, false);
+                projectTreeViewer.setGrayed(alreadyImportedPackage, true);
+            }
+        }
+    }
+    
+    private static List<BazelPackageInfo> getImportedBazelPackages(BazelPackageInfo rootPackage) {
+        List<BazelPackageInfo> importedPackages = new ArrayList<>();
+        IJavaProject[] javaProjects = BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false);
+        for (IJavaProject javaProject : javaProjects) {
+            String target = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(javaProject.getProject(), false).get(0);
+            BazelLabel label = new BazelLabel(target);
+            BazelPackageInfo bpi = rootPackage.findByPackage(label.getPackagePath(true));
+            if (bpi != null) {
+                importedPackages.add(bpi);
+            }
+        }
+        return importedPackages;
+    }
+    
 }

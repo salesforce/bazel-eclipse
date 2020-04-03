@@ -111,6 +111,33 @@ public class BazelLabel {
     }
 
     /**
+     * Returns the package path of this label, which is the "path part" of the label, excluding any specific target or
+     * target wildcard pattern.
+     * 
+     * For example, given a label //foo/blah/goo:t1, the package path is foo/blah/goo.
+     * 
+     * @param includePrefix if true, will prepend the path with "//"
+     * @return the package path of this label
+     */
+    public String getPackagePath(boolean includePrefix) {
+        String packagePath = this.label;
+        int i = packagePath.lastIndexOf("...");
+        if (i != -1) {
+            packagePath = packagePath.substring(0, i);
+            if (packagePath.endsWith("/")) {
+                packagePath = packagePath.substring(0, packagePath.length() - 1);
+            }
+        } else {
+            i = this.label.lastIndexOf(":");
+            if (i != -1) {
+                packagePath = packagePath.substring(0, i);
+            }
+        }
+        String prefix = includePrefix ? "//" : "";
+        return prefix + packagePath;
+    }
+    
+    /**
      * Returns the package name of this label, which is the right-most path component of the package path.
      * 
      * For example, given a label //foo/blah/goo:t1, the package name is goo.
