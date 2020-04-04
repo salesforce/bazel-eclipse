@@ -42,33 +42,13 @@ public class BazelOutputDirectoryBuilderTest {
     private final BazelOutputDirectoryBuilder builder = new BazelOutputDirectoryBuilder();
 
     @Test
-    public void testJavaLib() {
-        BazelLabel label = new BazelLabel("//projects/libs/apple/apple-api");
+    public void testGetRunScriptPath() {
+        BazelLabel label = new BazelLabel("//projects/services/apple:projects/services/apple_apprun");
+        String path = builder.getRunScriptPath(label);
+        assertEquals("bazel-bin/projects/services/apple/projects/services/apple_apprun", path);
 
-        String path = builder.getOutputDirectoryPath(TargetKind.JAVA_LIBRARY, label);
-
-        assertEquals("bazel-bin/projects/libs/apple/apple-api/_javac/apple-api/libapple-api_classes", path);
-    }
-
-    @Test
-    public void testJavaBinary() {
-        BazelLabel label = new BazelLabel("//projects/services/fruit-salad-service/fruit-salad:fruit-salad-service");
-
-        String path = builder.getOutputDirectoryPath(TargetKind.JAVA_BINARY, label);
-
-        assertEquals(
-            "bazel-bin/projects/services/fruit-salad-service/fruit-salad/_javac/fruit-salad-service/fruit-salad-service_classes",
-            path);
-    }
-
-    @Test
-    public void testJavaTest() {
-        BazelLabel label = new BazelLabel("//projects/libs/grapes/grapes-api:src/test/java/demo/grapes/api/GrapeTest");
-
-        String path = builder.getOutputDirectoryPath(TargetKind.JAVA_TEST, label);
-
-        assertEquals(
-            "bazel-bin/projects/libs/grapes/grapes-api/_javac/src/test/java/demo/grapes/api/GrapeTest/GrapeTest_classes",
-            path);
+        label = new BazelLabel("//projects/services/apple:test");
+        path = builder.getRunScriptPath(label);
+        assertEquals("bazel-bin/projects/services/apple/test", path);
     }
 }

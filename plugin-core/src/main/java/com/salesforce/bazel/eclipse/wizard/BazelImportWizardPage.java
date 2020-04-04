@@ -188,7 +188,8 @@ public class BazelImportWizardPage extends WizardPage {
         for (IJavaProject javaProject : javaProjects) {
             String target = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(javaProject.getProject(), false).get(0);
             BazelLabel label = new BazelLabel(target);
-            BazelPackageInfo bpi = rootPackage.findByPackage(label.getPackagePath(true));
+            String pack = label.getDefaultPackageLabel().getLabel();
+            BazelPackageInfo bpi = rootPackage.findByPackage(pack);
             if (bpi != null) {
                 importedPackages.add(bpi);
             }

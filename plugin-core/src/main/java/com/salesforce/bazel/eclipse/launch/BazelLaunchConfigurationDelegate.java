@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
@@ -97,6 +98,13 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
         String targetKindStr = getAttributeValueWithDefault(configuration, BazelLaunchConfigAttributes.TARGET_KIND, "java_binary");
         TargetKind targetKind = TargetKind.valueOfIgnoresCaseRequiresMatch(targetKindStr);
         IProject project = BazelPluginActivator.getResourceHelper().getProjectByName(projectName);
+        
+        if (targetKind.isRunnable()) {
+            // build before running - this is required because building generates the shell script
+            // we end up running
+            project.build(IncrementalProjectBuilder.FULL_BUILD, monitor);
+        }
+        
         BazelWorkspaceCommandRunner bazelCommandRunner = BazelPluginActivator.getInstance().getWorkspaceCommandRunner();
 
         Command cmd = bazelCommandRunner.getBazelLauncherBuilder().setLabel(label).setTargetKind(targetKind).setArgs(bazelArgs)
