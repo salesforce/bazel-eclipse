@@ -69,14 +69,11 @@ public class BazelLaunchConfigurationDelegateFTest {
         // verify
         MockResourceHelper mockResourceHelper = mockEclipse.getMockResourceHelper();
         String[] cmdLine = mockResourceHelper.lastExecCommandLine;
-        assertTrue(cmdLine[0].contains("bazel"));
-        assertEquals("run", cmdLine[1]);
-        assertTrue(cmdLine[2].contains("dt_socket"));
-        assertTrue(cmdLine[3].contains("testvalue"));
-        assertTrue(cmdLine[4].contains("testvalue"));
-        assertTrue(cmdLine[5].contains("testvalue"));
-        assertEquals("--", cmdLine[6]);
-        assertEquals("//projects/libs/javalib0", cmdLine[7]);
+        assertEquals("bazel-bin/projects/libs/javalib0/javalib0", cmdLine[0]);
+        assertTrue(cmdLine[1].contains("debug"));
+        assertTrue(cmdLine[2].contains("testvalue1"));
+        assertTrue(cmdLine[3].contains("testvalue2"));
+        assertTrue(cmdLine[4].contains("testvalue3"));
     }
 
     @Test
@@ -99,11 +96,11 @@ public class BazelLaunchConfigurationDelegateFTest {
         assertEquals("test", cmdLine[1]);
         assertTrue(cmdLine[2].contains("test_output"));
         // there are a bunch of other flags passed as well 3-8
-        assertTrue(cmdLine[9].contains("testvalue"));
-        assertTrue(cmdLine[10].contains("testvalue"));
-        assertTrue(cmdLine[11].contains("testvalue"));
-        assertEquals("--", cmdLine[12]);
-        assertEquals("//projects/libs/javalib0", cmdLine[13]);
+        assertTrue(cmdLine[8].contains("testvalue1"));
+        assertTrue(cmdLine[9].contains("testvalue2"));
+        assertTrue(cmdLine[10].contains("testvalue3"));
+        assertEquals("--", cmdLine[11]);
+        assertEquals("//projects/libs/javalib0", cmdLine[12]);
     }
 
     @Test
@@ -126,11 +123,11 @@ public class BazelLaunchConfigurationDelegateFTest {
         assertEquals("test", cmdLine[1]);
         assertTrue(cmdLine[2].contains("test_output"));
         // there are a bunch of other flags passed as well 3-8
-        assertTrue(cmdLine[9].contains("testvalue"));
-        assertTrue(cmdLine[10].contains("testvalue"));
-        assertTrue(cmdLine[11].contains("testvalue"));
-        assertEquals("--", cmdLine[12]);
-        assertEquals("//projects/libs/javalib0", cmdLine[13]);
+        assertTrue(cmdLine[8].contains("testvalue1"));
+        assertTrue(cmdLine[9].contains("testvalue2"));
+        assertTrue(cmdLine[10].contains("testvalue3"));
+        assertEquals("--", cmdLine[11]);
+        assertEquals("//projects/libs/javalib0", cmdLine[12]);
     }
     
     // HELPERS

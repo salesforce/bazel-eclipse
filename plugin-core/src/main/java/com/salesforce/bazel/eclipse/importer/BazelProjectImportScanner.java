@@ -86,7 +86,7 @@ public class BazelProjectImportScanner {
      *            the directory to scan, which must be the root node of a Bazel workspace
      * @return the workspace root BazelPackageInfo
      */
-    public BazelPackageInfo getProjects(String rootDirectory) {
+    public BazelPackageInfo getProjects(String rootDirectory) throws IOException {
         if (rootDirectory == null || rootDirectory.isEmpty()) {
             // this is the initialization state of the wizard
             return null;
@@ -115,12 +115,12 @@ public class BazelProjectImportScanner {
      *            the directory to scan, which must be the root node of a Bazel workspace
      * @return the workspace root BazelPackageInfo
      */
-    public BazelPackageInfo getProjects(File rootDirectoryFile) {
+    public BazelPackageInfo getProjects(File rootDirectoryFile) throws IOException {
         if (rootDirectoryFile == null || !rootDirectoryFile.exists() || !rootDirectoryFile.isDirectory()) {
             // this is the initialization state of the wizard
             return null;
         }
-        String rootDirectory = rootDirectoryFile.getAbsolutePath();
+        String rootDirectory = rootDirectoryFile.getCanonicalPath();
 
         // TODO the correct way to do this is put the configurator on another thread, and allow it to update the progress monitor.
         // Do it on-thread for now as it is easiest.
@@ -132,7 +132,7 @@ public class BazelProjectImportScanner {
 
         int sizeOfWorkspacePath = rootDirectory.length();
         for (File project : projects) {
-            String projectPath = project.getAbsolutePath();
+            String projectPath = project.getCanonicalPath();
 
             if (projectPath.equals(rootDirectory)) {
                 // root path, already created the root node

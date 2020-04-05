@@ -177,7 +177,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             this.setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
         } else {
             LOG.warn("Eclipse workspace is damaged, workspace path property is missing: " + BAZEL_WORKSPACE_PATH_PREF_NAME);
-            throw new IllegalStateException("Missing property: " + BAZEL_WORKSPACE_PATH_PREF_NAME);
+            //throw new IllegalStateException("Missing property: " + BAZEL_WORKSPACE_PATH_PREF_NAME);
         }
 }
     
