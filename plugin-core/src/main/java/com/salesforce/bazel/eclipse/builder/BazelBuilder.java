@@ -93,7 +93,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         try {
             boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project), progressMonitor, monitor);
             if (buildSuccessful && !importInProgress()) {
-                Set<IProject> downstreams = getDownstreamProjectsOf(project);
+                Set<IProject> downstreams = new HashSet<>();
+                getDownstreamProjectsOf(project, downstreams);
                 buildProjects(bazelWorkspaceCmdRunner, downstreams, progressMonitor, monitor);
             }
         } catch (IOException | InterruptedException e) {
@@ -159,7 +160,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         Multimap<IProject, BazelMarkerDetails> m = HashMultimap.create();
         for (BazelMarkerDetails error : errors) {
             for (IProject project : projectToLabels.keys()) {
-                String resourcePath = error.getResourcePathRelativeToBazelPackage(projectToLabels.get(project));
+                Collection<BazelLabel> labels = projectToLabels.get(project);
+                String resourcePath = error.getResourcePathRelativeToBazelPackage(labels);
                 if (resourcePath != null) {
                     m.put(project, error);
                 }
@@ -176,20 +178,22 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         return buildFlags;         
     }
 
-    private static Set<IProject> getDownstreamProjectsOf(IProject upstream) {
-        Set<IProject> downstreams = new HashSet<>();
+    private static void getDownstreamProjectsOf(IProject upstream, Set<IProject> downstreams) {
         for (IJavaProject project : BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false)) {
             try {
                 for (String requiredProjectName : project.getRequiredProjectNames()) {
                     if (upstream.getProject().getName().equals(requiredProjectName)) {
-                        downstreams.add(project.getProject());
+                        IProject downstream = project.getProject();
+                        if (!downstreams.contains(downstream)) {
+                            downstreams.add(downstream);
+                            getDownstreamProjectsOf(downstream, downstreams);
+                        }
                     }
                 }
             } catch (JavaModelException ex) {
                 throw new IllegalStateException(ex);
             }
         }
-        return downstreams;
     }
 
     private boolean importInProgress() {
