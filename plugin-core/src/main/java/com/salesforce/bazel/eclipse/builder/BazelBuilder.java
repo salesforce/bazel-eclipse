@@ -148,7 +148,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         
             // run build
             List<BazelMarkerDetails> errors = cmdRunner.runBazelBuild(bazelTargets, progressMonitor, bazelBuildFlags);
-            Multimap<IProject, BazelMarkerDetails> errorsByProject = paritionErrorsByProject(errors, projectToLabels);
+            Multimap<IProject, BazelMarkerDetails> errorsByProject = partitionErrorsByProject(errors, projectToLabels);
             for (IProject project : projects) {
                 BazelEclipseProjectSupport.publishProblemMarkers(project, monitor, errorsByProject.get(project), projectToLabels.get(project));
             }
@@ -156,7 +156,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         }
     }
     
-    private Multimap<IProject, BazelMarkerDetails> paritionErrorsByProject(List<BazelMarkerDetails> errors, Multimap<IProject, BazelLabel> projectToLabels) {
+    private Multimap<IProject, BazelMarkerDetails> partitionErrorsByProject(List<BazelMarkerDetails> errors, Multimap<IProject, BazelLabel> projectToLabels) {
         Multimap<IProject, BazelMarkerDetails> m = HashMultimap.create();
         for (BazelMarkerDetails error : errors) {
             for (IProject project : projectToLabels.keys()) {

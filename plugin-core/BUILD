@@ -147,6 +147,18 @@ java_test(
 )
 
 java_test(
+    name = "BazelBuilderTest",
+    srcs = ["src/test/java/com/salesforce/bazel/eclipse/builder/BazelBuilderTest.java"] + mock_src,
+    deps = [
+        ":com.salesforce.bazel.eclipse.core-bin",
+        "//plugin-libs/plugin-abstractions",
+        "//plugin-libs/plugin-command",
+        "//plugin-libs/plugin-model",
+    ] + mock_deps,
+    runtime_deps = mock_runtime_deps,
+)
+
+java_test(
     name = "MockTest",
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/mock/test/MockTest.java"] + mock_src,
     deps = [
