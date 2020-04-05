@@ -75,6 +75,20 @@ public class BazelLabelTest {
     }
 
     @Test
+    public void testGetDefaultPackageLabel() {
+        assertEquals("//foo", new BazelLabel("foo").getDefaultPackageLabel().getLabel());
+        assertEquals("//foo/blah", new BazelLabel("//foo/blah").getDefaultPackageLabel().getLabel());
+        assertEquals("//foo/blah", new BazelLabel("foo/blah:t1").getDefaultPackageLabel().getLabel());
+        assertEquals("//blah", new BazelLabel("blah/...").getDefaultPackageLabel().getLabel());
+        assertEquals("//blah", new BazelLabel("blah:*").getDefaultPackageLabel().getLabel());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetDefaultPackageLabel_invalidRootLabel() {
+        assertEquals("//", new BazelLabel("//...").getDefaultPackageLabel());
+    }
+
+    @Test
     public void testGetPackageName() {
         assertEquals("foo", new BazelLabel("foo").getPackageName());
         assertEquals("blah", new BazelLabel("//foo/blah").getPackageName());

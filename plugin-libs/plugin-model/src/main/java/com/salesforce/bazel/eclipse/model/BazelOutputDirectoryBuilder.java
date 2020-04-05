@@ -33,40 +33,29 @@
  */
 package com.salesforce.bazel.eclipse.model;
 
+import java.io.File;
+
 /**
- * Encapsulates the logic that builds the path to the location under "bazel-bin" that has compiled classes.
- * 
+ * Knows how to build paths to various files under bazel output directories (bazel-bin etc)
+ *
  * @author stoens
  * @since summer 2019
  *
  */
 public class BazelOutputDirectoryBuilder {
 
-    public String getOutputDirectoryPath(TargetKind targetKind, BazelLabel label) {
-
-        // Salesforce Issue #3: provide the Bazel output directory for compiled classfiles so that Launchers will work
-        // bazel-bin/java/libs/apple/apple-api/_javac/apple-api/libapple-api_classes/demo/apple/api/AppleOrchard.class
-        // bazel-bin/[PACKAGE_PATH]/_javac/[TARGET_NAME]/[TARGET_TYPE][LAST_PATH_COMP_TARGET_NAME]_classes
-
-        // PACKAGE_PATH=the path to the package, for ex java/libs/apple/apple-api
-        // TARGET_NAME=apple-api
-        // TARGET_TYPE="lib" for java_library, empty-string for java_binary|java_test
-        // LAST_PATH_COMP_TARGET_NAME=if the target name is a path-like structure (typical for tests - for ex src/main/java/foo/MyTest), 
-        //                            the value is the last part of the path: src/main/java/foo/MyTest -> MyTest
-        //                            if the target name is not path-like, this is just the target name
-        //
-        // TODO: it would be nice if we could just ask Bazel for this, instead of reverse-engineering the directory structure here        
-
-        String lastCompTargetName = label.getTargetName();
-        int i = lastCompTargetName.lastIndexOf("/");
-        if (i != -1) {
-            lastCompTargetName = lastCompTargetName.substring(i + 1);
-        }
+    /**
+     * Runnable targets (usable with "bazel run") produce a shell script at build time (bazel build).
+     *
+     * This method returns the path to that shell script, relative to the Bazel WORKSPACE root.
+     */
+    public String getRunScriptPath(BazelLabel label) {
         StringBuilder sb = new StringBuilder();
-        sb.append("bazel-bin/").append(label.getPackagePath()).append("/_javac/").append(label.getTargetName())
-                .append("/").append(targetKind == TargetKind.JAVA_LIBRARY ? "lib" : "").append(lastCompTargetName)
-                .append("_classes");
+        sb.append("bazel-bin");
+        sb.append(File.separator);
+        sb.append(label.getPackagePath());
+        sb.append(File.separator);
+        sb.append(label.getTargetName());
         return sb.toString();
     }
-
 }

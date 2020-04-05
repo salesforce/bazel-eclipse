@@ -178,53 +178,55 @@ public class MockCommandBuilder extends CommandBuilder {
         
         // check if this is from a catalog of standard commands with stock responses
         boolean handled = false;
-        if ("info".equals(mockCommand.commandTokens.get(1))) {            
-            // command is of the form 'bazel info' with an optional third param
+        if (mockCommand.commandTokens.get(0).endsWith("/bazel")) {
+            if ("info".equals(mockCommand.commandTokens.get(1))) {
+                // command is of the form 'bazel info' with an optional third param
             
-            if (mockCommand.commandTokens.size() < 3) {
-                // this is just the generic 'bazel info', we probably should not be issuing this command from the plugins as there are better ways
-                throw new IllegalArgumentException("The plugin issued the command 'bazel info' without a third arg. Please consider using a more specific 'bazel info xyz' command instead.");
-            } else if ("workspace".equals(mockCommand.commandTokens.get(2))) {
-                addSimulatedOutputToCommandStdOut(mockCommand, "INFO: Invocation ID: a6809b5e-3fb4-462e-8fcc-2c18575122e7", bazelWorkspaceRoot.getAbsolutePath());
-                handled = true;
-            } else if ("execution_root".equals(mockCommand.commandTokens.get(2))) {
-                addSimulatedOutputToCommandStdOut(mockCommand, bazelExecutionRoot.getAbsolutePath());
-                handled = true;
-            } else if ("output_base".equals(mockCommand.commandTokens.get(2))) {
-                addSimulatedOutputToCommandStdOut(mockCommand, bazelOutputBase.getAbsolutePath());
-                handled = true;
-            } else if ("bazel-bin".equals(mockCommand.commandTokens.get(2))) {
-                addSimulatedOutputToCommandStdOut(mockCommand, bazelBin.getAbsolutePath());
-                handled = true;
-            } else {
-                throw new IllegalArgumentException("MockCommandBuilder does not know how to mock 'bazel info "+mockCommand.commandTokens.get(2)+"'. Please add code to handle this case.");
-            }
-        } else if ("clean".equals(mockCommand.commandTokens.get(1))) {
-            // "bazel clean"
-            addSimulatedOutputToCommandStdOut(mockCommand, "INFO: Starting clean.");
-            handled = true;
-        } else if ("version".equals(mockCommand.commandTokens.get(1))) {
-            // "bazel version"
-            addSimulatedOutputToCommandStdOut(mockCommand, "Build label: 1.0.0", "Build time: Thu Oct 10 10:19:27 2019 (1570702767)",
-                "Build timestamp: 1570702767", "Build timestamp as int: 1570702767");
-            handled = true;
-        } else if ("build".equals(mockCommand.commandTokens.get(1))) {
-            if (mockCommand.commandTokens.size() < 3) {
-                // this is just 'bazel build' without a target, which is not valid, blow up here as there is something wrong in the calling code 
-                throw new IllegalArgumentException("The plugin issued the command 'bazel build' without a third arg. This is not a valid bazel command.");
-            }
-        } else if ("test".equals(mockCommand.commandTokens.get(1))) {
-            if (mockCommand.commandTokens.size() < 3) {
-                // this is just 'bazel test' without a target, which is not valid, blow up here as there is something wrong in the calling code 
-                throw new IllegalArgumentException("The plugin issued the command 'bazel test' without a third arg. This is not a valid bazel command.");
-            }
-            if (mockCommand.commandTokens.size() == 3 && "--announce_rc".equals(mockCommand.commandTokens.get(2))) {
-                if ("true".equals(commandOptions.get("explicit_java_test_deps"))) {
-                    addSimulatedOutputToCommandStdErr(mockCommand, "   'test' options: --explicit_java_test_deps=true");
+                if (mockCommand.commandTokens.size() < 3) {
+                    // this is just the generic 'bazel info', we probably should not be issuing this command from the plugins as there are better ways
+                    throw new IllegalArgumentException("The plugin issued the command 'bazel info' without a third arg. Please consider using a more specific 'bazel info xyz' command instead.");
+                } else if ("workspace".equals(mockCommand.commandTokens.get(2))) {
+                    addSimulatedOutputToCommandStdOut(mockCommand, "INFO: Invocation ID: a6809b5e-3fb4-462e-8fcc-2c18575122e7", bazelWorkspaceRoot.getAbsolutePath());
+                    handled = true;
+                } else if ("execution_root".equals(mockCommand.commandTokens.get(2))) {
+                    addSimulatedOutputToCommandStdOut(mockCommand, bazelExecutionRoot.getAbsolutePath());
+                    handled = true;
+                } else if ("output_base".equals(mockCommand.commandTokens.get(2))) {
+                    addSimulatedOutputToCommandStdOut(mockCommand, bazelOutputBase.getAbsolutePath());
+                    handled = true;
+                } else if ("bazel-bin".equals(mockCommand.commandTokens.get(2))) {
+                    addSimulatedOutputToCommandStdOut(mockCommand, bazelBin.getAbsolutePath());
+                    handled = true;
                 } else {
-                    addSimulatedOutputToCommandStdErr(mockCommand, "   'test' options: --explicit_java_test_deps=false");
+                    throw new IllegalArgumentException("MockCommandBuilder does not know how to mock 'bazel info "+mockCommand.commandTokens.get(2)+"'. Please add code to handle this case.");
                 }
+            } else if ("clean".equals(mockCommand.commandTokens.get(1))) {
+                // "bazel clean"
+                addSimulatedOutputToCommandStdOut(mockCommand, "INFO: Starting clean.");
                 handled = true;
+            } else if ("version".equals(mockCommand.commandTokens.get(1))) {
+                // "bazel version"
+                addSimulatedOutputToCommandStdOut(mockCommand, "Build label: 1.0.0", "Build time: Thu Oct 10 10:19:27 2019 (1570702767)",
+                    "Build timestamp: 1570702767", "Build timestamp as int: 1570702767");
+                handled = true;
+            } else if ("build".equals(mockCommand.commandTokens.get(1))) {
+                if (mockCommand.commandTokens.size() < 3) {
+                    // this is just 'bazel build' without a target, which is not valid, blow up here as there is something wrong in the calling code
+                    throw new IllegalArgumentException("The plugin issued the command 'bazel build' without a third arg. This is not a valid bazel command.");
+                }
+            } else if ("test".equals(mockCommand.commandTokens.get(1))) {
+                if (mockCommand.commandTokens.size() < 3) {
+                    // this is just 'bazel test' without a target, which is not valid, blow up here as there is something wrong in the calling code
+                    throw new IllegalArgumentException("The plugin issued the command 'bazel test' without a third arg. This is not a valid bazel command.");
+                }
+                if (mockCommand.commandTokens.size() == 3 && "--announce_rc".equals(mockCommand.commandTokens.get(2))) {
+                    if ("true".equals(commandOptions.get("explicit_java_test_deps"))) {
+                        addSimulatedOutputToCommandStdErr(mockCommand, "   'test' options: --explicit_java_test_deps=true");
+                    } else {
+                        addSimulatedOutputToCommandStdErr(mockCommand, "   'test' options: --explicit_java_test_deps=false");
+                    }
+                    handled = true;
+                }
             }
         } 
         

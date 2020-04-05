@@ -64,10 +64,7 @@ public class BazelLauncherBuilderTest {
         addBazelCommandOutput(env, "run", "bazel run result");
         
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
-
-        assertEquals(env.bazelExecutable.getAbsolutePath(), cmdTokens.get(0));
-        assertEquals("run", cmdTokens.get(1));
-        assertTrue(cmdTokens.contains(label.getLabel()));
+        assertEquals("bazel-bin/a/b/c/c", cmdTokens.get(0));
         assertFalse(cmdTokens.contains("debug"));
     }
 
@@ -87,11 +84,8 @@ public class BazelLauncherBuilderTest {
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
-        assertEquals(env.bazelExecutable.getAbsolutePath(), cmdTokens.get(0));
-        assertEquals("run", cmdTokens.get(1));
-        assertTrue(cmdTokens.contains(label.getLabel()));
-        assertTrue(cmdTokens.toString().contains(
-            "-agentlib:jdwp=transport=dt_socket,address=localhost:" + DEBUG_PORT + ",server=y,suspend=y"));
+        assertEquals("bazel-bin/a/b/c/c", cmdTokens.get(0));
+        assertFalse(cmdTokens.contains("debug=" + DEBUG_PORT));
     }
 
     @Test
