@@ -42,8 +42,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.util.Set;
-import java.util.TreeSet;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -102,7 +100,7 @@ public class BazelClasspathContainerFTest {
         // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
         assertNotNull(entries);
-        //printClasspathEntries(entries);
+        //printClasspathEntries("tcpbjp_im RAW", entries);
         
         // SECOND check that the resolved classpath has 3 entries for javalib0: (TestRunner comes from implicit deps)
         // bazel-output-base/execroot/mock_workspace/external/com_google_guava_guava/jar/guava-20.0.jar
@@ -110,9 +108,10 @@ public class BazelClasspathContainerFTest {
         // bazel-output-base/execroot/test_workspace/bazel-out/darwin-fastbuild/bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools/Runner_deploy-ijar.jar
         entries = javaHelper.getResolvedClasspath(javalib0_IJavaProject, false);
         assertNotNull(entries);
-        //printClasspathEntries("tcpbjp_im", entries);
+        //printClasspathEntries("tcpbjp_im RESOLVED", entries);
         assertEquals(3, entries.length);
-        assertTrue(entries[0].getPath().toString().contains("guava"));
+        String cpEntryPath = entries[0].getPath().toString(); 
+        assertTrue(cpEntryPath.contains("guava"));
         assertTrue(entries[1].getPath().toString().contains("slf4j"));
         assertTrue(entries[2].getPath().toString().contains("Runner")); // this is the magical implicit dep TestRunner jar that adds hamcrest, junit, javax.annotation to cp
 
@@ -236,12 +235,9 @@ public class BazelClasspathContainerFTest {
      */
     @SuppressWarnings("unused")
     private void printClasspathEntries(String testName, IClasspathEntry[] entries) {
-        Set<String> paths = new TreeSet<>();
+        int index = 0;
         for (IClasspathEntry entry : entries) {
-            paths.add(entry.getPath().toString());
-        }
-        for (String path : paths) {
-            System.out.println("CP ["+testName+"]: "+path);
+            System.err.println("CP["+ index++ +"] ["+testName+"]: "+entry.getPath());
         }
         
     }

@@ -78,12 +78,14 @@ public class BazelCommandRunnerFTest {
         // verify
         assertNotNull(bazelWorkspaceCmdRunner);
         
-        File expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot();
-        assertEquals(expectedBazelWorkspaceRoot.getAbsolutePath(), BazelPluginActivator.getBazelWorkspaceRootDirectory().getAbsolutePath());
+        String expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot().getCanonicalPath();
+        String actualBazelWorkspaceRoot = BazelPluginActivator.getBazelWorkspaceRootDirectory().getCanonicalPath();
+        assertEquals(expectedBazelWorkspaceRoot, actualBazelWorkspaceRoot);
         
         // verify command runner 'bazel info' commands
-        File expectedBazelExecutionRoot = mockEclipse.getBazelExecutionRoot();
-        assertEquals(expectedBazelExecutionRoot.getAbsolutePath(), bazelWorkspace.getBazelExecRootDirectory().getAbsolutePath());
+        String expectedBazelExecutionRoot = mockEclipse.getBazelExecutionRoot().getCanonicalPath();
+        String actualBazelExecutionRoot = bazelWorkspace.getBazelExecRootDirectory().getCanonicalPath();
+        assertEquals(expectedBazelExecutionRoot, actualBazelExecutionRoot);
     }
 
     /**
@@ -108,11 +110,13 @@ public class BazelCommandRunnerFTest {
         // verify
         assertNotNull(bazelWorkspaceCmdRunner);
         
-        File expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot();
-        assertEquals(expectedBazelWorkspaceRoot.getAbsolutePath(), BazelPluginActivator.getBazelWorkspaceRootDirectory().getAbsolutePath());
+        String expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot().getCanonicalPath();
+        String actualBazelWorkspaceRoot = BazelPluginActivator.getBazelWorkspaceRootDirectory().getCanonicalPath();
+        assertEquals(expectedBazelWorkspaceRoot, actualBazelWorkspaceRoot);
         
         // verify command runner 'bazel info' commands
-        File expectedBazelExecutionRoot = mockEclipse.getBazelExecutionRoot();
-        assertEquals(expectedBazelExecutionRoot.getAbsolutePath(), bazelWorkspace.getBazelExecRootDirectory().getAbsolutePath());
+        String expectedBazelExecutionRoot = mockEclipse.getBazelExecutionRoot().getCanonicalPath();
+        String actualBazelExecutionRoot = bazelWorkspace.getBazelExecRootDirectory().getCanonicalPath();
+        assertEquals(expectedBazelExecutionRoot, actualBazelExecutionRoot);
     }
 }

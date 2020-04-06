@@ -69,6 +69,7 @@ import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
 import com.salesforce.bazel.eclipse.model.AspectOutputJarSet;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
@@ -208,27 +209,30 @@ public class BazelClasspathContainer implements IClasspathContainer {
                                 bazelWorkspaceCmdRunner.flushAspectInfoCache(bazelTargetsForProject);
                             }
                         }
-                                                
-                    } else if (eclipseProject.getProject().getFullPath().equals(otherProject.getProject().getFullPath())) {
-                        // the project referenced is actually the the current project that this classpath container is for
-                        
-                        // some rule types have hidden dependencies that we need to add
-                        // if our Eclipse project has any of those rules, we need to add in the dependencies to our classpath
-                        Set<IClasspathEntry> implicitDeps = implicitDependencyHelper.computeImplicitDependencies(eclipseIProject, bazelWorkspace, packageInfo);
-                        classpathEntries.addAll(implicitDeps);
-                        
-                    } else {
-                        // otherProject != null
-                        // add the referenced project to the classpath, directly as a project classpath entry
-                        IPath projectFullPath = otherProject.getProject().getFullPath();
-                        if (!projectsAddedToClasspath.contains(projectFullPath)) {
-                            classpathEntries.add(BazelPluginActivator.getJavaCoreHelper().newProjectEntry(projectFullPath));
+                    } else { // otherProject != null 
+                        String thisFullPath = eclipseProject.getProject().getFullPath().toOSString();
+                        String otherFullPath = otherProject.getProject().getFullPath().toOSString(); 
+                        if (thisFullPath.equals(otherFullPath)) {
+                            // the project referenced is actually the the current project that this classpath container is for
+                            
+                            // some rule types have hidden dependencies that we need to add
+                            // if our Eclipse project has any of those rules, we need to add in the dependencies to our classpath
+                            Set<IClasspathEntry> implicitDeps = implicitDependencyHelper.computeImplicitDependencies(eclipseIProject, bazelWorkspace, packageInfo);
+                            classpathEntries.addAll(implicitDeps);
+                            
+                        } else {
+                            
+                            // add the referenced project to the classpath, directly as a project classpath entry
+                            IPath projectFullPath = otherProject.getProject().getFullPath();
+                            if (!projectsAddedToClasspath.contains(projectFullPath)) {
+                                classpathEntries.add(BazelPluginActivator.getJavaCoreHelper().newProjectEntry(projectFullPath));
+                            }
+                            projectsAddedToClasspath.add(projectFullPath);
+                            
+                            // now make a project reference between this project and the other project; this allows for features like
+                            // code refactoring across projects to work correctly
+                            addProjectReference(eclipseIProject, otherProject.getProject());
                         }
-                        projectsAddedToClasspath.add(projectFullPath);
-                        
-                        // now make a project reference between this project and the other project; this allows for features like
-                        // code refactoring across projects to work correctly
-                        addProjectReference(eclipseIProject, otherProject.getProject());
                     }
                 }
             } catch (IOException | InterruptedException e) {
@@ -311,8 +315,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
         IProject[] projects = rootResource.getProjects();
 
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        String absoluteSourcePathString = bazelWorkspace.getBazelWorkspaceRootDirectory().getAbsolutePath() + File.separator + sourcePath;
-        Path absoluteSourcePath = new File(absoluteSourcePathString).toPath();
+        String canonicalSourcePathString = BazelProjectHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory()) + File.separator + sourcePath;
+        Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
         for (IProject project : projects) {
             IJavaProject jProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
@@ -330,13 +334,13 @@ public class BazelClasspathContainer implements IClasspathContainer {
                     continue;
                 }
                 IPath projectLocation = res.getLocation();
-                String absProjectRoot = projectLocation.toOSString();
-                if (absProjectRoot != null && !absProjectRoot.isEmpty()) {
-                    if (absoluteSourcePath.startsWith(absProjectRoot)) {
+                if (projectLocation != null && !projectLocation.isEmpty()) {
+                    String canonicalProjectRoot = BazelProjectHelper.getCanonicalPathStringSafely(projectLocation.toOSString());
+                    if (canonicalSourcePathString.startsWith(canonicalProjectRoot)) {
                         IPath[] inclusionPatterns = entry.getInclusionPatterns();
                         IPath[] exclusionPatterns = entry.getExclusionPatterns();
-                        if (!matchPatterns(absoluteSourcePath, exclusionPatterns)) {
-                            if (inclusionPatterns == null || inclusionPatterns.length == 0 || matchPatterns(absoluteSourcePath, inclusionPatterns)) {
+                        if (!matchPatterns(canonicalSourcePath, exclusionPatterns)) {
+                            if (inclusionPatterns == null || inclusionPatterns.length == 0 || matchPatterns(canonicalSourcePath, inclusionPatterns)) {
                                 return jProject;
                             }
                         }
@@ -458,7 +462,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
     
     private static void printDirectoryDiagnostics(File path, String indent) {
         File[] children = path.listFiles();
-        System.out.println(indent+path.getAbsolutePath());
+        System.out.println(indent+BazelProjectHelper.getCanonicalPathStringSafely(path));
         if (children != null) {
             for (File child : children) {
                 System.out.println(indent+child.getName());

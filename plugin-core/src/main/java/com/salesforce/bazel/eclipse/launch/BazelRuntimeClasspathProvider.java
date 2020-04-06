@@ -63,6 +63,7 @@ import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 
 /**
@@ -130,7 +131,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
      * @throws InvocationTargetException 
      */
     IRuntimeClasspathEntry[] computeUnresolvedClasspath(ILaunchConfiguration configuration, boolean isSource)
-            throws CoreException{
+            throws CoreException {
         List<IRuntimeClasspathEntry> result = new ArrayList<>();
         IJavaProject project = JavaRuntime.getJavaProject(configuration);
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();        
@@ -182,7 +183,8 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                         "Error parsing " + paramsFile.getAbsolutePath(), e));
             }
             for (String rawPath : jarPaths) {
-                IPath eachPath = new Path(new File(base, rawPath).getAbsolutePath());
+                String canonicalPath = BazelProjectHelper.getCanonicalPathStringSafely(new File(base, rawPath));
+                IPath eachPath = new Path(canonicalPath);
                 if (eachPath.toFile().exists()) {
                     IRuntimeClasspathEntry src = JavaRuntime.newArchiveRuntimeClasspathEntry(eachPath);
                     result.add(src);

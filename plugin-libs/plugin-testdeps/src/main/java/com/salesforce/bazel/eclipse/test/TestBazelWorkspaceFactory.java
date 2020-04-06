@@ -2,6 +2,7 @@ package com.salesforce.bazel.eclipse.test;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -181,8 +182,10 @@ public class TestBazelWorkspaceFactory {
             // add aspects for maven jars (just picked a couple of typical maven jars to use)
             String aspectFilePath_slf4j = TestAspectFileCreator.createJavaAspectFileForMavenJar(dirOutputBase, "org_slf4j_slf4j_api", "slf4j-api-1.7.25");
             packageAspectFiles.add(aspectFilePath_slf4j);
+            createFakeExternalJars(dirOutputBase, "org_slf4j_slf4j_api", "slf4j-api-1.7.25");
             String aspectFilePath_guava = TestAspectFileCreator.createJavaAspectFileForMavenJar(dirOutputBase, "com_google_guava_guava", "guava-20.0");
             packageAspectFiles.add(aspectFilePath_guava);
+            createFakeExternalJars(dirOutputBase, "com_google_guava_guava", "guava-20.0");
 
             // test source
             List<String> testSourceFiles = new ArrayList<>();
@@ -207,8 +210,10 @@ public class TestBazelWorkspaceFactory {
             if (explicitJavaTestDeps) {
                 String aspectFilePath_junit = TestAspectFileCreator.createJavaAspectFileForMavenJar(dirOutputBase, "junit_junit", "junit-4.12");
                 packageAspectFiles.add(aspectFilePath_junit);
+                createFakeExternalJars(dirOutputBase, "junit_junit", "junit-4.12");
                 String aspectFilePath_hamcrest = TestAspectFileCreator.createJavaAspectFileForMavenJar(dirOutputBase, "org_hamcrest_hamcrest_core", "hamcrest-core-1.3");
                 packageAspectFiles.add(aspectFilePath_hamcrest);
+                createFakeExternalJars(dirOutputBase, "org_hamcrest_hamcrest_core", "hamcrest-core-1.3");
             }
             
             // we chain the libs together to test inter project deps
@@ -219,6 +224,9 @@ public class TestBazelWorkspaceFactory {
             // now save off our current lib target to add to the next
             previousJavaLibTarget = packageRelativePath+":"+packageName;
             previousAspectFilePath = aspectFilePath_mainsource;
+            
+            // write fake jar files to the filesystem for this project
+            createFakeProjectJars(packageRelativePath, packageName);
             
             // finish
             createdPackages.put(packageName, javaPackageDir);
@@ -289,5 +297,38 @@ public class TestBazelWorkspaceFactory {
         sb.append("   outs = \"bigmess.txt\",\n");
         sb.append(")");
         return sb.toString();
+    }
+    
+    private void createFakeExternalJars(File dirOutputBase, String foldername, String jarname) throws IOException {
+        File fakeJar = new File(dirOutputBase, "external/"+foldername+"/jar/"+jarname+".jar");
+        fakeJar.createNewFile();
+        File fakeSourceJar = new File(dirOutputBase, "external/"+foldername+"/jar/"+jarname+"-sources.jar");
+        fakeSourceJar.createNewFile();
+    }
+    
+    private void createFakeProjectJars(String packageRelativePath, String packageName) throws IOException {
+        File packageBinDir = new File(dirBazelBin, packageRelativePath);
+        packageBinDir.mkdirs();
+        
+        String jar = "lib"+packageName+".jar";
+        File fakeJar = new File(packageBinDir, jar);
+        fakeJar.createNewFile();
+        System.out.println("Created fake jar file: "+fakeJar.getCanonicalPath());
+        
+        String interfacejar = "lib"+packageName+"-hjar.jar";
+        fakeJar = new File(packageBinDir, interfacejar);
+        fakeJar.createNewFile();
+        
+        String sourcejar = "lib"+packageName+"-src.jar";
+        fakeJar = new File(packageBinDir, sourcejar);
+        fakeJar.createNewFile();
+        
+        String testjar = "lib"+packageName+"-test.jar";
+        fakeJar = new File(packageBinDir, testjar);
+        fakeJar.createNewFile();
+        
+        String testsourcejar = "lib"+packageName+"-test-src.jar";
+        fakeJar = new File(packageBinDir, testsourcejar);
+        fakeJar.createNewFile();
     }
 }

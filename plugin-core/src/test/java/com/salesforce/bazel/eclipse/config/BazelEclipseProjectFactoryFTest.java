@@ -74,7 +74,8 @@ public class BazelEclipseProjectFactoryFTest {
 
         // workspace preferences
         IPreferenceStore prefsStore = BazelPluginActivator.getResourceHelper().getPreferenceStore(BazelPluginActivator.getInstance());
-        assertEquals(mockEclipse.getBazelWorkspaceRoot().getAbsolutePath(), prefsStore.getString(BazelPluginActivator.BAZEL_WORKSPACE_PATH_PREF_NAME));
+        String expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot().getCanonicalPath();
+        assertEquals(expectedBazelWorkspaceRoot, prefsStore.getString(BazelPluginActivator.BAZEL_WORKSPACE_PATH_PREF_NAME));
         
         // Eclipse project for the Bazel workspace
         assertNotNull(workspace_IProject);

@@ -1,6 +1,7 @@
 package com.salesforce.bazel.eclipse.classpath;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -10,6 +11,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
@@ -33,7 +35,7 @@ import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
 public class ImplicitDependencyHelper {
 
     Set<IClasspathEntry> computeImplicitDependencies(IProject eclipseIProject, BazelWorkspace bazelWorkspace, 
-            AspectPackageInfo packageInfo) {
+            AspectPackageInfo packageInfo) throws IOException {
         Set<IClasspathEntry> deps = null;
         
         String ruleKind = packageInfo.getKind();        
@@ -73,7 +75,7 @@ public class ImplicitDependencyHelper {
         return deps;
     }
     
-    String computeFilePathForRunnerJar(BazelWorkspace bazelWorkspace, AspectPackageInfo packageInfo) {
+    String computeFilePathForRunnerJar(BazelWorkspace bazelWorkspace, AspectPackageInfo packageInfo)  {
         // The IJ plugin gets this path somehow from query/aspect but we are going to wedge it in via path here since we need to
         // overhaul our query/aspect in the near future TODO stop using file system hacking for implicit deps
         // Because of the way we are doing this, there is no aspect json file written on disk that we can consume.
@@ -83,21 +85,21 @@ public class ImplicitDependencyHelper {
         File testRunnerDir = new File(bazelBinDir, "external/bazel_tools/tools/jdk/_ijar/TestRunner");
         if (!testRunnerDir.exists()) {
             BazelPluginActivator.error("Could not add implicit test deps to target ["+packageInfo.getLabel()+
-                "], directory ["+testRunnerDir.getAbsolutePath()+"] does not exist.");
+                "], directory ["+BazelProjectHelper.getCanonicalPathStringSafely(testRunnerDir)+"] does not exist.");
             return null;
         }
         File javaToolsDir = new File(testRunnerDir, "external/remote_java_tools_"+bazelWorkspace.getOperatingSystemFoldername()+"/java_tools");
         if (!javaToolsDir.exists()) {
             BazelPluginActivator.error("Could not add implicit test deps to target ["+packageInfo.getLabel()+
-                "], directory ["+javaToolsDir.getAbsolutePath()+"] does not exist.");
+                "], directory ["+BazelProjectHelper.getCanonicalPathStringSafely(javaToolsDir)+"] does not exist.");
             return null;
         }
         File runnerJar = new File(javaToolsDir, "Runner_deploy-ijar.jar");
         if (!runnerJar.exists()) {
             BazelPluginActivator.error("Could not add implicit test deps to target ["+packageInfo.getLabel()+
-                "], test runner jar ["+runnerJar.getAbsolutePath()+"] does not exist.");
+                "], test runner jar ["+BazelProjectHelper.getCanonicalPathStringSafely(runnerJar)+"] does not exist.");
             return null;
         }
-        return runnerJar.getAbsolutePath();
+        return BazelProjectHelper.getCanonicalPathStringSafely(runnerJar);
     }
 }
