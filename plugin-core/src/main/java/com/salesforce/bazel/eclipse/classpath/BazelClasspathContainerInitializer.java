@@ -87,6 +87,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 LOG.error(errorMsg);
 
                 if (!isCorrupt.get()) {
+                    isCorrupt.set(true);
                     importedProjects.add(eclipseProject);
                 }
                 undo();
@@ -114,7 +115,11 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
         }
         isCorrupt.set(true);
         
-        MessageDialog.openError(Display.getDefault().getActiveShell(), "Error", generateImportErrorMessage());
+        Display.getDefault().syncExec(new Runnable() {
+            public void run() {
+                MessageDialog.openError(Display.getDefault().getActiveShell(), "Error", generateImportErrorMessage());
+            }
+        });
     }
     
     private String generateImportErrorMessage() {
@@ -128,6 +133,10 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     }
     
     private void undo(IProject project) {
+        if (BazelPluginActivator.getResourceHelper().getEclipseWorkspace().isTreeLocked()) {
+            return;
+        }
+
         try {
             project.delete(true,  null);
         } catch (CoreException e) {

@@ -268,6 +268,9 @@ public class BazelClasspathContainer implements IClasspathContainer {
 
     public boolean isValid() throws BackingStoreException, IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        if (bazelWorkspace == null) {
+            return false;
+        }
         File bazelWorkspaceRootDirectory = bazelWorkspace.getBazelWorkspaceRootDirectory();
         if (bazelWorkspaceRootDirectory == null) {
             return false;

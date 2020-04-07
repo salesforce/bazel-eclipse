@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
@@ -29,7 +30,7 @@ public class BazelProjectImporter {
                         monitor);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    MessageDialog.openError(new Shell(), "Error", e.getMessage());
+                    openError("Error", e);
                 }
             }
         };
@@ -37,9 +38,17 @@ public class BazelProjectImporter {
         try {
             new ProgressMonitorDialog(new Shell()).run(true, true, op);
         } catch (InvocationTargetException e) {
-            MessageDialog.openError(new Shell(), "Error", e.getTargetException().getMessage());
+            openError("Error", e.getTargetException());
         } catch (Exception e) {
-            MessageDialog.openError(new Shell(), "Error", e.getMessage());
+            openError("Error", e);
         }
+    }
+    
+    private static void openError(String title, Throwable ex) {
+        Display.getDefault().syncExec(new Runnable() {
+            public void run() {
+                MessageDialog.openError(new Shell(), title, ex.getMessage());
+            }
+        });
     }
 }

@@ -99,6 +99,9 @@ public class BazelCommandManager {
      * enclosing workspace and returns the instance that corresponds to it. If not in a Bazel workspace, returns null.
      */
     public BazelWorkspaceCommandRunner getWorkspaceCommandRunner(BazelWorkspace bazelWorkspace) {
+        if (bazelWorkspace == null) {
+            return null;
+        }
         File bazelWorkspaceRootDirectory = bazelWorkspace.getBazelWorkspaceRootDirectory();
         BazelWorkspaceCommandRunner workspaceCommandRunner = workspaceCommandRunners.get(bazelWorkspaceRootDirectory);
         if (workspaceCommandRunner == null) {

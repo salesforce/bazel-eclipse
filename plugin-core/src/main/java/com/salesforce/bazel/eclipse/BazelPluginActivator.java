@@ -170,16 +170,16 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             }
         });
 
-        // Get the bazel workspace path from the settings
+        // Get the bazel workspace path from the settings: 
+        //   ECLIPSE_WS_ROOT/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.salesforce.bazel.eclipse.core.prefs
         String bazelWorkspacePathFromPrefs = prefsStore.getString(BAZEL_WORKSPACE_PATH_PREF_NAME);
         if (bazelWorkspacePathFromPrefs != null && !bazelWorkspacePathFromPrefs.isEmpty()) {
             String workspaceName = BazelEclipseProjectFactory.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
             this.setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
         } else {
-            LOG.warn("Eclipse workspace is damaged, workspace path property is missing: " + BAZEL_WORKSPACE_PATH_PREF_NAME);
-            //throw new IllegalStateException("Missing property: " + BAZEL_WORKSPACE_PATH_PREF_NAME);
+            LOG.info("The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
         }
-}
+    }
     
     @Override
     public void stop(BundleContext context) throws Exception {

@@ -88,7 +88,13 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        if (bazelWorkspace == null) {
+            return new IProject[] {};
+        }
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
+        if (bazelWorkspaceCmdRunner == null) {
+            return new IProject[] {};
+        }
 
         try {
             boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project), progressMonitor, monitor);
