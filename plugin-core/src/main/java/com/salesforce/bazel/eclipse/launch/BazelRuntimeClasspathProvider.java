@@ -161,7 +161,11 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                             public void run() {
                                 if(canOpenErrorDialog.get()) {
                                 	canOpenErrorDialog.set(false);
-                                    MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target", "One or all of the tests trying to be executed are not part of a Bazel java_test target");
+                                    Display.getDefault().syncExec(new Runnable() {
+                                        public void run() {
+                                            MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target", "One or all of the tests trying to be executed are not part of a Bazel java_test target");
+                                        }
+                                    });
                                 }
                             }
                         });
