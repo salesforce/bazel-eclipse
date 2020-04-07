@@ -24,6 +24,7 @@ public class TestJavaRuleCreator {
         sb.append(projectName);
         sb.append("\",\n");
         sb.append("   srcs = glob([\"src/main/java/**/*.java\"]),\n");
+        sb.append("   resources = [\"src/main/resources/main.properties\"],\n"); // don't glob, to make sure the file exists in the right location
         sb.append("   create_executable = True,\n");
         sb.append("   main_class = \"com.salesforce.fruit"+projectIndex+".Apple\",\n");
         sb.append(")");
@@ -49,6 +50,7 @@ public class TestJavaRuleCreator {
         sb.append(projectName);
         sb.append("Test\",\n");
         sb.append("   srcs = glob([\"src/test/java/**/*.java\"]),\n");
+        sb.append("   resources = [\"src/test/resources/test.properties\"],\n"); // don't glob, to make sure the file exists in the right location
         sb.append("   visibility = [\"//visibility:public\"],\n");
         if (explicitJavaTestDeps) {
             // see ImplicitDependencyHelper.java for more details about this block

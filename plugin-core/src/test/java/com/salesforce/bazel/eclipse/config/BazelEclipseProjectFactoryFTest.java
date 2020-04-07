@@ -31,6 +31,8 @@ import java.io.File;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.junit.Rule;
@@ -39,8 +41,8 @@ import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
+import com.salesforce.bazel.eclipse.mock.MockEclipse;
 
 /**
  * This FTest checks that the Eclipse workspace and Eclipse projects are configured as expected
@@ -54,6 +56,7 @@ public class BazelEclipseProjectFactoryFTest {
     
     private IProject workspace_IProject;
     private IProject javalib0_IProject;
+    private IJavaProject javalib0_IJavaProject;
     private IProject javalib1_IProject;
 
     @Test
@@ -70,6 +73,7 @@ public class BazelEclipseProjectFactoryFTest {
             testTempDir, numberOfJavaPackages, computeClasspaths, false);
         workspace_IProject = mockEclipse.getImportedProject("Bazel Workspace ("+MockEclipse.BAZEL_WORKSPACE_NAME+")");
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");
+        javalib0_IJavaProject = mockEclipse.getMockJavaCoreHelper().getJavaProjectForProject(javalib0_IProject);
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");
 
         // workspace preferences
@@ -89,7 +93,10 @@ public class BazelEclipseProjectFactoryFTest {
         assertEquals("javalib0", javalib0_IProject.getName());
         IProjectDescription javalib0_description = BazelPluginActivator.getResourceHelper().getProjectDescription(javalib0_IProject);
         hasNature("javalib0", javalib0_description.getNatureIds(), true, true);
-
+        // javalib0 CP should have 4 source folders (src/main/java, src/main/resources, src/test/java, src/test/resources), JDK, and Bazel Classpath Container
+        IClasspathEntry[] refClasspathEntries = javalib0_IJavaProject.getReferencedClasspathEntries();
+        assertEquals(6, refClasspathEntries.length);
+        
         // Eclipse project for a Java package: javalib1
         assertNotNull(javalib1_IProject);
         assertEquals("javalib1", javalib1_IProject.getName());
