@@ -545,6 +545,8 @@ public class BazelEclipseProjectFactory {
         // TODO here is where we assume that the Java project is conforming  NON_CONFORMING PROJECT SUPPORT
         // https://git.soma.salesforce.com/services/bazel-eclipse/blob/master/docs/conforming_java_packages.md
         // tracked as ISSUE #8  https://github.com/salesforce/bazel-eclipse/issues/8
+        
+        // MAIN SRC
         String mainSrcRelPath = packageNode.getBazelPackageFSRelativePath() + File.separator + "src" + File.separator
                 + "main" + File.separator + "java";
         File mainSrcDir = new File(bazelPackageRootDirectory + File.separator + mainSrcRelPath);
@@ -552,11 +554,29 @@ public class BazelEclipseProjectFactory {
             packageSourceCodeFSPaths.add(mainSrcRelPath);
             foundSourceCodePaths = true;
         }
+        // MAIN RESOURCES
+        String mainResourcesRelPath = packageNode.getBazelPackageFSRelativePath() + File.separator + "src" + File.separator
+                + "main" + File.separator + "resources";
+        File mainResourcesDir = new File(bazelPackageRootDirectory + File.separator + mainResourcesRelPath);
+        if (mainResourcesDir.exists()) {
+            packageSourceCodeFSPaths.add(mainResourcesRelPath);
+            foundSourceCodePaths = true;
+        }
+
+        // TEST SRC
         String testSrcRelPath = packageNode.getBazelPackageFSRelativePath() + File.separator + "src" + File.separator
                 + "test" + File.separator + "java";
         File testSrcDir = new File(bazelPackageRootDirectory + File.separator + testSrcRelPath);
         if (testSrcDir.exists()) {
             packageSourceCodeFSPaths.add(testSrcRelPath);
+            foundSourceCodePaths = true;
+        }
+        // TEST RESOURCES
+        String testResourcesRelPath = packageNode.getBazelPackageFSRelativePath() + File.separator + "src" + File.separator
+                + "test" + File.separator + "resources";
+        File testResourcesDir = new File(bazelPackageRootDirectory + File.separator + testResourcesRelPath);
+        if (testResourcesDir.exists()) {
+            packageSourceCodeFSPaths.add(testResourcesRelPath);
             foundSourceCodePaths = true;
         }
         

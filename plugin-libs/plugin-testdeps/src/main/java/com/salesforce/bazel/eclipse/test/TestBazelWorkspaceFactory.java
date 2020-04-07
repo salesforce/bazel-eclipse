@@ -173,6 +173,13 @@ public class TestBazelWorkspaceFactory {
             String bananaSrc = packageRelativePath+"/"+srcMainPath+"/Banana"+i+".java";
             sourceFiles.add(bananaSrc);
             
+            // main resources
+            String srcMainResourcesPath = "src/main/resources";
+            File javaSrcMainResourcesDir = new File(javaPackageDir, srcMainResourcesPath);
+            javaSrcMainResourcesDir.mkdirs();
+            File resourceFile = new File(javaSrcMainResourcesDir, "main.properties");
+            resourceFile.createNewFile();
+
             // main fruit source aspect
             String extraDep = previousJavaLibTarget != null ? "    \"//"+previousJavaLibTarget+"\",\n" : null;
             String aspectFilePath_mainsource = TestAspectFileCreator.createJavaAspectFile(dirOutputBase, packageRelativePath, 
@@ -205,6 +212,13 @@ public class TestBazelWorkspaceFactory {
             String aspectFilePath_testsource = TestAspectFileCreator.createJavaAspectFile(dirOutputBase, libsRelativePath+"/"+packageName, 
                 packageName, packageName, null, testSourceFiles, false, explicitJavaTestDeps);
             packageAspectFiles.add(aspectFilePath_testsource);
+            
+            // test resources
+            String srcTestResourcesPath = "src/test/resources";
+            File javaSrcTestResourcesDir = new File(javaPackageDir, srcTestResourcesPath);
+            javaSrcTestResourcesDir.mkdirs();
+            File testResourceFile = new File(javaSrcTestResourcesDir, "test.properties");
+            testResourceFile.createNewFile();
             
             // add aspects for test maven jars if we have explicit java test deps mode enabled
             if (explicitJavaTestDeps) {
