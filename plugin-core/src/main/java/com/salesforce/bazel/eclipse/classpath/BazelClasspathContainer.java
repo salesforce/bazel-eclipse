@@ -68,8 +68,9 @@ import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationExc
 import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
-import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
+import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
+import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.model.AspectOutputJarSet;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
@@ -180,10 +181,10 @@ public class BazelClasspathContainer implements IClasspathContainer {
             
             try {
                 IProject eclipseIProject = eclipseProject.getProject();
-                List<String> bazelTargetsForProject = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(eclipseIProject, false);
+                EclipseProjectBazelTargets bazelTargetsForProject = BazelProjectPreferences.getConfiguredBazelTargets(eclipseIProject, false);
                 
                 Map<String, AspectPackageInfo> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(
-                    eclipseIProject.getName(), bazelTargetsForProject, progressMonitor, "getClasspathEntries");
+                    eclipseIProject.getName(), bazelTargetsForProject.getConfiguredTargets(), progressMonitor, "getClasspathEntries");
     
                 for (AspectPackageInfo packageInfo : packageInfos.values()) {
                     IJavaProject otherProject = getSourceProjectForSourcePaths(bazelWorkspaceCmdRunner, packageInfo.getSources());
@@ -197,7 +198,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                                 classpathEntries.add(cpEntry);
                             } else {
                                 // there was a problem with the aspect computation, this might resolve itself if we recompute it
-                                bazelWorkspaceCmdRunner.flushAspectInfoCache(bazelTargetsForProject);
+                                bazelWorkspaceCmdRunner.flushAspectInfoCache(bazelTargetsForProject.getConfiguredTargets());
                             }
                         }
                         for (AspectOutputJarSet jarSet : packageInfo.getJars()) {
@@ -206,7 +207,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                                 classpathEntries.add(cpEntry);
                             } else {
                                 // there was a problem with the aspect computation, this might resolve itself if we recompute it
-                                bazelWorkspaceCmdRunner.flushAspectInfoCache(bazelTargetsForProject);
+                                bazelWorkspaceCmdRunner.flushAspectInfoCache(bazelTargetsForProject.getConfiguredTargets());
                             }
                         }
                     } else { // otherProject != null 
@@ -282,9 +283,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
             if (this.eclipseProjectIsRoot) {
                 return true;
             }
-            List<String> targets =
-                    BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(this.eclipseProject.getProject(), false);
-            List<BazelMarkerDetails> details = bazelWorkspaceCmdRunner.runBazelBuild(targets, null, Collections.emptyList());
+            EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(this.eclipseProject.getProject(), false);
+            List<BazelMarkerDetails> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList());
             for (BazelMarkerDetails detail : details) {
                 BazelPluginActivator.error(detail.toString());
             }

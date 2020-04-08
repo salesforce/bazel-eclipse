@@ -57,37 +57,10 @@ import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
  */
 public class BazelEclipseProjectSupport {
     static final String WORKSPACE_ROOT_PROPERTY = "bazel.workspace.root";
-    static final String TARGET_PROPERTY_PREFIX = "bazel.target";
+    static final String TARGET_PROPERTY_PREFIX = "bazel.activated.target";
     static final String BUILDFLAG_PROPERTY_PREFIX = "bazel.build.flag";
 
     private static final BazelMarkerManagerSingleton MARKER_MANAGER = BazelMarkerManagerSingleton.getInstance();
-
-    /**
-     * List the Bazel targets configured for this Eclipse project. Each project configured for Bazel is configured to
-     * track certain targets and this function fetches this list from the project preferences.
-     */
-    public static List<String> getBazelTargetsForEclipseProject(IProject eclipseProject, boolean addWildcardIfNoTargets) {
-        // Get the list of targets from the preferences
-        Preferences eclipseProjectBazelPrefs = BazelPluginActivator.getResourceHelper().getProjectBazelPreferences(eclipseProject);
-        ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
-
-        boolean addedTarget = false;
-        for (String propertyName : getKeys(eclipseProjectBazelPrefs)) {
-            if (propertyName.startsWith(TARGET_PROPERTY_PREFIX)) {
-                String target = eclipseProjectBazelPrefs.get(propertyName, "");
-                if (!"//...".equals(target) && !target.isEmpty()) {
-                    listBuilder.add(target);
-                    addedTarget = true;
-                }
-            }
-        }
-
-        if (!addedTarget && addWildcardIfNoTargets) {
-            listBuilder.add("//...");
-        }
-
-        return listBuilder.build();
-    }
 
     /**
      * List of Bazel build flags for this Eclipse project, taken from the project configuration

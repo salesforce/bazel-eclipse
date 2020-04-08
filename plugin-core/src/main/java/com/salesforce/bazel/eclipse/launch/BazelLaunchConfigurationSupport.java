@@ -48,7 +48,8 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
+import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfos;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
@@ -204,8 +205,9 @@ class BazelLaunchConfigurationSupport {
     private static AspectPackageInfos computeAspectPackageInfos(IProject project, BazelWorkspaceCommandRunner bazelRunner,
             WorkProgressMonitor monitor) {
         try {
-            List<String> targets = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(project, false);
-            Map<String, AspectPackageInfo> packageInfos = bazelRunner.getAspectPackageInfos(project.getName(), targets,
+            // TODO switch this to use the BazelBuildFile value object
+            EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(project, false);
+            Map<String, AspectPackageInfo> packageInfos = bazelRunner.getAspectPackageInfos(project.getName(), targets.getConfiguredTargets(),
                 monitor, "launcher:computeAspectPackageInfos");
             return new AspectPackageInfos(packageInfos.values());
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException ex) {

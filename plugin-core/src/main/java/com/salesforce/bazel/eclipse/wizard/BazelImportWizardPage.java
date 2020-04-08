@@ -56,7 +56,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.importer.BazelProjectImportScanner;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
@@ -186,7 +186,8 @@ public class BazelImportWizardPage extends WizardPage {
         List<BazelPackageInfo> importedPackages = new ArrayList<>();
         IJavaProject[] javaProjects = BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false);
         for (IJavaProject javaProject : javaProjects) {
-            String target = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(javaProject.getProject(), false).get(0);
+            // TODO it is possible there are no targets configured for a project
+            String target = BazelProjectPreferences.getConfiguredBazelTargets(javaProject.getProject(), false).getConfiguredTargets().iterator().next();
             BazelLabel label = new BazelLabel(target);
             String pack = label.getDefaultPackageLabel().getLabel();
             BazelPackageInfo bpi = rootPackage.findByPackage(pack);
