@@ -29,6 +29,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,7 +58,7 @@ public class BazelWorkspaceAspectHelperTest {
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, AspectPackageInfo> aspectMap = aspectHelper.getAspectPackageInfos("test-project", targets, 
+        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos("test-project", targets, 
             new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.size());
@@ -80,7 +81,7 @@ public class BazelWorkspaceAspectHelperTest {
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, AspectPackageInfo> aspectMap = aspectHelper.getAspectPackageInfos("test-project", targets, 
+        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos("test-project", targets, 
             new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.size());
@@ -102,7 +103,7 @@ public class BazelWorkspaceAspectHelperTest {
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, AspectPackageInfo> aspectMap = aspectHelper.getAspectPackageInfos("test-project", targets, 
+        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos("test-project", targets, 
             new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.size());

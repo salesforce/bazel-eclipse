@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,11 +59,11 @@ public class BazelWorkspaceAspectHelper {
     private List<String> aspectOptions;
 
     /**
-     * Cache of the Aspect data for each target. key=String target (//a/b/c) value=AspectPackageInfo data that came from
+     * Cache of the Aspect data for each target. key=String target (//a/b/c) value=Set<AspectPackageInfo> data that came from
      * running the aspect. This cache is cleared often (currently, every build, but that is too often)
      */
     @VisibleForTesting
-    final Map<String, AspectPackageInfo> aspectInfoCache_current = new HashMap<>();
+    final Map<String, Set<AspectPackageInfo>> aspectInfoCache_current = new HashMap<>();
 
     /**
      * For wildcard targets //a/b/c:* we need to capture the resulting aspects that come from evaluation
@@ -77,7 +78,7 @@ public class BazelWorkspaceAspectHelper {
      * error into the package, such that the Aspect will fail to run.
      */
     @VisibleForTesting
-    final Map<String, AspectPackageInfo> aspectInfoCache_lastgood = new HashMap<>();
+    final Map<String, Set<AspectPackageInfo>> aspectInfoCache_lastgood = new HashMap<>();
 
     /**
      * Tracks the number of cache hits for getAspectPackageInfos() invocations.
@@ -113,15 +114,16 @@ public class BazelWorkspaceAspectHelper {
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, AspectPackageInfo> getAspectPackageInfos(String eclipseProjectName,
+    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(String eclipseProjectName,
             Collection<String> targets, WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         progressMonitor.subTask("Load Bazel dependency information");
-        Map<String, AspectPackageInfo> resultMap = new LinkedHashMap<>();
+        Map<String, Set<AspectPackageInfo>> resultMap = new LinkedHashMap<>();
 
         for (String target : targets) {
             // is this a wilcard target? we have to handle that differently
+            // TODO we are no longer using this now that we query each target directly
             if (target.endsWith("*")) {
                 Set<String> wildcardTargets = aspectInfoCache_wildcards.get(target);
                 if (wildcardTargets != null) {
@@ -131,7 +133,7 @@ public class BazelWorkspaceAspectHelper {
                     }
                 } else {
                     // we haven't seen this wildcard before, we need to ask bazel what sub-targets it maps to
-                    Map<String, AspectPackageInfo> wildcardResultMap = new LinkedHashMap<>();
+                    Map<String, Set<AspectPackageInfo>> wildcardResultMap = new LinkedHashMap<>();
                     getAspectPackageInfoForTarget(target, eclipseProjectName, progressMonitor, caller, wildcardResultMap);
                     resultMap.putAll(wildcardResultMap);
                     aspectInfoCache_wildcards.put(target, wildcardResultMap.keySet());
@@ -180,14 +182,14 @@ public class BazelWorkspaceAspectHelper {
     
     private void getAspectPackageInfoForTarget(String target, String eclipseProjectName,
             WorkProgressMonitor progressMonitor, String caller,
-            Map<String, AspectPackageInfo> resultMap)
+            Map<String, Set<AspectPackageInfo>> resultMap)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         String logstr = " [prj=" + eclipseProjectName + ", src=" + caller + "]";
         
-        AspectPackageInfo aspectInfo = aspectInfoCache_current.get(target);
-        if (aspectInfo != null) {
+        Set<AspectPackageInfo> aspectInfos = aspectInfoCache_current.get(target); 
+        if (aspectInfos != null) {
             LOG.info("ASPECT CACHE HIT target: " + target + logstr);
-            resultMap.put(target, aspectInfo);
+            resultMap.put(target, aspectInfos);
             this.numberCacheHits++;
         } else {
             LOG.info("ASPECT CACHE MISS target: " + target + logstr);
@@ -195,24 +197,28 @@ public class BazelWorkspaceAspectHelper {
             lookupTargets.add(target);
             List<String> discoveredAspectFilePaths = generateAspectPackageInfoFiles(lookupTargets, progressMonitor);
             ImmutableMap<String, AspectPackageInfo> map = AspectPackageInfo.loadAspectFilePaths(discoveredAspectFilePaths);
-            resultMap.putAll(map);
-            for (String resultTarget : map.keySet()) {
-                LOG.info("ASPECT CACHE LOAD target: " + resultTarget + logstr);
-                aspectInfoCache_current.put(resultTarget, map.get(resultTarget));
-                aspectInfoCache_lastgood.put(resultTarget, map.get(resultTarget));
-            }
-            if (resultMap.get(target) == null) {
+            
+            if (map.size() == 0) {
                 // still don't have the aspect for the target, use the last known one that computed
                 // it could be because the user introduced a compile error in it and the Aspect wont run.
                 // In this case use the last known good result of the Aspect for that target and hope for the best. The lastgood cache is never
                 // cleared, so if the Aspect ran correctly at least once since the IDE started it should be here (but possibly out of date depending
                 // on what changes were introduced along with the compile error)
-                aspectInfo = aspectInfoCache_lastgood.get(target);
-                if (aspectInfo != null) {
-                    resultMap.put(target, aspectInfo);
+                Set<AspectPackageInfo> lastgood = aspectInfoCache_lastgood.get(target);
+                if (lastgood != null) {
+                    resultMap.put(target, lastgood);
                 } else {
                     LOG.info("ASPECT CACHE FAIL target: " + target + logstr);
                 }
+            } else {
+                Set<AspectPackageInfo> values = new HashSet<>();
+                for (AspectPackageInfo info : map.values()) {
+                    values.add(info); // TODO this is super dumb, immutablemap causes type issues, fix it
+                }
+                resultMap.put(target, values);
+                LOG.info("ASPECT CACHE LOAD target: " + target + logstr);
+                aspectInfoCache_current.put(target, values);
+                aspectInfoCache_lastgood.put(target, values);
             }
         }
         

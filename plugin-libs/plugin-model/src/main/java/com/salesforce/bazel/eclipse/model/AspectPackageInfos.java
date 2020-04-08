@@ -42,7 +42,9 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * A container for AspectPackageInfo instances.
@@ -70,6 +72,16 @@ public class AspectPackageInfos {
         }
     }
 
+    public static AspectPackageInfos fromSets(Collection<Set<AspectPackageInfo>> aspectPackageInfoSets) {
+        Set<AspectPackageInfo> infoList = new TreeSet<>();
+        for (Set<AspectPackageInfo> set : aspectPackageInfoSets) {
+            for (AspectPackageInfo info : set) {
+                infoList.add(info);
+            }
+        }
+        return new AspectPackageInfos(infoList);
+    }
+    
     public AspectPackageInfo lookupByLabel(String label) {
         return labelToAspectPackageInfo.get(label);
     }

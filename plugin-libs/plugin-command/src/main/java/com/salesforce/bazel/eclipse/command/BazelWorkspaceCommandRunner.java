@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -455,13 +456,37 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, AspectPackageInfo> getAspectPackageInfos(String eclipseProjectName,
+    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(String eclipseProjectName,
             Collection<String> targetLabels, WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         return this.aspectHelper.getAspectPackageInfos(eclipseProjectName, targetLabels, progressMonitor, caller);
     }
 
+    /**
+     * Runs the analysis of the given list of targets using the build information Bazel Aspect and returns a map of
+     * {@link AspectPackageInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
+     * by the aspect.
+     * <p>
+     * This method caches its results and won't recompute a previously computed version unless
+     * {@link #flushAspectInfoCache()} has been called in between.
+     * <p>
+     * TODO it would be worthwhile to evaluate whether Aspects are the best way to get build info, as we could otherwise
+     * use Bazel Query here as well.
+     *
+     * @throws BazelCommandLineToolConfigurationException
+     */
+    public synchronized Set<AspectPackageInfo> getAspectPackageInfos(String eclipseProjectName,
+            String targetLabel, WorkProgressMonitor progressMonitor, String caller)
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+
+        Set<String> targetLabels = new TreeSet<>();
+        targetLabels.add(targetLabel);
+        Map<String, Set<AspectPackageInfo>> results = this.aspectHelper.getAspectPackageInfos(eclipseProjectName, targetLabels, progressMonitor, caller);
+        
+        return results.get(targetLabel);
+    }
+    
     /**
      * Clear the entire AspectPackageInfo cache. This flushes the dependency graph for the workspace.
      */

@@ -40,6 +40,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
@@ -207,9 +208,9 @@ class BazelLaunchConfigurationSupport {
         try {
             // TODO switch this to use the BazelBuildFile value object
             EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(project, false);
-            Map<String, AspectPackageInfo> packageInfos = bazelRunner.getAspectPackageInfos(project.getName(), targets.getConfiguredTargets(),
+            Map<String, Set<AspectPackageInfo>> packageInfos = bazelRunner.getAspectPackageInfos(project.getName(), targets.getConfiguredTargets(),
                 monitor, "launcher:computeAspectPackageInfos");
-            return new AspectPackageInfos(packageInfos.values());
+            return AspectPackageInfos.fromSets(packageInfos.values());
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException ex) {
             throw new IllegalStateException(ex);
         }
