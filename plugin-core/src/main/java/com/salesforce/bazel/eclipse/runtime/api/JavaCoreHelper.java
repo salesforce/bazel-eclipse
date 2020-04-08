@@ -240,9 +240,10 @@ public interface JavaCoreHelper {
      *   and will be automatically converted to <code>null</code>.
      * @param sourceAttachmentRootPath the location of the root of the source files within the source archive or folder
      *    or <code>null</code> if this location should be automatically detected.
+     * @param isTestLib pass true if you want this library to only be visible to test classes
      * @return a new library classpath entry
      */
-    IClasspathEntry newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath);
+    IClasspathEntry newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath, boolean isTestLib);
     
     /**
      * Creates and returns a new classpath entry of kind <code>CPE_CONTAINER</code>
