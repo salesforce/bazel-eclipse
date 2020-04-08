@@ -37,9 +37,6 @@ package com.salesforce.bazel.eclipse;
 
 import java.io.File;
 
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -51,11 +48,11 @@ import com.salesforce.bazel.eclipse.command.CommandBuilder;
 import com.salesforce.bazel.eclipse.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
+import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.model.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.eclipse.model.RealOperatingEnvironmentDetectionStrategy;
-import com.salesforce.bazel.eclipse.preferences.BazelPreferencePage;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseConsole;
@@ -73,9 +70,6 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     // The plug-in ID
     public static final String PLUGIN_ID = "com.salesforce.bazel.eclipse.core"; //$NON-NLS-1$
 
-    // The preference key for the bazel workspace root path
-    public static final String BAZEL_WORKSPACE_PATH_PREF_NAME = "bazel.workspace.root";
-    
     // GLOBAL COLLABORATORS
     // TODO move the collaborators to some other place, perhaps a dedicated static context object
     
@@ -155,24 +149,18 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         osEnvStrategy = osEnv;
 
         // Get the bazel executable path from the settings, defaults to /usr/local/bin/bazel
-        IPreferenceStore prefsStore =  resourceHelper.getPreferenceStore(this);
-        String bazelPath = prefsStore.getString(BazelPreferencePage.BAZEL_PATH_PREF_NAME);
+        String bazelPath = BazelProjectPreferences.getBazelExecutablePath(this);
         File bazelPathFile = new File(bazelPath);
 
+        // Build the command manager for the workspace (runs Bazel commands)
         bazelCommandManager = new BazelCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelPathFile);
 
-        prefsStore.addPropertyChangeListener(new IPropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent event) {
-                if (event.getProperty().equals(BazelPreferencePage.BAZEL_PATH_PREF_NAME)) {
-                    bazelCommandManager.setBazelExecutablePath(event.getNewValue().toString());
-                }
-            }
-        });
+        // setup a listener, if the user changes the path to Bazel executable notify the command manager
+        BazelProjectPreferences.setBazelExecutablePathListener(this, bazelCommandManager);
 
         // Get the bazel workspace path from the settings: 
         //   ECLIPSE_WS_ROOT/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.salesforce.bazel.eclipse.core.prefs
-        String bazelWorkspacePathFromPrefs = prefsStore.getString(BAZEL_WORKSPACE_PATH_PREF_NAME);
+        String bazelWorkspacePathFromPrefs = BazelProjectPreferences.getBazelWorkspacePath(this);
         if (bazelWorkspacePathFromPrefs != null && !bazelWorkspacePathFromPrefs.isEmpty()) {
             String workspaceName = BazelEclipseProjectFactory.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
             this.setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
@@ -242,8 +230,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         bazelWorkspace.setBazelWorkspaceMetadataStrategy(getWorkspaceCommandRunner());
 
         // write it to the preferences file
-        IPreferenceStore prefsStore =  resourceHelper.getPreferenceStore(this);
-        prefsStore.setValue(BAZEL_WORKSPACE_PATH_PREF_NAME, rootDirectory.getAbsolutePath());
+        BazelProjectPreferences.setBazelWorkspacePath(this, rootDirectory.getAbsolutePath());
     }
     
     

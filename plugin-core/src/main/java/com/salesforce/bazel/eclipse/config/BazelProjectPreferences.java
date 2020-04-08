@@ -40,19 +40,23 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.command.BazelCommandManager;
+import com.salesforce.bazel.eclipse.preferences.BazelPreferencePage;
 
 // TODO migrate this away from static methods
 public class BazelProjectPreferences { 
-    // TODO ideally these constants would be private, impl details
     /**
      * Absolute path of the Bazel workspace root 
      */
-    public static final String BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY = "bazel.workspace.root";
+    private static final String BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY = "bazel.workspace.root";
     
     /**
      * The label that identifies the Bazel package that represents this Eclipse project. This will
@@ -70,14 +74,47 @@ public class BazelProjectPreferences {
      *   bazel.activated.target0=//projects/libs/foo:barlib
      *   bazel.activated.target1=//projects/libs/foo:bazlib
      */
-    public static final String TARGET_PROPERTY_PREFIX = "bazel.activated.target";
+    private static final String TARGET_PROPERTY_PREFIX = "bazel.activated.target";
     
     /**
      * Property that allows a user to set project specific build flags that get
      * passed to the Bazel executable.
      */
-    static final String BUILDFLAG_PROPERTY_PREFIX = "bazel.build.flag";
+    private static final String BUILDFLAG_PROPERTY_PREFIX = "bazel.build.flag";
 
+    /**
+     */
+    public static String getBazelExecutablePath(BazelPluginActivator activator) {
+        IPreferenceStore prefsStore =  BazelPluginActivator.getResourceHelper().getPreferenceStore(activator);
+        return prefsStore.getString(BazelPreferencePage.BAZEL_PATH_PREF_NAME);
+    }
+    
+    public static void setBazelExecutablePathListener(BazelPluginActivator activator, BazelCommandManager bazelCommandManager) {
+        IPreferenceStore prefsStore =  BazelPluginActivator.getResourceHelper().getPreferenceStore(activator);
+        prefsStore.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent event) {
+                if (event.getProperty().equals(BazelPreferencePage.BAZEL_PATH_PREF_NAME)) {
+                    bazelCommandManager.setBazelExecutablePath(event.getNewValue().toString());
+                }
+            }
+        });
+    }
+
+    /**
+     */
+    public static String getBazelWorkspacePath(BazelPluginActivator activator) {
+        IPreferenceStore prefsStore =  BazelPluginActivator.getResourceHelper().getPreferenceStore(activator);
+        return prefsStore.getString(BazelProjectPreferences.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY);
+    }
+
+    /**
+     */
+    public static void setBazelWorkspacePath(BazelPluginActivator activator, String bazelWorkspacePath) {
+        IPreferenceStore prefsStore =  BazelPluginActivator.getResourceHelper().getPreferenceStore(activator);
+        prefsStore.setValue(BazelProjectPreferences.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspacePath);
+    }
+    
     
     /**
      * The label that identifies the Bazel package that represents this Eclipse project. This will

@@ -34,7 +34,6 @@ import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -77,9 +76,8 @@ public class BazelEclipseProjectFactoryFTest {
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");
 
         // workspace preferences
-        IPreferenceStore prefsStore = BazelPluginActivator.getResourceHelper().getPreferenceStore(BazelPluginActivator.getInstance());
         String expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot().getCanonicalPath();
-        assertEquals(expectedBazelWorkspaceRoot, prefsStore.getString(BazelProjectPreferences.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY));
+        assertEquals(expectedBazelWorkspaceRoot, BazelProjectPreferences.getBazelWorkspacePath(BazelPluginActivator.getInstance()));
         
         // Eclipse project for the Bazel workspace
         assertNotNull(workspace_IProject);

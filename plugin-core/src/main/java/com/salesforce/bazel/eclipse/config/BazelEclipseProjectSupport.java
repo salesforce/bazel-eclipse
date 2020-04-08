@@ -35,19 +35,13 @@ package com.salesforce.bazel.eclipse.config;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
-import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
-import org.osgi.service.prefs.BackingStoreException;
-import org.osgi.service.prefs.Preferences;
 
-import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.builder.BazelMarkerManagerSingleton;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
@@ -56,28 +50,8 @@ import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
  * Support class that provides interaction methods for existing Eclipse Bazel projects.
  */
 public class BazelEclipseProjectSupport {
-    static final String WORKSPACE_ROOT_PROPERTY = "bazel.workspace.root";
-    static final String TARGET_PROPERTY_PREFIX = "bazel.activated.target";
-    static final String BUILDFLAG_PROPERTY_PREFIX = "bazel.build.flag";
 
     private static final BazelMarkerManagerSingleton MARKER_MANAGER = BazelMarkerManagerSingleton.getInstance();
-
-    /**
-     * List of Bazel build flags for this Eclipse project, taken from the project configuration
-     */
-    public static List<String> getBazelBuildFlagsForEclipseProject(IProject eclipseProject) {
-        // Get the list of build flags from the preferences
-        IScopeContext eclipseProjectScope = BazelPluginActivator.getResourceHelper().getProjectScopeContext(eclipseProject);
-        Preferences eclipseProjectNode = eclipseProjectScope.getNode(BazelPluginActivator.PLUGIN_ID);
-
-        ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
-        for (String property : getKeys(eclipseProjectNode)) {
-            if (property.startsWith(BUILDFLAG_PROPERTY_PREFIX)) {
-                listBuilder.add(eclipseProjectNode.get(property, ""));
-            }
-        }
-        return listBuilder.build();
-    }
 
     /**
      * Publishes problem markers for the specified project.
@@ -103,13 +77,4 @@ public class BazelEclipseProjectSupport {
         }
     }
 
-    // HELPERS
-
-    private static String[] getKeys(Preferences prefs) {
-        try {
-            return prefs.keys();
-        } catch (BackingStoreException ex) {
-            throw new IllegalStateException(ex);
-        }
-    }
 }
