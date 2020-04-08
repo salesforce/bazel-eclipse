@@ -193,7 +193,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
                         // no project found that houses the sources of this bazel target, add the jars to the classpath
                         // this means that this is an external jar, or a jar produced by a bazel target that was not imported
                         for (AspectOutputJarSet jarSet : packageInfo.getGeneratedJars()) {
-                            IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspace, progressMonitor, jarSet); 
+                            boolean isTestLib = false; // TODO FIX THIS
+                            IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspace, progressMonitor, jarSet, isTestLib); 
                             if (cpEntry != null) {
                                 classpathEntries.add(cpEntry);
                             } else {
@@ -202,7 +203,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
                             }
                         }
                         for (AspectOutputJarSet jarSet : packageInfo.getJars()) {
-                            IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspace, progressMonitor, jarSet);
+                            boolean isTestLib = false; // TODO FIX THIS
+                            IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspace, progressMonitor, jarSet, isTestLib);
                             if (cpEntry != null) {
                                 classpathEntries.add(cpEntry);
                             } else {
@@ -267,6 +269,9 @@ public class BazelClasspathContainer implements IClasspathContainer {
         return eclipseProjectPath;
     }
 
+    /**
+     * Runs a build with the passed targets and returns true if no errors are returned.
+     */
     public boolean isValid() throws BackingStoreException, IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         if (bazelWorkspace == null) {
@@ -296,6 +301,43 @@ public class BazelClasspathContainer implements IClasspathContainer {
 
     // INTERNAL
 
+    @SuppressWarnings("unused")
+    private void addOrUpdateClasspathEntry(BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner, String targetLabel, 
+            IClasspathEntry cpEntry, boolean isTestTarget,  Map<String, IClasspathEntry> mainClasspathEntryMap, 
+            Map<String, IClasspathEntry> testClasspathEntryMap) {
+        if (cpEntry == null) {
+            // something was wrong with the Aspect that described the entry, flush the cache
+            bazelWorkspaceCmdRunner.flushAspectInfoCache(targetLabel);
+            return;
+        }
+
+        String pathStr = cpEntry.getPath().toPortableString();
+        System.out.println("Adding cp entry ["+pathStr+"] to target ["+targetLabel+"]");
+        if (!isTestTarget) {
+            // add to the main classpath?
+            // if this was previously a test CP entry, we need to remove it since this is now a main cp entry
+            testClasspathEntryMap.remove(pathStr);
+
+            // make it main cp
+            mainClasspathEntryMap.put(pathStr, cpEntry);
+        } else {
+            // add to the test classpath?
+            // if it already exists in the main classpath, do not also add to the test classpath
+            if (!mainClasspathEntryMap.containsKey(pathStr)) {
+                testClasspathEntryMap.put(pathStr, cpEntry);
+            }
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private IClasspathEntry[] assembleClasspathEntries(Map<String, IClasspathEntry> mainClasspathEntryMap, 
+            Map<String, IClasspathEntry> testClasspathEntryMap) {
+        List<IClasspathEntry> classpathEntries = new ArrayList<>();
+        classpathEntries.addAll(mainClasspathEntryMap.values());
+        classpathEntries.addAll(testClasspathEntryMap.values());
+
+        return classpathEntries.toArray(new IClasspathEntry[] {});
+    }
     /**
      * Returns the IJavaProject in the current workspace that contains at least one of the specified sources.
      */
@@ -371,7 +413,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
     }
 
     private IClasspathEntry jarsToClasspathEntry(BazelWorkspace bazelWorkspace, WorkProgressMonitor progressMonitor, 
-            AspectOutputJarSet jarSet) {
+            AspectOutputJarSet jarSet, boolean isTestLib) {
         IClasspathEntry cpEntry = null;
         File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
         File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
@@ -379,14 +421,14 @@ public class BazelClasspathContainer implements IClasspathContainer {
         if (jarPath != null) {
             IPath srcJarPath = getJarPathOnDisk(bazelOutputBase, bazelExecRoot, jarSet.getSrcJar());
             IPath srcJarRootPath = null;
-            cpEntry = BazelPluginActivator.getJavaCoreHelper().newLibraryEntry(jarPath, srcJarPath, srcJarRootPath);
+            cpEntry = BazelPluginActivator.getJavaCoreHelper().newLibraryEntry(jarPath, srcJarPath, srcJarRootPath, isTestLib);
         }
         return cpEntry;
     }
 
     @SuppressWarnings("unused")
     private IClasspathEntry[] jarsToClasspathEntries(BazelWorkspace bazelWorkspace, WorkProgressMonitor progressMonitor, 
-            Set<AspectOutputJarSet> jars) {
+            Set<AspectOutputJarSet> jars, boolean isTestLib) {
         IClasspathEntry[] entries = new IClasspathEntry[jars.size()];
         int i = 0;
         File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
@@ -396,7 +438,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
             if (jarPath != null) {
                 IPath srcJarPath = getJarPathOnDisk(bazelOutputBase, bazelExecRoot, j.getSrcJar());
                 IPath srcJarRootPath = null;
-                entries[i] = BazelPluginActivator.getJavaCoreHelper().newLibraryEntry(jarPath, srcJarPath, srcJarRootPath);
+                entries[i] = BazelPluginActivator.getJavaCoreHelper().newLibraryEntry(jarPath, srcJarPath, srcJarRootPath, isTestLib);
                 i++;
             }
         }

@@ -31,6 +31,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -110,8 +111,17 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
     }
 
     @Override
-    public IClasspathEntry newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath) {
-        return JavaCore.newLibraryEntry(path, sourceAttachmentPath, sourceAttachmentRootPath);
+    public IClasspathEntry newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath, boolean isTestLib) {
+        IClasspathAttribute[] extraAttributes = {};
+        if (isTestLib) {
+            IClasspathAttribute testAttr = JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true");
+            extraAttributes = new IClasspathAttribute[] { testAttr };
+        }
+        IAccessRule[] accessRules = null;
+        boolean isExported = false;
+
+        return JavaCore.newLibraryEntry(path, sourceAttachmentPath, sourceAttachmentRootPath, accessRules, extraAttributes,
+            isExported);
     }
 
     @Override

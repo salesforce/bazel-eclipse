@@ -69,7 +69,11 @@ public class ImplicitDependencyHelper {
         if (filePathForRunnerJar != null) {
             // now manufacture the classpath entry
             IPath runnerJarPath = org.eclipse.core.runtime.Path.fromOSString(filePathForRunnerJar);
-            IClasspathEntry runnerJarEntry = BazelPluginActivator.getJavaCoreHelper().newLibraryEntry(runnerJarPath, null, null);
+            IPath sourceAttachmentPath = null;
+            IPath sourceAttachmentRootPath = null;
+            boolean isTestLib = true;
+            IClasspathEntry runnerJarEntry = BazelPluginActivator.getJavaCoreHelper().newLibraryEntry(runnerJarPath, sourceAttachmentPath, 
+                sourceAttachmentRootPath, isTestLib);
             deps.add(runnerJarEntry);
         }        
         return deps;

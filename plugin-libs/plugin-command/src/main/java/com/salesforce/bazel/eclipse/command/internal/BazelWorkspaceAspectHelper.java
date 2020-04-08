@@ -155,6 +155,16 @@ public class BazelWorkspaceAspectHelper {
     }
 
     /**
+     * Clear the AspectPackageInfo cache for the passed target. This flushes the dependency graph for those target.
+     */
+    public synchronized void flushAspectInfoCache(String target) {
+        // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
+        // if the target exists in either it will get flushed
+        this.aspectInfoCache_current.remove(target);
+        this.aspectInfoCache_wildcards.remove(target);
+    }
+
+    /**
      * Clear the AspectPackageInfo cache for the passed targets. This flushes the dependency graph for those targets.
      */
     public synchronized void flushAspectInfoCache(Set<String> targets) {
