@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -393,7 +394,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * @throws IOException
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized List<BazelMarkerDetails> runBazelBuild(List<String> bazelTargets,
+    public synchronized List<BazelMarkerDetails> runBazelBuild(Set<String> bazelTargets,
             WorkProgressMonitor progressMonitor, List<String> extraArgs)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> extraArgsList = ImmutableList.<String> builder().add("build").addAll(this.buildOptions)
@@ -444,7 +445,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * Clear the AspectPackageInfo cache for the passed targets. This flushes the dependency graph for those targets.
      */
-    public synchronized void flushAspectInfoCache(List<String> targets) {
+    public synchronized void flushAspectInfoCache(Set<String> targets) {
         this.aspectHelper.flushAspectInfoCache(targets);
     }
     

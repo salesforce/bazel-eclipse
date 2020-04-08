@@ -62,8 +62,9 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
+import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
+import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 
 /**
@@ -140,10 +141,10 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
         String testClassName = configuration.getAttribute("org.eclipse.jdt.launching.MAIN_TYPE", (String) null);
         String suffix = getParamsJarSuffix(isSource);
 
-        List<String> targets = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(project.getProject(), false);
+        EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(project.getProject(), false);
         Set<File> paramFiles = new HashSet<File>();
         
-        for (String eachTarget : targets) {
+        for (String eachTarget : targets.getConfiguredTargets()) {
         	
         	if( testClassName == null || testClassName.equals("")) {
                 String query = "tests("+ eachTarget +")";

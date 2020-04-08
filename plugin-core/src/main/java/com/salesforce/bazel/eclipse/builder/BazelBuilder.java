@@ -38,10 +38,10 @@ package com.salesforce.bazel.eclipse.builder;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
@@ -62,6 +62,8 @@ import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
+import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
@@ -99,7 +101,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         try {
             boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project), progressMonitor, monitor);
             if (buildSuccessful && !importInProgress()) {
-                Set<IProject> downstreams = new HashSet<>();
+                Set<IProject> downstreams = new TreeSet<>();
                 getDownstreamProjectsOf(project, downstreams);
                 buildProjects(bazelWorkspaceCmdRunner, downstreams, progressMonitor, monitor);
             }
@@ -136,14 +138,14 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects, WorkProgressMonitor progressMonitor, IProgressMonitor monitor)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException 
     {
-        List<String> bazelTargets = Lists.newArrayList();
+        Set<String> bazelTargets = new TreeSet<>();
         Multimap<IProject, BazelLabel> projectToLabels = HashMultimap.create();
         
         // figure out the list of targets to build and map projects to targets
         for (IProject project : projects) {
-            List<String> targets = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(project, false);
-            bazelTargets.addAll(targets);
-            List<BazelLabel> labels = targets.stream().map(t -> new BazelLabel(t)).collect(Collectors.toList());
+            EclipseProjectBazelTargets activatedTargets = BazelProjectPreferences.getConfiguredBazelTargets(project, false);
+            bazelTargets.addAll(activatedTargets.getConfiguredTargets());
+            List<BazelLabel> labels = activatedTargets.getConfiguredTargets().stream().map(t -> new BazelLabel(t)).collect(Collectors.toList());
             projectToLabels.putAll(project, labels);
         }
         
@@ -179,7 +181,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     private static List<String> getAllBazelBuildFlags(Collection<IProject> projects) {
         List<String> buildFlags = Lists.newArrayList();
         for (IProject project : projects) {
-            buildFlags.addAll(BazelEclipseProjectSupport.getBazelBuildFlagsForEclipseProject(project));
+            buildFlags.addAll(BazelProjectPreferences.getBazelBuildFlagsForEclipseProject(project));
         }
         return buildFlags;         
     }

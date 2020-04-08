@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -26,6 +27,7 @@ import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
@@ -104,13 +106,14 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
         List<BazelPackageLocation> packageLocations = new ArrayList<>(projects.length);
         for (IJavaProject project : projects) {
             // get the target to get at the package path
-            List<String> targets = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(project.getProject(), false);
+            Set<String> targets = BazelProjectPreferences.getConfiguredBazelTargets(project.getProject(), false).getConfiguredTargets();
             if (targets == null || targets.isEmpty()) {
                 // this shouldn't happen, but if it does, we do not want to blow up here
                 // instead return null to force re-import
                 return null;
             }
-            String target = BazelEclipseProjectSupport.getBazelTargetsForEclipseProject(project.getProject(), false).get(0);
+            // TODO it is possible there are no targets configured for a project
+            String target = BazelProjectPreferences.getConfiguredBazelTargets(project.getProject(), false).getConfiguredTargets().iterator().next();
             BazelLabel label = new BazelLabel(target);
             packageLocations.add(new ProjectViewPackageLocation(this.rootDirectory, label.getPackagePath()));
         }
