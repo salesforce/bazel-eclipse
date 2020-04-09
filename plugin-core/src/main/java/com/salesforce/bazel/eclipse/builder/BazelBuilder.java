@@ -38,6 +38,7 @@ package com.salesforce.bazel.eclipse.builder;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -101,7 +102,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         try {
             boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project), progressMonitor, monitor);
             if (buildSuccessful && !importInProgress()) {
-                Set<IProject> downstreams = new TreeSet<>();
+                Set<IProject> downstreams = new LinkedHashSet<>(); // cannot be a TreeSet because Project doesn't implement Comparable
                 getDownstreamProjectsOf(project, downstreams);
                 buildProjects(bazelWorkspaceCmdRunner, downstreams, progressMonitor, monitor);
             }

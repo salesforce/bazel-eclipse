@@ -34,7 +34,6 @@
 package com.salesforce.bazel.eclipse.model;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -45,7 +44,7 @@ import com.google.common.collect.ImmutableList;
 public class BazelOutputParserTest {
 
     @Test
-    public void testSingleErrorOutput() {
+    public void testSingleJavaError() {
         BazelOutputParser p = new BazelOutputParser();
         List<String> lines = ImmutableList.of(
             "ERROR: /Users/stoens/bazel-build-example-for-eclipse/sayhello/BUILD:1:1: Building sayhello/libsayhello.jar (2 source files) failed (Exit 1)",
@@ -53,14 +52,14 @@ public class BazelOutputParserTest {
 
         List<BazelMarkerDetails> errors = p.getErrorBazelMarkerDetails(lines);
 
-        assertTrue(errors.size() == 1);
+        assertEquals(1, errors.size());
         assertEquals("sayhello/src/main/java/com/blah/foo/hello/Main.java", errors.get(0).getResourcePath());
         assertEquals(16, errors.get(0).getLineNumber());
         assertEquals("Cannot find symbol", errors.get(0).getDescription());
     }
 
     @Test
-    public void testMultipleErrorOutput() {
+    public void testMultipleJavaErrors() {
         BazelOutputParser p = new BazelOutputParser();
         List<String> lines = ImmutableList.of(
             "ERROR: /Users/stoens/bazel-build-example-for-eclipse/sayhello/BUILD:1:1: Building sayhello/libsayhello.jar (2 source files) failed (Exit 1)",
@@ -71,7 +70,7 @@ public class BazelOutputParserTest {
 
         List<BazelMarkerDetails> errors = p.getErrorBazelMarkerDetails(lines);
 
-        assertTrue(errors.size() == 2);
+        assertEquals(2, errors.size());
         assertEquals("sayhello/src/main/java/com/blah/foo/hello/Main.java", errors.get(0).getResourcePath());
         assertEquals(16, errors.get(0).getLineNumber());
         assertEquals("Cannot find symbol: blah 1 2 3", errors.get(0).getDescription());
@@ -79,5 +78,17 @@ public class BazelOutputParserTest {
         assertEquals("sayhello/src/main/java/com/blah/foo/hello/Main.java", errors.get(1).getResourcePath());
         assertEquals(17, errors.get(1).getLineNumber());
         assertEquals("Cannot find symbols", errors.get(1).getDescription());
+    }
+    
+    @Test
+    public void testUnformattedError() {
+        BazelOutputParser p = new BazelOutputParser();
+        List<String> lines = ImmutableList.of(
+            "ERROR: this is just a string that we should probably handle but we don't right now"
+        );                
+
+        List<BazelMarkerDetails> errors = p.getErrorBazelMarkerDetails(lines);
+
+        assertEquals(0, errors.size());
     }
 }
