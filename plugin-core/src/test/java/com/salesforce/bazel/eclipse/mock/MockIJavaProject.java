@@ -122,6 +122,22 @@ public class MockIJavaProject implements IJavaProject {
     public IClasspathEntry[] getReferencedClasspathEntries() throws JavaModelException {
         return entries;
     }
+    
+    @Override
+    public String[] getRequiredProjectNames() throws JavaModelException {
+        String[] names = new String[] {};
+        try {
+            IProject[] projects = iproject.getReferencedProjects();
+            names = new String[projects.length];
+            int i = 0;
+            for (IProject project : projects) {
+                names[i++] = project.getName();
+            }
+        } catch (Exception anyE) {
+            throw new IllegalStateException(anyE);
+        }
+        return names;
+    }
 
     @Override
     public void setRawClasspath(IClasspathEntry[] entries, IProgressMonitor monitor) throws JavaModelException {
@@ -429,11 +445,6 @@ public class MockIJavaProject implements IJavaProject {
 
     @Override
     public IModuleDescription getModuleDescription() throws JavaModelException {
-        throw new UnsupportedOperationException(UOE_MSG);
-    }
-
-    @Override
-    public String[] getRequiredProjectNames() throws JavaModelException {
         throw new UnsupportedOperationException(UOE_MSG);
     }
 

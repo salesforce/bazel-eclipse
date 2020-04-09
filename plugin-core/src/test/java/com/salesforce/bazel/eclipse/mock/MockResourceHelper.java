@@ -196,6 +196,14 @@ public class MockResourceHelper implements ResourceHelper {
     @Override
     public void setProjectDescription(IProject project, IProjectDescription description) {
         mockDescriptions.put(project.getName(), description);
+        
+        if (description.getReferencedProjects().length > 0) {
+            try {
+                Mockito.when(project.getReferencedProjects()).thenReturn(description.getReferencedProjects());
+            } catch (Exception anyE) {
+                throw new IllegalStateException(anyE);
+            }
+        }
     }
 
     @Override

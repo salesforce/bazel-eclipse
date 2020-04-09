@@ -147,8 +147,8 @@ java_test(
 )
 
 java_test(
-    name = "BazelBuilderTest",
-    srcs = ["src/test/java/com/salesforce/bazel/eclipse/builder/BazelBuilderTest.java"] + mock_src,
+    name = "BazelBuilderFTest",
+    srcs = ["src/test/java/com/salesforce/bazel/eclipse/builder/BazelBuilderFTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
         "//plugin-libs/plugin-abstractions",

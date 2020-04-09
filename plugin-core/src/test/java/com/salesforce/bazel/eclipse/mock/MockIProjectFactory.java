@@ -55,6 +55,10 @@ public class MockIProjectFactory {
         IPath absolutePath = new Path(bom.absolutePathToEclipseProjectDirectory);
         Mockito.when(mockProject.getLocation()).thenReturn(absolutePath);
         Mockito.when(mockProject.getWorkspace()).thenReturn(BazelPluginActivator.getResourceHelper().getEclipseWorkspace());
+        try {
+            Mockito.when(mockProject.getReferencedProjects()).thenReturn(new IProject[] {});
+        } catch (Exception anyE) {
+        }
         
         // lifecycle
         Mockito.when(mockProject.exists()).thenReturn(bom.exists);

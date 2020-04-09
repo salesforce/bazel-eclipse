@@ -70,6 +70,7 @@ public abstract class MockIProject implements IProject {
     
     
     // IMPLEMENTED METHODS
+    // REMINDER: DO NOT USE THIS CLASS, SEE THE CLASS LEVEL COMMENT
     
     @Override
     public IProject getProject() {
@@ -84,8 +85,7 @@ public abstract class MockIProject implements IProject {
         return file;
     }
 
-
-
+    
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
     
