@@ -44,6 +44,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.ICommand;
@@ -612,9 +613,13 @@ public class BazelEclipseProjectFactory {
         // run the aspect for specified targets and get an AspectPackageInfo for each
         AspectPackageInfos aspectPackageInfos = null;
         try {
-            Map<String, AspectPackageInfo> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(rootEclipseProject.getName(),
+            Map<String, Set<AspectPackageInfo>> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(rootEclipseProject.getName(),
                 packageBazelTargets, progressMonitor, "importWorkspace");
-            aspectPackageInfos = new AspectPackageInfos(packageInfos.values());
+            List<AspectPackageInfo> allPackageInfos = new ArrayList<>();
+            for (Set<AspectPackageInfo> targetPackageInfos : packageInfos.values()) {
+                allPackageInfos.addAll(targetPackageInfos);
+            }
+            aspectPackageInfos = new AspectPackageInfos(allPackageInfos);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

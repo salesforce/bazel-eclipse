@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -73,6 +74,7 @@ import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.model.AspectOutputJarSet;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
+import com.salesforce.bazel.eclipse.model.BazelBuildFile;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -171,70 +173,94 @@ public class BazelClasspathContainer implements IClasspathContainer {
             }
     
             BazelPluginActivator.info("Computing classpath for project "+eclipseProjectName+" (cached entries: "+foundCachedEntries+", is import: "+isImport+")");
-    
-            List<IClasspathEntry> classpathEntries = new ArrayList<>();
-            Set<IPath> projectsAddedToClasspath = new HashSet<>();
-    
             BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
             BazelCommandManager commandFacade = BazelPluginActivator.getBazelCommandManager();
             BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = commandFacade.getWorkspaceCommandRunner(bazelWorkspace);
+
+            Set<IPath> projectsAddedToClasspath = new HashSet<>();
+            Map<String, IClasspathEntry> mainClasspathEntryMap = new TreeMap<>();
+            Map<String, IClasspathEntry> testClasspathEntryMap = new TreeMap<>();
+
             
             try {
                 IProject eclipseIProject = eclipseProject.getProject();
-                EclipseProjectBazelTargets bazelTargetsForProject = BazelProjectPreferences.getConfiguredBazelTargets(eclipseIProject, false);
+                EclipseProjectBazelTargets configuredTargetsForProject = BazelProjectPreferences.getConfiguredBazelTargets(eclipseIProject, false);
                 
-                Map<String, AspectPackageInfo> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(
-                    eclipseIProject.getName(), bazelTargetsForProject.getConfiguredTargets(), progressMonitor, "getClasspathEntries");
-    
-                for (AspectPackageInfo packageInfo : packageInfos.values()) {
-                    IJavaProject otherProject = getSourceProjectForSourcePaths(bazelWorkspaceCmdRunner, packageInfo.getSources());
-                    
-                    if (otherProject == null) {
-                        // no project found that houses the sources of this bazel target, add the jars to the classpath
-                        // this means that this is an external jar, or a jar produced by a bazel target that was not imported
-                        for (AspectOutputJarSet jarSet : packageInfo.getGeneratedJars()) {
-                            boolean isTestLib = false; // TODO FIX THIS
-                            IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspace, progressMonitor, jarSet, isTestLib); 
-                            if (cpEntry != null) {
-                                classpathEntries.add(cpEntry);
+                // get the model of the BUILD file for this package, which will tell us the type of each target and the list
+                // of all targets if configured with the wildcard target
+                BazelBuildFile bazelBuildFileModel = null; 
+                try {
+                    bazelBuildFileModel = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor, 
+                        BazelProjectPreferences.getBazelLabelForEclipseProject(eclipseProject));
+                } catch (Exception anyE) {
+                    BazelPluginActivator.error("Unable to compute classpath containers entries for project "+eclipseProjectName, anyE);
+                    return new IClasspathEntry[] {};
+                }
+                // now get the actual list of activated targets, with wildcard resolved using the BUILD file model if necessary
+                Set<String> actualActivatedTargets = configuredTargetsForProject.getActualTargets(bazelBuildFileModel);
+                
+                for (String targetLabel : actualActivatedTargets) {
+                    String targetType = bazelBuildFileModel.getRuleTypeForTarget(targetLabel);
+                    boolean isTestTarget = "java_test".equals(targetType);
+
+                    Set<AspectPackageInfo> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(
+                        eclipseIProject.getName(), targetLabel, progressMonitor, "getClasspathEntries");
+
+                    for (AspectPackageInfo packageInfo : packageInfos) {
+                        IJavaProject otherProject = getSourceProjectForSourcePaths(bazelWorkspaceCmdRunner, packageInfo.getSources());
+                        
+                        if (otherProject == null) {
+                            // no project found that houses the sources of this bazel target, add the jars to the classpath
+                            // this means that this is an external jar, or a jar produced by a bazel target that was not imported
+                            for (AspectOutputJarSet jarSet : packageInfo.getGeneratedJars()) {
+                                IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspace, progressMonitor, jarSet, isTestTarget); 
+                                if (cpEntry != null) {
+                                    addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget, 
+                                        mainClasspathEntryMap, testClasspathEntryMap);
+                                } else {
+                                    // there was a problem with the aspect computation, this might resolve itself if we recompute it
+                                    bazelWorkspaceCmdRunner.flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
+                                }
+                            }
+                            for (AspectOutputJarSet jarSet : packageInfo.getJars()) {
+                                IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspace, progressMonitor, jarSet, isTestTarget);
+                                if (cpEntry != null) {
+                                    addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget, 
+                                        mainClasspathEntryMap, testClasspathEntryMap);
+                                } else {
+                                    // there was a problem with the aspect computation, this might resolve itself if we recompute it
+                                    bazelWorkspaceCmdRunner.flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
+                                }
+                            }
+                        } else { // otherProject != null 
+                            String thisFullPath = eclipseProject.getProject().getFullPath().toOSString();
+                            String otherFullPath = otherProject.getProject().getFullPath().toOSString(); 
+                            if (thisFullPath.equals(otherFullPath)) {
+                                // the project referenced is actually the the current project that this classpath container is for
+                                
+                                // some rule types have hidden dependencies that we need to add
+                                // if our Eclipse project has any of those rules, we need to add in the dependencies to our classpath
+                                Set<IClasspathEntry> implicitDeps = implicitDependencyHelper.computeImplicitDependencies(eclipseIProject, bazelWorkspace, packageInfo);
+                                for (IClasspathEntry implicitDep : implicitDeps) {
+                                    addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, implicitDep, isTestTarget, 
+                                        mainClasspathEntryMap, testClasspathEntryMap);
+                                }
+                                
                             } else {
-                                // there was a problem with the aspect computation, this might resolve itself if we recompute it
-                                bazelWorkspaceCmdRunner.flushAspectInfoCache(bazelTargetsForProject.getConfiguredTargets());
+                                
+                                // add the referenced project to the classpath, directly as a project classpath entry
+                                IPath projectFullPath = otherProject.getProject().getFullPath();
+                                if (!projectsAddedToClasspath.contains(projectFullPath)) {
+                                    IClasspathEntry cpEntry = BazelPluginActivator.getJavaCoreHelper().newProjectEntry(projectFullPath);
+                                    addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget, 
+                                        mainClasspathEntryMap, testClasspathEntryMap);
+                                }
+                                projectsAddedToClasspath.add(projectFullPath);
+                                
+                                // now make a project reference between this project and the other project; this allows for features like
+                                // code refactoring across projects to work correctly
+                                addProjectReference(eclipseIProject, otherProject.getProject());
                             }
-                        }
-                        for (AspectOutputJarSet jarSet : packageInfo.getJars()) {
-                            boolean isTestLib = false; // TODO FIX THIS
-                            IClasspathEntry cpEntry = jarsToClasspathEntry(bazelWorkspace, progressMonitor, jarSet, isTestLib);
-                            if (cpEntry != null) {
-                                classpathEntries.add(cpEntry);
-                            } else {
-                                // there was a problem with the aspect computation, this might resolve itself if we recompute it
-                                bazelWorkspaceCmdRunner.flushAspectInfoCache(bazelTargetsForProject.getConfiguredTargets());
-                            }
-                        }
-                    } else { // otherProject != null 
-                        String thisFullPath = eclipseProject.getProject().getFullPath().toOSString();
-                        String otherFullPath = otherProject.getProject().getFullPath().toOSString(); 
-                        if (thisFullPath.equals(otherFullPath)) {
-                            // the project referenced is actually the the current project that this classpath container is for
-                            
-                            // some rule types have hidden dependencies that we need to add
-                            // if our Eclipse project has any of those rules, we need to add in the dependencies to our classpath
-                            Set<IClasspathEntry> implicitDeps = implicitDependencyHelper.computeImplicitDependencies(eclipseIProject, bazelWorkspace, packageInfo);
-                            classpathEntries.addAll(implicitDeps);
-                            
-                        } else {
-                            
-                            // add the referenced project to the classpath, directly as a project classpath entry
-                            IPath projectFullPath = otherProject.getProject().getFullPath();
-                            if (!projectsAddedToClasspath.contains(projectFullPath)) {
-                                classpathEntries.add(BazelPluginActivator.getJavaCoreHelper().newProjectEntry(projectFullPath));
-                            }
-                            projectsAddedToClasspath.add(projectFullPath);
-                            
-                            // now make a project reference between this project and the other project; this allows for features like
-                            // code refactoring across projects to work correctly
-                            addProjectReference(eclipseIProject, otherProject.getProject());
                         }
                     }
                 }
@@ -248,7 +274,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
     
             // cache the entries
             this.cachePutTimeMillis = System.currentTimeMillis();
-            this.cachedEntries = classpathEntries.toArray(new IClasspathEntry[] {});
+            this.cachedEntries = assembleClasspathEntries(mainClasspathEntryMap, testClasspathEntryMap);
             BazelPluginActivator.debug("Cached the classpath for project "+eclipseProjectName);
         }
         return cachedEntries;
@@ -301,7 +327,6 @@ public class BazelClasspathContainer implements IClasspathContainer {
 
     // INTERNAL
 
-    @SuppressWarnings("unused")
     private void addOrUpdateClasspathEntry(BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner, String targetLabel, 
             IClasspathEntry cpEntry, boolean isTestTarget,  Map<String, IClasspathEntry> mainClasspathEntryMap, 
             Map<String, IClasspathEntry> testClasspathEntryMap) {
@@ -329,7 +354,6 @@ public class BazelClasspathContainer implements IClasspathContainer {
         }
     }
 
-    @SuppressWarnings("unused")
     private IClasspathEntry[] assembleClasspathEntries(Map<String, IClasspathEntry> mainClasspathEntryMap, 
             Map<String, IClasspathEntry> testClasspathEntryMap) {
         List<IClasspathEntry> classpathEntries = new ArrayList<>();
