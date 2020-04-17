@@ -7,8 +7,8 @@ Bundle-Version: 1.1.0.qualifier
 Export-Package: com.salesforce.bazel.eclipse.logging;version="1.1.0.qualifier",
  com.salesforce.bazel.eclipse.model;version="1.1.0.qualifier",
  com.salesforce.bazel.eclipse.model.projectview
-Import-Package: com.google.common.base;version="21.0",
- com.google.common.collect;version="21.0",
+Import-Package: com.google.common.base;version="28.2",
+ com.google.common.collect;version="28.2",
  com.salesforce.bazel.eclipse.logging;version="1.1.0.qualifier",
  org.json;version="20160212"
 Bundle-Vendor: Salesforce

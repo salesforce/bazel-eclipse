@@ -8,7 +8,7 @@ load("//tools:feature_version_def.bzl", "VERSION")
 java_import(
     name = "com_google_guava",
     jars = [
-        "lib/guava-21.0.jar",
+        "lib/guava-28.2.jar",
     ],
     visibility = [
         "//visibility:public",
