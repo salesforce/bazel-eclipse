@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -40,23 +40,22 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
-import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
 
 /**
  * Encapsulates Bazel Error Marker logic.
- * 
+ *
  * @author nishant.dsouza
  *
  */
 public class BazelMarkerManagerSingleton {
 
     private static BazelMarkerManagerSingleton singletonInstance = null;
-    
+
     private BazelMarkerManagerSingleton() {
-        
+
     }
-    
+
     public static final String BAZEL_MARKER = "com.salesforce.bazel.eclipse.bazelmarker";
 
     /**
@@ -81,9 +80,9 @@ public class BazelMarkerManagerSingleton {
      *            the Bazel Labels that were built and resulted in the specified errors
      * @throws CoreException
      */
-    public void publishProblemMarkersForProject(IProject project, Collection<BazelMarkerDetails> errorDetails, Collection<BazelLabel> labels) throws CoreException {
+    public void publishProblemMarkersForProject(IProject project, Collection<BazelMarkerDetails> errorDetails) throws CoreException {
         for (BazelMarkerDetails errorDetail : errorDetails) {
-            String resourcePath = errorDetail.getResourcePathRelativeToBazelPackage(labels);
+            String resourcePath = errorDetail.getResourcePath();
             IResource resource = project.findMember(resourcePath);
             IMarker marker = resource.createMarker(BAZEL_MARKER);
             marker.setAttribute(IMarker.LINE_NUMBER, errorDetail.getLineNumber());
@@ -93,11 +92,11 @@ public class BazelMarkerManagerSingleton {
             marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
         }
     }
-    
+
     public static BazelMarkerManagerSingleton getInstance() {
         if(singletonInstance == null) {
             singletonInstance = new BazelMarkerManagerSingleton();
         }
-        return singletonInstance;        
+        return singletonInstance;
     }
 }

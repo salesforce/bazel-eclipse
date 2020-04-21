@@ -43,7 +43,6 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
 import com.salesforce.bazel.eclipse.builder.BazelMarkerManagerSingleton;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
 
 /**
@@ -56,12 +55,12 @@ public class BazelEclipseProjectSupport {
     /**
      * Publishes problem markers for the specified project.
      */
-    public static void publishProblemMarkers(IProject project, IProgressMonitor monitor, Collection<BazelMarkerDetails> errors, Collection<BazelLabel> labels) {
+    public static void publishProblemMarkers(IProject project, IProgressMonitor monitor, Collection<BazelMarkerDetails> errors) {
         runWithProgress(monitor, new WorkspaceModifyOperation() {
             @Override
             protected void execute(IProgressMonitor monitor) throws CoreException {
                 MARKER_MANAGER.clearProblemMarkersForProject(project);
-                MARKER_MANAGER.publishProblemMarkersForProject(project, errors, labels);
+                MARKER_MANAGER.publishProblemMarkersForProject(project, errors);
             }
         });
     }

@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -39,7 +39,7 @@ import java.util.Objects;
 
 /**
  * This class holds parsed Bazel error output.
- * 
+ *
  * @author nishant.dsouza
  * @since 5/3/2019
  */
@@ -47,26 +47,33 @@ public class BazelMarkerDetails {
 
     private final String resourcePath;
     private final int lineNumber;
-    private final String desription;
+    private final String description;
 
     public BazelMarkerDetails(String resourcePath, int lineNumber, String description) {
         this.resourcePath = Objects.requireNonNull(resourcePath);
         this.lineNumber = lineNumber;
-        this.desription = Objects.requireNonNull(description);
+        this.description = Objects.requireNonNull(description);
     }
 
     /**
-     * This method finds the first label in the specified list of BazelLabel instances that could have built this
-     * resource, and returns the relative path of the resource relative to the Bazel Package of the matching BazelLabel.
+     * Returns the matching BazelLabel for this error's resourcePath.
+     *
+     * @param labels  all BazelLabel instances to consider
+     * @return the matching BazelLabel, null if no match is found
      */
-    public String getResourcePathRelativeToBazelPackage(Collection<BazelLabel> labels) {
+    public BazelLabel getOwningLabel(Collection<BazelLabel> labels) {
+        String shortestRelativeResourcePath = null;
+        BazelLabel bestMatch = null;
         for (BazelLabel label : labels) {
-            String packagePath = label.getPackagePath();
-            if (resourcePath.startsWith(packagePath + File.separator) && resourcePath.length() > packagePath.length() + 1) {
-                return resourcePath.substring(packagePath.length());
+            String relativeResourcePath = getRelativeResourcePath(label);
+            if (relativeResourcePath != null) {
+                if (shortestRelativeResourcePath == null || relativeResourcePath.length() < shortestRelativeResourcePath.length()) {
+                    bestMatch = label;
+                    shortestRelativeResourcePath = relativeResourcePath;
+                }
             }
         }
-        return null;
+        return bestMatch;
     }
 
     public String getResourcePath() {
@@ -74,15 +81,36 @@ public class BazelMarkerDetails {
     }
 
     public String getDescription() {
-        return desription;
+        return description;
     }
 
     public int getLineNumber() {
         return lineNumber;
     }
 
+    public BazelMarkerDetails toErrorWithRelativizedResourcePath(BazelLabel label) {
+        String rel = getRelativeResourcePath(label);
+        if (rel == null) {
+            throw new IllegalArgumentException("Unable to build a relative path for " + resourcePath + " based on label " + label);
+        }
+        return new BazelMarkerDetails(rel, this.lineNumber, description);
+    }
+
+    public BazelMarkerDetails toGenericWorkspaceLevelError(String descriptionPrefix) {
+        return new BazelMarkerDetails(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description);
+    }
+
     @Override
     public String toString() {
         return "ERROR: " + getResourcePath() + ":" + lineNumber + " " + getDescription();
     }
+
+    private String getRelativeResourcePath(BazelLabel label) {
+        String packagePath = label.getPackagePath();
+        if (resourcePath.startsWith(packagePath + File.separator) && resourcePath.length() > packagePath.length() + 1) {
+            return resourcePath.substring(packagePath.length());
+        }
+        return null;
+    }
+
 }
