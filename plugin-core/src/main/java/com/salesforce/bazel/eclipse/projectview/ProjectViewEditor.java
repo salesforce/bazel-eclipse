@@ -3,7 +3,6 @@ package com.salesforce.bazel.eclipse.projectview;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,25 +37,24 @@ import com.salesforce.bazel.eclipse.model.projectview.ProjectViewPackageLocation
 import com.salesforce.bazel.eclipse.wizard.BazelProjectImporter;
 
 public class ProjectViewEditor extends AbstractDecoratedTextEditor {
-    
-    private static final String CONFIRMATION_TEXT = 
+
+    private static final String CONFIRMATION_TEXT =
         "Update the Bazel Project(s) in your Workspace to match the content of this file?";
-    
+
     private static final LogHelper LOG = LogHelper.log(ProjectViewEditor.class);
-    
+
     private static final String PROJECT_VIEW_RESOURCE = File.separator + ProjectViewConstants.PROJECT_VIEW_FILE_NAME;
-    private static final BazelLabel ROOT_LABEL = new BazelLabel("//:*");
-    
+
     private final IProject rootProject;
     private final File rootDirectory;
     private final ProjectViewPackageLocation rootPackage;
-    
+
     public ProjectViewEditor() {
         this.rootProject = getBazelRootProject();
         this.rootDirectory = BazelPluginActivator.getBazelWorkspace().getBazelWorkspaceRootDirectory();
         this.rootPackage = new ProjectViewPackageLocation(this.rootDirectory, "");
         setDocumentProvider(new TextFileDocumentProvider());
-        super.setSourceViewerConfiguration(new SourceViewerConfiguration() {             
+        super.setSourceViewerConfiguration(new SourceViewerConfiguration() {
             public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
                 ContentAssistant ca = new ContentAssistant();
                 IContentAssistProcessor cap = new BazelPackageContentAssistProcessor();
@@ -64,32 +62,32 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
                 ca.setInformationControlCreator(getInformationControlCreator(sourceViewer));
                 return ca;
             }
-            
+
             @Override
             public IAnnotationHover getAnnotationHover(ISourceViewer sourceViewer) {
                 return new DefaultAnnotationHover();
-            }            
+            }
         });
     }
-    
+
     protected void editorSaved() {
-        super.editorSaved();        
+        super.editorSaved();
         String projectViewContent = getSourceViewer().getTextWidget().getText();
         ProjectView projectView = new ProjectView(this.rootDirectory, projectViewContent);
         List<BazelPackageLocation> invalidPackages = projectView.getInvalidPackages();
         Collection<BazelMarkerDetails> problemMarkers = new ArrayList<>();
         for (BazelPackageLocation invalidPackage : invalidPackages) {
-            problemMarkers.add(new BazelMarkerDetails(PROJECT_VIEW_RESOURCE, projectView.getLineNumber(invalidPackage), 
-                "Bad Bazel Package:" + invalidPackage.getBazelPackageFSRelativePath()));
+            problemMarkers.add(new BazelMarkerDetails(PROJECT_VIEW_RESOURCE, projectView.getLineNumber(invalidPackage),
+                "Bad Bazel Package: " + invalidPackage.getBazelPackageFSRelativePath()));
         }
         // publishProblemMarkers also takes care of clearing old markers
-        BazelEclipseProjectSupport.publishProblemMarkers(this.rootProject, getProgressMonitor(), problemMarkers, Collections.singleton(ROOT_LABEL));
+        BazelEclipseProjectSupport.publishProblemMarkers(this.rootProject, getProgressMonitor(), problemMarkers);
         if (problemMarkers.isEmpty()) {
             IJavaProject[] currentlyImportedProjects = getAllJavaBazelProjects();
-            
+
             List<BazelPackageLocation> currentlyImportedPackages = getPackages(currentlyImportedProjects);
             List<BazelPackageLocation> packagesToImport = projectView.getPackages();
-            
+
             if (currentlyImportedPackages != null && new HashSet<>(currentlyImportedPackages).equals(new HashSet<>(packagesToImport))) {
                 LOG.info("The Bazel Packages in the " + ProjectViewConstants.PROJECT_VIEW_FILE_NAME + " file match the set of Eclipse Projects currently imported");
             } else {
@@ -101,7 +99,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
             }
         }
     }
-    
+
     private List<BazelPackageLocation> getPackages(IJavaProject[] projects) {
         List<BazelPackageLocation> packageLocations = new ArrayList<>(projects.length);
         for (IJavaProject project : projects) {
@@ -119,7 +117,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
         }
         return packageLocations;
     }
-    
+
     private void deleteProjects(IJavaProject[] projects) {
         BazelEclipseProjectSupport.runWithProgress(getProgressMonitor(), new WorkspaceModifyOperation() {
             @Override
@@ -136,7 +134,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
     private static IJavaProject[] getAllJavaBazelProjects() {
         return BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false);
     }
-    
+
     private static IProject getBazelRootProject() {
         for (IJavaProject project : BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(true)) {
             if (BazelPluginActivator.getResourceHelper().isBazelRootProject(project.getProject())) {

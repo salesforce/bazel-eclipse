@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -34,55 +34,83 @@
 package com.salesforce.bazel.eclipse.model;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
-import java.util.Collections;
+import java.util.Arrays;
 
 import org.junit.Test;
 
 public class BazelMarkerDetailsTest {
 
     @Test
-    public void getResourcePathRelativeToBazelPackage__matchingBazelPackage() {
+    public void getOwningLabel__matchingLabel() {
+        BazelMarkerDetails details = new BazelMarkerDetails("a/b/c/d", 1, "desc");
+        BazelLabel l1 = new BazelLabel("x/y/z");
+        BazelLabel l2 = new BazelLabel("a/b/c");
+
+        BazelLabel owningLabel = details.getOwningLabel(Arrays.asList(l1, l2));
+
+        assertSame(l2, owningLabel);
+    }
+
+    @Test
+    public void getOwningLabel__nestedLabel() {
+        BazelMarkerDetails details = new BazelMarkerDetails("a/b/c/d/e", 1, "desc");
+        BazelLabel l0 = new BazelLabel("b/c/d");
+        BazelLabel l1 = new BazelLabel("a/b");
+        BazelLabel l2 = new BazelLabel("a/b/c");
+        BazelLabel l3 = new BazelLabel("a/b/c/d/e/f");
+        BazelLabel l4 = new BazelLabel("a/b/c/d");
+        BazelLabel l5 = new BazelLabel("x/y/z");
+
+        BazelLabel owningLabel = details.getOwningLabel(Arrays.asList(l0, l1, l2, l3, l4, l5));
+
+        assertSame(l4, owningLabel);
+    }
+
+    @Test
+    public void toErrorWithRelativizedResourcePath__matchingBazelPackage() {
         BazelMarkerDetails details =
                 new BazelMarkerDetails("projects/libs/cake/abstractions/src/main/java/com/MyClass.java", 1, "desc");
 
-        String path = details.getResourcePathRelativeToBazelPackage(
-            Collections.singletonList(new BazelLabel("//projects/libs/cake/abstractions")));
+        details = details.toErrorWithRelativizedResourcePath(new BazelLabel("//projects/libs/cake/abstractions"));
 
-        assertEquals("/src/main/java/com/MyClass.java", path);
+        assertEquals("/src/main/java/com/MyClass.java", details.getResourcePath());
     }
-    
+
     @Test
-    public void getResourcePathRelativeToBazelPackage__rootPackage() {
-        BazelMarkerDetails details =
-                new BazelMarkerDetails("/bazelproject", 1, "desc");
+    public void toErrorWithRelativizedResourcePath__rootPackage() {
+        BazelMarkerDetails details = new BazelMarkerDetails("/bazelproject", 1, "desc");
 
-        String path = details.getResourcePathRelativeToBazelPackage(
-            Collections.singletonList(new BazelLabel("//...")));
+        details = details.toErrorWithRelativizedResourcePath(new BazelLabel("//..."));
 
-        assertEquals("/bazelproject", path);
+        assertEquals("/bazelproject", details.getResourcePath());
     }
-    
-    @Test
-    public void getResourcePathRelativeToBazelPackage__matchingBazelPackagePrefix() {
+
+    @Test(expected = IllegalArgumentException.class)
+    public void toErrorWithRelativizedResourcePath__matchingBazelPackagePrefix() {
         BazelMarkerDetails details =
                 new BazelMarkerDetails("projects/libs/cake/abstractions_foo/src/main/java/com/MyClass.java", 1, "desc");
 
-        String path = details.getResourcePathRelativeToBazelPackage(
-            Collections.singletonList(new BazelLabel("//projects/libs/cake/abstractions")));
-
-        assertNull(path);
+        details.toErrorWithRelativizedResourcePath(new BazelLabel("//projects/libs/cake/abstractions"));
     }
 
-    @Test
-    public void getResourcePathRelativeToBazelPackage__differentBazelPackage() {
+    @Test(expected = IllegalArgumentException.class)
+    public void toErrorWithRelativizedResourcePath__differentBazelPackage() {
         BazelMarkerDetails details = new BazelMarkerDetails(
                 "projects/libs/cake/metrics-abstractions/src/main/java/com/MyClass.java", 1, "desc");
 
-        String path = details.getResourcePathRelativeToBazelPackage(
-            Collections.singletonList(new BazelLabel("projects/libs/cake/abstractions")));
+        details.toErrorWithRelativizedResourcePath(new BazelLabel("projects/libs/cake/abstractions"));
+    }
 
-        assertNull(path);
+    @Test
+    public void toGenericWorkspaceLevelError() {
+        BazelMarkerDetails details = new BazelMarkerDetails("a/b/c", 13, "desc");
+
+        BazelMarkerDetails generic = details.toGenericWorkspaceLevelError("prefix:");
+
+        assertEquals(0, generic.getLineNumber());
+        assertEquals("/WORKSPACE", generic.getResourcePath());
+        assertEquals("prefix:a/b/c desc", generic.getDescription());
     }
 }
