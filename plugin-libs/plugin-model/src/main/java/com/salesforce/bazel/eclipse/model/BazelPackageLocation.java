@@ -40,4 +40,12 @@ public interface BazelPackageLocation {
      * True if this is the root Bazel Package that contains the WORKSPACE file.  
      */
     boolean isWorkspaceRoot();
+    
+    /**
+     * Provides the proper Bazel label for the Bazel package.
+     * <p>
+     * 
+     * e.g. "//projects/libs/apple"
+     */
+    public String getBazelPackageName();    
 }

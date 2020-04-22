@@ -11,4 +11,5 @@ Bundle-ClassPath: lib/guava-28.2.jar,
  lib/json-20160212.jar
 Export-Package: com.google.common.base;version="28.2",
  com.google.common.collect;version="28.2",
+ com.google.common.graph;version="28.2",
  org.json;version="20160212"

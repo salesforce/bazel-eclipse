@@ -67,7 +67,9 @@ public class AspectPackageInfos {
             AspectPackageInfo previousValue =
                     labelToAspectPackageInfo.put(aspectPackageInfo.getLabel(), aspectPackageInfo);
             if (previousValue != null) {
-                throw new IllegalStateException("Did not expect a duplicate label: " + previousValue.getLabel());
+                if (!previousValue.toString().equals(aspectPackageInfo.toString())) {
+                    throw new IllegalStateException("Did not expect a duplicate label with different contents: " + previousValue.getLabel());
+                }
             }
         }
     }
@@ -84,6 +86,15 @@ public class AspectPackageInfos {
 
     public AspectPackageInfo lookupByLabel(String label) {
         return labelToAspectPackageInfo.get(label);
+    }
+    
+    public AspectPackageInfo lookByPackageName(String name) {
+        for (String key : labelToAspectPackageInfo.keySet()) {
+            if (key.startsWith(name)) {
+                return labelToAspectPackageInfo.get(key);
+            }
+        }
+        return null; //TODO: make it better
     }
 
     public Collection<AspectPackageInfo> lookupByTargetKind(EnumSet<TargetKind> requestedTargetKinds) {
