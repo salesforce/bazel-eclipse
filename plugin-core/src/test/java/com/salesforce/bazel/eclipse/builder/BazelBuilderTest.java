@@ -21,7 +21,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Multimap;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
+import com.salesforce.bazel.eclipse.model.BazelBuildError;
 
 public class BazelBuilderTest {
 
@@ -61,28 +61,28 @@ public class BazelBuilderTest {
     public void testAssignErrorsToOwningProject() throws Exception {
         IProject project1 = getMockedProject("P1").getProject();
         BazelLabel l1 = new BazelLabel("projects/libs/lib1:*");
-        BazelMarkerDetails error1 = new BazelMarkerDetails("projects/libs/lib1/src/Test.java", 21, "foo");
+        BazelBuildError error1 = new BazelBuildError("projects/libs/lib1/src/Test.java", 21, "foo");
         IProject project2 = getMockedProject("P2").getProject();
         BazelLabel l2 = new BazelLabel("projects/libs/lib2:*");
-        BazelMarkerDetails error2 = new BazelMarkerDetails("projects/libs/lib2/src/Test2.java", 22, "blah");
+        BazelBuildError error2 = new BazelBuildError("projects/libs/lib2/src/Test2.java", 22, "blah");
         Map<BazelLabel, IProject> labelToProject = new HashMap<>();
         labelToProject.put(l1, project1);
         labelToProject.put(l2, project2);
         IProject rootProject = getMockedProject("ROOT").getProject();
 
-        Multimap<IProject, BazelMarkerDetails> projectToErrors =
+        Multimap<IProject, BazelBuildError> projectToErrors =
                 BazelBuilder.assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, Optional.of(rootProject));
 
         assertEquals(2, projectToErrors.size());
-        Collection<BazelMarkerDetails> p1Errors = projectToErrors.get(project1);
+        Collection<BazelBuildError> p1Errors = projectToErrors.get(project1);
         assertEquals(1, p1Errors.size());
-        BazelMarkerDetails p1Error = p1Errors.iterator().next();
+        BazelBuildError p1Error = p1Errors.iterator().next();
         assertEquals("/src/Test.java", p1Error.getResourcePath());
         assertEquals(21, p1Error.getLineNumber());
         assertEquals("foo", p1Error.getDescription());
-        Collection<BazelMarkerDetails> p2Errors = projectToErrors.get(project2);
+        Collection<BazelBuildError> p2Errors = projectToErrors.get(project2);
         assertEquals(1, p2Errors.size());
-        BazelMarkerDetails p2Error = p2Errors.iterator().next();
+        BazelBuildError p2Error = p2Errors.iterator().next();
         assertEquals("/src/Test2.java", p2Error.getResourcePath());
         assertEquals(22, p2Error.getLineNumber());
         assertEquals("blah", p2Error.getDescription());
@@ -92,17 +92,17 @@ public class BazelBuilderTest {
     public void testUnassignedErrors() throws Exception {
         IProject project1 = getMockedProject("P1").getProject();
         BazelLabel l1 = new BazelLabel("projects/libs/lib1:*");
-        BazelMarkerDetails error1 = new BazelMarkerDetails("projects/libs/lib1/src/Test.java", 21, "foo");
+        BazelBuildError error1 = new BazelBuildError("projects/libs/lib1/src/Test.java", 21, "foo");
         Map<BazelLabel, IProject> labelToProject = Collections.singletonMap(l1, project1);
-        BazelMarkerDetails error2 = new BazelMarkerDetails("projects/libs/lib2/src/Test2.java", 22, "blah");
+        BazelBuildError error2 = new BazelBuildError("projects/libs/lib2/src/Test2.java", 22, "blah");
         IProject rootProject = getMockedProject("ROOT").getProject();
 
-        Multimap<IProject, BazelMarkerDetails> projectToErrors =
+        Multimap<IProject, BazelBuildError> projectToErrors =
                 BazelBuilder.assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, Optional.of(rootProject));
 
         assertEquals(2, projectToErrors.size());
-        Collection<BazelMarkerDetails> rootLevelErrors = projectToErrors.get(rootProject);
-        BazelMarkerDetails rootError = rootLevelErrors.iterator().next();
+        Collection<BazelBuildError> rootLevelErrors = projectToErrors.get(rootProject);
+        BazelBuildError rootError = rootLevelErrors.iterator().next();
         assertEquals("/WORKSPACE", rootError.getResourcePath());
         assertEquals(0, rootError.getLineNumber());
         assertTrue(rootError.getDescription().startsWith(BazelBuilder.UNKNOWN_PROJECT_ERROR_MSG_PREFIX));

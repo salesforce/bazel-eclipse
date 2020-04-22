@@ -61,7 +61,7 @@ import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.logging.LoggerFacade;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelBuildFile;
-import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
+import com.salesforce.bazel.eclipse.model.BazelBuildError;
 import com.salesforce.bazel.eclipse.model.BazelOutputParser;
 import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.eclipse.model.BazelWorkspaceMetadataStrategy;
@@ -422,7 +422,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * @throws IOException
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized List<BazelMarkerDetails> runBazelBuild(Set<String> bazelTargets,
+    public synchronized List<BazelBuildError> runBazelBuild(Set<String> bazelTargets,
             WorkProgressMonitor progressMonitor, List<String> extraArgs)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> extraArgsList = ImmutableList.<String> builder().add("build").addAll(this.buildOptions)
@@ -433,7 +433,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         if (output.isEmpty()) {
             return Collections.emptyList();
         } else {
-            List<BazelMarkerDetails> errorDetails = outputParser.getErrorBazelMarkerDetails(output);
+            List<BazelBuildError> errorDetails = outputParser.getErrorBazelMarkerDetails(output);
             getLogger().debug(getClass(),
                 "\n" + String.join("\n", errorDetails.stream().map(d -> d.toString()).collect(Collectors.toList()))
                         + "\n");

@@ -40,7 +40,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
-import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
+import com.salesforce.bazel.eclipse.model.BazelBuildError;
 
 /**
  * Encapsulates Bazel Error Marker logic.
@@ -80,8 +80,8 @@ public class BazelMarkerManagerSingleton {
      *            the Bazel Labels that were built and resulted in the specified errors
      * @throws CoreException
      */
-    public void publishProblemMarkersForProject(IProject project, Collection<BazelMarkerDetails> errorDetails) throws CoreException {
-        for (BazelMarkerDetails errorDetail : errorDetails) {
+    public void publishProblemMarkersForProject(IProject project, Collection<BazelBuildError> errorDetails) throws CoreException {
+        for (BazelBuildError errorDetail : errorDetails) {
             String resourcePath = errorDetail.getResourcePath();
             IResource resource = project.findMember(resourcePath);
             IMarker marker = resource.createMarker(BAZEL_MARKER);

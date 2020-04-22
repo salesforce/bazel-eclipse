@@ -46,8 +46,8 @@ public class BazelOutputParser {
 
     private static final String JAVA_FILE_PATH_SUFFX = ".java";
 
-    public List<BazelMarkerDetails> getErrorBazelMarkerDetails(List<String> lines) {
-        List<BazelMarkerDetails> allBazelMarkerDetails = new ArrayList<>();
+    public List<BazelBuildError> getErrorBazelMarkerDetails(List<String> lines) {
+        List<BazelBuildError> allBazelMarkerDetails = new ArrayList<>();
         boolean parsingErrors = false;
         String errorSourcePathLine = null;
         String moreDetailsLine = null;
@@ -96,7 +96,7 @@ public class BazelOutputParser {
         return allBazelMarkerDetails;
     }
 
-    private BazelMarkerDetails buildErrorDetails(String errorSourcePathLine, String moreDetailsLine) {
+    private BazelBuildError buildErrorDetails(String errorSourcePathLine, String moreDetailsLine) {
         int i = errorSourcePathLine.lastIndexOf(JAVA_FILE_PATH_SUFFX);
         String sourcePath = errorSourcePathLine.substring(0, i + JAVA_FILE_PATH_SUFFX.length());
         i = errorSourcePathLine.indexOf(":", sourcePath.length());
@@ -112,7 +112,7 @@ public class BazelOutputParser {
         if (moreDetailsLine != null) {
             description += ": " + moreDetailsLine;
         }
-        return new BazelMarkerDetails(sourcePath, lineNumber, description);
+        return new BazelBuildError(sourcePath, lineNumber, description);
     }
 
     private boolean isInitialErrorSourcePathLine(String line) {

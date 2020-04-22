@@ -43,7 +43,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
 import com.salesforce.bazel.eclipse.builder.BazelMarkerManagerSingleton;
-import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
+import com.salesforce.bazel.eclipse.model.BazelBuildError;
 
 /**
  * Support class that provides interaction methods for existing Eclipse Bazel projects.
@@ -55,7 +55,7 @@ public class BazelEclipseProjectSupport {
     /**
      * Publishes problem markers for the specified project.
      */
-    public static void publishProblemMarkers(IProject project, IProgressMonitor monitor, Collection<BazelMarkerDetails> errors) {
+    public static void publishProblemMarkers(IProject project, IProgressMonitor monitor, Collection<BazelBuildError> errors) {
         runWithProgress(monitor, new WorkspaceModifyOperation() {
             @Override
             protected void execute(IProgressMonitor monitor) throws CoreException {
