@@ -104,17 +104,17 @@ public class MockEclipse {
      */
     public MockEclipse(TestBazelWorkspaceFactory bazelWorkspace, File testTempDir) throws Exception {
         this.bazelCommandEnvironment = new TestBazelCommandEnvironmentFactory();
-        this.bazelCommandEnvironment.createTestEnvironment(bazelWorkspace, testTempDir, bazelWorkspace.commandOptions);
+        this.bazelCommandEnvironment.createTestEnvironment(bazelWorkspace, testTempDir, bazelWorkspace.workspaceDescriptor.commandOptions);
         
         setup(bazelWorkspace, testTempDir);
     }
     
     private void setup(TestBazelWorkspaceFactory bazelWorkspaceFactory, File testTempDir) throws Exception {
         this.bazelWorkspaceFactory = bazelWorkspaceFactory;
-        this.bazelWorkspaceRoot = bazelWorkspaceFactory.dirWorkspaceRoot;
-        this.bazelOutputBase = bazelWorkspaceFactory.dirOutputBase;
-        this.bazelExecutionRoot = bazelWorkspaceFactory.dirExecRoot;
-        this.bazelBin = bazelWorkspaceFactory.dirBazelBin;
+        this.bazelWorkspaceRoot = bazelWorkspaceFactory.workspaceDescriptor.workspaceRootDirectory;
+        this.bazelOutputBase = bazelWorkspaceFactory.workspaceDescriptor.outputBaseDirectory;
+        this.bazelExecutionRoot = bazelWorkspaceFactory.workspaceDescriptor.dirExecRoot;
+        this.bazelBin = bazelWorkspaceFactory.workspaceDescriptor.dirBazelBin;
 
         this.eclipseWorkspaceRoot = new File(testTempDir, "eclipse-workspace");
         this.eclipseWorkspaceRoot.mkdir();

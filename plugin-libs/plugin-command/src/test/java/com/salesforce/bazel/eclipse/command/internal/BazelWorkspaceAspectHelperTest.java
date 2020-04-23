@@ -38,6 +38,7 @@ import org.junit.rules.TemporaryFolder;
 import com.salesforce.bazel.eclipse.command.mock.MockWorkProgressMonitor;
 import com.salesforce.bazel.eclipse.command.mock.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
+import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
 
 /**
@@ -139,7 +140,9 @@ public class BazelWorkspaceAspectHelperTest {
         workspaceDir.mkdirs();
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
-        TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(workspaceDir, outputbaseDir).javaPackages(1).build();
+        
+        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(1);
+        TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
         env.createTestEnvironment(workspace, testDir, null);
         
