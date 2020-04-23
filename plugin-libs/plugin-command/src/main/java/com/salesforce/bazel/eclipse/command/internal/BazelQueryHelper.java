@@ -74,6 +74,11 @@ public class BazelQueryHelper {
     public synchronized BazelBuildFile queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory, WorkProgressMonitor progressMonitor,
             String bazelPackageName) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
+        if ("//".equals(bazelPackageName)) {
+            // we don't support having buildable code at the root of the WORKSPACE
+            return new BazelBuildFile("//...");
+        }
+        
         // bazel query 'kind(rule, [label]:*)' --output label_kind
         
         ImmutableList.Builder<String> argBuilder = ImmutableList.builder();

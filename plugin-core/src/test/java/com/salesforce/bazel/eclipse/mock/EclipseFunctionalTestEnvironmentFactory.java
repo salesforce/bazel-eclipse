@@ -39,6 +39,7 @@ import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
+import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
 
 /**
@@ -71,8 +72,9 @@ public class EclipseFunctionalTestEnvironmentFactory {
             commandOptions.put("explicit_java_test_deps", "true");
         }
         
-        TestBazelWorkspaceFactory bazelWorkspaceCreator = new TestBazelWorkspaceFactory(wsDir, outputbaseDir).
-                javaPackages(numberOfJavaPackages).genrulePackages(2).options(commandOptions).useAltConfigFileNames(useAltConfigFileNames);
+        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(wsDir, outputbaseDir).javaPackages(numberOfJavaPackages).
+                genrulePackages(2).options(commandOptions).useAltConfigFileNames(useAltConfigFileNames);
+        TestBazelWorkspaceFactory bazelWorkspaceCreator = new TestBazelWorkspaceFactory(descriptor);
         bazelWorkspaceCreator.build();
 
         // create the mock Eclipse runtime

@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
+import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
 
 public class BazelProjectImportScannerTest {
@@ -46,8 +47,8 @@ public class BazelProjectImportScannerTest {
 //        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws");
 //        File tmpOutputBase = new File("/tmp/bazeltest/bin");
         
-        
-        new TestBazelWorkspaceFactory(tmpWorkspaceDir, tmpOutputBase).javaPackages(5).genrulePackages(2).build();
+        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(5).genrulePackages(2);
+        new TestBazelWorkspaceFactory(descriptor).build();
         
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getProjects(tmpWorkspaceDir);
@@ -69,7 +70,8 @@ public class BazelProjectImportScannerTest {
     public void testNoJavaProjects() throws Exception {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
         File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
-        new TestBazelWorkspaceFactory(tmpWorkspaceDir, tmpOutputBase).javaPackages(0).genrulePackages(2).build();
+        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(0).genrulePackages(2);
+        new TestBazelWorkspaceFactory(descriptor).build();
         
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getProjects(tmpWorkspaceDir);

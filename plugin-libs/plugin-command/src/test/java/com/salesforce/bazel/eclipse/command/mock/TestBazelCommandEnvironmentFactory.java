@@ -32,6 +32,7 @@ import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.model.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
 
 /**
@@ -63,7 +64,8 @@ public class TestBazelCommandEnvironmentFactory {
         File outputBase = new File(tempDir, "outputbase");
         outputBase.mkdirs();
         
-        TestBazelWorkspaceFactory testWorkspace = new TestBazelWorkspaceFactory(workspaceDir, outputBase, "bazel_command_executor_test");
+        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputBase, "bazel_command_executor_test");
+        TestBazelWorkspaceFactory testWorkspace = new TestBazelWorkspaceFactory(descriptor);
         testWorkspace.build();
         createTestEnvironment(testWorkspace, tempDir, null);
     }
@@ -82,17 +84,19 @@ public class TestBazelCommandEnvironmentFactory {
         this.bazelAspectLocation = new MockBazelAspectLocation(tempDir, "test-aspect-label");
         this.commandConsole = new MockCommandConsole();
 
-        this.commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace.dirWorkspaceRoot, testWorkspace.dirOutputBase, 
-            testWorkspace.dirExecRoot, testWorkspace.dirBazelBin, commandOptions);
+        this.commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace.workspaceDescriptor.workspaceRootDirectory, 
+            testWorkspace.workspaceDescriptor.outputBaseDirectory, testWorkspace.workspaceDescriptor.dirExecRoot, 
+            testWorkspace.workspaceDescriptor.dirBazelBin, commandOptions);
         // when the workspace factory built out the Bazel workspace file system, it wrote a collection of aspect json files
         // we need to tell the MockCommandBuilder where they are, since it will need to return them in command results
-        this.commandBuilder.addAspectJsonFileResponses(this.testWorkspace.aspectFileSets);
+        this.commandBuilder.addAspectJsonFileResponses(this.testWorkspace.workspaceDescriptor.aspectFileSets);
 
         BazelCommandManager bazelCommandManager = new BazelCommandManager(bazelAspectLocation, commandBuilder, commandConsole, 
             bazelExecutable.bazelExecutableFile);
         bazelCommandManager.setBazelExecutablePath(bazelExecutable.bazelExecutableFile.getAbsolutePath());
         
-        BazelWorkspace bazelWorkspace = new BazelWorkspace("test", testWorkspace.dirWorkspaceRoot, Mockito.mock(OperatingEnvironmentDetectionStrategy.class));
+        BazelWorkspace bazelWorkspace = new BazelWorkspace("test", testWorkspace.workspaceDescriptor.workspaceRootDirectory, 
+            Mockito.mock(OperatingEnvironmentDetectionStrategy.class));
         bazelWorkspace.setBazelWorkspaceMetadataStrategy(bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace));
         
         this.globalCommandRunner = bazelCommandManager.getGlobalCommandRunner();

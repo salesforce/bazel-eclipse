@@ -227,6 +227,11 @@ public class MockCommandBuilder extends CommandBuilder {
                     }
                     handled = true;
                 }
+            } else if ("query".equals(mockCommand.commandTokens.get(1))) {
+                if (mockCommand.commandTokens.size() < 3) {
+                    // this is just 'bazel build' without a target, which is not valid, blow up here as there is something wrong in the calling code
+                    throw new IllegalArgumentException("The plugin issued the command 'bazel build' without a third arg. This is not a valid bazel command.");
+                }
             }
         } 
         

@@ -103,7 +103,7 @@ public class MockIJavaProject implements IJavaProject {
     
     @Override
     public IClasspathEntry[] getResolvedClasspath(boolean ignoreUnresolvedEntry) throws JavaModelException {
-        if (this.resolvedEntries == null) {
+        if (this.resolvedEntries == null || this.resolvedEntries.length == 0) {
             
             // TODO this should be done during setRawClasspath but that is causing timing issues. But right now the mock framework is
             // not consistent with real Eclipse so we should investigate
