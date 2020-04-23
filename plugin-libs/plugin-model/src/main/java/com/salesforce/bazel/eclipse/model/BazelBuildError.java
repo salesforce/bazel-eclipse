@@ -43,13 +43,13 @@ import java.util.Objects;
  * @author nishant.dsouza
  * @since 5/3/2019
  */
-public class BazelMarkerDetails {
+public class BazelBuildError {
 
     private final String resourcePath;
     private final int lineNumber;
     private final String description;
 
-    public BazelMarkerDetails(String resourcePath, int lineNumber, String description) {
+    public BazelBuildError(String resourcePath, int lineNumber, String description) {
         this.resourcePath = Objects.requireNonNull(resourcePath);
         this.lineNumber = lineNumber;
         this.description = Objects.requireNonNull(description);
@@ -88,16 +88,16 @@ public class BazelMarkerDetails {
         return lineNumber;
     }
 
-    public BazelMarkerDetails toErrorWithRelativizedResourcePath(BazelLabel label) {
+    public BazelBuildError toErrorWithRelativizedResourcePath(BazelLabel label) {
         String rel = getRelativeResourcePath(label);
         if (rel == null) {
             throw new IllegalArgumentException("Unable to build a relative path for " + resourcePath + " based on label " + label);
         }
-        return new BazelMarkerDetails(rel, this.lineNumber, description);
+        return new BazelBuildError(rel, this.lineNumber, description);
     }
 
-    public BazelMarkerDetails toGenericWorkspaceLevelError(String descriptionPrefix) {
-        return new BazelMarkerDetails(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description);
+    public BazelBuildError toGenericWorkspaceLevelError(String descriptionPrefix) {
+        return new BazelBuildError(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description);
     }
 
     @Override

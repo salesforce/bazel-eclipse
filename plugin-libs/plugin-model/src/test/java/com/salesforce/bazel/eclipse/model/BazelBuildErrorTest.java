@@ -40,11 +40,11 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-public class BazelMarkerDetailsTest {
+public class BazelBuildErrorTest {
 
     @Test
     public void getOwningLabel__matchingLabel() {
-        BazelMarkerDetails details = new BazelMarkerDetails("a/b/c/d", 1, "desc");
+        BazelBuildError details = new BazelBuildError("a/b/c/d", 1, "desc");
         BazelLabel l1 = new BazelLabel("x/y/z");
         BazelLabel l2 = new BazelLabel("a/b/c");
 
@@ -55,7 +55,7 @@ public class BazelMarkerDetailsTest {
 
     @Test
     public void getOwningLabel__nestedLabel() {
-        BazelMarkerDetails details = new BazelMarkerDetails("a/b/c/d/e", 1, "desc");
+        BazelBuildError details = new BazelBuildError("a/b/c/d/e", 1, "desc");
         BazelLabel l0 = new BazelLabel("b/c/d");
         BazelLabel l1 = new BazelLabel("a/b");
         BazelLabel l2 = new BazelLabel("a/b/c");
@@ -70,8 +70,8 @@ public class BazelMarkerDetailsTest {
 
     @Test
     public void toErrorWithRelativizedResourcePath__matchingBazelPackage() {
-        BazelMarkerDetails details =
-                new BazelMarkerDetails("projects/libs/cake/abstractions/src/main/java/com/MyClass.java", 1, "desc");
+        BazelBuildError details =
+                new BazelBuildError("projects/libs/cake/abstractions/src/main/java/com/MyClass.java", 1, "desc");
 
         details = details.toErrorWithRelativizedResourcePath(new BazelLabel("//projects/libs/cake/abstractions"));
 
@@ -80,7 +80,7 @@ public class BazelMarkerDetailsTest {
 
     @Test
     public void toErrorWithRelativizedResourcePath__rootPackage() {
-        BazelMarkerDetails details = new BazelMarkerDetails("/bazelproject", 1, "desc");
+        BazelBuildError details = new BazelBuildError("/bazelproject", 1, "desc");
 
         details = details.toErrorWithRelativizedResourcePath(new BazelLabel("//..."));
 
@@ -89,15 +89,15 @@ public class BazelMarkerDetailsTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void toErrorWithRelativizedResourcePath__matchingBazelPackagePrefix() {
-        BazelMarkerDetails details =
-                new BazelMarkerDetails("projects/libs/cake/abstractions_foo/src/main/java/com/MyClass.java", 1, "desc");
+        BazelBuildError details =
+                new BazelBuildError("projects/libs/cake/abstractions_foo/src/main/java/com/MyClass.java", 1, "desc");
 
         details.toErrorWithRelativizedResourcePath(new BazelLabel("//projects/libs/cake/abstractions"));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void toErrorWithRelativizedResourcePath__differentBazelPackage() {
-        BazelMarkerDetails details = new BazelMarkerDetails(
+        BazelBuildError details = new BazelBuildError(
                 "projects/libs/cake/metrics-abstractions/src/main/java/com/MyClass.java", 1, "desc");
 
         details.toErrorWithRelativizedResourcePath(new BazelLabel("projects/libs/cake/abstractions"));
@@ -105,9 +105,9 @@ public class BazelMarkerDetailsTest {
 
     @Test
     public void toGenericWorkspaceLevelError() {
-        BazelMarkerDetails details = new BazelMarkerDetails("a/b/c", 13, "desc");
+        BazelBuildError details = new BazelBuildError("a/b/c", 13, "desc");
 
-        BazelMarkerDetails generic = details.toGenericWorkspaceLevelError("prefix:");
+        BazelBuildError generic = details.toGenericWorkspaceLevelError("prefix:");
 
         assertEquals(0, generic.getLineNumber());
         assertEquals("/WORKSPACE", generic.getResourcePath());

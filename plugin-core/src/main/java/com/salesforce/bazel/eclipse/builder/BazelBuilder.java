@@ -73,7 +73,7 @@ import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelMarkerDetails;
+import com.salesforce.bazel.eclipse.model.BazelBuildError;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -173,7 +173,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         } else {
             List<String> bazelBuildFlags = getAllBazelBuildFlags(projects);
             // now run the actual build
-            List<BazelMarkerDetails> errors = cmdRunner.runBazelBuild(bazelTargets, progressMonitor, bazelBuildFlags);
+            List<BazelBuildError> errors = cmdRunner.runBazelBuild(bazelTargets, progressMonitor, bazelBuildFlags);
             // show build errors in the "Problems View" - this has to run even
             // if there are no errors because it also takes care of removing
             // previous errors
@@ -183,8 +183,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     }
 
     // assigns errors to owning projects, and published the errors in the "Problems View"
-    private static void handleBuildErrors(Collection<IProject> projects, List<BazelMarkerDetails> errors, Map<BazelLabel, IProject> labelToProject, Optional<IProject> rootProject, IProgressMonitor monitor) {
-        Multimap<IProject, BazelMarkerDetails> errorsByProject = assignErrorsToOwningProject(errors, labelToProject, rootProject);
+    private static void handleBuildErrors(Collection<IProject> projects, List<BazelBuildError> errors, Map<BazelLabel, IProject> labelToProject, Optional<IProject> rootProject, IProgressMonitor monitor) {
+        Multimap<IProject, BazelBuildError> errorsByProject = assignErrorsToOwningProject(errors, labelToProject, rootProject);
         if (rootProject.isPresent()) {
             projects = new ArrayList<>(projects);
             projects.add(rootProject.get());
@@ -193,7 +193,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     }
 
     // this needs to be called even when there are no errors, as it clears the "Problems View"
-    private static void publishErrors(Collection<IProject> projects, Multimap<IProject, BazelMarkerDetails> errorsByProject, IProgressMonitor monitor) {
+    private static void publishErrors(Collection<IProject> projects, Multimap<IProject, BazelBuildError> errorsByProject, IProgressMonitor monitor) {
         for (IProject project : projects) {
             BazelEclipseProjectSupport.publishProblemMarkers(project, monitor, errorsByProject.get(project));
         }
@@ -202,10 +202,10 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     static final String UNKNOWN_PROJECT_ERROR_MSG_PREFIX = "ERROR IN UNKNOWN PROJECT: ";
 
     // maps the specified errors to the project instances they belong to, and returns that mapping
-    static Multimap<IProject, BazelMarkerDetails> assignErrorsToOwningProject(List<BazelMarkerDetails> errors, Map<BazelLabel, IProject> labelToProject, Optional<IProject> rootProject) {
-        Multimap<IProject, BazelMarkerDetails> projectToErrors = HashMultimap.create();
-        List<BazelMarkerDetails> remainingErrors = new ArrayList<>(errors);
-        for (BazelMarkerDetails error : errors) {
+    static Multimap<IProject, BazelBuildError> assignErrorsToOwningProject(List<BazelBuildError> errors, Map<BazelLabel, IProject> labelToProject, Optional<IProject> rootProject) {
+        Multimap<IProject, BazelBuildError> projectToErrors = HashMultimap.create();
+        List<BazelBuildError> remainingErrors = new ArrayList<>(errors);
+        for (BazelBuildError error : errors) {
             BazelLabel owningLabel = error.getOwningLabel(labelToProject.keySet());
             if (owningLabel != null) {
                 IProject project = labelToProject.get(owningLabel);
@@ -214,16 +214,16 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             }
         }
         if (!remainingErrors.isEmpty()) {
-            rootProject.ifPresentOrElse(p -> {
-                projectToErrors.putAll(p, remainingErrors.stream()
+            if (rootProject.isPresent()) {
+                projectToErrors.putAll(rootProject.get(), remainingErrors.stream()
                         .map(e -> e.toGenericWorkspaceLevelError(UNKNOWN_PROJECT_ERROR_MSG_PREFIX))
                         .collect(Collectors.toList()));
-            }, () -> {
+            } else {
                 // getting here is a bug - at least log the errors we didn't assign to any project
-                for (BazelMarkerDetails error : remainingErrors) {
+                for (BazelBuildError error : remainingErrors) {
                     LOG.error("Unhandled error: " + error);
                 }
-            });
+            }
         }
         return projectToErrors;
     }

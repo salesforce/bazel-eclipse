@@ -50,7 +50,7 @@ public class BazelOutputParserTest {
             "ERROR: /Users/stoens/bazel-build-example-for-eclipse/sayhello/BUILD:1:1: Building sayhello/libsayhello.jar (2 source files) failed (Exit 1)",
             "sayhello/src/main/java/com/blah/foo/hello/Main.java:16: error: cannot find symbol");
 
-        List<BazelMarkerDetails> errors = p.getErrorBazelMarkerDetails(lines);
+        List<BazelBuildError> errors = p.getErrorBazelMarkerDetails(lines);
 
         assertEquals(1, errors.size());
         assertEquals("sayhello/src/main/java/com/blah/foo/hello/Main.java", errors.get(0).getResourcePath());
@@ -68,7 +68,7 @@ public class BazelOutputParserTest {
             "ERROR: /Users/stoens/bazel-build-example-for-eclipse/sayhello/BUILD:1:1: Building sayhello/libsayhello.jar (2 source files) failed (Exit 1)",
             "sayhello/src/main/java/com/blah/foo/hello/Main.java:17: error: cannot find symbols");
 
-        List<BazelMarkerDetails> errors = p.getErrorBazelMarkerDetails(lines);
+        List<BazelBuildError> errors = p.getErrorBazelMarkerDetails(lines);
 
         assertEquals(2, errors.size());
         assertEquals("sayhello/src/main/java/com/blah/foo/hello/Main.java", errors.get(0).getResourcePath());
@@ -87,7 +87,7 @@ public class BazelOutputParserTest {
             "ERROR: this is just a string that we should probably handle but we don't right now"
         );                
 
-        List<BazelMarkerDetails> errors = p.getErrorBazelMarkerDetails(lines);
+        List<BazelBuildError> errors = p.getErrorBazelMarkerDetails(lines);
 
         assertEquals(0, errors.size());
     }
