@@ -103,29 +103,28 @@ public class BazelClasspathContainerFTest {
         //printClasspathEntries("tcpbjp_im RAW", entries);
         
         // SECOND check that the resolved classpath has 3 entries for javalib0: (TestRunner comes from implicit deps)
+        // bazel-output-base/execroot/test_workspace/bazel-out/darwin-fastbuild/bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools/Runner_deploy-ijar.jar
         // bazel-output-base/execroot/mock_workspace/external/com_google_guava_guava/jar/guava-20.0.jar
         // bazel-output-base/execroot/mock_workspace/external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar
-        // bazel-output-base/execroot/test_workspace/bazel-out/darwin-fastbuild/bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools/Runner_deploy-ijar.jar
         entries = javaHelper.getResolvedClasspath(javalib0_IJavaProject, false);
         assertNotNull(entries);
         //printClasspathEntries("tcpbjp_im RESOLVED", entries);
         assertEquals(3, entries.length);
-        String cpEntryPath = entries[0].getPath().toString(); 
-        assertTrue(cpEntryPath.contains("guava"));
-        assertTrue(entries[1].getPath().toString().contains("slf4j"));
-        assertTrue(entries[2].getPath().toString().contains("Runner")); // this is the magical implicit dep TestRunner jar that adds hamcrest, junit, javax.annotation to cp
+        assertTrue(entries[0].getPath().toString().contains("Runner")); // this is the magical implicit dep TestRunner jar that adds hamcrest, junit, javax.annotation to cp
+        assertTrue(entries[1].getPath().toString().contains("guava"));
+        assertTrue(entries[2].getPath().toString().contains("slf4j")); 
 
         // THIRD check that the resolved classpath has 3 entries for javalib1: (TestRunner comes from implicit deps)
+        // bazel-output-base/execroot/test_workspace/bazel-out/darwin-fastbuild/bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools/Runner_deploy-ijar.jar
         // bazel-output-base/execroot/mock_workspace/external/com_google_guava_guava/jar/guava-20.0.jar
         // bazel-output-base/execroot/mock_workspace/external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar
         // javalib0
-        // bazel-output-base/execroot/test_workspace/bazel-out/darwin-fastbuild/bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools/Runner_deploy-ijar.jar
         entries = javaHelper.getResolvedClasspath(javalib1_IJavaProject, false);
         assertNotNull(entries);
         // printClasspathEntries(entries);
         assertEquals(4, entries.length);
         // make sure we picked up the inter-project dep (javalib1 depends on javalib0)
-        assertEquals("javalib0", entries[2].getPath().toString());
+        assertEquals("javalib0", entries[3].getPath().toString());
     }
 
     /**
