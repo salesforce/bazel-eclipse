@@ -159,7 +159,7 @@ public class MockCommandBuilder extends CommandBuilder {
      * @param matchers one or more matchers that will specifically target a command
      */
     public void addSimulatedOutput(String nameForLog, List<String> outputLines, List<String> errorLines, List<MockCommandSimulatedOutputMatcher> matchers) {
-        MockCommandSimulatedOutput out = new MockCommandSimulatedOutput(nameForLog, outputLines, errorLines);
+        MockCommandSimulatedOutput out = new MockCommandSimulatedOutput(nameForLog, outputLines, errorLines, matchers);
         simulatedOutputLines.add(out);
     }
     
@@ -243,7 +243,9 @@ public class MockCommandBuilder extends CommandBuilder {
 
                 handled = true;
             }
-        } 
+        } else if (mockCommand.commandTokens.get(0).startsWith("bazel-bin")) {
+            // launcher script
+        }
         
         // if it wasn't a standard command, get ready for it
         if (!handled) {

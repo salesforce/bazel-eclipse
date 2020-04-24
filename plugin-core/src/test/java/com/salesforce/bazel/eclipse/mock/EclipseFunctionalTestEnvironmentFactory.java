@@ -97,6 +97,8 @@ public class EclipseFunctionalTestEnvironmentFactory {
         // create base configuration, which includes the real bazel workspace on disk
         MockEclipse mockEclipse = createMockEnvironment_PriorToImport_JavaPackages(testTempDir, numberOfJavaPackages,
             explicitJavaTestDeps, false);
+        mockEclipse.getMockCommandBuilder().addAspectJsonFileResponses(mockEclipse.getBazelWorkspaceCreator().workspaceDescriptor.aspectFileSets);
+
 
         // scan the bazel workspace filesystem to build the list of Java projects
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();

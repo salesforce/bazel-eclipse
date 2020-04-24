@@ -60,7 +60,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         ILaunchConfiguration launchConfig = createLaunchConfiguration("run");
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
-        addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), "run", "bazel run result");
+        addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 0, "bazel-bin/projects/libs/javalib0/javalib0", "bazel run result");
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
         
         // method under test
@@ -83,7 +83,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         ILaunchConfiguration launchConfig = createLaunchConfiguration("test");
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
-        addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), "test", "bazel test result");
+        addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 1, "test", "bazel test result");
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
         
         // method under test
@@ -110,7 +110,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         ILaunchConfiguration launchConfig = createLaunchConfiguration("selenium");
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
-        addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), "test", "bazel test result");
+        addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 1, "test", "bazel test result");
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
         
         // method under test
@@ -140,7 +140,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         //testTempDir.mkdirs();
 
         // create the mock Eclipse runtime in the correct state
-        int numberOfJavaPackages = 2;
+        int numberOfJavaPackages = 1;
         boolean computeClasspaths = true; 
         MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(
             testTempDir, numberOfJavaPackages, computeClasspaths, false);
@@ -170,14 +170,14 @@ public class BazelLaunchConfigurationDelegateFTest {
         return testConfig;
     }
 
-    private void addBazelCommandOutput(TestBazelCommandEnvironmentFactory env, String verb, String resultLine) {
+    private void addBazelCommandOutput(TestBazelCommandEnvironmentFactory env, int verbIndex, String verb, String resultLine) {
         List<String> outputLines = new ArrayList<>();
         outputLines.add(resultLine);
         List<String> errorLines = new ArrayList<>();
         
         // create a matcher such that the resultLine is only returned if a command uses the specific verb
         List<MockCommandSimulatedOutputMatcher> matchers = new ArrayList<>();
-        matchers.add(new MockCommandSimulatedOutputMatcher(0, verb));
+        matchers.add(new MockCommandSimulatedOutputMatcher(verbIndex, verb));
         
         env.commandBuilder.addSimulatedOutput("launcherbuildertest", outputLines, errorLines, matchers);
     }
