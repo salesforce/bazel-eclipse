@@ -62,7 +62,7 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setTargetKind(targetKind);
         launcherBuilder.setArgs(Collections.emptyMap());
         
-        addBazelCommandOutput(env, "run", "bazel run result");
+        addBazelCommandOutput(env, 0, "bazel-bin/a/b/c/c", "fake bazel launcher script result");
         
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
         assertEquals("bazel-bin/a/b/c/c", cmdTokens.get(0));
@@ -81,7 +81,7 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setArgs(Collections.emptyMap());
         launcherBuilder.setDebugMode(true, "localhost", DEBUG_PORT);
 
-        addBazelCommandOutput(env, "run", "bazel run result");
+        addBazelCommandOutput(env, 0, "bazel-bin/a/b/c/c", "fake bazel launcher script result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
@@ -100,7 +100,7 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setTargetKind(targetKind);
         launcherBuilder.setArgs(Collections.emptyMap());
 
-        addBazelCommandOutput(env, "test", "bazel test result");
+        addBazelCommandOutput(env, 1, "test", "bazel test result");
         
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
@@ -121,7 +121,7 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setTargetKind(targetKind);
         launcherBuilder.setArgs(Collections.emptyMap());
 
-        addBazelCommandOutput(env, "test", "bazel test result");
+        addBazelCommandOutput(env, 1, "test", "bazel test result");
         
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
@@ -144,7 +144,7 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setTargetKind(targetKind);
         launcherBuilder.setArgs(bazelArgs);
         
-        addBazelCommandOutput(env, "test", "bazel test result");
+        addBazelCommandOutput(env, 1, "test", "bazel test result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
@@ -167,7 +167,7 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setArgs(Collections.emptyMap());
         launcherBuilder.setDebugMode(true, "localhost", DEBUG_PORT);
         
-        addBazelCommandOutput(env, "test", "bazel test result");
+        addBazelCommandOutput(env, 1, "test", "bazel test result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
@@ -194,14 +194,14 @@ public class BazelLauncherBuilderTest {
         return env;
     }
     
-    private void addBazelCommandOutput(TestBazelCommandEnvironmentFactory env, String verb, String resultLine) {
+    private void addBazelCommandOutput(TestBazelCommandEnvironmentFactory env, int verbIndex, String verb, String resultLine) {
         List<String> outputLines = new ArrayList<>();
         outputLines.add(resultLine);
         List<String> errorLines = new ArrayList<>();
         
         // create a matcher such that the resultLine is only returned if a command uses the specific verb
         List<MockCommandSimulatedOutputMatcher> matchers = new ArrayList<>();
-        matchers.add(new MockCommandSimulatedOutputMatcher(0, verb));
+        matchers.add(new MockCommandSimulatedOutputMatcher(verbIndex, verb));
         
         env.commandBuilder.addSimulatedOutput("launcherbuildertest", outputLines, errorLines, matchers);
     }
