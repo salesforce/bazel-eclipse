@@ -115,7 +115,7 @@ public class MockCommandBuilder extends CommandBuilder {
         
         for (String packagePath : aspectFileSets.keySet()) {
             // the last arg is the package path with the wildcard target (//projects/libs/javalib0:*)
-            String wildcardTarget = "//"+packagePath+":\\*";
+            String wildcardTarget = "//"+packagePath+":.*"; // TODO this is returning the same set of aspects for each target in a package
             MockCommandSimulatedOutputMatcher aspectCommandMatcher3 = new MockCommandSimulatedOutputMatcher(7, wildcardTarget);
 
             List<MockCommandSimulatedOutputMatcher> matchers = new ArrayList<>();
@@ -232,6 +232,16 @@ public class MockCommandBuilder extends CommandBuilder {
                     // this is just 'bazel build' without a target, which is not valid, blow up here as there is something wrong in the calling code
                     throw new IllegalArgumentException("The plugin issued the command 'bazel build' without a third arg. This is not a valid bazel command.");
                 }
+                // TODO mockcommand
+                if (mockCommand.commandTokens.get(2).contains("javalib0")) {
+                    addSimulatedOutputToCommandStdOut(mockCommand, "java_test rule //projects/libs/javalib0:javalib0Test");
+                    addSimulatedOutputToCommandStdOut(mockCommand, "java_library rule //projects/libs/javalib0:javalib0");
+                } else if (mockCommand.commandTokens.get(2).contains("javalib1")) {
+                    addSimulatedOutputToCommandStdOut(mockCommand, "java_test rule //projects/libs/javalib1:javalib1Test");
+                    addSimulatedOutputToCommandStdOut(mockCommand, "java_library rule //projects/libs/javalib1:javalib1");
+                }
+
+                handled = true;
             }
         } 
         
@@ -333,7 +343,9 @@ public class MockCommandBuilder extends CommandBuilder {
                     // not enough args to match against, so this can't be our command
                     return false;
                 }
-                if (!commandArgs.get(matcher.matchArgIndex).matches(matcher.matchArgRegex)) {
+                String pattern = matcher.matchArgRegex;
+                String arg = commandArgs.get(matcher.matchArgIndex);
+                if (!arg.matches(pattern)) {
                     return false;
                 }
             }
