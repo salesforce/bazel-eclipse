@@ -484,7 +484,12 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         targetLabels.add(targetLabel);
         Map<String, Set<AspectPackageInfo>> results = this.aspectHelper.getAspectPackageInfos(eclipseProjectName, targetLabels, progressMonitor, caller);
         
-        return results.get(targetLabel);
+        Set<AspectPackageInfo> resultSet = results.get(targetLabel);
+        if (resultSet == null) {
+            // TODO figure out why we get in here
+            resultSet = new TreeSet<>();
+        }
+        return resultSet;
     }
     
     /**
