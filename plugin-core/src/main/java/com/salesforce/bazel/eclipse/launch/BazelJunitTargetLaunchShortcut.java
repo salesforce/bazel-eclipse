@@ -44,7 +44,7 @@ import org.eclipse.jdt.junit.launcher.JUnitLaunchShortcut;
 /**
  * Launch target for Bazel JUnit Tests - should be able to run Junit without this target. All this target does is
  * enables the BazelRuntimeClasspathProviders
- * 
+ *
  * @author Blaine Buxton
  *
  */
@@ -56,8 +56,4 @@ public class BazelJunitTargetLaunchShortcut extends JUnitLaunchShortcut {
         BazelRuntimeClasspathProvider.canOpenErrorDialog.set(true);
         return config;
     }
-
-    //	protected String getLaunchConfigurationTypeId() {
-    //	return ID;
-    //}
 }

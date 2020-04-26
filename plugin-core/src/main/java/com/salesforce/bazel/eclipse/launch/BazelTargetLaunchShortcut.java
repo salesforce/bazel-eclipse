@@ -40,7 +40,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IEditorPart;
@@ -77,13 +76,12 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
                 projectName = cu.getJavaProject().getElementName();
             } else if (structured.getFirstElement() instanceof IMethod) {
                 IJavaElement cu = (IJavaElement) structured.getFirstElement();
-                //methodName = cu.getElementName();
                 fileName = cu.getParent().getElementName();
                 packageName = cu.getParent().getParent().getParent().getElementName();
                 projectName = cu.getJavaProject().getElementName();
             }
         }
-        
+
         String fqClassName = packageName + "." + fileName;
         IWorkspaceRoot eclipseWorkspaceRoot = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot();
         IJavaModel eclipseJavaModel = BazelPluginActivator.getJavaCoreHelper().getJavaModelForWorkspace(eclipseWorkspaceRoot);
@@ -98,20 +96,18 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
             throw new IllegalStateException("Unable to find a java_binary target that has a main_class of " + fqClassName);
         } else if (matchingInfos.size() > 1) {
             // surface correctly
-            throw new IllegalStateException("Found multiple java_binary targets that have a main_class of " + fqClassName + " - create a launch configuration manually");            
+            throw new IllegalStateException("Found multiple java_binary targets that have a main_class of " + fqClassName + " - create a launch configuration manually");
         }
 
         ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
         ILaunchConfigurationType type = manager.getLaunchConfigurationType(BazelLaunchConfigurationDelegate.ID);
         try {
             ILaunchConfigurationWorkingCopy config = type.newInstance(null, fileName);
+            support.setLaunchConfigDefaults(config);
             AspectPackageInfo api = matchingInfos.iterator().next();
             BazelLabel label = new BazelLabel(api.getLabel());
             TargetKind kind = TargetKind.valueOfIgnoresCase(api.getKind());
             support.populateBazelLaunchConfig(config, projectName, label, kind);
-            if (mode.equalsIgnoreCase(ILaunchManager.DEBUG_MODE)) {
-                config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_ALLOW_TERMINATE, true);
-            }
             DebugUITools.launch(config.doSave(), mode);
 
         } catch (CoreException ex) {

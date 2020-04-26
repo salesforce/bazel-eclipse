@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -44,6 +44,7 @@ import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
@@ -148,15 +149,19 @@ class BazelLaunchConfigurationSupport {
             return "com.salesforce.bazel.eclipse.launch." + attributeName;
         }
     }
-    
+
+    void setLaunchConfigDefaults(ILaunchConfigurationWorkingCopy config) {
+        // this is required so that the red button in the console view is enabled and able to
+        // terminate the running jvm while it is being debugged
+        config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_ALLOW_TERMINATE, true);
+    }
+
     void populateBazelLaunchConfig(ILaunchConfigurationWorkingCopy config, String projectName, BazelLabel label, TargetKind targetKind) {
         Objects.requireNonNull(config);
         Objects.requireNonNull(projectName);
-        
+
         String labelStr = label == null ? null : label.getLabel();
         String kindStr = targetKind == null ? null : targetKind.getKind();
-        //System.out.println("Applying launch config with: p: "+projectName+" l:"+labelStr+" k: "+kindStr);
-
         config.setAttribute(BazelLaunchConfigAttributes.PROJECT.getAttributeName(), projectName);
         config.setAttribute(BazelLaunchConfigAttributes.LABEL.getAttributeName(), labelStr);
         config.setAttribute(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), kindStr);
@@ -165,13 +170,13 @@ class BazelLaunchConfigurationSupport {
 
     /**
      * Returns all runnable AspectPackageInfo instances for the specified project.
-     * 
+     *
      * @see {@link TargetKind#isRunnable()}
      */
     Collection<AspectPackageInfo> getLaunchableAspectPackageInfosForProject(IProject project) {
         return getAspectPackageInfosForProject(project, LAUNCHABLE_TARGET_KINDS);
     }
-    
+
     /**
      * Returns all AspectPackageInfo instances that represent targets of the specified type, for the specified project.
      */
@@ -183,17 +188,17 @@ class BazelLaunchConfigurationSupport {
 
     /**
      * Returns all runnable Bazel targets for the specified project.
-     * 
+     *
      * @see {@link TargetKind#isRunnable()}
      */
-    Collection<TypedBazelLabel> getLaunchableBazelTargetsForProject(IProject project) {
+    List<TypedBazelLabel> getLaunchableBazelTargetsForProject(IProject project) {
         return getBazelTargetsForProject(project, LAUNCHABLE_TARGET_KINDS);
     }
-    
+
     /**
      * Returns all Bazel targets of the specified type, for the specified project.
      */
-    Collection<TypedBazelLabel> getBazelTargetsForProject(IProject project, EnumSet<TargetKind> targetTypes) {
+    List<TypedBazelLabel> getBazelTargetsForProject(IProject project, EnumSet<TargetKind> targetTypes) {
         List<TypedBazelLabel> typedBazelLabels = new ArrayList<>();
         for (AspectPackageInfo api : getAspectPackageInfosForProject(project, targetTypes)) {
             BazelLabel label = new BazelLabel(api.getLabel());
@@ -202,7 +207,7 @@ class BazelLaunchConfigurationSupport {
         }
         return typedBazelLabels;
     }
-    
+
     private static AspectPackageInfos computeAspectPackageInfos(IProject project, BazelWorkspaceCommandRunner bazelRunner,
             WorkProgressMonitor monitor) {
         try {
@@ -217,15 +222,19 @@ class BazelLaunchConfigurationSupport {
     }
 
     private static EnumSet<TargetKind> LAUNCHABLE_TARGET_KINDS = null;
-    
+
     static {
         List<TargetKind> targets = new ArrayList<>();
         for (TargetKind kind : TargetKind.values()) {
-            if (kind.isRunnable() || kind.isTestable()) {
+            // the expectation is that we'll only get java_binary targets
+            // there's nothing wrong with getting other target kinds here,
+            // but the target selection ui isn't that great, it should have
+            // a better way to distinguish between different target kinds
+            if (kind.isRunnable()) {
                 targets.add(kind);
             }
         }
         LAUNCHABLE_TARGET_KINDS = EnumSet.copyOf(targets);
     }
-    
+
 }
