@@ -100,6 +100,14 @@
       </launchConfigurationType>
    </extension>
    <extension
+        point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+    <launchConfigurationTypeImage
+            id="com.salesforce.bazel.eclipse.launch.image"
+            configTypeID="com.salesforce.bazel.eclipse.launch"
+            icon="resources/bazelicon.gif">
+    </launchConfigurationTypeImage>
+   </extension>   
+   <extension
          id="com.salesforce.bazel.eclipse.launch.tab"
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup

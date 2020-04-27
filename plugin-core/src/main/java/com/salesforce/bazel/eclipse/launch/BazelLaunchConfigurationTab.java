@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -33,7 +33,7 @@
  */
 package com.salesforce.bazel.eclipse.launch;
 
-import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -78,11 +78,11 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
 
     private Text projectTextInput;
     private Text targetTextInput;
-    
+
     private String loadedProjectName = "";
     private String loadedTargetKind;
 
-    private Collection<TypedBazelLabel> labelsForSelectedProject = null;
+    private List<TypedBazelLabel> labelsForSelectedProject = null;
 
     @Override
     public String getName() {
@@ -90,7 +90,9 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
     }
 
     @Override
-    public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {}
+    public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
+        support.setLaunchConfigDefaults(configuration);
+    }
 
     @Override
     public void initializeFrom(ILaunchConfiguration configuration) {
@@ -120,13 +122,13 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
                 projectTextInput.setText(projectName);
             }
         }
-        
+
         BazelLabel label = targetTextInput.getText().trim().isEmpty() ? null : new BazelLabel(targetTextInput.getText());
         TargetKind targetKind = label == null ? null : lookupLabelKind(label);
         if (targetKind == null && loadedTargetKind != null) {
             targetKind = TargetKind.valueOfIgnoresCase(loadedTargetKind);
         }
-        
+
         support.populateBazelLaunchConfig(configuration, projectName, label, targetKind);
     }
 
@@ -191,13 +193,16 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         }
         return null;
     }
-    
+
     private synchronized void initializeLabelsForSelectedProject(IProject project) {
         if (labelsForSelectedProject == null) {
             labelsForSelectedProject = support.getLaunchableBazelTargetsForProject(project);
+            labelsForSelectedProject.sort((t1, t2) -> {
+                return t1.getBazelLabel().getLabel().compareTo(t2.getBazelLabel().getLabel());
+            });
         }
     }
-    
+
     private synchronized void clearLabelsForSelectedProject() {
         labelsForSelectedProject = null;
     }
@@ -320,6 +325,13 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
     };
 
     private static String toFriendlyLabelRepresentation(BazelLabel label, TargetKind targetKind) {
-        return label.getLastComponentOfTargetName() + " (" + targetKind.getKind() + ") - " + label.getLabel();
+        // if the target name uses a path-like syntax: my/target/name, then return
+        // "name (my/target/name)"
+        // otherwise just return the target name
+        if (label.getLastComponentOfTargetName().equals(label.getTargetName())) {
+            return label.getTargetName();
+        } else {
+            return label.getLastComponentOfTargetName() + " (" + label.getTargetName() + ")";
+        }
     }
 }

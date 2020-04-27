@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -40,15 +40,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * A container for AspectPackageInfo instances.
- * 
+ *
  * @author stoens
  * @since summer 2019
  */
@@ -73,7 +73,7 @@ public class AspectPackageInfos {
     }
 
     public static AspectPackageInfos fromSets(Collection<Set<AspectPackageInfo>> aspectPackageInfoSets) {
-        Set<AspectPackageInfo> infoList = new TreeSet<>();
+        Set<AspectPackageInfo> infoList = new LinkedHashSet<>(); // with TreeSet: class com.salesforce.bazel.eclipse.model.AspectPackageInfo cannot be cast to class java.lang.Comparable
         for (Set<AspectPackageInfo> set : aspectPackageInfoSets) {
             for (AspectPackageInfo info : set) {
                 infoList.add(info);
@@ -81,7 +81,7 @@ public class AspectPackageInfos {
         }
         return new AspectPackageInfos(infoList);
     }
-    
+
     public AspectPackageInfo lookupByLabel(String label) {
         return labelToAspectPackageInfo.get(label);
     }
