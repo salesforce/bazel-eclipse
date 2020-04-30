@@ -487,12 +487,16 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 // resolving the link will fail if the symlink does not a point to a real file
                 path = Files.readSymbolicLink(path);
             } catch (IOException ex) {
+                // TODO this can happen if someone does a 'bazel clean' using the command line #113
+                // https://github.com/salesforce/bazel-eclipse/issues/113
                 BazelPluginActivator.error("Problem adding jar to project ["+eclipseProjectName+"] because it does not exist on the filesystem: "+path);
                 printDirectoryDiagnostics(path.toFile().getParentFile().getParentFile(), " ");
             }
         } else {
             // it is a normal path, check for existence
             if (!Files.exists(path)) {
+                // TODO this can happen if someone does a 'bazel clean' using the command line #113
+                // https://github.com/salesforce/bazel-eclipse/issues/113
                 BazelPluginActivator.error("Problem adding jar to project ["+eclipseProjectName+"] because it does not exist on the filesystem: "+path);
                 printDirectoryDiagnostics(path.toFile().getParentFile().getParentFile(), " ");
             }            
@@ -528,8 +532,15 @@ public class BazelClasspathContainer implements IClasspathContainer {
         
     }
     
-    
+    private static int diagnosticsCount = 0;
     private static void printDirectoryDiagnostics(File path, String indent) {
+        if (diagnosticsCount > 3) {
+            // only do this a few times so we know there are problems but then be silent, 
+            //   otherwise a shutdown with lots of projects open can take forever
+            return;
+        }
+        diagnosticsCount++;
+        
         File[] children = path.listFiles();
         System.out.println(indent+BazelProjectHelper.getCanonicalPathStringSafely(path));
         if (children != null) {
