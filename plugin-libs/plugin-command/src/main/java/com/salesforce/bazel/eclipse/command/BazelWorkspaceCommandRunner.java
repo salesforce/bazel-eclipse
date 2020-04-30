@@ -486,7 +486,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         
         Set<AspectPackageInfo> resultSet = results.get(targetLabel);
         if (resultSet == null) {
-            // TODO figure out why we get in here
+            // this is a non-Java target, just return an empty set
             resultSet = new TreeSet<>();
         }
         return resultSet;
