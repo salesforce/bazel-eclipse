@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -36,8 +36,8 @@ package com.salesforce.bazel.eclipse.launch;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -72,7 +72,7 @@ import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
 /**
  * Runs a previously configured Bazel target.
- * 
+ *
  * @author stoens
  * @since summer 2019
  */
@@ -92,22 +92,25 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
             throws CoreException {
 
         boolean isDebugMode = mode.equalsIgnoreCase(ILaunchManager.DEBUG_MODE);
-        String projectName = getAttributeValue(configuration, BazelLaunchConfigAttributes.PROJECT);
-        Map<String, String> bazelArgs = getAttributeMap(configuration, BazelLaunchConfigAttributes.INTERNAL_BAZEL_ARGS);
-        BazelLabel label = new BazelLabel(getAttributeValue(configuration, BazelLaunchConfigAttributes.LABEL));
-        String targetKindStr = getAttributeValueWithDefault(configuration, BazelLaunchConfigAttributes.TARGET_KIND, "java_binary");
+        String projectName = BazelLaunchConfigAttributes.PROJECT.getStringValue(configuration);
+        BazelLabel label = new BazelLabel(BazelLaunchConfigAttributes.LABEL.getStringValue(configuration));
+        String targetKindStr = BazelLaunchConfigAttributes.TARGET_KIND.getStringValue(configuration);
         TargetKind targetKind = TargetKind.valueOfIgnoresCaseRequiresMatch(targetKindStr);
         IProject project = BazelPluginActivator.getResourceHelper().getProjectByName(projectName);
-        
+
+        List<String> allArgs = new ArrayList<>();
+        allArgs.addAll(BazelLaunchConfigAttributes.INTERNAL_BAZEL_ARGS.getListValue(configuration));
+        allArgs.addAll(BazelLaunchConfigAttributes.USER_BAZEL_ARGS.getListValue(configuration));
+
         if (targetKind.isRunnable()) {
             // build before running - this is required because building generates the shell script
             // we end up running
             project.build(IncrementalProjectBuilder.FULL_BUILD, monitor);
         }
-        
+
         BazelWorkspaceCommandRunner bazelCommandRunner = BazelPluginActivator.getInstance().getWorkspaceCommandRunner();
 
-        Command cmd = bazelCommandRunner.getBazelLauncherBuilder().setLabel(label).setTargetKind(targetKind).setArgs(bazelArgs)
+        Command cmd = bazelCommandRunner.getBazelLauncherBuilder().setLabel(label).setTargetKind(targetKind).setArgs(allArgs)
                 .setDebugMode(isDebugMode, DEBUG_HOST, DEBUG_PORT).build();
         BazelProcessBuilder processBuilder = cmd.getProcessBuilder();
 
@@ -125,12 +128,12 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
 
     protected void launchExec(ILaunchConfiguration configuration, IProject project, List<String> commandTokens,
             BazelProcessBuilder processBuilder, ILaunch launch, IProgressMonitor monitor) throws CoreException {
-        
+
         String[] cmdLine = commandTokens.toArray(new String[commandTokens.size()]);
         File workingDirectory = processBuilder.directory();
-        
+
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-        
+
         // launch the external process, and attach to the output
         Process process = resourceHelper.exec(cmdLine, workingDirectory);
         IProcess debugProcess = resourceHelper.newProcess(launch, process, "Bazel Runner");
@@ -154,49 +157,11 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
         return ImmutableMap.of("hostname", DEBUG_HOST, "port", String.valueOf(DEBUG_PORT));
     }
 
-    private static String getAttributeValue(ILaunchConfiguration configuration, BazelLaunchConfigAttributes attribute) {
-        try {
-            String value = configuration.getAttribute(attribute.getAttributeName(), (String) null);
-            if (value == null || value.isEmpty()) {
-                throw new IllegalStateException(
-                        "Launch Configuration Attribute without value: " + attribute.getAttributeName());
-            }
-            return value;
-        } catch (CoreException ex) {
-            throw new IllegalStateException(
-                    "Launch Configuration Attribute does not exist: " + attribute.getAttributeName());
-        }
-    }
-
-    private static String getAttributeValueWithDefault(ILaunchConfiguration configuration, BazelLaunchConfigAttributes attribute, String defaultValue) {
-        try {
-            String value = configuration.getAttribute(attribute.getAttributeName(), (String) defaultValue);
-            if (value == null || value.isEmpty()) {
-                throw new IllegalStateException(
-                        "Launch Configuration Attribute without value: " + attribute.getAttributeName());
-            }
-            return value;
-        } catch (CoreException ex) {
-            throw new IllegalStateException(
-                    "Launch Configuration Attribute does not exist: " + attribute.getAttributeName());
-        }
-    }
-
-    private static Map<String, String> getAttributeMap(ILaunchConfiguration configuration,
-            BazelLaunchConfigAttributes attribute) {
-        try {
-            return configuration.getAttribute(attribute.getAttributeName(), Collections.emptyMap());
-        } catch (CoreException ex) {
-            throw new IllegalStateException(
-                    "Launch Configuration Attribute does not exist: " + attribute.getAttributeName());
-        }
-    }
-
     private static void connectDebugger(ILaunchConfiguration configuration, IProject project, IProgressMonitor monitor,
             ILaunch launch) {
         // logic below copied and adapted from
         // https://github.com/eclipse/eclipse.jdt.debug/blob/master/org.eclipse.jdt.launching/launching/org/eclipse/jdt/internal/launching/JavaRemoteApplicationLaunchConfigurationDelegate.java
-        
+
         IJavaProject mainProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
         List<IJavaProject> otherProjects = getOtherJavaProjects(mainProject);
         ISourceLookupDirector sourceLocator = new BazelJavaSourceLookupDirector(mainProject, otherProjects);
@@ -209,14 +174,13 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
             throw new IllegalStateException(ex);
         }
     }
-    
+
     private static List<IJavaProject> getOtherJavaProjects(IJavaProject mainProject) {
         return Arrays.stream(BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false))
                 .filter(p -> p != mainProject).collect(Collectors.toList());
     }
 
     private static int getAvailablePort() {
-        //Possible race condition if this port is used by another process right before being used by the debugProcess
         try (ServerSocket socket = new ServerSocket(0)) {
             return socket.getLocalPort();
         } catch (IOException ex) {

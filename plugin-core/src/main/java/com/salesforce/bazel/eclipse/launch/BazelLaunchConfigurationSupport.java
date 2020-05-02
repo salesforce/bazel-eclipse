@@ -36,6 +36,7 @@ package com.salesforce.bazel.eclipse.launch;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 
@@ -52,6 +55,7 @@ import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationExc
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
+import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfos;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
@@ -65,6 +69,9 @@ import com.salesforce.bazel.eclipse.model.TargetKind;
  *
  */
 class BazelLaunchConfigurationSupport {
+
+    static final LogHelper LOG = LogHelper.log(BazelLaunchConfigurationSupport.class);
+
 
     /**
      * Groups a BazelLabel with its TargetKind.
@@ -133,11 +140,19 @@ class BazelLaunchConfigurationSupport {
         TARGET_KIND("target_kind"),
 
         /*
-         * A Map<String, String> of arguments that are added to the bazel command line.
-         * The keys of the Map are argument names and the values are argument values; each
-         * Map Entry is added to the bazel command line as <key>=<value>.
+         * List of arguments added to the cmdline when running the launch configuration.
+         *
+         * These arguments are not user specified.
          */
-        INTERNAL_BAZEL_ARGS("internal_bazel_args");
+        INTERNAL_BAZEL_ARGS("internal_bazel_args"),
+
+        /*
+         * List of arguments added to the cmdline when running the launch configuration.
+         *
+         * These arguments are user specified.
+         */
+        USER_BAZEL_ARGS("user_bazel_args");
+
 
         private final String attributeName;
 
@@ -147,6 +162,24 @@ class BazelLaunchConfigurationSupport {
 
         String getAttributeName() {
             return "com.salesforce.bazel.eclipse.launch." + attributeName;
+        }
+
+        String getStringValue(ILaunchConfiguration configuration) {
+            try {
+                return configuration.getAttribute(getAttributeName(), (String)null);
+            } catch (CoreException ex) {
+                LOG.error("Failed to load attribute value {}", ex, getAttributeName());
+                return null;
+            }
+        }
+
+        List<String> getListValue(ILaunchConfiguration configuration) {
+            try {
+                return configuration.getAttribute(getAttributeName(), Collections.emptyList());
+            } catch (CoreException ex) {
+                LOG.error("Failed to load attribute value {}", ex, getAttributeName());
+                return Collections.emptyList();
+            }
         }
     }
 

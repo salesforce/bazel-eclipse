@@ -37,7 +37,6 @@ import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
@@ -79,7 +78,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
     private Text projectTextInput;
     private Text targetTextInput;
 
-    private String loadedProjectName = "";
+    private String loadedProjectName;
     private String loadedTargetKind;
 
     private List<TypedBazelLabel> labelsForSelectedProject = null;
@@ -96,28 +95,24 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
 
     @Override
     public void initializeFrom(ILaunchConfiguration configuration) {
-        try {
-            loadedProjectName = configuration.getAttribute(BazelLaunchConfigAttributes.PROJECT.getAttributeName(), "");
-            if (!loadedProjectName.isEmpty() && getSelectedProject() != null) {
-                projectTextInput.setText(loadedProjectName);
-                initializeLabelsForSelectedProject(getSelectedProject().getProject());
-            }
-            String targetName = configuration.getAttribute(BazelLaunchConfigAttributes.LABEL.getAttributeName(), (String)null);
-            if (targetName != null) {
-                targetTextInput.setText(targetName);
-            }
-            loadedTargetKind = configuration.getAttribute(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), (String)null);
-        } catch (CoreException ex) {
-            throw new IllegalStateException(ex);
+        loadedProjectName = BazelLaunchConfigAttributes.PROJECT.getStringValue(configuration);
+        if (loadedProjectName != null && getSelectedProject() != null) {
+            projectTextInput.setText(loadedProjectName);
+            initializeLabelsForSelectedProject(getSelectedProject().getProject());
         }
+        String targetName = BazelLaunchConfigAttributes.LABEL.getStringValue(configuration);
+        if (targetName != null) {
+            targetTextInput.setText(targetName);
+        }
+        loadedTargetKind = BazelLaunchConfigAttributes.TARGET_KIND.getStringValue(configuration);
     }
 
     @Override
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         String projectName = projectTextInput.getText();
-        if (projectName == null || projectName.isEmpty()) {
+        if (projectName.isEmpty()) {
             // there is a weird state issue sometimes where the project name in the text field gets lost
-            if (!loadedProjectName.isEmpty()) {
+            if (loadedProjectName != null) {
                 projectName = loadedProjectName;
                 projectTextInput.setText(projectName);
             }
