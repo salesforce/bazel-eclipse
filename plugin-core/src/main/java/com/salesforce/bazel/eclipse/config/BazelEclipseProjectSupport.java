@@ -34,36 +34,14 @@
 package com.salesforce.bazel.eclipse.config;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.ui.actions.WorkspaceModifyOperation;
-
-import com.salesforce.bazel.eclipse.builder.BazelMarkerManagerSingleton;
-import com.salesforce.bazel.eclipse.model.BazelBuildError;
 
 /**
  * Support class that provides interaction methods for existing Eclipse Bazel projects.
  */
 public class BazelEclipseProjectSupport {
-
-    private static final BazelMarkerManagerSingleton MARKER_MANAGER = BazelMarkerManagerSingleton.getInstance();
-
-    /**
-     * Publishes problem markers for the specified project.
-     */
-    public static void publishProblemMarkers(IProject project, IProgressMonitor monitor, Collection<BazelBuildError> errors) {
-        runWithProgress(monitor, new WorkspaceModifyOperation() {
-            @Override
-            protected void execute(IProgressMonitor monitor) throws CoreException {
-                MARKER_MANAGER.clearProblemMarkersForProject(project);
-                MARKER_MANAGER.publishProblemMarkersForProject(project, errors);
-            }
-        });
-    }
 
     /**
      * Boilerplate to run a IRunnableWithProgress and deal with checked exceptions.

@@ -39,7 +39,10 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
+import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.model.BazelBuildError;
 
 /**
@@ -48,39 +51,38 @@ import com.salesforce.bazel.eclipse.model.BazelBuildError;
  * @author nishant.dsouza
  *
  */
-public class BazelMarkerManagerSingleton {
+public class BazelMarkerSupport {
 
-    private static BazelMarkerManagerSingleton singletonInstance = null;
-
-    private BazelMarkerManagerSingleton() {
-
-    }
-
-    public static final String BAZEL_MARKER = "com.salesforce.bazel.eclipse.bazelmarker";
+    private static final String BAZEL_MARKER = "com.salesforce.bazel.eclipse.bazelmarker";
 
     /**
-     * This method modifies the workspace and must always be executed within a WorkspaceModifyOperation
+     * Publishes the specified build errors to the Problems View.
      *
-     * @param project
-     *            the project to clear problem markers for
-     * @throws CoreException
+     * This method first clears the problem markers associated with the specified project,
+     * before publishing the specified BazelBuildError instances as problem markers to
+     * the Problems View.
+     *
+     * Note that this method runs within a WorkspaceModifyOperation.
+     *
+     * @param project  the project for which to publish the specified errors
+     * @param errors  the errors to publish to the Problems View
+     * @param monitor  progress monitor
      */
-    public void clearProblemMarkersForProject(IProject project) throws CoreException {
-        project.deleteMarkers(BazelMarkerManagerSingleton.BAZEL_MARKER, true, IResource.DEPTH_INFINITE);
+    public static void publishToProblemsView(IProject project, Collection<BazelBuildError> errors, IProgressMonitor monitor) {
+        BazelEclipseProjectSupport.runWithProgress(monitor, new WorkspaceModifyOperation() {
+            @Override
+            protected void execute(IProgressMonitor monitor) throws CoreException {
+                clearProblemMarkersForProject(project);
+                publishProblemMarkersForProject(project, errors);
+            }
+        });
     }
 
-    /**
-     * This method modifies the workspace and must always be executed within a WorkspaceModifyOperation
-     *
-     * @param the
-     *            project the problem markers are related to
-     * @param errorDetails
-     *            the errors that problem markers should be created for
-     * @param labels
-     *            the Bazel Labels that were built and resulted in the specified errors
-     * @throws CoreException
-     */
-    public void publishProblemMarkersForProject(IProject project, Collection<BazelBuildError> errorDetails) throws CoreException {
+    private static void clearProblemMarkersForProject(IProject project) throws CoreException {
+        project.deleteMarkers(BazelMarkerSupport.BAZEL_MARKER, true, IResource.DEPTH_INFINITE);
+    }
+
+    private static void publishProblemMarkersForProject(IProject project, Collection<BazelBuildError> errorDetails) throws CoreException {
         for (BazelBuildError errorDetail : errorDetails) {
             String resourcePath = errorDetail.getResourcePath();
             IResource resource = project.findMember(resourcePath);
@@ -91,12 +93,5 @@ public class BazelMarkerManagerSingleton {
             marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
             marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
         }
-    }
-
-    public static BazelMarkerManagerSingleton getInstance() {
-        if(singletonInstance == null) {
-            singletonInstance = new BazelMarkerManagerSingleton();
-        }
-        return singletonInstance;
     }
 }

@@ -25,6 +25,7 @@ import org.eclipse.ui.editors.text.TextFileDocumentProvider;
 import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.builder.BazelMarkerSupport;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
@@ -81,7 +82,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
                 "Bad Bazel Package: " + invalidPackage.getBazelPackageFSRelativePath()));
         }
         // publishProblemMarkers also takes care of clearing old markers
-        BazelEclipseProjectSupport.publishProblemMarkers(this.rootProject, getProgressMonitor(), problemMarkers);
+        BazelMarkerSupport.publishToProblemsView(this.rootProject, problemMarkers, getProgressMonitor());
         if (problemMarkers.isEmpty()) {
             IJavaProject[] currentlyImportedProjects = getAllJavaBazelProjects();
 

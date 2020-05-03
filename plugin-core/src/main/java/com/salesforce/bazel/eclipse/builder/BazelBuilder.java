@@ -68,12 +68,11 @@ import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationExc
 import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
-import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelBuildError;
+import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -88,9 +87,9 @@ import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
  */
 public class BazelBuilder extends IncrementalProjectBuilder {
 
-    private static final LogHelper LOG = LogHelper.log(BazelBuilder.class);
-
     public static final String BUILDER_NAME = "com.salesforce.bazel.eclipse.builder";
+
+    private static final LogHelper LOG = LogHelper.log(BazelBuilder.class);
 
     @Override
     protected IProject[] build(int kind, Map<String, String> args, IProgressMonitor monitor) throws CoreException {
@@ -195,7 +194,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     // this needs to be called even when there are no errors, as it clears the "Problems View"
     private static void publishErrors(Collection<IProject> projects, Multimap<IProject, BazelBuildError> errorsByProject, IProgressMonitor monitor) {
         for (IProject project : projects) {
-            BazelEclipseProjectSupport.publishProblemMarkers(project, monitor, errorsByProject.get(project));
+            BazelMarkerSupport.publishToProblemsView(project, errorsByProject.get(project), monitor);
         }
     }
 
