@@ -34,6 +34,14 @@ eclipse_plugin(
 )
 
 java_test(
+    name = "ArgumentSplitterTest",
+    srcs = [
+        "src/main/java/com/salesforce/bazel/eclipse/model/ArgumentSplitter.java",
+        "src/test/java/com/salesforce/bazel/eclipse/model/ArgumentSplitterTest.java",
+    ],
+)
+
+java_test(
     name = "AspectPackageInfosTest",
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/model/AspectPackageInfosTest.java",],
     deps = [

@@ -29,8 +29,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
@@ -62,10 +60,10 @@ public class BazelLaunchConfigurationDelegateFTest {
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
         addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 0, "bazel-bin/projects/libs/javalib0/javalib0", "bazel run result");
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
-        
+
         // method under test
         delegate.launch(launchConfig, "debug", launch, progress);
-        
+
         // verify
         MockResourceHelper mockResourceHelper = mockEclipse.getMockResourceHelper();
         String[] cmdLine = mockResourceHelper.lastExecCommandLine;
@@ -85,7 +83,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
         addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 1, "test", "bazel test result");
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
-        
+
         // method under test
         delegate.launch(launchConfig, "debug", launch, progress);
 
@@ -112,7 +110,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
         addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 1, "test", "bazel test result");
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
-        
+
         // method under test
         delegate.launch(launchConfig, "debug", launch, progress);
 
@@ -129,22 +127,22 @@ public class BazelLaunchConfigurationDelegateFTest {
         assertEquals("--", cmdLine[11]);
         assertEquals("//projects/libs/javalib0", cmdLine[12]);
     }
-    
+
     // HELPERS
 
     private MockEclipse createMockEnvironment() throws Exception {
         File testTempDir = tmpFolder.newFolder();
-        
+
         // during test development, it can be useful to have a stable location on disk for the Bazel workspace contents
         //testTempDir = new File("/tmp/bef/bazelws");
         //testTempDir.mkdirs();
 
         // create the mock Eclipse runtime in the correct state
         int numberOfJavaPackages = 1;
-        boolean computeClasspaths = true; 
+        boolean computeClasspaths = true;
         MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(
             testTempDir, numberOfJavaPackages, computeClasspaths, false);
-        
+
         return mockEclipse;
     }
 
@@ -161,10 +159,10 @@ public class BazelLaunchConfigurationDelegateFTest {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_web_test_suite");
         }
 
-        Map<String, String> args = new TreeMap<>();
-        args.put("arg1", "testvalue1");
-        args.put("arg2", "testvalue2");
-        args.put("arg3", "testvalue3");
+        List<String> args = new ArrayList<>();
+        args.add("arg1=testvalue1");
+        args.add("arg2=testvalue2");
+        args.add("arg3=testvalue3");
         testConfig.attributes.put(BazelLaunchConfigAttributes.INTERNAL_BAZEL_ARGS.getAttributeName(), args);
 
         return testConfig;
@@ -174,11 +172,11 @@ public class BazelLaunchConfigurationDelegateFTest {
         List<String> outputLines = new ArrayList<>();
         outputLines.add(resultLine);
         List<String> errorLines = new ArrayList<>();
-        
+
         // create a matcher such that the resultLine is only returned if a command uses the specific verb
         List<MockCommandSimulatedOutputMatcher> matchers = new ArrayList<>();
         matchers.add(new MockCommandSimulatedOutputMatcher(verbIndex, verb));
-        
+
         env.commandBuilder.addSimulatedOutput("launcherbuildertest", outputLines, errorLines, matchers);
     }
 }
