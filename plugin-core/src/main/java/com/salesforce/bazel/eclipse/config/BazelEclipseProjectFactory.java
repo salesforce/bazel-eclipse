@@ -99,7 +99,7 @@ public class BazelEclipseProjectFactory {
     /**
      * Alternate code path that we no longer use, but retained for possible future use.
      */
-    private static final boolean PRECOMPUTE_ALL_ASPECTS_FOR_WORKSPACE = false;
+    private static final boolean PRECOMPUTE_ALL_ASPECTS_FOR_WORKSPACE = true;
 
     // signals that we are in a delicate bootstrapping operation
     public static AtomicBoolean importInProgress = new AtomicBoolean(false);
@@ -150,13 +150,17 @@ public class BazelEclipseProjectFactory {
         importedProjectsList.add(rootEclipseProject);
 
         // see the method level comment about this option (currently disabled)
+        AspectPackageInfos aspects = null;
         if (PRECOMPUTE_ALL_ASPECTS_FOR_WORKSPACE) {
-            precomputeBazelAspectsForWorkspace(rootEclipseProject, selectedBazelPackages, progressMonitor);
+            aspects = precomputeBazelAspectsForWorkspace(rootEclipseProject, selectedBazelPackages, progressMonitor);
         }
+        
+        Iterable<BazelPackageLocation> postOrderedModules = ImportOrderResolver
+                .resolveModulesImportOrder(bazelWorkspaceRootPackageInfo, selectedBazelPackages, aspects);
 
         // finally, create an Eclipse Project for each Bazel Package being imported
         subMonitor.setTaskName("Importing bazel packages: ");
-        for (BazelPackageLocation childPackageInfo : selectedBazelPackages) {
+        for (BazelPackageLocation childPackageInfo : postOrderedModules) {
             subMonitor.subTask("Importing " + childPackageInfo.getBazelPackageFSRelativePath());
             if (childPackageInfo.isWorkspaceRoot()) {
                 // the workspace root node has already been created (above)
