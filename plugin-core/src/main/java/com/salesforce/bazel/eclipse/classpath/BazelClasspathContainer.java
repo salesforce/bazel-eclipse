@@ -45,11 +45,14 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -64,7 +67,9 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.abstractions.OutputStreamObserver;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.eclipse.builder.BazelErrorStreamObserver;
 import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
@@ -75,6 +80,7 @@ import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.model.AspectOutputJarSet;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelBuildFile;
+import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelBuildError;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -315,7 +321,15 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 return true;
             }
             EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(this.eclipseProject.getProject(), false);
-            List<BazelBuildError> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList());
+            List<BazelLabel> labels = targets.getConfiguredTargets().stream().map(t -> new BazelLabel(t)).collect(Collectors.toList());
+            Map<BazelLabel, IProject> labelToProject = new HashMap<>();
+            for (BazelLabel label : labels) {
+                labelToProject.merge(label, this.eclipseProject.getProject(), (k1, k2) -> {
+                    throw new IllegalStateException("Duplicate label: " + label + " - this is bug");
+                });
+            }
+            OutputStreamObserver errorStreamObserver = new BazelErrorStreamObserver(null, labelToProject, null);
+            List<BazelBuildError> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, errorStreamObserver);
             for (BazelBuildError detail : details) {
                 BazelPluginActivator.error(detail.toString());
             }

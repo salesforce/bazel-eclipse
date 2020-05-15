@@ -46,6 +46,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.abstractions.CommandConsole;
 import com.salesforce.bazel.eclipse.abstractions.CommandConsoleFactory;
+import com.salesforce.bazel.eclipse.abstractions.OutputStreamObserver;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.command.BazelProcessBuilder;
 import com.salesforce.bazel.eclipse.command.Command;
@@ -70,7 +71,7 @@ public final class ShellCommand implements Command {
 
     ShellCommand(CommandConsole console, File directory, ImmutableList<String> args,
             Function<String, String> stdoutSelector, Function<String, String> stderrSelector, OutputStream stdout,
-            OutputStream stderr, WorkProgressMonitor progressMonitor, long timeoutMS) {
+            OutputStream stderr, OutputStreamObserver stdoutObserver, OutputStreamObserver stderrObserver, WorkProgressMonitor progressMonitor, long timeoutMS) {
         this.directory = directory;
         this.args = args;
         if (console != null) {
@@ -81,8 +82,8 @@ public final class ShellCommand implements Command {
                 stderr = console.createErrorStream();
             }
         }
-        this.stderr = new SelectOutputStream(stderr, stderrSelector);
-        this.stdout = new SelectOutputStream(stdout, stdoutSelector);
+        this.stderr = new SelectOutputStream(stderr, stderrSelector, stderrObserver);
+        this.stdout = new SelectOutputStream(stdout, stdoutSelector, stdoutObserver);
         this.progressMonitor = progressMonitor;
         this.timeoutMS = timeoutMS;
     }
@@ -173,6 +174,41 @@ public final class ShellCommand implements Command {
 
     // Launch a thread to copy all data from inputStream to outputStream
     private static Thread copyStream(InputStream inputStream, OutputStream outputStream) {
+        if (outputStream != null) {
+            Thread t = new Thread(new CopyStreamRunnable(inputStream, outputStream), "CopyStream");
+            t.start();
+            return t;
+        }
+        return null;
+    }
+    
+    private static class UpdateObserverRunnable implements Runnable {
+        private InputStream inputStream;
+        private OutputStream outputStream;
+
+        UpdateObserverRunnable(InputStream inputStream, OutputStream outputStream) {
+            this.inputStream = inputStream;
+            this.outputStream = outputStream;
+        }
+
+        @Override
+        public void run() {
+            byte[] buffer = new byte[4096];
+            int read;
+            try {
+                while ((read = inputStream.read(buffer)) > 0) {
+                    synchronized (outputStream) {
+                        outputStream.write(buffer, 0, read);
+                    }
+                }
+            } catch (IOException ex) {
+                // we simply terminate the thread on exceptions
+            }
+        }
+    }
+
+    // Launch a thread to copy all data from inputStream to outputStream
+    private static Thread UpdateObserver(InputStream inputStream, OutputStream outputStream) {
         if (outputStream != null) {
             Thread t = new Thread(new CopyStreamRunnable(inputStream, outputStream), "CopyStream");
             t.start();

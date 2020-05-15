@@ -6,22 +6,12 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.junit.Test;
-
-import com.google.common.collect.Multimap;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelBuildError;
 
 public class BazelBuilderTest {
 
@@ -56,64 +46,7 @@ public class BazelBuilderTest {
 
         assertFalse("Do not use a TreeSet", downstreams instanceof TreeSet);
     }
-
-    @Test
-    public void testAssignErrorsToOwningProject() throws Exception {
-        IProject project1 = getMockedProject("P1").getProject();
-        BazelLabel l1 = new BazelLabel("projects/libs/lib1:*");
-        BazelBuildError error1 = new BazelBuildError("projects/libs/lib1/src/Test.java", 21, "foo");
-        IProject project2 = getMockedProject("P2").getProject();
-        BazelLabel l2 = new BazelLabel("projects/libs/lib2:*");
-        BazelBuildError error2 = new BazelBuildError("projects/libs/lib2/src/Test2.java", 22, "blah");
-        Map<BazelLabel, IProject> labelToProject = new HashMap<>();
-        labelToProject.put(l1, project1);
-        labelToProject.put(l2, project2);
-        IProject rootProject = getMockedProject("ROOT").getProject();
-
-        Multimap<IProject, BazelBuildError> projectToErrors =
-                BazelBuilder.assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, Optional.of(rootProject));
-
-        assertEquals(2, projectToErrors.size());
-        Collection<BazelBuildError> p1Errors = projectToErrors.get(project1);
-        assertEquals(1, p1Errors.size());
-        BazelBuildError p1Error = p1Errors.iterator().next();
-        assertEquals("/src/Test.java", p1Error.getResourcePath());
-        assertEquals(21, p1Error.getLineNumber());
-        assertEquals("foo", p1Error.getDescription());
-        Collection<BazelBuildError> p2Errors = projectToErrors.get(project2);
-        assertEquals(1, p2Errors.size());
-        BazelBuildError p2Error = p2Errors.iterator().next();
-        assertEquals("/src/Test2.java", p2Error.getResourcePath());
-        assertEquals(22, p2Error.getLineNumber());
-        assertEquals("blah", p2Error.getDescription());
-    }
-
-    @Test
-    public void testUnassignedErrors() throws Exception {
-        IProject project1 = getMockedProject("P1").getProject();
-        BazelLabel l1 = new BazelLabel("projects/libs/lib1:*");
-        BazelBuildError error1 = new BazelBuildError("projects/libs/lib1/src/Test.java", 21, "foo");
-        Map<BazelLabel, IProject> labelToProject = Collections.singletonMap(l1, project1);
-        BazelBuildError error2 = new BazelBuildError("projects/libs/lib2/src/Test2.java", 22, "blah");
-        IProject rootProject = getMockedProject("ROOT").getProject();
-
-        Multimap<IProject, BazelBuildError> projectToErrors =
-                BazelBuilder.assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, Optional.of(rootProject));
-
-        assertEquals(2, projectToErrors.size());
-        Collection<BazelBuildError> rootLevelErrors = projectToErrors.get(rootProject);
-        BazelBuildError rootError = rootLevelErrors.iterator().next();
-        assertEquals("/WORKSPACE", rootError.getResourcePath());
-        assertEquals(0, rootError.getLineNumber());
-        assertTrue(rootError.getDescription().startsWith(BazelBuilder.UNKNOWN_PROJECT_ERROR_MSG_PREFIX));
-        assertTrue(rootError.getDescription().contains("projects/libs/lib2/src/Test2.java"));
-        assertTrue(rootError.getDescription().contains("blah"));
-    }
-
-    private IJavaProject getMockedProject(String projectName) throws Exception {
-        return getMockedProject(projectName, new String[]{});
-    }
-
+    
     private IJavaProject getMockedProject(String projectName, String[] requiredProjectNames) throws Exception {
         IJavaProject javaProject = mock(IJavaProject.class);
         when(javaProject.getRequiredProjectNames()).thenReturn(requiredProjectNames);

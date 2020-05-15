@@ -48,6 +48,8 @@ import java.util.function.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import com.salesforce.bazel.eclipse.abstractions.OutputStreamObserver;
+
 /**
  * A wrapper output stream to output part of the result to a given output and extracting the other part with a selector
  * function. The other part is return as a list of string.
@@ -60,6 +62,7 @@ public class SelectOutputStream extends OutputStream {
     private List<String> lines = new LinkedList<>();
     private List<String> outputLines = new LinkedList<>();
     private ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    private OutputStreamObserver observer;
 
     /**
      * Create a SelectOutputStream. <code>output<code> is the output stream where non-selected lines
@@ -72,10 +75,11 @@ public class SelectOutputStream extends OutputStream {
      * Both <code>output</code> and <code>selector</code> can be null. If <code>output</code> is null, unselected lines
      * will be discarded. If <code>selector</code> is null, all lines will be considered as unselected.
      */
-    public SelectOutputStream(OutputStream output, Function<String, String> selector) {
+    public SelectOutputStream(OutputStream output, Function<String, String> selector, OutputStreamObserver observer) {
         super();
         this.output = output;
         this.selector = selector;
+        this.observer = observer;
     }
 
     @Override
@@ -91,11 +95,15 @@ public class SelectOutputStream extends OutputStream {
 
     private void select(boolean appendNewLine) throws UnsupportedEncodingException, IOException {
         String line = null;
-        if (selector != null) {
+        if (this.selector != null) {
             line = selector.apply(stream.toString(StandardCharsets.UTF_8.name()));
         }
 
         if (line != null) {
+            final String updateError = line;
+            if (this.observer != null) {
+                this.observer.update(updateError);
+            }
             lines.add(line);
         } else if (output != null) {
             if (appendNewLine) {

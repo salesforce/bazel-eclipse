@@ -52,6 +52,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.abstractions.BazelAspectLocation;
 import com.salesforce.bazel.eclipse.abstractions.CommandConsoleFactory;
+import com.salesforce.bazel.eclipse.abstractions.OutputStreamObserver;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.command.internal.BazelCommandExecutor;
 import com.salesforce.bazel.eclipse.command.internal.BazelQueryHelper;
@@ -321,7 +322,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             argBuilder.add("test").add("--announce_rc");
             
             List<String> outputLines = bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory, null, 
-                argBuilder.build(), (t) -> t);
+                argBuilder.build(), (t) -> t, null, null);
             commandOptions.parseOptionsFromOutput(outputLines);
         } catch (Exception anyE) {
             throw new IllegalStateException(anyE);
@@ -423,13 +424,13 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * @throws BazelCommandLineToolConfigurationException
      */
     public synchronized List<BazelBuildError> runBazelBuild(Set<String> bazelTargets,
-            WorkProgressMonitor progressMonitor, List<String> extraArgs)
+            WorkProgressMonitor progressMonitor, List<String> extraArgs, OutputStreamObserver outputStreamObserver, OutputStreamObserver errorStreamObserver)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> extraArgsList = ImmutableList.<String> builder().add("build").addAll(this.buildOptions)
                 .addAll(extraArgs).add("--").addAll(bazelTargets).build();
 
         List<String> output = this.bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory, progressMonitor,
-            extraArgsList, new ErrorOutputSelector());
+            extraArgsList, new ErrorOutputSelector(), outputStreamObserver, errorStreamObserver);
         if (output.isEmpty()) {
             return Collections.emptyList();
         } else {

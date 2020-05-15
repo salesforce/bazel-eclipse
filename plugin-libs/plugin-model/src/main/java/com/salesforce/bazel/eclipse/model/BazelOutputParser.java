@@ -45,52 +45,70 @@ import java.util.List;
 public class BazelOutputParser {
 
     private static final String JAVA_FILE_PATH_SUFFX = ".java";
+    private boolean parsingErrors = false;
+    private String errorSourcePathLine = null;
+    private String moreDetailsLine = null;
 
-    public List<BazelBuildError> getErrorBazelMarkerDetails(List<String> lines) {
+    public List<BazelBuildError> getErrorBazelMarkerDetails(String latestLine) {
         List<BazelBuildError> allBazelMarkerDetails = new ArrayList<>();
-        boolean parsingErrors = false;
-        String errorSourcePathLine = null;
-        String moreDetailsLine = null;
-        for (String line : lines) {
-            line = line.trim();
-            if (parsingErrors) {
-                if (line.isEmpty()) {
-                    if (errorSourcePathLine != null) {
-                        allBazelMarkerDetails.add(buildErrorDetails(errorSourcePathLine, moreDetailsLine));
-                        errorSourcePathLine = null;
-                        moreDetailsLine = null;
-                    }
-                }
-
-                else if (isInitialErrorSourcePathLine(line)) {
-                    if (errorSourcePathLine == null) {
-                        errorSourcePathLine = line;
-                    } else {
-                        allBazelMarkerDetails.add(buildErrorDetails(errorSourcePathLine, moreDetailsLine));
-                        errorSourcePathLine = line;
-                        moreDetailsLine = null;
-                    }
-
-                } else if (isNonErrorStatusLine(line)) {
-                    parsingErrors = false;
-                } else {
-                    if (errorSourcePathLine != null) {
-                        // already found a line like this: projects/libs/apple/apple-api/src/main/java/demo/apple/api/Apple.java:15: error: ';' expected
-                        // the next like may have more details
-                        if (moreDetailsLine == null) {
-                            moreDetailsLine = line;
-                        }
-                    }
-                }
-            } else {
-                if (isErrorStatusLine(line)) {
-                    parsingErrors = true;
+        String line = latestLine.trim();
+        if (this.parsingErrors) {
+            if (line.isEmpty()) {
+                if (this.errorSourcePathLine != null) {
+                    allBazelMarkerDetails.add(buildErrorDetails(this.errorSourcePathLine, this.moreDetailsLine));
+                    this.errorSourcePathLine = null;
+                    this.moreDetailsLine = null;
                 }
             }
-        }
+            
+            else if (isInitialErrorSourcePathLine(line)) {
+                if (this.errorSourcePathLine == null) {
+                    this.errorSourcePathLine = line;
+                } else {
+                    allBazelMarkerDetails.add(buildErrorDetails(this.errorSourcePathLine, this.moreDetailsLine));
+                    this.errorSourcePathLine = line;
+                    this.moreDetailsLine = null;
+                }
 
-        if (errorSourcePathLine != null) {
-            allBazelMarkerDetails.add(buildErrorDetails(errorSourcePathLine, moreDetailsLine));
+            } else if (isNonErrorStatusLine(line)) {
+                this.parsingErrors = false;
+                if (this.errorSourcePathLine != null) {
+                    allBazelMarkerDetails.add(buildErrorDetails(this.errorSourcePathLine, this.moreDetailsLine));
+                    this.errorSourcePathLine = null;
+                    this.moreDetailsLine = null;
+                }
+            } else {
+                if (this.errorSourcePathLine != null) {
+                    // already found a line like this: projects/libs/apple/apple-api/src/main/java/demo/apple/api/Apple.java:15: error: ';' expected
+                    // the next like may have more details
+                    if (this.moreDetailsLine == null) {
+                        this.moreDetailsLine = line;
+                    }
+                }
+            }
+        } else {
+            if (isErrorStatusLine(line)) {
+                this.parsingErrors = true;
+            }
+        }
+        
+        if (this.moreDetailsLine != null) {
+            allBazelMarkerDetails.add(buildErrorDetails(this.errorSourcePathLine, this.moreDetailsLine));
+            this.errorSourcePathLine = null;
+            this.moreDetailsLine = null;
+        }
+        
+        return allBazelMarkerDetails;
+    }
+    
+    public List<BazelBuildError> getErrorBazelMarkerDetails(List<String> lines) {
+        this.parsingErrors = false;
+        this.errorSourcePathLine = null;
+        this.moreDetailsLine = null;
+        List<BazelBuildError> allBazelMarkerDetails = new ArrayList<>();
+        for (String line : lines) {
+            List<BazelBuildError> bazelMarkerDetails = getErrorBazelMarkerDetails(line);
+            allBazelMarkerDetails.addAll(bazelMarkerDetails);
         }
 
         return allBazelMarkerDetails;

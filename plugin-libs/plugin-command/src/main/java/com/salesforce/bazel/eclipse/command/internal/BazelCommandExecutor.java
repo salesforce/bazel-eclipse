@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.google.common.collect.ImmutableList;
+import com.salesforce.bazel.eclipse.abstractions.OutputStreamObserver;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.eclipse.command.Command;
@@ -89,11 +90,11 @@ public class BazelCommandExecutor {
     // WHEN INTERESTING OUTPUT IS ON STDERR...
     
     public synchronized List<String> runBazelAndGetErrorLines(File directory, WorkProgressMonitor progressMonitor,
-            List<String> args, Function<String, String> selector)
+            List<String> args, Function<String, String> selector, OutputStreamObserver outputStreamObserver, OutputStreamObserver errorStreamObserver)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         
         CommandBuilder builder = getConfiguredCommandBuilder(ConsoleType.WORKSPACE, directory, progressMonitor, args);
-        Command command = builder.setStderrLineSelector(selector).build();
+        Command command = builder.setStderrLineSelector(selector).setStandardErrorObserver(errorStreamObserver).build();
         command.run();
 
         return command.getSelectedErrorLines();
