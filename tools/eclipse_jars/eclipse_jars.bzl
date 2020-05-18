@@ -21,7 +21,7 @@ load(
 # If you change anything below (add/remove/update) make sure the change is reflected in
 # plugin-core/META-INF/MANIFEST.MF
 
-ECLIPSE_VERSION="4.9"
+ECLIPSE_VERSION="4.13"
 
 # To upgrade:
 # 1. locate and identify the correct version of each of these dependencies from the target SDK
