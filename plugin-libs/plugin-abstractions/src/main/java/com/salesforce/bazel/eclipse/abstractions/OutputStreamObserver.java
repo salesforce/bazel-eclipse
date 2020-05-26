@@ -34,8 +34,6 @@ package com.salesforce.bazel.eclipse.abstractions;
  */
 public interface OutputStreamObserver {
     
-    public void startObserver();
-    
     public void update(String output);
-    
+
 }

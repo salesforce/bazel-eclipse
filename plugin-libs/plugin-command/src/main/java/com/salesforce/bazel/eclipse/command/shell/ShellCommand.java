@@ -181,41 +181,6 @@ public final class ShellCommand implements Command {
         }
         return null;
     }
-    
-    private static class UpdateObserverRunnable implements Runnable {
-        private InputStream inputStream;
-        private OutputStream outputStream;
-
-        UpdateObserverRunnable(InputStream inputStream, OutputStream outputStream) {
-            this.inputStream = inputStream;
-            this.outputStream = outputStream;
-        }
-
-        @Override
-        public void run() {
-            byte[] buffer = new byte[4096];
-            int read;
-            try {
-                while ((read = inputStream.read(buffer)) > 0) {
-                    synchronized (outputStream) {
-                        outputStream.write(buffer, 0, read);
-                    }
-                }
-            } catch (IOException ex) {
-                // we simply terminate the thread on exceptions
-            }
-        }
-    }
-
-    // Launch a thread to copy all data from inputStream to outputStream
-    private static Thread UpdateObserver(InputStream inputStream, OutputStream outputStream) {
-        if (outputStream != null) {
-            Thread t = new Thread(new CopyStreamRunnable(inputStream, outputStream), "CopyStream");
-            t.start();
-            return t;
-        }
-        return null;
-    }
 
     /**
      * Returns the list of lines selected from the standard error stream. Lines printed to the standard error stream by

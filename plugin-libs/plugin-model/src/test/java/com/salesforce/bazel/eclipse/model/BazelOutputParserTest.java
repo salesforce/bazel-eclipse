@@ -83,6 +83,55 @@ public class BazelOutputParserTest {
     }
     
     @Test
+    public void testMultipleJavaErrorsWithSameStatus() {
+        BazelOutputParser p = new BazelOutputParser();
+        List<String> lines = ImmutableList.of(
+            "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n", 
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:41: error: ';' expected\n",
+            "  public int numSeeds\n",
+            "                     ^\n",
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n", 
+            "  private String species\n",
+            "                        ^");
+
+        List<BazelBuildError> errors = p.getErrorBazelMarkerDetails(lines);
+
+        assertEquals(2, errors.size());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
+        assertEquals(41, errors.get(0).getLineNumber());
+        assertEquals("';' expected: public int numSeeds", errors.get(0).getDescription());
+
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(1).getResourcePath());
+        assertEquals(42, errors.get(1).getLineNumber());
+        assertEquals("';' expected: private String species", errors.get(1).getDescription());
+    }
+    
+    @Test
+    public void testMultipleErrorSourceLines() {
+        BazelOutputParser p = new BazelOutputParser();
+        List<String> lines = ImmutableList.of(
+            "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n", 
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:41: error: ';' expected\n",
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n",
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:45: error: ';' expected\n",
+            "    this.species = species",
+            "                        ^");
+
+        List<BazelBuildError> errors = p.getErrorBazelMarkerDetails(lines);
+
+        assertEquals(3, errors.size());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
+        assertEquals(41, errors.get(0).getLineNumber());
+        assertEquals("';' expected", errors.get(0).getDescription());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(1).getResourcePath());
+        assertEquals(42, errors.get(1).getLineNumber());
+        assertEquals("';' expected", errors.get(1).getDescription());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(1).getResourcePath());
+        assertEquals(45, errors.get(2).getLineNumber());
+        assertEquals("';' expected: this.species = species", errors.get(2).getDescription());
+    }
+    
+    @Test
     public void testUnformattedError() {
         BazelOutputParser p = new BazelOutputParser();
         List<String> lines = ImmutableList.of(

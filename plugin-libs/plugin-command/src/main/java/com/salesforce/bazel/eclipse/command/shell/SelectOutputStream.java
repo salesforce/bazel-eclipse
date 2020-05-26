@@ -62,7 +62,7 @@ public class SelectOutputStream extends OutputStream {
     private List<String> lines = new LinkedList<>();
     private List<String> outputLines = new LinkedList<>();
     private ByteArrayOutputStream stream = new ByteArrayOutputStream();
-    private OutputStreamObserver observer;
+    private final OutputStreamObserver observer;
 
     /**
      * Create a SelectOutputStream. <code>output<code> is the output stream where non-selected lines
@@ -117,6 +117,7 @@ public class SelectOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
+        System.out.print("Closing Output Stream");
         Preconditions.checkState(!closed);
         super.close();
         select(false);

@@ -38,17 +38,14 @@ package com.salesforce.bazel.eclipse.builder;
 import static com.google.common.collect.MoreCollectors.onlyElement;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
@@ -57,11 +54,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.abstractions.OutputStreamObserver;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
@@ -153,25 +147,20 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException
     {
         Set<String> bazelTargets = new TreeSet<>();
-        Map<BazelLabel, IProject> labelToProject = new HashMap<>();
-
-        // figure out the list of targets to build and map targets to projects
+        
+        // figure out the list of targets to build
         for (IProject project : projects) {
             EclipseProjectBazelTargets activatedTargets = BazelProjectPreferences.getConfiguredBazelTargets(project, false);
             bazelTargets.addAll(activatedTargets.getConfiguredTargets());
-            List<BazelLabel> labels = activatedTargets.getConfiguredTargets().stream().map(t -> new BazelLabel(t)).collect(Collectors.toList());
-            for (BazelLabel label : labels) {
-                labelToProject.merge(label, project, (k1, k2) -> {
-                    throw new IllegalStateException("Duplicate label: " + label + " - this is bug");
-                });
-            }
         }
 
         if (bazelTargets.isEmpty()) {
             return true;
         } else {
             List<String> bazelBuildFlags = getAllBazelBuildFlags(projects);
-            OutputStreamObserver errorStreamObserver = new BazelErrorStreamObserver(monitor, labelToProject, rootProject);
+            // Get a map of targets to projects to build BazelErrorStreamObserver
+            Map<BazelLabel, IProject> labelToProject = BazelProjectPreferences.getBazelLabelToEclipseProjectMap(projects);
+            BazelErrorStreamObserver errorStreamObserver = new BazelErrorStreamObserver(monitor, labelToProject, rootProject);
             // Start error observer and clear Problems View
             errorStreamObserver.startObserver();
             // now run the actual build

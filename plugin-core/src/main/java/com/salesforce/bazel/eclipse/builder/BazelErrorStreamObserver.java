@@ -35,16 +35,18 @@
  */
 package com.salesforce.bazel.eclipse.builder;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.LinkedList; 
 import java.util.Map;
-import java.util.Queue; 
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.google.common.collect.HashMultimap;
@@ -64,8 +66,8 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
     private final Map<BazelLabel, IProject> labelToProject;
     private final IProject rootProject;
     private static final BazelOutputParser outputParser = new BazelOutputParser();
-    private final Queue<String> errorLines = new LinkedList<>();
     private static final LogHelper LOG = LogHelper.log(BazelErrorStreamObserver.class);
+    private ExecutorService executor;
     static final String UNKNOWN_PROJECT_ERROR_MSG_PREFIX = "ERROR IN UNKNOWN PROJECT: ";
 
     public BazelErrorStreamObserver(final IProgressMonitor monitor, final Map<BazelLabel, IProject> labelToProject,
@@ -76,39 +78,38 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
     }
     
     /**
-     * Starts the observer, clears Problems View for every project
+     * Starts the observer by clears Problems View for every project
      */
-    @Override
     public void startObserver() {
         final Set<IProject> projectSet = new HashSet<>(this.labelToProject.values());
         for (IProject project : projectSet) {
-            BazelMarkerSupport.publishToProblemsView(project, Collections.emptyList(), monitor);
+            try {
+                BazelMarkerSupport.clearProblemMarkersForProject(project);
+            } catch (CoreException e) {
+                e.printStackTrace();
+            }
         }
+        this.executor = Executors.newFixedThreadPool(1);
     }
-
+    
     /**
-     * Launch a thread to parse latest error line and publish to Problems View if applicable
+     * Create a CompletableFuture object to make async call to updateProblemsView, which parses
+     * latest error line and publishes to Problems View if applicable
      */
     @Override
     public void update(String error) {
-        synchronized (this.errorLines) {
-            this.errorLines.add(error);
-        }
-        new Thread(() -> updateProblemsView()).start();
+        CompletableFuture completeUpdate = CompletableFuture
+                .runAsync(() -> updateProblemsView(error), this.executor);
     }
-
-    private void updateProblemsView() {
-        String latestLine = null;
-        synchronized (this.errorLines) {
-            latestLine = this.errorLines.remove();
-        }
+    
+    private void updateProblemsView(String error) {
         
-        List<BazelBuildError> bazelBuildErrors = outputParser.getErrorBazelMarkerDetails(latestLine);
+        List<BazelBuildError> bazelBuildErrors = outputParser.getErrorBazelMarkerDetails(error);
         if (! bazelBuildErrors.isEmpty()) {
             Multimap<IProject, BazelBuildError> projectToErrors =
                     assignErrorsToOwningProject(bazelBuildErrors, this.labelToProject, this.rootProject);
             for (IProject project : projectToErrors.keySet()) {
-                BazelMarkerSupport.publishToProblemsViewWithoutClearing(project, projectToErrors.get(project), monitor);
+                BazelMarkerSupport.publishToProblemsView(project, projectToErrors.get(project), monitor);
             }
         }
     }

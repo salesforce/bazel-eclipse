@@ -45,14 +45,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -321,13 +318,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 return true;
             }
             EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(this.eclipseProject.getProject(), false);
-            List<BazelLabel> labels = targets.getConfiguredTargets().stream().map(t -> new BazelLabel(t)).collect(Collectors.toList());
-            Map<BazelLabel, IProject> labelToProject = new HashMap<>();
-            for (BazelLabel label : labels) {
-                labelToProject.merge(label, this.eclipseProject.getProject(), (k1, k2) -> {
-                    throw new IllegalStateException("Duplicate label: " + label + " - this is bug");
-                });
-            }
+            Map<BazelLabel, IProject> labelToProject = BazelProjectPreferences.getBazelLabelToEclipseProjectMap(Collections.singletonList(this.eclipseProject));
             OutputStreamObserver errorStreamObserver = new BazelErrorStreamObserver(null, labelToProject, null);
             List<BazelBuildError> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, errorStreamObserver);
             for (BazelBuildError detail : details) {
