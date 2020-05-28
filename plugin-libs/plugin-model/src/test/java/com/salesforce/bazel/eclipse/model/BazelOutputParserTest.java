@@ -47,15 +47,16 @@ public class BazelOutputParserTest {
     public void testSingleJavaError() {
         BazelOutputParser p = new BazelOutputParser();
         List<String> lines = ImmutableList.of(
-            "ERROR: /Users/stoens/bazel-build-example-for-eclipse/sayhello/BUILD:1:1: Building sayhello/libsayhello.jar (2 source files) failed (Exit 1)",
-            "sayhello/src/main/java/com/blah/foo/hello/Main.java:16: error: cannot find symbol");
+            "ERROR: /Users/stoens/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building libbanana-api.jar (2 source files) failed (Exit 1)",
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:50: error: cannot find symbol",
+            "    this.numSeeds = numSeeds;");
 
         List<BazelBuildError> errors = p.getErrorBazelMarkerDetails(lines);
 
         assertEquals(1, errors.size());
-        assertEquals("sayhello/src/main/java/com/blah/foo/hello/Main.java", errors.get(0).getResourcePath());
-        assertEquals(16, errors.get(0).getLineNumber());
-        assertEquals("Cannot find symbol", errors.get(0).getDescription());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
+        assertEquals(50, errors.get(0).getLineNumber());
+        assertEquals("Cannot find symbol: this.numSeeds = numSeeds;", errors.get(0).getDescription());
     }
 
     @Test
@@ -66,7 +67,8 @@ public class BazelOutputParserTest {
             "sayhello/src/main/java/com/blah/foo/hello/Main.java:16: error: cannot find symbol", "    blah 1 2 3",
             "             ^",
             "ERROR: /Users/stoens/bazel-build-example-for-eclipse/sayhello/BUILD:1:1: Building sayhello/libsayhello.jar (2 source files) failed (Exit 1)",
-            "sayhello/src/main/java/com/blah/foo/hello/Main.java:17: error: cannot find symbols");
+            "sayhello/src/main/java/com/blah/foo/hello/Main.java:17: error: cannot find symbols",
+            "INFO: Elapsed time: 0.196s, Critical Path: 0.03s");
 
         List<BazelBuildError> errors = p.getErrorBazelMarkerDetails(lines);
 
@@ -78,6 +80,55 @@ public class BazelOutputParserTest {
         assertEquals("sayhello/src/main/java/com/blah/foo/hello/Main.java", errors.get(1).getResourcePath());
         assertEquals(17, errors.get(1).getLineNumber());
         assertEquals("Cannot find symbols", errors.get(1).getDescription());
+    }
+    
+    @Test
+    public void testMultipleJavaErrorsWithSameStatus() {
+        BazelOutputParser p = new BazelOutputParser();
+        List<String> lines = ImmutableList.of(
+            "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n", 
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:41: error: ';' expected\n",
+            "  public int numSeeds\n",
+            "                     ^\n",
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n", 
+            "  private String species\n",
+            "                        ^");
+
+        List<BazelBuildError> errors = p.getErrorBazelMarkerDetails(lines);
+
+        assertEquals(2, errors.size());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
+        assertEquals(41, errors.get(0).getLineNumber());
+        assertEquals("';' expected: public int numSeeds", errors.get(0).getDescription());
+
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(1).getResourcePath());
+        assertEquals(42, errors.get(1).getLineNumber());
+        assertEquals("';' expected: private String species", errors.get(1).getDescription());
+    }
+    
+    @Test
+    public void testMultipleErrorSourceLines() {
+        BazelOutputParser p = new BazelOutputParser();
+        List<String> lines = ImmutableList.of(
+            "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n", 
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:41: error: ';' expected\n",
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n",
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:45: error: ';' expected\n",
+            "    this.species = species",
+            "                        ^");
+
+        List<BazelBuildError> errors = p.getErrorBazelMarkerDetails(lines);
+
+        assertEquals(3, errors.size());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
+        assertEquals(41, errors.get(0).getLineNumber());
+        assertEquals("';' expected", errors.get(0).getDescription());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(1).getResourcePath());
+        assertEquals(42, errors.get(1).getLineNumber());
+        assertEquals("';' expected", errors.get(1).getDescription());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(1).getResourcePath());
+        assertEquals(45, errors.get(2).getLineNumber());
+        assertEquals("';' expected: this.species = species", errors.get(2).getDescription());
     }
     
     @Test

@@ -64,7 +64,9 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.abstractions.OutputStreamObserver;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.eclipse.builder.BazelErrorStreamObserver;
 import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
@@ -75,6 +77,7 @@ import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.model.AspectOutputJarSet;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelBuildFile;
+import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelBuildError;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -315,7 +318,9 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 return true;
             }
             EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(this.eclipseProject.getProject(), false);
-            List<BazelBuildError> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList());
+            Map<BazelLabel, IProject> labelToProject = BazelProjectPreferences.getBazelLabelToEclipseProjectMap(Collections.singletonList(this.eclipseProject));
+            OutputStreamObserver errorStreamObserver = new BazelErrorStreamObserver(null, labelToProject, null);
+            List<BazelBuildError> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, errorStreamObserver);
             for (BazelBuildError detail : details) {
                 BazelPluginActivator.error(detail.toString());
             }

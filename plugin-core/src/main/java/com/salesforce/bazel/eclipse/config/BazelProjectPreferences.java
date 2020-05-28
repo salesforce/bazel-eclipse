@@ -35,9 +35,13 @@
  */
 package com.salesforce.bazel.eclipse.config;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -49,6 +53,7 @@ import org.osgi.service.prefs.Preferences;
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.command.BazelCommandManager;
+import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferencePage;
 
 // TODO migrate this away from static methods
@@ -125,6 +130,23 @@ public class BazelProjectPreferences {
     public static String getBazelLabelForEclipseProject(IProject eclipseProject) {
         Preferences eclipseProjectBazelPrefs = BazelPluginActivator.getResourceHelper().getProjectBazelPreferences(eclipseProject);
         return eclipseProjectBazelPrefs.get(PROJECT_PACKAGE_LABEL, null);
+    }
+    
+    /**
+     * Returns a map that maps Bazel labels to their Eclipse projects
+     */
+    public static Map<BazelLabel, IProject> getBazelLabelToEclipseProjectMap(Collection<IProject> eclipseProjects) {
+        Map<BazelLabel, IProject> labelToProject = new HashMap<>();
+        for (IProject project : eclipseProjects) {
+            EclipseProjectBazelTargets activatedTargets = getConfiguredBazelTargets(project, false);
+            List<BazelLabel> labels = activatedTargets.getConfiguredTargets().stream().map(t -> new BazelLabel(t)).collect(Collectors.toList());
+            for (BazelLabel label : labels) {
+                labelToProject.merge(label, project, (k1, k2) -> {
+                    throw new IllegalStateException("Duplicate label: " + label + " - this is bug");
+                });
+            }
+        }
+        return labelToProject;
     }
 
     

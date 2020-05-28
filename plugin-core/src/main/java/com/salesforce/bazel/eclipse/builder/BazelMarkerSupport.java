@@ -58,9 +58,9 @@ public class BazelMarkerSupport {
     /**
      * Publishes the specified build errors to the Problems View.
      *
-     * This method first clears the problem markers associated with the specified project,
-     * before publishing the specified BazelBuildError instances as problem markers to
-     * the Problems View.
+     * This method publishes the specified BazelBuildError instances as problem markers to
+     * the Problems View. If you want to clear Problems View before publishing, call 
+     * clearProblemMarkersForProject before this method.
      *
      * Note that this method runs within a WorkspaceModifyOperation.
      *
@@ -72,13 +72,17 @@ public class BazelMarkerSupport {
         BazelEclipseProjectSupport.runWithProgress(monitor, new WorkspaceModifyOperation() {
             @Override
             protected void execute(IProgressMonitor monitor) throws CoreException {
-                clearProblemMarkersForProject(project);
                 publishProblemMarkersForProject(project, errors);
             }
         });
     }
 
-    private static void clearProblemMarkersForProject(IProject project) throws CoreException {
+    /**
+     * Clears the Problems View for the specified project
+     *
+     * @param project  the project for which to clear Problems View
+     */
+    public static void clearProblemMarkersForProject(IProject project) throws CoreException {
         project.deleteMarkers(BazelMarkerSupport.BAZEL_MARKER, true, IResource.DEPTH_INFINITE);
     }
 

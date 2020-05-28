@@ -81,7 +81,12 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
             problemMarkers.add(new BazelBuildError(PROJECT_VIEW_RESOURCE, projectView.getLineNumber(invalidPackage),
                 "Bad Bazel Package: " + invalidPackage.getBazelPackageFSRelativePath()));
         }
-        // publishProblemMarkers also takes care of clearing old markers
+        // Clear old markers and publish to Problems View
+        try {
+            BazelMarkerSupport.clearProblemMarkersForProject(this.rootProject);
+        } catch (CoreException e) {
+            e.printStackTrace();
+        }
         BazelMarkerSupport.publishToProblemsView(this.rootProject, problemMarkers, getProgressMonitor());
         if (problemMarkers.isEmpty()) {
             IJavaProject[] currentlyImportedProjects = getAllJavaBazelProjects();

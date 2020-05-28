@@ -38,18 +38,14 @@ package com.salesforce.bazel.eclipse.builder;
 import static com.google.common.collect.MoreCollectors.onlyElement;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
@@ -58,9 +54,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
@@ -110,14 +104,14 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         }
 
         try {
-            boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project), progressMonitor, Optional.empty(), monitor);
+            boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project), progressMonitor, null, monitor);
             if (buildSuccessful && !importInProgress()) {
                 IJavaProject[] allImportedProjects = javaCoreHelper.getAllBazelJavaProjects(true);
                 IProject rootWorkspaceProject = Arrays.stream(allImportedProjects)
                         .filter(p -> resourceHelper.isBazelRootProject(p.getProject()))
                         .collect(onlyElement()).getProject();
                 Set<IProject> downstreamProjects = getDownstreamProjectsOf(project, allImportedProjects);
-                buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, Optional.of(rootWorkspaceProject), monitor);
+                buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject, monitor);
             }
         } catch (IOException | InterruptedException e) {
             LOG.error("Failed to build {}", e, project.getName());
@@ -149,82 +143,30 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         BazelClasspathContainer.clean();
     }
 
-    private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects, WorkProgressMonitor progressMonitor, Optional<IProject> rootProject, IProgressMonitor monitor)
+    private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects, WorkProgressMonitor progressMonitor, IProject rootProject, IProgressMonitor monitor)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException
     {
         Set<String> bazelTargets = new TreeSet<>();
-        Map<BazelLabel, IProject> labelToProject = new HashMap<>();
-
-        // figure out the list of targets to build and map targets to projects
+        
+        // figure out the list of targets to build
         for (IProject project : projects) {
             EclipseProjectBazelTargets activatedTargets = BazelProjectPreferences.getConfiguredBazelTargets(project, false);
             bazelTargets.addAll(activatedTargets.getConfiguredTargets());
-            List<BazelLabel> labels = activatedTargets.getConfiguredTargets().stream().map(t -> new BazelLabel(t)).collect(Collectors.toList());
-            for (BazelLabel label : labels) {
-                labelToProject.merge(label, project, (k1, k2) -> {
-                    throw new IllegalStateException("Duplicate label: " + label + " - this is bug");
-                });
-            }
         }
 
         if (bazelTargets.isEmpty()) {
             return true;
         } else {
             List<String> bazelBuildFlags = getAllBazelBuildFlags(projects);
+            // Get a map of targets to projects to build BazelErrorStreamObserver
+            Map<BazelLabel, IProject> labelToProject = BazelProjectPreferences.getBazelLabelToEclipseProjectMap(projects);
+            BazelErrorStreamObserver errorStreamObserver = new BazelErrorStreamObserver(monitor, labelToProject, rootProject);
+            // Start error observer and clear Problems View
+            errorStreamObserver.startObserver();
             // now run the actual build
-            List<BazelBuildError> errors = cmdRunner.runBazelBuild(bazelTargets, progressMonitor, bazelBuildFlags);
-            // show build errors in the "Problems View" - this has to run even
-            // if there are no errors because it also takes care of removing
-            // previous errors
-            handleBuildErrors(projects, errors, labelToProject, rootProject, monitor);
+            List<BazelBuildError> errors = cmdRunner.runBazelBuild(bazelTargets, progressMonitor, bazelBuildFlags, null, errorStreamObserver);
             return errors.isEmpty();
         }
-    }
-
-    // assigns errors to owning projects, and published the errors in the "Problems View"
-    private static void handleBuildErrors(Collection<IProject> projects, List<BazelBuildError> errors, Map<BazelLabel, IProject> labelToProject, Optional<IProject> rootProject, IProgressMonitor monitor) {
-        Multimap<IProject, BazelBuildError> errorsByProject = assignErrorsToOwningProject(errors, labelToProject, rootProject);
-        if (rootProject.isPresent()) {
-            projects = new ArrayList<>(projects);
-            projects.add(rootProject.get());
-        }
-        publishErrors(projects, errorsByProject, monitor);
-    }
-
-    // this needs to be called even when there are no errors, as it clears the "Problems View"
-    private static void publishErrors(Collection<IProject> projects, Multimap<IProject, BazelBuildError> errorsByProject, IProgressMonitor monitor) {
-        for (IProject project : projects) {
-            BazelMarkerSupport.publishToProblemsView(project, errorsByProject.get(project), monitor);
-        }
-    }
-
-    static final String UNKNOWN_PROJECT_ERROR_MSG_PREFIX = "ERROR IN UNKNOWN PROJECT: ";
-
-    // maps the specified errors to the project instances they belong to, and returns that mapping
-    static Multimap<IProject, BazelBuildError> assignErrorsToOwningProject(List<BazelBuildError> errors, Map<BazelLabel, IProject> labelToProject, Optional<IProject> rootProject) {
-        Multimap<IProject, BazelBuildError> projectToErrors = HashMultimap.create();
-        List<BazelBuildError> remainingErrors = new ArrayList<>(errors);
-        for (BazelBuildError error : errors) {
-            BazelLabel owningLabel = error.getOwningLabel(labelToProject.keySet());
-            if (owningLabel != null) {
-                IProject project = labelToProject.get(owningLabel);
-                projectToErrors.put(project, error.toErrorWithRelativizedResourcePath(owningLabel));
-                remainingErrors.remove(error);
-            }
-        }
-        if (!remainingErrors.isEmpty()) {
-            if (rootProject.isPresent()) {
-                projectToErrors.putAll(rootProject.get(), remainingErrors.stream()
-                        .map(e -> e.toGenericWorkspaceLevelError(UNKNOWN_PROJECT_ERROR_MSG_PREFIX))
-                        .collect(Collectors.toList()));
-            } else {
-                // getting here is a bug - at least log the errors we didn't assign to any project
-                for (BazelBuildError error : remainingErrors) {
-                    LOG.error("Unhandled error: " + error);
-                }
-            }
-        }
-        return projectToErrors;
     }
 
     private static List<String> getAllBazelBuildFlags(Collection<IProject> projects) {
