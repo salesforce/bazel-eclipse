@@ -65,7 +65,7 @@ import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelBuildError;
+import com.salesforce.bazel.eclipse.model.BazelProblem;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
@@ -164,7 +164,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             // Start error observer and clear Problems View
             errorStreamObserver.startObserver();
             // now run the actual build
-            List<BazelBuildError> errors = cmdRunner.runBazelBuild(bazelTargets, progressMonitor, bazelBuildFlags, null, errorStreamObserver);
+            List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, progressMonitor, bazelBuildFlags, null, errorStreamObserver);
             return errors.isEmpty();
         }
     }
