@@ -117,7 +117,6 @@ public class SelectOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        System.out.print("Closing Output Stream");
         Preconditions.checkState(!closed);
         super.close();
         select(false);
