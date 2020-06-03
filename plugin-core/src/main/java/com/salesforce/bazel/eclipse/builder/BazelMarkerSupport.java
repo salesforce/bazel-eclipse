@@ -43,7 +43,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
-import com.salesforce.bazel.eclipse.model.BazelBuildError;
+import com.salesforce.bazel.eclipse.model.BazelProblem;
 
 /**
  * Encapsulates Bazel Error Marker logic.
@@ -68,7 +68,7 @@ public class BazelMarkerSupport {
      * @param errors  the errors to publish to the Problems View
      * @param monitor  progress monitor
      */
-    public static void publishToProblemsView(IProject project, Collection<BazelBuildError> errors, IProgressMonitor monitor) {
+    public static void publishToProblemsView(IProject project, Collection<BazelProblem> errors, IProgressMonitor monitor) {
         BazelEclipseProjectSupport.runWithProgress(monitor, new WorkspaceModifyOperation() {
             @Override
             protected void execute(IProgressMonitor monitor) throws CoreException {
@@ -93,8 +93,8 @@ public class BazelMarkerSupport {
         });
     }
     
-    private static void publishProblemMarkersForProject(IProject project, Collection<BazelBuildError> errorDetails) throws CoreException {        
-        for (BazelBuildError errorDetail : errorDetails) {
+    private static void publishProblemMarkersForProject(IProject project, Collection<BazelProblem> errorDetails) throws CoreException {        
+        for (BazelProblem errorDetail : errorDetails) {
             String resourcePath = errorDetail.getResourcePath();
             IResource resource = project.findMember(resourcePath);
             IMarker marker = resource.createMarker(BAZEL_MARKER);

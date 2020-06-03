@@ -49,8 +49,8 @@ public class BazelOutputParser {
     private String errorSourcePathLine = null;
     private String moreDetailsLine = null;
 
-    public List<BazelBuildError> getErrorBazelMarkerDetails(String latestLine) {
-        List<BazelBuildError> allBazelMarkerDetails = new ArrayList<>();
+    public List<BazelProblem> getErrorBazelMarkerDetails(String latestLine) {
+        List<BazelProblem> allBazelMarkerDetails = new ArrayList<>();
         String line = latestLine.trim();
         if (this.parsingErrors) {
             if (line.isEmpty()) {
@@ -101,20 +101,20 @@ public class BazelOutputParser {
         return allBazelMarkerDetails;
     }
     
-    public List<BazelBuildError> getErrorBazelMarkerDetails(List<String> lines) {
+    public List<BazelProblem> getErrorBazelMarkerDetails(List<String> lines) {
         this.parsingErrors = false;
         this.errorSourcePathLine = null;
         this.moreDetailsLine = null;
-        List<BazelBuildError> allBazelMarkerDetails = new ArrayList<>();
+        List<BazelProblem> allBazelMarkerDetails = new ArrayList<>();
         for (String line : lines) {
-            List<BazelBuildError> bazelMarkerDetails = getErrorBazelMarkerDetails(line);
+            List<BazelProblem> bazelMarkerDetails = getErrorBazelMarkerDetails(line);
             allBazelMarkerDetails.addAll(bazelMarkerDetails);
         }
 
         return allBazelMarkerDetails;
     }
 
-    private BazelBuildError buildErrorDetails(String errorSourcePathLine, String moreDetailsLine) {
+    private BazelProblem buildErrorDetails(String errorSourcePathLine, String moreDetailsLine) {
         int i = errorSourcePathLine.lastIndexOf(JAVA_FILE_PATH_SUFFX);
         String sourcePath = errorSourcePathLine.substring(0, i + JAVA_FILE_PATH_SUFFX.length());
         i = errorSourcePathLine.indexOf(":", sourcePath.length());
@@ -130,7 +130,7 @@ public class BazelOutputParser {
         if (moreDetailsLine != null) {
             description += ": " + moreDetailsLine;
         }
-        return new BazelBuildError(sourcePath, lineNumber, description);
+        return new BazelProblem(sourcePath, lineNumber, description);
     }
 
     private boolean isInitialErrorSourcePathLine(String line) {

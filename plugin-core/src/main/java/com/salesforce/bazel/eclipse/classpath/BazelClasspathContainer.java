@@ -74,7 +74,7 @@ import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.model.AspectOutputJarSet;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
-import com.salesforce.bazel.eclipse.model.BazelBuildError;
+import com.salesforce.bazel.eclipse.model.BazelProblem;
 import com.salesforce.bazel.eclipse.model.BazelBuildFile;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -315,8 +315,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 return true;
             }
             EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(this.eclipseProject.getProject(), false);
-            List<BazelBuildError> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, null);
-            for (BazelBuildError detail : details) {
+            List<BazelProblem> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, null);
+            for (BazelProblem detail : details) {
                 BazelPluginActivator.error(detail.toString());
             }
             return details.isEmpty();

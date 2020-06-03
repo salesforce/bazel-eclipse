@@ -30,7 +30,7 @@ import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelBuildError;
+import com.salesforce.bazel.eclipse.model.BazelProblem;
 import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.model.projectview.ProjectView;
 import com.salesforce.bazel.eclipse.model.projectview.ProjectViewConstants;
@@ -76,9 +76,9 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
         String projectViewContent = getSourceViewer().getTextWidget().getText();
         ProjectView projectView = new ProjectView(this.rootDirectory, projectViewContent);
         List<BazelPackageLocation> invalidPackages = projectView.getInvalidPackages();
-        Collection<BazelBuildError> problemMarkers = new ArrayList<>();
+        Collection<BazelProblem> problemMarkers = new ArrayList<>();
         for (BazelPackageLocation invalidPackage : invalidPackages) {
-            problemMarkers.add(new BazelBuildError(PROJECT_VIEW_RESOURCE, projectView.getLineNumber(invalidPackage),
+            problemMarkers.add(new BazelProblem(PROJECT_VIEW_RESOURCE, projectView.getLineNumber(invalidPackage),
                 "Bad Bazel Package: " + invalidPackage.getBazelPackageFSRelativePath()));
         }
         BazelMarkerSupport.clearProblemMarkersForProject(this.rootProject, getProgressMonitor());

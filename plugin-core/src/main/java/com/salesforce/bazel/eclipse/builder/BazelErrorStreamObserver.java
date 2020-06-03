@@ -51,7 +51,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.salesforce.bazel.eclipse.abstractions.OutputStreamObserver;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelBuildError;
+import com.salesforce.bazel.eclipse.model.BazelProblem;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelOutputParser;
 
@@ -93,9 +93,9 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
     }
     
     private void updateProblemsView(String error) {
-        List<BazelBuildError> bazelBuildErrors = outputParser.getErrorBazelMarkerDetails(error);
+        List<BazelProblem> bazelBuildErrors = outputParser.getErrorBazelMarkerDetails(error);
         if (!bazelBuildErrors.isEmpty()) {
-            Multimap<IProject, BazelBuildError> projectToErrors =
+            Multimap<IProject, BazelProblem> projectToErrors =
                     assignErrorsToOwningProject(bazelBuildErrors, this.labelToProject, this.rootProject);
             for (IProject project : projectToErrors.keySet()) {
                 BazelMarkerSupport.publishToProblemsView(project, projectToErrors.get(project), monitor);
@@ -104,11 +104,11 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
     }
     
     // maps the specified errors to the project instances they belong to, and returns that mapping
-    static Multimap<IProject, BazelBuildError> assignErrorsToOwningProject(List<BazelBuildError> errors,
+    static Multimap<IProject, BazelProblem> assignErrorsToOwningProject(List<BazelProblem> errors,
             Map<BazelLabel, IProject> labelToProject, IProject rootProject) {
-        Multimap<IProject, BazelBuildError> projectToErrors = HashMultimap.create();
-        List<BazelBuildError> remainingErrors = new LinkedList<>(errors);
-        for (BazelBuildError error : errors) {
+        Multimap<IProject, BazelProblem> projectToErrors = HashMultimap.create();
+        List<BazelProblem> remainingErrors = new LinkedList<>(errors);
+        for (BazelProblem error : errors) {
             BazelLabel owningLabel = error.getOwningLabel(labelToProject.keySet());
             if (owningLabel != null) {
                 IProject project = labelToProject.get(owningLabel);
@@ -123,7 +123,7 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
                             .collect(Collectors.toList()));
             } else {
                 // getting here is a bug - at least log the errors we didn't assign to any project
-                for (BazelBuildError error : remainingErrors) {
+                for (BazelProblem error : remainingErrors) {
                     LOG.error("Unhandled error: " + error);
                 }
             }

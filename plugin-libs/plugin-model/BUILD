@@ -59,11 +59,11 @@ java_test(
 )
 
 java_test(
-    name = "BazelBuildErrorTest",
+    name = "BazelProblemTest",
     srcs = [
         "src/main/java/com/salesforce/bazel/eclipse/model/BazelLabel.java",
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelBuildError.java",
-        "src/test/java/com/salesforce/bazel/eclipse/model/BazelBuildErrorTest.java",
+        "src/main/java/com/salesforce/bazel/eclipse/model/BazelProblem.java",
+        "src/test/java/com/salesforce/bazel/eclipse/model/BazelProblemTest.java",
     ],
 )
 
@@ -81,7 +81,7 @@ java_test(
     name = "BazelOutputParserTest",
     srcs = [
         "src/main/java/com/salesforce/bazel/eclipse/model/BazelLabel.java",
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelBuildError.java",
+        "src/main/java/com/salesforce/bazel/eclipse/model/BazelProblem.java",
         "src/main/java/com/salesforce/bazel/eclipse/model/BazelOutputParser.java",
         "src/test/java/com/salesforce/bazel/eclipse/model/BazelOutputParserTest.java",
     ],

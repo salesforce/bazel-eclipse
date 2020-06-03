@@ -38,25 +38,25 @@ import java.util.Collection;
 import java.util.Objects;
 
 /**
- * This class holds parsed Bazel error output.
+ * A wrapper for a Bazel "problem" (error/warning).
  *
  * @author nishant.dsouza
  * @since 5/3/2019
  */
-public class BazelBuildError {
+public class BazelProblem {
 
     private final String resourcePath;
     private final int lineNumber;
     private final String description;
 
-    public BazelBuildError(String resourcePath, int lineNumber, String description) {
+    public BazelProblem(String resourcePath, int lineNumber, String description) {
         this.resourcePath = Objects.requireNonNull(resourcePath);
         this.lineNumber = lineNumber;
         this.description = Objects.requireNonNull(description);
     }
 
     /**
-     * Returns the matching BazelLabel for this error's resourcePath.
+     * Returns the matching BazelLabel for this problem's resourcePath.
      *
      * @param labels  all BazelLabel instances to consider
      * @return the matching BazelLabel, null if no match is found
@@ -88,16 +88,16 @@ public class BazelBuildError {
         return lineNumber;
     }
 
-    public BazelBuildError toErrorWithRelativizedResourcePath(BazelLabel label) {
+    public BazelProblem toErrorWithRelativizedResourcePath(BazelLabel label) {
         String rel = getRelativeResourcePath(label);
         if (rel == null) {
             throw new IllegalArgumentException("Unable to build a relative path for " + resourcePath + " based on label " + label);
         }
-        return new BazelBuildError(rel, this.lineNumber, description);
+        return new BazelProblem(rel, this.lineNumber, description);
     }
 
-    public BazelBuildError toGenericWorkspaceLevelError(String descriptionPrefix) {
-        return new BazelBuildError(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description);
+    public BazelProblem toGenericWorkspaceLevelError(String descriptionPrefix) {
+        return new BazelProblem(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description);
     }
 
     @Override
