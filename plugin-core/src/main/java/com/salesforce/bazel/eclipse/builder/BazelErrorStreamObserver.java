@@ -36,23 +36,20 @@
 package com.salesforce.bazel.eclipse.builder;
 
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.LinkedList; 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.salesforce.bazel.eclipse.abstractions.OutputStreamObserver;
-import com.salesforce.bazel.eclipse.builder.BazelMarkerSupport;
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.model.BazelBuildError;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
@@ -62,19 +59,22 @@ import com.salesforce.bazel.eclipse.model.BazelOutputParser;
  * Implementation of {@link OutputStreamObserver} that observes error output and publishes errors to Problems View
  */
 public class BazelErrorStreamObserver implements OutputStreamObserver {
+    
+    static final String UNKNOWN_PROJECT_ERROR_MSG_PREFIX = "ERROR IN UNKNOWN PROJECT: ";
+
+    private static final LogHelper LOG = LogHelper.log(BazelErrorStreamObserver.class);
+    private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
+    
     private final IProgressMonitor monitor;
     private final Map<BazelLabel, IProject> labelToProject;
     private final IProject rootProject;
-    private static final BazelOutputParser outputParser = new BazelOutputParser();
-    private static final LogHelper LOG = LogHelper.log(BazelErrorStreamObserver.class);
-    private ExecutorService executor;
-    static final String UNKNOWN_PROJECT_ERROR_MSG_PREFIX = "ERROR IN UNKNOWN PROJECT: ";
-
+    private final BazelOutputParser outputParser;
     public BazelErrorStreamObserver(final IProgressMonitor monitor, final Map<BazelLabel, IProject> labelToProject,
             IProject rootProject) {
         this.monitor = monitor;
         this.labelToProject = labelToProject;
         this.rootProject = rootProject;
+        this.outputParser = new BazelOutputParser();
     }
     
     /**
@@ -83,29 +83,18 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
     public void startObserver() {
         final Set<IProject> projectSet = new HashSet<>(this.labelToProject.values());
         for (IProject project : projectSet) {
-            try {
-                BazelMarkerSupport.clearProblemMarkersForProject(project);
-            } catch (CoreException e) {
-                e.printStackTrace();
-            }
+            BazelMarkerSupport.clearProblemMarkersForProject(project, monitor);
         }
-        this.executor = Executors.newFixedThreadPool(1);
     }
     
-    /**
-     * Create a CompletableFuture object to make async call to updateProblemsView, which parses
-     * latest error line and publishes to Problems View if applicable
-     */
     @Override
     public void update(String error) {
-        CompletableFuture completeUpdate = CompletableFuture
-                .runAsync(() -> updateProblemsView(error), this.executor);
+        EXECUTOR.execute(() -> updateProblemsView(error));
     }
     
     private void updateProblemsView(String error) {
-        
         List<BazelBuildError> bazelBuildErrors = outputParser.getErrorBazelMarkerDetails(error);
-        if (! bazelBuildErrors.isEmpty()) {
+        if (!bazelBuildErrors.isEmpty()) {
             Multimap<IProject, BazelBuildError> projectToErrors =
                     assignErrorsToOwningProject(bazelBuildErrors, this.labelToProject, this.rootProject);
             for (IProject project : projectToErrors.keySet()) {

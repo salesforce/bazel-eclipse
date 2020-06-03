@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.junit.Test;
 
@@ -79,11 +78,6 @@ public class BazelErrorStreamObserverTest {
         return getMockedProject(projectName, new String[]{});
     }
     
-    private IProgressMonitor getMockedMonitor() throws Exception {
-        IProgressMonitor progressMonitor = mock(IProgressMonitor.class);
-        return progressMonitor;
-    }
-
     private IJavaProject getMockedProject(String projectName, String[] requiredProjectNames) throws Exception {
         IJavaProject javaProject = mock(IJavaProject.class);
         when(javaProject.getRequiredProjectNames()).thenReturn(requiredProjectNames);

@@ -78,15 +78,22 @@ public class BazelMarkerSupport {
     }
 
     /**
-     * Clears the Problems View for the specified project
+     * Clears the Problems View for the specified project.
+     * 
+     * Note that this method runs within a WorkspaceModifyOperation.
      *
-     * @param project  the project for which to clear Problems View
+     * @param project  the project for which to remove associated markers from the Problems View
      */
-    public static void clearProblemMarkersForProject(IProject project) throws CoreException {
-        project.deleteMarkers(BazelMarkerSupport.BAZEL_MARKER, true, IResource.DEPTH_INFINITE);
+    public static void clearProblemMarkersForProject(IProject project, IProgressMonitor monitor) {
+        BazelEclipseProjectSupport.runWithProgress(monitor, new WorkspaceModifyOperation() {
+            @Override
+            protected void execute(IProgressMonitor monitor) throws CoreException {
+                project.deleteMarkers(BazelMarkerSupport.BAZEL_MARKER, true, IResource.DEPTH_INFINITE);
+            }
+        });
     }
-
-    private static void publishProblemMarkersForProject(IProject project, Collection<BazelBuildError> errorDetails) throws CoreException {
+    
+    private static void publishProblemMarkersForProject(IProject project, Collection<BazelBuildError> errorDetails) throws CoreException {        
         for (BazelBuildError errorDetail : errorDetails) {
             String resourcePath = errorDetail.getResourcePath();
             IResource resource = project.findMember(resourcePath);
