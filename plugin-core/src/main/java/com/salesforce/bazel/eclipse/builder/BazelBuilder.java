@@ -48,6 +48,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -112,6 +113,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                         .collect(onlyElement()).getProject();
                 Set<IProject> downstreamProjects = getDownstreamProjectsOf(project, allImportedProjects);
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject, monitor);
+                
+                refreshClasspath(project, monitor, bazelWorkspaceCmdRunner);
             }
         } catch (IOException | InterruptedException e) {
             LOG.error("Failed to build {}", e, project.getName());
@@ -122,6 +125,17 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         }
         return null;
     }
+
+	void refreshClasspath(IProject project, IProgressMonitor monitor,
+			BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner) throws CoreException {
+		// Force update of classpath container
+		BazelClasspathContainer.clean();
+		bazelWorkspaceCmdRunner.flushAspectInfoCache();
+		// refresh the project immediately to reload classpath
+		project.refreshLocal(IResource.DEPTH_ONE, monitor);
+		// Force refresh of GUI
+		project.touch(monitor);
+	}
 
     @Override
     protected void clean(IProgressMonitor monitor) throws CoreException {
