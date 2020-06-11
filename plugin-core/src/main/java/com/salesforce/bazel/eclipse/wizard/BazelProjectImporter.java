@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
+import com.salesforce.bazel.eclipse.config.ImportOrderResolverImpl;
 import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 
@@ -26,8 +27,8 @@ public class BazelProjectImporter {
             @Override
             public void run(IProgressMonitor monitor) {
                 try {
-                    BazelEclipseProjectFactory.importWorkspace(workspaceRootProject, bazelPackagesToImport, progressMonitor,
-                        monitor);
+                    BazelEclipseProjectFactory.importWorkspace(workspaceRootProject, bazelPackagesToImport, 
+                        new ImportOrderResolverImpl(), progressMonitor, monitor);
                 } catch (Exception e) {
                     e.printStackTrace();
                     openError("Error", e);

@@ -111,8 +111,8 @@ public class BazelEclipseProjectFactory {
      *         the IProject object created for the 'bazel workspace' project node which is a special container project
      */
     public static List<IProject> importWorkspace(BazelPackageLocation bazelWorkspaceRootPackageInfo,
-            List<BazelPackageLocation> selectedBazelPackages, WorkProgressMonitor progressMonitor,
-          IProgressMonitor monitor) {
+            List<BazelPackageLocation> selectedBazelPackages, ImportOrderResolver importOrderResolver,
+            WorkProgressMonitor progressMonitor, IProgressMonitor monitor) {
 
         File bazelWorkspaceRootDirectory = BazelProjectHelper.getCanonicalFileSafely(bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory());
 
@@ -155,7 +155,7 @@ public class BazelEclipseProjectFactory {
             aspects = precomputeBazelAspectsForWorkspace(rootEclipseProject, selectedBazelPackages, progressMonitor);
         }
         
-        Iterable<BazelPackageLocation> postOrderedModules = ImportOrderResolver
+        Iterable<BazelPackageLocation> postOrderedModules = importOrderResolver
                 .resolveModulesImportOrder(bazelWorkspaceRootPackageInfo, selectedBazelPackages, aspects);
 
         // finally, create an Eclipse Project for each Bazel Package being imported
