@@ -125,6 +125,10 @@ public class AspectPackageInfos {
         return aspectPackageInfos;
     }
 
+    public Iterable<AspectPackageInfo> getPackageInfos() {
+        return this.labelToAspectPackageInfo.values();
+    }
+    
     private static void assertAllSourcesHaveSameRootPath(Path rootSourcePath, AspectPackageInfo aspectPackageInfo) {
         for (String sourcePath : aspectPackageInfo.getSources()) {
             if (!Paths.get(sourcePath).startsWith(rootSourcePath)) {

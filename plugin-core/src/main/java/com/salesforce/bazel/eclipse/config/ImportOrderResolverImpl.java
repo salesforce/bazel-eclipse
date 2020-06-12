@@ -2,12 +2,12 @@ package com.salesforce.bazel.eclipse.config;
 
 import java.util.List;
 
-import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.Traverser;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
+import com.salesforce.bazel.eclipse.model.AspectDependencyGraphBuilder;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfos;
+import com.salesforce.bazel.eclipse.model.BazelDependencyGraph;
 import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 
 /**
@@ -21,63 +21,48 @@ public class ImportOrderResolverImpl implements ImportOrderResolver {
     }
 
     /**
-     * Builds the dependency graph of modules based on the aspects info. Current solution is a subject for optimization
-     * - to many iteration inside may slow down overall import performance.
-     *
+     * Orders the modules selected for import such that no module is imported before any of modules that it depends on.
+     * <p>
+     * Given the complex nature of the dependency graph, and the user can select an arbitrary set of packages to import,
+     * this . 
+     * It assumes that there are hundreds/thousands of packages in the Bazel workspace, and the
+     * user will pick 10-20 to import.
+     * 
      * @return ordered list of modules - leaves nodes goes first, those which dependent on them next and so on up to the
      *         root module
      */
     public Iterable<BazelPackageLocation> resolveModulesImportOrder(BazelPackageLocation rootModule,
-            List<BazelPackageLocation> childModules, AspectPackageInfos aspects) {
+            List<BazelPackageLocation> selectedModules, AspectPackageInfos aspects) {
 
         if (aspects == null) {
-            return childModules;
+            return selectedModules;
         }
         
-        MutableGraph<BazelPackageLocation> graph = GraphBuilder.undirected().build();
-
-        graph.addNode(rootModule);
-        for (BazelPackageLocation childPackageInfo : childModules) {
-            graph.addNode(childPackageInfo);
-            if (!rootModule.equals(childPackageInfo)) {
-                graph.putEdge(rootModule, childPackageInfo);
-            }
+        // first, generate the dependency graph for the entire workspace
+        List<BazelPackageLocation> orderedModules = null;
+        try {
+            BazelDependencyGraph workspaceDepGraph = AspectDependencyGraphBuilder.build(aspects, false);
+            orderedModules = workspaceDepGraph.orderLabels(selectedModules);
+        } catch (Exception anyE) {
+            anyE.printStackTrace();
+            orderedModules = selectedModules;
         }
-
-        for (BazelPackageLocation childPackageInfo : childModules) {
-            if (childPackageInfo.isWorkspaceRoot()) {
-                // this is the workspace root project, it does not have a real classpath, ignore
-                continue;
-            }
-            AspectPackageInfo packageAspect = aspects.lookByPackageName(childPackageInfo.getBazelPackageName());
-            
-            if (packageAspect == null) {
-                throw new IllegalStateException(
-                        "Package dependencies couldn't be resolved: " + childPackageInfo.getBazelPackageName());
-            }
-            
-            for (String dep : packageAspect.getDeps()) {
-                for (BazelPackageLocation candidateNode : childModules) {
-                    if (dep.startsWith(candidateNode.getBazelPackageName()) && childPackageInfo != candidateNode) {
-                        graph.putEdge(childPackageInfo, candidateNode);
-                    }
-                }
-            }
-        }
-
-        Iterable<BazelPackageLocation> postOrderedModules = Traverser.forGraph(graph).depthFirstPostOrder(rootModule);
 
         StringBuffer sb = new StringBuffer();
         sb.append("ImportOrderResolver order of modules: ");
-        for (BazelPackageLocation pkg : postOrderedModules) {
+        for (BazelPackageLocation pkg : orderedModules) {
             sb.append(pkg.getBazelPackageName());
             sb.append("  ");
         }
         BazelPluginActivator.info(sb.toString());
-        postOrderedModules = Traverser.forGraph(graph).depthFirstPostOrder(rootModule);
         
-        return postOrderedModules;
+        return orderedModules;
 
+    }
+    
+    // @VisibleForTesting
+    static Iterable<BazelPackageLocation> orderNodes(MutableGraph<BazelPackageLocation> graph, BazelPackageLocation rootModule) {
+        return Traverser.forGraph(graph).depthFirstPostOrder(rootModule);
     }
 
 }
