@@ -9,6 +9,7 @@ import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
  * Orders modules for import.
  */
 public interface ImportOrderResolver {
+    
     Iterable<BazelPackageLocation> resolveModulesImportOrder(BazelPackageLocation rootModule,
             List<BazelPackageLocation> childModules, AspectPackageInfos aspects);
 }

@@ -337,7 +337,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
         }
 
         String pathStr = cpEntry.getPath().toPortableString();
-        System.out.println("Adding cp entry ["+pathStr+"] to target ["+targetLabel+"]");
+        //System.out.println("Adding cp entry ["+pathStr+"] to target ["+targetLabel+"]");
         if (!isTestTarget) {
             // add to the main classpath?
             // if this was previously a test CP entry, we need to remove it since this is now a main cp entry
