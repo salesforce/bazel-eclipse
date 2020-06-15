@@ -85,6 +85,7 @@ public class BazelDependencyGraph {
             usedByMap.put(depLabel, usedbySources);
         }
         usedbySources.add(sourceLabel);
+
     }
     
     // ACCESSORS
