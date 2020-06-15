@@ -68,14 +68,13 @@ import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.model.AspectOutputJarSet;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
-import com.salesforce.bazel.eclipse.model.BazelProblem;
 import com.salesforce.bazel.eclipse.model.BazelBuildFile;
+import com.salesforce.bazel.eclipse.model.BazelProblem;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
@@ -87,7 +86,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
     
     // TODO make classpath cache timeout configurable
-    private static final long CLASSPATH_CACHE_TIMEOUT_MS = 30000; 
+    private static final long CLASSPATH_CACHE_TIMEOUT_MS = 300000; 
 
     private final IPath eclipseProjectPath;
     private final IProject eclipseProject;
@@ -149,18 +148,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 if ((now - this.cachePutTimeMillis) > CLASSPATH_CACHE_TIMEOUT_MS) {
                     this.cachedEntries = null;
                 } else {
-                    foundCachedEntries = true;
-                    if (BazelEclipseProjectFactory.importInProgress.get()) {
-                        // classpath computation is iterative right now during import, each project's classpath is computed many times. 
-                        // earlier in the import process, project refs might be brought in as jars because the associated project
-                        //   may not have been imported yet. 
-                        // by not caching during import, the classpath is continually recomputed and eventually arrives in the right state
-                        BazelPluginActivator.debug("  Recomputing classpath for project "+eclipseProjectName+" because we are in an import operation.");
-                        isImport = true;
-                    } else {
-                        BazelPluginActivator.debug("  Using cached classpath for project "+eclipseProjectName);
-                        return this.cachedEntries;
-                    }
+                    BazelPluginActivator.debug("  Using cached classpath for project "+eclipseProjectName);
+                    return this.cachedEntries;
                 }
             }
     
