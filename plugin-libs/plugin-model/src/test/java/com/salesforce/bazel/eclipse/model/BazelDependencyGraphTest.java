@@ -25,11 +25,22 @@ public class BazelDependencyGraphTest {
         assertEquals(1, roots.size());
         assertTrue(roots.contains("rootA"));
         
+        // test leaf identification
         Set<String> leaves = graph.getLeafLabels();
         assertEquals(3, leaves.size());
         assertTrue(leaves.contains("leafA1"));
         assertTrue(leaves.contains("leafA1b"));
         assertTrue(leaves.contains("leafA2"));
+        
+        // test ordering alg
+        Set<BazelPackageLocation> selectedLabels = new LinkedHashSet<>();
+        selectedLabels.add(new InMemoryBazelPackageLocation("midA2"));
+        selectedLabels.add(new InMemoryBazelPackageLocation("rootA"));
+        selectedLabels.add(new InMemoryBazelPackageLocation("leafA2"));
+        List<BazelPackageLocation> orderedLabels = graph.orderLabels(selectedLabels);
+        assertEquals("leafA2", orderedLabels.get(0).getBazelPackageName());
+        assertEquals("midA2", orderedLabels.get(1).getBazelPackageName());
+        assertEquals("rootA", orderedLabels.get(2).getBazelPackageName());
     }
 
 
@@ -54,6 +65,7 @@ public class BazelDependencyGraphTest {
         assertTrue(roots.contains("rootA"));
         assertTrue(roots.contains("rootB"));
         
+        // test leaf identification
         Set<String> leaves = graph.getLeafLabels();
         assertEquals(6, leaves.size());
         assertTrue(leaves.contains("leafA1"));
@@ -63,6 +75,7 @@ public class BazelDependencyGraphTest {
         assertTrue(leaves.contains("leafB1b"));
         assertTrue(leaves.contains("leafB2"));
         
+        // test ordering alg
         Set<BazelPackageLocation> selectedLabels = new LinkedHashSet<>();
         selectedLabels.add(new InMemoryBazelPackageLocation("rootA"));
         selectedLabels.add(new InMemoryBazelPackageLocation("midA1"));
@@ -91,11 +104,22 @@ public class BazelDependencyGraphTest {
         assertEquals(2, roots.size());
         assertTrue(roots.contains("rootA"));
         assertTrue(roots.contains("rootB"));
-        
+
+        // test leaf identification
         Set<String> leaves = graph.getLeafLabels();
         assertEquals(3, leaves.size());
         assertTrue(leaves.contains("leaf1"));
         assertTrue(leaves.contains("leaf1b"));
         assertTrue(leaves.contains("leaf2"));
+
+        // test ordering alg
+        Set<BazelPackageLocation> selectedLabels = new LinkedHashSet<>();
+        selectedLabels.add(new InMemoryBazelPackageLocation("rootA"));
+        selectedLabels.add(new InMemoryBazelPackageLocation("mid1"));
+        selectedLabels.add(new InMemoryBazelPackageLocation("leaf1"));
+        List<BazelPackageLocation> orderedLabels = graph.orderLabels(selectedLabels);
+        assertEquals("leaf1", orderedLabels.get(0).getBazelPackageName());
+        assertEquals("mid1", orderedLabels.get(1).getBazelPackageName());
+        assertEquals("rootA", orderedLabels.get(2).getBazelPackageName());
     }
 }
