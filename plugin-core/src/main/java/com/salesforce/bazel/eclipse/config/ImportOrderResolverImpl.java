@@ -43,19 +43,18 @@ public class ImportOrderResolverImpl implements ImportOrderResolver {
         try {
             BazelDependencyGraph workspaceDepGraph = AspectDependencyGraphBuilder.build(aspects, false);
             orderedModules = workspaceDepGraph.orderLabels(selectedModules);
+
+            StringBuffer sb = new StringBuffer();
+            sb.append("ImportOrderResolver order of modules: ");
+            for (BazelPackageLocation pkg : orderedModules) {
+                sb.append(pkg.getBazelPackageName());
+                sb.append("  ");
+            }
+            BazelPluginActivator.info(sb.toString());
         } catch (Exception anyE) {
             anyE.printStackTrace();
             orderedModules = selectedModules;
         }
-
-        StringBuffer sb = new StringBuffer();
-        sb.append("ImportOrderResolver order of modules: ");
-        for (BazelPackageLocation pkg : orderedModules) {
-            sb.append(pkg.getBazelPackageName());
-            sb.append("  ");
-        }
-        BazelPluginActivator.info(sb.toString());
-        
         return orderedModules;
 
     }
