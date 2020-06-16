@@ -51,6 +51,7 @@ import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.command.BazelProcessBuilder;
 import com.salesforce.bazel.eclipse.command.Command;
 import com.salesforce.bazel.eclipse.command.CommandBuilder;
+import com.salesforce.bazel.eclipse.model.SimplePerfRecorder;
 
 /**
  * A utility class to spawn a command in the shell and parse its output. It allows to filter the output, 
@@ -120,6 +121,7 @@ public final class ShellCommand implements Command {
             command = command + arg + " ";
         }
         System.out.println("Executing command: "+command);
+        long startTimeMS = System.currentTimeMillis();
 
         try {
             Thread err = copyStream(process.getErrorStream(), stderr);
@@ -138,6 +140,12 @@ public final class ShellCommand implements Command {
         finally {
             closeQuietly(stderr);
             closeQuietly(stdout);
+            if (args.size() > 1) {
+                // arg 1 typically has the more interesting command token
+                SimplePerfRecorder.addTime("commmand_"+args.get(1), startTimeMS);
+            } else {
+                SimplePerfRecorder.addTime("commmand_"+args.get(0), startTimeMS);
+            }
         }
     }
 

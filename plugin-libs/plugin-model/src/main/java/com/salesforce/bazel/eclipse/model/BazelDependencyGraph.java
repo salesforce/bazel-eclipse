@@ -205,7 +205,6 @@ public class BazelDependencyGraph {
      */
     public boolean isDependency(String label, String possibleDependency) {
         boolean isDep = isDependencyRecur(label, possibleDependency, null);
-        System.out.println("BazelDependencyGraph.isDependency source: "+label+" possibleDep: "+possibleDependency+ " result: "+isDep);
         return isDep;
     }
 
@@ -221,7 +220,6 @@ public class BazelDependencyGraph {
      */
     public boolean isDependency(String label, String possibleDependency, Map<String, Boolean> depCache) {
         boolean isDep = isDependencyRecur(label, possibleDependency, depCache);
-        System.out.println("BazelDependencyGraph.isDependency source: "+label+" possibleDep: "+possibleDependency+ " result: "+isDep);
         return isDep;
     }
 

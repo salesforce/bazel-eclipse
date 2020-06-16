@@ -81,6 +81,7 @@ import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.eclipse.model.SimplePerfRecorder;
 import com.salesforce.bazel.eclipse.model.projectview.ProjectView;
 import com.salesforce.bazel.eclipse.model.projectview.ProjectViewConstants;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -113,6 +114,7 @@ public class BazelEclipseProjectFactory {
     public static List<IProject> importWorkspace(BazelPackageLocation bazelWorkspaceRootPackageInfo,
             List<BazelPackageLocation> selectedBazelPackages, ImportOrderResolver importOrderResolver,
             WorkProgressMonitor progressMonitor, IProgressMonitor monitor) {
+        SimplePerfRecorder.reset();
 
         File bazelWorkspaceRootDirectory = BazelProjectHelper.getCanonicalFileSafely(bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory());
 
@@ -144,22 +146,30 @@ public class BazelEclipseProjectFactory {
         int sourceLevel = JavaLanguageLevelHelper.getSourceLevelAsInt(javacoptString);
         
         // create the Eclipse project for the Bazel workspace (directory that contains the WORKSPACE file)
+        long startTimeMS = System.currentTimeMillis();
         IProject rootEclipseProject = createEclipseRootWorkspaceProject(bazelWorkspaceName, bazelWorkspaceRootDirectory, sourceLevel, 
                 selectedBazelPackages, monitor);
+        SimplePerfRecorder.addTime("import_createroot", startTimeMS);
+
         List<IProject> importedProjectsList = new ArrayList<>();
         importedProjectsList.add(rootEclipseProject);
 
         // see the method level comment about this option (currently disabled)
         AspectPackageInfos aspects = null;
+        startTimeMS = System.currentTimeMillis();
         if (PRECOMPUTE_ALL_ASPECTS_FOR_WORKSPACE) {
             aspects = precomputeBazelAspectsForWorkspace(rootEclipseProject, selectedBazelPackages, progressMonitor);
         }
+        SimplePerfRecorder.addTime("import_computeaspects", startTimeMS);
         
+        startTimeMS = System.currentTimeMillis();
         Iterable<BazelPackageLocation> postOrderedModules = importOrderResolver
                 .resolveModulesImportOrder(bazelWorkspaceRootPackageInfo, selectedBazelPackages, aspects);
+        SimplePerfRecorder.addTime("import_computeorder", startTimeMS);
 
         // finally, create an Eclipse Project for each Bazel Package being imported
         subMonitor.setTaskName("Importing bazel packages: ");
+        startTimeMS = System.currentTimeMillis();
         for (BazelPackageLocation childPackageInfo : postOrderedModules) {
             subMonitor.subTask("Importing " + childPackageInfo.getBazelPackageFSRelativePath());
             if (childPackageInfo.isWorkspaceRoot()) {
@@ -169,10 +179,13 @@ public class BazelEclipseProjectFactory {
             importBazelWorkspacePackagesAsProjects(childPackageInfo, bazelWorkspaceRootDirectory, importedProjectsList, sourceLevel);
             subMonitor.split(1);
         }
+        SimplePerfRecorder.addTime("import_createprojects_all", startTimeMS);
 
         subMonitor.done();
         // reset flag that indicates we are doing import
         importInProgress.set(false);
+        
+        SimplePerfRecorder.logResults();
 
         return importedProjectsList;
     }
@@ -306,8 +319,10 @@ public class BazelEclipseProjectFactory {
             // TODO investigate using the configure() hook in the BazelNature for the configuration part of this createProject() method
             IJavaProject eclipseJavaProject =
                     BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(eclipseProject);
+            long startTimeMS = System.currentTimeMillis();
             createBazelClasspathForEclipseProject(new Path(bazelWorkspaceRootDirectory.getAbsolutePath()), packageFSPath, packageSourceCodeFSPaths,
                 eclipseJavaProject, javaLanguageVersion);
+            SimplePerfRecorder.addTime("import_createprojects_cp_all", startTimeMS);
         } catch (CoreException e) {
             LOG.error(e.getMessage(), e);
             eclipseProject = null;
@@ -370,6 +385,7 @@ public class BazelEclipseProjectFactory {
         List<IClasspathEntry> classpathEntries = new LinkedList<>();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
 
+        long startTimeMS = System.currentTimeMillis();
         for (String path : packageSourceCodeFSRelativePaths) {
             IPath realSourceDir = Path.fromOSString(bazelWorkspacePath + File.separator + path);
             IFolder projectSourceFolder =
@@ -393,10 +409,13 @@ public class BazelEclipseProjectFactory {
             IClasspathEntry sourceClasspathEntry = BazelPluginActivator.getJavaCoreHelper().newSourceEntry(sourceDir, outputDir, isTestSource);
             classpathEntries.add(sourceClasspathEntry);
         }
+        SimplePerfRecorder.addTime("import_createprojects_cp_1", startTimeMS);
 
+        startTimeMS = System.currentTimeMillis();
         IClasspathEntry bazelClasspathContainerEntry = BazelPluginActivator.getJavaCoreHelper()
                 .newContainerEntry(new Path(BazelClasspathContainer.CONTAINER_NAME));
         classpathEntries.add(bazelClasspathContainerEntry);
+        SimplePerfRecorder.addTime("import_createprojects_cp_2", startTimeMS);
 
         // add in a JDK to the classpath
         String jdk;
@@ -409,7 +428,9 @@ public class BazelEclipseProjectFactory {
         classpathEntries.add(BazelPluginActivator.getJavaCoreHelper().newContainerEntry(new Path(jdk)));
 
         IClasspathEntry[] newClasspath = classpathEntries.toArray(new IClasspathEntry[classpathEntries.size()]);
+        startTimeMS = System.currentTimeMillis();
         eclipseProject.setRawClasspath(newClasspath, null);
+        SimplePerfRecorder.addTime("import_createprojects_cp_3", startTimeMS);
     }
 
     private static IFolder createFoldersForRelativePackagePath(IProject project, String bazelPackageFSPath,
