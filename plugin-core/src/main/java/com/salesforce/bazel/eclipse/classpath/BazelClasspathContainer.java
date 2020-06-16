@@ -76,6 +76,7 @@ import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelBuildFile;
 import com.salesforce.bazel.eclipse.model.BazelProblem;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.model.SimplePerfRecorder;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 
@@ -132,6 +133,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
         if (!BazelPluginActivator.hasBazelWorkspaceRootDirectory()) {
             throw new IllegalStateException("Attempt to retrieve the classpath of a Bazel Java project prior to setting up the Bazel workspace.");
         }
+        long startTimeMS = System.currentTimeMillis();
 
         boolean foundCachedEntries = false;
         boolean isImport = false;
@@ -266,6 +268,9 @@ public class BazelClasspathContainer implements IClasspathContainer {
             this.cachedEntries = assembleClasspathEntries(mainClasspathEntryMap, testClasspathEntryMap);
             BazelPluginActivator.debug("Cached the classpath for project "+eclipseProjectName);
         }
+        
+        SimplePerfRecorder.addTime("classpath", startTimeMS);
+        
         return cachedEntries;
     }
 
