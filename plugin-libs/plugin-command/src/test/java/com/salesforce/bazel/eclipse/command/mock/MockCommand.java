@@ -24,6 +24,7 @@
 package com.salesforce.bazel.eclipse.command.mock;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.mockito.Mockito;
@@ -38,10 +39,34 @@ public class MockCommand implements Command {
         
     }
     
+    public MockCommand(List<String> commandTokens) {
+        this.commandTokens = commandTokens;
+    }
     
     public List<String> commandTokens;
     public List<String> outputLines;
     public List<String> errorLines;
+    
+    public void addSimulatedOutputToCommandStdOut(String... someStrings) {
+        this.outputLines = new ArrayList<>();
+        for (String someString : someStrings) {
+            this.outputLines.add(someString);
+        }
+        this.errorLines = new ArrayList<>();
+    }
+
+    public void addSimulatedOutputToCommandStdErr(String... someStrings) {
+        this.errorLines = new ArrayList<>();
+        for (String someString : someStrings) {
+            this.errorLines.add(someString);
+        }
+        this.outputLines = new ArrayList<>();
+    }
+
+    public boolean isValid() {
+        return true;
+    }
+    
     
     @Override
     public int run() throws IOException, InterruptedException {

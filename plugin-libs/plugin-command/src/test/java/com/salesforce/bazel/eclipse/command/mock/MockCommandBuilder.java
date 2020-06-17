@@ -35,6 +35,12 @@ import java.util.Set;
 import com.salesforce.bazel.eclipse.abstractions.CommandConsoleFactory;
 import com.salesforce.bazel.eclipse.command.Command;
 import com.salesforce.bazel.eclipse.command.CommandBuilder;
+import com.salesforce.bazel.eclipse.command.mock.type.MockBuildCommand;
+import com.salesforce.bazel.eclipse.command.mock.type.MockCleanCommand;
+import com.salesforce.bazel.eclipse.command.mock.type.MockInfoCommand;
+import com.salesforce.bazel.eclipse.command.mock.type.MockQueryCommand;
+import com.salesforce.bazel.eclipse.command.mock.type.MockTestCommand;
+import com.salesforce.bazel.eclipse.command.mock.type.MockVersionCommand;
 
 /**
  * This is the main component of the mocking layer for the Bazel command line. This command builder
@@ -60,7 +66,7 @@ public class MockCommandBuilder extends CommandBuilder {
     private File bazelExecutionRoot;
     private File bazelBin;
     
-    // .bazelrc options
+    // .bazelrc options that you want simulated
     private Map<String, String> commandOptions;
 
     /**
@@ -172,75 +178,35 @@ public class MockCommandBuilder extends CommandBuilder {
         
         mockCommand.commandTokens = args;
         String commandPretty = "";
-        for (String token : mockCommand.commandTokens) {
+        for (String token : args) {
             commandPretty = commandPretty + token + " ";
         }
         
         // check if this is from a catalog of standard commands with stock responses
         boolean handled = false;
-        if (mockCommand.commandTokens.get(0).endsWith("/bazel")) {
-            if ("info".equals(mockCommand.commandTokens.get(1))) {
+        if (args.get(0).endsWith("/bazel")) {
+            if ("info".equals(args.get(1))) {
                 // command is of the form 'bazel info' with an optional third param
-            
-                if (mockCommand.commandTokens.size() < 3) {
-                    // this is just the generic 'bazel info', we probably should not be issuing this command from the plugins as there are better ways
-                    throw new IllegalArgumentException("The plugin issued the command 'bazel info' without a third arg. Please consider using a more specific 'bazel info xyz' command instead.");
-                } else if ("workspace".equals(mockCommand.commandTokens.get(2))) {
-                    addSimulatedOutputToCommandStdOut(mockCommand, "INFO: Invocation ID: a6809b5e-3fb4-462e-8fcc-2c18575122e7", bazelWorkspaceRoot.getAbsolutePath());
-                    handled = true;
-                } else if ("execution_root".equals(mockCommand.commandTokens.get(2))) {
-                    addSimulatedOutputToCommandStdOut(mockCommand, bazelExecutionRoot.getAbsolutePath());
-                    handled = true;
-                } else if ("output_base".equals(mockCommand.commandTokens.get(2))) {
-                    addSimulatedOutputToCommandStdOut(mockCommand, bazelOutputBase.getAbsolutePath());
-                    handled = true;
-                } else if ("bazel-bin".equals(mockCommand.commandTokens.get(2))) {
-                    addSimulatedOutputToCommandStdOut(mockCommand, bazelBin.getAbsolutePath());
-                    handled = true;
-                } else {
-                    throw new IllegalArgumentException("MockCommandBuilder does not know how to mock 'bazel info "+mockCommand.commandTokens.get(2)+"'. Please add code to handle this case.");
-                }
+                mockCommand = new MockInfoCommand(args, bazelWorkspaceRoot, bazelExecutionRoot, bazelOutputBase, bazelBin);
+                handled = true;
             } else if ("clean".equals(mockCommand.commandTokens.get(1))) {
                 // "bazel clean"
-                addSimulatedOutputToCommandStdOut(mockCommand, "INFO: Starting clean.");
+                mockCommand = new MockCleanCommand(args);
                 handled = true;
             } else if ("version".equals(mockCommand.commandTokens.get(1))) {
                 // "bazel version"
-                addSimulatedOutputToCommandStdOut(mockCommand, "Build label: 1.0.0", "Build time: Thu Oct 10 10:19:27 2019 (1570702767)",
-                    "Build timestamp: 1570702767", "Build timestamp as int: 1570702767");
+                mockCommand = new MockVersionCommand(args);
                 handled = true;
             } else if ("build".equals(mockCommand.commandTokens.get(1))) {
-                if (mockCommand.commandTokens.size() < 3) {
-                    // this is just 'bazel build' without a target, which is not valid, blow up here as there is something wrong in the calling code
-                    throw new IllegalArgumentException("The plugin issued the command 'bazel build' without a third arg. This is not a valid bazel command.");
-                }
+                // bazel build xyz
+                mockCommand = new MockBuildCommand(args, bazelWorkspaceRoot, bazelExecutionRoot, bazelOutputBase, bazelBin);
+                handled = true;
             } else if ("test".equals(mockCommand.commandTokens.get(1))) {
-                if (mockCommand.commandTokens.size() < 3) {
-                    // this is just 'bazel test' without a target, which is not valid, blow up here as there is something wrong in the calling code
-                    throw new IllegalArgumentException("The plugin issued the command 'bazel test' without a third arg. This is not a valid bazel command.");
-                }
-                if (mockCommand.commandTokens.size() == 3 && "--announce_rc".equals(mockCommand.commandTokens.get(2))) {
-                    if ("true".equals(commandOptions.get("explicit_java_test_deps"))) {
-                        addSimulatedOutputToCommandStdErr(mockCommand, "   'test' options: --explicit_java_test_deps=true");
-                    } else {
-                        addSimulatedOutputToCommandStdErr(mockCommand, "   'test' options: --explicit_java_test_deps=false");
-                    }
-                    handled = true;
-                }
+                // bazel test xyz
+                mockCommand = new MockTestCommand(args, commandOptions, bazelWorkspaceRoot, bazelExecutionRoot, bazelOutputBase, bazelBin);
+                handled = true;
             } else if ("query".equals(mockCommand.commandTokens.get(1))) {
-                if (mockCommand.commandTokens.size() < 3) {
-                    // this is just 'bazel build' without a target, which is not valid, blow up here as there is something wrong in the calling code
-                    throw new IllegalArgumentException("The plugin issued the command 'bazel build' without a third arg. This is not a valid bazel command.");
-                }
-                // TODO mockcommand
-                if (mockCommand.commandTokens.get(2).contains("javalib0")) {
-                    addSimulatedOutputToCommandStdOut(mockCommand, "java_test rule //projects/libs/javalib0:javalib0Test");
-                    addSimulatedOutputToCommandStdOut(mockCommand, "java_library rule //projects/libs/javalib0:javalib0");
-                } else if (mockCommand.commandTokens.get(2).contains("javalib1")) {
-                    addSimulatedOutputToCommandStdOut(mockCommand, "java_test rule //projects/libs/javalib1:javalib1Test");
-                    addSimulatedOutputToCommandStdOut(mockCommand, "java_library rule //projects/libs/javalib1:javalib1");
-                }
-
+                mockCommand = new MockQueryCommand(args);
                 handled = true;
             }
         } else if (mockCommand.commandTokens.get(0).startsWith("bazel-bin")) {
@@ -248,7 +214,7 @@ public class MockCommandBuilder extends CommandBuilder {
         }
         
         // if it wasn't a standard command, get ready for it
-        if (!handled) {
+        if (!handled || !mockCommand.isValid()) {
             for (MockCommandSimulatedOutput candidateOutput: this.simulatedOutputLines) {
                 if (candidateOutput.doesMatch(mockCommand.commandTokens)) {
                     // the output is targeted to this command
@@ -266,95 +232,6 @@ public class MockCommandBuilder extends CommandBuilder {
         }
 
         return mockCommand;
-    }
-
-    private void addSimulatedOutputToCommandStdOut(MockCommand mockCommand, String... someStrings) {
-        mockCommand.outputLines = new ArrayList<>();
-        for (String someString : someStrings) {
-            mockCommand.outputLines.add(someString);
-        }
-        mockCommand.errorLines = new ArrayList<>();
-    }
-
-    private void addSimulatedOutputToCommandStdErr(MockCommand mockCommand, String... someStrings) {
-        mockCommand.errorLines = new ArrayList<>();
-        for (String someString : someStrings) {
-            mockCommand.errorLines.add(someString);
-        }
-        mockCommand.outputLines = new ArrayList<>();
-    }
-
-    /**
-     * Filter that enables Bazel command output to be associated with a particular command.
-     * By providing a list of these, you can make sure that the output lines are only returned to
-     * the caller if all matchers return true.  
-     */
-    public static class MockCommandSimulatedOutputMatcher {
-        public int matchArgIndex;
-        public String matchArgRegex;
-        
-        public MockCommandSimulatedOutputMatcher(int index, String regex) {
-            this.matchArgIndex = index;
-            this.matchArgRegex = regex;
-        }
-    }
-    
-    /**
-     * Provides the output (output and error lines) from a simulated run of a Bazel command.
-     */
-    public static class MockCommandSimulatedOutput {
-        public String nameForLog;
-        public List<MockCommandSimulatedOutputMatcher> matchers;
-        public int matchesRemaining = Integer.MAX_VALUE;
-        public List<String> outputLines;
-        public List<String> errorLines;
-
-        public MockCommandSimulatedOutput(String nameForLog) {
-            this.nameForLog = nameForLog;
-        }
-
-        public MockCommandSimulatedOutput(String nameForLog, List<String> outputLines, List<String> errorLines) {
-            this.nameForLog = nameForLog;
-            this.outputLines = outputLines;
-            this.errorLines = errorLines;
-        }
-
-        public MockCommandSimulatedOutput(String nameForLog, List<String> outputLines, List<String> errorLines, List<MockCommandSimulatedOutputMatcher> matchers) {
-            this.nameForLog = nameForLog;
-            this.outputLines = outputLines;
-            this.errorLines = errorLines;
-            this.matchers = matchers;
-        }
-
-        /**
-         * Determines if this output is to be used for the command.
-         */
-        public boolean doesMatch(List<String> commandArgs) {
-            if (matchesRemaining < 1) {
-                // this matcher was configured to be 'consumed' and not reused
-                return false;
-            }
-            if (matchers == null) {
-                // test probably is only running one command, so just return true
-                matchesRemaining--;
-                return true;
-            }
-            // the matchers must all be true (AND) for the command to match
-            for (MockCommandSimulatedOutputMatcher matcher : matchers) {
-                if (commandArgs.size() <= matcher.matchArgIndex) {
-                    // not enough args to match against, so this can't be our command
-                    return false;
-                }
-                String pattern = matcher.matchArgRegex;
-                String arg = commandArgs.get(matcher.matchArgIndex);
-                if (!arg.matches(pattern)) {
-                    return false;
-                }
-            }
-            matchesRemaining--;
-            return true;
-        }
-        
     }
     
 }
