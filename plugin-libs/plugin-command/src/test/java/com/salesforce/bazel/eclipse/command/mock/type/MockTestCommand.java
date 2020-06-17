@@ -5,11 +5,17 @@ import java.util.Map;
 
 import com.salesforce.bazel.eclipse.command.mock.MockCommand;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.test.TestOptions;
 
 /**
  * Simulates the running of a "bazel test //a/b/c" command.
  */
 public class MockTestCommand extends MockCommand {
+
+    public static final String TESTOPTION_EXPLICIT_JAVA_TEST_DEPS = "EXPLICIT_JAVA_TEST_DEPS"; // search code base for this string, there are a few 
+    static {
+        TestOptions.advertise(TESTOPTION_EXPLICIT_JAVA_TEST_DEPS);
+    }
 
     public MockTestCommand(List<String> commandTokens, Map<String, String> testOptions, TestBazelWorkspaceFactory testWorkspaceFactory) {
         super(commandTokens);
@@ -24,7 +30,7 @@ public class MockTestCommand extends MockCommand {
         // This block detects this use case and returns the appropriate response.
         // Note that some low level tests do not use this mechanism to simulate .bazelrc options, see also MockBazelWorkspaceMetadataStrategy.
         if (commandTokens.size() == 3 && "--announce_rc".equals(commandTokens.get(2))) {
-            if ("true".equals(testOptions.get("explicit_java_test_deps"))) {
+            if ("true".equals(testOptions.get(TESTOPTION_EXPLICIT_JAVA_TEST_DEPS))) {
                 addSimulatedOutputToCommandStdErr("   'test' options: --explicit_java_test_deps=true");
             } else {
                 addSimulatedOutputToCommandStdErr("   'test' options: --explicit_java_test_deps=false");

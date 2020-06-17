@@ -24,7 +24,6 @@
 package com.salesforce.bazel.eclipse.command.mock;
 
 import java.io.File;
-import java.util.Map;
 
 import org.mockito.Mockito;
 
@@ -34,6 +33,7 @@ import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.model.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.test.TestOptions;
 
 /**
  * Factory for creating test environments for Bazel Command functional tests. Produces a real BazelWorkspaceCommandRunner with 
@@ -54,9 +54,9 @@ public class TestBazelCommandEnvironmentFactory {
 
     /**
      * Basic testing environment for the command layer. It creates a simple Bazel workspace on the filesystem
-     * with no Java/generic packages.
+     * with no Java/generic packages. This is only useful for very basic tests that don't need a Bazel workspace.
      */
-    public void createTestEnvironment(File tempDir) throws Exception {
+    public void createTestEnvironment(File tempDir, TestOptions testOptions) throws Exception {
         // the name of the directory that contains the bazel workspace is significant, as the Eclipse feature
         // will use it in the name of the Eclipse project
         File workspaceDir = new File(tempDir, "bazel-workspace");
@@ -64,22 +64,30 @@ public class TestBazelCommandEnvironmentFactory {
         File outputBase = new File(tempDir, "outputbase");
         outputBase.mkdirs();
         
+        if (testOptions == null) {
+            testOptions = new TestOptions();
+        }
+        
         TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputBase, "bazel_command_executor_test");
         TestBazelWorkspaceFactory testWorkspace = new TestBazelWorkspaceFactory(descriptor);
         testWorkspace.build();
-        createTestEnvironment(testWorkspace, tempDir, null);
+        createTestEnvironment(testWorkspace, tempDir, testOptions);
     }
     
     /**
      * Creates a testing environment based on a test workspace passed in from the caller. If you are testing
      * commands in the context of actual Bazel packages (e.g. Java) this is the form to use.
      */
-    public void createTestEnvironment(TestBazelWorkspaceFactory testWorkspace, File tempDir, Map<String, String> testOptions) {
+    public void createTestEnvironment(TestBazelWorkspaceFactory testWorkspace, File tempDir, TestOptions testOptions) {
         this.testWorkspace = testWorkspace;
         
         File execDir = new File(tempDir, "executable");
         execDir.mkdir();
         this.bazelExecutable = new MockBazelExecutable(execDir);
+        
+        if (testOptions == null) {
+            testOptions = new TestOptions();
+        }
         
         this.bazelAspectLocation = new MockBazelAspectLocation(tempDir, "test-aspect-label");
         this.commandConsole = new MockCommandConsole();

@@ -9,10 +9,14 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+/**
+ * Tests .bazelrc options gathering and parsing. Note that we don't parse .bazelrc directly (as that would be hard, and there
+ * can be multiple .bazelrc type files).
+ */
 public class BazelWorkspaceCommandOptionsTest {
 
     @Test
-    public void testOptionsParsing() {
+    public void testCommandOptionsParsing() {
         // the options class doesn't use BazelWorkspace for anything important, just send in a mock
         BazelWorkspace bazelWorkspace = Mockito.mock(BazelWorkspace.class);
         BazelWorkspaceCommandOptions options = new BazelWorkspaceCommandOptions(bazelWorkspace);
