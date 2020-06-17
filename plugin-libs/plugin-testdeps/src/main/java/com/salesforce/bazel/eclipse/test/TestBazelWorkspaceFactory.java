@@ -70,7 +70,7 @@ public class TestBazelWorkspaceFactory {
             anyE.printStackTrace();
             throw anyE;
         }
-        boolean explicitJavaTestDeps = "true".equals(this.workspaceDescriptor.testOptions.get("explicit_java_test_deps"));
+        boolean explicitJavaTestDeps = "true".equals(this.workspaceDescriptor.testOptions.get("EXPLICIT_JAVA_TEST_DEPS"));
         
         String previousJavaLibTarget = null;
         String previousAspectFilePath = null;

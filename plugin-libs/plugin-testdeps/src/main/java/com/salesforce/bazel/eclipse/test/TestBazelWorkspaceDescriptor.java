@@ -1,7 +1,6 @@
 package com.salesforce.bazel.eclipse.test;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -21,10 +20,10 @@ public class TestBazelWorkspaceDescriptor {
     public String workspaceFilename = "WORKSPACE"; // could also be WORKSPACE.bazel
     public String buildFilename = "BUILD"; // could also be BUILD.bazel
     
-    // instead of infinite params, a bunch of options can be passed in via this map
-    // these get interpreted by various components of the Mock layer to alter mocking behavior
-    // Mock*Command classes are good place to look
-    public Map<String, String> testOptions = new HashMap<>();
+    // Instead of infinite parameters in the constructor, a bunch of options can be passed in via this map.
+    // These get interpreted by various components of the Mock layer to alter mocking behavior.
+    // See the TestOptions class for ways to find all the available options.
+    public TestOptions testOptions = new TestOptions();
     
     // ideally this would be an extensible scheme for any type of rules to be generated
     public int numberJavaPackages = 0;
@@ -105,7 +104,7 @@ public class TestBazelWorkspaceDescriptor {
      * List of options that allow you to create test workspaces with specific Mock features enabled.
      * The features are specific to each Mock*Command.
      */
-    public TestBazelWorkspaceDescriptor testOptions(Map<String, String> options) {
+    public TestBazelWorkspaceDescriptor testOptions(TestOptions options) {
         this.testOptions = options;
         return this;
     }

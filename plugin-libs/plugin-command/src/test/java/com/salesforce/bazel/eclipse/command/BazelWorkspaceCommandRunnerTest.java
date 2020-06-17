@@ -36,46 +36,79 @@ import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.command.mock.MockWorkProgressMonitor;
 import com.salesforce.bazel.eclipse.command.mock.TestBazelCommandEnvironmentFactory;
+import com.salesforce.bazel.eclipse.command.mock.type.MockVersionCommand;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.test.TestOptions;
 
 public class BazelWorkspaceCommandRunnerTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
+    
+    // GLOBAL COMMAND RUNNER TESTS
+    // The global runner is for commands that aren't associated with a particular workspace, typically
+    // executed by an IDE prior to import of a workspace.
+    
     @Test
-    public void testGlobalRunner() throws Exception {
+    public void testGlobalRunner_bazelpath() throws Exception {
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
-        env.createTestEnvironment(tmpFolder.newFolder());
+        env.createTestEnvironment(tmpFolder.newFolder(), null);
 
         // verify that the command runner has the Bazel exec path
         assertEquals(env.bazelExecutable.getAbsolutePath(), BazelWorkspaceCommandRunner.getBazelExecutablePath());
+    }
+
+    @Test
+    public void testGlobalRunner_checkBazelVersion() throws Exception {
+        TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
+        env.createTestEnvironment(tmpFolder.newFolder(), null);
 
         // run our version check, will throw if version is not approved
+        // during tests, the Bazel command is simulated by MockVersionCommand
         BazelWorkspaceCommandRunner globalRunner = env.globalCommandRunner;
         globalRunner.runBazelVersionCheck();
     }
 
+    @Test(expected = BazelCommandLineToolConfigurationException.class)
+    public void testGlobalRunner_checkBazelVersion_fail() throws Exception {
+        TestOptions testOptions = new TestOptions();
+        // minimum supported Bazel version is currently 1.0.0, so this should cause check to fail
+        testOptions.put(MockVersionCommand.TESTOPTION_BAZELVERSION, "0.9.0"); 
+        
+        TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
+        env.createTestEnvironment(tmpFolder.newFolder(), testOptions);
+
+        // run our version check, will throw if version is not approved
+        // during tests, the Bazel command is simulated by MockVersionCommand
+        BazelWorkspaceCommandRunner globalRunner = env.globalCommandRunner;
+        globalRunner.runBazelVersionCheck();
+    }
+
+    
+    // WORKSPACE COMMAND RUNNER BASIC TESTS
+    // This set mostly tests our mocking framework to make sure everything is wired up correctly
+    // and workspace specific commands are successful.
+    
     @Test
-    public void testWorkspaceRunner() throws Exception {
+    public void testWorkspaceRunner_workspacesetup() throws Exception {
         File testDir = tmpFolder.newFolder();
         File workspaceDir = new File(testDir, "bazel-workspace");
         workspaceDir.mkdirs();
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
         
+        // setup a test workspace on disk, this will write out WORKSPACE, BUILD and aspect files
         TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(3);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
         env.createTestEnvironment(workspace, testDir, null);
-
-        // verify that the command runner has the Bazel exec path
-        assertEquals(env.bazelExecutable.getAbsolutePath(), BazelWorkspaceCommandRunner.getBazelExecutablePath());
-
+        
+        // get the command runner associated with our test workspace on disk
         BazelWorkspaceCommandRunner workspaceRunner = env.bazelWorkspaceCommandRunner;
         
-        // test getting aspects from the file system
+        // test the setup, for example we are loading the workspace aspects from the file system
         Set<String> targets = new TreeSet<>();
         targets.add("//projects/libs/javalib0:*");
         Map<String, Set<AspectPackageInfo>> aspectMap = workspaceRunner.getAspectPackageInfos("javalib0", targets, new MockWorkProgressMonitor(),

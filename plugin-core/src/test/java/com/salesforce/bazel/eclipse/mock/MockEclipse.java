@@ -78,22 +78,6 @@ public class MockEclipse {
     private List<IProject> importedProjectsList = new ArrayList<>();
     
     /**
-     * Create a MockEclipse environment with an empty Bazel workspace. The Bazel workspace
-     * has a WORKSPACE file, but that is all. For functional tests that don't do much with the Bazel
-     * workspace, this setup is sufficient.
-     * <p>
-     * Note that after this method is complete, the MockEclipse object is configured but the import step has
-     * not been run so there will be no Eclipse projects created. See EclipseFunctionalTestEnvironmentFactory
-     * for convenience methods for setting up a Bazel workspace, MockEclipse, and then import of the Bazel packages. 
-     */
-    public MockEclipse(File testTempDir) throws Exception {
-        this.bazelCommandEnvironment = new TestBazelCommandEnvironmentFactory();
-        this.bazelCommandEnvironment.createTestEnvironment(testTempDir);
-        
-        setup(this.bazelCommandEnvironment.testWorkspace, testTempDir);
-    }
-    
-    /**
      * Create a MockEclipse environment with a richer Bazel workspace. First, the caller will create a 
      * Bazel workspace on disk with the TestBazelWorkspaceFactory harness. Typically it will be created with
      * some Java packages and maybe some genrule packages. 

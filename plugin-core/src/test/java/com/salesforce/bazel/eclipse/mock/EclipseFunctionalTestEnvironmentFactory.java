@@ -27,9 +27,7 @@ package com.salesforce.bazel.eclipse.mock;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
 
@@ -41,6 +39,7 @@ import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.test.TestOptions;
 
 /**
  * Factory for creating test environments for Eclipse functional tests. Produces a Mock Eclipse workspace from templates.
@@ -66,14 +65,14 @@ public class EclipseFunctionalTestEnvironmentFactory {
         File outputbaseDir = new File(testTempDir, "outputbase");
         outputbaseDir.mkdirs();
         
-        // simulate flags from .bazelrc
-        Map<String, String> commandOptions = new HashMap<>();
+        // tell the mocking framework to write the BUILD files such that all java test deps are explicit (not the default)
+        TestOptions testOptions = new TestOptions();
         if (explicitJavaTestDeps) {
-            commandOptions.put("explicit_java_test_deps", "true");
+            testOptions.put("EXPLICIT_JAVA_TEST_DEPS", "true");
         }
         
         TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(wsDir, outputbaseDir).javaPackages(numberOfJavaPackages).
-                genrulePackages(2).testOptions(commandOptions).useAltConfigFileNames(useAltConfigFileNames);
+                genrulePackages(2).testOptions(testOptions).useAltConfigFileNames(useAltConfigFileNames);
         TestBazelWorkspaceFactory bazelWorkspaceCreator = new TestBazelWorkspaceFactory(descriptor);
         bazelWorkspaceCreator.build();
 
