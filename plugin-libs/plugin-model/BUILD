@@ -95,9 +95,10 @@ java_test(
         ":plugin-model",
 
         "//plugin-libs/plugin-deps:com_google_guava",
+        "//plugin-libs/plugin-testdeps:com_google_truth",
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
-        "//plugin-libs/plugin-testdeps:com_google_truth",
+        "//plugin-libs/plugin-testdeps:org_mockito_mockito_core",
     ],
 )
 
@@ -143,4 +144,22 @@ java_test(
         "src/main/java/com/salesforce/bazel/eclipse/model/projectview/ProjectViewPackageLocation.java",
         "src/test/java/com/salesforce/bazel/eclipse/model/projectview/ProjectViewTest.java",
     ],
+)
+
+java_test(
+    name = "BazelWorkspaceTest",
+    srcs = glob([
+        "src/test/java/com/salesforce/bazel/eclipse/model/**/*.java",
+    ]), 
+    deps = [
+        ":plugin-model",
+
+        "//plugin-libs/plugin-deps:com_google_guava",
+        "//plugin-libs/plugin-deps:org_json_json",
+        "//plugin-libs/plugin-testdeps:org_hamcrest_core",
+        "//plugin-libs/plugin-testdeps:org_junit_junit",
+        "//plugin-libs/plugin-testdeps:org_mockito_mockito_core",
+        "//plugin-libs/plugin-testdeps:com_google_truth",
+    ],
+    
 )

@@ -23,24 +23,23 @@
  */
 package com.salesforce.bazel.eclipse.command.mock;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.salesforce.bazel.eclipse.abstractions.CommandConsoleFactory;
 import com.salesforce.bazel.eclipse.command.Command;
 import com.salesforce.bazel.eclipse.command.CommandBuilder;
 import com.salesforce.bazel.eclipse.command.mock.type.MockBuildCommand;
 import com.salesforce.bazel.eclipse.command.mock.type.MockCleanCommand;
+import com.salesforce.bazel.eclipse.command.mock.type.MockCustomCommand;
 import com.salesforce.bazel.eclipse.command.mock.type.MockInfoCommand;
+import com.salesforce.bazel.eclipse.command.mock.type.MockLauncherCommand;
 import com.salesforce.bazel.eclipse.command.mock.type.MockQueryCommand;
 import com.salesforce.bazel.eclipse.command.mock.type.MockTestCommand;
 import com.salesforce.bazel.eclipse.command.mock.type.MockVersionCommand;
+import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
 
 /**
  * This is the main component of the mocking layer for the Bazel command line. This command builder
@@ -60,15 +59,15 @@ import com.salesforce.bazel.eclipse.command.mock.type.MockVersionCommand;
  * Review the build() method to see the preconfigured commands.
  */
 public class MockCommandBuilder extends CommandBuilder {
-    // file paths
-    private File bazelWorkspaceRoot;
-    private File bazelOutputBase;
-    private File bazelExecutionRoot;
-    private File bazelBin;
+    // Workspace under test
+    private TestBazelWorkspaceFactory testWorkspaceFactory;
     
-    // .bazelrc options that you want simulated
-    private Map<String, String> commandOptions;
-
+    // arbitrary option map provided by the test, can be interpreted by the Commands in a specific way
+    // see the Mock*Command classes for details on what is available 
+    // for example, you may wish for a certain package to fail to build, that is an option in MockBuildCommand
+    private Map<String, String> testOptions;
+    
+    
     /**
      * This is an ordered list of output/error lines that will be returned from the Mock commands.
      * Tests need to populate one or more (depending on how many Bazel commands are run) that will simulate
@@ -83,14 +82,10 @@ public class MockCommandBuilder extends CommandBuilder {
      * able to create the specific output.
      */
     
-    public MockCommandBuilder(CommandConsoleFactory consoleFactory, File bazelWorkspaceRoot, File bazelOutputBase, 
-            File bazelExecutionRoot, File bazelBin, Map<String, String> commandOptions) {
+    public MockCommandBuilder(CommandConsoleFactory consoleFactory, TestBazelWorkspaceFactory testWorkspaceFactory, Map<String, String> testOptions) {
         super(consoleFactory);
-        this.bazelWorkspaceRoot = bazelWorkspaceRoot;
-        this.bazelOutputBase = bazelOutputBase;
-        this.bazelExecutionRoot = bazelExecutionRoot;
-        this.bazelBin = bazelBin;
-        this.commandOptions = commandOptions;
+        this.testWorkspaceFactory = testWorkspaceFactory;
+        this.testOptions = testOptions;
     }
     
     public MockCommandBuilder mockReturnOutputLines(List<String> outputLines) {
@@ -101,46 +96,10 @@ public class MockCommandBuilder extends CommandBuilder {
         return this;
     }
     
-    // STANDARD OUTPUT LINES
-    // Use these methods as helpers to create standard output patterns
     
-    /**
-     * When the aspect build is run, the output lists the paths to all of the aspect files written
-     * to disk. To simulate the aspect command output, you need to provide the list of aspect file paths
-     * that are in the workspace. 
-     * <p>
-     * We need to use a Set of paths because the same aspect (ex. slf4j-api) will be used by multiple
-     * mock bazel packages, so we need to make sure we only list each once
-     * 
-     * @param aspectFilePaths the set of file absolute paths to every aspect generated file
-     */
-    public void addAspectJsonFileResponses(Map<String, Set<String>> aspectFileSets) {
-        // build command looks like: bazel build --override_repository=local_eclipse_aspect=/tmp/bef/bazelws/bazel-workspace/tools/aspect ...
-        MockCommandSimulatedOutputMatcher aspectCommandMatcher1 = new MockCommandSimulatedOutputMatcher(1, "build");
-        MockCommandSimulatedOutputMatcher aspectCommandMatcher2 = new MockCommandSimulatedOutputMatcher(2, ".*local_eclipse_aspect.*");
-        
-        for (String packagePath : aspectFileSets.keySet()) {
-            // the last arg is the package path with the wildcard target (//projects/libs/javalib0:*)
-            String wildcardTarget = "//"+packagePath+":.*"; // TODO this is returning the same set of aspects for each target in a package
-            MockCommandSimulatedOutputMatcher aspectCommandMatcher3 = new MockCommandSimulatedOutputMatcher(7, wildcardTarget);
-
-            List<MockCommandSimulatedOutputMatcher> matchers = new ArrayList<>();
-            Collections.addAll(matchers, aspectCommandMatcher1, aspectCommandMatcher2, aspectCommandMatcher3);
-    
-            // stdout is used to print useless diagnostics, and stderr is a line per path to an aspect json file
-            String[] outputLines = new String[] { "INFO: Analyzed 19 targets (0 packages loaded, 1 target configured).", "INFO: Found 19 targets...",
-                    "INFO: Elapsed time: 0.146s, Critical Path: 0.00s", "INFO: Build completed successfully, 1 total action" };
-            
-            List<String> aspectFilePathsList = new ArrayList<>();
-            aspectFilePathsList.addAll(aspectFileSets.get(packagePath));
-            String nameForLog = "Aspect file set for target: "+wildcardTarget;
-            MockCommandSimulatedOutput aspectOutput = new MockCommandSimulatedOutput(nameForLog, Arrays.asList(outputLines), aspectFilePathsList, matchers);
-            simulatedOutputLines.add(aspectOutput);
-        }
-    }
-    
-    // CUSTOM OUTPUT LINES
-    // If your use case invokes a command that will have specific output, use these methods
+    // OUTPUT LINES FOR CUSTOM OR LAUNCHER COMMANDS
+    // For use cases in which arbitrary non-standard commands are run, or for use cases in which a launcher
+    // script is run ("bazel run //a/b/c") you will need to provide the output.
     
     /**
      * Simplest way to simulate a single custom command. When you use this method, the command builder
@@ -174,63 +133,38 @@ public class MockCommandBuilder extends CommandBuilder {
     
     @Override
     public Command build_impl() throws IOException {
-        MockCommand mockCommand = new MockCommand();
-        
-        mockCommand.commandTokens = args;
-        String commandPretty = "";
-        for (String token : args) {
-            commandPretty = commandPretty + token + " ";
-        }
+        MockCommand mockCommand = null;
         
         // check if this is from a catalog of standard commands with stock responses
-        boolean handled = false;
         if (args.get(0).endsWith("/bazel")) {
             if ("info".equals(args.get(1))) {
                 // command is of the form 'bazel info' with an optional third param
-                mockCommand = new MockInfoCommand(args, bazelWorkspaceRoot, bazelExecutionRoot, bazelOutputBase, bazelBin);
-                handled = true;
-            } else if ("clean".equals(mockCommand.commandTokens.get(1))) {
+                mockCommand = new MockInfoCommand(args, testOptions, this.testWorkspaceFactory);
+            } else if ("clean".equals(args.get(1))) {
                 // "bazel clean"
-                mockCommand = new MockCleanCommand(args);
-                handled = true;
-            } else if ("version".equals(mockCommand.commandTokens.get(1))) {
+                mockCommand = new MockCleanCommand(args, testOptions, this.testWorkspaceFactory);
+            } else if ("version".equals(args.get(1))) {
                 // "bazel version"
-                mockCommand = new MockVersionCommand(args);
-                handled = true;
-            } else if ("build".equals(mockCommand.commandTokens.get(1))) {
+                mockCommand = new MockVersionCommand(args, testOptions, this.testWorkspaceFactory);
+            } else if ("build".equals(args.get(1))) {
                 // bazel build xyz
-                mockCommand = new MockBuildCommand(args, bazelWorkspaceRoot, bazelExecutionRoot, bazelOutputBase, bazelBin);
-                handled = true;
-            } else if ("test".equals(mockCommand.commandTokens.get(1))) {
+                mockCommand = new MockBuildCommand(args, testOptions, this.testWorkspaceFactory);
+            } else if ("test".equals(args.get(1))) {
                 // bazel test xyz
-                mockCommand = new MockTestCommand(args, commandOptions, bazelWorkspaceRoot, bazelExecutionRoot, bazelOutputBase, bazelBin);
-                handled = true;
-            } else if ("query".equals(mockCommand.commandTokens.get(1))) {
-                mockCommand = new MockQueryCommand(args);
-                handled = true;
+                mockCommand = new MockTestCommand(args, testOptions, this.testWorkspaceFactory);
+            } else if ("query".equals(args.get(1))) {
+                mockCommand = new MockQueryCommand(args, testOptions, this.testWorkspaceFactory);
             }
-        } else if (mockCommand.commandTokens.get(0).startsWith("bazel-bin")) {
-            // launcher script
+        } else if (args.get(0).startsWith("bazel-bin")) {
+            // launcher script (test must provide the desired output lines)
+            mockCommand = new MockLauncherCommand(args, testOptions, this.testWorkspaceFactory, simulatedOutputLines);
         }
         
-        // if it wasn't a standard command, get ready for it
-        if (!handled || !mockCommand.isValid()) {
-            for (MockCommandSimulatedOutput candidateOutput: this.simulatedOutputLines) {
-                if (candidateOutput.doesMatch(mockCommand.commandTokens)) {
-                    // the output is targeted to this command
-                    mockCommand.outputLines = candidateOutput.outputLines;
-                    mockCommand.errorLines = candidateOutput.errorLines;
-                    handled = true;
-                    break;
-                }
-            }
+        // if it wasn't a standard command, setup a custom command responder (test must provide the desired output lines)
+        if (mockCommand == null) {
+            mockCommand = new MockCustomCommand(args, testOptions, this.testWorkspaceFactory, simulatedOutputLines);
         }
         
-        if (!handled) {
-            throw new IllegalStateException("The MockCommandBuilder does not have enough output to provide to simulate the necessary Bazel commands. There are "+
-                    simulatedOutputLines.size()+" outputs configured. Command:\n" + commandPretty);
-        }
-
         return mockCommand;
     }
     
