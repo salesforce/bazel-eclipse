@@ -70,7 +70,7 @@ public class TestBazelWorkspaceFactory {
             anyE.printStackTrace();
             throw anyE;
         }
-        boolean explicitJavaTestDeps = "true".equals(this.workspaceDescriptor.commandOptions.get("explicit_java_test_deps"));
+        boolean explicitJavaTestDeps = "true".equals(this.workspaceDescriptor.testOptions.get("explicit_java_test_deps"));
         
         String previousJavaLibTarget = null;
         String previousAspectFilePath = null;
@@ -86,7 +86,7 @@ public class TestBazelWorkspaceFactory {
             // create the BUILD file
             File buildFile = new File(javaPackageDir, this.workspaceDescriptor.buildFilename);
             buildFile.createNewFile();
-            TestJavaRuleCreator.createJavaBuildFile(this.workspaceDescriptor.commandOptions, buildFile, packageName, i);
+            TestJavaRuleCreator.createJavaBuildFile(this.workspaceDescriptor.testOptions, buildFile, packageName, i);
             
             // main source
             List<String> sourceFiles = new ArrayList<>();

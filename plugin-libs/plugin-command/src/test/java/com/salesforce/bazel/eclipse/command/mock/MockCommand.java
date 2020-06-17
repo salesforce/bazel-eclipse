@@ -35,10 +35,6 @@ import com.salesforce.bazel.eclipse.command.Command;
 
 public class MockCommand implements Command {
 
-    public MockCommand() {
-        
-    }
-    
     public MockCommand(List<String> commandTokens) {
         this.commandTokens = commandTokens;
     }
@@ -63,11 +59,6 @@ public class MockCommand implements Command {
         this.outputLines = new ArrayList<>();
     }
 
-    public boolean isValid() {
-        return true;
-    }
-    
-    
     @Override
     public int run() throws IOException, InterruptedException {
         return 0;

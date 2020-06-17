@@ -104,7 +104,7 @@ public class MockEclipse {
      */
     public MockEclipse(TestBazelWorkspaceFactory bazelWorkspace, File testTempDir) throws Exception {
         this.bazelCommandEnvironment = new TestBazelCommandEnvironmentFactory();
-        this.bazelCommandEnvironment.createTestEnvironment(bazelWorkspace, testTempDir, bazelWorkspace.workspaceDescriptor.commandOptions);
+        this.bazelCommandEnvironment.createTestEnvironment(bazelWorkspace, testTempDir, bazelWorkspace.workspaceDescriptor.testOptions);
         
         setup(bazelWorkspace, testTempDir);
     }

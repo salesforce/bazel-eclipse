@@ -42,10 +42,6 @@ public class BazelBuilderFTest {
         IProject builderProject = bazelBuilder.getProject();
         assertEquals(javalib1_IProject.getName(), builderProject.getName());
         
-        List<String> outputLines = new ArrayList<>();
-        outputLines.add("Build succeeded."); // TODO add convenience methods in MockCommandBuilder to add simulated build output
-        List<String> errorLines = new ArrayList<>();
-        mockCommandBuilder.addSimulatedOutput("testBazelBuilder_Success", outputLines, errorLines);
         bazelBuilder.build(1, null, new EclipseWorkProgressMonitor());
     }
     

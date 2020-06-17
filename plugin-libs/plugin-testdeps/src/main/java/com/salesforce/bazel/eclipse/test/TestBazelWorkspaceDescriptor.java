@@ -22,7 +22,9 @@ public class TestBazelWorkspaceDescriptor {
     public String buildFilename = "BUILD"; // could also be BUILD.bazel
     
     // instead of infinite params, a bunch of options can be passed in via this map
-    public Map<String, String> commandOptions = new HashMap<>();
+    // these get interpreted by various components of the Mock layer to alter mocking behavior
+    // Mock*Command classes are good place to look
+    public Map<String, String> testOptions = new HashMap<>();
     
     // ideally this would be an extensible scheme for any type of rules to be generated
     public int numberJavaPackages = 0;
@@ -100,11 +102,11 @@ public class TestBazelWorkspaceDescriptor {
     }
     
     /**
-     * Simplified construct similar to BazelWorkspaceCommandOptions. It allows you to create test workspaces
-     * with specific command option features enabled. 
+     * List of options that allow you to create test workspaces with specific Mock features enabled.
+     * The features are specific to each Mock*Command.
      */
-    public TestBazelWorkspaceDescriptor options(Map<String, String> options) {
-        this.commandOptions = options;
+    public TestBazelWorkspaceDescriptor testOptions(Map<String, String> options) {
+        this.testOptions = options;
         return this;
     }
 

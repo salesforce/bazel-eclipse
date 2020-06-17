@@ -12,7 +12,10 @@ import java.util.TreeMap;
  * <p>
  * https://docs.bazel.build/versions/2.0.0/guide.html#bazelrc
  * <p>
- * To see the list of options used for your workspace, run this command:  bazel info --announce_rc
+ * To see the list of options used for your workspace, run this command:  bazel test --announce_rc
+ * It probably seems odd to use 'test' as the verb, but that provides the most visibility into the set options.
+ * <p>
+ * This gets populated at runtime by BazelWorkspaceMetadataStrategy.populateBazelWorkspaceCommandOptions() 
  */
 public class BazelWorkspaceCommandOptions {
 

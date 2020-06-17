@@ -73,7 +73,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
         }
         
         TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(wsDir, outputbaseDir).javaPackages(numberOfJavaPackages).
-                genrulePackages(2).options(commandOptions).useAltConfigFileNames(useAltConfigFileNames);
+                genrulePackages(2).testOptions(commandOptions).useAltConfigFileNames(useAltConfigFileNames);
         TestBazelWorkspaceFactory bazelWorkspaceCreator = new TestBazelWorkspaceFactory(descriptor);
         bazelWorkspaceCreator.build();
 
@@ -97,8 +97,6 @@ public class EclipseFunctionalTestEnvironmentFactory {
         // create base configuration, which includes the real bazel workspace on disk
         MockEclipse mockEclipse = createMockEnvironment_PriorToImport_JavaPackages(testTempDir, numberOfJavaPackages,
             explicitJavaTestDeps, false);
-        mockEclipse.getMockCommandBuilder().addAspectJsonFileResponses(mockEclipse.getBazelWorkspaceCreator().workspaceDescriptor.aspectFileSets);
-
 
         // scan the bazel workspace filesystem to build the list of Java projects
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();

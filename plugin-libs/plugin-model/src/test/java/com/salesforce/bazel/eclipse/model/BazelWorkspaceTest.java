@@ -71,6 +71,8 @@ public class BazelWorkspaceTest {
         File testBazelRoot = File.createTempFile("bazel-eclipse-feature-"+testName+"-workspace", "");
         File testBazelOutput = File.createTempFile("bazel-eclipse-feature-"+testName+"-outputdir", "");
         MockOperatingEnvironmentDetectionStrategy os = new MockOperatingEnvironmentDetectionStrategy(osName);
+        
+        // this mock simulates .bazelrc options
         MockBazelWorkspaceMetadataStrategy metadata = new MockBazelWorkspaceMetadataStrategy(testName, testBazelRoot, testBazelOutput, os);
         
         return new BazelWorkspace(testName, testBazelRoot, os, metadata);

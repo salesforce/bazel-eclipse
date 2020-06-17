@@ -74,7 +74,7 @@ public class TestBazelCommandEnvironmentFactory {
      * Creates a testing environment based on a test workspace passed in from the caller. If you are testing
      * commands in the context of actual Bazel packages (e.g. Java) this is the form to use.
      */
-    public void createTestEnvironment(TestBazelWorkspaceFactory testWorkspace, File tempDir, Map<String, String> commandOptions) {
+    public void createTestEnvironment(TestBazelWorkspaceFactory testWorkspace, File tempDir, Map<String, String> testOptions) {
         this.testWorkspace = testWorkspace;
         
         File execDir = new File(tempDir, "executable");
@@ -83,13 +83,7 @@ public class TestBazelCommandEnvironmentFactory {
         
         this.bazelAspectLocation = new MockBazelAspectLocation(tempDir, "test-aspect-label");
         this.commandConsole = new MockCommandConsole();
-
-        this.commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace.workspaceDescriptor.workspaceRootDirectory, 
-            testWorkspace.workspaceDescriptor.outputBaseDirectory, testWorkspace.workspaceDescriptor.dirExecRoot, 
-            testWorkspace.workspaceDescriptor.dirBazelBin, commandOptions);
-        // when the workspace factory built out the Bazel workspace file system, it wrote a collection of aspect json files
-        // we need to tell the MockCommandBuilder where they are, since it will need to return them in command results
-        this.commandBuilder.addAspectJsonFileResponses(this.testWorkspace.workspaceDescriptor.aspectFileSets);
+        this.commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace, testOptions);
 
         BazelCommandManager bazelCommandManager = new BazelCommandManager(bazelAspectLocation, commandBuilder, commandConsole, 
             bazelExecutable.bazelExecutableFile);
