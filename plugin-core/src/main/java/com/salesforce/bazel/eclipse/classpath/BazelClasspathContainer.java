@@ -520,8 +520,21 @@ public class BazelClasspathContainer implements IClasspathContainer {
             // as this make code refactoring across Eclipse projects work correctly (among other things)
             List<IProject> updatedRefList = new ArrayList<>(Arrays.asList(existingRefsArray));
             updatedRefList.add(thatProject.getProject());
-            projectDescription.setReferencedProjects(updatedRefList.toArray(new IProject[] {}));
-            resourceHelper.setProjectDescription(thisProject, projectDescription);
+            
+            // The next two lines are wrapped in an exception handler because the first time
+            // called on a new workspace, a RuntimeException is thrown which causes the BazelClasspathContainer
+            // to get into an incorrect state that it can't recover from unless eclipse is restarted.
+            // The error is thrown by at org.eclipse.jface.viewers.ColumnViewer.checkBusy(ColumnViewer.java:764)
+            // asyncExec might help here, but need a display widget to call on
+            // Ignoring the error allows the classpath container to recover and the use does not know
+            // there ever was a problem.
+            try {
+            	projectDescription.setReferencedProjects(updatedRefList.toArray(new IProject[] {}));
+            	resourceHelper.setProjectDescription(thisProject, projectDescription);
+            } catch(RuntimeException ex) {
+            	System.err.println("Caught RuntimeException updating project: " + thisProject.toString());
+            	ex.printStackTrace();
+            }
         }
         
     }
