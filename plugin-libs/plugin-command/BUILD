@@ -40,14 +40,8 @@ eclipse_plugin(
 java_library(
     name = "plugin-command-test-mocks",
     srcs = glob([
-        "src/test/java/com/salesforce/bazel/eclipse/command/mock/MockBazel.java",
-        "src/test/java/com/salesforce/bazel/eclipse/command/mock/MockBazelAspectLocation.java",
-        "src/test/java/com/salesforce/bazel/eclipse/command/mock/MockBazelExecutable.java",
-        "src/test/java/com/salesforce/bazel/eclipse/command/mock/MockCommand.java",
-        "src/test/java/com/salesforce/bazel/eclipse/command/mock/MockCommandBuilder.java",
-        "src/test/java/com/salesforce/bazel/eclipse/command/mock/MockCommandConsole.java",
-        "src/test/java/com/salesforce/bazel/eclipse/command/mock/MockWorkProgressMonitor.java",
-        "src/test/java/com/salesforce/bazel/eclipse/command/mock/TestBazelCommandEnvironmentFactory.java",
+        "src/test/java/com/salesforce/bazel/eclipse/command/mock/*.java",
+        "src/test/java/com/salesforce/bazel/eclipse/command/mock/type/*.java",
     ]),
     visibility = ["//visibility:public"],
     deps = [
