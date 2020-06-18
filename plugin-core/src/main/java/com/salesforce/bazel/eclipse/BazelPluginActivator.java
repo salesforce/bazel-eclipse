@@ -273,6 +273,13 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         return javaCoreHelper;
     }
     
+    /**
+     * Provides details of the operating environment (OS, real vs. tests, etc)
+     */
+    public OperatingEnvironmentDetectionStrategy getOperatingEnvironmentDetectionStrategy() {
+        return osEnvStrategy;
+    }
+    
     // LOGGING
     
     /**

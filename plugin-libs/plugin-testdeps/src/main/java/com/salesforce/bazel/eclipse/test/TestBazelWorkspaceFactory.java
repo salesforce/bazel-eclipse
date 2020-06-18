@@ -80,13 +80,16 @@ public class TestBazelWorkspaceFactory {
             File javaPackageDir = new File(libsDir, packageName);
             javaPackageDir.mkdir();
             
+            // create the catalog entries
+            TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(this.workspaceDescriptor, packageRelativePath, packageName, javaPackageDir);
+            
             // we will be collecting locations of Aspect json files for this package
             Set<String> packageAspectFiles = new TreeSet<>();
             
             // create the BUILD file
             File buildFile = new File(javaPackageDir, this.workspaceDescriptor.buildFilename);
             buildFile.createNewFile();
-            TestJavaRuleCreator.createJavaBuildFile(this.workspaceDescriptor.testOptions, buildFile, packageName, i);
+            TestJavaRuleCreator.createJavaBuildFile(this.workspaceDescriptor, buildFile, packageDescriptor);
             
             // main source
             List<String> sourceFiles = new ArrayList<>();
@@ -174,22 +177,24 @@ public class TestBazelWorkspaceFactory {
             createFakeProjectJars(packageRelativePath, packageName);
             
             // finish
-            this.workspaceDescriptor.createdPackages.put(packageName, javaPackageDir);
             this.workspaceDescriptor.aspectFileSets.put(packageRelativePath, packageAspectFiles);
         }
         
         for (int i=0; i<this.workspaceDescriptor.numberGenrulePackages; i++) {
             String packageName = "genrulelib"+i;
+            String packageRelativePath = libsRelativePath+"/"+packageName;
             File genruleLib = new File(libsDir, packageName);
             genruleLib.mkdir();
+            
+            // create the catalog entries
+            TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(this.workspaceDescriptor, packageRelativePath, packageName, genruleLib);
+            
             File buildFile = new File(genruleLib, this.workspaceDescriptor.buildFilename);
             buildFile.createNewFile();
-            createGenruleBuildFile(buildFile, packageName, i);
-            
+            createGenruleBuildFile(buildFile, packageDescriptor);
+
             File shellScript = new File(genruleLib, "gocrazy"+i+".sh");
             shellScript.createNewFile();
-            
-            this.workspaceDescriptor.createdPackages.put(packageName, genruleLib);
         }        
         
         return this;
@@ -224,18 +229,19 @@ public class TestBazelWorkspaceFactory {
 
     // GENRULE
     
-    public static void createGenruleBuildFile(File buildFile, String projectName, int projectIndex) throws Exception {
+    public static void createGenruleBuildFile(File buildFile, TestBazelPackageDescriptor packageDescriptor) throws Exception {
         try (PrintStream out = new PrintStream(new FileOutputStream(buildFile))) {
-            
-            String buildFileContents = createGenRule(projectName);
+            String buildFileContents = createGenRule(packageDescriptor.packageName);
+            new TestBazelTargetDescriptor(packageDescriptor, packageDescriptor.packageName, "genrule");
+
             out.print(buildFileContents);
-        } 
+        }
     }
     
-    private static String createGenRule(String projectName) {
+    private static String createGenRule(String packageName) {
         StringBuffer sb = new StringBuffer();
         sb.append("genrule(\n   name=\"");
-        sb.append(projectName);
+        sb.append(packageName);
         sb.append("\",\n");
         sb.append("   tools = \"gocrazy.sh\",\n");
         sb.append("   cmd = \"./$(location gocrazy.sh) abc\",\n");

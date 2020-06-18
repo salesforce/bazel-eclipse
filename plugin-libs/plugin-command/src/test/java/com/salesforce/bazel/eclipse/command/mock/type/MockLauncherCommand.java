@@ -19,7 +19,7 @@ public class MockLauncherCommand extends MockCommand {
      */
     public MockLauncherCommand(List<String> commandTokens, Map<String, String> testOptions, TestBazelWorkspaceFactory testWorkspaceFactory,
             List<MockCommandSimulatedOutput> simulatedOutputLinesProvidedByTest) {
-        super(commandTokens);
+        super(commandTokens, testOptions, testWorkspaceFactory);
 
         boolean handled = false;
         for (MockCommandSimulatedOutput candidateOutput: simulatedOutputLinesProvidedByTest) {
@@ -40,7 +40,5 @@ public class MockLauncherCommand extends MockCommand {
             throw new IllegalStateException("The MockLauncherCommand does not have enough output to provide to simulate the launcher commands. There are "+
                     simulatedOutputLinesProvidedByTest.size()+" outputs configured. Command as received:\n" + commandPretty);
         }
-        
-        // TODO add launcher tests
     }
 }

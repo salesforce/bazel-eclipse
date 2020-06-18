@@ -12,7 +12,7 @@ import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
 public class MockInfoCommand extends MockCommand {
 
     public MockInfoCommand(List<String> commandTokens, Map<String, String> testOptions, TestBazelWorkspaceFactory testWorkspaceFactory) {
-        super(commandTokens);
+        super(commandTokens, testOptions, testWorkspaceFactory);
         
         if (commandTokens.size() < 3) {
             // this is just the generic 'bazel info', which is a legal bazel command but it provides a many line response

@@ -185,7 +185,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                         BazelProjectPreferences.getBazelLabelForEclipseProject(eclipseProject));
                 } catch (Exception anyE) {
                     BazelPluginActivator.error("Unable to compute classpath containers entries for project "+eclipseProjectName, anyE);
-                    return new IClasspathEntry[] {};
+                    return returnEmptyClasspathOrThrow(anyE);
                 }
                 // now get the actual list of activated targets, with wildcard resolved using the BUILD file model if necessary
                 Set<String> actualActivatedTargets = configuredTargetsForProject.getActualTargets(bazelBuildFileModel);
@@ -257,10 +257,10 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 }
             } catch (IOException | InterruptedException e) {
                 BazelPluginActivator.error("Unable to compute classpath containers entries for project "+eclipseProjectName, e);
-                return new IClasspathEntry[] {};
+                return returnEmptyClasspathOrThrow(e);
             } catch (BazelCommandLineToolConfigurationException e) {
                 BazelPluginActivator.error("Bazel not found: " + e.getMessage());
-                return new IClasspathEntry[] {};
+                return returnEmptyClasspathOrThrow(e);
             }
     
             // cache the entries
@@ -485,6 +485,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 // https://github.com/salesforce/bazel-eclipse/issues/113
                 BazelPluginActivator.error("Problem adding jar to project ["+eclipseProjectName+"] because it does not exist on the filesystem: "+path);
                 printDirectoryDiagnostics(path.toFile().getParentFile().getParentFile(), " ");
+                continueOrThrow(ex);
             }
         } else {
             // it is a normal path, check for existence
@@ -493,9 +494,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 // https://github.com/salesforce/bazel-eclipse/issues/113
                 BazelPluginActivator.error("Problem adding jar to project ["+eclipseProjectName+"] because it does not exist on the filesystem: "+path);
                 printDirectoryDiagnostics(path.toFile().getParentFile().getParentFile(), " ");
-            }            
+            }
         }
-        
         return org.eclipse.core.runtime.Path.fromOSString(path.toString());
     }
 
@@ -529,14 +529,14 @@ public class BazelClasspathContainer implements IClasspathContainer {
             // Ignoring the error allows the classpath container to recover and the use does not know
             // there ever was a problem.
             try {
-            	projectDescription.setReferencedProjects(updatedRefList.toArray(new IProject[] {}));
-            	resourceHelper.setProjectDescription(thisProject, projectDescription);
+                projectDescription.setReferencedProjects(updatedRefList.toArray(new IProject[] {}));
+                resourceHelper.setProjectDescription(thisProject, projectDescription);
             } catch(RuntimeException ex) {
-            	System.err.println("Caught RuntimeException updating project: " + thisProject.toString());
-            	ex.printStackTrace();
+                System.err.println("Caught RuntimeException updating project: " + thisProject.toString());
+                ex.printStackTrace();
+                continueOrThrow(ex);
             }
         }
-        
     }
     
     private static int diagnosticsCount = 0;
@@ -559,5 +559,19 @@ public class BazelClasspathContainer implements IClasspathContainer {
             }
         } 
         
+    }
+    
+    private static void continueOrThrow(Throwable th) {
+        // under real usage, we suppress fatal exceptions because sometimes there are IDE timing issues that can
+        // be corrected if the classpath is computed again.
+        // But under tests, we want to fail fatally otherwise tests could pass when they shouldn't
+        if (BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy().isTestRuntime()) {
+            throw new IllegalStateException("The classpath could not be computed by the BazelClasspathContainer", th);
+        }
+    }
+    
+    private static IClasspathEntry[] returnEmptyClasspathOrThrow(Throwable th) {
+        continueOrThrow(th);
+        return new IClasspathEntry[] {};  
     }
 }

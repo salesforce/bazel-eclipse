@@ -12,7 +12,7 @@ import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
 public class MockCleanCommand extends MockCommand {
 
     public MockCleanCommand(List<String> commandTokens, Map<String, String> testOptions, TestBazelWorkspaceFactory testWorkspaceFactory) {
-        super(commandTokens);
+        super(commandTokens, testOptions, testWorkspaceFactory);
         
         addSimulatedOutputToCommandStdOut("INFO: Starting clean.");
     }
