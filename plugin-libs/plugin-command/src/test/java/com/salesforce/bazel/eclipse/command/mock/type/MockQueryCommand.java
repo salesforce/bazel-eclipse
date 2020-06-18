@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.salesforce.bazel.eclipse.command.mock.MockCommand;
+import com.salesforce.bazel.eclipse.test.TestBazelPackageDescriptor;
+import com.salesforce.bazel.eclipse.test.TestBazelTargetDescriptor;
 import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
 
 /**
@@ -22,26 +24,34 @@ public class MockQueryCommand extends MockCommand {
 
         // determine the type of query
         String queryArg = commandTokens.get(2);
+        
         if (queryArg.startsWith("kind(rule, //")) {
-            // the only bazel query command we currently invoke has this idiom in the third arg:
-            // kind(rule, //projects/libs/javalib0:*)
-            // strip target to be just '//projects/libs/javalib0:*'
-            String target = queryArg.substring(13, queryArg.length()-1);
+            // QUERY: 
+            //    kind(rule, //projects/libs/javalib0:*)
+            // RESPONSE: for each target in the package, a line is written to stdout such as:
+            //    java_library rule //projects/libs/javalib0:javalib0
+            //    java_test rule //projects/libs/javalib0:javalib0Test
             
-            if (!isValidBazelTarget(target)) {
-                errorLines = Arrays.asList(new String[] { "ERROR: no such package '"+target+"': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.", 
-                        "- /fake/abs/path/"+target });
+            // strip target to be just '//projects/libs/javalib0'
+            String queryPackage = queryArg.substring(13, queryArg.length()-3);
+            
+            if (!isValidBazelTarget(queryPackage)) {
+                // by default, isValidBazelTarget() will throw an exception if the package is missing, but the test may configure it to return false instead
+                errorLines = Arrays.asList(new String[] { "ERROR: no such package '"+queryPackage+"': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.", 
+                        "- /fake/abs/path/"+queryPackage });
                 return;
             }
-            // TODO create simulated query results in a more dynamic way using the test workspace structure
-            if (commandTokens.get(2).contains("javalib0")) {
-                addSimulatedOutputToCommandStdOut("java_test rule //projects/libs/javalib0:javalib0Test");
-                addSimulatedOutputToCommandStdOut("java_library rule //projects/libs/javalib0:javalib0");
-            } else if (commandTokens.get(2).contains("javalib1")) {
-                addSimulatedOutputToCommandStdOut("java_test rule //projects/libs/javalib1:javalib1Test");
-                addSimulatedOutputToCommandStdOut("java_library rule //projects/libs/javalib1:javalib1");
+            
+            TestBazelPackageDescriptor queryPackageDescriptor = testWorkspaceFactory.workspaceDescriptor.createdPackages.get(queryPackage);
+            if (queryPackageDescriptor == null) {
+                throw new IllegalStateException("The mock package descriptor is missing for package ["+queryPackage+"]. This is a bug in the mock testing framework.");
             }
             
+            // the query is for :* which means all targets, so iterate through the package's targets and write a line per target to stdout
+            for (TestBazelTargetDescriptor target : queryPackageDescriptor.targets.values()) {
+                String outputString = target.targetType+" rule //"+target.targetPath;
+                addSimulatedOutputToCommandStdOut(outputString);
+            }
         } else {
             throw new IllegalArgumentException("The plugin issued the command 'bazel query' with an unknown type of query. "+
                     "The mocking layer (MockQueryCommand) does not know how to simulate a response.");

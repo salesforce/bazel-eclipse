@@ -27,6 +27,7 @@ public class MockBuildCommand extends MockCommand {
         // check that the target (e.g. projects/libs/javalib0) is valid relative to our test workspace
         String target = findBazelTargetInArgs();
         if (!isValidBazelTarget(target)) {
+            // by default, isValidBazelTarget() will throw an exception if the package is missing, but the test may configure it to return false instead
             errorLines = Arrays.asList(new String[] { "ERROR: no such package '"+target+"': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.", 
                     "- /fake/path/"+target });
             return;

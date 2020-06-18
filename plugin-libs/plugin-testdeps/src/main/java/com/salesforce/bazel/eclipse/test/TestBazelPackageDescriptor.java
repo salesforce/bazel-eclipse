@@ -4,6 +4,9 @@ import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * Descriptor for a manufactured bazel package in a test workspace.
+ */
 public class TestBazelPackageDescriptor {
     
     public TestBazelWorkspaceDescriptor parentWorkspaceDescriptor;

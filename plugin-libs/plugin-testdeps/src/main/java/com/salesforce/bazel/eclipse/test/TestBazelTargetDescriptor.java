@@ -1,5 +1,9 @@
 package com.salesforce.bazel.eclipse.test;
 
+/**
+ * Descriptor for a manufactured target (java_library, java_test, etc) in a manufactured bazel package
+ * in a test workspace.
+ */
 public class TestBazelTargetDescriptor {
 
     public TestBazelPackageDescriptor parentPackage;
@@ -21,6 +25,7 @@ public class TestBazelTargetDescriptor {
         this.targetType = targetType;
         
         this.parentPackage.parentWorkspaceDescriptor.createdTargets.put(targetPath, this);
+        this.parentPackage.targets.put(targetPath, this);
     }
     
 }
