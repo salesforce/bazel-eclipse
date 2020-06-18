@@ -41,8 +41,22 @@ public class TestBazelWorkspaceDescriptor {
     public File dirBazelBin;            // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild/bin
     public File dirBazelTestLogs;       // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild/testlogs
 
+    
+    // WORKSPACE CATALOGS
+    
     // map of package path (projects/libs/javalib0) to the directory containing the package on the file system
-    public Map<String, File> createdPackages = new TreeMap<>();
+    public Map<String, TestBazelPackageDescriptor> createdPackages = new TreeMap<>();
+    
+    public TestBazelPackageDescriptor getCreatedPackageByName(String packageName) {
+        TestBazelPackageDescriptor desc = createdPackages.get(packageName);
+        if (desc == null) {
+            System.out.println("Test caused a package to be requested that does not exist: "+packageName);
+        }
+        return desc;
+    }
+    
+    // map of target (projects/libs/javalib0:javalib0) to the package (projects/libs/javalib0)
+    public Map<String, TestBazelTargetDescriptor> createdTargets = new TreeMap<>();
     
     // map of package path (projects/libs/javalib0) to the set of absolute paths for the aspect files for the package and deps
     public Map<String, Set<String>> aspectFileSets= new TreeMap<>();

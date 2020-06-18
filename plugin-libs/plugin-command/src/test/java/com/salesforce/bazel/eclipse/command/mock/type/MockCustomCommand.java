@@ -18,7 +18,7 @@ public class MockCustomCommand extends MockCommand {
      */
     public MockCustomCommand(List<String> commandTokens, Map<String, String> testOptions, TestBazelWorkspaceFactory testWorkspaceFactory,
             List<MockCommandSimulatedOutput> simulatedOutputLinesProvidedByTest) {
-        super(commandTokens);
+        super(commandTokens, testOptions, testWorkspaceFactory);
         
         boolean handled = false;
         for (MockCommandSimulatedOutput candidateOutput: simulatedOutputLinesProvidedByTest) {

@@ -1,5 +1,6 @@
 package com.salesforce.bazel.eclipse.command.mock.type;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +19,7 @@ public class MockTestCommand extends MockCommand {
     }
 
     public MockTestCommand(List<String> commandTokens, Map<String, String> testOptions, TestBazelWorkspaceFactory testWorkspaceFactory) {
-        super(commandTokens);
+        super(commandTokens, testOptions, testWorkspaceFactory);
         
         if (commandTokens.size() < 3) {
             // this is just 'bazel test' without a target, which is not valid, blow up here as there is something wrong in the calling code
@@ -35,6 +36,16 @@ public class MockTestCommand extends MockCommand {
             } else {
                 addSimulatedOutputToCommandStdErr("   'test' options: --explicit_java_test_deps=false");
             }
+            return;
+        } 
+
+        // proceed with an actual test invocation
+        // check that the target (e.g. projects/libs/javalib0) is valid relative to our test workspace
+        String target = findBazelTargetInArgs();
+        if (!isValidBazelTarget(target)) {
+            errorLines = Arrays.asList(new String[] { "ERROR: no such package '"+target+"': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.", 
+                    "- /fake/path/"+target });
+            return;
         }
         
         // TODO pull more bazelrc options from testOptions

@@ -18,7 +18,7 @@ public class MockVersionCommand extends MockCommand {
     }
 
     public MockVersionCommand(List<String> commandTokens, Map<String, String> testOptions, TestBazelWorkspaceFactory testWorkspaceFactory) {
-        super(commandTokens);
+        super(commandTokens, testOptions, testWorkspaceFactory);
         
         // 1.0.0 is the minimum supported Bazel version currently, tests can tell this mock to return a different value
         String bazelVersion = testOptions.getOrDefault(TESTOPTION_BAZELVERSION, "1.0.0");
