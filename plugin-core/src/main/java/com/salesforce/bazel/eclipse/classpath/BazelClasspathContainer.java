@@ -148,6 +148,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
             if (this.cachedEntries != null) {
                 long now = System.currentTimeMillis();
                 if ((now - this.cachePutTimeMillis) > CLASSPATH_CACHE_TIMEOUT_MS) {
+                    BazelPluginActivator.info("Evicted classpath from cache for project "+eclipseProjectName);
                     this.cachedEntries = null;
                 } else {
                     BazelPluginActivator.debug("  Using cached classpath for project "+eclipseProjectName);

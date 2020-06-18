@@ -114,7 +114,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 Set<IProject> downstreamProjects = getDownstreamProjectsOf(project, allImportedProjects);
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject, monitor);
                 
-                refreshClasspath(project, monitor, bazelWorkspaceCmdRunner);
+                //refreshClasspath(project, monitor, bazelWorkspaceCmdRunner);
             }
         } catch (IOException | InterruptedException e) {
             LOG.error("Failed to build {}", e, project.getName());

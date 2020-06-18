@@ -146,6 +146,7 @@ public final class ShellCommand implements Command {
             } else {
                 SimplePerfRecorder.addTime("commmand_"+args.get(0), startTimeMS);
             }
+            System.out.println("Finished command: "+command);
         }
     }
 
