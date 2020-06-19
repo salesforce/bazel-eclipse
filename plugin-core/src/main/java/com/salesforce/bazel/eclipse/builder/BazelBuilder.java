@@ -114,28 +114,39 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 Set<IProject> downstreamProjects = getDownstreamProjectsOf(project, allImportedProjects);
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject, monitor);
                 
-                //refreshClasspath(project, monitor, bazelWorkspaceCmdRunner);
+                refreshProjectClasspath(project, progressMonitor, monitor, bazelWorkspaceCmdRunner);
             }
-        } catch (IOException | InterruptedException e) {
-            LOG.error("Failed to build {}", e, project.getName());
         } catch (BazelCommandLineToolConfigurationException e) {
             LOG.error("Bazel not found: {} ", e.getMessage());
+        } catch (Exception e) {
+            LOG.error("Failed to build {}", e, project.getName());
         } finally {
             progressMonitor.done();
         }
         return null;
     }
 
-	void refreshClasspath(IProject project, IProgressMonitor monitor,
-			BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner) throws CoreException {
-		// Force update of classpath container
-		BazelClasspathContainer.clean();
-		bazelWorkspaceCmdRunner.flushAspectInfoCache();
-		// refresh the project immediately to reload classpath
-		project.refreshLocal(IResource.DEPTH_ONE, monitor);
-		// Force refresh of GUI
-		project.touch(monitor);
-	}
+    void refreshProjectClasspath(IProject project, WorkProgressMonitor progressMonitor, IProgressMonitor monitor,
+            BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner) 
+                    throws Exception{
+
+        // Force update of classpath container and the aspect cache
+        BazelClasspathContainer.clean();
+        
+        // Clean the aspect cache, and reload
+        String pname = project.getName();
+        int slashIndex = pname.indexOf("/");
+        if (slashIndex >= 0) {
+            pname = pname.substring(slashIndex+1);
+        }
+        Set<String> flushedAspectTargets = bazelWorkspaceCmdRunner.flushAspectInfoCacheForProject(pname);
+        bazelWorkspaceCmdRunner.getAspectPackageInfos(project.getName(), flushedAspectTargets, progressMonitor, "refreshProjectClasspath");
+        
+        // refresh the project immediately to reload classpath
+        project.refreshLocal(IResource.DEPTH_ONE, monitor);
+        // Force refresh of GUI
+        project.touch(monitor);
+    }
 
     @Override
     protected void clean(IProgressMonitor monitor) throws CoreException {

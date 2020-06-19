@@ -28,7 +28,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +62,7 @@ public class BazelWorkspaceAspectHelper {
 
     /**
      * Cache of the Aspect data for each target. key=String target (//a/b/c) value=Set<AspectPackageInfo> data that came from
-     * running the aspect. This cache is cleared often (currently, every build, but that is too often)
+     * running the aspect. 
      */
     @VisibleForTesting
     final Map<String, Set<AspectPackageInfo>> aspectInfoCache_current = new HashMap<>();
@@ -178,6 +180,36 @@ public class BazelWorkspaceAspectHelper {
         }
     }
 
+    /**
+     * Clear the AspectPackageInfo cache for the passed project name. This flushes the dependency graph for any
+     * target that contains the project name. This is a little sloppy, but over time we plan to revisit all of this
+     * in https://github.com/salesforce/bazel-eclipse/issues/131
+     */
+    public synchronized Set<String> flushAspectInfoCacheForProject(String projectName) {
+        Set<String> flushedTargets = new LinkedHashSet<>();
+        
+        // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
+        // if the target exists in either it will get flushed
+        Iterator<String> iter = this.aspectInfoCache_current.keySet().iterator();
+        while(iter.hasNext()) {
+            String key = iter.next();
+            if (key.contains(projectName)) {
+                flushedTargets.add(key);
+                iter.remove();
+            }
+        }
+        iter = this.aspectInfoCache_wildcards.keySet().iterator();
+        while(iter.hasNext()) {
+            String key = iter.next();
+            if (key.contains(projectName)) {
+                flushedTargets.add(key);
+                iter.remove();
+            }
+        }
+        
+        return flushedTargets;
+    }
+
     // INTERNALS
     
     private void getAspectPackageInfoForTarget(String target, String eclipseProjectName,
@@ -242,7 +274,7 @@ public class BazelWorkspaceAspectHelper {
                 ? (t.endsWith(AspectPackageInfo.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
 
         List<String> listOfGeneratedFilePaths = this.bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE,
-            this.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), progressMonitor, args, filter);
+            this.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), progressMonitor, args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
 
         return listOfGeneratedFilePaths;
     }

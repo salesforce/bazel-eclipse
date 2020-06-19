@@ -55,6 +55,7 @@ import com.salesforce.bazel.eclipse.command.CommandBuilder;
 public class BazelCommandExecutor {
     private final File bazelExecutable;
     private final CommandBuilder commandBuilder;
+    public static final long TIMEOUT_INFINITE = 0L;
 
     public BazelCommandExecutor(File bazelExecutable, CommandBuilder commandBuilder) {
         this.bazelExecutable = bazelExecutable;
@@ -66,7 +67,7 @@ public class BazelCommandExecutor {
     public synchronized List<String> runBazelAndGetOutputLines(File workingDirectory, WorkProgressMonitor progressMonitor,
             List<String> args, Function<String, String> selector) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        CommandBuilder builder = getConfiguredCommandBuilder(ConsoleType.WORKSPACE, workingDirectory, progressMonitor, args);
+        CommandBuilder builder = getConfiguredCommandBuilder(ConsoleType.WORKSPACE, workingDirectory, progressMonitor, args, TIMEOUT_INFINITE);
         Command command = builder.setStdoutLineSelector(selector).build();
         command.run();
 
@@ -78,7 +79,7 @@ public class BazelCommandExecutor {
             WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         
-        CommandBuilder builder = getConfiguredCommandBuilder(consoleType, workingDirectory, progressMonitor, args);
+        CommandBuilder builder = getConfiguredCommandBuilder(consoleType, workingDirectory, progressMonitor, args, TIMEOUT_INFINITE);
         Command command = builder.setStdoutLineSelector(selector).build();
 
         if (command.run() == 0) {
@@ -93,7 +94,7 @@ public class BazelCommandExecutor {
             List<String> args, Function<String, String> selector, OutputStreamObserver outputStreamObserver, OutputStreamObserver errorStreamObserver)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         
-        CommandBuilder builder = getConfiguredCommandBuilder(ConsoleType.WORKSPACE, directory, progressMonitor, args);
+        CommandBuilder builder = getConfiguredCommandBuilder(ConsoleType.WORKSPACE, directory, progressMonitor, args, TIMEOUT_INFINITE);
         Command command = builder.setStderrLineSelector(selector).setStandardErrorObserver(errorStreamObserver).build();
         command.run();
 
@@ -101,10 +102,10 @@ public class BazelCommandExecutor {
     }
 
     public synchronized List<String> runBazelAndGetErrorLines(ConsoleType consoleType, File directory,
-            WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector)
+            WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector, long timeoutMS)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
        
-        CommandBuilder builder = getConfiguredCommandBuilder(consoleType, directory, progressMonitor, args);
+        CommandBuilder builder = getConfiguredCommandBuilder(consoleType, directory, progressMonitor, args, timeoutMS);
         Command command = builder.setStderrLineSelector(selector).build();
         if (command.run() == 0) {
             return command.getSelectedErrorLines();
@@ -134,13 +135,14 @@ public class BazelCommandExecutor {
     // INTERNAL
     
     private CommandBuilder getConfiguredCommandBuilder(ConsoleType type, File directory,
-            WorkProgressMonitor progressMonitor, List<String> args) throws BazelCommandLineToolConfigurationException {
+            WorkProgressMonitor progressMonitor, List<String> args, long timeoutMS) throws BazelCommandLineToolConfigurationException {
         
         String consoleName = type.getConsoleName(directory);
         
         return commandBuilder
                 .setConsoleName(consoleName)
                 .setDirectory(directory)
+                .setTimeout(timeoutMS)
                 .addArguments(this.bazelExecutable.getAbsolutePath())
                 .addArguments(args)
                 .setProgressMonitor(progressMonitor);

@@ -120,7 +120,7 @@ public final class ShellCommand implements Command {
         for (String arg : args) {
             command = command + arg + " ";
         }
-        System.out.println("Executing command: "+command);
+        System.out.println("Executing command (timeout = "+timeoutMS+"): "+command);
         long startTimeMS = System.currentTimeMillis();
 
         try {
