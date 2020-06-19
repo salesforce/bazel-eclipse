@@ -215,9 +215,17 @@ public interface ResourceHelper {
     
     /**
      * Sets the project description object for the passed project.
+     * Returns true if the description is queued for later application using applyDeferredProjectDescriptionUpdates().
      */
-    void setProjectDescription(IProject project, IProjectDescription description);
-    
+    boolean setProjectDescription(IProject project, IProjectDescription description);
+
+    /**
+     * When setProjectDescription() fails, it is likely because the resource tree is locked.
+     * Call this method outside of a locked code path if setProjectDescription() returned true.
+     * It is harmless to call this method if there are no queued updates.
+     */
+    void applyDeferredProjectDescriptionUpdates();
+
     /**
      * Retrieves the scope context for the project.
      */

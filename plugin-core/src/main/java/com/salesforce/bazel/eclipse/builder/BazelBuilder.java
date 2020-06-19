@@ -129,23 +129,31 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     void refreshProjectClasspath(IProject project, WorkProgressMonitor progressMonitor, IProgressMonitor monitor,
             BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner) 
                     throws Exception{
-
+        String pname = project.getName();
+        String packageLabel = BazelProjectPreferences.getBazelLabelForEclipseProject(project);
+        System.out.println("Refreshing the classpath for project ["+pname+"] for package ["+packageLabel+"]");
+        
         // Force update of classpath container and the aspect cache
         BazelClasspathContainer.clean();
         
         // Clean the aspect cache, and reload
-        String pname = project.getName();
-        int slashIndex = pname.indexOf("/");
-        if (slashIndex >= 0) {
-            pname = pname.substring(slashIndex+1);
-        }
-        Set<String> flushedAspectTargets = bazelWorkspaceCmdRunner.flushAspectInfoCacheForProject(pname);
-        bazelWorkspaceCmdRunner.getAspectPackageInfos(project.getName(), flushedAspectTargets, progressMonitor, "refreshProjectClasspath");
+        Set<String> flushedTargets = bazelWorkspaceCmdRunner.flushAspectInfoCacheForPackage(packageLabel);
+        bazelWorkspaceCmdRunner.getAspectPackageInfos(project.getName(), flushedTargets, progressMonitor, "refreshProjectClasspath");
+        
+        // Clean the query cache and reload
+        bazelWorkspaceCmdRunner.flushQueryCache(packageLabel);
+        bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor, packageLabel);
         
         // refresh the project immediately to reload classpath
         project.refreshLocal(IResource.DEPTH_ONE, monitor);
         // Force refresh of GUI
         project.touch(monitor);
+        
+        // If a BUILD file added a reference from this project to another project in the Eclipse workspace, it is likely
+        // the project ref update failed because the resource tree was locked. Retry any queued project updates now.
+        // This operation is a no-op if no deferred updates are necessary
+        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
+        resourceHelper.applyDeferredProjectDescriptionUpdates();
     }
 
     @Override

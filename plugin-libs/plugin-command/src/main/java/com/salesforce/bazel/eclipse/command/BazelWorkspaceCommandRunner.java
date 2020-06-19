@@ -44,7 +44,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -62,8 +61,8 @@ import com.salesforce.bazel.eclipse.logging.LogHelper;
 import com.salesforce.bazel.eclipse.logging.LoggerFacade;
 import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelBuildFile;
-import com.salesforce.bazel.eclipse.model.BazelProblem;
 import com.salesforce.bazel.eclipse.model.BazelOutputParser;
+import com.salesforce.bazel.eclipse.model.BazelProblem;
 import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.eclipse.model.BazelWorkspaceMetadataStrategy;
 
@@ -158,11 +157,6 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     private List<String> buildOptions = Collections.emptyList();
     
     // CACHES
-    
-    /**
-     * Cache of queried BUILD files
-     */
-    private Map<String, BazelBuildFile> buildFileCache = new TreeMap<>();
     
     /**
      * This is to cache the last query and return the query result without actually computing it. This is required 
@@ -375,13 +369,14 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized BazelBuildFile queryBazelTargetsInBuildFile(WorkProgressMonitor progressMonitor,
             String bazelPackageName) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        BazelBuildFile buildFile = buildFileCache.get(bazelPackageName);
-        if (buildFile != null) {
-            return buildFile;
-        }
-        buildFile = this.bazelQueryHelper.queryBazelTargetsInBuildFile(bazelWorkspaceRootDirectory, progressMonitor, bazelPackageName);
-        buildFileCache.put(bazelPackageName, buildFile);
-        return buildFile;
+        return this.bazelQueryHelper.queryBazelTargetsInBuildFile(bazelWorkspaceRootDirectory, progressMonitor, bazelPackageName);
+    }
+
+    /**
+     * @param bazelPackageName the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
+     */
+    public synchronized void flushQueryCache(String bazelPackageName) {
+        this.bazelQueryHelper.flushCache(bazelPackageName);
     }
     
     /**
@@ -516,12 +511,11 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     }
 
     /**
-     * Clear the AspectPackageInfo cache for the passed project name. This flushes the dependency graph for any
-     * target that contains the project name. This is a little sloppy, but over time we plan to revisit all of this
-     * in https://github.com/salesforce/bazel-eclipse/issues/131
+     * Clear the AspectPackageInfo cache for the passed package. This flushes the dependency graph for any
+     * target that contains the package name. 
      */
-    public synchronized Set<String>  flushAspectInfoCacheForProject(String projectName) {
-        return this.aspectHelper.flushAspectInfoCacheForProject(projectName);
+    public synchronized Set<String>  flushAspectInfoCacheForPackage(String packageName) {
+        return this.aspectHelper.flushAspectInfoCacheForPackage(packageName);
     }
 
 
