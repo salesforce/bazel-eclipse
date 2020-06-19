@@ -506,14 +506,24 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     public synchronized void flushAspectInfoCache(String target) {
         this.aspectHelper.flushAspectInfoCache(target);
     }
-    
+
     /**
      * Clear the AspectPackageInfo cache for the passed targets. This flushes the dependency graph for those targets.
      */
     public synchronized void flushAspectInfoCache(Set<String> targets) {
         this.aspectHelper.flushAspectInfoCache(targets);
     }
-    
+
+    /**
+     * Clear the AspectPackageInfo cache for the passed project name. This flushes the dependency graph for any
+     * target that contains the project name. This is a little sloppy, but over time we plan to revisit all of this
+     * in https://github.com/salesforce/bazel-eclipse/issues/131
+     */
+    public synchronized Set<String>  flushAspectInfoCacheForProject(String projectName) {
+        return this.aspectHelper.flushAspectInfoCacheForProject(projectName);
+    }
+
+
     /**
      * Access to the low level aspect collaborator. Visible for tests.
      */

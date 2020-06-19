@@ -57,7 +57,7 @@ public class BazelBuilderTest {
     	IProject project = mock(IProject.class);
     	BazelWorkspaceCommandRunner runner = mock(BazelWorkspaceCommandRunner.class);
     	
-    	subject.refreshClasspath(project, null, runner);
+    	subject.refreshProjectClasspath(project, null, null, runner);
     	
     	// Verify the methods we can are called. Each one allows the classpath container
     	// to be refreshed from the current state of the build
