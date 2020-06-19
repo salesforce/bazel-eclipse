@@ -65,7 +65,7 @@ public class BazelQueryHelper {
             argBuilder.add(directoryPath+"/...");
         }
         return bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, 
-            argBuilder.build(), (t) -> t);
+            argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
     }
     
     /**
@@ -87,7 +87,7 @@ public class BazelQueryHelper {
         argBuilder.add("--output");
         argBuilder.add("label_kind");
         List<String> resultLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, 
-            argBuilder.build(), (t) -> t);
+            argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
         
         // Sample Output:  (format: rule_type 'rule' label)
         // java_binary rule //projects/libs/apple/apple-api:apple-main
@@ -139,7 +139,7 @@ public class BazelQueryHelper {
             };
 
             List<String> outputLines = this.bazelCommandExecutor.runBazelAndGetOuputLines(ConsoleType.WORKSPACE,
-                bazelWorkspaceRootDirectory, progressMonitor, args, selector);
+                bazelWorkspaceRootDirectory, progressMonitor, args, selector, BazelCommandExecutor.TIMEOUT_INFINITE);
 
             ImmutableList.Builder<String> builder = ImmutableList.builder();
             builder.addAll(outputLines);

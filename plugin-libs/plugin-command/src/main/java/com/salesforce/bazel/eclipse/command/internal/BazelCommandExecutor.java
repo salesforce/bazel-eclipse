@@ -65,9 +65,10 @@ public class BazelCommandExecutor {
     // WHEN INTERESTING OUTPUT IS ON STDOUT...
 
     public synchronized List<String> runBazelAndGetOutputLines(File workingDirectory, WorkProgressMonitor progressMonitor,
-            List<String> args, Function<String, String> selector) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            List<String> args, Function<String, String> selector, long timeoutMS) 
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        CommandBuilder builder = getConfiguredCommandBuilder(ConsoleType.WORKSPACE, workingDirectory, progressMonitor, args, TIMEOUT_INFINITE);
+        CommandBuilder builder = getConfiguredCommandBuilder(ConsoleType.WORKSPACE, workingDirectory, progressMonitor, args, timeoutMS);
         Command command = builder.setStdoutLineSelector(selector).build();
         command.run();
 
@@ -76,10 +77,10 @@ public class BazelCommandExecutor {
 
 
     public synchronized List<String> runBazelAndGetOuputLines(ConsoleType consoleType, File workingDirectory,
-            WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector)
+            WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector, long timeoutMS)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         
-        CommandBuilder builder = getConfiguredCommandBuilder(consoleType, workingDirectory, progressMonitor, args, TIMEOUT_INFINITE);
+        CommandBuilder builder = getConfiguredCommandBuilder(consoleType, workingDirectory, progressMonitor, args, timeoutMS);
         Command command = builder.setStdoutLineSelector(selector).build();
 
         if (command.run() == 0) {
@@ -91,10 +92,11 @@ public class BazelCommandExecutor {
     // WHEN INTERESTING OUTPUT IS ON STDERR...
     
     public synchronized List<String> runBazelAndGetErrorLines(File directory, WorkProgressMonitor progressMonitor,
-            List<String> args, Function<String, String> selector, OutputStreamObserver outputStreamObserver, OutputStreamObserver errorStreamObserver)
+            List<String> args, Function<String, String> selector, OutputStreamObserver outputStreamObserver, 
+            OutputStreamObserver errorStreamObserver, long timeoutMS)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         
-        CommandBuilder builder = getConfiguredCommandBuilder(ConsoleType.WORKSPACE, directory, progressMonitor, args, TIMEOUT_INFINITE);
+        CommandBuilder builder = getConfiguredCommandBuilder(ConsoleType.WORKSPACE, directory, progressMonitor, args, timeoutMS);
         Command command = builder.setStderrLineSelector(selector).setStandardErrorObserver(errorStreamObserver).build();
         command.run();
 

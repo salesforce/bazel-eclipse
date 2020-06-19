@@ -229,7 +229,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
                 argBuilder.add("info").add("execution_root");
                 
                 List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, 
-                    argBuilder.build(), (t) -> t);
+                    argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
                 outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
                 bazelExecRootDirectory = new File(String.join("", outputLines));
                 bazelExecRootDirectory = getCanonicalFileSafely(bazelExecRootDirectory);
@@ -258,7 +258,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         	ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
             argBuilder.add("query").add(query);
             
-            results = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, argBuilder.build(), (t) -> t);
+            results = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, argBuilder.build(), 
+                (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
 
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException e) {
             throw new IllegalStateException(e);
@@ -280,7 +281,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
                 argBuilder.add("info").add("output_base");
                 
                 List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, 
-                    argBuilder.build(), (t) -> t);
+                    argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
                 outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
                 bazelOutputBaseDirectory = new File(String.join("", outputLines));
                 bazelOutputBaseDirectory = getCanonicalFileSafely(bazelOutputBaseDirectory);
@@ -301,7 +302,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
                 argBuilder.add("info").add("bazel-bin");
                 
                 List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, 
-                    argBuilder.build(), (t) -> t);
+                    argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
                 outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
                 bazelBinDirectory = new File(String.join("", outputLines));
                 bazelBinDirectory = getCanonicalFileSafely(bazelBinDirectory);
@@ -322,7 +323,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             argBuilder.add("test").add("--announce_rc");
             
             List<String> outputLines = bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory, null, 
-                argBuilder.build(), (t) -> t, null, null);
+                argBuilder.build(), (t) -> t, null, null, BazelCommandExecutor.TIMEOUT_INFINITE);
             commandOptions.parseOptionsFromOutput(outputLines);
         } catch (Exception anyE) {
             throw new IllegalStateException(anyE);
@@ -430,7 +431,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
                 .addAll(extraArgs).add("--").addAll(bazelTargets).build();
 
         List<String> output = this.bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory, progressMonitor,
-            extraArgsList, new ErrorOutputSelector(), outputStreamObserver, errorStreamObserver);
+            extraArgsList, new ErrorOutputSelector(), outputStreamObserver, errorStreamObserver, BazelCommandExecutor.TIMEOUT_INFINITE);
         if (output.isEmpty()) {
             return Collections.emptyList();
         } else {
@@ -566,7 +567,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             argBuilder.add("clean");
 
             bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, 
-                argBuilder.build(), (t) -> t);
+                argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException e) {
             e.printStackTrace();
         }

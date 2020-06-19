@@ -58,7 +58,7 @@ public class BazelCommandExecutorTest {
         
         BazelCommandExecutor executor = new BazelCommandExecutor(env.bazelExecutable.bazelExecutableFile, env.commandBuilder);
         List<String> result = executor.runBazelAndGetOutputLines(env.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), 
-            new MockWorkProgressMonitor(), args, (t) -> t);
+            new MockWorkProgressMonitor(), args, (t) -> t, 0);
         
         assertEquals(2, result.size());
         assertEquals("result line 1", result.get(0));
@@ -81,7 +81,7 @@ public class BazelCommandExecutorTest {
         
         BazelCommandExecutor executor = new BazelCommandExecutor(env.bazelExecutable.bazelExecutableFile, env.commandBuilder);
         List<String> result = executor.runBazelAndGetErrorLines(env.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), 
-            new MockWorkProgressMonitor(), args, (t) -> t, null, null);
+            new MockWorkProgressMonitor(), args, (t) -> t, null, null, 0);
         
         assertEquals(2, result.size());
         assertEquals("result line 1", result.get(0));
