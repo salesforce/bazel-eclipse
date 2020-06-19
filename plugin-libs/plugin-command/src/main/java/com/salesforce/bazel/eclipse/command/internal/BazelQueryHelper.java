@@ -25,7 +25,9 @@ package com.salesforce.bazel.eclipse.command.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.google.common.collect.ImmutableList;
@@ -42,6 +44,8 @@ public class BazelQueryHelper {
      * Underlying command invoker which takes built Command objects and executes them.
      */
     private final BazelCommandExecutor bazelCommandExecutor;
+    
+    private final Map<String, BazelBuildFile> buildFileCache = new HashMap<>();
     
     public BazelQueryHelper(BazelCommandExecutor bazelCommandExecutor) {
         this.bazelCommandExecutor = bazelCommandExecutor;
@@ -70,6 +74,7 @@ public class BazelQueryHelper {
     
     /**
      * Returns the list of targets, with type data, found in a BUILD files for the given package. Uses Bazel Query to build the list.
+     * @param bazelPackageName the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
      */
     public synchronized BazelBuildFile queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory, WorkProgressMonitor progressMonitor,
             String bazelPackageName) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
@@ -77,6 +82,12 @@ public class BazelQueryHelper {
         if ("//".equals(bazelPackageName)) {
             // we don't support having buildable code at the root of the WORKSPACE
             return new BazelBuildFile("//...");
+        }
+        
+        BazelBuildFile buildFile = buildFileCache.get(bazelPackageName);
+        if (buildFile != null) {
+            System.out.println("Retrieved list of targets for package ["+bazelPackageName+"] from cache.");
+            return buildFile;
         }
         
         // bazel query 'kind(rule, [label]:*)' --output label_kind
@@ -94,7 +105,7 @@ public class BazelQueryHelper {
         // java_test rule //projects/libs/apple/apple-api:apple-api-test2
         // java_library rule //projects/libs/apple/apple-api:apple-api
 
-        BazelBuildFile buildFile = new BazelBuildFile(bazelPackageName);
+        buildFile = new BazelBuildFile(bazelPackageName);
         for (String resultLine : resultLines) {
             String[] tokens = resultLine.split(" ");
             if (tokens.length != 3) {
@@ -104,8 +115,13 @@ public class BazelQueryHelper {
             String targetLabel = tokens[2];
             buildFile.addTarget(ruleType, targetLabel);
         }
+        buildFileCache.put(bazelPackageName, buildFile);
         
         return buildFile;
+    }
+    
+    public void flushCache(String bazelPackageName) {
+        buildFileCache.remove(bazelPackageName);
     }
     
 

@@ -527,12 +527,14 @@ public class BazelClasspathContainer implements IClasspathContainer {
             // to get into an incorrect state that it can't recover from unless eclipse is restarted.
             // The error is thrown by at org.eclipse.jface.viewers.ColumnViewer.checkBusy(ColumnViewer.java:764)
             // asyncExec might help here, but need a display widget to call on
-            // Ignoring the error allows the classpath container to recover and the use does not know
+            // Ignoring the error allows the classpath container to recover and the user does not know
             // there ever was a problem.
             try {
                 projectDescription.setReferencedProjects(updatedRefList.toArray(new IProject[] {}));
                 resourceHelper.setProjectDescription(thisProject, projectDescription);
             } catch(RuntimeException ex) {
+                // potential cause: org.eclipse.core.internal.resources.ResourceException: The resource tree is locked for modifications.
+                // if that is happening in your code path, see ResourceHelper.applyDeferredProjectDescriptionUpdates()
                 System.err.println("Caught RuntimeException updating project: " + thisProject.toString());
                 ex.printStackTrace();
                 continueOrThrow(ex);

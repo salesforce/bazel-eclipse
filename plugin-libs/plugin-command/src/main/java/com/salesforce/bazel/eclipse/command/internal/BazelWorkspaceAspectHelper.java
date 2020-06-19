@@ -181,11 +181,10 @@ public class BazelWorkspaceAspectHelper {
     }
 
     /**
-     * Clear the AspectPackageInfo cache for the passed project name. This flushes the dependency graph for any
-     * target that contains the project name. This is a little sloppy, but over time we plan to revisit all of this
-     * in https://github.com/salesforce/bazel-eclipse/issues/131
+     * Clear the AspectPackageInfo cache for the passed package. This flushes the dependency graph for any
+     * target that contains the package name. 
      */
-    public synchronized Set<String> flushAspectInfoCacheForProject(String projectName) {
+    public synchronized Set<String> flushAspectInfoCacheForPackage(String packageName) {
         Set<String> flushedTargets = new LinkedHashSet<>();
         
         // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
@@ -193,7 +192,7 @@ public class BazelWorkspaceAspectHelper {
         Iterator<String> iter = this.aspectInfoCache_current.keySet().iterator();
         while(iter.hasNext()) {
             String key = iter.next();
-            if (key.contains(projectName)) {
+            if (key.contains(packageName)) {
                 flushedTargets.add(key);
                 iter.remove();
             }
@@ -201,7 +200,7 @@ public class BazelWorkspaceAspectHelper {
         iter = this.aspectInfoCache_wildcards.keySet().iterator();
         while(iter.hasNext()) {
             String key = iter.next();
-            if (key.contains(projectName)) {
+            if (key.contains(packageName)) {
                 flushedTargets.add(key);
                 iter.remove();
             }

@@ -115,20 +115,34 @@ public class BazelOutputParser {
     }
 
     private BazelProblem buildErrorDetails(String errorSourcePathLine, String moreDetailsLine) {
-        int i = errorSourcePathLine.lastIndexOf(JAVA_FILE_PATH_SUFFX);
-        String sourcePath = errorSourcePathLine.substring(0, i + JAVA_FILE_PATH_SUFFX.length());
-        i = errorSourcePathLine.indexOf(":", sourcePath.length());
-        int j = errorSourcePathLine.indexOf(":", i + 1);
-        int lineNumber = Integer.parseInt(errorSourcePathLine.substring(i + 1, j));
-        String description = errorSourcePathLine.substring(j + 1).trim();
-        for (String errorPrefix : new String[] { "error", "error:", "ERROR", "ERROR:" }) {
-            if (description.startsWith(errorPrefix) && description.length() > errorPrefix.length() + 1) {
-                description = capitalize(description.substring(errorPrefix.length() + 1).trim());
-                break;
+        String sourcePath = "";
+        int lineNumber = 1;
+        String description = moreDetailsLine;
+        try {
+            int i = errorSourcePathLine.lastIndexOf(JAVA_FILE_PATH_SUFFX);
+            sourcePath = errorSourcePathLine.substring(0, i + JAVA_FILE_PATH_SUFFX.length());
+            i = errorSourcePathLine.indexOf(":", sourcePath.length());
+            int j = errorSourcePathLine.indexOf(":", i + 1);
+            if (j == -1) {
+                j = errorSourcePathLine.length()-1;
             }
-        }
-        if (moreDetailsLine != null) {
-            description += ": " + moreDetailsLine;
+            lineNumber = Integer.parseInt(errorSourcePathLine.substring(i + 1, j));
+            description = errorSourcePathLine.substring(j + 1).trim();
+            for (String errorPrefix : new String[] { "error", "error:", "ERROR", "ERROR:" }) {
+                if (description.startsWith(errorPrefix) && description.length() > errorPrefix.length() + 1) {
+                    description = capitalize(description.substring(errorPrefix.length() + 1).trim());
+                    break;
+                }
+            }
+            if (moreDetailsLine != null) {
+                description += ": " + moreDetailsLine;
+            }
+        } catch (Exception anyE) {
+            // BUILD file update error TODO
+            // errorSourcePathLine: ERROR: /Users/plaird/dev/sfdc-bazel/projects/libs/scone/scone-starter-jetty/scone-starter-jetty-impl/BUILD:81:1: Target '//projects/libs/scone/scone-starter-jetty/scone-starter-jetty-impl:src/main/java/com/salesforce/sconems/jetty/HttpTraceDisabler.java' contains an error and its package is in error and referenced by '//projects/libs/scone/scone-starter-jetty/scone-starter-jetty-impl:scone-starter-jetty-impl' 
+            // moreDetailsLine: null
+            System.err.println("Failed to parse line: "+errorSourcePathLine+" with details: "+moreDetailsLine);
+            description = "BUILD file error";
         }
         return new BazelProblem(sourcePath, lineNumber, description);
     }
