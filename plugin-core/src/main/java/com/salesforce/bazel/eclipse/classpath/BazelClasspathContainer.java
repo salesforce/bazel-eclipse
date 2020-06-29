@@ -191,6 +191,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 // now get the actual list of activated targets, with wildcard resolved using the BUILD file model if necessary
                 Set<String> actualActivatedTargets = configuredTargetsForProject.getActualTargets(bazelBuildFileModel);
                 
+                List<IProject> updatedProjectReferences = new ArrayList<>(); 
                 for (String targetLabel : actualActivatedTargets) {
                     String targetType = bazelBuildFileModel.getRuleTypeForTarget(targetLabel);
                     boolean isTestTarget = "java_test".equals(targetType);
@@ -251,11 +252,18 @@ public class BazelClasspathContainer implements IClasspathContainer {
                                 
                                 // now make a project reference between this project and the other project; this allows for features like
                                 // code refactoring across projects to work correctly
-                                addProjectReference(eclipseIProject, otherProject.getProject());
+                                //addProjectReference(eclipseIProject, otherProject.getProject());
+                                updatedProjectReferences.add(otherProject.getProject());
+                                //System.out.println("Project ["+eclipseProjectName+"] now refers to project ["+otherProject.getProject().getName()+"]");
                             }
                         }
                     }
-                }
+                } // for loop
+                
+                // now update project refs, which includes adding new ones and removing any that may now be obsolete 
+                // (e.g. dep was removed, project removed from Eclipse workspace)
+                setProjectReferences(eclipseIProject, updatedProjectReferences);
+                
             } catch (IOException | InterruptedException e) {
                 BazelPluginActivator.error("Unable to compute classpath containers entries for project "+eclipseProjectName, e);
                 return returnEmptyClasspathOrThrow(e);
@@ -503,8 +511,11 @@ public class BazelClasspathContainer implements IClasspathContainer {
     /**
      * Creates a project reference between this project and that project.
      * The direction of reference goes from this->that
-     * References are used by Eclipse code refactoring among other things. 
+     * References are used by Eclipse code refactoring among other things.
+     * This is now unused, prefer the setProjectReferences because it can handle removal of
+     * references not just adds. 
      */
+    @SuppressWarnings("unused")
     private void addProjectReference(IProject thisProject, IProject thatProject) {
         IProjectDescription projectDescription = this.resourceHelper.getProjectDescription(thisProject);
         IProject[] existingRefsArray = projectDescription.getReferencedProjects();
@@ -541,6 +552,34 @@ public class BazelClasspathContainer implements IClasspathContainer {
             }
         }
     }
+
+    /**
+     * Creates a project reference between this project and a set of other projects.
+     * References are used by Eclipse code refactoring among other things. 
+     * The direction of reference goes from this->updatedRefList
+     * If this project no longer uses another project, removing it from the list will eliminate the project reference.
+     */
+    private void setProjectReferences(IProject thisProject, List<IProject> updatedRefList) {
+        IProjectDescription projectDescription = this.resourceHelper.getProjectDescription(thisProject);
+        // The next two lines are wrapped in an exception handler because the first time
+        // called on a new workspace, a RuntimeException is thrown which causes the BazelClasspathContainer
+        // to get into an incorrect state that it can't recover from unless eclipse is restarted.
+        // The error is thrown by at org.eclipse.jface.viewers.ColumnViewer.checkBusy(ColumnViewer.java:764)
+        // asyncExec might help here, but need a display widget to call on
+        // Ignoring the error allows the classpath container to recover and the user does not know
+        // there ever was a problem.
+        try {
+            projectDescription.setReferencedProjects(updatedRefList.toArray(new IProject[] {}));
+            resourceHelper.setProjectDescription(thisProject, projectDescription);
+        } catch(RuntimeException ex) {
+            // potential cause: org.eclipse.core.internal.resources.ResourceException: The resource tree is locked for modifications.
+            // if that is happening in your code path, see ResourceHelper.applyDeferredProjectDescriptionUpdates()
+            System.err.println("Caught RuntimeException updating project: " + thisProject.toString());
+            ex.printStackTrace();
+            continueOrThrow(ex);
+        }
+    }
+
     
     private static int diagnosticsCount = 0;
     private static void printDirectoryDiagnostics(File path, String indent) {

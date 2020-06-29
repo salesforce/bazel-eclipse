@@ -146,14 +146,16 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         
         // refresh the project immediately to reload classpath
         project.refreshLocal(IResource.DEPTH_ONE, monitor);
-        // Force refresh of GUI
-        project.touch(monitor);
         
         // If a BUILD file added a reference from this project to another project in the Eclipse workspace, it is likely
         // the project ref update failed because the resource tree was locked. Retry any queued project updates now.
         // This operation is a no-op if no deferred updates are necessary
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         resourceHelper.applyDeferredProjectDescriptionUpdates();
+
+        // Force refresh of GUI
+        project.touch(monitor);
+        //System.out.println("Done refreshing the classpath for project ["+pname+"] for package ["+packageLabel+"]");
     }
 
     @Override
