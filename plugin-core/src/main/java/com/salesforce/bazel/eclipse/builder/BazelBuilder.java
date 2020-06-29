@@ -156,7 +156,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         // Force refresh of GUI
         project.touch(monitor);
         //System.out.println("Done refreshing the classpath for project ["+pname+"] for package ["+packageLabel+"]");
-}
+    }
 
     @Override
     protected void clean(IProgressMonitor monitor) throws CoreException {
