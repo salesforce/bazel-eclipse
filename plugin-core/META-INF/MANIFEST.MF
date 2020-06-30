@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Bazel Eclipse Core Plugin
 Automatic-Module-Name: com.salesforce.bazel.eclipse.core
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.core;singleton:=true
-Bundle-Version: 1.2.0.qualifier
+Bundle-Version: 1.2.5.qualifier
 Bundle-Activator: com.salesforce.bazel.eclipse.BazelPluginActivator
 Bundle-Vendor: Salesforce
 Require-Bundle: org.eclipse.ui.console;bundle-version="3.8.100.v20180821-1744",
@@ -24,19 +24,19 @@ Require-Bundle: org.eclipse.ui.console;bundle-version="3.8.100.v20180821-1744",
  org.eclipse.jface.text;bundle-version="3.14.0",
  org.eclipse.jdt.junit;bundle-version="3.11.100",
  org.eclipse.core.expressions;bundle-version="3.6.200.v20180817-1401",
- com.salesforce.bazel.eclipse.abstractions;bundle-version="1.2.0.qualifier",
- com.salesforce.bazel.eclipse.command;bundle-version="1.2.0.qualifier",
- com.salesforce.bazel.eclipse.model;bundle-version="1.2.0.qualifier"
+ com.salesforce.bazel.eclipse.abstractions;bundle-version="1.2.5.qualifier",
+ com.salesforce.bazel.eclipse.command;bundle-version="1.2.5.qualifier",
+ com.salesforce.bazel.eclipse.model;bundle-version="1.2.5.qualifier"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: bin/,
  .
-Import-Package: com.salesforce.bazel.eclipse.abstractions;version="1.2.0.qualifier",
- com.salesforce.bazel.eclipse.command;version="1.2.0.qualifier",
- com.salesforce.bazel.eclipse.logging;version="1.2.0.qualifier",
- com.salesforce.bazel.eclipse.model;version="1.2.0.qualifier",
+Import-Package: com.salesforce.bazel.eclipse.abstractions;version="1.2.5.qualifier",
+ com.salesforce.bazel.eclipse.command;version="1.2.5.qualifier",
+ com.salesforce.bazel.eclipse.logging;version="1.2.5.qualifier",
+ com.salesforce.bazel.eclipse.model;version="1.2.5.qualifier",
  com.google.common.base;version="28.2",
  com.google.common.collect;version="28.2",
  com.google.common.graph;version="28.2"
-Export-Package: com.salesforce.bazel.eclipse;version="1.2.0.qualifier",
- com.salesforce.bazel.eclipse.launch;version="1.2.0.qualifier"
+Export-Package: com.salesforce.bazel.eclipse;version="1.2.5.qualifier",
+ com.salesforce.bazel.eclipse.launch;version="1.2.5.qualifier"
