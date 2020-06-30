@@ -91,7 +91,13 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         WorkProgressMonitor progressMonitor = new EclipseWorkProgressMonitor(monitor);
         IProject project = getProject();
         progressMonitor.beginTask("Bazel build", 1);
-
+        
+        // TODO there is something seriously wrong with Eclipse's resource change mechanism
+        // To be fixed in https://github.com/salesforce/bazel-eclipse/issues/145
+        // We are getting FULL_BUILD commands even if files have not changed.
+        // See also the commented out line below for refreshProjectClasspath
+        //System.out.println(">> Eclipse signaled that project ["+project.getName()+"] is dirty with kind ["+kind+"]");
+        
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         JavaCoreHelper javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
@@ -114,7 +120,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 Set<IProject> downstreamProjects = getDownstreamProjectsOf(project, allImportedProjects);
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject, monitor);
                 
-                refreshProjectClasspath(project, progressMonitor, monitor, bazelWorkspaceCmdRunner);
+                // TODO this is too slow, we need to fix this in https://github.com/salesforce/bazel-eclipse/issues/145
+                //refreshProjectClasspath(project, progressMonitor, monitor, bazelWorkspaceCmdRunner);
             }
         } catch (BazelCommandLineToolConfigurationException e) {
             LOG.error("Bazel not found: {} ", e.getMessage());
