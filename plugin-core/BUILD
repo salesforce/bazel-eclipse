@@ -17,7 +17,6 @@ eclipse_plugin(
     # include this p2.inf entry only if you want to manually control the contents of this file, otherwise it is auto generated
     classpath_resources = ['plugin.xml'],
     deps = [
-        "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
 
         "//plugin-libs/plugin-deps:com_google_guava",
@@ -37,7 +36,7 @@ mock_src = glob(["src/test/java/com/salesforce/bazel/eclipse/mock/*.java"])
 mock_deps = [
         "//plugin-libs/plugin-testdeps",
         "//plugin-libs/plugin-testdeps:org_mockito_mockito_core",
-        "//plugin-libs/plugin-command:plugin-command-test-mocks",
+        "//plugin-libs/plugin-model:plugin-model-test-mocks",
 
         "//plugin-libs/plugin-deps:com_google_guava",
 
@@ -68,7 +67,7 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/launch/BazelRuntimeClasspathProviderTest.java"],
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-command",
+        "//plugin-libs/plugin-model",
 
         "//tools/eclipse_jars:org_eclipse_equinox_common",
         "//tools/eclipse_jars:org_eclipse_jdt_launching",
@@ -95,7 +94,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/importer/BazelProjectImportScannerTest.java"],
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
 
         "//plugin-libs/plugin-testdeps",
@@ -113,7 +111,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/command/BazelCommandRunnerFTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
     ] + mock_deps,
     runtime_deps = mock_runtime_deps,
@@ -124,7 +121,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/config/BazelEclipseProjectFactoryFTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
     ] + mock_deps,
     runtime_deps = mock_runtime_deps,
@@ -135,7 +131,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/classpath/BazelClasspathContainerFTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
     ] + mock_deps,
     runtime_deps = mock_runtime_deps,
@@ -146,7 +141,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/builder/BazelBuilderFTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
     ] + mock_deps,
     runtime_deps = mock_runtime_deps,
@@ -157,7 +151,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/mock/test/MockTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
     ] + mock_deps,
     runtime_deps = mock_runtime_deps,
