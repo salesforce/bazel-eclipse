@@ -90,9 +90,14 @@ public class BazelClasspathContainer implements IClasspathContainer {
         BazelProject bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
         bazelProjectManager.addProject(bazelProject);
         
-        impl = new BazelClasspathContainerImpl(BazelPluginActivator.getBazelWorkspace(), bazelProject, 
-        		resourceHelper.isBazelRootProject(eclipseProject), resourceHelper,
-        		new EclipseImplicitClasspathHelper());
+        impl = new BazelClasspathContainerImpl(BazelPluginActivator.getBazelWorkspace(), 
+        		bazelProject, 
+        		resourceHelper.isBazelRootProject(eclipseProject), 
+        		resourceHelper,
+        		new EclipseImplicitClasspathHelper(), 
+        		BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy(), 
+        		BazelPluginActivator.getBazelCommandManager(),
+        		BazelPluginActivator.getJavaCoreHelper());
         instances.add(impl);
     }
     
