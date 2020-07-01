@@ -70,13 +70,13 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.builder.BazelBuilder;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer;
-import com.salesforce.bazel.eclipse.classpath.JavaLanguageLevelHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.ide.projectview.ProjectView;
 import com.salesforce.bazel.sdk.ide.projectview.ProjectViewConstants;
+import com.salesforce.bazel.sdk.lang.jvm.JavaLanguageLevelHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.AspectPackageInfo;
 import com.salesforce.bazel.sdk.model.AspectPackageInfos;
@@ -85,6 +85,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.model.SimplePerfRecorder;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * A factory class to create Eclipse projects from packages in a Bazel workspace.
@@ -116,7 +117,7 @@ public class BazelEclipseProjectFactory {
             WorkProgressMonitor progressMonitor, IProgressMonitor monitor) {
         SimplePerfRecorder.reset();
 
-        File bazelWorkspaceRootDirectory = BazelProjectHelper.getCanonicalFileSafely(bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory());
+        File bazelWorkspaceRootDirectory = BazelPathHelper.getCanonicalFileSafely(bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory());
 
         SubMonitor subMonitor = SubMonitor.convert(monitor, selectedBazelPackages.size());
         subMonitor.setTaskName("Getting the Aspect Information for targets");
@@ -364,12 +365,12 @@ public class BazelEclipseProjectFactory {
                 resourceHelper.createFileLink(projectFile, Path.fromOSString(f.getCanonicalPath()), IResource.NONE, null);
             } catch (Exception anyE) {
                 // TODO throwing this exception just writes a log message, we need a modal error popup for this error
-                BazelPluginActivator.error("Failure to link file ["+BazelProjectHelper.getCanonicalPathStringSafely(f)+"] for project ["+
+                BazelPluginActivator.error("Failure to link file ["+BazelPathHelper.getCanonicalPathStringSafely(f)+"] for project ["+
                         eclipseProject.getName()+"]");
                 throw new IllegalStateException(anyE);
             }
         } else {
-            BazelPluginActivator.error("Tried to link a non-existant file ["+BazelProjectHelper.getCanonicalPathStringSafely(f)+"] for project ["+
+            BazelPluginActivator.error("Tried to link a non-existant file ["+BazelPathHelper.getCanonicalPathStringSafely(f)+"] for project ["+
                     eclipseProject.getName()+"]");
             retval = false;
         }
@@ -545,7 +546,7 @@ public class BazelEclipseProjectFactory {
         boolean foundSourceCodePaths = false;
 
         // add this node buildable target
-        String bazelPackageRootDirectory = BazelProjectHelper.getCanonicalPathStringSafely(packageNode.getWorkspaceRootDirectory());
+        String bazelPackageRootDirectory = BazelPathHelper.getCanonicalPathStringSafely(packageNode.getWorkspaceRootDirectory());
         File packageDirectory = new File(packageNode.getWorkspaceRootDirectory(), packageNode.getBazelPackageFSRelativePath());
 
         // TODO here is where we assume that the Java project is conforming  NON_CONFORMING PROJECT SUPPORT

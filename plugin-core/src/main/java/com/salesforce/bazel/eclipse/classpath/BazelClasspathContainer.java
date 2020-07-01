@@ -64,7 +64,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -79,6 +78,7 @@ import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.SimplePerfRecorder;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Computes the classpath for a Bazel package and provides it to the JDT tooling in Eclipse.
@@ -100,7 +100,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
     
     private static List<BazelClasspathContainer> instances = new ArrayList<>();
     
-    private ImplicitDependencyHelper implicitDependencyHelper = new ImplicitDependencyHelper();
+    private EclipseImplicitClasspathHelper implicitDependencyHelper = new EclipseImplicitClasspathHelper();
     
     public BazelClasspathContainer(IProject eclipseProject)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
@@ -387,7 +387,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
         IProject[] projects = rootResource.getProjects();
 
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        String canonicalSourcePathString = BazelProjectHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory()) + File.separator + sourcePath;
+        String canonicalSourcePathString = BazelPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory()) + File.separator + sourcePath;
         Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
         for (IProject project : projects) {
@@ -407,7 +407,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
                 }
                 IPath projectLocation = res.getLocation();
                 if (projectLocation != null && !projectLocation.isEmpty()) {
-                    String canonicalProjectRoot = BazelProjectHelper.getCanonicalPathStringSafely(projectLocation.toOSString());
+                    String canonicalProjectRoot = BazelPathHelper.getCanonicalPathStringSafely(projectLocation.toOSString());
                     if (canonicalSourcePathString.startsWith(canonicalProjectRoot)) {
                         IPath[] inclusionPatterns = entry.getInclusionPatterns();
                         IPath[] exclusionPatterns = entry.getExclusionPatterns();
@@ -591,7 +591,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
         diagnosticsCount++;
         
         File[] children = path.listFiles();
-        System.out.println(indent+BazelProjectHelper.getCanonicalPathStringSafely(path));
+        System.out.println(indent+BazelPathHelper.getCanonicalPathStringSafely(path));
         if (children != null) {
             for (File child : children) {
                 System.out.println(indent+child.getName());

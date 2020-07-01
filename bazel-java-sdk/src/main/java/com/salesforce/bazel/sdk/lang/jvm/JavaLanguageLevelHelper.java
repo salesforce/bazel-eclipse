@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.classpath;
+package com.salesforce.bazel.sdk.lang.jvm;
 
 /**
  * Utility methods for the Java language levels

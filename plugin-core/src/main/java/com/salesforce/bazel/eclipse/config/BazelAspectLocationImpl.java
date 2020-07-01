@@ -46,6 +46,7 @@ import org.osgi.framework.Bundle;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.abstractions.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Implementation of {@link BazelAspectLocation} using Eclipse OSGi Bundle locations.
@@ -69,7 +70,7 @@ public class BazelAspectLocationImpl implements BazelAspectLocation {
                 throw new IllegalStateException("Could not load location [" + url + "]");
             }
 
-            return BazelProjectHelper.getCanonicalFileSafely(new File(resolved.getPath()));
+            return BazelPathHelper.getCanonicalFileSafely(new File(resolved.getPath()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

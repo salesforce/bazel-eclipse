@@ -1,20 +1,15 @@
-package com.salesforce.bazel.eclipse.classpath;
+package com.salesforce.bazel.sdk.lang.jvm;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.IClasspathEntry;
-
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.AspectPackageInfo;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Bazel generally requires BUILD file authors to list all dependencies explicitly.
@@ -22,7 +17,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
  * For example, java_test implicitly brings in junit, hamcrest, javax.annotation libraries.
  * <p>
  * This is unfortunate because external tools that need to construct the dependency
- * graph (ahem, that's us, for JDT) we need to know to append the implicit dependencies
+ * graph (ahem, that's us) we need to know to append the implicit dependencies
  * to the explicit ones identified by the Aspect.
  * <p>
  * This is a helper class for computing implicit dependencies.
@@ -32,25 +27,17 @@ import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
  * This code is isolated from the classpath container code because this is somewhat of a
  * hack and it is nice to have it isolated. 
  */
-public class ImplicitDependencyHelper {
+public class ImplicitClasspathHelper {
 
-    Set<IClasspathEntry> computeImplicitDependencies(IProject eclipseIProject, BazelWorkspace bazelWorkspace, 
-            AspectPackageInfo packageInfo) throws IOException {
-        Set<IClasspathEntry> deps = null;
-        
+    public Set<JvmClasspathEntry> computeImplicitDependencies(BazelWorkspace bazelWorkspace,
+            AspectPackageInfo packageInfo) {
+        Set<JvmClasspathEntry> deps = new HashSet<>();
+
         String ruleKind = packageInfo.getKind();        
-        if ("java_test".equals(ruleKind)) {
-            deps = computeImplicitJavaTestDependencies(eclipseIProject, bazelWorkspace, packageInfo);
-        } else {
+        if (!"java_test".equals(ruleKind)) {
             deps = new TreeSet<>();
         }
-        return deps;
-    }
-    
-    private Set<IClasspathEntry> computeImplicitJavaTestDependencies(IProject eclipseIProject, BazelWorkspace bazelWorkspace,
-            AspectPackageInfo packageInfo) {
-        Set<IClasspathEntry> deps = new HashSet<>();
-        
+
         // java_test targets do not have implicit deps if .bazelrc has --explicit_java_test_deps=true
         BazelWorkspaceCommandOptions commandOptions = bazelWorkspace.getBazelWorkspaceCommandOptions();
         String explicitDepsOption = commandOptions.getOption("explicit_java_test_deps");
@@ -68,12 +55,8 @@ public class ImplicitDependencyHelper {
         String filePathForRunnerJar = computeFilePathForRunnerJar(bazelWorkspace, packageInfo);
         if (filePathForRunnerJar != null) {
             // now manufacture the classpath entry
-            IPath runnerJarPath = org.eclipse.core.runtime.Path.fromOSString(filePathForRunnerJar);
-            IPath sourceAttachmentPath = null;
-            IPath sourceAttachmentRootPath = null;
             boolean isTestLib = true;
-            IClasspathEntry runnerJarEntry = BazelPluginActivator.getJavaCoreHelper().newLibraryEntry(runnerJarPath, sourceAttachmentPath, 
-                sourceAttachmentRootPath, isTestLib);
+            JvmClasspathEntry runnerJarEntry = new JvmClasspathEntry(filePathForRunnerJar, isTestLib);
             deps.add(runnerJarEntry);
         }        
         return deps;
@@ -87,23 +70,25 @@ public class ImplicitDependencyHelper {
 
         File bazelBinDir = bazelWorkspace.getBazelBinDirectory();
         File testRunnerDir = new File(bazelBinDir, "external/bazel_tools/tools/jdk/_ijar/TestRunner");
+        
+        LogHelper logger = LogHelper.log(this.getClass());
         if (!testRunnerDir.exists()) {
-            BazelPluginActivator.error("Could not add implicit test deps to target ["+packageInfo.getLabel()+
-                "], directory ["+BazelProjectHelper.getCanonicalPathStringSafely(testRunnerDir)+"] does not exist.");
+        	logger.error("Could not add implicit test deps to target ["+packageInfo.getLabel()+
+                "], directory ["+BazelPathHelper.getCanonicalPathStringSafely(testRunnerDir)+"] does not exist.");
             return null;
         }
         File javaToolsDir = new File(testRunnerDir, "external/remote_java_tools_"+bazelWorkspace.getOperatingSystemFoldername()+"/java_tools");
         if (!javaToolsDir.exists()) {
-            BazelPluginActivator.error("Could not add implicit test deps to target ["+packageInfo.getLabel()+
-                "], directory ["+BazelProjectHelper.getCanonicalPathStringSafely(javaToolsDir)+"] does not exist.");
+        	logger.error("Could not add implicit test deps to target ["+packageInfo.getLabel()+
+                "], directory ["+BazelPathHelper.getCanonicalPathStringSafely(javaToolsDir)+"] does not exist.");
             return null;
         }
         File runnerJar = new File(javaToolsDir, "Runner_deploy-ijar.jar");
         if (!runnerJar.exists()) {
-            BazelPluginActivator.error("Could not add implicit test deps to target ["+packageInfo.getLabel()+
-                "], test runner jar ["+BazelProjectHelper.getCanonicalPathStringSafely(runnerJar)+"] does not exist.");
+        	logger.error("Could not add implicit test deps to target ["+packageInfo.getLabel()+
+                "], test runner jar ["+BazelPathHelper.getCanonicalPathStringSafely(runnerJar)+"] does not exist.");
             return null;
         }
-        return BazelProjectHelper.getCanonicalPathStringSafely(runnerJar);
+        return BazelPathHelper.getCanonicalPathStringSafely(runnerJar);
     }
 }

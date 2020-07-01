@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.config;
+package com.salesforce.bazel.sdk.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.io.IOException;
 /**
  * Static utilities.
  */
-public class BazelProjectHelper {
+public class BazelPathHelper {
   
   /**
    * Resolve softlinks and other abstractions in the workspace paths.

@@ -1,7 +1,9 @@
-package com.salesforce.bazel.eclipse.classpath;
+package com.salesforce.bazel.sdk.lang.jvm;
 
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
+
+import com.salesforce.bazel.sdk.lang.jvm.JavaLanguageLevelHelper;
 
 public class JavaLanguageLevelHelperTest {
 
