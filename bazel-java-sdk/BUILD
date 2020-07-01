@@ -5,11 +5,6 @@ java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-
-        # do not add an Eclipse deps here, this library is free from Eclipse API
-        # so that we can have easily run unit tests
-        # only the core plugin knows about Eclipse API
-
         "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-deps:org_json_json",
     ],
@@ -19,8 +14,8 @@ java_library(
 java_library(
     name = "test-command-mocks",
     srcs = glob([
-        "src/test/java/com/salesforce/bazel/eclipse/command/test/*.java",
-        "src/test/java/com/salesforce/bazel/eclipse/command/test/type/*.java",
+        "src/test/java/com/salesforce/bazel/sdk/command/test/*.java",
+        "src/test/java/com/salesforce/bazel/sdk/command/test/type/*.java",
     ]),
     visibility = ["//visibility:public"],
     deps = [
@@ -35,7 +30,7 @@ java_library(
 
 java_library(
     name = "test-workspace-support",
-    srcs = glob(["src/test/java/com/salesforce/bazel/eclipse/workspace/test/*.java"]),
+    srcs = glob(["src/test/java/com/salesforce/bazel/sdk/workspace/test/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
     ],
@@ -45,14 +40,14 @@ java_library(
 java_test(
     name = "ArgumentSplitterTest",
     srcs = [
-        "src/main/java/com/salesforce/bazel/eclipse/model/ArgumentSplitter.java",
-        "src/test/java/com/salesforce/bazel/eclipse/model/ArgumentSplitterTest.java",
+        "src/main/java/com/salesforce/bazel/sdk/command/ArgumentSplitter.java",
+        "src/test/java/com/salesforce/bazel/sdk/command/ArgumentSplitterTest.java",
     ],
 )
 
 java_test(
     name = "AspectPackageInfosTest",
-    srcs = ["src/test/java/com/salesforce/bazel/eclipse/model/AspectPackageInfosTest.java",],
+    srcs = ["src/test/java/com/salesforce/bazel/sdk/model/AspectPackageInfosTest.java",],
     deps = [
         ":bazel-java-sdk",
         "//plugin-libs/plugin-deps:com_google_guava",
@@ -62,44 +57,44 @@ java_test(
 java_test(
     name = "BazelLabelTest",
     srcs = [
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelLabel.java",
-        "src/test/java/com/salesforce/bazel/eclipse/model/BazelLabelTest.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelLabel.java",
+        "src/test/java/com/salesforce/bazel/sdk/model/BazelLabelTest.java",
     ],
 )
 
 java_test(
     name = "BazelProblemTest",
     srcs = [
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelLabel.java",
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelProblem.java",
-        "src/test/java/com/salesforce/bazel/eclipse/model/BazelProblemTest.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelLabel.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelProblem.java",
+        "src/test/java/com/salesforce/bazel/sdk/model/BazelProblemTest.java",
     ],
 )
 
 java_test(
     name = "BazelOutputDirectoryBuilderTest",
     srcs = [
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelLabel.java",
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelOutputDirectoryBuilder.java",
-        "src/main/java/com/salesforce/bazel/eclipse/model/TargetKind.java",
-        "src/test/java/com/salesforce/bazel/eclipse/model/BazelOutputDirectoryBuilderTest.java"
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelLabel.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/TargetKind.java",
+        "src/main/java/com/salesforce/bazel/sdk/command/BazelOutputDirectoryBuilder.java",
+        "src/test/java/com/salesforce/bazel/sdk/command/BazelOutputDirectoryBuilderTest.java"
     ],
 )
 
 java_test(
     name = "BazelOutputParserTest",
     srcs = [
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelLabel.java",
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelProblem.java",
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelOutputParser.java",
-        "src/test/java/com/salesforce/bazel/eclipse/model/BazelOutputParserTest.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelLabel.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelProblem.java",
+        "src/main/java/com/salesforce/bazel/sdk/command/BazelOutputParser.java",
+        "src/test/java/com/salesforce/bazel/sdk/command/BazelOutputParserTest.java",
     ],
     deps = ["//plugin-libs/plugin-deps:com_google_guava",],
 )
 
 java_test(
     name = "BazelProjectInfoTest",
-    srcs = ["src/test/java/com/salesforce/bazel/eclipse/model/BazelProjectInfoTest.java"],
+    srcs = ["src/test/java/com/salesforce/bazel/sdk/model/BazelProjectInfoTest.java"],
     deps = [
         ":bazel-java-sdk",
 
@@ -113,7 +108,7 @@ java_test(
 
 java_test(
     name = "BazelBuildFileHelperTest",
-    srcs = ["src/test/java/com/salesforce/bazel/eclipse/model/BazelBuildFileHelperTest.java"],
+    srcs = ["src/test/java/com/salesforce/bazel/sdk/model/BazelBuildFileHelperTest.java"],
     deps = [
         ":bazel-java-sdk",
 
@@ -126,16 +121,16 @@ java_test(
 java_test(
     name = "BazelPackageInfoTest",
     srcs = [
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelPackageInfo.java",
-        "src/test/java/com/salesforce/bazel/eclipse/model/BazelPackageInfoTest.java",
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelPackageLocation.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelPackageInfo.java",
+        "src/test/java/com/salesforce/bazel/sdk/model/BazelPackageInfoTest.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelPackageLocation.java",
     ],
 )
 
 java_test(
     name = "LogHelperTest",
-    srcs = ["src/test/java/com/salesforce/bazel/eclipse/logging/CaptureLoggerFacade.java",
-            "src/test/java/com/salesforce/bazel/eclipse/logging/LogHelperTest.java"],
+    srcs = ["src/test/java/com/salesforce/bazel/sdk/logging/CaptureLoggerFacade.java",
+            "src/test/java/com/salesforce/bazel/sdk/logging/LogHelperTest.java"],
     deps = [
         ":bazel-java-sdk",
 
@@ -148,17 +143,17 @@ java_test(
 java_test(
     name = "ProjectViewTest",
     srcs = [
-        "src/main/java/com/salesforce/bazel/eclipse/model/BazelPackageLocation.java",
-        "src/main/java/com/salesforce/bazel/eclipse/model/projectview/ProjectView.java",
-        "src/main/java/com/salesforce/bazel/eclipse/model/projectview/ProjectViewPackageLocation.java",
-        "src/test/java/com/salesforce/bazel/eclipse/model/projectview/ProjectViewTest.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelPackageLocation.java",
+        "src/main/java/com/salesforce/bazel/sdk/ide/projectview/ProjectView.java",
+        "src/main/java/com/salesforce/bazel/sdk/ide/projectview/ProjectViewPackageLocation.java",
+        "src/test/java/com/salesforce/bazel/sdk/ide/projectview/ProjectViewTest.java",
     ],
 )
 
 java_test(
     name = "BazelWorkspaceTest",
     srcs = glob([
-        "src/test/java/com/salesforce/bazel/eclipse/model/**/*.java",
+        "src/test/java/com/salesforce/bazel/sdk/model/**/*.java",
     ]),
     deps = [
         ":bazel-java-sdk",
@@ -174,7 +169,7 @@ java_test(
 
 java_test(
     name = "BazelCommandArgsTest",
-    srcs = ["src/test/java/com/salesforce/bazel/eclipse/abstractions/BazelCommandArgsTest.java"],
+    srcs = ["src/test/java/com/salesforce/bazel/sdk/command/BazelCommandArgsTest.java"],
     deps = [
         ":bazel-java-sdk",
 
@@ -188,7 +183,7 @@ java_test(
 java_test(
     name = "BazelLauncherBuilderTest",
     srcs = [
-       "src/test/java/com/salesforce/bazel/eclipse/command/BazelLauncherBuilderTest.java",
+       "src/test/java/com/salesforce/bazel/sdk/command/BazelLauncherBuilderTest.java",
     ],
     deps = [
         ":bazel-java-sdk",
@@ -206,7 +201,7 @@ java_test(
 java_test(
     name = "BazelWorkspaceCommandRunnerTest",
     srcs = [
-       "src/test/java/com/salesforce/bazel/eclipse/command/BazelWorkspaceCommandRunnerTest.java",
+       "src/test/java/com/salesforce/bazel/sdk/command/BazelWorkspaceCommandRunnerTest.java",
     ],
     deps = [
         ":bazel-java-sdk",
@@ -224,7 +219,7 @@ java_test(
 java_test(
     name = "ShellCommandTest",
     srcs = [
-       "src/test/java/com/salesforce/bazel/eclipse/command/ShellCommandTest.java",
+       "src/test/java/com/salesforce/bazel/sdk/command/ShellCommandTest.java",
     ],
     deps = [
         ":bazel-java-sdk",
@@ -238,7 +233,7 @@ java_test(
 java_test(
     name = "BazelWorkspaceAspectHelperTest",
     srcs = [
-       "src/test/java/com/salesforce/bazel/eclipse/command/internal/BazelWorkspaceAspectHelperTest.java",
+       "src/test/java/com/salesforce/bazel/sdk/command/internal/BazelWorkspaceAspectHelperTest.java",
     ],
     deps = [
         ":bazel-java-sdk",
@@ -256,7 +251,7 @@ java_test(
 java_test(
     name = "BazelCommandExecutorTest",
     srcs = [
-       "src/test/java/com/salesforce/bazel/eclipse/command/internal/BazelCommandExecutorTest.java",
+       "src/test/java/com/salesforce/bazel/sdk/command/internal/BazelCommandExecutorTest.java",
     ],
     deps = [
         ":bazel-java-sdk",

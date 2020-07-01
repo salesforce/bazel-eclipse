@@ -80,9 +80,9 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Tree;
 
-import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
-import com.salesforce.bazel.eclipse.model.projectview.ProjectView;
-import com.salesforce.bazel.eclipse.model.projectview.ProjectViewConstants;
+import com.salesforce.bazel.sdk.ide.projectview.ProjectView;
+import com.salesforce.bazel.sdk.ide.projectview.ProjectViewConstants;
+import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 
 /**
  * Builds and handles interaction with the project tree view on the Bazel import workspace wizard.

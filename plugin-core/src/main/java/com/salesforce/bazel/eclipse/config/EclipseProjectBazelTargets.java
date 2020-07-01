@@ -40,7 +40,7 @@ import java.util.TreeSet;
 
 import org.eclipse.core.resources.IProject;
 
-import com.salesforce.bazel.eclipse.model.BazelBuildFile;
+import com.salesforce.bazel.sdk.model.BazelBuildFile;
 
 /**
  * Object that encapsulates the logic and state regarding the active targets configured for an

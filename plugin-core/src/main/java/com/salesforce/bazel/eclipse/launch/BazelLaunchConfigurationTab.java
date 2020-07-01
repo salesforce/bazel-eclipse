@@ -61,9 +61,9 @@ import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.TypedBazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.TargetKind;
 import com.salesforce.bazel.eclipse.ui.BazelSWTFactory;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.TargetKind;
 
 /**
  * Launch Configuration Tab to select a project and Bazel target to launch.

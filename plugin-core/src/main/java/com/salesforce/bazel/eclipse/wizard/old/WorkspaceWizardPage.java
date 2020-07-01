@@ -40,9 +40,9 @@ import org.eclipse.swt.widgets.Text;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.model.RealOperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.model.RealOperatingEnvironmentDetectionStrategy;
 
 /**
  * This is a quick wizard page that ask the user for the various targets and source path he wants to include.

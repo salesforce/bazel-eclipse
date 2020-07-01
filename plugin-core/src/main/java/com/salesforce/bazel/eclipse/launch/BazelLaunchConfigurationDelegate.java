@@ -61,14 +61,14 @@ import org.eclipse.jdt.launching.JavaRuntime;
 
 import com.google.common.collect.ImmutableMap;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.BazelProcessBuilder;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.eclipse.command.Command;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.TargetKind;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.command.Command;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.TargetKind;
 
 /**
  * Runs a previously configured Bazel target.

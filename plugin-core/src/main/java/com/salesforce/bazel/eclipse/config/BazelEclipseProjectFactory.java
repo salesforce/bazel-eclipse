@@ -67,24 +67,24 @@ import org.osgi.service.prefs.BackingStoreException;
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.builder.BazelBuilder;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer;
 import com.salesforce.bazel.eclipse.classpath.JavaLanguageLevelHelper;
-import com.salesforce.bazel.eclipse.command.BazelCommandManager;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfos;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
-import com.salesforce.bazel.eclipse.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
-import com.salesforce.bazel.eclipse.model.SimplePerfRecorder;
-import com.salesforce.bazel.eclipse.model.projectview.ProjectView;
-import com.salesforce.bazel.eclipse.model.projectview.ProjectViewConstants;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.ide.projectview.ProjectView;
+import com.salesforce.bazel.sdk.ide.projectview.ProjectViewConstants;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.AspectPackageInfo;
+import com.salesforce.bazel.sdk.model.AspectPackageInfos;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.model.SimplePerfRecorder;
 
 /**
  * A factory class to create Eclipse projects from packages in a Bazel workspace.

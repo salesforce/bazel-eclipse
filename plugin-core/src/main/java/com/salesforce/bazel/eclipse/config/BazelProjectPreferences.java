@@ -52,9 +52,9 @@ import org.osgi.service.prefs.Preferences;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.BazelCommandManager;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferencePage;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 
 // TODO migrate this away from static methods
 public class BazelProjectPreferences { 

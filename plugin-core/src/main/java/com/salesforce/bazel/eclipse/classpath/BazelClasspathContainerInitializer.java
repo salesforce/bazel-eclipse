@@ -52,8 +52,8 @@ import org.eclipse.swt.widgets.Display;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
+import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class BazelClasspathContainerInitializer extends ClasspathContainerInitializer {
     static final LogHelper LOG = LogHelper.log(BazelClasspathContainerInitializer.class);

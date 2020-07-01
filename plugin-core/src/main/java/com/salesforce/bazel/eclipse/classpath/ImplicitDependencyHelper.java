@@ -12,9 +12,9 @@ import org.eclipse.jdt.core.IClasspathEntry;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
-import com.salesforce.bazel.eclipse.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.model.AspectPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
 
 /**
  * Bazel generally requires BUILD file authors to list all dependencies explicitly.

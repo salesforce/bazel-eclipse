@@ -50,16 +50,16 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
-import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfos;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.TargetKind;
+import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.AspectPackageInfo;
+import com.salesforce.bazel.sdk.model.AspectPackageInfos;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.TargetKind;
 
 /**
  * Supporting logic for Bazel Launch Configurations.

@@ -43,7 +43,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
-import com.salesforce.bazel.eclipse.model.BazelProblem;
+import com.salesforce.bazel.sdk.model.BazelProblem;
 
 /**
  * Encapsulates Bazel Error Marker logic.

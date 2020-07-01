@@ -57,7 +57,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 
 public class BazelImportWizardLabelProvider extends LabelProvider
         implements IColorProvider, DelegatingStyledCellLabelProvider.IStyledLabelProvider {

@@ -40,24 +40,24 @@ import java.io.File;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-import com.salesforce.bazel.eclipse.abstractions.BazelAspectLocation;
-import com.salesforce.bazel.eclipse.abstractions.CommandConsoleFactory;
-import com.salesforce.bazel.eclipse.command.BazelCommandManager;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.eclipse.command.CommandBuilder;
-import com.salesforce.bazel.eclipse.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.model.OperatingEnvironmentDetectionStrategy;
-import com.salesforce.bazel.eclipse.model.RealOperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseConsole;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseJavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseResourceHelper;
+import com.salesforce.bazel.sdk.abstractions.BazelAspectLocation;
+import com.salesforce.bazel.sdk.abstractions.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.command.CommandBuilder;
+import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.model.RealOperatingEnvironmentDetectionStrategy;
 
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle

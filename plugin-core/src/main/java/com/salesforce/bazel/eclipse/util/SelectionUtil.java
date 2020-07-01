@@ -60,7 +60,7 @@ import org.eclipse.ui.IWorkingSet;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Helper methods to deal with workspace resources passed as navigator selection to actions and wizards.

@@ -38,7 +38,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import com.salesforce.bazel.eclipse.config.BazelProjectConfigurator;
-import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 
 /**
  * Scans a Bazel workspace looking for Java packages (BUILD files that have java_binary or java_library targets). It is

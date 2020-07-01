@@ -49,11 +49,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.salesforce.bazel.eclipse.abstractions.OutputStreamObserver;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelProblem;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelOutputParser;
+import com.salesforce.bazel.sdk.abstractions.OutputStreamObserver;
+import com.salesforce.bazel.sdk.command.BazelOutputParser;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelProblem;
 
 /**
  * Implementation of {@link OutputStreamObserver} that observes error output and publishes errors to Problems View

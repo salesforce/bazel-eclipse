@@ -5,10 +5,10 @@ import java.util.List;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.Traverser;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.model.AspectDependencyGraphBuilder;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfos;
-import com.salesforce.bazel.eclipse.model.BazelDependencyGraph;
-import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.model.AspectDependencyGraphBuilder;
+import com.salesforce.bazel.sdk.model.AspectPackageInfos;
+import com.salesforce.bazel.sdk.model.BazelDependencyGraph;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
  * Orders modules for import such that upstream dependencies are imported before downstream

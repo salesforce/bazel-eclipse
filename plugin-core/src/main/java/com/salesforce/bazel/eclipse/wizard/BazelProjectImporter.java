@@ -10,11 +10,11 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.config.ImportOrderResolverImpl;
-import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
+import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
  * Imports projects with a Progress Dialog.  This is used by the Import Wizard and the ProjectView machinery.

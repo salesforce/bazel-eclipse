@@ -64,21 +64,21 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
-import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.eclipse.command.BazelCommandManager;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
-import com.salesforce.bazel.eclipse.model.AspectOutputJarSet;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
-import com.salesforce.bazel.eclipse.model.BazelBuildFile;
-import com.salesforce.bazel.eclipse.model.BazelProblem;
-import com.salesforce.bazel.eclipse.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.model.SimplePerfRecorder;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
+import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.model.AspectOutputJarSet;
+import com.salesforce.bazel.sdk.model.AspectPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelBuildFile;
+import com.salesforce.bazel.sdk.model.BazelProblem;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.model.SimplePerfRecorder;
 
 /**
  * Computes the classpath for a Bazel package and provides it to the JDT tooling in Eclipse.

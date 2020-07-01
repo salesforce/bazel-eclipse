@@ -22,8 +22,8 @@ import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 
 /**
  * A {@link IContentProposalProvider} to provide completion for Bazel. Use the

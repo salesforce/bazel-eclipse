@@ -30,14 +30,14 @@ import java.util.List;
 import org.eclipse.core.resources.IProject;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.test.MockBazelAspectLocation;
-import com.salesforce.bazel.eclipse.command.test.MockCommandBuilder;
-import com.salesforce.bazel.eclipse.command.test.MockCommandConsole;
-import com.salesforce.bazel.eclipse.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationDelegate;
-import com.salesforce.bazel.eclipse.model.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferencePage;
-import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.sdk.command.test.MockBazelAspectLocation;
+import com.salesforce.bazel.sdk.command.test.MockCommandBuilder;
+import com.salesforce.bazel.sdk.command.test.MockCommandConsole;
+import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
+import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
 
 /**

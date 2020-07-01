@@ -52,8 +52,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.wizards.datatransfer.ProjectConfigurator;
 
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelBuildFileHelper;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelBuildFileHelper;
 
 // copied from m2e MavenProjectConfigurator
 

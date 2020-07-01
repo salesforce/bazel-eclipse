@@ -16,8 +16,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.junit.Test;
 
 import com.google.common.collect.Multimap;
-import com.salesforce.bazel.eclipse.model.BazelProblem;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelProblem;
 
 public class BazelErrorStreamObserverTest {
     

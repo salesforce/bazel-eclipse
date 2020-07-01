@@ -65,7 +65,7 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
-import com.salesforce.bazel.eclipse.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * Provide the runtime classpath for JUnit tests. These are obtained from the test rule's generated param files that
