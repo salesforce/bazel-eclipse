@@ -57,6 +57,7 @@ import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
@@ -64,6 +65,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  */
 public class BazelClasspathContainer implements IClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
+    private static BazelProjectManager bazelProjectManager = new BazelProjectManager();
     
     private final IPath eclipseProjectPath;
     private final IProject eclipseProject;
@@ -86,7 +88,10 @@ public class BazelClasspathContainer implements IClasspathContainer {
         this.eclipseProjectIsRoot = resourceHelper.isBazelRootProject(eclipseProject);
         
         BazelProject bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
-        impl = new BazelClasspathContainerImpl(bazelProject, resourceHelper.isBazelRootProject(eclipseProject), resourceHelper,
+        bazelProjectManager.addProject(bazelProject);
+        
+        impl = new BazelClasspathContainerImpl(BazelPluginActivator.getBazelWorkspace(), bazelProject, 
+        		resourceHelper.isBazelRootProject(eclipseProject), resourceHelper,
         		new EclipseImplicitClasspathHelper());
         instances.add(impl);
     }

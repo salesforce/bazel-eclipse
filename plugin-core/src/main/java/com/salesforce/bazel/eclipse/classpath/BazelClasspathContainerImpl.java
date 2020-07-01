@@ -9,6 +9,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +32,6 @@ import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
-
 import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -49,6 +49,7 @@ public class BazelClasspathContainerImpl {
     // TODO make classpath cache timeout configurable
     private static final long CLASSPATH_CACHE_TIMEOUT_MS = 300000; 
 
+    private final BazelWorkspace bazelWorkspace;
     private final BazelProject bazelProject;
     private final boolean eclipseProjectIsRoot;
     private final ResourceHelper resourceHelper;
@@ -58,8 +59,9 @@ public class BazelClasspathContainerImpl {
     
     private EclipseImplicitClasspathHelper implicitDependencyHelper = new EclipseImplicitClasspathHelper();
 
-    public BazelClasspathContainerImpl(BazelProject bazelProject,
+    public BazelClasspathContainerImpl(BazelWorkspace bazelWorkspace, BazelProject bazelProject,
 			boolean eclipseProjectIsRoot, ResourceHelper resourceHelper, EclipseImplicitClasspathHelper implicitDependencyHelper) {
+    	this.bazelWorkspace = bazelWorkspace;
 		this.bazelProject = bazelProject;
 		this.eclipseProjectIsRoot = eclipseProjectIsRoot;
 		this.resourceHelper = resourceHelper;
@@ -108,7 +110,6 @@ public class BazelClasspathContainerImpl {
             }
     
             BazelPluginActivator.info("Computing classpath for project "+bazelProject.name+" (cached entries: "+foundCachedEntries+", is import: "+isImport+")");
-            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
             BazelCommandManager commandFacade = BazelPluginActivator.getBazelCommandManager();
             BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = commandFacade.getWorkspaceCommandRunner(bazelWorkspace);
 
@@ -230,7 +231,6 @@ public class BazelClasspathContainerImpl {
      * Runs a build with the passed targets and returns true if no errors are returned.
      */
     public boolean isValid() throws BackingStoreException, IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         if (bazelWorkspace == null) {
             return false;
         }
@@ -309,18 +309,15 @@ public class BazelClasspathContainerImpl {
 
     private IJavaProject getSourceProjectForSourcePath(BazelWorkspaceCommandRunner bazelCommandRunner, String sourcePath) {
 
-        // TODO this code is messy, why get workspace root two different ways, and is there a better way to handle source paths?
         IWorkspaceRoot eclipseWorkspaceRoot = this.resourceHelper.getEclipseWorkspaceRoot();
-        IWorkspace eclipseWorkspace = this.resourceHelper.getEclipseWorkspace();
-        IWorkspaceRoot rootResource = eclipseWorkspace.getRoot();
-        IProject[] projects = rootResource.getProjects();
+        Collection<BazelProject> bazelProjects = bazelProject.bazelProjectManager.getAllProjects();
 
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         String canonicalSourcePathString = BazelPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory()) + File.separator + sourcePath;
         Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
-        for (IProject project : projects) {
-            IJavaProject jProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
+        for (BazelProject project : bazelProjects) {
+        	IProject iProject = (IProject)project.getProjectImpl();
+            IJavaProject jProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(iProject);
             IClasspathEntry[] classpathEntries = BazelPluginActivator.getJavaCoreHelper().getRawClasspath(jProject);
             if (classpathEntries == null) {
                 BazelPluginActivator.error("No classpath entries found for project ["+jProject.getElementName()+"]");
