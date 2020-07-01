@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.test;
+package com.salesforce.bazel.eclipse.workspace.test;
 
 import java.io.File;
 import java.io.FileOutputStream;

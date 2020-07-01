@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.command.mock;
+package com.salesforce.bazel.eclipse.command.test;
 
 import java.io.File;
 
@@ -31,9 +31,9 @@ import com.salesforce.bazel.eclipse.command.BazelCommandManager;
 import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.eclipse.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.model.OperatingEnvironmentDetectionStrategy;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
-import com.salesforce.bazel.eclipse.test.TestOptions;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceDescriptor;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.workspace.test.TestOptions;
 
 /**
  * Factory for creating test environments for Bazel Command functional tests. Produces a real BazelWorkspaceCommandRunner with 

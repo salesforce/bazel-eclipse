@@ -1,11 +1,11 @@
-package com.salesforce.bazel.eclipse.command.mock.type;
+package com.salesforce.bazel.eclipse.command.test.type;
 
 import java.util.List;
 import java.util.Map;
 
-import com.salesforce.bazel.eclipse.command.mock.MockCommand;
-import com.salesforce.bazel.eclipse.command.mock.MockCommandSimulatedOutput;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.command.test.MockCommand;
+import com.salesforce.bazel.eclipse.command.test.MockCommandSimulatedOutput;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
 
 /**
  * You may want to run a test that invokes a command not already supported by specific code. This is a catch all

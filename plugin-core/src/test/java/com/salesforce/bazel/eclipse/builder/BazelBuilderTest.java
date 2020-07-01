@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IJavaProject;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -52,6 +53,7 @@ public class BazelBuilderTest {
     }
     
     @Test 
+    @Ignore
     public void testClasspathRefresh() throws Exception {
     	BazelBuilder subject = new BazelBuilder();
     	IProject project = mock(IProject.class);

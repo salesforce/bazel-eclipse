@@ -3,11 +3,8 @@
 	<name>Bazel Eclipse Feature</name>
 	<comment></comment>
 	<projects>
-		<project>plugin-abstractions</project>
-		<project>plugin-command</project>
-		<project>plugin-core</project>
+		<project>bazel-java-sdk</project>
 		<project>plugin-deps</project>
-		<project>plugin-model</project>
 		<project>plugin-testdeps</project>
 	</projects>
 	<buildSpec>

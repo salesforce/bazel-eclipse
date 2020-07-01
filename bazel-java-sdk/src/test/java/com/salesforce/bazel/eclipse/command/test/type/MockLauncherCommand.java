@@ -1,11 +1,11 @@
-package com.salesforce.bazel.eclipse.command.mock.type;
+package com.salesforce.bazel.eclipse.command.test.type;
 
 import java.util.List;
 import java.util.Map;
 
-import com.salesforce.bazel.eclipse.command.mock.MockCommand;
-import com.salesforce.bazel.eclipse.command.mock.MockCommandSimulatedOutput;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.command.test.MockCommand;
+import com.salesforce.bazel.eclipse.command.test.MockCommandSimulatedOutput;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
 
 /**
  * Simulates an invocation of a launcher script (bazel run //a/b/c) from Bazel

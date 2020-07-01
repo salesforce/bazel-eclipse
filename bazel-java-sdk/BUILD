@@ -1,7 +1,7 @@
 load("//tools:feature_version_def.bzl", "VERSION")
 
 java_library(
-    name = "plugin-model",
+    name = "bazel-java-sdk",
     srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
@@ -17,19 +17,27 @@ java_library(
 
 # Mock Command library
 java_library(
-    name = "plugin-model-test-mocks",
+    name = "test-command-mocks",
     srcs = glob([
-        "src/test/java/com/salesforce/bazel/eclipse/command/mock/*.java",
-        "src/test/java/com/salesforce/bazel/eclipse/command/mock/type/*.java",
+        "src/test/java/com/salesforce/bazel/eclipse/command/test/*.java",
+        "src/test/java/com/salesforce/bazel/eclipse/command/test/type/*.java",
     ]),
     visibility = ["//visibility:public"],
     deps = [
-        ":plugin-model",
-        "//plugin-libs/plugin-testdeps",
+        ":bazel-java-sdk",
+        ":test-workspace-support",
 
         "//plugin-libs/plugin-testdeps:org_junit_junit",
         "//plugin-libs/plugin-testdeps:org_mockito_mockito_core",
         "//plugin-libs/plugin-deps:com_google_guava",
+    ],
+)
+
+java_library(
+    name = "test-workspace-support",
+    srcs = glob(["src/test/java/com/salesforce/bazel/eclipse/workspace/test/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
     ],
 )
 
@@ -46,7 +54,7 @@ java_test(
     name = "AspectPackageInfosTest",
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/model/AspectPackageInfosTest.java",],
     deps = [
-        ":plugin-model",
+        ":bazel-java-sdk",
         "//plugin-libs/plugin-deps:com_google_guava",
     ],
 )
@@ -93,7 +101,7 @@ java_test(
     name = "BazelProjectInfoTest",
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/model/BazelProjectInfoTest.java"],
     deps = [
-        ":plugin-model",
+        ":bazel-java-sdk",
 
         "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-testdeps:com_google_truth",
@@ -107,7 +115,7 @@ java_test(
     name = "BazelBuildFileHelperTest",
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/model/BazelBuildFileHelperTest.java"],
     deps = [
-        ":plugin-model",
+        ":bazel-java-sdk",
 
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
@@ -129,7 +137,7 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/logging/CaptureLoggerFacade.java",
             "src/test/java/com/salesforce/bazel/eclipse/logging/LogHelperTest.java"],
     deps = [
-        ":plugin-model",
+        ":bazel-java-sdk",
 
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
@@ -153,7 +161,7 @@ java_test(
         "src/test/java/com/salesforce/bazel/eclipse/model/**/*.java",
     ]),
     deps = [
-        ":plugin-model",
+        ":bazel-java-sdk",
 
         "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-deps:org_json_json",
@@ -168,7 +176,7 @@ java_test(
     name = "BazelCommandArgsTest",
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/abstractions/BazelCommandArgsTest.java"],
     deps = [
-        ":plugin-model",
+        ":bazel-java-sdk",
 
         "//plugin-libs/plugin-testdeps:org_junit_junit",
         "//plugin-libs/plugin-testdeps:com_google_truth",
@@ -183,9 +191,9 @@ java_test(
        "src/test/java/com/salesforce/bazel/eclipse/command/BazelLauncherBuilderTest.java",
     ],
     deps = [
-        ":plugin-model",
-        ":plugin-model-test-mocks",
-        "//plugin-libs/plugin-testdeps",
+        ":bazel-java-sdk",
+        ":test-command-mocks",
+        ":test-workspace-support",
 
         "//plugin-libs/plugin-testdeps:com_google_truth",
         "//plugin-libs/plugin-testdeps:net_bytebuddy_byte_buddy",
@@ -201,9 +209,9 @@ java_test(
        "src/test/java/com/salesforce/bazel/eclipse/command/BazelWorkspaceCommandRunnerTest.java",
     ],
     deps = [
-        ":plugin-model",
-        ":plugin-model-test-mocks",
-        "//plugin-libs/plugin-testdeps",
+        ":bazel-java-sdk",
+        ":test-command-mocks",
+        ":test-workspace-support",
 
         "//plugin-libs/plugin-testdeps:com_google_truth",
         "//plugin-libs/plugin-testdeps:net_bytebuddy_byte_buddy",
@@ -219,7 +227,7 @@ java_test(
        "src/test/java/com/salesforce/bazel/eclipse/command/ShellCommandTest.java",
     ],
     deps = [
-        ":plugin-model",
+        ":bazel-java-sdk",
 
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
@@ -233,9 +241,9 @@ java_test(
        "src/test/java/com/salesforce/bazel/eclipse/command/internal/BazelWorkspaceAspectHelperTest.java",
     ],
     deps = [
-        ":plugin-model",
-        ":plugin-model-test-mocks",
-        "//plugin-libs/plugin-testdeps",
+        ":bazel-java-sdk",
+        ":test-command-mocks",
+        ":test-workspace-support",
 
         "//plugin-libs/plugin-testdeps:com_google_truth",
         "//plugin-libs/plugin-testdeps:net_bytebuddy_byte_buddy",
@@ -251,9 +259,9 @@ java_test(
        "src/test/java/com/salesforce/bazel/eclipse/command/internal/BazelCommandExecutorTest.java",
     ],
     deps = [
-        ":plugin-model",
-        ":plugin-model-test-mocks",
-        "//plugin-libs/plugin-testdeps",
+        ":bazel-java-sdk",
+        ":test-command-mocks",
+        ":test-workspace-support",
 
         "//plugin-libs/plugin-testdeps:com_google_truth",
         "//plugin-libs/plugin-testdeps:net_bytebuddy_byte_buddy",

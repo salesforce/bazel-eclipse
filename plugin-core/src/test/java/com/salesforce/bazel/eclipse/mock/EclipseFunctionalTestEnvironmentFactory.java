@@ -37,9 +37,9 @@ import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
 import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
-import com.salesforce.bazel.eclipse.test.TestOptions;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceDescriptor;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.workspace.test.TestOptions;
 
 /**
  * Factory for creating test environments for Eclipse functional tests. Produces a Mock Eclipse workspace from templates.

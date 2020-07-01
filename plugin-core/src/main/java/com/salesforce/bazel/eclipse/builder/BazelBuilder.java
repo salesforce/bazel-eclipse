@@ -121,6 +121,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject, monitor);
                 
                 // TODO this is too slow, we need to fix this in https://github.com/salesforce/bazel-eclipse/issues/145
+                // when you uncomment this, make sure to also un-ignore the related test in BazelBuilderTest
                 //refreshProjectClasspath(project, progressMonitor, monitor, bazelWorkspaceCmdRunner);
             }
         } catch (BazelCommandLineToolConfigurationException e) {

@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.test;
+package com.salesforce.bazel.eclipse.workspace.test;
 
 /**
  * Descriptor for a manufactured target (java_library, java_test, etc) in a manufactured bazel package

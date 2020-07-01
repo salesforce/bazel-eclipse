@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.command.mock;
+package com.salesforce.bazel.eclipse.command.test;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,15 +31,15 @@ import java.util.Map;
 import com.salesforce.bazel.eclipse.abstractions.CommandConsoleFactory;
 import com.salesforce.bazel.eclipse.command.Command;
 import com.salesforce.bazel.eclipse.command.CommandBuilder;
-import com.salesforce.bazel.eclipse.command.mock.type.MockBuildCommand;
-import com.salesforce.bazel.eclipse.command.mock.type.MockCleanCommand;
-import com.salesforce.bazel.eclipse.command.mock.type.MockCustomCommand;
-import com.salesforce.bazel.eclipse.command.mock.type.MockInfoCommand;
-import com.salesforce.bazel.eclipse.command.mock.type.MockLauncherCommand;
-import com.salesforce.bazel.eclipse.command.mock.type.MockQueryCommand;
-import com.salesforce.bazel.eclipse.command.mock.type.MockTestCommand;
-import com.salesforce.bazel.eclipse.command.mock.type.MockVersionCommand;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.command.test.type.MockBuildCommand;
+import com.salesforce.bazel.eclipse.command.test.type.MockCleanCommand;
+import com.salesforce.bazel.eclipse.command.test.type.MockCustomCommand;
+import com.salesforce.bazel.eclipse.command.test.type.MockInfoCommand;
+import com.salesforce.bazel.eclipse.command.test.type.MockLauncherCommand;
+import com.salesforce.bazel.eclipse.command.test.type.MockQueryCommand;
+import com.salesforce.bazel.eclipse.command.test.type.MockTestCommand;
+import com.salesforce.bazel.eclipse.command.test.type.MockVersionCommand;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
 
 /**
  * This is the main component of the mocking layer for the Bazel command line. This command builder

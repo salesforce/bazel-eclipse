@@ -36,13 +36,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.eclipse.command.mock.MockCommandSimulatedOutputMatcher;
-import com.salesforce.bazel.eclipse.command.mock.TestBazelCommandEnvironmentFactory;
+import com.salesforce.bazel.eclipse.command.test.MockCommandSimulatedOutputMatcher;
+import com.salesforce.bazel.eclipse.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.eclipse.model.BazelCommandArgs;
 import com.salesforce.bazel.eclipse.model.BazelLabel;
 import com.salesforce.bazel.eclipse.model.TargetKind;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceDescriptor;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
 
 public class BazelLauncherBuilderTest {
     @Rule

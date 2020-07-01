@@ -21,33 +21,30 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.command.mock;
+package com.salesforce.bazel.eclipse.command.test;
 
 import java.io.File;
 
-/**
- * Creates a mock executable binary on the file system, for tests that expect to have an 
- * actual Bazel executable.
- */
-public class MockBazelExecutable {
-    public File bazelExecutableFile;
+import com.salesforce.bazel.eclipse.abstractions.BazelAspectLocation;
+
+public class MockBazelAspectLocation implements BazelAspectLocation{
+
+    public File aspectDir; 
+    public String aspectLabel;
     
-    /**
-     * Creates the fake executable file.
-     * 
-     * @param executableDir directory in which the binary file will be placed, must exist, must be writable
-     */
-    public MockBazelExecutable(File executableDir) {
-        this.bazelExecutableFile = new File(executableDir, "bazel");
-        try {
-            this.bazelExecutableFile.createNewFile();
-            this.bazelExecutableFile.setExecutable(true);
-        } catch (Exception anyE) {
-            throw new RuntimeException(anyE);
-        }
+    public MockBazelAspectLocation(File aspectDir, String aspectLabel) {
+        this.aspectDir = aspectDir;
+        this.aspectLabel = aspectLabel;
     }
     
-    public String getAbsolutePath() {
-        return bazelExecutableFile.getAbsolutePath();
+    @Override
+    public File getAspectDirectory() {
+        return aspectDir;
     }
+
+    @Override
+    public String getAspectLabel() {
+        return aspectLabel;
+    }
+
 }

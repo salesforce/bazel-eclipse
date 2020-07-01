@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.command.mock;
+package com.salesforce.bazel.eclipse.command.test;
 
 import java.util.List;
 

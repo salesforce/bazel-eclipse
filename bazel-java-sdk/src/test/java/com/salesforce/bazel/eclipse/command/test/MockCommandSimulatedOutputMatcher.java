@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.command.mock;
+package com.salesforce.bazel.eclipse.command.test;
 
 /**
  * Filter that enables Bazel command output to be associated with a particular command.

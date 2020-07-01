@@ -37,8 +37,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.eclipse.command.mock.MockCommandSimulatedOutputMatcher;
-import com.salesforce.bazel.eclipse.command.mock.TestBazelCommandEnvironmentFactory;
+import com.salesforce.bazel.eclipse.command.test.MockCommandSimulatedOutputMatcher;
+import com.salesforce.bazel.eclipse.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;

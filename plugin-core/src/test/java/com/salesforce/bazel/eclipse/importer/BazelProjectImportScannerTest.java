@@ -32,8 +32,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceDescriptor;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceDescriptor;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
 
 public class BazelProjectImportScannerTest {
     @Rule

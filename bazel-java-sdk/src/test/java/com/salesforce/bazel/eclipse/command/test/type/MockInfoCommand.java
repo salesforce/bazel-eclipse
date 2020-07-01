@@ -1,10 +1,10 @@
-package com.salesforce.bazel.eclipse.command.mock.type;
+package com.salesforce.bazel.eclipse.command.test.type;
 
 import java.util.List;
 import java.util.Map;
 
-import com.salesforce.bazel.eclipse.command.mock.MockCommand;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.command.test.MockCommand;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
 
 /**
  * Simulates an info command (bazel info XYZ) where XYZ is one of a set of descriptors supported by Bazel.

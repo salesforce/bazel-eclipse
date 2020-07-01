@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.command.mock;
+package com.salesforce.bazel.eclipse.command.test;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,8 +33,8 @@ import org.mockito.Mockito;
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.command.BazelProcessBuilder;
 import com.salesforce.bazel.eclipse.command.Command;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
-import com.salesforce.bazel.eclipse.test.TestOptions;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.workspace.test.TestOptions;
 
 public class MockCommand implements Command {
 

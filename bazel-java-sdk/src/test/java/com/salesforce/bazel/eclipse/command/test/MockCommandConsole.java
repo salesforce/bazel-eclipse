@@ -21,46 +21,34 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.command.mock;
+package com.salesforce.bazel.eclipse.command.test;
 
-import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
-public class MockWorkProgressMonitor implements WorkProgressMonitor {
-    public String name = null;
-    public int totalWork = 0;
-    public boolean isCancelled = false;
-    public String subtask = null;
-    public int worked = 0;
-    public boolean isDone = false;
-    
-    @Override
-    public void beginTask(String name, int totalWork) {
-        this.name = name;
-        this.totalWork = totalWork;
+import com.salesforce.bazel.eclipse.abstractions.CommandConsole;
+import com.salesforce.bazel.eclipse.abstractions.CommandConsoleFactory;
+
+public class MockCommandConsole implements CommandConsole, CommandConsoleFactory {
+    final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    final ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    public MockCommandConsole() {
     }
 
     @Override
-    public void done() {
-        this.isDone = true;
+    public OutputStream createOutputStream() {
+        return stdout;
     }
 
     @Override
-    public boolean isCanceled() {
-        return this.isCancelled;
+    public OutputStream createErrorStream() {
+        return stderr;
     }
 
     @Override
-    public void setCanceled(boolean value) {
-        this.isCancelled = value;
-    }
-
-    @Override
-    public void subTask(String name) {
-        this.subtask = name;
-    }
-
-    @Override
-    public void worked(int work) {
-        this.worked = work;
+    public CommandConsole get(String name, String title) throws IOException {
+        return this;
     }
 }

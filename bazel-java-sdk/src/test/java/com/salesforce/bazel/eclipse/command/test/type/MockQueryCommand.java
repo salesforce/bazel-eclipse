@@ -1,13 +1,13 @@
-package com.salesforce.bazel.eclipse.command.mock.type;
+package com.salesforce.bazel.eclipse.command.test.type;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.salesforce.bazel.eclipse.command.mock.MockCommand;
-import com.salesforce.bazel.eclipse.test.TestBazelPackageDescriptor;
-import com.salesforce.bazel.eclipse.test.TestBazelTargetDescriptor;
-import com.salesforce.bazel.eclipse.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.eclipse.command.test.MockCommand;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelPackageDescriptor;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelTargetDescriptor;
+import com.salesforce.bazel.eclipse.workspace.test.TestBazelWorkspaceFactory;
 
 /**
  * Simulates an invocation of 'bazel query xyz'
