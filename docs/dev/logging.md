@@ -32,7 +32,7 @@ public void warn(String message, Object... args);
 public void info(String message, Object... args);
 public void debug(String message, Object... args);
 ```
-These methods can be found [here](../../plugin-libs/plugin-model/src/main/java/com/salesforce/bazel/eclipse/logging/LogHelper.java).
+These methods can be found [here](../../bazel-java-sdk/src/main/java/com/salesforce/bazel/eclipse/logging/LogHelper.java).
 
 These methods should be familiar to SLF4j users.
 The ```message```and ```args``` work just like SLF4J where ```{}``` is used to substitute values in the ```args```.
