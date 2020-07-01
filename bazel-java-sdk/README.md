@@ -1,8 +1,9 @@
 ## Bazel Java SDK
 
-In the [architecture](../docs/dev/architecture.md) of the Bazel Eclipse Feature, the implementation is spread across a few Eclipse plugins.
+This directory contains the Bazel Java SDK, which is a general purpose Java library for building tools on top of Bazel in the Java programming language.
+It implements a number of Bazel models and tools, including:
 
-- **plugin-core**: this plugin is the one that is integrated with Eclipse APIs, and contains classes such as the activator
-- **bazel-java-sdk**: handles model abstractions and command execution for Bazel
+- Models such as BazelLabel, BazelDependencyGraph, and BazelBuildFile
+- Bazel Command executors to run Bazel command line and collecting the outputs
 
-This package contains the SDK.
+The SDK will is helpful for writing tools and IDE integrations.
