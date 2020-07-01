@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Bazel Eclipse Model Plugin
-Bundle-SymbolicName: com.salesforce.bazel.eclipse.model;singleton:=true
+Bundle-Name: Bazel Java SDK Plugin
+Bundle-SymbolicName: com.salesforce.bazel-java-sdk;singleton:=true
 Automatic-Module-Name: com.salesforce.bazel.eclipse.model
 Bundle-Version: 1.2.5.qualifier
 Export-Package: com.salesforce.bazel.eclipse.logging;version="1.2.5.qualifier",

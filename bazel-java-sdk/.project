@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>plugin-model</name>
+	<name>bazel-java-sdk</name>
 	<comment></comment>
 	<projects>
 		<project>plugin-deps</project>

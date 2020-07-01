@@ -1,7 +1,3 @@
-load(
-    "//tools/eclipse:eclipse_plugin.bzl",
-    "eclipse_plugin",
-)
 load("//tools:feature_version_def.bzl", "VERSION")
 
 java_library(
@@ -16,20 +12,6 @@ java_library(
 
         "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-deps:org_json_json",
-    ],
-)
-
-eclipse_plugin(
-    name = "com.salesforce.bazel.eclipse.model",
-    srcs = glob(["src/main/java/**/*.java"]),
-    bundle_name = "Bazel Eclipse Model Plugin",
-    vendor = "Salesforce, Bazel Authors",
-    version = VERSION,
-    exports = 'com.salesforce.bazel.eclipse.model;version="'+VERSION+'"',
-    visibility = ["//visibility:public"],
-    deps = [
-    "//plugin-libs/plugin-deps:com_google_guava",
-    "//plugin-libs/plugin-deps:org_json_json",
     ],
 )
 
@@ -187,7 +169,7 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/abstractions/BazelCommandArgsTest.java"],
     deps = [
         ":plugin-model",
-        
+
         "//plugin-libs/plugin-testdeps:org_junit_junit",
         "//plugin-libs/plugin-testdeps:com_google_truth",
     ],
@@ -238,7 +220,7 @@ java_test(
     ],
     deps = [
         ":plugin-model",
-        
+
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
         "//plugin-libs/plugin-testdeps:com_google_truth",
@@ -280,4 +262,3 @@ java_test(
         "//plugin-libs/plugin-testdeps:org_objenesis_objenesis",
     ],
 )
-
