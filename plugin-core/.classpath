@@ -12,7 +12,6 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/plugin-abstractions"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/plugin-command"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/plugin-deps"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/plugin-model"/>

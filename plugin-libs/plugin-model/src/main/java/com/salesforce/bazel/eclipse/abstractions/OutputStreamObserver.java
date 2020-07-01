@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
+/*
+ * Copyright (c) 2020, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -21,14 +21,16 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package com.salesforce.bazel.eclipse.abstractions;
 
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+/**
+ * An interface to create an observer to observe stream output from a command. An output stream observer should be able to
+ * publish output stream for both normal ouput and error output as soon as they appear in command console. An 
+ * implementation exists that publishes error output to problems view.
+ */
+public interface OutputStreamObserver {
+    
+    public void update(String output);
 
-public class BazelCommandArgsTest {
-    @Test
-    public void testArgs() {
-        assertEquals("--test_filter", BazelCommandArgs.TEST_FILTER.getName());
-    }
 }

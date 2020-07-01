@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * 
  * Copyright 2017 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -36,27 +36,23 @@
 
 package com.salesforce.bazel.eclipse.abstractions;
 
-import java.io.File;
+import java.io.OutputStream;
 
 /**
- * Provide the location of the aspect to use to analyze a Bazel workspace.
- * <p>
- * The Bazel Eclipse plugin uses a Bazel Aspect to introspect build data, such as dependencies. See
- * {@link BazelWorkspaceCommandRunner} for details on how this aspect is wired into the build.
+ * An interface to describe an output console to stream output from a command. A command console should be able to
+ * provide output stream for both normal ouput and error output. An implementation exists that plugs into the Eclipse
+ * console.
  */
-public interface BazelAspectLocation {
+public interface CommandConsole {
 
-    /**
-     * Returns a {@link File} object that points to the Bazel directory containing the aspect bzl file. This is set to
-     * bazel-eclipse/resources in the plugin. This has to be done in a special way when the plugin is running inside of
-     * Eclipse. See implementor of this interface for details.
+    /** 
+     * Create an {@link OuputStream} suitable to print standard output of a command. 
      */
-    public File getAspectDirectory();
+    OutputStream createOutputStream();
 
-    /**
-     * Returns the label of the aspect in the Bazel workspace (with the function name).
-     * <p>
-     * For example: "//:bzleclipse_aspect.bzl%bzleclipse_aspect"
+    /** 
+     * Create an {@link OuputStream} suitable to print standard error output of a command. 
      */
-    public String getAspectLabel();
+    OutputStream createErrorStream();
+
 }

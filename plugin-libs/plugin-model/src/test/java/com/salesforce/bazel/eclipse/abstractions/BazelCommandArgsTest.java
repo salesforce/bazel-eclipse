@@ -20,38 +20,18 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * Copyright 2017 The Bazel Authors. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- *
  */
-
 package com.salesforce.bazel.eclipse.abstractions;
 
-import java.io.OutputStream;
+import org.junit.Test;
 
-/**
- * An interface to describe an output console to stream output from a command. A command console should be able to
- * provide output stream for both normal ouput and error output. An implementation exists that plugs into the Eclipse
- * console.
- * <p>
- * The abstraction package is used to insulate parts of the plugin code from having direct Eclipse dependencies, which
- * allows for easier testing and simpler builds.
- */
-public interface CommandConsole {
+import com.salesforce.bazel.eclipse.model.BazelCommandArgs;
 
-    /** Create an {@link OuputStream} suitable to print standard output of a command. */
-    OutputStream createOutputStream();
+import static org.junit.Assert.assertEquals;
 
-    /** Create an {@link OuputStream} suitable to print standard error output of a command. */
-    OutputStream createErrorStream();
-
+public class BazelCommandArgsTest {
+    @Test
+    public void testArgs() {
+        assertEquals("--test_filter", BazelCommandArgs.TEST_FILTER.getName());
+    }
 }

@@ -23,27 +23,15 @@
  */
 package com.salesforce.bazel.eclipse.abstractions;
 
-/**
- * Well known names of Bazel command line arguments.
- * 
- * @author nishant.dsouza
+import java.io.IOException;
+
+/** 
+ * A factory that returns a command console by name 
  */
-public enum BazelCommandArgs {
-
-    TEST_FILTER("--test_filter");
-
-    private final String argName;
-
-    private BazelCommandArgs(String argName) {
-        this.argName = argName;
-    }
-
-    public String getName() {
-        return argName;
-    }
-
-    @Override
-    public String toString() {
-        return getName();
-    }
+public interface CommandConsoleFactory {
+    /**
+     * Returns a {@link CommandConsole} that has the name {@code name}. {@code title} will be written at the
+     * beginning of the console.
+     */
+    CommandConsole get(String name, String title) throws IOException;
 }

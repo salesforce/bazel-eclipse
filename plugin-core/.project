@@ -3,7 +3,6 @@
 	<name>com.salesforce.bazel.eclipse.core</name>
 	<comment></comment>
 	<projects>
-		<project>plugin-abstractions</project>
 		<project>plugin-command</project>
 		<project>plugin-deps</project>
 		<project>plugin-model</project>

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2020, Salesforce.com, Inc. All rights reserved.
+/**
+ * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -21,19 +21,27 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-package com.salesforce.bazel.eclipse.abstractions;
+package com.salesforce.bazel.eclipse.model;
 
 /**
- * An interface to create an observer to observe stream output from a command. An output stream observer should be able to
- * publish output stream for both normal ouput and error output as soon as they appear in command console. An 
- * implementation exists that publishes error output to problems view.
- * <p>
- * The abstraction package is used to insulate parts of the plugin code from having direct Eclipse dependencies, which
- * allows for easier testing and simpler builds.
+ * Well known names of Bazel command line arguments.
  */
-public interface OutputStreamObserver {
-    
-    public void update(String output);
+public enum BazelCommandArgs {
 
+    TEST_FILTER("--test_filter");
+
+    private final String argName;
+
+    private BazelCommandArgs(String argName) {
+        this.argName = argName;
+    }
+
+    public String getName() {
+        return argName;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
 }

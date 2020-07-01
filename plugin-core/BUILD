@@ -17,7 +17,6 @@ eclipse_plugin(
     # include this p2.inf entry only if you want to manually control the contents of this file, otherwise it is auto generated
     classpath_resources = ['plugin.xml'],
     deps = [
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
 
@@ -96,7 +95,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/importer/BazelProjectImportScannerTest.java"],
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
 
@@ -115,7 +113,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/command/BazelCommandRunnerFTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
     ] + mock_deps,
@@ -127,7 +124,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/config/BazelEclipseProjectFactoryFTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
     ] + mock_deps,
@@ -139,7 +135,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/classpath/BazelClasspathContainerFTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
     ] + mock_deps,
@@ -151,7 +146,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/builder/BazelBuilderFTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
     ] + mock_deps,
@@ -163,7 +157,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/mock/test/MockTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-command",
         "//plugin-libs/plugin-model",
     ] + mock_deps,

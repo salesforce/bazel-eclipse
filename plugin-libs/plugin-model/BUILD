@@ -150,7 +150,7 @@ java_test(
     name = "BazelWorkspaceTest",
     srcs = glob([
         "src/test/java/com/salesforce/bazel/eclipse/model/**/*.java",
-    ]), 
+    ]),
     deps = [
         ":plugin-model",
 
@@ -161,5 +161,15 @@ java_test(
         "//plugin-libs/plugin-testdeps:org_mockito_mockito_core",
         "//plugin-libs/plugin-testdeps:com_google_truth",
     ],
-    
+)
+
+java_test(
+    name = "BazelCommandArgsTest",
+    srcs = ["src/test/java/com/salesforce/bazel/eclipse/abstractions/BazelCommandArgsTest.java"],
+    deps = [
+        ":plugin-model",
+        
+        "//plugin-libs/plugin-testdeps:org_junit_junit",
+        "//plugin-libs/plugin-testdeps:com_google_truth",
+    ],
 )

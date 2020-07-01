@@ -25,11 +25,8 @@
 package com.salesforce.bazel.eclipse.abstractions;
 
 /**
- * Abstraction that encapsulates the Eclipse IProgressMonitor.
- * <p>
- * The abstraction package is used to insulate parts of the plugin code from having direct Eclipse dependencies, which
- * allows for easier testing and simpler builds.
- *
+ * Abstraction that allows an observer to monitor the progress of work performed during an operation. This 
+ * interface was inspired by the Eclipse API.
  */
 public interface WorkProgressMonitor {
 

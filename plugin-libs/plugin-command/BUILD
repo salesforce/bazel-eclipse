@@ -13,7 +13,6 @@ java_library(
         # so that we can have easily run unit tests
         # only the core plugin knows about Eclipse API
 
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-model",
 
         "//plugin-libs/plugin-deps:com_google_guava",
@@ -29,7 +28,6 @@ eclipse_plugin(
     exports = 'com.salesforce.bazel.eclipse.command;version="'+VERSION+'"',
     visibility = ["//visibility:public"],
     deps = [
-    "//plugin-libs/plugin-abstractions",
     "//plugin-libs/plugin-model",
 
     "//plugin-libs/plugin-deps:com_google_guava",
@@ -46,7 +44,6 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         ":plugin-command",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-model",
         "//plugin-libs/plugin-testdeps",
 
@@ -65,7 +62,6 @@ java_test(
     deps = [
         ":plugin-command",
         ":plugin-command-test-mocks",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-model",
         "//plugin-libs/plugin-testdeps",
 
@@ -85,7 +81,6 @@ java_test(
     deps = [
         ":plugin-command",
         ":plugin-command-test-mocks",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-model",
         "//plugin-libs/plugin-testdeps",
 
@@ -104,8 +99,8 @@ java_test(
     ],
     deps = [
         ":plugin-command",
-        "//plugin-libs/plugin-abstractions",
-
+        "//plugin-libs/plugin-model",
+        
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
         "//plugin-libs/plugin-testdeps:com_google_truth",
@@ -120,7 +115,6 @@ java_test(
     deps = [
         ":plugin-command",
         ":plugin-command-test-mocks",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-model",
         "//plugin-libs/plugin-testdeps",
 
@@ -140,7 +134,6 @@ java_test(
     deps = [
         ":plugin-command",
         ":plugin-command-test-mocks",
-        "//plugin-libs/plugin-abstractions",
         "//plugin-libs/plugin-testdeps",
 
         "//plugin-libs/plugin-testdeps:com_google_truth",

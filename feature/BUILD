@@ -21,7 +21,6 @@ eclipse_feature(
     license_url = "http://www.apache.org/licenses/LICENSE-2.0",
     plugins = [
       "//plugin-core:com.salesforce.bazel.eclipse.core",
-      "//plugin-libs/plugin-abstractions:com.salesforce.bazel.eclipse.abstractions",
       "//plugin-libs/plugin-command:com.salesforce.bazel.eclipse.command",
       "//plugin-libs/plugin-model:com.salesforce.bazel.eclipse.model",
       "//plugin-libs/plugin-deps:com.salesforce.bazel.eclipse.deps",
