@@ -246,7 +246,7 @@ class BazelLaunchConfigurationSupport {
     private static AspectPackageInfos computeAspectPackageInfos(IProject project, BazelWorkspaceCommandRunner bazelRunner,
             WorkProgressMonitor monitor) {
         ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
-        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         try {
             // TODO switch this to use the BazelBuildFile value object
         	String projectName = project.getName();

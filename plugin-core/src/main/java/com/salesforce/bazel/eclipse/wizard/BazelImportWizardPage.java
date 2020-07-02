@@ -188,7 +188,7 @@ public class BazelImportWizardPage extends WizardPage {
         List<BazelPackageInfo> importedPackages = new ArrayList<>();
         ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
         IJavaProject[] javaProjects = BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false);
-        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         for (IJavaProject javaProject : javaProjects) {
             // TODO it is possible there are no targets configured for a project

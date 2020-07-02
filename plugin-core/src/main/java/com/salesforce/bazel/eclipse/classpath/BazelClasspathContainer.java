@@ -72,10 +72,10 @@ import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
  */
 public class BazelClasspathContainer implements IClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
-    private static BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
     
     private final BazelWorkspace bazelWorkspace;
-    private final BazelProject bazelProject;
+    private final BazelProjectManager bazelProjectManager;
+    private BazelProject bazelProject;
     private final IPath eclipseProjectPath;
     private final IProject eclipseProject;
     private final boolean eclipseProjectIsRoot;
@@ -97,15 +97,20 @@ public class BazelClasspathContainer implements IClasspathContainer {
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
     	this.bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+    	this.bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         this.eclipseProject = eclipseProject;
         this.eclipseProjectPath = eclipseProject.getLocation();
         this.eclipseProjectIsRoot = resourceHelper.isBazelRootProject(eclipseProject);
         this.osDetector = BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy();
         
-        this.bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
-        bazelProjectManager.addProject(bazelProject);
+        this.bazelProject = this.bazelProjectManager.getProject(eclipseProject.getName());
+        if (this.bazelProject == null) {
+        	this.bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
+        	this.bazelProjectManager.addProject(bazelProject);
+        }
         
         impl = new BazelClasspathContainerImpl(this.bazelWorkspace, 
+        		bazelProjectManager,
         		bazelProject, 
         		resourceHelper.isBazelRootProject(eclipseProject), 
         		resourceHelper,

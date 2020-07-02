@@ -140,7 +140,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();        
         File base = bazelWorkspace.getBazelExecRootDirectory();
         ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
-        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         String testClassName = configuration.getAttribute("org.eclipse.jdt.launching.MAIN_TYPE", (String) null);
         String suffix = getParamsJarSuffix(isSource);

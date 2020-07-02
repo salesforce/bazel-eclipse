@@ -299,7 +299,7 @@ public class BazelEclipseProjectFactory {
     private static IProject createEclipseProjectForBazelPackage(String projectName, URI eclipseProjectLocation,
             File bazelWorkspaceRootDirectory, String packageFSPath, List<String> packageSourceCodeFSPaths,
             List<String> bazelTargets, int javaLanguageVersion) {
-        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         IProject eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation, bazelWorkspaceRootDirectory);
         BazelProject bazelProject = bazelProjectManager.getProject(projectName);
@@ -517,7 +517,7 @@ public class BazelEclipseProjectFactory {
             createdEclipseProject = newEclipseProject;
         }
 
-        BazelProjectManager.getInstance().addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
+        BazelPluginActivator.getBazelProjectManager().addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
         return createdEclipseProject;
     }
 

@@ -56,6 +56,7 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.model.RealOperatingEnvironmentDetectionStrategy;
@@ -94,6 +95,11 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     private static BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
     
     /**
+     * ProjectManager manages all of the imported projects
+     */
+    private static BazelProjectManager bazelProjectManager;
+    
+    /**
      * ResourceHelper is a useful singleton for looking up workspace/projects from the Eclipse environment
      */
     private static ResourceHelper resourceHelper;
@@ -130,12 +136,13 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         BazelAspectLocation aspectLocation = new BazelAspectLocationImpl();
         CommandConsoleFactory consoleFactory = new EclipseConsole();
         CommandBuilder  commandBuilder = new ShellCommandBuilder(consoleFactory);
+        BazelProjectManager projectMgr = new BazelProjectManager();
         ResourceHelper eclipseResourceHelper = new EclipseResourceHelper();
         JavaCoreHelper eclipseJavaCoreHelper = new EclipseJavaCoreHelper();
         OperatingEnvironmentDetectionStrategy osEnvStrategy = new RealOperatingEnvironmentDetectionStrategy();
         ProjectPreferencesManager projectPreferencesManager = new EclipseProjectPreferencesManager(eclipseResourceHelper);
         
-        startInternal(aspectLocation, commandBuilder, consoleFactory, eclipseResourceHelper, eclipseJavaCoreHelper, 
+        startInternal(aspectLocation, commandBuilder, consoleFactory, projectMgr, eclipseResourceHelper, eclipseJavaCoreHelper, 
         		osEnvStrategy, projectPreferencesManager);
     }
 
@@ -145,7 +152,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * the passed collaborators are all the real ones, when running mock tests the collaborators are mocks.
      */
     public void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory, 
-            ResourceHelper rh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, ProjectPreferencesManager projectPrefsMgr) throws Exception {
+    		BazelProjectManager projectMgr, ResourceHelper rh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, ProjectPreferencesManager projectPrefsMgr) throws Exception {
         // reset internal state (this is so tests run in a clean env)
         bazelWorkspace = null;
         bazelWorkspaceCommandRunner = null;
@@ -155,6 +162,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         plugin = this;
         javaCoreHelper = javac;
         osEnvStrategy = osEnv;
+        bazelProjectManager = projectMgr;
         projectPreferencesManager = projectPrefsMgr;
 
         // Get the bazel executable path from the settings, defaults to /usr/local/bin/bazel
@@ -264,6 +272,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             }
         }
         return bazelWorkspaceCommandRunner;
+    }
+    
+    /**
+     * Returns the manager for imported projects
+     * @return
+     */
+    public static BazelProjectManager getBazelProjectManager() {
+    	return bazelProjectManager;
     }
     
     /**

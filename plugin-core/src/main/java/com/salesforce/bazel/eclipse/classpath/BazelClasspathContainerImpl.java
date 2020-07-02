@@ -51,6 +51,7 @@ public class BazelClasspathContainerImpl {
     private static final long CLASSPATH_CACHE_TIMEOUT_MS = 300000; 
 
     private final BazelWorkspace bazelWorkspace;
+    private final BazelProjectManager bazelProjectManager;
     private final BazelProject bazelProject;
     private final boolean eclipseProjectIsRoot;
     private final ResourceHelper resourceHelper;
@@ -65,11 +66,12 @@ public class BazelClasspathContainerImpl {
     private long cachePutTimeMillis = 0;
     
 
-    public BazelClasspathContainerImpl(BazelWorkspace bazelWorkspace, BazelProject bazelProject,
+    public BazelClasspathContainerImpl(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager, BazelProject bazelProject,
 			boolean eclipseProjectIsRoot, ResourceHelper resourceHelper, EclipseImplicitClasspathHelper implicitDependencyHelper,
 			OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager,
 			JavaCoreHelper javaCoreHelper) {
     	this.bazelWorkspace = bazelWorkspace;
+    	this.bazelProjectManager = bazelProjectManager;
 		this.bazelProject = bazelProject;
 		this.eclipseProjectIsRoot = eclipseProjectIsRoot;
 		this.resourceHelper = resourceHelper;
@@ -132,7 +134,7 @@ public class BazelClasspathContainerImpl {
 
             try {
                 IProject eclipseIProject = (IProject)bazelProject.getProjectImpl();
-                BazelProject bazelProject = BazelProjectManager.getInstance().getProject(eclipseIProject.getName());
+                BazelProject bazelProject = bazelProjectManager.getProject(eclipseIProject.getName());
 
                 ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
                 BazelProjectTargets configuredTargetsForProject = prefsMgr.getConfiguredBazelTargets(bazelProject, false);
@@ -200,7 +202,7 @@ public class BazelClasspathContainerImpl {
                             } else {
                                 // add the referenced project to the classpath, directly as a project classpath entry
                                 if (!projectsAddedToClasspath.contains(otherBazelProjectName)) {
-                                	BazelProject otherBazelProject = BazelProjectManager.getInstance().getProject(otherBazelProjectName);
+                                	BazelProject otherBazelProject = bazelProjectManager.getProject(otherBazelProjectName);
                                 	if (otherBazelProject == null) {
                                 		otherBazelProject = new BazelProject(otherBazelProjectName);
                                 	}

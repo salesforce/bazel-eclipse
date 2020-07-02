@@ -10,16 +10,8 @@ import java.util.TreeMap;
 public class BazelProjectManager {
 
 	private Map<String, BazelProject> projectMap = new TreeMap<>();
-	private static BazelProjectManager instance;
 	
-	BazelProjectManager() {
-	}
-	
-	public static BazelProjectManager getInstance() {
-		if (instance == null) {
-			instance = new BazelProjectManager();
-		}
-		return instance;
+	public BazelProjectManager() {
 	}
 	
 	public void addProject(BazelProject project) {

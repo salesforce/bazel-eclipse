@@ -106,7 +106,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
     private List<BazelPackageLocation> getPackages(IJavaProject[] projects) {
         List<BazelPackageLocation> packageLocations = new ArrayList<>(projects.length);
         ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
-        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         for (IJavaProject project : projects) {
         	String projectName = project.getProject().getName();

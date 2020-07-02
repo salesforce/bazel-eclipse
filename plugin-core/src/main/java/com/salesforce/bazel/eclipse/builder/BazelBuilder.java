@@ -141,7 +141,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner) 
                     throws Exception{
         String pname = project.getName();
-        BazelProject bazelProject = BazelProjectManager.getInstance().getProject(pname);
+        BazelProject bazelProject = BazelPluginActivator.getBazelProjectManager().getProject(pname);
         ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
         String packageLabel = prefsMgr.getBazelLabelForProject(bazelProject);
         System.out.println("Refreshing the classpath for project ["+pname+"] for package ["+packageLabel+"]");
@@ -196,7 +196,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     {
         Set<String> bazelTargets = new TreeSet<>();
         ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
-        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         List<BazelProject> bazelProjects = new ArrayList<>();
 
         // figure out the list of targets to build
@@ -226,7 +226,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     private static List<String> getAllBazelBuildFlags(Collection<IProject> projects) {
         List<String> buildFlags = Lists.newArrayList();
         ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
-        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         for (IProject project : projects) {
         	String projectName = project.getName();
