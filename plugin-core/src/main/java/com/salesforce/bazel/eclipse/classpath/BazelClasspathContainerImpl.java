@@ -26,7 +26,6 @@ import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
-import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.SimplePerfRecorder;
 
 public class BazelClasspathContainerImpl {
@@ -40,7 +39,6 @@ public class BazelClasspathContainerImpl {
     private ImplicitClasspathHelper implicitDependencyHelper = new ImplicitClasspathHelper();
     private final OperatingEnvironmentDetectionStrategy osDetector;
     private final BazelCommandManager bazelCommandManager;
-    private final BazelConfigurationManager bazelConfigurationManager;
     private final LogHelper logger;
     
     private JvmClasspathEntry[] cachedEntries;
@@ -49,8 +47,7 @@ public class BazelClasspathContainerImpl {
 
     public BazelClasspathContainerImpl(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager, BazelProject bazelProject,
 			boolean eclipseProjectIsRoot, ImplicitClasspathHelper implicitDependencyHelper,
-			OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager,
-			BazelConfigurationManager configManager) {
+			OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager) {
     	this.bazelWorkspace = bazelWorkspace;
     	this.bazelProjectManager = bazelProjectManager;
 		this.bazelProject = bazelProject;
@@ -58,7 +55,6 @@ public class BazelClasspathContainerImpl {
 		this.implicitDependencyHelper = implicitDependencyHelper;
 		this.osDetector = osDetector;
 		this.bazelCommandManager = bazelCommandManager;
-		this.bazelConfigurationManager = configManager;
 		
 		logger = LogHelper.log(this.getClass());
 	}
@@ -110,14 +106,14 @@ public class BazelClasspathContainerImpl {
             Map<String, JvmClasspathEntry> testClasspathEntryMap = new TreeMap<>();
 
             try {
-                BazelProjectTargets configuredTargetsForProject = this.bazelConfigurationManager.getConfiguredBazelTargets(bazelProject, false);
+                BazelProjectTargets configuredTargetsForProject = this.bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
                 
                 // get the model of the BUILD file for this package, which will tell us the type of each target and the list
                 // of all targets if configured with the wildcard target
                 BazelBuildFile bazelBuildFileModel = null; 
                 try {
                     bazelBuildFileModel = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor, 
-                    		this.bazelConfigurationManager.getBazelLabelForProject(bazelProject));
+                    		this.bazelProjectManager.getBazelLabelForProject(bazelProject));
                 } catch (Exception anyE) {
                     logger.error("Unable to compute classpath containers entries for project "+bazelProject.name, anyE);
                     return returnEmptyClasspathOrThrow(anyE);
@@ -236,7 +232,7 @@ public class BazelClasspathContainerImpl {
             if (this.eclipseProjectIsRoot) {
                 return true;
             }
-            BazelProjectTargets targets = this.bazelConfigurationManager.getConfiguredBazelTargets(bazelProject, false);
+            BazelProjectTargets targets = this.bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
             List<BazelProblem> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, null);
             for (BazelProblem detail : details) {
             	logger.error(detail.toString());

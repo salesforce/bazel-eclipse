@@ -74,7 +74,6 @@ import com.salesforce.bazel.sdk.model.BazelProject;
 import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 
 /**
  * Project builder that calls out to Bazel to run a workspace build.
@@ -142,8 +141,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                     throws Exception{
         String pname = project.getName();
         BazelProject bazelProject = BazelPluginActivator.getBazelProjectManager().getProject(pname);
-        BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
-        String packageLabel = configMgr.getBazelLabelForProject(bazelProject);
+        BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
+        String packageLabel = projMgr.getBazelLabelForProject(bazelProject);
         System.out.println("Refreshing the classpath for project ["+pname+"] for package ["+packageLabel+"]");
         
         // Force update of classpath container and the aspect cache
@@ -195,7 +194,6 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException
     {
         Set<String> bazelTargets = new TreeSet<>();
-        BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         List<BazelProject> bazelProjects = new ArrayList<>();
 
@@ -203,7 +201,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         for (IProject project : projects) {
         	String projectName = project.getName();
         	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
-        	BazelProjectTargets activatedTargets = configMgr.getConfiguredBazelTargets(bazelProject, false);
+        	BazelProjectTargets activatedTargets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
             bazelTargets.addAll(activatedTargets.getConfiguredTargets());
             bazelProjects.add(bazelProject);
         }
@@ -213,7 +211,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         } else {
             List<String> bazelBuildFlags = getAllBazelBuildFlags(projects);
             // Get a map of targets to projects to build BazelErrorStreamObserver
-            Map<BazelLabel, BazelProject> labelToProjectMap = configMgr.getBazelLabelToProjectMap(bazelProjects);
+            Map<BazelLabel, BazelProject> labelToProjectMap = bazelProjectManager.getBazelLabelToProjectMap(bazelProjects);
             BazelErrorStreamObserver errorStreamObserver = new BazelErrorStreamObserver(monitor, labelToProjectMap, rootProject);
             // Start error observer and clear Problems View
             errorStreamObserver.startObserver();
@@ -225,13 +223,12 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private static List<String> getAllBazelBuildFlags(Collection<IProject> projects) {
         List<String> buildFlags = Lists.newArrayList();
-        BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         for (IProject project : projects) {
         	String projectName = project.getName();
         	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
-            buildFlags.addAll(configMgr.getBazelBuildFlagsForProject(bazelProject));
+            buildFlags.addAll(bazelProjectManager.getBazelBuildFlagsForProject(bazelProject));
         }
         return buildFlags;
     }

@@ -37,7 +37,6 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.model.BazelProject;
 import com.salesforce.bazel.sdk.model.BazelProjectManager;
-import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 
 public class ProjectViewEditor extends AbstractDecoratedTextEditor {
 
@@ -105,7 +104,6 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
 
     private List<BazelPackageLocation> getPackages(IJavaProject[] projects) {
         List<BazelPackageLocation> packageLocations = new ArrayList<>(projects.length);
-        BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         for (IJavaProject project : projects) {
@@ -113,14 +111,14 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
         	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
 
         	// get the target to get at the package path
-            Set<String> targets = configMgr.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets();
+            Set<String> targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets();
             if (targets == null || targets.isEmpty()) {
                 // this shouldn't happen, but if it does, we do not want to blow up here
                 // instead return null to force re-import
                 return null;
             }
             // TODO it is possible there are no targets configured for a project
-            String target = configMgr.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets().iterator().next();
+            String target = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets().iterator().next();
             BazelLabel label = new BazelLabel(target);
             packageLocations.add(new ProjectViewPackageLocation(this.rootDirectory, label.getPackagePath()));
         }

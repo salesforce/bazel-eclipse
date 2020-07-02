@@ -85,7 +85,6 @@ import com.salesforce.bazel.sdk.model.BazelProject;
 import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
-import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
@@ -306,8 +305,8 @@ public class BazelEclipseProjectFactory {
         try {
             addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID);
             addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID);
-            BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
-            configMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), 
+            BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
+            projMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), 
                 packageFSPath, bazelTargets, ImmutableList.of()); // TODO pass buildFlags
 
             // this may throw if the user has deleted the .project file on disk while the project is open for import

@@ -66,7 +66,6 @@ import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
-import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 
 /**
  * Computes the classpath for a Bazel package and provides it to the JDT tooling in Eclipse.
@@ -116,8 +115,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
         		resourceHelper.isBazelRootProject(eclipseProject), 
         		new EclipseImplicitClasspathHelper(), 
         		osDetector, 
-        		BazelPluginActivator.getBazelCommandManager(),
-        		BazelPluginActivator.getInstance().getConfigurationManager());
+        		BazelPluginActivator.getBazelCommandManager());
         instances.add(impl);
         
         javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
@@ -186,7 +184,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
         }
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
-        BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
+        BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
     	String projectName = this.eclipseProject.getName();
     	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
 
@@ -194,7 +192,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
             if (this.eclipseProjectIsRoot) {
                 return true;
             }
-            BazelProjectTargets targets = configMgr.getConfiguredBazelTargets(bazelProject, false);
+            BazelProjectTargets targets = projMgr.getConfiguredBazelTargets(bazelProject, false);
             List<BazelProblem> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, null);
             for (BazelProblem detail : details) {
                 BazelPluginActivator.error(detail.toString());
