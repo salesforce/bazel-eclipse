@@ -62,7 +62,6 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.BazelNature;
@@ -86,6 +85,7 @@ import com.salesforce.bazel.sdk.model.BazelProject;
 import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
@@ -306,8 +306,8 @@ public class BazelEclipseProjectFactory {
         try {
             addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID);
             addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID);
-            ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
-            prefsMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), 
+            BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
+            configMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), 
                 packageFSPath, bazelTargets, ImmutableList.of()); // TODO pass buildFlags
 
             // this may throw if the user has deleted the .project file on disk while the project is open for import
@@ -317,9 +317,7 @@ public class BazelEclipseProjectFactory {
             setBuildersOnEclipseProject(eclipseProject);
         } catch (CoreException e) {
             LOG.error(e.getMessage(), e);
-        } catch (BackingStoreException e) {
-            LOG.error(e.getMessage(), e);
-        }
+        } 
 
         try {
             // TODO investigate using the configure() hook in the BazelNature for the configuration part of this createProject() method

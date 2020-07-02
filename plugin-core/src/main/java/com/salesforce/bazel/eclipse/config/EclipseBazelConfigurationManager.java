@@ -58,8 +58,9 @@ import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProject;
 import com.salesforce.bazel.sdk.model.BazelProjectTargets;
+import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 
-public class EclipseProjectPreferencesManager implements ProjectPreferencesManager { 
+public class EclipseBazelConfigurationManager implements BazelConfigurationManager { 
     /**
      * Absolute path of the Bazel workspace root 
      */
@@ -91,7 +92,7 @@ public class EclipseProjectPreferencesManager implements ProjectPreferencesManag
 
     private final ResourceHelper resourceHelper;
     
-    public EclipseProjectPreferencesManager(ResourceHelper resourceHelper) {
+    public EclipseBazelConfigurationManager(ResourceHelper resourceHelper) {
     	this.resourceHelper = resourceHelper;
     }
     
@@ -121,7 +122,7 @@ public class EclipseProjectPreferencesManager implements ProjectPreferencesManag
     @Override
 	public String getBazelWorkspacePath() {
         IPreferenceStore prefsStore =  this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
-        return prefsStore.getString(EclipseProjectPreferencesManager.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY);
+        return prefsStore.getString(EclipseBazelConfigurationManager.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY);
     }
 
     /**
@@ -129,7 +130,7 @@ public class EclipseProjectPreferencesManager implements ProjectPreferencesManag
     @Override
 	public void setBazelWorkspacePath(String bazelWorkspacePath) {
         IPreferenceStore prefsStore =  this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
-        prefsStore.setValue(EclipseProjectPreferencesManager.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspacePath);
+        prefsStore.setValue(EclipseBazelConfigurationManager.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspacePath);
     }
     
     
@@ -234,7 +235,7 @@ public class EclipseProjectPreferencesManager implements ProjectPreferencesManag
     
     @Override
 	public void addSettingsToProject(BazelProject bazelProject, String bazelWorkspaceRoot,
-            String bazelProjectLabel, List<String> bazelTargets, List<String> bazelBuildFlags) throws BackingStoreException {
+            String bazelProjectLabel, List<String> bazelTargets, List<String> bazelBuildFlags) {
 
     	IProject eclipseProject = (IProject)bazelProject.getProjectImpl();
         Preferences eclipseProjectBazelPrefs = this.resourceHelper.getProjectBazelPreferences(eclipseProject);
@@ -255,7 +256,11 @@ public class EclipseProjectPreferencesManager implements ProjectPreferencesManag
             eclipseProjectBazelPrefs.put(BUILDFLAG_PROPERTY_PREFIX + i, bazelBuildFlag);
             i++;
         }
-        eclipseProjectBazelPrefs.flush();
+        try {
+        	eclipseProjectBazelPrefs.flush();
+        } catch (Exception anyE) {
+        	throw new RuntimeException(anyE);
+        }
     }
     
 

@@ -52,9 +52,9 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.ProjectPreferencesManager;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -66,6 +66,7 @@ import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 
 /**
  * Computes the classpath for a Bazel package and provides it to the JDT tooling in Eclipse.
@@ -113,11 +114,10 @@ public class BazelClasspathContainer implements IClasspathContainer {
         		bazelProjectManager,
         		bazelProject, 
         		resourceHelper.isBazelRootProject(eclipseProject), 
-        		resourceHelper,
         		new EclipseImplicitClasspathHelper(), 
         		osDetector, 
         		BazelPluginActivator.getBazelCommandManager(),
-        		BazelPluginActivator.getJavaCoreHelper());
+        		BazelPluginActivator.getInstance().getConfigurationManager());
         instances.add(impl);
         
         javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
@@ -133,7 +133,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
 
     @Override
     public IClasspathEntry[] getClasspathEntries() {
-    	JvmClasspathEntry[] jvmClasspathEntries = impl.getClasspathEntries();
+    	JvmClasspathEntry[] jvmClasspathEntries = impl.getClasspathEntries(new EclipseWorkProgressMonitor(null));
     	
     	List<IClasspathEntry> eclipseClasspathEntries = new ArrayList<>();
         File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
@@ -186,7 +186,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
         }
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
-        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+        BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
     	String projectName = this.eclipseProject.getName();
     	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
 
@@ -194,7 +194,7 @@ public class BazelClasspathContainer implements IClasspathContainer {
             if (this.eclipseProjectIsRoot) {
                 return true;
             }
-            BazelProjectTargets targets = prefsMgr.getConfiguredBazelTargets(bazelProject, false);
+            BazelProjectTargets targets = configMgr.getConfiguredBazelTargets(bazelProject, false);
             List<BazelProblem> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, null);
             for (BazelProblem detail : details) {
                 BazelPluginActivator.error(detail.toString());

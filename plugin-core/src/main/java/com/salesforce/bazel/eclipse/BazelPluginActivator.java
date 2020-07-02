@@ -42,8 +42,8 @@ import org.osgi.framework.BundleContext;
 
 import com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
-import com.salesforce.bazel.eclipse.config.EclipseProjectPreferencesManager;
-import com.salesforce.bazel.eclipse.config.ProjectPreferencesManager;
+import com.salesforce.bazel.eclipse.config.EclipseBazelProjectManager;
+import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseConsole;
@@ -59,6 +59,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.RealOperatingEnvironmentDetectionStrategy;
 
 /**
@@ -117,7 +118,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     /**
      * Iteracts with preferences
      */
-    private static ProjectPreferencesManager projectPreferencesManager;
+    private static BazelConfigurationManager configurationManager;
 
     // LIFECYCLE
     
@@ -136,14 +137,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         BazelAspectLocation aspectLocation = new BazelAspectLocationImpl();
         CommandConsoleFactory consoleFactory = new EclipseConsole();
         CommandBuilder  commandBuilder = new ShellCommandBuilder(consoleFactory);
-        BazelProjectManager projectMgr = new BazelProjectManager();
         ResourceHelper eclipseResourceHelper = new EclipseResourceHelper();
         JavaCoreHelper eclipseJavaCoreHelper = new EclipseJavaCoreHelper();
+        BazelProjectManager projectMgr = new EclipseBazelProjectManager(eclipseResourceHelper, eclipseJavaCoreHelper);
         OperatingEnvironmentDetectionStrategy osEnvStrategy = new RealOperatingEnvironmentDetectionStrategy();
-        ProjectPreferencesManager projectPreferencesManager = new EclipseProjectPreferencesManager(eclipseResourceHelper);
+        BazelConfigurationManager configManager = new EclipseBazelConfigurationManager(eclipseResourceHelper);
         
         startInternal(aspectLocation, commandBuilder, consoleFactory, projectMgr, eclipseResourceHelper, eclipseJavaCoreHelper, 
-        		osEnvStrategy, projectPreferencesManager);
+        		osEnvStrategy, configManager);
     }
 
     /**
@@ -152,7 +153,8 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * the passed collaborators are all the real ones, when running mock tests the collaborators are mocks.
      */
     public void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory, 
-    		BazelProjectManager projectMgr, ResourceHelper rh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, ProjectPreferencesManager projectPrefsMgr) throws Exception {
+    		BazelProjectManager projectMgr, ResourceHelper rh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, 
+    		BazelConfigurationManager configMgr) throws Exception {
         // reset internal state (this is so tests run in a clean env)
         bazelWorkspace = null;
         bazelWorkspaceCommandRunner = null;
@@ -163,21 +165,21 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         javaCoreHelper = javac;
         osEnvStrategy = osEnv;
         bazelProjectManager = projectMgr;
-        projectPreferencesManager = projectPrefsMgr;
+        configurationManager = configMgr;
 
         // Get the bazel executable path from the settings, defaults to /usr/local/bin/bazel
-        String bazelPath = projectPreferencesManager.getBazelExecutablePath();
+        String bazelPath = configurationManager.getBazelExecutablePath();
         File bazelPathFile = new File(bazelPath);
 
         // Build the command manager for the workspace (runs Bazel commands)
         bazelCommandManager = new BazelCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelPathFile);
 
         // setup a listener, if the user changes the path to Bazel executable notify the command manager
-        projectPreferencesManager.setBazelExecutablePathListener(bazelCommandManager);
+        configurationManager.setBazelExecutablePathListener(bazelCommandManager);
 
         // Get the bazel workspace path from the settings: 
         //   ECLIPSE_WS_ROOT/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.salesforce.bazel.eclipse.core.prefs
-        String bazelWorkspacePathFromPrefs = projectPreferencesManager.getBazelWorkspacePath();
+        String bazelWorkspacePathFromPrefs = configurationManager.getBazelWorkspacePath();
         if (bazelWorkspacePathFromPrefs != null && !bazelWorkspacePathFromPrefs.isEmpty()) {
             String workspaceName = BazelEclipseProjectFactory.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
             this.setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
@@ -247,7 +249,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         bazelWorkspace.setBazelWorkspaceMetadataStrategy(getWorkspaceCommandRunner());
 
         // write it to the preferences file
-        projectPreferencesManager.setBazelWorkspacePath(rootDirectory.getAbsolutePath());
+        configurationManager.setBazelWorkspacePath(rootDirectory.getAbsolutePath());
     }
     
     
@@ -306,10 +308,10 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     }
     
     /**
-     * Returns the prefs manager for projects
+     * Returns the config manager for projects
      */
-    public ProjectPreferencesManager getProjectPreferencesManager() {
-    	return projectPreferencesManager;
+    public BazelConfigurationManager getConfigurationManager() {
+    	return configurationManager;
     }
     
     // LOGGING

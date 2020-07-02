@@ -1,22 +1,34 @@
-package com.salesforce.bazel.eclipse.config;
+package com.salesforce.bazel.sdk.model;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProject;
 import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 
-public interface ProjectPreferencesManager {
+public interface BazelConfigurationManager {
 
-	// TODO these are not project preferences, we should rename this class 
+	/**
+	 * Gets the file system absolute path to the Bazel executable
+	 */
 	String getBazelExecutablePath();
+	
+	/**
+	 * Configure a listener for changes to the path (often by the user) to the Bazel executable
+	 */
 	void setBazelExecutablePathListener(BazelCommandManager bazelCommandManager);
+	
+	/**
+	 * Gets the absoluate path to the root of the Bazel workspace
+	 */
 	String getBazelWorkspacePath();
+	
+	/**
+	 * Sets the absoluate path to the root of the Bazel workspace
+	 */
 	void setBazelWorkspacePath(String bazelWorkspacePath);
 
 	/**
@@ -49,7 +61,10 @@ public interface ProjectPreferencesManager {
 	 */
 	List<String> getBazelBuildFlagsForProject(BazelProject bazelProject);
 
+	/**
+	 * Persists preferences for the given project
+	 */
 	void addSettingsToProject(BazelProject bazelProject, String bazelWorkspaceRoot, String bazelProjectLabel,
-			List<String> bazelTargets, List<String> bazelBuildFlags) throws BackingStoreException;
+			List<String> bazelTargets, List<String> bazelBuildFlags);
 
 }

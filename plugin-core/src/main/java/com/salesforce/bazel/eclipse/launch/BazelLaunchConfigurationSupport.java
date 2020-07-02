@@ -50,7 +50,6 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.ProjectPreferencesManager;
 import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -61,6 +60,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProject;
 import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelProjectTargets;
+import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.TargetKind;
 
 /**
@@ -245,13 +245,13 @@ class BazelLaunchConfigurationSupport {
 
     private static AspectPackageInfos computeAspectPackageInfos(IProject project, BazelWorkspaceCommandRunner bazelRunner,
             WorkProgressMonitor monitor) {
-        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+        BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         try {
             // TODO switch this to use the BazelBuildFile value object
         	String projectName = project.getName();
         	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
-        	BazelProjectTargets targets = prefsMgr.getConfiguredBazelTargets(bazelProject, false);
+        	BazelProjectTargets targets = configMgr.getConfiguredBazelTargets(bazelProject, false);
             Map<String, Set<AspectPackageInfo>> packageInfos = bazelRunner.getAspectPackageInfos(project.getName(), targets.getConfiguredTargets(),
                 monitor, "launcher:computeAspectPackageInfos");
             return AspectPackageInfos.fromSets(packageInfos.values());

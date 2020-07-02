@@ -27,7 +27,6 @@ import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.builder.BazelMarkerSupport;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
-import com.salesforce.bazel.eclipse.config.ProjectPreferencesManager;
 import com.salesforce.bazel.eclipse.wizard.BazelProjectImporter;
 import com.salesforce.bazel.sdk.ide.projectview.ProjectView;
 import com.salesforce.bazel.sdk.ide.projectview.ProjectViewConstants;
@@ -38,6 +37,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.model.BazelProject;
 import com.salesforce.bazel.sdk.model.BazelProjectManager;
+import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 
 public class ProjectViewEditor extends AbstractDecoratedTextEditor {
 
@@ -105,7 +105,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
 
     private List<BazelPackageLocation> getPackages(IJavaProject[] projects) {
         List<BazelPackageLocation> packageLocations = new ArrayList<>(projects.length);
-        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+        BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         for (IJavaProject project : projects) {
@@ -113,14 +113,14 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
         	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
 
         	// get the target to get at the package path
-            Set<String> targets = prefsMgr.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets();
+            Set<String> targets = configMgr.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets();
             if (targets == null || targets.isEmpty()) {
                 // this shouldn't happen, but if it does, we do not want to blow up here
                 // instead return null to force re-import
                 return null;
             }
             // TODO it is possible there are no targets configured for a project
-            String target = prefsMgr.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets().iterator().next();
+            String target = configMgr.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets().iterator().next();
             BazelLabel label = new BazelLabel(target);
             packageLocations.add(new ProjectViewPackageLocation(this.rootDirectory, label.getPackagePath()));
         }
