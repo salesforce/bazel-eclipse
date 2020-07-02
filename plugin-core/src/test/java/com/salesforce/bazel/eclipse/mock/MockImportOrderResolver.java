@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.model.ImportOrderResolver;
+import com.salesforce.bazel.sdk.workspace.ImportOrderResolver;
 
 public class MockImportOrderResolver implements ImportOrderResolver {
 

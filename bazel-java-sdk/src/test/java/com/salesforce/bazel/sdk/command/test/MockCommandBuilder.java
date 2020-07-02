@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.salesforce.bazel.sdk.abstractions.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.test.type.MockBuildCommand;
@@ -39,6 +38,7 @@ import com.salesforce.bazel.sdk.command.test.type.MockLauncherCommand;
 import com.salesforce.bazel.sdk.command.test.type.MockQueryCommand;
 import com.salesforce.bazel.sdk.command.test.type.MockTestCommand;
 import com.salesforce.bazel.sdk.command.test.type.MockVersionCommand;
+import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
 /**

@@ -23,7 +23,7 @@
  */
 package com.salesforce.bazel.sdk.command.test;
 
-import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 public class MockWorkProgressMonitor implements WorkProgressMonitor {
     public String name = null;

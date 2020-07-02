@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.workspace;
 
 import java.io.File;
 import java.util.List;

@@ -51,11 +51,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.sdk.abstractions.CommandConsole;
-import com.salesforce.bazel.sdk.abstractions.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommand;
+import com.salesforce.bazel.sdk.console.CommandConsole;
+import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 
 /**
  * @{link Command}Test

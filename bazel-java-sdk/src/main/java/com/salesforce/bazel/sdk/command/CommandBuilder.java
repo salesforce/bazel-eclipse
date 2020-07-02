@@ -31,9 +31,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-import com.salesforce.bazel.sdk.abstractions.CommandConsoleFactory;
-import com.salesforce.bazel.sdk.abstractions.OutputStreamObserver;
-import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * A base builder class to generate a Bazel Command object. This is a low level API

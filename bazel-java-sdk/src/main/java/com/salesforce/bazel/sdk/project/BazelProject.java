@@ -13,6 +13,8 @@ import com.salesforce.bazel.sdk.model.BazelPackageInfo;
  */
 public class BazelProject {
 	public String name;
+	
+	// TODO implement mapping of project to bazel packages contained within
 	public List<BazelPackageInfo> bazelPackages;
 	public BazelProjectManager bazelProjectManager; 
 	

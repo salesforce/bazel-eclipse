@@ -27,8 +27,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import com.salesforce.bazel.sdk.abstractions.CommandConsole;
-import com.salesforce.bazel.sdk.abstractions.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.console.CommandConsole;
+import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 
 public class MockCommandConsole implements CommandConsole, CommandConsoleFactory {
     final ByteArrayOutputStream stdout = new ByteArrayOutputStream();

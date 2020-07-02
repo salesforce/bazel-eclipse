@@ -40,8 +40,8 @@ import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.salesforce.bazel.sdk.abstractions.BazelAspectLocation;
-import com.salesforce.bazel.sdk.abstractions.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
+import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**

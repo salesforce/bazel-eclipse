@@ -43,11 +43,11 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.sdk.abstractions.OutputStreamObserver;
-import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
+import com.salesforce.bazel.sdk.command.OutputStreamObserver;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Utility class that understands how to run Command objects and collect output from them.

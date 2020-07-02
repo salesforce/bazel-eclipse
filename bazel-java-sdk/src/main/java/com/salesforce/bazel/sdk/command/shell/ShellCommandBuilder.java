@@ -27,9 +27,9 @@ import java.io.IOException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.sdk.abstractions.CommandConsole;
-import com.salesforce.bazel.sdk.abstractions.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
+import com.salesforce.bazel.sdk.console.CommandConsole;
+import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 
 /**
  * Implementation of CommandBuilder that builds real command line commands (as opposed to

@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.workspace;
 
 /**
  * Isolates the code that looks up operating environment data so that it can be

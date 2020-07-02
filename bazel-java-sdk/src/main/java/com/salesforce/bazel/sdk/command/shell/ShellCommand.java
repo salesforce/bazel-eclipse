@@ -44,14 +44,14 @@ import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.sdk.abstractions.CommandConsole;
-import com.salesforce.bazel.sdk.abstractions.CommandConsoleFactory;
-import com.salesforce.bazel.sdk.abstractions.OutputStreamObserver;
-import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
+import com.salesforce.bazel.sdk.command.OutputStreamObserver;
+import com.salesforce.bazel.sdk.console.CommandConsole;
+import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * A utility class to spawn a command in the shell and parse its output. It allows to filter the output, 

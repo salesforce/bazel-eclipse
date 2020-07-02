@@ -38,9 +38,9 @@ import com.salesforce.bazel.sdk.command.test.MockBazelAspectLocation;
 import com.salesforce.bazel.sdk.command.test.MockCommandBuilder;
 import com.salesforce.bazel.sdk.command.test.MockCommandConsole;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
-import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
+import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
 

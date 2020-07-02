@@ -32,7 +32,6 @@ Bundle-ClassPath: bin/,
 Import-Package: com.google.common.base;version="28.2",
  com.google.common.collect;version="28.2",
  com.google.common.graph;version="28.2",
- com.salesforce.bazel.sdk.abstractions;version="1.2.5.qualifier",
  com.salesforce.bazel.sdk.command;version="1.2.5.qualifier",
  com.salesforce.bazel.sdk.logging;version="1.2.5.qualifier",
  com.salesforce.bazel.sdk.model;version="1.2.5.qualifier"

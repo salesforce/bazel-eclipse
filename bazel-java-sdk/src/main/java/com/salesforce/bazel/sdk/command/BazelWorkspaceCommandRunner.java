@@ -49,20 +49,19 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.sdk.abstractions.BazelAspectLocation;
-import com.salesforce.bazel.sdk.abstractions.CommandConsoleFactory;
-import com.salesforce.bazel.sdk.abstractions.OutputStreamObserver;
-import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.internal.BazelCommandExecutor;
 import com.salesforce.bazel.sdk.command.internal.BazelQueryHelper;
 import com.salesforce.bazel.sdk.command.internal.BazelVersionChecker;
 import com.salesforce.bazel.sdk.command.internal.BazelWorkspaceAspectHelper;
+import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.logging.LoggerFacade;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelProblem;
-import com.salesforce.bazel.sdk.model.BazelWorkspaceMetadataStrategy;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
 
 /**
  * An instance of the Bazel command interface for a specific workspace. Provides the API to run Bazel commands on a

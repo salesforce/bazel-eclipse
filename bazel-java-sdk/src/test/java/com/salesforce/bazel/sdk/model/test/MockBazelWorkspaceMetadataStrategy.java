@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
-import com.salesforce.bazel.sdk.model.BazelWorkspaceMetadataStrategy;
-import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
+import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
  * Mock impl for BazelWorkspaceMetadataStrategy suitable for tests. It mocks various 

@@ -25,7 +25,7 @@ package com.salesforce.bazel.sdk.command.test;
 
 import java.io.File;
 
-import com.salesforce.bazel.sdk.abstractions.BazelAspectLocation;
+import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 
 public class MockBazelAspectLocation implements BazelAspectLocation{
 

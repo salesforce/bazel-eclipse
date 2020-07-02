@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.workspace;
 
 /**
  * Real implementation of OperatingEnvironmentDetectionStrategy to be used when running in a tool.

@@ -35,7 +35,7 @@ package com.salesforce.bazel.eclipse.runtime.impl;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Implementation of Eclipse agnostic WorkProgressMonitor interface that delegates to an Eclipse IProgressMonitor

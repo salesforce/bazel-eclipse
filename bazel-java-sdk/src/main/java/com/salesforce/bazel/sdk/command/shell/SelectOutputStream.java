@@ -47,7 +47,7 @@ import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.sdk.abstractions.OutputStreamObserver;
+import com.salesforce.bazel.sdk.command.OutputStreamObserver;
 
 /**
  * A wrapper output stream to output part of the result to a given output and extracting the other part with a selector

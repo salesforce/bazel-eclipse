@@ -20,39 +20,18 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Copyright 2017 The Bazel Authors. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- *
  */
+package com.salesforce.bazel.sdk.console;
 
-package com.salesforce.bazel.sdk.abstractions;
+import java.io.IOException;
 
-import java.io.File;
-
-/**
- * Provide the location of the aspect to use to analyze a Bazel workspace.
+/** 
+ * A factory that returns a command console by name 
  */
-public interface BazelAspectLocation {
-
+public interface CommandConsoleFactory {
     /**
-     * Returns a {@link File} object that points to the Bazel directory containing the aspect bzl file. See 
-     * implementor of this interface for details.
+     * Returns a {@link CommandConsole} that has the name {@code name}. {@code title} will be written at the
+     * beginning of the console.
      */
-    public File getAspectDirectory();
-
-    /**
-     * Returns the label of the aspect in the Bazel workspace (with the function name).
-     * <p>
-     * For example: "//:bzleclipse_aspect.bzl%bzleclipse_aspect"
-     */
-    public String getAspectLabel();
+    CommandConsole get(String name, String title) throws IOException;
 }

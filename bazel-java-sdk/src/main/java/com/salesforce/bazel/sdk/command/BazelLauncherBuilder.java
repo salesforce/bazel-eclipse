@@ -30,10 +30,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.internal.ConsoleType;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Convenience class that manufactures Bazel Command instances used for Bazel 'run' or 'test' commands

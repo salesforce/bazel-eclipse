@@ -22,7 +22,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.bazel.sdk.abstractions;
+package com.salesforce.bazel.sdk.util;
 
 /**
  * Abstraction that allows an observer to monitor the progress of work performed during an operation.

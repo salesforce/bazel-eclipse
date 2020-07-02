@@ -31,9 +31,9 @@ import java.util.Map;
 import java.util.function.Function;
 
 import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Helper that knows how to run bazel query commands.

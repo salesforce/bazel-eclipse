@@ -1,6 +1,6 @@
 package com.salesforce.bazel.sdk.model.test;
 
-import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
  * For tests, you can hardcode the answer to the os name computation. The os name is used in some cases

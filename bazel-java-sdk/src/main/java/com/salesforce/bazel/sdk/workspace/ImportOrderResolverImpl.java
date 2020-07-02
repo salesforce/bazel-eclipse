@@ -1,10 +1,12 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.workspace;
 
 import java.util.List;
 
 import com.salesforce.bazel.sdk.aspect.AspectDependencyGraphBuilder;
 import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelDependencyGraph;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
  * Orders modules for import such that upstream dependencies are imported before downstream

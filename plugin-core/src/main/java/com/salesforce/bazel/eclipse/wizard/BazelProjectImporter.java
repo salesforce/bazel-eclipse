@@ -12,9 +12,9 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
-import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.model.ImportOrderResolverImpl;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.workspace.ImportOrderResolverImpl;
 
 /**
  * Imports projects with a Progress Dialog.  This is used by the Import Wizard and the ProjectView machinery.

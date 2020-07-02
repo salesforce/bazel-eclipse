@@ -1,6 +1,6 @@
 package com.salesforce.bazel.eclipse.mock;
 
-import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class MockOperatingEnvironmentDetectionStrategy implements OperatingEnvironmentDetectionStrategy {
 
