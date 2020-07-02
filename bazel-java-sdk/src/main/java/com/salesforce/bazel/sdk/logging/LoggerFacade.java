@@ -36,12 +36,9 @@
 package com.salesforce.bazel.sdk.logging;
 
 /**
- * Logger facade that can log both to eclipse platform error log and debug log for the bazel plugin.
+ * Logger facade.
  * 
  * This is an interface so that tests can use it and verify logging
- * 
- * @author Blaine Buxton
- *
  */
 public abstract class LoggerFacade {
     static LoggerFacade instance = new BasicLoggerFacade();
@@ -101,11 +98,6 @@ public abstract class LoggerFacade {
      */
     public abstract void debug(Class<?> from, String message, Object... args);
 
-    /**
-     * Use only by bazel eclipse plugin activator or tests
-     * 
-     * @param newFacade
-     */
     public static void setInstance(LoggerFacade newFacade) {
         instance = newFacade;
     }

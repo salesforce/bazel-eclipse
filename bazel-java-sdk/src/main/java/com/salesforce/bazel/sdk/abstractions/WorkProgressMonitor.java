@@ -25,8 +25,7 @@
 package com.salesforce.bazel.sdk.abstractions;
 
 /**
- * Abstraction that allows an observer to monitor the progress of work performed during an operation. This 
- * interface was inspired by the Eclipse API.
+ * Abstraction that allows an observer to monitor the progress of work performed during an operation.
  */
 public interface WorkProgressMonitor {
 

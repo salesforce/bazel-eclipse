@@ -33,8 +33,7 @@ import com.salesforce.bazel.sdk.command.CommandBuilder;
 
 /**
  * Implementation of CommandBuilder that builds real command line commands (as opposed to
- * mock commands used in testing). This is the implementation used by the plugin when running
- * in Eclipse.
+ * mock commands used in testing). 
  * <p>
  * It creates instances of type ShellCommand.
  */

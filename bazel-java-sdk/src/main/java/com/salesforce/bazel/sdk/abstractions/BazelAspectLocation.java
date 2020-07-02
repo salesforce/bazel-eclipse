@@ -44,9 +44,8 @@ import java.io.File;
 public interface BazelAspectLocation {
 
     /**
-     * Returns a {@link File} object that points to the Bazel directory containing the aspect bzl file. This is set to
-     * bazel-eclipse/resources in the plugin. This has to be done in a special way when the plugin is running inside of
-     * Eclipse. See implementor of this interface for details.
+     * Returns a {@link File} object that points to the Bazel directory containing the aspect bzl file. See 
+     * implementor of this interface for details.
      */
     public File getAspectDirectory();
 

@@ -75,7 +75,7 @@ public abstract class BazelProjectManager {
 	
     /**
      * Creates a project reference between this project and a set of other projects.
-     * References are used by Eclipse code refactoring among other things. 
+     * References are used by IDE code refactoring among other things. 
      * The direction of reference goes from this->updatedRefList
      * If this project no longer uses another project, removing it from the list will eliminate the project reference.
      */
@@ -95,7 +95,7 @@ public abstract class BazelProjectManager {
 	public abstract Map<BazelLabel, BazelProject> getBazelLabelToProjectMap(Collection<BazelProject> bazelProjects);
 
 	/**
-	 * List the Bazel targets the user has chosen to activate for this Eclipse project. Each project configured 
+	 * List the Bazel targets the user has chosen to activate for this project. Each project configured 
 	 * for Bazel is configured to track certain targets and this function fetches this list from the project preferences.
 	 * After initial import, this will be just the wildcard target (:*) which means all targets are activated. This
 	 * is the safest choice as new targets that are added to the BUILD file will implicitly get picked up. But users
@@ -107,7 +107,7 @@ public abstract class BazelProjectManager {
 	public abstract BazelProjectTargets getConfiguredBazelTargets(BazelProject bazelProject, boolean addWildcardIfNoTargets);
 
 	/**
-	 * List of Bazel build flags for this Eclipse project, taken from the project configuration
+	 * List of Bazel build flags for this project, taken from the project configuration
 	 */
 	public abstract List<String> getBazelBuildFlagsForProject(BazelProject bazelProject);
 

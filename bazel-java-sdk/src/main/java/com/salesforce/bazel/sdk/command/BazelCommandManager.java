@@ -95,7 +95,7 @@ public class BazelCommandManager {
     }
 
     /**
-     * Returns a {@link BazelWorkspaceCommandRunner} for the given Eclipse workspace directory. It looks for the
+     * Returns a {@link BazelWorkspaceCommandRunner} for the given Bazel workspace. It looks for the
      * enclosing workspace and returns the instance that corresponds to it. If not in a Bazel workspace, returns null.
      */
     public BazelWorkspaceCommandRunner getWorkspaceCommandRunner(BazelWorkspace bazelWorkspace) {

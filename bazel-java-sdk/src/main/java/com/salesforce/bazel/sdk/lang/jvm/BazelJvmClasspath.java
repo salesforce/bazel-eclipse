@@ -152,7 +152,7 @@ public class BazelJvmClasspath {
                             // the project referenced is actually the the current project that this classpath container is for
                             
                             // some rule types have hidden dependencies that we need to add
-                            // if our Eclipse project has any of those rules, we need to add in the dependencies to our classpath
+                            // if our project has any of those rules, we need to add in the dependencies to our classpath
                             Set<JvmClasspathEntry> implicitDeps = implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, packageInfo);
                             for (JvmClasspathEntry implicitDep : implicitDeps) {
                                 addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, implicitDep, isTestTarget, 
@@ -181,7 +181,7 @@ public class BazelJvmClasspath {
             } // for loop
             
             // now update project refs, which includes adding new ones and removing any that may now be obsolete 
-            // (e.g. dep was removed, project removed from Eclipse workspace)
+            // (e.g. dep was removed, project removed from IDE workspace)
             bazelProjectManager.setProjectReferences(bazelProject, updatedProjectReferences);
             
         } catch (IOException | InterruptedException e) {

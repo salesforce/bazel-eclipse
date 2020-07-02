@@ -100,7 +100,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
 
     /**
      * The internal location on disk for Bazel's 'bazel-bin' for this workspace. E.g.
-     * <i>/private/var/tmp/_bazel_plaird/f521799c9882dcc6330b57416b13ba81/execroot/bazel_eclipse_feature/bazel-out/darwin-fastbuild/bin</i>
+     * <i>/private/var/tmp/_bazel_plaird/f521799c9882dcc6330b57416b13ba81/execroot/bazel_feature/bazel-out/darwin-fastbuild/bin</i>
      * <p>
      * Determined by running this command line: <i>bazel info bazel-bin</i>
      */
@@ -124,7 +124,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     // COLLABORATORS 
     
     /**
-     * Builder for Bazel commands, which may be a ShellCommandBuilder (for real Eclipse use) or a MockCommandBuilder 
+     * Builder for Bazel commands, which may be a ShellCommandBuilder (for real IDE use) or a MockCommandBuilder 
      * (for simulations during functional tests).
      */
     private CommandBuilder commandBuilder;
@@ -184,7 +184,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     }
     
     /**
-     * For each Bazel workspace in the Eclipse workspace, there will be an instance of this runner.
+     * For each Bazel workspace, there will be an instance of this runner.
      */
     BazelWorkspaceCommandRunner(File bazelExecutable, BazelAspectLocation aspectLocation,
             CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory, File bazelWorkspaceRoot) {
@@ -452,11 +452,11 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(String eclipseProjectName,
+    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(String projectName,
             Collection<String> targetLabels, WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        return this.aspectHelper.getAspectPackageInfos(eclipseProjectName, targetLabels, progressMonitor, caller);
+        return this.aspectHelper.getAspectPackageInfos(projectName, targetLabels, progressMonitor, caller);
     }
 
     /**
@@ -472,13 +472,13 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Set<AspectPackageInfo> getAspectPackageInfos(String eclipseProjectName,
+    public synchronized Set<AspectPackageInfo> getAspectPackageInfos(String projectName,
             String targetLabel, WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         Set<String> targetLabels = new TreeSet<>();
         targetLabels.add(targetLabel);
-        Map<String, Set<AspectPackageInfo>> results = this.aspectHelper.getAspectPackageInfos(eclipseProjectName, targetLabels, progressMonitor, caller);
+        Map<String, Set<AspectPackageInfo>> results = this.aspectHelper.getAspectPackageInfos(projectName, targetLabels, progressMonitor, caller);
         
         Set<AspectPackageInfo> resultSet = results.get(targetLabel);
         if (resultSet == null) {
