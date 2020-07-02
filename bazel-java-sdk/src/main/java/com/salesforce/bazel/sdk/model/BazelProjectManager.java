@@ -1,9 +1,15 @@
 package com.salesforce.bazel.sdk.model;
 
+import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Central manager for managing BazelProject instances 
@@ -11,8 +17,10 @@ import java.util.TreeMap;
 public abstract class BazelProjectManager {
 
 	private Map<String, BazelProject> projectMap = new TreeMap<>();
+	private LogHelper logger;
 	
 	public BazelProjectManager() {
+		logger = LogHelper.log(this.getClass());
 	}
 	
 	public void addProject(BazelProject project) {
@@ -27,6 +35,41 @@ public abstract class BazelProjectManager {
 	public Collection<BazelProject> getAllProjects() {
 		return projectMap.values();
 	}
+	
+    /**
+     * Runs a build with the passed targets and returns true if no errors are returned.
+     */
+    public boolean isValid(BazelWorkspace bazelWorkspace, BazelCommandManager bazelCommandManager, 
+    		BazelProject bazelProject)  {
+        if (bazelWorkspace == null) {
+            return false;
+        }
+        
+        
+        File bazelWorkspaceRootDirectory = bazelWorkspace.getBazelWorkspaceRootDirectory();
+        if (bazelWorkspaceRootDirectory == null) {
+            return false;
+        }
+        
+        try {
+	        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
+	        
+	        if (bazelWorkspaceCmdRunner != null) {
+	            BazelProjectTargets targets = getConfiguredBazelTargets(bazelProject, false);
+	            List<BazelProblem> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, null);
+	            for (BazelProblem detail : details) {
+	            	logger.error(detail.toString());
+	            }
+	            return details.isEmpty();
+	
+	        }
+        } catch (Exception anyE) {
+        	logger.error("Caught exception validating project ["+bazelProject.name+"]", anyE);
+        	// just return false below
+        }
+        return false;
+    }
+
 	
 	public abstract BazelProject getSourceProjectForSourcePath(BazelWorkspace bazelWorkspace, String sourcePath);
 	
