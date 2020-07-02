@@ -407,18 +407,26 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         return this.bazelQueryHelper.getMatchingTargets(this.bazelWorkspaceRootDirectory, userSearchString, progressMonitor);
     }
+
     
     /**
      * Run a bazel build on a list of targets in the current workspace.
      *
      * @return a List of error details, this list is empty if the build was successful
-     *
-     * @throws InterruptedException
-     * @throws IOException
-     * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized List<BazelProblem> runBazelBuild(Set<String> bazelTargets,
-            WorkProgressMonitor progressMonitor, List<String> extraArgs, OutputStreamObserver outputStreamObserver, OutputStreamObserver errorStreamObserver)
+    public synchronized List<BazelProblem> runBazelBuild(Set<String> bazelTargets, List<String> extraArgs) 
+    		throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+    	return runBazelBuild(bazelTargets, extraArgs, null, null, null);
+    }
+    
+    /**
+     * Run a bazel build on a list of targets in the current workspace.
+     *
+     * @return a List of error details, this list is empty if the build was successful
+     */
+    public synchronized List<BazelProblem> runBazelBuild(Set<String> bazelTargets, List<String> extraArgs, 
+    		OutputStreamObserver outputStreamObserver, OutputStreamObserver errorStreamObserver,
+            WorkProgressMonitor progressMonitor)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> extraArgsList = ImmutableList.<String> builder().add("build").addAll(this.buildOptions)
                 .addAll(extraArgs).add("--").addAll(bazelTargets).build();

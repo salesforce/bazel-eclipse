@@ -217,7 +217,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             // Start error observer and clear Problems View
             errorStreamObserver.startObserver();
             // now run the actual build
-            List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, progressMonitor, bazelBuildFlags, null, errorStreamObserver);
+            List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, bazelBuildFlags, null, errorStreamObserver, progressMonitor);
             return errors.isEmpty();
         }
     }
