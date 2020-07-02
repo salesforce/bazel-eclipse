@@ -59,6 +59,7 @@ import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.logging.LoggerFacade;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
@@ -169,7 +170,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * This constructor creates the 'global' runner, which is a limited runner that only runs commands such as version check.
      */
-    BazelWorkspaceCommandRunner(File bazelExecutable, CommandBuilder commandBuilder) {
+    public BazelWorkspaceCommandRunner(File bazelExecutable, CommandBuilder commandBuilder) {
 
         this.commandBuilder = commandBuilder;
         this.bazelCommandExecutor = new BazelCommandExecutor(bazelExecutable, commandBuilder);        
@@ -184,7 +185,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * For each Bazel workspace, there will be an instance of this runner.
      */
-    BazelWorkspaceCommandRunner(File bazelExecutable, BazelAspectLocation aspectLocation,
+    public BazelWorkspaceCommandRunner(File bazelExecutable, BazelAspectLocation aspectLocation,
             CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory, File bazelWorkspaceRoot) {
 
         if (bazelWorkspaceRoot == null || !bazelWorkspaceRoot.exists()) {
@@ -450,11 +451,36 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(String projectName,
+    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfoForPackages(
+            Collection<BazelPackageLocation> targetPackages, WorkProgressMonitor progressMonitor, String caller)
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+    	List<String> targetLabels = new ArrayList<>();
+    	for (BazelPackageLocation pkg : targetPackages) {
+    		String target = pkg.getBazelPackageFSRelativePath()+":*";
+    		targetLabels.add(target);
+    	}
+    	
+        return this.aspectHelper.getAspectPackageInfos(targetLabels, progressMonitor, caller);
+    }
+    
+    /**
+     * Runs the analysis of the given list of targets using the build information Bazel Aspect and returns a map of
+     * {@link AspectPackageInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
+     * by the aspect.
+     * <p>
+     * This method caches its results and won't recompute a previously computed version unless
+     * {@link #flushAspectInfoCache()} has been called in between.
+     * <p>
+     * TODO it would be worthwhile to evaluate whether Aspects are the best way to get build info, as we could otherwise
+     * use Bazel Query here as well.
+     *
+     * @throws BazelCommandLineToolConfigurationException
+     */
+    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(
             Collection<String> targetLabels, WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        return this.aspectHelper.getAspectPackageInfos(projectName, targetLabels, progressMonitor, caller);
+        return this.aspectHelper.getAspectPackageInfos(targetLabels, progressMonitor, caller);
     }
 
     /**
@@ -470,13 +496,14 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Set<AspectPackageInfo> getAspectPackageInfos(String projectName,
+    public synchronized Set<AspectPackageInfo> getAspectPackageInfos(
             String targetLabel, WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         Set<String> targetLabels = new TreeSet<>();
         targetLabels.add(targetLabel);
-        Map<String, Set<AspectPackageInfo>> results = this.aspectHelper.getAspectPackageInfos(projectName, targetLabels, progressMonitor, caller);
+        Map<String, Set<AspectPackageInfo>> results = this.aspectHelper.getAspectPackageInfos(
+        		targetLabels, progressMonitor, caller);
         
         Set<AspectPackageInfo> resultSet = results.get(targetLabel);
         if (resultSet == null) {

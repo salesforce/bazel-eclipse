@@ -87,7 +87,8 @@ import com.salesforce.bazel.sdk.project.ProjectViewConstants;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
-import com.salesforce.bazel.sdk.workspace.ImportOrderResolver;
+import com.salesforce.bazel.sdk.workspace.BazelProjectImportScanner;
+import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 
 /**
  * A factory class to create Eclipse projects from packages in a Bazel workspace.
@@ -115,7 +116,7 @@ public class BazelEclipseProjectFactory {
      *         the IProject object created for the 'bazel workspace' project node which is a special container project
      */
     public static List<IProject> importWorkspace(BazelPackageLocation bazelWorkspaceRootPackageInfo,
-            List<BazelPackageLocation> selectedBazelPackages, ImportOrderResolver importOrderResolver,
+            List<BazelPackageLocation> selectedBazelPackages, ProjectOrderResolver importOrderResolver,
             WorkProgressMonitor progressMonitor, IProgressMonitor monitor) {
         SimplePerfRecorder.reset();
 
@@ -125,7 +126,7 @@ public class BazelEclipseProjectFactory {
         subMonitor.setTaskName("Getting the Aspect Information for targets");
         subMonitor.split(1);
 
-        String bazelWorkspaceName = getBazelWorkspaceName(bazelWorkspaceRootDirectory.getName());
+        String bazelWorkspaceName = BazelProjectImportScanner.getBazelWorkspaceName(bazelWorkspaceRootDirectory.getName());
 
         // Many collaborators need the Bazel workspace directory location, so we stash it in an accessible global location
         // currently we only support one Bazel workspace in an Eclipse workspace
@@ -167,7 +168,7 @@ public class BazelEclipseProjectFactory {
         
         startTimeMS = System.currentTimeMillis();
         Iterable<BazelPackageLocation> postOrderedModules = importOrderResolver
-                .resolveModulesImportOrder(bazelWorkspaceRootPackageInfo, selectedBazelPackages, aspects);
+                .computePackageOrder(bazelWorkspaceRootPackageInfo, selectedBazelPackages, aspects);
         SimplePerfRecorder.addTime("import_computeorder", startTimeMS);
 
         // finally, create an Eclipse Project for each Bazel Package being imported
@@ -193,21 +194,6 @@ public class BazelEclipseProjectFactory {
         return importedProjectsList;
     }
     
-    public static String getBazelWorkspaceName(String bazelWorkspaceRootDirectory) {
-        // TODO pull the workspace name out of the WORKSPACE file, until then use the directory name (e.g. bazel-demo)
-        String bazelWorkspaceName = "workspace";
-        if (bazelWorkspaceRootDirectory != null) {
-            int lastSlash = bazelWorkspaceRootDirectory.lastIndexOf(File.separator);
-            if (lastSlash >= 0 && (bazelWorkspaceRootDirectory.length() - lastSlash) > 3) {
-                // add the directory name to the label, if it is meaningful (>3 chars)
-                bazelWorkspaceName = bazelWorkspaceRootDirectory.substring(lastSlash + 1);
-            } else {
-                bazelWorkspaceName = bazelWorkspaceRootDirectory;
-            }
-        }
-        return bazelWorkspaceName;
-    }
-
     private static void importBazelWorkspacePackagesAsProjects(BazelPackageLocation packageInfo, File bazelWorkspaceRootDirectory,
             List<IProject> importedProjectsList, int javaLanguageVersion) {
         List<String> packageSourceCodeFSPaths = new ArrayList<>();
@@ -643,7 +629,7 @@ public class BazelEclipseProjectFactory {
         // run the aspect for specified targets and get an AspectPackageInfo for each
         AspectPackageInfos aspectPackageInfos = null;
         try {
-            Map<String, Set<AspectPackageInfo>> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(rootEclipseProject.getName(),
+            Map<String, Set<AspectPackageInfo>> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(
                 packageBazelTargets, progressMonitor, "importWorkspace");
             List<AspectPackageInfo> allPackageInfos = new ArrayList<>();
             for (Set<AspectPackageInfo> targetPackageInfos : packageInfos.values()) {

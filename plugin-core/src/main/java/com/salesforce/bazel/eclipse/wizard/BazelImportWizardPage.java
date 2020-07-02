@@ -56,12 +56,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.importer.BazelProjectImportScanner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.workspace.BazelProjectImportScanner;
 
 /**
  * Class that sets up the UI for the Bazel Import Workspace wizard.
@@ -137,7 +137,7 @@ public class BazelImportWizardPage extends WizardPage {
             // when the wizard is first opened, the location field is blank and we have a null root package
             if (this.locationControl.rootDirectory != null) {
                 this.projectTree.setRootWorkspaceDirectory(this.locationControl.rootDirectory);
-                this.workspaceRootPackage = projectScanner.getProjects(this.locationControl.rootDirectory);
+                this.workspaceRootPackage = projectScanner.getPackages(this.locationControl.rootDirectory);
                 if (workspaceRootPackage != null) {
                     // make sure the user chose a Bazel workspace
                     newEclipseProjects.add(workspaceRootPackage);

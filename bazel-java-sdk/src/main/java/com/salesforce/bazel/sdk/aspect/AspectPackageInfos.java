@@ -49,10 +49,7 @@ import java.util.TreeMap;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
- * A container for AspectPackageInfo instances.
- *
- * @author stoens
- * @since summer 2019
+ * A container for AspectPackageInfo instances, keyed by the label.
  */
 public class AspectPackageInfos {
 
@@ -84,6 +81,12 @@ public class AspectPackageInfos {
             }
         }
         return new AspectPackageInfos(infoList);
+    }
+    
+    public void addAll(Set<AspectPackageInfo> aspectPackageInfoSet) {
+    	for (AspectPackageInfo info : aspectPackageInfoSet) {
+    		labelToAspectPackageInfo.put(info.getLabel(), info);
+    	}
     }
 
     public AspectPackageInfo lookupByLabel(String label) {

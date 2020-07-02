@@ -1,6 +1,7 @@
 package com.salesforce.bazel.sdk.model;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Minimal representation of a Bazel Package location on the file system.
@@ -47,5 +48,10 @@ public interface BazelPackageLocation {
      * 
      * e.g. "//projects/libs/apple"
      */
-    public String getBazelPackageName();    
+    public String getBazelPackageName();
+    
+    /**
+     * Builds a list containing this node, plus all children (recursively)
+     */
+    public List<BazelPackageLocation> gatherChildren();
 }

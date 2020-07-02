@@ -151,7 +151,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         
         // Clean the aspect cache, and reload
         Set<String> flushedTargets = bazelWorkspaceCmdRunner.flushAspectInfoCacheForPackage(packageLabel);
-        bazelWorkspaceCmdRunner.getAspectPackageInfos(project.getName(), flushedTargets, progressMonitor, "refreshProjectClasspath");
+        bazelWorkspaceCmdRunner.getAspectPackageInfos(flushedTargets, progressMonitor, "refreshProjectClasspath");
         
         // Clean the query cache and reload
         bazelWorkspaceCmdRunner.flushQueryCache(packageLabel);

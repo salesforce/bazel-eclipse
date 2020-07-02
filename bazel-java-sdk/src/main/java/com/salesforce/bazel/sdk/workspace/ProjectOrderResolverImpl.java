@@ -12,15 +12,15 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
  * Orders modules for import such that upstream dependencies are imported before downstream
  * dependencies.
  */
-public class ImportOrderResolverImpl implements ImportOrderResolver {
+public class ProjectOrderResolverImpl implements ProjectOrderResolver {
 	LogHelper logger;
 	
-    public ImportOrderResolverImpl() {
+    public ProjectOrderResolverImpl() {
     	logger = LogHelper.log(this.getClass());
     }
 
     /**
-     * Orders the modules selected for import such that no module is imported before any of modules that it depends on.
+     * Orders all of the packages for import such that no package is imported before any of modules that it depends on.
      * <p>
      * Given the complex nature of the dependency graph, and the user can select an arbitrary set of packages to import,
      * this . 
@@ -30,18 +30,36 @@ public class ImportOrderResolverImpl implements ImportOrderResolver {
      * @return ordered list of modules - leaves nodes goes first, those which dependent on them next and so on up to the
      *         root module
      */
-    public Iterable<BazelPackageLocation> resolveModulesImportOrder(BazelPackageLocation rootModule,
-            List<BazelPackageLocation> selectedModules, AspectPackageInfos aspects) {
+    public Iterable<BazelPackageLocation> computePackageOrder(BazelPackageLocation rootPackage,
+            AspectPackageInfos aspects) {
+    	List<BazelPackageLocation> selectedPackages = rootPackage.gatherChildren();
+    	
+    	return computePackageOrder(rootPackage, selectedPackages, aspects);
+    }
+
+    /**
+     * Orders the packages selected for import such that no package is imported before any of modules that it depends on.
+     * <p>
+     * Given the complex nature of the dependency graph, and the user can select an arbitrary set of packages to import,
+     * this . 
+     * It assumes that there are hundreds/thousands of packages in the Bazel workspace, and the
+     * user will pick 10-20 to import.
+     * 
+     * @return ordered list of modules - leaves nodes goes first, those which dependent on them next and so on up to the
+     *         root module
+     */
+    public Iterable<BazelPackageLocation> computePackageOrder(BazelPackageLocation rootPackage,
+            List<BazelPackageLocation> selectedPackages, AspectPackageInfos aspects) {
 
         if (aspects == null) {
-            return selectedModules;
+            return selectedPackages;
         }
         
         // first, generate the dependency graph for the entire workspace
         List<BazelPackageLocation> orderedModules = null;
         try {
             BazelDependencyGraph workspaceDepGraph = AspectDependencyGraphBuilder.build(aspects, false);
-            orderedModules = workspaceDepGraph.orderLabels(selectedModules);
+            orderedModules = workspaceDepGraph.orderLabels(selectedPackages);
 
             StringBuffer sb = new StringBuffer();
             sb.append("ImportOrderResolver order of modules: ");
@@ -52,7 +70,7 @@ public class ImportOrderResolverImpl implements ImportOrderResolver {
             logger.info(sb.toString());
         } catch (Exception anyE) {
             anyE.printStackTrace();
-            orderedModules = selectedModules;
+            orderedModules = selectedPackages;
         }
         return orderedModules;
 

@@ -1,6 +1,7 @@
 package com.salesforce.bazel.sdk.model;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * In memory package location. 
@@ -56,5 +57,11 @@ public class InMemoryBazelPackageLocation implements BazelPackageLocation {
     public String getBazelPackageName() {
         return path;
     }
+
+	@Override
+	public List<BazelPackageLocation> gatherChildren() {
+		// TODO hard to implement, we plan to rework this class
+		return null;
+	}
 
 }

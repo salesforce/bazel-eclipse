@@ -59,6 +59,8 @@ import com.salesforce.bazel.sdk.workspace.BazelPackageFinder;
 
 // initial version copied from m2e MavenProjectConfigurator
 
+// TODO test if any of this used at all. maybe just legacy cruft 
+
 public class BazelProjectConfigurator implements ProjectConfigurator {
     static final LogHelper LOG = LogHelper.log(BazelProjectConfigurator.class);
 

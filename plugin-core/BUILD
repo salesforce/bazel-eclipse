@@ -89,22 +89,6 @@ java_test(
  )
 
 java_test(
-    name = "BazelProjectImportScannerTest",
-    srcs = ["src/test/java/com/salesforce/bazel/eclipse/importer/BazelProjectImportScannerTest.java"],
-    deps = [
-        ":com.salesforce.bazel.eclipse.core-bin",
-        "//bazel-java-sdk",
-        "//bazel-java-sdk:test-workspace-support",
-    ],
-    runtime_deps = [
-        "//tools/eclipse_jars:org_eclipse_core_jobs",
-        "//tools/eclipse_jars:org_eclipse_core_resources",
-        "//tools/eclipse_jars:org_eclipse_equinox_common",
-        "//tools/eclipse_jars:org_eclipse_ui_ide",
-    ],
-)
-
-java_test(
     name = "BazelCommandRunnerFTest",
     srcs = ["src/test/java/com/salesforce/bazel/eclipse/command/BazelCommandRunnerFTest.java"] + mock_src,
     deps = [

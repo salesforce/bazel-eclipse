@@ -31,14 +31,15 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.eclipse.importer;
+package com.salesforce.bazel.sdk.workspace;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import java.util.TreeSet;
 
-import com.salesforce.bazel.eclipse.config.BazelProjectConfigurator;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.workspace.BazelPackageFinder;
 
 /**
  * Scans a Bazel workspace looking for Java packages (BUILD files that have java_binary or java_library targets). It is
@@ -69,9 +70,21 @@ import com.salesforce.bazel.sdk.model.BazelPackageInfo;
  */
 public class BazelProjectImportScanner {
 
-    // TODO BazelProjectImportScanner should be moved into the plugin-command project, but will require some refactoring
-    // of BazelProjectConfigurator and maybe other collaborators
-    
+    public static String getBazelWorkspaceName(String bazelWorkspaceRootDirectory) {
+        // TODO pull the workspace name out of the WORKSPACE file, until then use the directory name (e.g. bazel-demo)
+        String bazelWorkspaceName = "workspace";
+        if (bazelWorkspaceRootDirectory != null) {
+            int lastSlash = bazelWorkspaceRootDirectory.lastIndexOf(File.separator);
+            if (lastSlash >= 0 && (bazelWorkspaceRootDirectory.length() - lastSlash) > 3) {
+                // add the directory name to the label, if it is meaningful (>3 chars)
+                bazelWorkspaceName = bazelWorkspaceRootDirectory.substring(lastSlash + 1);
+            } else {
+                bazelWorkspaceName = bazelWorkspaceRootDirectory;
+            }
+        }
+        return bazelWorkspaceName;
+    }
+
     /**
      * Get a list of candidate Bazel packages to import. This list is provided to the user in the form of a tree
      * control.
@@ -86,7 +99,7 @@ public class BazelProjectImportScanner {
      *            the directory to scan, which must be the root node of a Bazel workspace
      * @return the workspace root BazelPackageInfo
      */
-    public BazelPackageInfo getProjects(String rootDirectory) throws IOException {
+    public BazelPackageInfo getPackages(String rootDirectory) throws IOException {
         if (rootDirectory == null || rootDirectory.isEmpty()) {
             // this is the initialization state of the wizard
             return null;
@@ -98,7 +111,7 @@ public class BazelProjectImportScanner {
             ioe.printStackTrace();
             return null;
         }
-        return getProjects(workspaceRootDir);
+        return getPackages(workspaceRootDir);
     }
     
     /**
@@ -115,20 +128,20 @@ public class BazelProjectImportScanner {
      *            the directory to scan, which must be the root node of a Bazel workspace
      * @return the workspace root BazelPackageInfo
      */
-    public BazelPackageInfo getProjects(File rootDirectoryFile) throws IOException {
+    public BazelPackageInfo getPackages(File rootDirectoryFile) throws IOException {
         if (rootDirectoryFile == null || !rootDirectoryFile.exists() || !rootDirectoryFile.isDirectory()) {
             // this is the initialization state of the wizard
             return null;
         }
         String rootDirectory = rootDirectoryFile.getCanonicalPath();
+        BazelPackageInfo workspace = new BazelPackageInfo(rootDirectoryFile);
 
-        // TODO the correct way to do this is put the configurator on another thread, and allow it to update the progress monitor.
+        // TODO the correct way to do this is put the scan on another thread, and allow it to update the progress monitor.
         // Do it on-thread for now as it is easiest.
 
-        BazelProjectConfigurator configurator = new BazelProjectConfigurator();
-        Set<File> projects = configurator.findConfigurableLocations(rootDirectoryFile, null);
-
-        BazelPackageInfo workspace = new BazelPackageInfo(rootDirectoryFile);
+        Set<File> projects = new TreeSet<>();
+        BazelPackageFinder packageFinder = new BazelPackageFinder();
+        packageFinder.findBuildFileLocations(rootDirectoryFile, null, projects, 0);
 
         int sizeOfWorkspacePath = rootDirectory.length();
         for (File project : projects) {

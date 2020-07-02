@@ -116,11 +116,13 @@ public class BazelWorkspaceAspectHelper {
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(String projectName,
+    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(
             Collection<String> targets, WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-
-        progressMonitor.subTask("Load Bazel dependency information");
+    	
+    	if (progressMonitor != null) {
+    		progressMonitor.subTask("Load Bazel dependency information");
+    	}
         Map<String, Set<AspectPackageInfo>> resultMap = new LinkedHashMap<>();
 
         for (String target : targets) {
@@ -131,21 +133,23 @@ public class BazelWorkspaceAspectHelper {
                 if (wildcardTargets != null) {
                     // we know what sub-targets resolve from the wildcard target, so add each sub-target aspect
                     for (String wildcardTarget : wildcardTargets) {
-                        getAspectPackageInfoForTarget(wildcardTarget, projectName, progressMonitor, caller, resultMap);
+                        getAspectPackageInfoForTarget(wildcardTarget, progressMonitor, caller, resultMap);
                     }
                 } else {
                     // we haven't seen this wildcard before, we need to ask bazel what sub-targets it maps to
                     Map<String, Set<AspectPackageInfo>> wildcardResultMap = new LinkedHashMap<>();
-                    getAspectPackageInfoForTarget(target, projectName, progressMonitor, caller, wildcardResultMap);
+                    getAspectPackageInfoForTarget(target, progressMonitor, caller, wildcardResultMap);
                     resultMap.putAll(wildcardResultMap);
                     aspectInfoCache_wildcards.put(target, wildcardResultMap.keySet());
                 }
             } else {
-                getAspectPackageInfoForTarget(target, projectName, progressMonitor, caller, resultMap);
+                getAspectPackageInfoForTarget(target, progressMonitor, caller, resultMap);
             }
         }
 
-        progressMonitor.worked(resultMap.size());
+        if (progressMonitor != null) {
+        	progressMonitor.worked(resultMap.size());
+        }
 
         return resultMap;
     }
@@ -211,11 +215,11 @@ public class BazelWorkspaceAspectHelper {
 
     // INTERNALS
     
-    private void getAspectPackageInfoForTarget(String target, String projectName,
+    private void getAspectPackageInfoForTarget(String target, 
             WorkProgressMonitor progressMonitor, String caller,
             Map<String, Set<AspectPackageInfo>> resultMap)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        String logstr = " [prj=" + projectName + ", src=" + caller + "]";
+        String logstr = " [target=" + target + ", src=" + caller + "]";
         
         Set<AspectPackageInfo> aspectInfos = aspectInfoCache_current.get(target); 
         if (aspectInfos != null) {
@@ -253,7 +257,9 @@ public class BazelWorkspaceAspectHelper {
             }
         }
         
-        progressMonitor.worked(resultMap.size());
+        if (progressMonitor != null) {
+        	progressMonitor.worked(resultMap.size());
+        }
     }
     
     /**

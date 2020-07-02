@@ -113,7 +113,7 @@ public class BazelWorkspaceCommandRunnerTest {
         // test the setup, for example we are loading the workspace aspects from the file system
         Set<String> targets = new TreeSet<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectPackageInfo>> aspectMap = workspaceRunner.getAspectPackageInfos("javalib0", targets, new MockWorkProgressMonitor(),
+        Map<String, Set<AspectPackageInfo>> aspectMap = workspaceRunner.getAspectPackageInfos(targets, new MockWorkProgressMonitor(),
             "testWorkspaceRunner");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.get("//projects/libs/javalib0:*").size());

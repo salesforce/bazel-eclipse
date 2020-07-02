@@ -118,7 +118,7 @@ public class BazelJvmClasspath {
                 boolean isTestTarget = "java_test".equals(targetType);
 
                 Set<AspectPackageInfo> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(
-                		bazelProject.name, targetLabel, progressMonitor, "getClasspathEntries");
+                		targetLabel, progressMonitor, "getClasspathEntries");
 
                 for (AspectPackageInfo packageInfo : packageInfos) {
                     BazelProject otherProject = getSourceProjectForSourcePaths(packageInfo.getSources());

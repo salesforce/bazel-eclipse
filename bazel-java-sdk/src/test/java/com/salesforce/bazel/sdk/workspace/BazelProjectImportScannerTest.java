@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.importer;
+package com.salesforce.bazel.sdk.workspace;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.workspace.BazelProjectImportScanner;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
@@ -51,7 +52,7 @@ public class BazelProjectImportScannerTest {
         new TestBazelWorkspaceFactory(descriptor).build();
         
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();
-        BazelPackageInfo rootWorkspacePackage = scanner.getProjects(tmpWorkspaceDir);
+        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
         
         assertEquals(5, rootWorkspacePackage.getChildPackageInfos().size());
     }
@@ -63,7 +64,7 @@ public class BazelProjectImportScannerTest {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
         
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();
-        scanner.getProjects(tmpWorkspaceDir);
+        scanner.getPackages(tmpWorkspaceDir);
     }
 
     @Test
@@ -74,7 +75,7 @@ public class BazelProjectImportScannerTest {
         new TestBazelWorkspaceFactory(descriptor).build();
         
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();
-        BazelPackageInfo rootWorkspacePackage = scanner.getProjects(tmpWorkspaceDir);
+        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
         
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());
     }
@@ -86,7 +87,7 @@ public class BazelProjectImportScannerTest {
         workspaceFile.createNewFile();
         
         BazelProjectImportScanner scanner = new BazelProjectImportScanner();
-        BazelPackageInfo rootWorkspacePackage = scanner.getProjects(tmpWorkspaceDir);
+        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
         
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());
     }

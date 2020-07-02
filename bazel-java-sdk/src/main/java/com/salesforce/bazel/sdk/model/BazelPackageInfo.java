@@ -34,8 +34,10 @@
 package com.salesforce.bazel.sdk.model;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -407,6 +409,22 @@ public class BazelPackageInfo implements BazelPackageLocation {
         }
         return null;
     }
+    
+	@Override
+	public List<BazelPackageLocation> gatherChildren() {
+		List<BazelPackageLocation> gatherList = new ArrayList<>();
+		gatherChildrenRecur(gatherList);
+		return gatherList;
+	}
+
+	public void gatherChildrenRecur(List<BazelPackageLocation> gatherList) {
+		gatherList.add(this);
+		for (BazelPackageLocation child : this.childPackages.values()) {
+			BazelPackageInfo childInfo = (BazelPackageInfo)child;
+			childInfo.gatherChildrenRecur(gatherList);
+		}
+	}
+
 
     @Override
     public int hashCode() {

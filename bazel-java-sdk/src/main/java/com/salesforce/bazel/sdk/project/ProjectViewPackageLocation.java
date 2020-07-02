@@ -1,6 +1,7 @@
 package com.salesforce.bazel.sdk.project;
 
 import java.io.File;
+import java.util.List;
 import java.util.Objects;
 
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
@@ -81,5 +82,11 @@ public class ProjectViewPackageLocation implements BazelPackageLocation {
     public String toString() {
         return "package path: " + this.packagePath;
     }
+
+	@Override
+	public List<BazelPackageLocation> gatherChildren() {
+		// TODO hard to implement, this class is planned for a rework
+		return null;
+	}
 
 }
