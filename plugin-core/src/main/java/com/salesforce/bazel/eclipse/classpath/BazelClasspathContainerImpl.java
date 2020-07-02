@@ -6,7 +6,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -160,7 +159,7 @@ public class BazelClasspathContainerImpl {
                     		bazelProject.name, targetLabel, progressMonitor, "getClasspathEntries");
 
                     for (AspectPackageInfo packageInfo : packageInfos) {
-                        IJavaProject otherProject = getSourceProjectForSourcePaths(bazelWorkspaceCmdRunner, packageInfo.getSources());
+                        BazelProject otherProject = getSourceProjectForSourcePaths(bazelWorkspaceCmdRunner, packageInfo.getSources());
                         
                         if (otherProject == null) {
                             // no project found that houses the sources of this bazel target, add the jars to the classpath
@@ -186,7 +185,7 @@ public class BazelClasspathContainerImpl {
                                 }
                             }
                         } else { // otherProject != null 
-                            String otherBazelProjectName = otherProject.getProject().getName();
+                            String otherBazelProjectName = otherProject.name;
                             if (bazelProject.name.equals(otherBazelProjectName)) {
                                 // the project referenced is actually the the current project that this classpath container is for
                                 
@@ -213,8 +212,8 @@ public class BazelClasspathContainerImpl {
                                 
                                 // now make a project reference between this project and the other project; this allows for features like
                                 // code refactoring across projects to work correctly
-                                //addProjectReference(eclipseIProject, otherProject.getProject());
-                                updatedProjectReferences.add(otherProject.getProject());
+                                IProject otherEclipseProject = (IProject)otherProject.getProjectImpl();
+                                updatedProjectReferences.add(otherEclipseProject);
                                 //System.out.println("Project ["+eclipseProjectName+"] now refers to project ["+otherProject.getProject().getName()+"]");
                             }
                         }
@@ -316,9 +315,9 @@ public class BazelClasspathContainerImpl {
     /**
      * Returns the IJavaProject in the current workspace that contains at least one of the specified sources.
      */
-    private IJavaProject getSourceProjectForSourcePaths(BazelWorkspaceCommandRunner bazelCommandRunner, List<String> sources) {
+    private BazelProject getSourceProjectForSourcePaths(BazelWorkspaceCommandRunner bazelCommandRunner, List<String> sources) {
         for (String candidate : sources) {
-            IJavaProject project = getSourceProjectForSourcePath(candidate);
+        	BazelProject project = getSourceProjectForSourcePath(candidate);
             if (project != null) {
                 return project;
             }
@@ -326,15 +325,15 @@ public class BazelClasspathContainerImpl {
         return null;
     }
 
-    private IJavaProject getSourceProjectForSourcePath(String sourcePath) {
+    private BazelProject getSourceProjectForSourcePath(String sourcePath) {
 
         Collection<BazelProject> bazelProjects = bazelProject.bazelProjectManager.getAllProjects();
 
         String canonicalSourcePathString = BazelPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory()) + File.separator + sourcePath;
         Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
-        for (BazelProject project : bazelProjects) {
-        	IProject iProject = (IProject)project.getProjectImpl();
+        for (BazelProject candidateProject : bazelProjects) {
+        	IProject iProject = (IProject)candidateProject.getProjectImpl();
             IJavaProject jProject = javaCoreHelper.getJavaProjectForProject(iProject);
             IClasspathEntry[] classpathEntries = javaCoreHelper.getRawClasspath(jProject);
             if (classpathEntries == null) {
@@ -357,7 +356,7 @@ public class BazelClasspathContainerImpl {
                         IPath[] exclusionPatterns = entry.getExclusionPatterns();
                         if (!matchPatterns(canonicalSourcePath, exclusionPatterns)) {
                             if (inclusionPatterns == null || inclusionPatterns.length == 0 || matchPatterns(canonicalSourcePath, inclusionPatterns)) {
-                                return jProject;
+                                return candidateProject;
                             }
                         }
                     }
@@ -401,50 +400,6 @@ public class BazelClasspathContainerImpl {
             i++;
         }
         return entries;
-    }
-
-    /**
-     * Creates a project reference between this project and that project.
-     * The direction of reference goes from this->that
-     * References are used by Eclipse code refactoring among other things.
-     * This is now unused, prefer the setProjectReferences because it can handle removal of
-     * references not just adds. 
-     */
-    @SuppressWarnings("unused")
-    private void addProjectReference(IProject thisProject, IProject thatProject) {
-        IProjectDescription projectDescription = this.resourceHelper.getProjectDescription(thisProject);
-        IProject[] existingRefsArray = projectDescription.getReferencedProjects();
-        boolean hasRef = false;
-        String otherProjectName = thatProject.getName();
-        for (IProject candidateRef : existingRefsArray) {
-            if (candidateRef.getName().equals(otherProjectName)) {
-                hasRef = true;
-                break;
-            }
-        }
-        if (!hasRef) {
-            // this project does not already reference the other project, we need to add the project reference
-            // as this make code refactoring across Eclipse projects work correctly (among other things)
-            List<IProject> updatedRefList = new ArrayList<>(Arrays.asList(existingRefsArray));
-            updatedRefList.add(thatProject.getProject());
-            
-            // The next two lines are wrapped in an exception handler because the first time
-            // called on a new workspace, a RuntimeException is thrown which causes the BazelClasspathContainer
-            // to get into an incorrect state that it can't recover from unless eclipse is restarted.
-            // The error is thrown by at org.eclipse.jface.viewers.ColumnViewer.checkBusy(ColumnViewer.java:764)
-            // asyncExec might help here, but need a display widget to call on
-            // Ignoring the error allows the classpath container to recover and the user does not know
-            // there ever was a problem.
-            try {
-                projectDescription.setReferencedProjects(updatedRefList.toArray(new IProject[] {}));
-                resourceHelper.setProjectDescription(thisProject, projectDescription);
-            } catch(RuntimeException ex) {
-                // potential cause: org.eclipse.core.internal.resources.ResourceException: The resource tree is locked for modifications.
-                // if that is happening in your code path, see ResourceHelper.applyDeferredProjectDescriptionUpdates()
-                logger.error("Caught RuntimeException updating project: " + thisProject.toString(), ex);
-                continueOrThrow(ex);
-            }
-        }
     }
 
     /**
