@@ -37,6 +37,9 @@ package com.salesforce.bazel.eclipse.classpath;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,14 +54,18 @@ import org.osgi.service.prefs.BackingStoreException;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
 import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.model.BazelProject;
 import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
 
 /**
  * Computes the classpath for a Bazel package and provides it to the JDT tooling in Eclipse.
@@ -67,10 +74,16 @@ public class BazelClasspathContainer implements IClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
     private static BazelProjectManager bazelProjectManager = new BazelProjectManager();
     
+    private final BazelWorkspace bazelWorkspace;
+    private final BazelProject bazelProject;
     private final IPath eclipseProjectPath;
     private final IProject eclipseProject;
     private final boolean eclipseProjectIsRoot;
     private final BazelClasspathContainerImpl impl;
+    private final JavaCoreHelper javaCoreHelper;
+    private final OperatingEnvironmentDetectionStrategy osDetector;
+    private final LogHelper logger;
+
     
     private static List<BazelClasspathContainerImpl> instances = new ArrayList<>();
     
@@ -83,22 +96,28 @@ public class BazelClasspathContainer implements IClasspathContainer {
     BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
+    	this.bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         this.eclipseProject = eclipseProject;
         this.eclipseProjectPath = eclipseProject.getLocation();
         this.eclipseProjectIsRoot = resourceHelper.isBazelRootProject(eclipseProject);
+        this.osDetector = BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy();
         
-        BazelProject bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
+        this.bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
         bazelProjectManager.addProject(bazelProject);
         
-        impl = new BazelClasspathContainerImpl(BazelPluginActivator.getBazelWorkspace(), 
+        impl = new BazelClasspathContainerImpl(this.bazelWorkspace, 
         		bazelProject, 
         		resourceHelper.isBazelRootProject(eclipseProject), 
         		resourceHelper,
         		new EclipseImplicitClasspathHelper(), 
-        		BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy(), 
+        		osDetector, 
         		BazelPluginActivator.getBazelCommandManager(),
         		BazelPluginActivator.getJavaCoreHelper());
         instances.add(impl);
+        
+        javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
+		logger = LogHelper.log(this.getClass());
+
     }
     
     public static void clean() {
@@ -109,7 +128,28 @@ public class BazelClasspathContainer implements IClasspathContainer {
 
     @Override
     public IClasspathEntry[] getClasspathEntries() {
-        return impl.getClasspathEntries();
+    	JvmClasspathEntry[] jvmClasspathEntries = impl.getClasspathEntries();
+    	
+    	List<IClasspathEntry> eclipseClasspathEntries = new ArrayList<>();
+        File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
+        File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
+    	
+    	for (JvmClasspathEntry entry : jvmClasspathEntries) {
+    		if (entry.pathToJar != null) {
+	            IPath jarPath = getIPathOnDisk(bazelOutputBase, bazelExecRoot, entry.pathToJar);
+	            if (jarPath != null) {
+	                IPath srcJarPath = getIPathOnDisk(bazelOutputBase, bazelExecRoot, entry.pathToSourceJar);
+	                IPath srcJarRootPath = null;
+	        		eclipseClasspathEntries.add(javaCoreHelper.newLibraryEntry(jarPath, srcJarPath, 
+	        				srcJarRootPath, entry.isTestJar));
+	            }
+    		} else {
+    			IProject iproject = (IProject)entry.bazelProject.projectImpl;
+    			IPath ipath = iproject.getFullPath();
+    			eclipseClasspathEntries.add(javaCoreHelper.newProjectEntry(ipath));
+    		}
+    	}
+        return eclipseClasspathEntries.toArray(new IClasspathEntry[] {});
     }
 
     @Override
@@ -155,6 +195,49 @@ public class BazelClasspathContainer implements IClasspathContainer {
 
         }
         return false;
+    }
+
+    private IPath getIPathOnDisk(File bazelOutputBase, File bazelExecRoot, String file) {
+        if (file == null) {
+            return null;
+        }
+        Path path = null;
+        if (file.startsWith("external")) {
+            path = Paths.get(bazelOutputBase.toString(), file);
+        } else {
+            path = Paths.get(bazelExecRoot.toString(), file);
+        }
+
+        // We have had issues with Eclipse complaining about symlinks in the Bazel output directories not being real,
+        // so we resolve them before handing them back to Eclipse.
+        if (Files.isSymbolicLink(path)) {
+            try {
+                // resolving the link will fail if the symlink does not a point to a real file
+                path = Files.readSymbolicLink(path);
+            } catch (IOException ex) {
+                // TODO this can happen if someone does a 'bazel clean' using the command line #113
+                // https://github.com/salesforce/bazel-eclipse/issues/113
+            	logger.error("Problem adding jar to project ["+bazelProject.name+"] because it does not exist on the filesystem: "+path);
+                continueOrThrow(ex);
+            }
+        } else {
+            // it is a normal path, check for existence
+            if (!Files.exists(path)) {
+                // TODO this can happen if someone does a 'bazel clean' using the command line #113
+                // https://github.com/salesforce/bazel-eclipse/issues/113
+            	logger.error("Problem adding jar to project ["+bazelProject.name+"] because it does not exist on the filesystem: "+path);
+            }
+        }
+        return org.eclipse.core.runtime.Path.fromOSString(path.toString());
+    }
+
+    private void continueOrThrow(Throwable th) {
+        // under real usage, we suppress fatal exceptions because sometimes there are IDE timing issues that can
+        // be corrected if the classpath is computed again.
+        // But under tests, we want to fail fatally otherwise tests could pass when they shouldn't
+        if (osDetector.isTestRuntime()) {
+            throw new IllegalStateException("The classpath could not be computed by the BazelClasspathContainer", th);
+        }
     }
 
 }

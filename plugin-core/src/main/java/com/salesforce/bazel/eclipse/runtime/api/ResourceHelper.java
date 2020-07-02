@@ -174,7 +174,7 @@ public interface ResourceHelper {
      * @return the member resource, or <code>null</code> if no such
      *      resource exists
      */
-    IResource findMemberInWorkspace(IWorkspaceRoot workspaceRoot, IPath path);
+    IResource findMemberInWorkspace(IPath path);
     
     /**
      * Returns true if the specified project is the special root project that represents the Bazel Workspace.

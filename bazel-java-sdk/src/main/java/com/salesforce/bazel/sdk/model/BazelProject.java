@@ -18,6 +18,10 @@ public class BazelProject {
 	// stored here
 	public Object projectImpl;
 
+	public BazelProject(String name) {
+		this.name = name;
+	}
+
 	public BazelProject(String name, List<BazelPackageInfo> packages) {
 		this.name = name;
 		this.bazelPackages = packages;

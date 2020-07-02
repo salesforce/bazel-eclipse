@@ -155,7 +155,7 @@ public class MockResourceHelper implements ResourceHelper {
     }
     
     @Override
-    public IResource findMemberInWorkspace(IWorkspaceRoot workspaceRoot, IPath path) {
+    public IResource findMemberInWorkspace(IPath path) {
         return workspaceRoot.findMember(path);
     }
 

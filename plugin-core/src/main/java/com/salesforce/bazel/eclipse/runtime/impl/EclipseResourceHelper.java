@@ -134,8 +134,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     }
     
     @Override
-    public IResource findMemberInWorkspace(IWorkspaceRoot workspaceRoot, IPath path) {
-        IResource resource = workspaceRoot.findMember(path);        
+    public IResource findMemberInWorkspace(IPath path) {
+        IResource resource = this.getEclipseWorkspaceRoot().findMember(path);        
         //System.out.println("findMemberInWorkspace: path="+path.toOSString()+" member.location="+getResourceAbsolutePath(resource));
         return resource;
     }
