@@ -76,8 +76,9 @@ public class BazelEclipseProjectFactoryFTest {
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");
 
         // workspace preferences
+        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
         String expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot().getCanonicalPath();
-        assertEquals(expectedBazelWorkspaceRoot, BazelProjectPreferences.getBazelWorkspacePath(BazelPluginActivator.getInstance()));
+        assertEquals(expectedBazelWorkspaceRoot, prefsMgr.getBazelWorkspacePath());
         
         // Eclipse project for the Bazel workspace
         assertNotNull(workspace_IProject);

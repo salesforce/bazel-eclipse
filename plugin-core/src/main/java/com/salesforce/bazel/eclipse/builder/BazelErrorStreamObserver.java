@@ -54,6 +54,7 @@ import com.salesforce.bazel.sdk.command.BazelOutputParser;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
+import com.salesforce.bazel.sdk.model.BazelProject;
 
 /**
  * Implementation of {@link OutputStreamObserver} that observes error output and publishes errors to Problems View
@@ -66,10 +67,11 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
     private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
     
     private final IProgressMonitor monitor;
-    private final Map<BazelLabel, IProject> labelToProject;
+    private final Map<BazelLabel, BazelProject> labelToProject;
     private final IProject rootProject;
     private final BazelOutputParser outputParser;
-    public BazelErrorStreamObserver(final IProgressMonitor monitor, final Map<BazelLabel, IProject> labelToProject,
+    
+    public BazelErrorStreamObserver(final IProgressMonitor monitor, final Map<BazelLabel, BazelProject> labelToProject,
             IProject rootProject) {
         this.monitor = monitor;
         this.labelToProject = labelToProject;
@@ -81,9 +83,10 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
      * Starts the observer by clears Problems View for every project
      */
     public void startObserver() {
-        final Set<IProject> projectSet = new HashSet<>(this.labelToProject.values());
-        for (IProject project : projectSet) {
-            BazelMarkerSupport.clearProblemMarkersForProject(project, monitor);
+        final Set<BazelProject> projectSet = new HashSet<>(this.labelToProject.values());
+        for (BazelProject project : projectSet) {
+        	IProject eclipseProject = (IProject)project;
+            BazelMarkerSupport.clearProblemMarkersForProject(eclipseProject, monitor);
         }
     }
     
@@ -105,14 +108,15 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
     
     // maps the specified errors to the project instances they belong to, and returns that mapping
     static Multimap<IProject, BazelProblem> assignErrorsToOwningProject(List<BazelProblem> errors,
-            Map<BazelLabel, IProject> labelToProject, IProject rootProject) {
+            Map<BazelLabel, BazelProject> labelToProject, IProject rootProject) {
         Multimap<IProject, BazelProblem> projectToErrors = HashMultimap.create();
         List<BazelProblem> remainingErrors = new LinkedList<>(errors);
         for (BazelProblem error : errors) {
             BazelLabel owningLabel = error.getOwningLabel(labelToProject.keySet());
             if (owningLabel != null) {
-                IProject project = labelToProject.get(owningLabel);
-                projectToErrors.put(project, error.toErrorWithRelativizedResourcePath(owningLabel));
+                BazelProject project = labelToProject.get(owningLabel);
+                IProject eclipseProject = (IProject)project.getProjectImpl();
+                projectToErrors.put(eclipseProject, error.toErrorWithRelativizedResourcePath(owningLabel));
                 remainingErrors.remove(error);
             }
         }

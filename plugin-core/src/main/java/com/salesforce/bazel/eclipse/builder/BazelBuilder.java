@@ -38,6 +38,7 @@ package com.salesforce.bazel.eclipse.builder;
 import static com.google.common.collect.MoreCollectors.onlyElement;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,8 +60,7 @@ import com.google.common.collect.Lists;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
-import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
-import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
+import com.salesforce.bazel.eclipse.config.ProjectPreferencesManager;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
@@ -71,6 +71,9 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
+import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.model.BazelProjectManager;
+import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
@@ -138,7 +141,9 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner) 
                     throws Exception{
         String pname = project.getName();
-        String packageLabel = BazelProjectPreferences.getBazelLabelForEclipseProject(project);
+        BazelProject bazelProject = BazelProjectManager.getInstance().getProject(pname);
+        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+        String packageLabel = prefsMgr.getBazelLabelForProject(bazelProject);
         System.out.println("Refreshing the classpath for project ["+pname+"] for package ["+packageLabel+"]");
         
         // Force update of classpath container and the aspect cache
@@ -190,11 +195,17 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException
     {
         Set<String> bazelTargets = new TreeSet<>();
-        
+        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
+        List<BazelProject> bazelProjects = new ArrayList<>();
+
         // figure out the list of targets to build
         for (IProject project : projects) {
-            EclipseProjectBazelTargets activatedTargets = BazelProjectPreferences.getConfiguredBazelTargets(project, false);
+        	String projectName = project.getName();
+        	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+        	BazelProjectTargets activatedTargets = prefsMgr.getConfiguredBazelTargets(bazelProject, false);
             bazelTargets.addAll(activatedTargets.getConfiguredTargets());
+            bazelProjects.add(bazelProject);
         }
 
         if (bazelTargets.isEmpty()) {
@@ -202,8 +213,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         } else {
             List<String> bazelBuildFlags = getAllBazelBuildFlags(projects);
             // Get a map of targets to projects to build BazelErrorStreamObserver
-            Map<BazelLabel, IProject> labelToProject = BazelProjectPreferences.getBazelLabelToEclipseProjectMap(projects);
-            BazelErrorStreamObserver errorStreamObserver = new BazelErrorStreamObserver(monitor, labelToProject, rootProject);
+            Map<BazelLabel, BazelProject> labelToProjectMap = prefsMgr.getBazelLabelToProjectMap(bazelProjects);
+            BazelErrorStreamObserver errorStreamObserver = new BazelErrorStreamObserver(monitor, labelToProjectMap, rootProject);
             // Start error observer and clear Problems View
             errorStreamObserver.startObserver();
             // now run the actual build
@@ -214,8 +225,13 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private static List<String> getAllBazelBuildFlags(Collection<IProject> projects) {
         List<String> buildFlags = Lists.newArrayList();
+        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
+
         for (IProject project : projects) {
-            buildFlags.addAll(BazelProjectPreferences.getBazelBuildFlagsForEclipseProject(project));
+        	String projectName = project.getName();
+        	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+            buildFlags.addAll(prefsMgr.getBazelBuildFlagsForProject(bazelProject));
         }
         return buildFlags;
     }

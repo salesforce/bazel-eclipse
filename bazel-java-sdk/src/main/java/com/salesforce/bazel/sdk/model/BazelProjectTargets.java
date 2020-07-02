@@ -33,21 +33,20 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.eclipse.config;
+package com.salesforce.bazel.sdk.model;
 
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.eclipse.core.resources.IProject;
-
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
+import com.salesforce.bazel.sdk.model.BazelProject;
 
 /**
- * Object that encapsulates the logic and state regarding the active targets configured for an
- * Eclipse project.
+ * Object that encapsulates the logic and state regarding the active targets configured for a
+ * BazelProject.
  */
-public class EclipseProjectBazelTargets {
-    private IProject project;
+public class BazelProjectTargets {
+    private BazelProject project;
     private String projectBazelLabel;
     
     /**
@@ -71,7 +70,7 @@ public class EclipseProjectBazelTargets {
     private Set<String> actualTargets;
     
     
-    public EclipseProjectBazelTargets(IProject project, String projectBazelLabel) {
+    public BazelProjectTargets(BazelProject project, String projectBazelLabel) {
          this.project = project;
          this.projectBazelLabel = projectBazelLabel;
     }
@@ -91,7 +90,7 @@ public class EclipseProjectBazelTargets {
 
     // CONSUMER API
     
-    public IProject getProject() {
+    public BazelProject getProject() {
         return this.project;
     }
     

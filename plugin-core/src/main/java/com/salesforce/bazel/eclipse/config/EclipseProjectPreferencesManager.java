@@ -53,11 +53,13 @@ import org.osgi.service.prefs.Preferences;
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferencePage;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 
-// TODO migrate this away from static methods
-public class BazelProjectPreferences { 
+public class EclipseProjectPreferencesManager implements ProjectPreferencesManager { 
     /**
      * Absolute path of the Bazel workspace root 
      */
@@ -87,15 +89,23 @@ public class BazelProjectPreferences {
      */
     private static final String BUILDFLAG_PROPERTY_PREFIX = "bazel.build.flag";
 
+    private final ResourceHelper resourceHelper;
+    
+    public EclipseProjectPreferencesManager(ResourceHelper resourceHelper) {
+    	this.resourceHelper = resourceHelper;
+    }
+    
     /**
      */
-    public static String getBazelExecutablePath(BazelPluginActivator activator) {
-        IPreferenceStore prefsStore =  BazelPluginActivator.getResourceHelper().getPreferenceStore(activator);
+    @Override
+	public String getBazelExecutablePath() {
+        IPreferenceStore prefsStore =  this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
         return prefsStore.getString(BazelPreferencePage.BAZEL_PATH_PREF_NAME);
     }
     
-    public static void setBazelExecutablePathListener(BazelPluginActivator activator, BazelCommandManager bazelCommandManager) {
-        IPreferenceStore prefsStore =  BazelPluginActivator.getResourceHelper().getPreferenceStore(activator);
+    @Override
+	public void setBazelExecutablePathListener(BazelCommandManager bazelCommandManager) {
+        IPreferenceStore prefsStore =  this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
         prefsStore.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent event) {
@@ -108,16 +118,18 @@ public class BazelProjectPreferences {
 
     /**
      */
-    public static String getBazelWorkspacePath(BazelPluginActivator activator) {
-        IPreferenceStore prefsStore =  BazelPluginActivator.getResourceHelper().getPreferenceStore(activator);
-        return prefsStore.getString(BazelProjectPreferences.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY);
+    @Override
+	public String getBazelWorkspacePath() {
+        IPreferenceStore prefsStore =  this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
+        return prefsStore.getString(EclipseProjectPreferencesManager.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY);
     }
 
     /**
      */
-    public static void setBazelWorkspacePath(BazelPluginActivator activator, String bazelWorkspacePath) {
-        IPreferenceStore prefsStore =  BazelPluginActivator.getResourceHelper().getPreferenceStore(activator);
-        prefsStore.setValue(BazelProjectPreferences.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspacePath);
+    @Override
+	public void setBazelWorkspacePath(String bazelWorkspacePath) {
+        IPreferenceStore prefsStore =  this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
+        prefsStore.setValue(EclipseProjectPreferencesManager.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspacePath);
     }
     
     
@@ -127,21 +139,24 @@ public class BazelProjectPreferences {
      * Example:  //projects/libs/foo
      * See https://github.com/salesforce/bazel-eclipse/issues/24
      */
-    public static String getBazelLabelForEclipseProject(IProject eclipseProject) {
-        Preferences eclipseProjectBazelPrefs = BazelPluginActivator.getResourceHelper().getProjectBazelPreferences(eclipseProject);
+    @Override
+	public String getBazelLabelForProject(BazelProject bazelProject) {
+    	IProject eclipseProject = (IProject)bazelProject.getProjectImpl();
+        Preferences eclipseProjectBazelPrefs = this.resourceHelper.getProjectBazelPreferences(eclipseProject);
         return eclipseProjectBazelPrefs.get(PROJECT_PACKAGE_LABEL, null);
     }
     
     /**
      * Returns a map that maps Bazel labels to their Eclipse projects
      */
-    public static Map<BazelLabel, IProject> getBazelLabelToEclipseProjectMap(Collection<IProject> eclipseProjects) {
-        Map<BazelLabel, IProject> labelToProject = new HashMap<>();
-        for (IProject project : eclipseProjects) {
-            EclipseProjectBazelTargets activatedTargets = getConfiguredBazelTargets(project, false);
+    @Override
+	public Map<BazelLabel, BazelProject> getBazelLabelToProjectMap(Collection<BazelProject> bazelProjects) {
+        Map<BazelLabel, BazelProject> labelToProject = new HashMap<>();
+        for (BazelProject bazelProject : bazelProjects) {
+        	BazelProjectTargets activatedTargets = getConfiguredBazelTargets(bazelProject, false);
             List<BazelLabel> labels = activatedTargets.getConfiguredTargets().stream().map(t -> new BazelLabel(t)).collect(Collectors.toList());
             for (BazelLabel label : labels) {
-                labelToProject.merge(label, project, (k1, k2) -> {
+                labelToProject.merge(label, bazelProject, (k1, k2) -> {
                     throw new IllegalStateException("Duplicate label: " + label + " - this is bug");
                 });
             }
@@ -160,11 +175,13 @@ public class BazelProjectPreferences {
      * By contract, this method will return only one target if the there is a wildcard target, even if the user does
      * funny things in their prefs file and sets multiple targets along with the wildcard target.
      */
-    public static EclipseProjectBazelTargets getConfiguredBazelTargets(IProject eclipseProject, boolean addWildcardIfNoTargets) {
-        Preferences eclipseProjectBazelPrefs = BazelPluginActivator.getResourceHelper().getProjectBazelPreferences(eclipseProject);
+    @Override
+	public BazelProjectTargets getConfiguredBazelTargets(BazelProject bazelProject, boolean addWildcardIfNoTargets) {
+    	IProject eclipseProject = (IProject)bazelProject.getProjectImpl();
+        Preferences eclipseProjectBazelPrefs = this.resourceHelper.getProjectBazelPreferences(eclipseProject);
         String projectLabel = eclipseProjectBazelPrefs.get(PROJECT_PACKAGE_LABEL, null);
 
-        EclipseProjectBazelTargets activatedTargets = new EclipseProjectBazelTargets(eclipseProject, projectLabel);
+        BazelProjectTargets activatedTargets = new BazelProjectTargets(bazelProject, projectLabel);
         
         boolean addedTarget = false;
         Set<String> activeTargets = new TreeSet<>();
@@ -200,8 +217,10 @@ public class BazelProjectPreferences {
     /**
      * List of Bazel build flags for this Eclipse project, taken from the project configuration
      */
-    public static List<String> getBazelBuildFlagsForEclipseProject(IProject eclipseProject) {
-        Preferences eclipseProjectBazelPrefs = BazelPluginActivator.getResourceHelper().getProjectBazelPreferences(eclipseProject);
+    @Override
+	public List<String> getBazelBuildFlagsForProject(BazelProject bazelProject) {
+    	IProject eclipseProject = (IProject)bazelProject.getProjectImpl();
+        Preferences eclipseProjectBazelPrefs = this.resourceHelper.getProjectBazelPreferences(eclipseProject);
         
         ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
         for (String property : getKeys(eclipseProjectBazelPrefs)) {
@@ -213,10 +232,12 @@ public class BazelProjectPreferences {
     }
     
     
-    public static void addSettingsToEclipseProject(IProject eclipseProject, String bazelWorkspaceRoot,
+    @Override
+	public void addSettingsToProject(BazelProject bazelProject, String bazelWorkspaceRoot,
             String bazelProjectLabel, List<String> bazelTargets, List<String> bazelBuildFlags) throws BackingStoreException {
 
-        Preferences eclipseProjectBazelPrefs = BazelPluginActivator.getResourceHelper().getProjectBazelPreferences(eclipseProject);
+    	IProject eclipseProject = (IProject)bazelProject.getProjectImpl();
+        Preferences eclipseProjectBazelPrefs = this.resourceHelper.getProjectBazelPreferences(eclipseProject);
 
         eclipseProjectBazelPrefs.put(BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspaceRoot);
         if (!bazelProjectLabel.startsWith("//")) {

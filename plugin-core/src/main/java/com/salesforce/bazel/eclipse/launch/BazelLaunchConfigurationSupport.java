@@ -50,8 +50,7 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
-import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
+import com.salesforce.bazel.eclipse.config.ProjectPreferencesManager;
 import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -59,6 +58,9 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.AspectPackageInfo;
 import com.salesforce.bazel.sdk.model.AspectPackageInfos;
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.model.BazelProjectManager;
+import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.TargetKind;
 
 /**
@@ -243,9 +245,13 @@ class BazelLaunchConfigurationSupport {
 
     private static AspectPackageInfos computeAspectPackageInfos(IProject project, BazelWorkspaceCommandRunner bazelRunner,
             WorkProgressMonitor monitor) {
+        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
         try {
             // TODO switch this to use the BazelBuildFile value object
-            EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(project, false);
+        	String projectName = project.getName();
+        	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+        	BazelProjectTargets targets = prefsMgr.getConfiguredBazelTargets(bazelProject, false);
             Map<String, Set<AspectPackageInfo>> packageInfos = bazelRunner.getAspectPackageInfos(project.getName(), targets.getConfiguredTargets(),
                 monitor, "launcher:computeAspectPackageInfos");
             return AspectPackageInfos.fromSets(packageInfos.values());

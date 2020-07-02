@@ -62,8 +62,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
-import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
+import com.salesforce.bazel.eclipse.config.ProjectPreferencesManager;
+import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.model.BazelProjectManager;
+import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
@@ -137,11 +139,16 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
         IJavaProject project = JavaRuntime.getJavaProject(configuration);
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();        
         File base = bazelWorkspace.getBazelExecRootDirectory();
+        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
 
         String testClassName = configuration.getAttribute("org.eclipse.jdt.launching.MAIN_TYPE", (String) null);
         String suffix = getParamsJarSuffix(isSource);
 
-        EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(project.getProject(), false);
+    	String projectName = project.getProject().getName();
+    	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+        
+    	BazelProjectTargets targets = prefsMgr.getConfiguredBazelTargets(bazelProject, false);
         Set<File> paramFiles = new HashSet<File>();
         
         for (String eachTarget : targets.getConfiguredTargets()) {

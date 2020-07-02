@@ -23,8 +23,8 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.osgi.service.prefs.BackingStoreException;
 
-import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
-import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
+import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.config.ProjectPreferencesManager;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
@@ -40,6 +40,8 @@ import com.salesforce.bazel.sdk.model.AspectPackageInfo;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.model.BazelProjectManager;
+import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.model.SimplePerfRecorder;
@@ -131,14 +133,17 @@ public class BazelClasspathContainerImpl {
 
             try {
                 IProject eclipseIProject = (IProject)bazelProject.getProjectImpl();
-                EclipseProjectBazelTargets configuredTargetsForProject = BazelProjectPreferences.getConfiguredBazelTargets(eclipseIProject, false);
+                BazelProject bazelProject = BazelProjectManager.getInstance().getProject(eclipseIProject.getName());
+
+                ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+                BazelProjectTargets configuredTargetsForProject = prefsMgr.getConfiguredBazelTargets(bazelProject, false);
                 
                 // get the model of the BUILD file for this package, which will tell us the type of each target and the list
                 // of all targets if configured with the wildcard target
                 BazelBuildFile bazelBuildFileModel = null; 
                 try {
                     bazelBuildFileModel = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor, 
-                        BazelProjectPreferences.getBazelLabelForEclipseProject(eclipseIProject));
+                        prefsMgr.getBazelLabelForProject(bazelProject));
                 } catch (Exception anyE) {
                     logger.error("Unable to compute classpath containers entries for project "+bazelProject.name, anyE);
                     return returnEmptyClasspathOrThrow(anyE);
@@ -181,9 +186,8 @@ public class BazelClasspathContainerImpl {
                                 }
                             }
                         } else { // otherProject != null 
-                            String thisFullPath = eclipseIProject.getFullPath().toOSString();
-                            String otherFullPath = otherProject.getProject().getFullPath().toOSString(); 
-                            if (thisFullPath.equals(otherFullPath)) {
+                            String otherBazelProjectName = otherProject.getProject().getName();
+                            if (bazelProject.name.equals(otherBazelProjectName)) {
                                 // the project referenced is actually the the current project that this classpath container is for
                                 
                                 // some rule types have hidden dependencies that we need to add
@@ -196,9 +200,8 @@ public class BazelClasspathContainerImpl {
                                 
                             } else {
                                 // add the referenced project to the classpath, directly as a project classpath entry
-                            	String otherBazelProjectName = otherProject.getProject().getName();
                                 if (!projectsAddedToClasspath.contains(otherBazelProjectName)) {
-                                	BazelProject otherBazelProject = bazelProject.bazelProjectManager.getProject(otherBazelProjectName);
+                                	BazelProject otherBazelProject = BazelProjectManager.getInstance().getProject(otherBazelProjectName);
                                 	if (otherBazelProject == null) {
                                 		otherBazelProject = new BazelProject(otherBazelProjectName);
                                 	}
@@ -258,8 +261,8 @@ public class BazelClasspathContainerImpl {
             if (this.eclipseProjectIsRoot) {
                 return true;
             }
-            IProject eclipseIProject = (IProject)bazelProject.getProjectImpl();
-            EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(eclipseIProject.getProject(), false);
+            ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+            BazelProjectTargets targets = prefsMgr.getConfiguredBazelTargets(bazelProject, false);
             List<BazelProblem> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, null);
             for (BazelProblem detail : details) {
             	logger.error(detail.toString());

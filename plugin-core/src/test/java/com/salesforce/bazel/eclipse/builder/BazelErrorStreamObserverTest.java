@@ -18,6 +18,7 @@ import org.junit.Test;
 import com.google.common.collect.Multimap;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
+import com.salesforce.bazel.sdk.model.BazelProject;
 
 public class BazelErrorStreamObserverTest {
     
@@ -29,9 +30,9 @@ public class BazelErrorStreamObserverTest {
         IProject project2 = getMockedProject("P2").getProject();
         BazelLabel l2 = new BazelLabel("projects/libs/lib2:*");
         BazelProblem error2 = new BazelProblem("projects/libs/lib2/src/Test2.java", 22, "blah");
-        Map<BazelLabel, IProject> labelToProject = new HashMap<>();
-        labelToProject.put(l1, project1);
-        labelToProject.put(l2, project2);
+        Map<BazelLabel, BazelProject> labelToProject = new HashMap<>();
+        labelToProject.put(l1, new BazelProject("P1", project1));
+        labelToProject.put(l2, new BazelProject("P2", project2));
         IProject rootProject = getMockedProject("ROOT").getProject();
 
         Multimap<IProject, BazelProblem> projectToErrors =
@@ -57,7 +58,7 @@ public class BazelErrorStreamObserverTest {
         IProject project1 = getMockedProject("P1").getProject();
         BazelLabel l1 = new BazelLabel("projects/libs/lib1:*");
         BazelProblem error1 = new BazelProblem("projects/libs/lib1/src/Test.java", 21, "foo");
-        Map<BazelLabel, IProject> labelToProject = Collections.singletonMap(l1, project1);
+        Map<BazelLabel, BazelProject> labelToProject = Collections.singletonMap(l1, new BazelProject("P1", project1));
         BazelProblem error2 = new BazelProblem("projects/libs/lib2/src/Test2.java", 22, "blah");
         IProject rootProject = getMockedProject("ROOT").getProject();
 

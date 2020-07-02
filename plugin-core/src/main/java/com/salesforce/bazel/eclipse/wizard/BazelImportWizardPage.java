@@ -56,11 +56,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
+import com.salesforce.bazel.eclipse.config.ProjectPreferencesManager;
 import com.salesforce.bazel.eclipse.importer.BazelProjectImportScanner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.model.BazelProjectManager;
 
 /**
  * Class that sets up the UI for the Bazel Import Workspace wizard.
@@ -184,10 +186,15 @@ public class BazelImportWizardPage extends WizardPage {
     
     private static List<BazelPackageInfo> getImportedBazelPackages(BazelPackageInfo rootPackage) {
         List<BazelPackageInfo> importedPackages = new ArrayList<>();
+        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
         IJavaProject[] javaProjects = BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false);
+        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
+
         for (IJavaProject javaProject : javaProjects) {
             // TODO it is possible there are no targets configured for a project
-            String target = BazelProjectPreferences.getConfiguredBazelTargets(javaProject.getProject(), false).getConfiguredTargets().iterator().next();
+        	String projectName = javaProject.getProject().getName();
+        	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+            String target = prefsMgr.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets().iterator().next();
             BazelLabel label = new BazelLabel(target);
             String pack = label.getDefaultPackageLabel().getLabel();
             BazelPackageInfo bpi = rootPackage.findByPackage(pack);

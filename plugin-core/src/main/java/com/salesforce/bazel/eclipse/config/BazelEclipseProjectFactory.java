@@ -82,6 +82,8 @@ import com.salesforce.bazel.sdk.model.AspectPackageInfo;
 import com.salesforce.bazel.sdk.model.AspectPackageInfos;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.model.SimplePerfRecorder;
@@ -297,12 +299,15 @@ public class BazelEclipseProjectFactory {
     private static IProject createEclipseProjectForBazelPackage(String projectName, URI eclipseProjectLocation,
             File bazelWorkspaceRootDirectory, String packageFSPath, List<String> packageSourceCodeFSPaths,
             List<String> bazelTargets, int javaLanguageVersion) {
+        BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
 
         IProject eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation, bazelWorkspaceRootDirectory);
+        BazelProject bazelProject = bazelProjectManager.getProject(projectName);
         try {
             addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID);
             addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID);
-            BazelProjectPreferences.addSettingsToEclipseProject(eclipseProject, bazelWorkspaceRootDirectory.getAbsolutePath(), 
+            ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+            prefsMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), 
                 packageFSPath, bazelTargets, ImmutableList.of()); // TODO pass buildFlags
 
             // this may throw if the user has deleted the .project file on disk while the project is open for import
@@ -512,6 +517,7 @@ public class BazelEclipseProjectFactory {
             createdEclipseProject = newEclipseProject;
         }
 
+        BazelProjectManager.getInstance().addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
         return createdEclipseProject;
     }
 

@@ -52,8 +52,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
-import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
+import com.salesforce.bazel.eclipse.config.ProjectPreferencesManager;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
@@ -64,6 +63,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.model.BazelProject;
 import com.salesforce.bazel.sdk.model.BazelProjectManager;
+import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
 
@@ -72,7 +72,7 @@ import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
  */
 public class BazelClasspathContainer implements IClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
-    private static BazelProjectManager bazelProjectManager = new BazelProjectManager();
+    private static BazelProjectManager bazelProjectManager = BazelProjectManager.getInstance();
     
     private final BazelWorkspace bazelWorkspace;
     private final BazelProject bazelProject;
@@ -181,12 +181,15 @@ public class BazelClasspathContainer implements IClasspathContainer {
         }
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
-        
+        ProjectPreferencesManager prefsMgr = BazelPluginActivator.getInstance().getProjectPreferencesManager();
+    	String projectName = this.eclipseProject.getName();
+    	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+
         if (bazelWorkspaceCmdRunner != null) {
             if (this.eclipseProjectIsRoot) {
                 return true;
             }
-            EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(this.eclipseProject.getProject(), false);
+            BazelProjectTargets targets = prefsMgr.getConfiguredBazelTargets(bazelProject, false);
             List<BazelProblem> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), null, Collections.emptyList(), null, null);
             for (BazelProblem detail : details) {
                 BazelPluginActivator.error(detail.toString());

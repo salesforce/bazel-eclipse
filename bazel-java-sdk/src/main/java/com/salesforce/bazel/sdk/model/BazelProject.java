@@ -12,7 +12,7 @@ import java.util.List;
 public class BazelProject {
 	public String name;
 	public List<BazelPackageInfo> bazelPackages;
-	public BazelProjectManager bazelProjectManager;
+	public BazelProjectManager bazelProjectManager; 
 	
 	// the tool environment (e.g. IDE) may provide a project implementation object of its own, that is
 	// stored here
