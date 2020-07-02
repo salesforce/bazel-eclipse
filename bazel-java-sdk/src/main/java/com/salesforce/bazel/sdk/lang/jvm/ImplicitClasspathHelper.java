@@ -5,10 +5,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.AspectPackageInfo;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**

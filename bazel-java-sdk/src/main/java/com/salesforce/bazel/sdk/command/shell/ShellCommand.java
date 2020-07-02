@@ -51,7 +51,7 @@ import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
-import com.salesforce.bazel.sdk.model.SimplePerfRecorder;
+import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 
 /**
  * A utility class to spawn a command in the shell and parse its output. It allows to filter the output, 

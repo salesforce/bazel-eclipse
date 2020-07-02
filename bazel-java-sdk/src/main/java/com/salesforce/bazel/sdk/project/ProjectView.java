@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.ide.projectview;
+package com.salesforce.bazel.sdk.project;
 
 import java.io.File;
 import java.nio.file.Paths;

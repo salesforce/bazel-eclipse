@@ -63,7 +63,7 @@ import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.Bazel
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.TypedBazelLabel;
 import com.salesforce.bazel.eclipse.ui.BazelSWTFactory;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.TargetKind;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
  * Launch Configuration Tab to select a project and Bazel target to launch.
@@ -119,9 +119,9 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         }
 
         BazelLabel label = targetTextInput.getText().trim().isEmpty() ? null : new BazelLabel(targetTextInput.getText());
-        TargetKind targetKind = label == null ? null : lookupLabelKind(label);
+        BazelTargetKind targetKind = label == null ? null : lookupLabelKind(label);
         if (targetKind == null && loadedTargetKind != null) {
-            targetKind = TargetKind.valueOfIgnoresCase(loadedTargetKind);
+            targetKind = BazelTargetKind.valueOfIgnoresCase(loadedTargetKind);
         }
 
         support.populateBazelLaunchConfig(configuration, projectName, label, targetKind);
@@ -259,7 +259,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         return new BazelLabel(targetName);
     }
 
-    private TargetKind lookupLabelKind(BazelLabel label) {
+    private BazelTargetKind lookupLabelKind(BazelLabel label) {
         if (labelsForSelectedProject != null) {
             for (TypedBazelLabel typedBazelLabel : labelsForSelectedProject) {
                 if (typedBazelLabel.getBazelLabel().equals(label)) {
@@ -314,12 +314,12 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         @Override
         public String getText(Object element) {
             BazelLabel label = ((BazelLabel)element);
-            TargetKind targetKind = BazelLaunchConfigurationTab.this.lookupLabelKind(label);
+            BazelTargetKind targetKind = BazelLaunchConfigurationTab.this.lookupLabelKind(label);
             return toFriendlyLabelRepresentation(label, targetKind);
         }
     };
 
-    private static String toFriendlyLabelRepresentation(BazelLabel label, TargetKind targetKind) {
+    private static String toFriendlyLabelRepresentation(BazelLabel label, BazelTargetKind targetKind) {
         // if the target name uses a path-like syntax: my/target/name, then return
         // "name (my/target/name)"
         // otherwise just return the target name

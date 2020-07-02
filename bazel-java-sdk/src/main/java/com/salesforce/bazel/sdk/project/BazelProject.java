@@ -1,6 +1,8 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.project;
 
 import java.util.List;
+
+import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 
 /**
  * A BazelProject is a logical concept that has no concrete artifact in the Bazel workspace.

@@ -1,6 +1,8 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.aspect;
 
 import java.util.List;
+
+import com.salesforce.bazel.sdk.model.BazelDependencyGraph;
 
 /**
  * Builder that uses the set of aspect infos generated for a workspace to construct the

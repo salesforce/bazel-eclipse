@@ -1,8 +1,8 @@
-package com.salesforce.bazel.eclipse.config;
+package com.salesforce.bazel.sdk.model;
 
 import java.util.List;
 
-import com.salesforce.bazel.sdk.model.AspectPackageInfos;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**

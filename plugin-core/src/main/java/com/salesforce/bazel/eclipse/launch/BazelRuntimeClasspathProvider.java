@@ -62,10 +62,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.sdk.model.BazelProject;
-import com.salesforce.bazel.sdk.model.BazelProjectManager;
-import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**

@@ -41,10 +41,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.salesforce.bazel.sdk.abstractions.BazelAspectLocation;
 import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.AspectPackageInfo;
 
 /**
  * Manages running, collecting, and caching all of the build info aspects for a specific workspace.

@@ -47,7 +47,7 @@ java_test(
 
 java_test(
     name = "AspectPackageInfosTest",
-    srcs = ["src/test/java/com/salesforce/bazel/sdk/model/AspectPackageInfosTest.java",],
+    srcs = ["src/test/java/com/salesforce/bazel/sdk/aspect/AspectPackageInfosTest.java",],
     deps = [
         ":bazel-java-sdk",
         "//plugin-libs/plugin-deps:com_google_guava",
@@ -75,7 +75,7 @@ java_test(
     name = "BazelOutputDirectoryBuilderTest",
     srcs = [
         "src/main/java/com/salesforce/bazel/sdk/model/BazelLabel.java",
-        "src/main/java/com/salesforce/bazel/sdk/model/TargetKind.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelTargetKind.java",
         "src/main/java/com/salesforce/bazel/sdk/command/BazelOutputDirectoryBuilder.java",
         "src/test/java/com/salesforce/bazel/sdk/command/BazelOutputDirectoryBuilderTest.java"
     ],
@@ -144,9 +144,9 @@ java_test(
     name = "ProjectViewTest",
     srcs = [
         "src/main/java/com/salesforce/bazel/sdk/model/BazelPackageLocation.java",
-        "src/main/java/com/salesforce/bazel/sdk/ide/projectview/ProjectView.java",
-        "src/main/java/com/salesforce/bazel/sdk/ide/projectview/ProjectViewPackageLocation.java",
-        "src/test/java/com/salesforce/bazel/sdk/ide/projectview/ProjectViewTest.java",
+        "src/main/java/com/salesforce/bazel/sdk/project/ProjectView.java",
+        "src/main/java/com/salesforce/bazel/sdk/project/ProjectViewPackageLocation.java",
+        "src/test/java/com/salesforce/bazel/sdk/project/ProjectViewTest.java",
     ],
 )
 

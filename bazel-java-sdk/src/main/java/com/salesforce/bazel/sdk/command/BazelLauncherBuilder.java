@@ -33,7 +33,7 @@ import java.util.Objects;
 import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.internal.ConsoleType;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.TargetKind;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
  * Convenience class that manufactures Bazel Command instances used for Bazel 'run' or 'test' commands
@@ -46,7 +46,7 @@ public class BazelLauncherBuilder {
     private final BazelOutputDirectoryBuilder outputDirectoryBuilder;
 
     private BazelLabel bazelLabel;
-    private TargetKind targetKind;
+    private BazelTargetKind targetKind;
     private List<String> bazelArgs;
 
     private boolean isDebugMode;
@@ -68,12 +68,12 @@ public class BazelLauncherBuilder {
     }
 
     BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder,
-            BazelLabel bazelLabel, TargetKind targetKind, List<String> bazelArgs) {
+            BazelLabel bazelLabel, BazelTargetKind targetKind, List<String> bazelArgs) {
         this(bazelRunner, commandBuilder, bazelLabel, targetKind, bazelArgs, new BazelOutputDirectoryBuilder());
     }
 
     BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder,
-        BazelLabel bazelLabel, TargetKind targetKind, List<String> bazelArgs,
+        BazelLabel bazelLabel, BazelTargetKind targetKind, List<String> bazelArgs,
         BazelOutputDirectoryBuilder outputDirectoryBuilder) {
         this.bazelCommandRunner = Objects.requireNonNull(bazelRunner);
         this.commandBuilder = Objects.requireNonNull(commandBuilder);
@@ -91,7 +91,7 @@ public class BazelLauncherBuilder {
          return this;
     }
 
-    public BazelLauncherBuilder setTargetKind(TargetKind targetKind) {
+    public BazelLauncherBuilder setTargetKind(BazelTargetKind targetKind) {
         this.targetKind = targetKind;
         return this;
    }

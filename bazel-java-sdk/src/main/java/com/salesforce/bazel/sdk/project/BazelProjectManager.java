@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.project;
 
 import java.io.File;
 import java.util.Collection;
@@ -10,6 +10,9 @@ import java.util.TreeMap;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelProblem;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * Central manager for managing BazelProject instances 

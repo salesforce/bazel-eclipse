@@ -9,8 +9,8 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
 
 /**
  * Tests .bazelrc options gathering and parsing. Note that we don't parse .bazelrc directly (as that would be hard, and there

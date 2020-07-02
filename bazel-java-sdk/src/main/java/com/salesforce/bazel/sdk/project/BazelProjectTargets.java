@@ -33,13 +33,13 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.project;
 
 import java.util.Set;
 import java.util.TreeSet;
 
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
-import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProject;
 
 /**
  * Object that encapsulates the logic and state regarding the active targets configured for a

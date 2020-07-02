@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.aspect;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -6,7 +6,7 @@ import static org.junit.Assert.assertNull;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import com.salesforce.bazel.sdk.model.AspectOutputJarSet;
+import com.salesforce.bazel.sdk.aspect.AspectOutputJarSet;
 
 public class AspectOutputJarsTest {
 

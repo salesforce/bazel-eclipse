@@ -1,9 +1,11 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.command;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * Holds the list of command options defined for the Workspace.

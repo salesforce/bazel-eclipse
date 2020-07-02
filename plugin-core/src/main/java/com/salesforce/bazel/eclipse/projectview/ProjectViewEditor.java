@@ -28,15 +28,15 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.builder.BazelMarkerSupport;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.wizard.BazelProjectImporter;
-import com.salesforce.bazel.sdk.ide.projectview.ProjectView;
-import com.salesforce.bazel.sdk.ide.projectview.ProjectViewConstants;
-import com.salesforce.bazel.sdk.ide.projectview.ProjectViewPackageLocation;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelProblem;
-import com.salesforce.bazel.sdk.model.BazelProject;
-import com.salesforce.bazel.sdk.model.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.ProjectView;
+import com.salesforce.bazel.sdk.project.ProjectViewConstants;
+import com.salesforce.bazel.sdk.project.ProjectViewPackageLocation;
 
 public class ProjectViewEditor extends AbstractDecoratedTextEditor {
 

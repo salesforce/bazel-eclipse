@@ -31,7 +31,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.aspect;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
  * A container for AspectPackageInfo instances.
@@ -97,10 +99,10 @@ public class AspectPackageInfos {
         return null; //TODO: make it better
     }
 
-    public Collection<AspectPackageInfo> lookupByTargetKind(EnumSet<TargetKind> requestedTargetKinds) {
+    public Collection<AspectPackageInfo> lookupByTargetKind(EnumSet<BazelTargetKind> requestedTargetKinds) {
         List<AspectPackageInfo> aspectPackageInfos = new ArrayList<>();
         for (AspectPackageInfo aspectPackageInfo : labelToAspectPackageInfo.values()) {
-            if (requestedTargetKinds.contains(TargetKind.valueOfIgnoresCase(aspectPackageInfo.getKind()))) {
+            if (requestedTargetKinds.contains(BazelTargetKind.valueOfIgnoresCase(aspectPackageInfo.getKind()))) {
                 aspectPackageInfos.add(aspectPackageInfo);
             }
         }

@@ -60,8 +60,8 @@ import com.salesforce.bazel.eclipse.importer.BazelProjectImportScanner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
-import com.salesforce.bazel.sdk.model.BazelProject;
-import com.salesforce.bazel.sdk.model.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 /**
  * Class that sets up the UI for the Bazel Import Workspace wizard.

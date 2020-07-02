@@ -6,8 +6,8 @@ import java.io.File;
 
 import org.junit.Test;
 
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.model.test.MockBazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.model.test.MockOperatingEnvironmentDetectionStrategy;
 

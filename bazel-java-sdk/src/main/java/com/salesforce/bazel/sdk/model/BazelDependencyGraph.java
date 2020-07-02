@@ -42,9 +42,9 @@ public class BazelDependencyGraph {
     Map<String, Set<String>> usedByMap = new TreeMap<>();
     
     /**
-     * Callers must use the factories to construct the graph.
+     * Callers should use the factories to construct the graph.
      */
-    BazelDependencyGraph() {
+    public BazelDependencyGraph() {
     }
     
     // CONSTRUCTION

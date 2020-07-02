@@ -41,7 +41,7 @@ import com.salesforce.bazel.sdk.command.BazelLauncherBuilder;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutputMatcher;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.TargetKind;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
@@ -55,7 +55,7 @@ public class BazelLauncherBuilderTest {
     public void testBuildRunCommand() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelLabel label = new BazelLabel("//projects/libs/javalib0");
-        TargetKind targetKind = TargetKind.JAVA_BINARY;
+        BazelTargetKind targetKind = BazelTargetKind.JAVA_BINARY;
 
         BazelLauncherBuilder launcherBuilder = env.bazelWorkspaceCommandRunner.getBazelLauncherBuilder();
         launcherBuilder.setLabel(label);
@@ -73,7 +73,7 @@ public class BazelLauncherBuilderTest {
     public void testBuildRunCommandWithDebug() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelLabel label = new BazelLabel("//projects/libs/javalib0");
-        TargetKind targetKind = TargetKind.JAVA_BINARY;
+        BazelTargetKind targetKind = BazelTargetKind.JAVA_BINARY;
 
         BazelLauncherBuilder launcherBuilder = env.bazelWorkspaceCommandRunner.getBazelLauncherBuilder();
         launcherBuilder.setLabel(label);
@@ -93,7 +93,7 @@ public class BazelLauncherBuilderTest {
     public void testBuildTestCommand() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelLabel label = new BazelLabel("//projects/libs/javalib0");
-        TargetKind targetKind = TargetKind.JAVA_TEST;
+        BazelTargetKind targetKind = BazelTargetKind.JAVA_TEST;
 
         BazelLauncherBuilder launcherBuilder = env.bazelWorkspaceCommandRunner.getBazelLauncherBuilder();
         launcherBuilder.setLabel(label);
@@ -114,7 +114,7 @@ public class BazelLauncherBuilderTest {
     public void testBuildSeleniumTestCommand() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelLabel label = new BazelLabel("//projects/libs/javalib0");
-        TargetKind targetKind = TargetKind.JAVA_WEB_TEST_SUITE;
+        BazelTargetKind targetKind = BazelTargetKind.JAVA_WEB_TEST_SUITE;
 
         BazelLauncherBuilder launcherBuilder = env.bazelWorkspaceCommandRunner.getBazelLauncherBuilder();
         launcherBuilder.setLabel(label);
@@ -135,7 +135,7 @@ public class BazelLauncherBuilderTest {
     public void testBuildTestCommandWithFilter() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelLabel label = new BazelLabel("//projects/libs/javalib0");
-        TargetKind targetKind = TargetKind.JAVA_TEST;
+        BazelTargetKind targetKind = BazelTargetKind.JAVA_TEST;
         List<String> bazelArgs =
                 Collections.singletonList(BazelCommandArgs.TEST_FILTER.getName() + "=someBazelTestFilter");
 
@@ -159,7 +159,7 @@ public class BazelLauncherBuilderTest {
     public void testBuildTestCommandWithDebugEnabled() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelLabel label = new BazelLabel("//projects/libs/javalib0");
-        TargetKind targetKind = TargetKind.JAVA_TEST;
+        BazelTargetKind targetKind = BazelTargetKind.JAVA_TEST;
 
         BazelLauncherBuilder launcherBuilder = env.bazelWorkspaceCommandRunner.getBazelLauncherBuilder();
         launcherBuilder.setLabel(label);

@@ -55,9 +55,9 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelProject;
-import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 public class BazelClasspathContainerInitializer extends ClasspathContainerInitializer {
     static final LogHelper LOG = LogHelper.log(BazelClasspathContainerInitializer.class);

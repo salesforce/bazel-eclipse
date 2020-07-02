@@ -26,10 +26,10 @@ import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.BazelProject;
-import com.salesforce.bazel.sdk.model.BazelProjectManager;
-import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 public class EclipseBazelProjectManager extends BazelProjectManager {

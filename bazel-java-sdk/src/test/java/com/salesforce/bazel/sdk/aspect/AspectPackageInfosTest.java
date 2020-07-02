@@ -31,7 +31,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.aspect;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -45,18 +45,18 @@ import java.util.EnumSet;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.sdk.model.AspectPackageInfo;
-import com.salesforce.bazel.sdk.model.AspectPackageInfos;
-import com.salesforce.bazel.sdk.model.TargetKind;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 public class AspectPackageInfosTest {
 
     @Test
     public void testLookupByLabel() {
-        AspectPackageInfo lib = getAspectPackageInfo("foo1", TargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo test = getAspectPackageInfo("foo2", TargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
-        AspectPackageInfo bin = getAspectPackageInfo("foo3", TargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", TargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectPackageInfo lib = getAspectPackageInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
+        AspectPackageInfo test = getAspectPackageInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
+        AspectPackageInfo bin = getAspectPackageInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
+        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
         AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
 
@@ -69,33 +69,33 @@ public class AspectPackageInfosTest {
 
     @Test
     public void testLookupByTargetKind__singleTargetKind() {
-        AspectPackageInfo lib = getAspectPackageInfo("foo1", TargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo test = getAspectPackageInfo("foo2", TargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
-        AspectPackageInfo bin = getAspectPackageInfo("foo3", TargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", TargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectPackageInfo lib = getAspectPackageInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
+        AspectPackageInfo test = getAspectPackageInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
+        AspectPackageInfo bin = getAspectPackageInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
+        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
         AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
 
-        Collection<AspectPackageInfo> infos = apis.lookupByTargetKind(EnumSet.of(TargetKind.JAVA_TEST));
+        Collection<AspectPackageInfo> infos = apis.lookupByTargetKind(EnumSet.of(BazelTargetKind.JAVA_TEST));
         assertEquals(1, infos.size());
         assertSame(test, infos.iterator().next());
 
-        infos = apis.lookupByTargetKind(EnumSet.of(TargetKind.JAVA_WEB_TEST_SUITE));
+        infos = apis.lookupByTargetKind(EnumSet.of(BazelTargetKind.JAVA_WEB_TEST_SUITE));
         assertEquals(1, infos.size());
         assertSame(seleniumTest, infos.iterator().next());
 }
 
     @Test
     public void testLookupByTargetKind__multipleTargetKinds() {
-        AspectPackageInfo lib = getAspectPackageInfo("foo1", TargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo test = getAspectPackageInfo("foo2", TargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
-        AspectPackageInfo bin = getAspectPackageInfo("foo3", TargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", TargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectPackageInfo lib = getAspectPackageInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
+        AspectPackageInfo test = getAspectPackageInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
+        AspectPackageInfo bin = getAspectPackageInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
+        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
         AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
 
         Collection<AspectPackageInfo> infos =
-                apis.lookupByTargetKind(EnumSet.of(TargetKind.JAVA_TEST, TargetKind.JAVA_BINARY));
+                apis.lookupByTargetKind(EnumSet.of(BazelTargetKind.JAVA_TEST, BazelTargetKind.JAVA_BINARY));
 
         assertEquals(2, infos.size());
         assertTrue(infos.contains(test));
@@ -177,10 +177,10 @@ public class AspectPackageInfosTest {
     }
 
     private static AspectPackageInfo getAspectPackageInfo(String label, String... sourcePaths) {
-        return getAspectPackageInfo(label, TargetKind.JAVA_LIBRARY, sourcePaths);
+        return getAspectPackageInfo(label, BazelTargetKind.JAVA_LIBRARY, sourcePaths);
     }
 
-    private static AspectPackageInfo getAspectPackageInfo(String label, TargetKind targetKind, String... sourcePaths) {
+    private static AspectPackageInfo getAspectPackageInfo(String label, BazelTargetKind targetKind, String... sourcePaths) {
         return new AspectPackageInfo(new File(""), ImmutableList.of(), ImmutableList.of(), "some/path",
                 targetKind.toString().toLowerCase(), label, ImmutableList.of(), ImmutableList.copyOf(sourcePaths), "main-class");
     }

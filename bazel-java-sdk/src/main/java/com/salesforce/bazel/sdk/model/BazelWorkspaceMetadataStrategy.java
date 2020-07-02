@@ -3,6 +3,8 @@ package com.salesforce.bazel.sdk.model;
 import java.io.File;
 import java.util.List;
 
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
+
 /**
  * Worker interface for a delegate that can retrieve metadata for the BazelWorkspace.
  * For example, the primary implementation uses 'bazel info' commands. During tests,

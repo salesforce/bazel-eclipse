@@ -53,16 +53,15 @@ import com.salesforce.bazel.sdk.abstractions.BazelAspectLocation;
 import com.salesforce.bazel.sdk.abstractions.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.abstractions.OutputStreamObserver;
 import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
 import com.salesforce.bazel.sdk.command.internal.BazelCommandExecutor;
 import com.salesforce.bazel.sdk.command.internal.BazelQueryHelper;
 import com.salesforce.bazel.sdk.command.internal.BazelVersionChecker;
 import com.salesforce.bazel.sdk.command.internal.BazelWorkspaceAspectHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.logging.LoggerFacade;
-import com.salesforce.bazel.sdk.model.AspectPackageInfo;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelProblem;
-import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.model.BazelWorkspaceMetadataStrategy;
 
 /**

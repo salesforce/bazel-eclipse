@@ -70,10 +70,10 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
-import com.salesforce.bazel.sdk.model.BazelProject;
-import com.salesforce.bazel.sdk.model.BazelProjectManager;
-import com.salesforce.bazel.sdk.model.BazelProjectTargets;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 /**
  * Project builder that calls out to Bazel to run a workspace build.
@@ -129,7 +129,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         } catch (BazelCommandLineToolConfigurationException e) {
             LOG.error("Bazel not found: {} ", e.getMessage());
         } catch (Exception e) {
-            LOG.error("Failed to build {}", e, project.getName());
+            LOG.error("Failed to build: "+e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             progressMonitor.done();
         }

@@ -54,7 +54,7 @@ import com.salesforce.bazel.sdk.command.BazelOutputParser;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
-import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProject;
 
 /**
  * Implementation of {@link OutputStreamObserver} that observes error output and publishes errors to Problems View
@@ -85,7 +85,7 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
     public void startObserver() {
         final Set<BazelProject> projectSet = new HashSet<>(this.labelToProject.values());
         for (BazelProject project : projectSet) {
-        	IProject eclipseProject = (IProject)project;
+        	IProject eclipseProject = (IProject)project.getProjectImpl();
             BazelMarkerSupport.clearProblemMarkersForProject(eclipseProject, monitor);
         }
     }

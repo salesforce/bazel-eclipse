@@ -1,23 +1,20 @@
-package com.salesforce.bazel.eclipse.config;
+package com.salesforce.bazel.sdk.model;
 
 import java.util.List;
 
-import com.google.common.graph.MutableGraph;
-import com.google.common.graph.Traverser;
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.sdk.model.AspectDependencyGraphBuilder;
-import com.salesforce.bazel.sdk.model.AspectPackageInfos;
-import com.salesforce.bazel.sdk.model.BazelDependencyGraph;
-import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.aspect.AspectDependencyGraphBuilder;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Orders modules for import such that upstream dependencies are imported before downstream
  * dependencies.
  */
 public class ImportOrderResolverImpl implements ImportOrderResolver {
-
+	LogHelper logger;
+	
     public ImportOrderResolverImpl() {
-
+    	logger = LogHelper.log(this.getClass());
     }
 
     /**
@@ -50,7 +47,7 @@ public class ImportOrderResolverImpl implements ImportOrderResolver {
                 sb.append(pkg.getBazelPackageName());
                 sb.append("  ");
             }
-            BazelPluginActivator.info(sb.toString());
+            logger.info(sb.toString());
         } catch (Exception anyE) {
             anyE.printStackTrace();
             orderedModules = selectedModules;
@@ -58,10 +55,4 @@ public class ImportOrderResolverImpl implements ImportOrderResolver {
         return orderedModules;
 
     }
-    
-    // @VisibleForTesting
-    static Iterable<BazelPackageLocation> orderNodes(MutableGraph<BazelPackageLocation> graph, BazelPackageLocation rootModule) {
-        return Traverser.forGraph(graph).depthFirstPostOrder(rootModule);
-    }
-
 }

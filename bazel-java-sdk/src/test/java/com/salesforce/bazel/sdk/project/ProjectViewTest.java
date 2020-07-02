@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.ide.projectview;
+package com.salesforce.bazel.sdk.project;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,9 +10,9 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.salesforce.bazel.sdk.ide.projectview.ProjectView;
-import com.salesforce.bazel.sdk.ide.projectview.ProjectViewPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.project.ProjectView;
+import com.salesforce.bazel.sdk.project.ProjectViewPackageLocation;
 
 public class ProjectViewTest {
     

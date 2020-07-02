@@ -36,7 +36,7 @@ package com.salesforce.bazel.sdk.model;
 /**
  * The Bazel targets we support.
  */
-public enum TargetKind {
+public enum BazelTargetKind {
 
     JAVA_LIBRARY("java_library") {
 
@@ -133,7 +133,7 @@ public enum TargetKind {
     
     private final String targetKind;
 
-    private TargetKind(String targetKind) {
+    private BazelTargetKind(String targetKind) {
         this.targetKind = targetKind;
     }
 
@@ -143,9 +143,9 @@ public enum TargetKind {
      * 
      * @return matching TargetKind instance, null if no match
      */
-    public static TargetKind valueOfIgnoresCase(String value) {
+    public static BazelTargetKind valueOfIgnoresCase(String value) {
         try {
-            return TargetKind.valueOf(value.toUpperCase());
+            return BazelTargetKind.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException ex) {
             return null;
         }
@@ -159,8 +159,8 @@ public enum TargetKind {
      * @throws IllegalStateException
      *             if no matching TargetKind is found for the specified value
      */
-    public static TargetKind valueOfIgnoresCaseRequiresMatch(String value) {
-        TargetKind targetKind = valueOfIgnoresCase(value);
+    public static BazelTargetKind valueOfIgnoresCaseRequiresMatch(String value) {
+        BazelTargetKind targetKind = valueOfIgnoresCase(value);
         if (targetKind == null) {
             throw new IllegalStateException("No matching TargetKind found for value [" + value + "]");
         }

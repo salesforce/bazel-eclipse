@@ -18,7 +18,7 @@ import org.junit.Test;
 import com.google.common.collect.Multimap;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
-import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProject;
 
 public class BazelErrorStreamObserverTest {
     

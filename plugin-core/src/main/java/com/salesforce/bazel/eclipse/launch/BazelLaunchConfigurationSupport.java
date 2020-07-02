@@ -51,16 +51,16 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.abstractions.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.AspectPackageInfo;
-import com.salesforce.bazel.sdk.model.AspectPackageInfos;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.BazelProject;
-import com.salesforce.bazel.sdk.model.BazelProjectManager;
-import com.salesforce.bazel.sdk.model.BazelProjectTargets;
-import com.salesforce.bazel.sdk.model.TargetKind;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 /**
  * Supporting logic for Bazel Launch Configurations.
@@ -80,9 +80,9 @@ class BazelLaunchConfigurationSupport {
     static class TypedBazelLabel {
 
         private final BazelLabel bazelLabel;
-        private final TargetKind targetKind;
+        private final BazelTargetKind targetKind;
 
-        TypedBazelLabel(BazelLabel bazelLabel, TargetKind targetKind) {
+        TypedBazelLabel(BazelLabel bazelLabel, BazelTargetKind targetKind) {
             this.bazelLabel = Objects.requireNonNull(bazelLabel);
             this.targetKind = Objects.requireNonNull(targetKind);
         }
@@ -91,7 +91,7 @@ class BazelLaunchConfigurationSupport {
             return bazelLabel;
         }
 
-        TargetKind getTargetKind() {
+        BazelTargetKind getTargetKind() {
             return targetKind;
         }
 
@@ -190,7 +190,7 @@ class BazelLaunchConfigurationSupport {
         config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_ALLOW_TERMINATE, true);
     }
 
-    void populateBazelLaunchConfig(ILaunchConfigurationWorkingCopy config, String projectName, BazelLabel label, TargetKind targetKind) {
+    void populateBazelLaunchConfig(ILaunchConfigurationWorkingCopy config, String projectName, BazelLabel label, BazelTargetKind targetKind) {
         Objects.requireNonNull(config);
         Objects.requireNonNull(projectName);
 
@@ -205,7 +205,7 @@ class BazelLaunchConfigurationSupport {
     /**
      * Returns all runnable AspectPackageInfo instances for the specified project.
      *
-     * @see {@link TargetKind#isRunnable()}
+     * @see {@link BazelTargetKind#isRunnable()}
      */
     Collection<AspectPackageInfo> getLaunchableAspectPackageInfosForProject(IProject project) {
         return getAspectPackageInfosForProject(project, LAUNCHABLE_TARGET_KINDS);
@@ -214,7 +214,7 @@ class BazelLaunchConfigurationSupport {
     /**
      * Returns all AspectPackageInfo instances that represent targets of the specified type, for the specified project.
      */
-    Collection<AspectPackageInfo> getAspectPackageInfosForProject(IProject project, EnumSet<TargetKind> targetTypes) {
+    Collection<AspectPackageInfo> getAspectPackageInfosForProject(IProject project, EnumSet<BazelTargetKind> targetTypes) {
         BazelWorkspaceCommandRunner bazelRunner = BazelPluginActivator.getInstance().getWorkspaceCommandRunner();
         AspectPackageInfos apis = computeAspectPackageInfos(project, bazelRunner, WorkProgressMonitor.NOOP);
         return apis.lookupByTargetKind(targetTypes);
@@ -223,7 +223,7 @@ class BazelLaunchConfigurationSupport {
     /**
      * Returns all runnable Bazel targets for the specified project.
      *
-     * @see {@link TargetKind#isRunnable()}
+     * @see {@link BazelTargetKind#isRunnable()}
      */
     List<TypedBazelLabel> getLaunchableBazelTargetsForProject(IProject project) {
         return getBazelTargetsForProject(project, LAUNCHABLE_TARGET_KINDS);
@@ -232,11 +232,11 @@ class BazelLaunchConfigurationSupport {
     /**
      * Returns all Bazel targets of the specified type, for the specified project.
      */
-    List<TypedBazelLabel> getBazelTargetsForProject(IProject project, EnumSet<TargetKind> targetTypes) {
+    List<TypedBazelLabel> getBazelTargetsForProject(IProject project, EnumSet<BazelTargetKind> targetTypes) {
         List<TypedBazelLabel> typedBazelLabels = new ArrayList<>();
         for (AspectPackageInfo api : getAspectPackageInfosForProject(project, targetTypes)) {
             BazelLabel label = new BazelLabel(api.getLabel());
-            TargetKind kind = TargetKind.valueOfIgnoresCase(api.getKind());
+            BazelTargetKind kind = BazelTargetKind.valueOfIgnoresCase(api.getKind());
             typedBazelLabels.add(new TypedBazelLabel(label, kind));
         }
         return typedBazelLabels;
@@ -258,11 +258,11 @@ class BazelLaunchConfigurationSupport {
         }
     }
 
-    private static EnumSet<TargetKind> LAUNCHABLE_TARGET_KINDS = null;
+    private static EnumSet<BazelTargetKind> LAUNCHABLE_TARGET_KINDS = null;
 
     static {
-        List<TargetKind> targets = new ArrayList<>();
-        for (TargetKind kind : TargetKind.values()) {
+        List<BazelTargetKind> targets = new ArrayList<>();
+        for (BazelTargetKind kind : BazelTargetKind.values()) {
             // the expectation is that we'll only get java_binary targets
             // there's nothing wrong with getting other target kinds here,
             // but the target selection ui isn't that great, it should have

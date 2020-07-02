@@ -34,7 +34,7 @@
  *
  */
 
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.aspect;
 
 import java.io.File;
 import java.io.FileInputStream;

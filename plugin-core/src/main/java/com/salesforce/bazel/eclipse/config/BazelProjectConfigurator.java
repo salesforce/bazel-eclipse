@@ -58,6 +58,8 @@ import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 // copied from m2e MavenProjectConfigurator
 
+// TODO move some of this into the SDK
+
 public class BazelProjectConfigurator implements ProjectConfigurator {
     static final LogHelper LOG = LogHelper.log(BazelProjectConfigurator.class);
 

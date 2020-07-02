@@ -31,7 +31,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.aspect;
 
 import java.util.Objects;
 

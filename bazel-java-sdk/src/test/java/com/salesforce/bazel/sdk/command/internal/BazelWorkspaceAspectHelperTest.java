@@ -36,10 +36,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
 import com.salesforce.bazel.sdk.command.internal.BazelWorkspaceAspectHelper;
 import com.salesforce.bazel.sdk.command.test.MockWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
-import com.salesforce.bazel.sdk.model.AspectPackageInfo;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 

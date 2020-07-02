@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.salesforce.bazel.sdk.model.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.model.BazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
 

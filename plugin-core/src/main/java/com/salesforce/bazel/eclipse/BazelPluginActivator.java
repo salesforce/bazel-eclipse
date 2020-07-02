@@ -56,11 +56,11 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelProjectManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.model.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.RealOperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle

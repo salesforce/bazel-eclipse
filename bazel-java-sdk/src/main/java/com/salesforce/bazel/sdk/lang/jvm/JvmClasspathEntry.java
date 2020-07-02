@@ -1,6 +1,6 @@
 package com.salesforce.bazel.sdk.lang.jvm;
 
-import com.salesforce.bazel.sdk.model.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProject;
 
 /**
  * Entry in a classpath for the JVM that points to a Jar with bytecode.

@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.util;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -9,9 +9,9 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
 import com.salesforce.bazel.sdk.lang.jvm.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
-import com.salesforce.bazel.sdk.model.AspectPackageInfo;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**

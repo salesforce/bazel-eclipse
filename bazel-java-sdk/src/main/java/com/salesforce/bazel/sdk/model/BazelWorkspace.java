@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
+
 public class BazelWorkspace {
     
     // DATA
