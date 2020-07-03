@@ -58,7 +58,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
-import com.salesforce.bazel.sdk.workspace.BazelProjectImportScanner;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
 
@@ -181,7 +181,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         //   ECLIPSE_WS_ROOT/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.salesforce.bazel.eclipse.core.prefs
         String bazelWorkspacePathFromPrefs = configurationManager.getBazelWorkspacePath();
         if (bazelWorkspacePathFromPrefs != null && !bazelWorkspacePathFromPrefs.isEmpty()) {
-            String workspaceName = BazelProjectImportScanner.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
+            String workspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
             this.setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
         } else {
             LOG.info("The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");

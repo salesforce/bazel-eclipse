@@ -36,7 +36,7 @@ import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.workspace.BazelProjectImportScanner;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 import com.salesforce.bazel.sdk.workspace.test.TestOptions;
@@ -98,7 +98,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
             explicitJavaTestDeps, false);
 
         // scan the bazel workspace filesystem to build the list of Java projects
-        BazelProjectImportScanner scanner = new BazelProjectImportScanner();
+        BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         BazelPackageInfo workspaceRootProject = scanner.getPackages(mockEclipse.getBazelWorkspaceRoot());
         
         // choose the list of Bazel packages to import, in this case we assume the user selected all Java packages

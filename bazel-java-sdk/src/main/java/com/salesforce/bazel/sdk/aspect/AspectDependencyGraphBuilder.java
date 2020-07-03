@@ -10,7 +10,16 @@ import com.salesforce.bazel.sdk.model.BazelDependencyGraph;
  */
 public class AspectDependencyGraphBuilder {
 
-    
+    /**
+     * Builds the dependency graph using the data collected by running aspects. It is typical that the list
+     * of aspects covers all packages in the Workspace, but for some use cases it may be possible to use
+     * a subset of packages.
+     * <p>
+     * Passing includeTarget=true will increase the complexity of the graph. It will track dependencies per
+     * target in a package. Generally, this is more data than applications need. If includeTarget=false
+     * then the graph will have an edge in between two packages if any target in package A depends on
+     * any target in package B. 
+     */
     public static BazelDependencyGraph build(AspectPackageInfos aspects, boolean includeTarget) {
         BazelDependencyGraph graph = new BazelDependencyGraph();
         

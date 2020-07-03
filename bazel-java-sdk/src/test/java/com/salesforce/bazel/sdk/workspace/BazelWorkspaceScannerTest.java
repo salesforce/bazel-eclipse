@@ -32,11 +32,11 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
-import com.salesforce.bazel.sdk.workspace.BazelProjectImportScanner;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
-public class BazelProjectImportScannerTest {
+public class BazelWorkspaceScannerTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
@@ -51,7 +51,7 @@ public class BazelProjectImportScannerTest {
         TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(5).genrulePackages(2);
         new TestBazelWorkspaceFactory(descriptor).build();
         
-        BazelProjectImportScanner scanner = new BazelProjectImportScanner();
+        BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
         
         assertEquals(5, rootWorkspacePackage.getChildPackageInfos().size());
@@ -63,7 +63,7 @@ public class BazelProjectImportScannerTest {
     public void testEmptyDirectory() throws Exception {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
         
-        BazelProjectImportScanner scanner = new BazelProjectImportScanner();
+        BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         scanner.getPackages(tmpWorkspaceDir);
     }
 
@@ -74,7 +74,7 @@ public class BazelProjectImportScannerTest {
         TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(0).genrulePackages(2);
         new TestBazelWorkspaceFactory(descriptor).build();
         
-        BazelProjectImportScanner scanner = new BazelProjectImportScanner();
+        BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
         
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());
@@ -86,7 +86,7 @@ public class BazelProjectImportScannerTest {
         File workspaceFile = new File(tmpWorkspaceDir, "WORKSPACE").getCanonicalFile();
         workspaceFile.createNewFile();
         
-        BazelProjectImportScanner scanner = new BazelProjectImportScanner();
+        BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
         
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());

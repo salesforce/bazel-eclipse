@@ -199,8 +199,8 @@ java_test(
 )
 
 java_test(
-    name = "BazelProjectImportScannerTest",
-    srcs = ["src/test/java/com/salesforce/bazel/sdk/workspace/BazelProjectImportScannerTest.java"],
+    name = "BazelWorkspaceScannerTest",
+    srcs = ["src/test/java/com/salesforce/bazel/sdk/workspace/BazelWorkspaceScannerTest.java"],
     deps = [
         ":bazel-java-sdk",
         ":test-workspace-support",

@@ -418,7 +418,9 @@ public class BazelPackageInfo implements BazelPackageLocation {
 	}
 
 	public void gatherChildrenRecur(List<BazelPackageLocation> gatherList) {
-		gatherList.add(this);
+		if (!this.isWorkspaceRoot()) {
+			gatherList.add(this);
+		}
 		for (BazelPackageLocation child : this.childPackages.values()) {
 			BazelPackageInfo childInfo = (BazelPackageInfo)child;
 			childInfo.gatherChildrenRecur(gatherList);

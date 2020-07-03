@@ -87,7 +87,7 @@ import com.salesforce.bazel.sdk.project.ProjectViewConstants;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
-import com.salesforce.bazel.sdk.workspace.BazelProjectImportScanner;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 
 /**
@@ -126,7 +126,7 @@ public class BazelEclipseProjectFactory {
         subMonitor.setTaskName("Getting the Aspect Information for targets");
         subMonitor.split(1);
 
-        String bazelWorkspaceName = BazelProjectImportScanner.getBazelWorkspaceName(bazelWorkspaceRootDirectory.getName());
+        String bazelWorkspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspaceRootDirectory.getName());
 
         // Many collaborators need the Bazel workspace directory location, so we stash it in an accessible global location
         // currently we only support one Bazel workspace in an Eclipse workspace

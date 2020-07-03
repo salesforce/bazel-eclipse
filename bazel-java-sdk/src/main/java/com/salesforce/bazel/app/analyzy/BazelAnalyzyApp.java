@@ -5,20 +5,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.salesforce.bazel.sdk.aspect.AspectDependencyGraphBuilder;
 import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
 import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.aspect.LocalBazelAspectLocation;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory;
+import com.salesforce.bazel.sdk.model.BazelDependencyGraph;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
-import com.salesforce.bazel.sdk.workspace.BazelProjectImportScanner;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolverImpl;
@@ -26,8 +29,7 @@ import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrat
 
 /**
  * This app, as a tool, is not useful. It simply uses the Bazel Java SDK to 
- * import a Bazel workspace, compute the dependency graph, and run a build.
- * In effect, it is the equivalent to 'bazel build //...'.
+ * read a Bazel workspace, compute the dependency graph, and a few other tasks.
  * <p>
  * The value in this app is the code sample, that shows how to use the SDK to
  * write tools that are actually useful.
@@ -40,7 +42,7 @@ public class BazelAnalyzyApp {
 	private static final String BAZEL_EXECUTABLE = "/usr/local/bin/bazel";
 	private static final String ASPECT_LOCATION = "/Users/plaird/dev/bazel-eclipse/bazel-java-sdk/aspect";
 	
-	private static BazelProjectImportScanner importScanner = new BazelProjectImportScanner();
+	private static BazelWorkspaceScanner workspaceScanner = new BazelWorkspaceScanner();
 
 	public static void main(String[] args) throws Exception {
 		parseArgs(args);
@@ -55,12 +57,14 @@ public class BazelAnalyzyApp {
 				commandBuilder, consoleFactory, bazelWorkspaceDir);
 		
 		// create the Bazel workspace SDK objects
-		String workspaceName = BazelProjectImportScanner.getBazelWorkspaceName(bazelWorkspacePath); // TODO use a File arg
+		String workspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspacePath); // TODO use a File arg
 		OperatingEnvironmentDetectionStrategy osDetector =  new RealOperatingEnvironmentDetectionStrategy();
 		BazelWorkspace bazelWorkspace = new BazelWorkspace(workspaceName, bazelWorkspaceDir, osDetector, bazelWorkspaceCmdRunner);
+		BazelWorkspaceCommandOptions bazelOptions = bazelWorkspace.getBazelWorkspaceCommandOptions();
+		printBazelOptions(bazelOptions);
 		
 		// scan for Bazel packages
-		BazelPackageInfo rootPackage = importScanner.getPackages(bazelWorkspaceDir);
+		BazelPackageInfo rootPackage = workspaceScanner.getPackages(bazelWorkspaceDir);
 		printPackageListToStdOut(rootPackage);
 		List<BazelPackageLocation> allPackages = rootPackage.gatherChildren();
 		
@@ -71,12 +75,16 @@ public class BazelAnalyzyApp {
 			Set<AspectPackageInfo> aspectsForTarget = aspectMap.get(target);
 			aspects.addAll(aspectsForTarget);
 		}
+		
+		// use the dependency data to interact with the dependency graph
+		BazelDependencyGraph depGraph = AspectDependencyGraphBuilder.build(aspects, false);
+		Set<String> rootLabels = depGraph.getRootLabels();
+		printRootLabels(rootLabels);
 				
 		// put them in the right order for analysis
 		ProjectOrderResolver projectOrderResolver = new ProjectOrderResolverImpl();
         Iterable<BazelPackageLocation> orderedPackages = projectOrderResolver.computePackageOrder(rootPackage, aspects);
         printPackageListOrder(orderedPackages);
-        
 	}
 	
 	
@@ -98,6 +106,11 @@ public class BazelAnalyzyApp {
 		}
 	}
 	
+	private static void printBazelOptions(BazelWorkspaceCommandOptions bazelOptions) {
+		System.out.println("\nBazel configuration options for the workspace:");
+		System.out.println(bazelOptions.toString());
+	}
+	
 	private static void printPackageListToStdOut(BazelPackageInfo rootPackage) {
 		System.out.println("\nFound packages eligible for import:");
 		printPackage(rootPackage, "");
@@ -111,6 +124,13 @@ public class BazelAnalyzyApp {
 		}
 		for (BazelPackageInfo child : pkg.getChildPackageInfos()) {
 			printPackage(child, prefix+"   ");
+		}
+	}
+
+	private static void printRootLabels(Set<String> rootLabels) {
+		System.out.println("\nRoot labels in the dependency tree (nothing depends on them):");
+		for (String label : rootLabels) {
+			System.out.println("  "+label);
 		}
 	}
 

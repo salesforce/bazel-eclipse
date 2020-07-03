@@ -67,7 +67,7 @@ public class ProjectOrderResolverImpl implements ProjectOrderResolver {
                 sb.append(pkg.getBazelPackageName());
                 sb.append("  ");
             }
-            logger.info(sb.toString());
+            logger.debug(sb.toString());
         } catch (Exception anyE) {
             anyE.printStackTrace();
             orderedModules = selectedPackages;

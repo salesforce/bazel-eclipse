@@ -28,8 +28,7 @@ public class LocalBazelAspectLocation implements BazelAspectLocation {
      */
 	@Override
 	public String getAspectLabel() {
-		// TODO Auto-generated method stub
-		return null;
+        return "//:bzleclipse_aspect.bzl%bzleclipse_aspect";
 	}
 
 }

@@ -45,30 +45,8 @@ import com.salesforce.bazel.sdk.workspace.BazelPackageFinder;
  * Scans a Bazel workspace looking for Java packages (BUILD files that have java_binary or java_library targets). It is
  * assumed that the user will provide the root workspace directory (where the WORKSPACE file is) and we will scan the
  * subtree below that.
- * <p>
- * TODO the current Import UI approach is not scalable beyond a few hundred Bazel Java packages.
- * <p>
- * It will be difficult for a user to select the projects they want if there are hundreds/thousands of boxes in the tree
- * view. Since we stole this Import UI design from m2e, we are stuck with their approach for now. In Maven it is
- * unlikely that you have a single parent module with hundreds of submodules (ha ha, I know of one case of that) so they
- * didn't optimize import for huge numbers of modules.
- * <p>
- * In the future, we should allow the user to provide the workspace root (but not load anything). Then there would be
- * two modes:
- * <p>
- * 1. the existing design where we scan the entire workspace and suggest to add all packages
- * <p>
- * 2. do not scan the workspace and populate the tree control, but wait for the user to interact with a Search Box
- * control. They can selectively search for what they want and add projects (e.g. 'basic-rest-se' and then click the
- * basic-rest-service) and then optionally also import upstream and/or downstream deps.
- *
- * Or said another way, approach number 1 is a simple approach that does not consider the Bazel dependency tree. The
- * second approach would make use of Bazel Query to intelligently suggest other projects to import based on a small
- * selection picked by the user.
- * 
- * @author plaird
  */
-public class BazelProjectImportScanner {
+public class BazelWorkspaceScanner {
 
     public static String getBazelWorkspaceName(String bazelWorkspaceRootDirectory) {
         // TODO pull the workspace name out of the WORKSPACE file, until then use the directory name (e.g. bazel-demo)

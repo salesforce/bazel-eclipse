@@ -11,7 +11,7 @@ import java.util.TreeMap;
 
 /**
  * The Bazel dependency graph of the entire workspace. This is implemented using simple Java JDK primitives rather
- * than bring in a new dependency for the purpose. It is a directed acyclic graph with multiple root/starting nodes.
+ * than bring in a new graph dependency for the purpose. It is a directed acyclic graph with multiple root/starting nodes.
  * It is too simplistic to view the workspace as a single tree of dependencies. It is actually a set of trees that 
  * probably overlap. All we know is that it is a directed graph, and will not have cycles.
  * <p>

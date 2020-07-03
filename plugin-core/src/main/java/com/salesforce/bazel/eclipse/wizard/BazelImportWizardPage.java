@@ -61,7 +61,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
-import com.salesforce.bazel.sdk.workspace.BazelProjectImportScanner;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 
 /**
  * Class that sets up the UI for the Bazel Import Workspace wizard.
@@ -128,7 +128,7 @@ public class BazelImportWizardPage extends WizardPage {
     @SuppressWarnings("deprecation")
     public void scanProjects() {
         // this the heavy lifting of scanning the file system for BUILD files, checking if BUILD file is a Java package
-        BazelProjectImportScanner projectScanner = new BazelProjectImportScanner();
+        BazelWorkspaceScanner workspaceScanner = new BazelWorkspaceScanner();
         try {
             List<String> newFilesystemLocations = new ArrayList<>();
             List<BazelPackageInfo> newEclipseProjects = new ArrayList<>();
@@ -137,7 +137,7 @@ public class BazelImportWizardPage extends WizardPage {
             // when the wizard is first opened, the location field is blank and we have a null root package
             if (this.locationControl.rootDirectory != null) {
                 this.projectTree.setRootWorkspaceDirectory(this.locationControl.rootDirectory);
-                this.workspaceRootPackage = projectScanner.getPackages(this.locationControl.rootDirectory);
+                this.workspaceRootPackage = workspaceScanner.getPackages(this.locationControl.rootDirectory);
                 if (workspaceRootPackage != null) {
                     // make sure the user chose a Bazel workspace
                     newEclipseProjects.add(workspaceRootPackage);
