@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -39,7 +39,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
-import com.salesforce.bazel.sdk.workspace.BazelPackageFinder;
 
 /**
  * Scans a Bazel workspace looking for Java packages (BUILD files that have java_binary or java_library targets). It is
@@ -72,7 +71,7 @@ public class BazelWorkspaceScanner {
      * <p>
      * TODO support scanning at an arbitrary location inside of a Bazel workspace (e.g. //projects/libs) and have the
      * scanner crawl up to the WORKSPACE root from there.
-     * 
+     *
      * @param rootDirectory
      *            the directory to scan, which must be the root node of a Bazel workspace
      * @return the workspace root BazelPackageInfo
@@ -84,14 +83,14 @@ public class BazelWorkspaceScanner {
         }
         File workspaceRootDir = new File(rootDirectory);
         try {
-            workspaceRootDir = workspaceRootDir.getCanonicalFile(); 
+            workspaceRootDir = workspaceRootDir.getCanonicalFile();
         } catch (IOException ioe) {
             ioe.printStackTrace();
             return null;
         }
         return getPackages(workspaceRootDir);
     }
-    
+
     /**
      * Get a list of candidate Bazel packages to import. This list is provided to the user in the form of a tree
      * control.
@@ -101,7 +100,7 @@ public class BazelWorkspaceScanner {
      * <p>
      * TODO support scanning at an arbitrary location inside of a Bazel workspace (e.g. //projects/libs) and have the
      * scanner crawl up to the WORKSPACE root from there.
-     * 
+     *
      * @param rootDirectory
      *            the directory to scan, which must be the root node of a Bazel workspace
      * @return the workspace root BazelPackageInfo

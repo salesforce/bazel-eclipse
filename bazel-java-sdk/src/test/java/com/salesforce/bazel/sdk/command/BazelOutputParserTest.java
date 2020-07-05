@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -40,7 +40,6 @@ import java.util.List;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.sdk.command.BazelOutputParser;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 
 public class BazelOutputParserTest {
@@ -83,16 +82,16 @@ public class BazelOutputParserTest {
         assertEquals(17, errors.get(1).getLineNumber());
         assertEquals("Cannot find symbols", errors.get(1).getDescription());
     }
-    
+
     @Test
     public void testMultipleJavaErrorsWithSameStatus() {
         BazelOutputParser p = new BazelOutputParser();
         List<String> lines = ImmutableList.of(
-            "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n", 
+            "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:41: error: ';' expected\n",
             "  public int numSeeds\n",
             "                     ^\n",
-            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n", 
+            "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n",
             "  private String species\n",
             "                        ^");
 
@@ -107,12 +106,12 @@ public class BazelOutputParserTest {
         assertEquals(42, errors.get(1).getLineNumber());
         assertEquals("';' expected: private String species", errors.get(1).getDescription());
     }
-    
+
     @Test
     public void testMultipleErrorSourceLines() {
         BazelOutputParser p = new BazelOutputParser();
         List<String> lines = ImmutableList.of(
-            "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n", 
+            "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:41: error: ';' expected\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:45: error: ';' expected\n",
@@ -132,13 +131,13 @@ public class BazelOutputParserTest {
         assertEquals(45, errors.get(2).getLineNumber());
         assertEquals("';' expected: this.species = species", errors.get(2).getDescription());
     }
-    
+
     @Test
     public void testUnformattedError() {
         BazelOutputParser p = new BazelOutputParser();
         List<String> lines = ImmutableList.of(
             "ERROR: this is just a string that we should probably handle but we don't right now"
-        );                
+        );
 
         List<BazelProblem> errors = p.getErrorBazelMarkerDetails(lines);
 

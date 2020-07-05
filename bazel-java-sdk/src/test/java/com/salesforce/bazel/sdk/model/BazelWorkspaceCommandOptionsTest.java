@@ -10,7 +10,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
-import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * Tests .bazelrc options gathering and parsing. Note that we don't parse .bazelrc directly (as that would be hard, and there
@@ -34,7 +33,7 @@ public class BazelWorkspaceCommandOptionsTest {
         optionLines.add("  'test' options: --explicit_java_test_deps=true --test_timeout=45,180,300,360 --test_tag_filters=-flaky");
         optionLines.add("INFO: Analyzed 0 targets (0 packages loaded, 0 targets configured).");
         optionLines.add("INFO: Found 0 test targets...");
-        
+
         // parse the simulated log lines from a 'bazel test --announce_rc' command
         options.parseOptionsFromOutput(optionLines);
 
@@ -50,7 +49,7 @@ public class BazelWorkspaceCommandOptionsTest {
         assertEquals("true", options.getOption("explicit_java_test_deps"));
         assertEquals("true", options.getContextualOption("test", "explicit_java_test_deps"));
         assertNull(options.getContextualOption("common", "explicit_java_test_deps"));
-        
+
         // verify that --stamp gets interpreted as --stamp=true
         assertEquals("true", options.getOption("stamp"));
         assertEquals("true", options.getContextualOption("build", "stamp"));
@@ -60,5 +59,5 @@ public class BazelWorkspaceCommandOptionsTest {
         //assertEquals("blue", options.getOptionWithDefault("nonexistentoption"));
         //assertEquals("red", options.getContextualOptionWithDefault("test", "nonexistentoption"));
     }
-    
+
 }

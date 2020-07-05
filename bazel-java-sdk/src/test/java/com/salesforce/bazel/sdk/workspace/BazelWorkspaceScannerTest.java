@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
-import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
@@ -44,25 +43,25 @@ public class BazelWorkspaceScannerTest {
     public void testHappyPath() throws Exception {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
         File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
-        
+
 //        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws");
 //        File tmpOutputBase = new File("/tmp/bazeltest/bin");
-        
+
         TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(5).genrulePackages(2);
         new TestBazelWorkspaceFactory(descriptor).build();
-        
+
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
-        
+
         assertEquals(5, rootWorkspacePackage.getChildPackageInfos().size());
     }
 
     // UNHAPPY PATHS
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void testEmptyDirectory() throws Exception {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
-        
+
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         scanner.getPackages(tmpWorkspaceDir);
     }
@@ -73,22 +72,22 @@ public class BazelWorkspaceScannerTest {
         File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
         TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(0).genrulePackages(2);
         new TestBazelWorkspaceFactory(descriptor).build();
-        
+
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
-        
+
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());
     }
-    
+
     @Test
     public void testNoProjects() throws Exception {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
         File workspaceFile = new File(tmpWorkspaceDir, "WORKSPACE").getCanonicalFile();
         workspaceFile.createNewFile();
-        
+
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
-        
+
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());
     }
 }

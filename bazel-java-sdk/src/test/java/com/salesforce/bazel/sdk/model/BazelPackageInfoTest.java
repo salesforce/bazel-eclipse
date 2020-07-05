@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -42,8 +42,6 @@ import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 
 public class BazelPackageInfoTest {
 
@@ -80,7 +78,7 @@ public class BazelPackageInfoTest {
 
         File nestedWSDir = tmpDir.newFolder("root", "nestedWS");
         new File(nestedWSDir, "WORKSPACE").createNewFile();
-        
+
         // will throw, as we don't support nested workspaces yet
         new BazelPackageInfo(root, "nestedWS");
     }
@@ -91,14 +89,14 @@ public class BazelPackageInfoTest {
 
         File nestedWSDir = tmpDir.newFolder("root", "nestedWS");
         new File(nestedWSDir, "WORKSPACE.bazel").createNewFile();
-        
+
         // will throw, as we don't support nested workspaces yet
         new BazelPackageInfo(root, "nestedWS");
     }
-    
-    
+
+
     // HELPERS
-    
+
     private BazelPackageInfo getRootBazelPackageInfo(boolean useAltWsFilename) throws IOException {
         File f = tmpDir.newFolder("root");
         if (useAltWsFilename) {

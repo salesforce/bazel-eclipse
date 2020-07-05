@@ -9,33 +9,29 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.salesforce.bazel.sdk.model.BazelDependencyGraph;
-import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.model.InMemoryBazelPackageLocation;
-
 public class BazelDependencyGraphTest {
 
     @Test
     public void testSingleTree() {
         BazelDependencyGraph graph = new BazelDependencyGraph();
-        
+
         graph.addDependency("rootA", "midA1");
         graph.addDependency("rootA", "midA2");
         graph.addDependency("midA1", "leafA1");
         graph.addDependency("midA1", "leafA1b");
         graph.addDependency("midA2", "leafA2");
-        
+
         Set<String> roots = graph.getRootLabels();
         assertEquals(1, roots.size());
         assertTrue(roots.contains("rootA"));
-        
+
         // test leaf identification
         Set<String> leaves = graph.getLeafLabels();
         assertEquals(3, leaves.size());
         assertTrue(leaves.contains("leafA1"));
         assertTrue(leaves.contains("leafA1b"));
         assertTrue(leaves.contains("leafA2"));
-        
+
         // test ordering alg
         Set<BazelPackageLocation> selectedLabels = new LinkedHashSet<>();
         selectedLabels.add(new InMemoryBazelPackageLocation("midA2"));
@@ -51,7 +47,7 @@ public class BazelDependencyGraphTest {
     @Test
     public void testMultiDistinctTrees() {
         BazelDependencyGraph graph = new BazelDependencyGraph();
-        
+
         graph.addDependency("rootA", "midA1");
         graph.addDependency("rootA", "midA2");
         graph.addDependency("midA1", "leafA1");
@@ -68,7 +64,7 @@ public class BazelDependencyGraphTest {
         assertEquals(2, roots.size());
         assertTrue(roots.contains("rootA"));
         assertTrue(roots.contains("rootB"));
-        
+
         // test leaf identification
         Set<String> leaves = graph.getLeafLabels();
         assertEquals(6, leaves.size());
@@ -78,7 +74,7 @@ public class BazelDependencyGraphTest {
         assertTrue(leaves.contains("leafB1"));
         assertTrue(leaves.contains("leafB1b"));
         assertTrue(leaves.contains("leafB2"));
-        
+
         // test ordering alg
         Set<BazelPackageLocation> selectedLabels = new LinkedHashSet<>();
         selectedLabels.add(new InMemoryBazelPackageLocation("rootA"));
@@ -95,7 +91,7 @@ public class BazelDependencyGraphTest {
     @Test
     public void testMultiConjoinedTrees() {
         BazelDependencyGraph graph = new BazelDependencyGraph();
-        
+
         graph.addDependency("rootA", "mid1");
         graph.addDependency("rootA", "mid2");
         graph.addDependency("mid1", "leaf1");

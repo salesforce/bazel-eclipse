@@ -6,10 +6,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.salesforce.bazel.sdk.command.ArgumentSplitter;
-
 public class ArgumentSplitterTest {
-    
+
     @Test
     public void testSplit_newline() {
         ArgumentSplitter as = new ArgumentSplitter();
@@ -19,7 +17,7 @@ public class ArgumentSplitterTest {
         assertEquals(3, args.size());
         assertEquals("a1", args.get(0));
         assertEquals("a2=v2", args.get(1));
-        assertEquals("a3", args.get(2));        
+        assertEquals("a3", args.get(2));
     }
 
     @Test

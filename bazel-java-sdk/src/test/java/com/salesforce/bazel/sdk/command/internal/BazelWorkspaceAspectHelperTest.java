@@ -37,7 +37,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
-import com.salesforce.bazel.sdk.command.internal.BazelWorkspaceAspectHelper;
 import com.salesforce.bazel.sdk.command.test.MockWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
@@ -57,15 +56,15 @@ public class BazelWorkspaceAspectHelperTest {
     public void testAspectLoading() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
-        
+
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets, 
+        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets,
             new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.get("//projects/libs/javalib0:*").size());
-        
+
         // now check that the caches are populated
         assertEquals(1, aspectHelper.aspectInfoCache_current.size());
         assertEquals(1, aspectHelper.aspectInfoCache_lastgood.size());
@@ -76,55 +75,55 @@ public class BazelWorkspaceAspectHelperTest {
     public void testAspectLoadingSpecificTarget() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
-        
+
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:javalib0");
-        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets, 
+        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets,
             new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.get("//projects/libs/javalib0:javalib0").size()); // TODO this should be only 3 entries, javalib0-test should not be loaded
-        
+
         // now check that the caches are populated
         assertEquals(1, aspectHelper.aspectInfoCache_current.size());
         assertEquals(1, aspectHelper.aspectInfoCache_lastgood.size());
     }
-    
+
     @Test
     public void testAspectLoadingAndCaching() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
-        
+
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets, 
+        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets,
             new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(1, aspectMap.size());
         assertEquals(0, aspectHelper.numberCacheHits);
-        
+
         // ask for the same target again
         aspectMap = aspectHelper.getAspectPackageInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(1, aspectMap.size());
         assertEquals(1, aspectHelper.numberCacheHits); // the entries all came from cache
     }
-    
+
     @Test
     public void testAspectCacheFlush() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
-        
+
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets, 
+        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets,
             new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(1, aspectMap.size());
         assertEquals(0, aspectHelper.numberCacheHits);
-        
+
         // ask for the same target again
         aspectMap = aspectHelper.getAspectPackageInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
@@ -136,29 +135,29 @@ public class BazelWorkspaceAspectHelperTest {
         assertEquals(0, aspectHelper.aspectInfoCache_current.size());
         assertEquals(0, aspectHelper.aspectInfoCache_wildcards.size());
         assertEquals(1, aspectHelper.aspectInfoCache_lastgood.size()); // last good is an emergency fallback, not flushed
-        
+
         // ask for the same target again
         aspectMap = aspectHelper.getAspectPackageInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(1, aspectMap.size());
         assertEquals(1, aspectHelper.numberCacheHits); // the entries all came from cache
     }
-    
-    
+
+
     // INTERNAL
-    
+
     private TestBazelCommandEnvironmentFactory createEnv() throws Exception {
         File testDir = tmpFolder.newFolder();
         File workspaceDir = new File(testDir, "bazel-workspace");
         workspaceDir.mkdirs();
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
-        
+
         TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(1);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
         env.createTestEnvironment(workspace, testDir, null);
-        
+
         return env;
     }
 
