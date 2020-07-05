@@ -35,19 +35,17 @@ package com.salesforce.bazel.sdk.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
 import org.junit.Test;
 
-import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.BazelProblem;
-
 public class BazelProblemTest {
 
     @Test
     public void getOwningLabel__matchingLabel() {
-        BazelProblem details = new BazelProblem("a/b/c/d", 1, "desc");
+        BazelProblem details = BazelProblem.createError("a/b/c/d", 1, "desc");
         BazelLabel l1 = new BazelLabel("x/y/z");
         BazelLabel l2 = new BazelLabel("a/b/c");
 
@@ -58,7 +56,7 @@ public class BazelProblemTest {
 
     @Test
     public void getOwningLabel__nestedLabel() {
-        BazelProblem details = new BazelProblem("a/b/c/d/e", 1, "desc");
+        BazelProblem details = BazelProblem.createError("a/b/c/d/e", 1, "desc");
         BazelLabel l0 = new BazelLabel("b/c/d");
         BazelLabel l1 = new BazelLabel("a/b");
         BazelLabel l2 = new BazelLabel("a/b/c");
@@ -74,7 +72,7 @@ public class BazelProblemTest {
     @Test
     public void toErrorWithRelativizedResourcePath__matchingBazelPackage() {
         BazelProblem details =
-                new BazelProblem("projects/libs/cake/abstractions/src/main/java/com/MyClass.java", 1, "desc");
+                BazelProblem.createError("projects/libs/cake/abstractions/src/main/java/com/MyClass.java", 1, "desc");
 
         details = details.toErrorWithRelativizedResourcePath(new BazelLabel("//projects/libs/cake/abstractions"));
 
@@ -83,7 +81,7 @@ public class BazelProblemTest {
 
     @Test
     public void toErrorWithRelativizedResourcePath__rootPackage() {
-        BazelProblem details = new BazelProblem("/bazelproject", 1, "desc");
+        BazelProblem details = BazelProblem.createError("/bazelproject", 1, "desc");
 
         details = details.toErrorWithRelativizedResourcePath(new BazelLabel("//..."));
 
@@ -93,14 +91,14 @@ public class BazelProblemTest {
     @Test(expected = IllegalArgumentException.class)
     public void toErrorWithRelativizedResourcePath__matchingBazelPackagePrefix() {
         BazelProblem details =
-                new BazelProblem("projects/libs/cake/abstractions_foo/src/main/java/com/MyClass.java", 1, "desc");
+                BazelProblem.createError("projects/libs/cake/abstractions_foo/src/main/java/com/MyClass.java", 1, "desc");
 
         details.toErrorWithRelativizedResourcePath(new BazelLabel("//projects/libs/cake/abstractions"));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void toErrorWithRelativizedResourcePath__differentBazelPackage() {
-        BazelProblem details = new BazelProblem(
+        BazelProblem details = BazelProblem.createError(
                 "projects/libs/cake/metrics-abstractions/src/main/java/com/MyClass.java", 1, "desc");
 
         details.toErrorWithRelativizedResourcePath(new BazelLabel("projects/libs/cake/abstractions"));
@@ -108,7 +106,7 @@ public class BazelProblemTest {
 
     @Test
     public void toGenericWorkspaceLevelError() {
-        BazelProblem details = new BazelProblem("a/b/c", 13, "desc");
+        BazelProblem details = BazelProblem.createError("a/b/c", 13, "desc");
 
         BazelProblem generic = details.toGenericWorkspaceLevelError("prefix:");
 
@@ -116,4 +114,10 @@ public class BazelProblemTest {
         assertEquals("/WORKSPACE", generic.getResourcePath());
         assertEquals("prefix:a/b/c desc", generic.getDescription());
     }
+
+    @Test
+    public void testIsError() {
+        assertTrue(BazelProblem.createError("", 1, "").isError());
+    }
+
 }

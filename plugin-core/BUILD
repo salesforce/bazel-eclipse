@@ -147,3 +147,13 @@ java_test(
     ] + mock_deps,
     runtime_deps = mock_runtime_deps,
 )
+
+java_test(
+    name = "BazelErrorStreamObserverTest",
+    srcs = ["src/test/java/com/salesforce/bazel/eclipse/builder/BazelErrorStreamObserverTest.java"],
+    deps = [
+        ":com.salesforce.bazel.eclipse.core-bin",
+        "//bazel-java-sdk",
+    ] + mock_deps,
+    runtime_deps = mock_runtime_deps,
+)

@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2017 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -35,20 +35,17 @@
  */
 package com.salesforce.bazel.eclipse.builder;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import com.salesforce.bazel.sdk.command.BazelOutputParser;
 import com.salesforce.bazel.sdk.command.OutputStreamObserver;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -60,71 +57,76 @@ import com.salesforce.bazel.sdk.project.BazelProject;
  * Implementation of {@link OutputStreamObserver} that observes error output and publishes errors to Problems View
  */
 public class BazelErrorStreamObserver implements OutputStreamObserver {
-    
+
     static final String UNKNOWN_PROJECT_ERROR_MSG_PREFIX = "ERROR IN UNKNOWN PROJECT: ";
 
     private static final LogHelper LOG = LogHelper.log(BazelErrorStreamObserver.class);
     private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
-    
+
     private final IProgressMonitor monitor;
     private final Map<BazelLabel, BazelProject> labelToProject;
     private final IProject rootProject;
     private final BazelOutputParser outputParser;
-    
+    private final BazelProblemMarkerManager markerManager;
+
     public BazelErrorStreamObserver(final IProgressMonitor monitor, final Map<BazelLabel, BazelProject> labelToProject,
             IProject rootProject) {
         this.monitor = monitor;
         this.labelToProject = labelToProject;
         this.rootProject = rootProject;
         this.outputParser = new BazelOutputParser();
+        this.markerManager = new BazelProblemMarkerManager(getClass().getName());
     }
-    
+
     /**
-     * Starts the observer by clears Problems View for every project
+     * Starting the observer clears the Problems View for every project.
      */
     public void startObserver() {
-        final Set<BazelProject> projectSet = new HashSet<>(this.labelToProject.values());
-        for (BazelProject project : projectSet) {
-        	IProject eclipseProject = (IProject)project.getProjectImpl();
-            BazelMarkerSupport.clearProblemMarkersForProject(eclipseProject, monitor);
+        List<IProject> eclipseProjects = new ArrayList<>(labelToProject.values().size() + 1);
+        for (BazelProject project : labelToProject.values()) {
+            eclipseProjects.add((IProject)project.getProjectImpl());
         }
+        if (rootProject != null) {
+            eclipseProjects.add(rootProject);
+        }
+        markerManager.clear(eclipseProjects, monitor);
     }
-    
+
     @Override
     public void update(String error) {
         EXECUTOR.execute(() -> updateProblemsView(error));
     }
-    
+
     private void updateProblemsView(String error) {
         List<BazelProblem> bazelBuildErrors = outputParser.getErrorBazelMarkerDetails(error);
         if (!bazelBuildErrors.isEmpty()) {
-            Multimap<IProject, BazelProblem> projectToErrors =
-                    assignErrorsToOwningProject(bazelBuildErrors, this.labelToProject, this.rootProject);
+            Map<IProject, List<BazelProblem>> projectToErrors =
+                    assignErrorsToOwningProject(bazelBuildErrors, labelToProject, rootProject);
             for (IProject project : projectToErrors.keySet()) {
-                BazelMarkerSupport.publishToProblemsView(project, projectToErrors.get(project), monitor);
+                markerManager.publish(projectToErrors.get(project), project, monitor);
             }
         }
     }
-    
+
     // maps the specified errors to the project instances they belong to, and returns that mapping
-    static Multimap<IProject, BazelProblem> assignErrorsToOwningProject(List<BazelProblem> errors,
+    static Map<IProject, List<BazelProblem>> assignErrorsToOwningProject(List<BazelProblem> errors,
             Map<BazelLabel, BazelProject> labelToProject, IProject rootProject) {
-        Multimap<IProject, BazelProblem> projectToErrors = HashMultimap.create();
+        Map<IProject, List<BazelProblem>> projectToErrors = new HashMap<>();
         List<BazelProblem> remainingErrors = new LinkedList<>(errors);
         for (BazelProblem error : errors) {
             BazelLabel owningLabel = error.getOwningLabel(labelToProject.keySet());
             if (owningLabel != null) {
                 BazelProject project = labelToProject.get(owningLabel);
                 IProject eclipseProject = (IProject)project.getProjectImpl();
-                projectToErrors.put(eclipseProject, error.toErrorWithRelativizedResourcePath(owningLabel));
+                mapProblemToProject(error.toErrorWithRelativizedResourcePath(owningLabel), eclipseProject, projectToErrors);
                 remainingErrors.remove(error);
             }
         }
         if (!remainingErrors.isEmpty()) {
             if (rootProject != null) {
-                projectToErrors.putAll(rootProject,
-                    remainingErrors.stream().map(e -> e.toGenericWorkspaceLevelError(UNKNOWN_PROJECT_ERROR_MSG_PREFIX))
-                            .collect(Collectors.toList()));
+                for (BazelProblem error : remainingErrors) {
+                    mapProblemToProject(error.toGenericWorkspaceLevelError(UNKNOWN_PROJECT_ERROR_MSG_PREFIX), rootProject, projectToErrors);
+                }
             } else {
                 // getting here is a bug - at least log the errors we didn't assign to any project
                 for (BazelProblem error : remainingErrors) {
@@ -134,4 +136,14 @@ public class BazelErrorStreamObserver implements OutputStreamObserver {
         }
         return projectToErrors;
     }
+
+    private static void mapProblemToProject(BazelProblem problem, IProject project, Map<IProject, List<BazelProblem>> projectToErrors) {
+        List<BazelProblem> storedErrors = projectToErrors.get(project);
+        if (storedErrors == null) {
+            storedErrors = new ArrayList<>();
+        }
+        storedErrors.add(problem);
+        projectToErrors.put(project, storedErrors);
+    }
+
 }

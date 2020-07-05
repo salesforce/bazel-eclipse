@@ -1,0 +1,87 @@
+package com.salesforce.bazel.eclipse.builder;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.ElementChangedEvent;
+import org.eclipse.jdt.core.IElementChangedListener;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaElementDelta;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+
+import com.salesforce.bazel.sdk.model.BazelProblem;
+
+/**
+ * This class publishes JDT based code warnings to the Problems View.
+ *
+ * @author stoens
+ * @since Summer 2020
+ *
+ */
+class JDTWarningPublisher implements IElementChangedListener {
+
+    static {
+        JavaCore.addElementChangedListener(new JDTWarningPublisher());
+    }
+
+    @Override
+    public void elementChanged(ElementChangedEvent event) {
+        if (event.getType() == ElementChangedEvent.POST_RECONCILE) {
+            IJavaElementDelta delta = event.getDelta();
+            CompilationUnit ast = delta.getCompilationUnitAST();
+            if (ast != null) {
+                List<BazelProblem> warnings = getWarnings(ast);
+                IJavaElement element = delta.getElement();
+                String filePath = getFilePath(element);
+                if (filePath != null) {
+                    IProject project = element.getJavaProject().getProject();
+                    String ownerId = this.getClass().getName() + "__" + filePath;
+                    BazelProblemMarkerManager mgr = new BazelProblemMarkerManager(ownerId);
+                    mgr.clearAndPublish(warnings, project, null);
+                }
+            }
+        }
+    }
+
+    private static List<BazelProblem> getWarnings(CompilationUnit ast) {
+        IProblem[] problems = ast.getProblems();
+        List<BazelProblem> warnings = new ArrayList<>();
+        for (IProblem problem : problems) {
+            if (!problem.isWarning()) {
+                continue;
+            }
+            String path = new String(problem.getOriginatingFileName());
+            path = removeLeadingProjectName(path);
+            warnings.add(BazelProblem.createWarning(path, problem.getSourceLineNumber(), problem.getMessage()));
+
+        }
+        return warnings;
+    }
+
+    private static String getFilePath(IJavaElement el) {
+        IPath path;
+        try {
+            path = el.getCorrespondingResource().getFullPath();
+        } catch (JavaModelException ex) {
+            return null;
+        }
+        return removeLeadingProjectName(path.toOSString());
+    }
+
+    private static String removeLeadingProjectName(String path) {
+        if (path.startsWith(File.separator)) {
+            path = path.substring(1);
+        }
+        int i = path.indexOf(File.separator);
+        if (i != -1) {
+            path = path.substring(i+1);
+        }
+        return path;
+    }
+}

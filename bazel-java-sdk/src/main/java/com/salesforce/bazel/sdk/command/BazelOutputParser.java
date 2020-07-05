@@ -146,7 +146,7 @@ public class BazelOutputParser {
             System.err.println("Failed to parse line: "+errorSourcePathLine+" with details: "+moreDetailsLine);
             description = "BUILD file error";
         }
-        return new BazelProblem(sourcePath, lineNumber, description);
+        return BazelProblem.createError(sourcePath, lineNumber, description);
     }
 
     private boolean isInitialErrorSourcePathLine(String line) {
