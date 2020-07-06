@@ -190,9 +190,6 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     
     @Override
     public void stop(BundleContext context) throws Exception {
-        plugin = null;
-        bazelCommandManager = null;
-        resourceHelper = null;
         super.stop(context);
     }
 
