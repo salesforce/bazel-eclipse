@@ -23,11 +23,9 @@
  */
 package com.salesforce.bazel.sdk.command;
 
-import org.junit.Test;
-
-import com.salesforce.bazel.sdk.command.BazelCommandArgs;
-
 import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 
 public class BazelCommandArgsTest {
     @Test

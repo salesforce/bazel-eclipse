@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -43,8 +43,6 @@ import java.io.File;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 
 public class BazelProjectInfoTest {
 
@@ -150,7 +148,7 @@ public class BazelProjectInfoTest {
     @Test
     /**
      * Same test as above, but the path is passed with a trailing slash, which should be ignored
-     * 
+     *
      * @throws Exception
      */
     public void testCtor_Sub_Happy_trailingslash() throws Exception {

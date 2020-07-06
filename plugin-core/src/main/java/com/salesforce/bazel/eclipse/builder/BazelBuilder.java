@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -54,6 +55,7 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
 import com.google.common.collect.Lists;
@@ -86,20 +88,28 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     public static final String BUILDER_NAME = "com.salesforce.bazel.eclipse.builder";
 
+    private static final AtomicBoolean REGISTERED_EL_CHANGE_LISTENER = new AtomicBoolean(false);
     private static final LogHelper LOG = LogHelper.log(BazelBuilder.class);
+
+    public BazelBuilder() {
+        if (!REGISTERED_EL_CHANGE_LISTENER.getAndSet(true)) {
+            // is there a better way/place to register a singleton?
+            JavaCore.addElementChangedListener(new JDTWarningPublisher());
+        }
+    }
 
     @Override
     protected IProject[] build(int kind, Map<String, String> args, IProgressMonitor monitor) throws CoreException {
         WorkProgressMonitor progressMonitor = new EclipseWorkProgressMonitor(monitor);
         IProject project = getProject();
         progressMonitor.beginTask("Bazel build", 1);
-        
+
         // TODO there is something seriously wrong with Eclipse's resource change mechanism
         // To be fixed in https://github.com/salesforce/bazel-eclipse/issues/145
         // We are getting FULL_BUILD commands even if files have not changed.
         // See also the commented out line below for refreshProjectClasspath
         //System.out.println(">> Eclipse signaled that project ["+project.getName()+"] is dirty with kind ["+kind+"]");
-        
+
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         JavaCoreHelper javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
@@ -121,7 +131,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                         .collect(onlyElement()).getProject();
                 Set<IProject> downstreamProjects = getDownstreamProjectsOf(project, allImportedProjects);
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject, monitor);
-                
+
                 // TODO this is too slow, we need to fix this in https://github.com/salesforce/bazel-eclipse/issues/145
                 // when you uncomment this, make sure to also un-ignore the related test in BazelBuilderTest
                 //refreshProjectClasspath(project, progressMonitor, monitor, bazelWorkspaceCmdRunner);
@@ -138,28 +148,28 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     }
 
     void refreshProjectClasspath(IProject project, WorkProgressMonitor progressMonitor, IProgressMonitor monitor,
-            BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner) 
+            BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner)
                     throws Exception{
         String pname = project.getName();
         BazelProject bazelProject = BazelPluginActivator.getBazelProjectManager().getProject(pname);
         BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
         String packageLabel = projMgr.getBazelLabelForProject(bazelProject);
         System.out.println("Refreshing the classpath for project ["+pname+"] for package ["+packageLabel+"]");
-        
+
         // Force update of classpath container and the aspect cache
         BazelClasspathContainer.clean();
-        
+
         // Clean the aspect cache, and reload
         Set<String> flushedTargets = bazelWorkspaceCmdRunner.flushAspectInfoCacheForPackage(packageLabel);
         bazelWorkspaceCmdRunner.getAspectPackageInfos(flushedTargets, progressMonitor, "refreshProjectClasspath");
-        
+
         // Clean the query cache and reload
         bazelWorkspaceCmdRunner.flushQueryCache(packageLabel);
         bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor, packageLabel);
-        
+
         // refresh the project immediately to reload classpath
         project.refreshLocal(IResource.DEPTH_ONE, monitor);
-        
+
         // If a BUILD file added a reference from this project to another project in the Eclipse workspace, it is likely
         // the project ref update failed because the resource tree was locked. Retry any queued project updates now.
         // This operation is a no-op if no deferred updates are necessary

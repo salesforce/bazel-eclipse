@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -39,7 +39,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
-import com.salesforce.bazel.sdk.project.BazelProject;
 
 /**
  * Object that encapsulates the logic and state regarding the active targets configured for a
@@ -48,35 +47,35 @@ import com.salesforce.bazel.sdk.project.BazelProject;
 public class BazelProjectTargets {
     private BazelProject project;
     private String projectBazelLabel;
-    
+
     /**
      * This is the list of targets listed as listed in the project preferences.
      * This may contain a single entry that is the wildcard target (:*), or it can be a list
      * of specific targets
      */
     private Set<String> configuredTargets = new TreeSet<>();
-    
+
     /**
      * Convenience flag that indicates that the activatedTargets list contains one entry and it is
      * the wildcard entry
      */
     private boolean isActivatedWildcardTarget = false;
-    
+
     /**
      * Contains the list of targets configured for building/testing. This will be the same as
      * configuredTargets if isActivatedWildcardTarget==false, or will be the actual list of all targets
      * found in the BUILD file if isActivatedWildcardTarget==true
      */
     private Set<String> actualTargets;
-    
-    
+
+
     public BazelProjectTargets(BazelProject project, String projectBazelLabel) {
          this.project = project;
          this.projectBazelLabel = projectBazelLabel;
     }
-    
+
     // TODO weave these into the constructor
-    
+
     public void activateWildcardTarget() {
         this.isActivatedWildcardTarget = true;
         this.configuredTargets.add(projectBazelLabel+":*");
@@ -89,11 +88,11 @@ public class BazelProjectTargets {
     }
 
     // CONSUMER API
-    
+
     public BazelProject getProject() {
         return this.project;
     }
-    
+
     public Set<String> getConfiguredTargets() {
         return this.configuredTargets;
     }
@@ -102,7 +101,7 @@ public class BazelProjectTargets {
         if (this.isActivatedWildcardTarget) {
             this.actualTargets = bazelBuildFile.getAllTargetLabels();
         }
-        
+
         return this.actualTargets;
     }
 

@@ -48,11 +48,27 @@ public class BazelProblem {
     private final String resourcePath;
     private final int lineNumber;
     private final String description;
+    private final boolean isError;
 
-    public BazelProblem(String resourcePath, int lineNumber, String description) {
+    /**
+     * Returns a new Error level BazelProblem.
+     */
+    public static BazelProblem createError(String resourcePath, int lineNumber, String description) {
+        return new BazelProblem(resourcePath, lineNumber, description, true);
+    }
+
+    /**
+     * Returns a new Warning level BazelProblem.
+     */
+    public static BazelProblem createWarning(String resourcePath, int lineNumber, String description) {
+        return new BazelProblem(resourcePath, lineNumber, description, false);
+    }
+
+    private BazelProblem(String resourcePath, int lineNumber, String description, boolean isError) {
         this.resourcePath = Objects.requireNonNull(resourcePath);
         this.lineNumber = lineNumber;
         this.description = Objects.requireNonNull(description);
+        this.isError = isError;
     }
 
     /**
@@ -88,21 +104,39 @@ public class BazelProblem {
         return lineNumber;
     }
 
+    public boolean isError() {
+        return isError;
+    }
+
     public BazelProblem toErrorWithRelativizedResourcePath(BazelLabel label) {
         String rel = getRelativeResourcePath(label);
         if (rel == null) {
             throw new IllegalArgumentException("Unable to build a relative path for " + resourcePath + " based on label " + label);
         }
-        return new BazelProblem(rel, this.lineNumber, description);
+        return new BazelProblem(rel, lineNumber, description, isError);
     }
 
     public BazelProblem toGenericWorkspaceLevelError(String descriptionPrefix) {
-        return new BazelProblem(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description);
+        return new BazelProblem(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description, isError);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(resourcePath, description, lineNumber);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof BazelProblem)) {
+            return false;
+        }
+        BazelProblem o = (BazelProblem)other;
+        return resourcePath.equals(o.resourcePath) && description.equals(o.description) && lineNumber == o.lineNumber;
     }
 
     @Override
     public String toString() {
-        return "ERROR: " + getResourcePath() + ":" + lineNumber + " " + getDescription();
+        return (isError ? "ERROR: " : "WARNING: ") + getResourcePath() + ":" + lineNumber + " " + getDescription();
     }
 
     private String getRelativeResourcePath(BazelLabel label) {

@@ -42,8 +42,6 @@ import java.nio.charset.Charset;
 
 import org.junit.Test;
 
-import com.salesforce.bazel.sdk.model.BazelBuildFileHelper;
-
 public class BazelBuildFileHelperTest {
 
     @Test

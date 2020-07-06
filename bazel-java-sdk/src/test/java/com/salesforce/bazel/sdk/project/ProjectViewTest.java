@@ -11,11 +11,9 @@ import java.util.List;
 import org.junit.Test;
 
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.project.ProjectView;
-import com.salesforce.bazel.sdk.project.ProjectViewPackageLocation;
 
 public class ProjectViewTest {
-    
+
     @Test
     public void testBuildProjectViewFromScratch() {
         List<BazelPackageLocation> packages = new ArrayList<>();
@@ -26,12 +24,12 @@ public class ProjectViewTest {
         expectedContent.append(ProjectView.INDENT).append(ProjectView.DIRECTORIES_COMMENT).append(System.lineSeparator());
         expectedContent.append(ProjectView.INDENT).append("a/b/c").append(System.lineSeparator());
         expectedContent.append(ProjectView.INDENT).append("d/e/f").append(System.lineSeparator());
-        
+
         ProjectView projectView = new ProjectView(new File(""), packages);
-        
-        assertEquals(expectedContent.toString(), projectView.getContent());        
+
+        assertEquals(expectedContent.toString(), projectView.getContent());
     }
-    
+
     @Test
     public void testParseProjectViewFile() {
         File root = new File(".");
@@ -40,12 +38,12 @@ public class ProjectViewTest {
         content.append(ProjectView.INDENT).append(ProjectView.DIRECTORIES_COMMENT).append(System.lineSeparator());
         content.append(ProjectView.INDENT).append("a/b/c").append(System.lineSeparator());
         content.append(ProjectView.INDENT).append("d/e/f").append(System.lineSeparator());
-        
+
         ProjectView projectView = new ProjectView(root, content.toString());
         List<BazelPackageLocation> packages = projectView.getPackages();
-        
+
         assertEquals(2, packages.size());
-        
+
         assertEquals("a/b/c", packages.get(0).getBazelPackageFSRelativePath());
         assertEquals("c", packages.get(0).getBazelPackageNameLastSegment());
         assertEquals("d/e/f", packages.get(1).getBazelPackageFSRelativePath());
@@ -55,7 +53,7 @@ public class ProjectViewTest {
             assertFalse(pack.isWorkspaceRoot());
         }
     }
-    
+
     private BazelPackageLocation getPackage(String path) {
         return new ProjectViewPackageLocation(new File(""), path) {
             @Override public String getBazelPackageNameLastSegment() { throw new AssertionError(); }

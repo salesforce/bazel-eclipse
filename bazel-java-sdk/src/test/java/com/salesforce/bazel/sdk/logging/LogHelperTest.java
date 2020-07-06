@@ -35,7 +35,9 @@
  */
 package com.salesforce.bazel.sdk.logging;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -43,14 +45,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.logging.LoggerFacade;
 import com.salesforce.bazel.sdk.logging.CaptureLoggerFacade.LogEvent;
 
 /**
- * 
+ *
  * Test LogHelper
- * 
+ *
  * @author Blaine Buxton
  *
  */

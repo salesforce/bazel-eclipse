@@ -36,8 +36,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.sdk.command.BazelCommandArgs;
-import com.salesforce.bazel.sdk.command.BazelLauncherBuilder;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutputMatcher;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.sdk.model.BazelLabel;
