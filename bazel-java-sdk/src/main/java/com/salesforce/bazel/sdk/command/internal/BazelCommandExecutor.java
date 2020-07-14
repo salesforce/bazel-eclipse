@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
-import com.salesforce.bazel.sdk.command.OutputStreamObserver;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
@@ -92,12 +91,11 @@ public class BazelCommandExecutor {
     // WHEN INTERESTING OUTPUT IS ON STDERR...
     
     public synchronized List<String> runBazelAndGetErrorLines(File directory, WorkProgressMonitor progressMonitor,
-            List<String> args, Function<String, String> selector, OutputStreamObserver outputStreamObserver, 
-            OutputStreamObserver errorStreamObserver, long timeoutMS)
+            List<String> args, Function<String, String> selector, long timeoutMS)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         
         CommandBuilder builder = getConfiguredCommandBuilder(ConsoleType.WORKSPACE, directory, progressMonitor, args, timeoutMS);
-        Command command = builder.setStderrLineSelector(selector).setStandardErrorObserver(errorStreamObserver).build();
+        Command command = builder.setStderrLineSelector(selector).build();
         command.run();
 
         return command.getSelectedErrorLines();

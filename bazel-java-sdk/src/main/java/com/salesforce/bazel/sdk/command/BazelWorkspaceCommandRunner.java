@@ -114,11 +114,6 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     private static File bazelExecutable = null;
 
-    /**
-     * Shared class for low level parsing of Bazel command output
-     */
-    private static final BazelOutputParser outputParser = new BazelOutputParser();
-
     
     // COLLABORATORS 
     
@@ -315,7 +310,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             argBuilder.add("test").add("--announce_rc");
             
             List<String> outputLines = bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory, null, 
-                argBuilder.build(), (t) -> t, null, null, BazelCommandExecutor.TIMEOUT_INFINITE);
+                argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
             commandOptions.parseOptionsFromOutput(outputLines);
         } catch (Exception anyE) {
             throw new IllegalStateException(anyE);
@@ -416,7 +411,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized List<BazelProblem> runBazelBuild(Set<String> bazelTargets, List<String> extraArgs) 
     		throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-    	return runBazelBuild(bazelTargets, extraArgs, null, null, null);
+    	return runBazelBuild(bazelTargets, extraArgs, null);
     }
     
     /**
@@ -425,23 +420,26 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * @return a List of error details, this list is empty if the build was successful
      */
     public synchronized List<BazelProblem> runBazelBuild(Set<String> bazelTargets, List<String> extraArgs, 
-    		OutputStreamObserver outputStreamObserver, OutputStreamObserver errorStreamObserver,
-            WorkProgressMonitor progressMonitor)
+    		WorkProgressMonitor progressMonitor)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> extraArgsList = ImmutableList.<String> builder().add("build").addAll(this.buildOptions)
                 .addAll(extraArgs).add("--").addAll(bazelTargets).build();
 
         List<String> output = this.bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory, progressMonitor,
-            extraArgsList, new ErrorOutputSelector(), outputStreamObserver, errorStreamObserver, BazelCommandExecutor.TIMEOUT_INFINITE);
+            extraArgsList, new ErrorOutputSelector(), BazelCommandExecutor.TIMEOUT_INFINITE);
         if (output.isEmpty()) {
             return Collections.emptyList();
         } else {
-            List<BazelProblem> errorDetails = outputParser.getErrorBazelMarkerDetails(output);
-            getLogger().debug(getClass(),
-                "\n" + String.join("\n", errorDetails.stream().map(d -> d.toString()).collect(Collectors.toList()))
-                        + "\n");
-            return errorDetails;
+            BazelOutputParser outputParser = new BazelOutputParser();
+            List<BazelProblem> errors = outputParser.getErrors(output);
+            logErrors(errors);
+            return errors;
         }
+    }
+    
+    private void logErrors(List<BazelProblem> errors) {
+        List<String> errorStrs = errors.stream().map(d -> d.toString()).collect(Collectors.toList());
+        getLogger().debug(getClass(), "\n" + String.join("\n", errorStrs) + "\n");        
     }
     
     // ASPECT OPERATIONS

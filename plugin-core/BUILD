@@ -149,8 +149,8 @@ java_test(
 )
 
 java_test(
-    name = "BazelErrorStreamObserverTest",
-    srcs = ["src/test/java/com/salesforce/bazel/eclipse/builder/BazelErrorStreamObserverTest.java"],
+    name = "BazelErrorPublisherTest",
+    srcs = ["src/test/java/com/salesforce/bazel/eclipse/builder/BazelErrorPublisherTest.java"],
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
         "//bazel-java-sdk",

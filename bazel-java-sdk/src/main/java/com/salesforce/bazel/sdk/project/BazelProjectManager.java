@@ -60,7 +60,7 @@ public abstract class BazelProjectManager {
 	        if (bazelWorkspaceCmdRunner != null) {
 	            BazelProjectTargets targets = getConfiguredBazelTargets(bazelProject, false);
 	            List<BazelProblem> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(), 
-	            		Collections.emptyList(), null, null, null);
+	            		Collections.emptyList(), null);
 	            for (BazelProblem detail : details) {
 	            	logger.error(detail.toString());
 	            }

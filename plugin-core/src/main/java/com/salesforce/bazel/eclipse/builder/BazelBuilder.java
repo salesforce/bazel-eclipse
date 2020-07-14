@@ -90,11 +90,14 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private static final AtomicBoolean REGISTERED_EL_CHANGE_LISTENER = new AtomicBoolean(false);
     private static final LogHelper LOG = LogHelper.log(BazelBuilder.class);
-
+    
+    // we only need one instance of this one
+    private static JDTWarningPublisher warningPublisher = new JDTWarningPublisher();
+    
     public BazelBuilder() {
         if (!REGISTERED_EL_CHANGE_LISTENER.getAndSet(true)) {
             // is there a better way/place to register a singleton?
-            JavaCore.addElementChangedListener(new JDTWarningPublisher());
+            JavaCore.addElementChangedListener(warningPublisher);
         }
     }
 
@@ -216,18 +219,18 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             bazelTargets.addAll(activatedTargets.getConfiguredTargets());
             bazelProjects.add(bazelProject);
         }
-
+        
         if (bazelTargets.isEmpty()) {
             return true;
         } else {
             List<String> bazelBuildFlags = getAllBazelBuildFlags(projects);
-            // Get a map of targets to projects to build BazelErrorStreamObserver
-            Map<BazelLabel, BazelProject> labelToProjectMap = bazelProjectManager.getBazelLabelToProjectMap(bazelProjects);
-            BazelErrorStreamObserver errorStreamObserver = new BazelErrorStreamObserver(monitor, labelToProjectMap, rootProject);
-            // Start error observer and clear Problems View
-            errorStreamObserver.startObserver();
-            // now run the actual build
-            List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, bazelBuildFlags, null, errorStreamObserver, progressMonitor);
+            List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, bazelBuildFlags, progressMonitor);            
+            // publish errors (even if no errors, this must run so that previous errors are cleared)
+            Map<BazelLabel, BazelProject> labelToProject = bazelProjectManager.getBazelLabelToProjectMap(bazelProjects);
+            BazelErrorPublisher errorPublisher = new BazelErrorPublisher(rootProject, projects, labelToProject);
+            errorPublisher.publish(errors, monitor);
+            // also publish warnings
+            warningPublisher.publish(projects, monitor);
             return errors.isEmpty();
         }
     }
