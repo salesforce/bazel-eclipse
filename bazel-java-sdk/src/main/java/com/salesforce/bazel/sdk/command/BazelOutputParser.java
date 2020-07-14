@@ -103,17 +103,16 @@ public class BazelOutputParser {
         return allBazelMarkerDetails;
     }
     
-    public List<BazelProblem> getErrorBazelMarkerDetails(List<String> lines) {
+    public List<BazelProblem> getErrors(List<String> lines) {
         this.parsingErrors = false;
         this.errorSourcePathLine = null;
         this.moreDetailsLine = null;
-        List<BazelProblem> allBazelMarkerDetails = new ArrayList<>();
+        List<BazelProblem> errors = new ArrayList<>();
         for (String line : lines) {
             List<BazelProblem> bazelMarkerDetails = getErrorBazelMarkerDetails(line);
-            allBazelMarkerDetails.addAll(bazelMarkerDetails);
+            errors.addAll(bazelMarkerDetails);
         }
-
-        return allBazelMarkerDetails;
+        return errors;
     }
 
     private BazelProblem buildErrorDetails(String errorSourcePathLine, String moreDetailsLine) {

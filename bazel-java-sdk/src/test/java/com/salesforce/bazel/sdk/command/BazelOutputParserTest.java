@@ -52,7 +52,7 @@ public class BazelOutputParserTest {
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:50: error: cannot find symbol",
             "    this.numSeeds = numSeeds;");
 
-        List<BazelProblem> errors = p.getErrorBazelMarkerDetails(lines);
+        List<BazelProblem> errors = p.getErrors(lines);
 
         assertEquals(1, errors.size());
         assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
@@ -71,7 +71,7 @@ public class BazelOutputParserTest {
             "sayhello/src/main/java/com/blah/foo/hello/Main.java:17: error: cannot find symbols",
             "INFO: Elapsed time: 0.196s, Critical Path: 0.03s");
 
-        List<BazelProblem> errors = p.getErrorBazelMarkerDetails(lines);
+        List<BazelProblem> errors = p.getErrors(lines);
 
         assertEquals(2, errors.size());
         assertEquals("sayhello/src/main/java/com/blah/foo/hello/Main.java", errors.get(0).getResourcePath());
@@ -95,7 +95,7 @@ public class BazelOutputParserTest {
             "  private String species\n",
             "                        ^");
 
-        List<BazelProblem> errors = p.getErrorBazelMarkerDetails(lines);
+        List<BazelProblem> errors = p.getErrors(lines);
 
         assertEquals(2, errors.size());
         assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
@@ -118,7 +118,7 @@ public class BazelOutputParserTest {
             "    this.species = species",
             "                        ^");
 
-        List<BazelProblem> errors = p.getErrorBazelMarkerDetails(lines);
+        List<BazelProblem> errors = p.getErrors(lines);
 
         assertEquals(3, errors.size());
         assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
@@ -139,7 +139,7 @@ public class BazelOutputParserTest {
             "ERROR: this is just a string that we should probably handle but we don't right now"
         );
 
-        List<BazelProblem> errors = p.getErrorBazelMarkerDetails(lines);
+        List<BazelProblem> errors = p.getErrors(lines);
 
         assertEquals(0, errors.size());
     }

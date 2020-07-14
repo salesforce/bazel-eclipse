@@ -53,8 +53,6 @@ public abstract class CommandBuilder {
     protected List<String> args;
     protected OutputStream stdout = null;
     protected OutputStream stderr = null;
-    protected OutputStreamObserver stdoutObserver = null;
-    protected OutputStreamObserver stderrObserver = null;
     protected Function<String, String> stdoutSelector;
     protected Function<String, String> stderrSelector;
     protected final CommandConsoleFactory consoleFactory;
@@ -126,26 +124,6 @@ public abstract class CommandBuilder {
      */
     public CommandBuilder setStandardError(OutputStream stderr) {
         this.stderr = stderr;
-        return this;
-    }
-
-    /**
-     * Set an {@link OutputStreamObserver} to receive non selected lines from the standard output stream of the program in
-     * line of the console. If a selector has been set with {@link #setStdoutLineSelector(Function)}, only the lines
-     * not selected (for which the selector returns null) will be updated to the {@link OutputStreamObserver}.
-     */
-    public CommandBuilder setStandardOutObserver(OutputStreamObserver outputObserver) {
-        this.stdoutObserver = outputObserver;
-        return this;
-    }
-    
-    /**
-     * Set an {@link OutputStreamObserver} to receive non selected lines from the standard error stream of the program in
-     * line of the console. If a selector has been set with {@link #setStderrLineSelector(Function)}, only the lines
-     * not selected (for which the selector returns null) will be updated to the {@link OutputStreamObserver}.
-     */
-    public CommandBuilder setStandardErrorObserver(OutputStreamObserver errorObserver) {
-        this.stderrObserver = errorObserver;
         return this;
     }
 

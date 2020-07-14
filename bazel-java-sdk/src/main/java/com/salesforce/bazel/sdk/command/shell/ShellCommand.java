@@ -47,7 +47,6 @@ import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
-import com.salesforce.bazel.sdk.command.OutputStreamObserver;
 import com.salesforce.bazel.sdk.console.CommandConsole;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
@@ -72,7 +71,7 @@ public final class ShellCommand implements Command {
 
     ShellCommand(CommandConsole console, File directory, ImmutableList<String> args,
             Function<String, String> stdoutSelector, Function<String, String> stderrSelector, OutputStream stdout,
-            OutputStream stderr, OutputStreamObserver stdoutObserver, OutputStreamObserver stderrObserver, WorkProgressMonitor progressMonitor, long timeoutMS) {
+            OutputStream stderr, WorkProgressMonitor progressMonitor, long timeoutMS) {
         this.directory = directory;
         this.args = args;
         if (console != null) {
@@ -83,8 +82,8 @@ public final class ShellCommand implements Command {
                 stderr = console.createErrorStream();
             }
         }
-        this.stderr = new SelectOutputStream(stderr, stderrSelector, stderrObserver);
-        this.stdout = new SelectOutputStream(stdout, stdoutSelector, stdoutObserver);
+        this.stderr = new SelectOutputStream(stderr, stderrSelector);
+        this.stdout = new SelectOutputStream(stdout, stdoutSelector);
         this.progressMonitor = progressMonitor;
         this.timeoutMS = timeoutMS;
     }

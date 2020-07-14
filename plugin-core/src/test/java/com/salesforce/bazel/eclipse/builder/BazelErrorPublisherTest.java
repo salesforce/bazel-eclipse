@@ -20,7 +20,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.project.BazelProject;
 
-public class BazelErrorStreamObserverTest {
+public class BazelErrorPublisherTest {
     
     @Test
     public void testAssignErrorsToOwningProject() throws Exception {
@@ -36,7 +36,7 @@ public class BazelErrorStreamObserverTest {
         IProject rootProject = getMockedProject("ROOT").getProject();
 
         Map<IProject, List<BazelProblem>> projectToErrors =
-                BazelErrorStreamObserver.assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, rootProject);
+                BazelErrorPublisher.assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, rootProject);
 
         assertEquals(2, projectToErrors.size());
         Collection<BazelProblem> p1Errors = projectToErrors.get(project1);
@@ -63,14 +63,14 @@ public class BazelErrorStreamObserverTest {
         IProject rootProject = getMockedProject("ROOT").getProject();
 
         Map<IProject, List<BazelProblem>> projectToErrors =
-                BazelErrorStreamObserver.assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, rootProject);
+                BazelErrorPublisher.assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, rootProject);
 
         assertEquals(2, projectToErrors.size());
         Collection<BazelProblem> rootLevelErrors = projectToErrors.get(rootProject);
         BazelProblem rootError = rootLevelErrors.iterator().next();
         assertEquals("/WORKSPACE", rootError.getResourcePath());
         assertEquals(0, rootError.getLineNumber());
-        assertTrue(rootError.getDescription().startsWith(BazelErrorStreamObserver.UNKNOWN_PROJECT_ERROR_MSG_PREFIX));
+        assertTrue(rootError.getDescription().startsWith(BazelErrorPublisher.UNKNOWN_PROJECT_ERROR_MSG_PREFIX));
         assertTrue(rootError.getDescription().contains("projects/libs/lib2/src/Test2.java"));
         assertTrue(rootError.getDescription().contains("blah"));
     }

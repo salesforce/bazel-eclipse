@@ -52,7 +52,7 @@ public class ShellCommandBuilder extends CommandBuilder {
         CommandConsole console = consoleName == null ? null : consoleFactory.get(consoleName,
             "Running " + String.join(" ", args) + " from " + directory.toString());
         
-        ShellCommand command = new ShellCommand(console, directory, iargs, stdoutSelector, stderrSelector, stdout, stderr, stdoutObserver, stderrObserver,
+        ShellCommand command = new ShellCommand(console, directory, iargs, stdoutSelector, stderrSelector, stdout, stderr,
             progressMonitor, timeoutMS);
         
         return command;
