@@ -175,9 +175,9 @@ public class EclipseResourceHelper implements ResourceHelper {
         try {
             project.setDescription(description, null);
         } catch (Exception ex) {
-            ex.printStackTrace();
             // this is likely an issue with the resource tree being locked, so we have to defer this update
             // but it works for any type of issue
+        	BazelPluginActivator.info("Deferring updates to project "+project.getName()+" because workspace is locked.");
             deferredProjectDescriptionUpdates.add(new DeferredProjectDescriptionUpdate(project, description));
             needsDeferredApplication = true;
         }

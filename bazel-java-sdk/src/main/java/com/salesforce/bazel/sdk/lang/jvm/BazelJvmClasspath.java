@@ -41,7 +41,7 @@ public class BazelJvmClasspath {
     private final BazelCommandManager bazelCommandManager;
     private final LogHelper logger;
     
-    private JvmClasspathEntry[] cachedEntries;
+    private BazelJvmClasspathResponse cachedEntries;
     private long cachePutTimeMillis = 0;
     
 
@@ -63,10 +63,25 @@ public class BazelJvmClasspath {
         cachePutTimeMillis = 0;
     }
     
+    public static class BazelJvmClasspathResponse {
+    	/**
+    	 * The jvm classpath entries (e.g. jar files)
+    	 */
+    	public JvmClasspathEntry[] jvmClasspathEntries = new JvmClasspathEntry[] {};
+    	
+    	/**
+    	 * The list of projects that should be added to the classpath, if this environment is using
+    	 * project support. The caller is expected to invoke the following:
+    	 *   bazelProjectManager.setProjectReferences(bazelProject, computedClasspath.classpathProjectReferences);
+    	 * But due to locking in some environments, this may need to be delayed.
+    	 */
+    	public List<BazelProject> classpathProjectReferences = new ArrayList<>();
+    }
+    
     /**
      * Computes the JVM classpath for the associated BazelProject
      */
-	public JvmClasspathEntry[] getClasspathEntries(WorkProgressMonitor progressMonitor) {
+	public BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
         // sanity check
         if (bazelWorkspace == null) {
         	// not sure how we could get here, but just check
@@ -76,6 +91,7 @@ public class BazelJvmClasspath {
 
         boolean foundCachedEntries = false;
         boolean isImport = false;
+        BazelJvmClasspathResponse response = new BazelJvmClasspathResponse();
         
         
         if (this.cachedEntries != null) {
@@ -112,7 +128,6 @@ public class BazelJvmClasspath {
             // now get the actual list of activated targets, with wildcard resolved using the BUILD file model if necessary
             Set<String> actualActivatedTargets = configuredTargetsForProject.getActualTargets(bazelBuildFileModel);
             
-            List<BazelProject> updatedProjectReferences = new ArrayList<>(); 
             for (String targetLabel : actualActivatedTargets) {
                 String targetType = bazelBuildFileModel.getRuleTypeForTarget(targetLabel);
                 boolean isTestTarget = "java_test".equals(targetType);
@@ -174,15 +189,12 @@ public class BazelJvmClasspath {
                             
                             // now make a project reference between this project and the other project; this allows for features like
                             // code refactoring across projects to work correctly
-                            updatedProjectReferences.add(otherProject);
+                            response.classpathProjectReferences.add(otherProject);
                         }
                     }
                 }
             } // for loop
             
-            // now update project refs, which includes adding new ones and removing any that may now be obsolete 
-            // (e.g. dep was removed, project removed from IDE workspace)
-            bazelProjectManager.setProjectReferences(bazelProject, updatedProjectReferences);
             
         } catch (IOException | InterruptedException e) {
         	logger.error("Unable to compute classpath containers entries for project "+bazelProject.name, e);
@@ -197,7 +209,8 @@ public class BazelJvmClasspath {
 
         // cache the entries
         this.cachePutTimeMillis = System.currentTimeMillis();
-        this.cachedEntries = assembleClasspathEntries(mainClasspathEntryMap, testClasspathEntryMap);
+        response.jvmClasspathEntries = assembleClasspathEntries(mainClasspathEntryMap, testClasspathEntryMap);
+        this.cachedEntries = response;
         logger.debug("Cached the classpath for project "+bazelProject.name);
         
         SimplePerfRecorder.addTime("classpath", startTimeMS);
@@ -221,7 +234,7 @@ public class BazelJvmClasspath {
         if (pathStr == null) {
         	pathStr = cpEntry.bazelProject.name;
         }
-        logger.info("Adding cp entry ["+pathStr+"] to target ["+targetLabel+"]");
+        //logger.info("Adding cp entry ["+pathStr+"] to target ["+targetLabel+"]");
         if (!isTestTarget) {
             // add to the main classpath?
             // if this was previously a test CP entry, we need to remove it since this is now a main cp entry
@@ -288,9 +301,9 @@ public class BazelJvmClasspath {
         }
     }
     
-    private JvmClasspathEntry[] returnEmptyClasspathOrThrow(Throwable th) {
+    private BazelJvmClasspathResponse returnEmptyClasspathOrThrow(Throwable th) {
         continueOrThrow(th);
-        return new JvmClasspathEntry[] {};  
+        return new BazelJvmClasspathResponse();  
     }
 
 }

@@ -56,6 +56,7 @@ import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
+import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -134,17 +135,17 @@ public class BazelClasspathContainer implements IClasspathContainer {
          * the cache is not as effective as it could be. Synchronize on this instance such that the first invocation completes and populates
          * the cache before the subsequent calls are allowed to proceed.
          */
+        BazelJvmClasspathResponse computedClasspath = null;
+        List<IClasspathEntry> eclipseClasspathEntries = new ArrayList<>();
         synchronized (this) {
 
 		    // the Java SDK will produce a list of logical classpath entries 
-			JvmClasspathEntry[] jvmClasspathEntries = bazelClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
+        	computedClasspath = bazelClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
 			
-			// convert the logical entries into concrete Eclipse entries
-			List<IClasspathEntry> eclipseClasspathEntries = new ArrayList<>();
+			// convert the logical entries into concrete Eclipse entries			
 		    File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
 		    File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
-			
-			for (JvmClasspathEntry entry : jvmClasspathEntries) {
+			for (JvmClasspathEntry entry : computedClasspath.jvmClasspathEntries) {
 				if (entry.pathToJar != null) {
 		            IPath jarPath = getIPathOnDisk(bazelOutputBase, bazelExecRoot, entry.pathToJar);
 		            if (jarPath != null) {
@@ -159,8 +160,15 @@ public class BazelClasspathContainer implements IClasspathContainer {
 					eclipseClasspathEntries.add(javaCoreHelper.newProjectEntry(ipath));
 				}
 			}
-		    return eclipseClasspathEntries.toArray(new IClasspathEntry[] {});
-        }
+        } // end synchronized
+        
+        // Now update project refs, which includes adding new ones and removing any that may now be obsolete 
+        // (e.g. dep was removed, project removed from IDE workspace)
+        // We need to do this outside of the synchronized block because this next statement requires a lock on the 
+        // Eclipse workspace, and this may take some time to acquire. 
+        bazelProjectManager.setProjectReferences(bazelProject, computedClasspath.classpathProjectReferences);
+
+	    return eclipseClasspathEntries.toArray(new IClasspathEntry[] {});
     }
 
     @Override
