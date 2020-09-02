@@ -76,10 +76,13 @@ public class MockJavaCoreHelper implements JavaCoreHelper {
     public IClasspathEntry[] getResolvedClasspath(IJavaProject javaProject, boolean ignoreUnresolvedEntry) {
         try {
             return javaProject.getResolvedClasspath(ignoreUnresolvedEntry);
+        } catch (RuntimeException anyE) {
+            anyE.printStackTrace();
+            throw anyE;
         } catch (Exception anyE) {
             anyE.printStackTrace();
+            throw new RuntimeException(anyE);
         }
-        return null;
     }
 
     @Override

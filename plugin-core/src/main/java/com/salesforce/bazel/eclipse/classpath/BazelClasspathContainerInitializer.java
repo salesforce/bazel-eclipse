@@ -52,8 +52,12 @@ import org.eclipse.swt.widgets.Display;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
+import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 public class BazelClasspathContainerInitializer extends ClasspathContainerInitializer {
     static final LogHelper LOG = LogHelper.log(BazelClasspathContainerInitializer.class);
@@ -74,8 +78,18 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 return;
             }
             
+            // create the BazelProject if necessary
+            BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+            BazelProject bazelProject = bazelProjectManager.getProject(eclipseProject.getName());
+            if (bazelProject == null) {
+            	bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
+            	bazelProjectManager.addProject(bazelProject);
+            }
+            
+            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+            BazelCommandManager commandManager = BazelPluginActivator.getBazelCommandManager();
             BazelClasspathContainer container = new BazelClasspathContainer(eclipseProject);
-            if (container.isValid()) {
+            if (bazelProjectManager.isValid(bazelWorkspace, commandManager, bazelProject)) {
                 BazelPluginActivator.getJavaCoreHelper().setClasspathContainer(eclipseProjectPath, new IJavaProject[] { eclipseJavaProject },
                     new IClasspathContainer[] { container }, null);
                 importedProjects.add(eclipseJavaProject.getProject());

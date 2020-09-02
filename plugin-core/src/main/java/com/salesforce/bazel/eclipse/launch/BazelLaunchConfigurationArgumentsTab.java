@@ -18,7 +18,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
-import com.salesforce.bazel.eclipse.model.ArgumentSplitter;
+import com.salesforce.bazel.sdk.command.ArgumentSplitter;
 
 /**
  * Launch Configuration Tab to specify arguments for Bazel runnable targets.

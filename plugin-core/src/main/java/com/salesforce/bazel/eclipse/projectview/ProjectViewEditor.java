@@ -2,7 +2,6 @@ package com.salesforce.bazel.eclipse.projectview;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,16 +24,18 @@ import org.eclipse.ui.editors.text.TextFileDocumentProvider;
 import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.builder.BazelMarkerSupport;
+import com.salesforce.bazel.eclipse.builder.BazelProblemMarkerManager;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
-import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelBuildError;
-import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
-import com.salesforce.bazel.eclipse.model.projectview.ProjectView;
-import com.salesforce.bazel.eclipse.model.projectview.ProjectViewConstants;
-import com.salesforce.bazel.eclipse.model.projectview.ProjectViewPackageLocation;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.model.BazelProblem;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.ProjectView;
+import com.salesforce.bazel.sdk.project.ProjectViewConstants;
+import com.salesforce.bazel.sdk.project.ProjectViewPackageLocation;
+
 import com.salesforce.bazel.eclipse.wizard.BazelProjectImporter;
 
 public class ProjectViewEditor extends AbstractDecoratedTextEditor {
@@ -49,11 +50,13 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
     private final IProject rootProject;
     private final File rootDirectory;
     private final ProjectViewPackageLocation rootPackage;
+    private final BazelProblemMarkerManager markerManager;
 
     public ProjectViewEditor() {
         this.rootProject = getBazelRootProject();
         this.rootDirectory = BazelPluginActivator.getBazelWorkspace().getBazelWorkspaceRootDirectory();
         this.rootPackage = new ProjectViewPackageLocation(this.rootDirectory, "");
+        this.markerManager = new BazelProblemMarkerManager(getClass().getName());
         setDocumentProvider(new TextFileDocumentProvider());
         super.setSourceViewerConfiguration(new SourceViewerConfiguration() {
             public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
@@ -76,14 +79,13 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
         String projectViewContent = getSourceViewer().getTextWidget().getText();
         ProjectView projectView = new ProjectView(this.rootDirectory, projectViewContent);
         List<BazelPackageLocation> invalidPackages = projectView.getInvalidPackages();
-        Collection<BazelBuildError> problemMarkers = new ArrayList<>();
+        List<BazelProblem> problems = new ArrayList<>();
         for (BazelPackageLocation invalidPackage : invalidPackages) {
-            problemMarkers.add(new BazelBuildError(PROJECT_VIEW_RESOURCE, projectView.getLineNumber(invalidPackage),
+            problems.add(BazelProblem.createError(PROJECT_VIEW_RESOURCE, projectView.getLineNumber(invalidPackage),
                 "Bad Bazel Package: " + invalidPackage.getBazelPackageFSRelativePath()));
         }
-        // publishProblemMarkers also takes care of clearing old markers
-        BazelMarkerSupport.publishToProblemsView(this.rootProject, problemMarkers, getProgressMonitor());
-        if (problemMarkers.isEmpty()) {
+        markerManager.clearAndPublish(problems, this.rootProject, getProgressMonitor());
+        if (problems.isEmpty()) {
             IJavaProject[] currentlyImportedProjects = getAllJavaBazelProjects();
 
             List<BazelPackageLocation> currentlyImportedPackages = getPackages(currentlyImportedProjects);
@@ -103,16 +105,21 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
 
     private List<BazelPackageLocation> getPackages(IJavaProject[] projects) {
         List<BazelPackageLocation> packageLocations = new ArrayList<>(projects.length);
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         for (IJavaProject project : projects) {
+            String projectName = project.getProject().getName();
+            BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+
             // get the target to get at the package path
-            Set<String> targets = BazelProjectPreferences.getConfiguredBazelTargets(project.getProject(), false).getConfiguredTargets();
+            Set<String> targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets();
+
             if (targets == null || targets.isEmpty()) {
                 // this shouldn't happen, but if it does, we do not want to blow up here
                 // instead return null to force re-import
                 return null;
             }
             // TODO it is possible there are no targets configured for a project
-            String target = BazelProjectPreferences.getConfiguredBazelTargets(project.getProject(), false).getConfiguredTargets().iterator().next();
+            String target = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets().iterator().next();
             BazelLabel label = new BazelLabel(target);
             packageLocations.add(new ProjectViewPackageLocation(this.rootDirectory, label.getPackagePath()));
         }

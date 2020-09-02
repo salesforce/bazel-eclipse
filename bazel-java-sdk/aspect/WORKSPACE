@@ -1,0 +1,7 @@
+# This is a workspace file for creating a local repository added with --override_repository when
+# using the aspect so we can load the bzljavasdk_aspect.bzl Skylark aspect extension when calling
+# bazel build from the Bazel Java SDK.
+
+# This WORKSPACE is NOT used in the context of the Bazel build for the plugin. It is copied
+# into the Bazel Eclipse plugin jar as-is, and it is used when running Bazel command line
+# under the covers when using the Bazel plugin.

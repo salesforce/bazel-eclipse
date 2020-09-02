@@ -46,8 +46,8 @@ import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 
-import com.salesforce.bazel.eclipse.abstractions.CommandConsole;
-import com.salesforce.bazel.eclipse.abstractions.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.console.CommandConsole;
+import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 
 /** Implementation of {@link CommandConsoleFactory} using Eclipse's console */
 public class EclipseConsole implements CommandConsoleFactory {

@@ -57,11 +57,3 @@ java_import(
         "//visibility:public",
     ],
 )
-
-java_library(
-    name = "plugin-testdeps",
-    srcs = glob(["src/main/java/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-    ],
-)

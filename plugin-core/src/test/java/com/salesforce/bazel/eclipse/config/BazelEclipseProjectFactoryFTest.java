@@ -42,6 +42,7 @@ import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
+import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 
 /**
  * This FTest checks that the Eclipse workspace and Eclipse projects are configured as expected
@@ -76,8 +77,9 @@ public class BazelEclipseProjectFactoryFTest {
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");
 
         // workspace preferences
+        BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
         String expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot().getCanonicalPath();
-        assertEquals(expectedBazelWorkspaceRoot, BazelProjectPreferences.getBazelWorkspacePath(BazelPluginActivator.getInstance()));
+        assertEquals(expectedBazelWorkspaceRoot, configMgr.getBazelWorkspacePath());
         
         // Eclipse project for the Bazel workspace
         assertNotNull(workspace_IProject);

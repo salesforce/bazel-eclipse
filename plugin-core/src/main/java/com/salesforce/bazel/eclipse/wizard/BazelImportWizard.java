@@ -55,10 +55,10 @@ import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkingSet;
 
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
-import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
 import com.salesforce.bazel.eclipse.util.SelectionUtil;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
  * Entrypoint for the Bazel Workspace import wizard

@@ -40,24 +40,27 @@ import java.io.File;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-import com.salesforce.bazel.eclipse.abstractions.BazelAspectLocation;
-import com.salesforce.bazel.eclipse.abstractions.CommandConsoleFactory;
-import com.salesforce.bazel.eclipse.command.BazelCommandManager;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.eclipse.command.CommandBuilder;
-import com.salesforce.bazel.eclipse.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl;
-import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
-import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.model.OperatingEnvironmentDetectionStrategy;
-import com.salesforce.bazel.eclipse.model.RealOperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
+import com.salesforce.bazel.eclipse.config.EclipseBazelProjectManager;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseConsole;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseJavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseResourceHelper;
+import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.command.CommandBuilder;
+import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
+import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
+import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
 
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
@@ -93,6 +96,11 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     private static BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
     
     /**
+     * ProjectManager manages all of the imported projects
+     */
+    private static BazelProjectManager bazelProjectManager;
+    
+    /**
      * ResourceHelper is a useful singleton for looking up workspace/projects from the Eclipse environment
      */
     private static ResourceHelper resourceHelper;
@@ -106,6 +114,11 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * Looks up the operating environment (e.g. OS type)
      */
     private static OperatingEnvironmentDetectionStrategy osEnvStrategy;
+    
+    /**
+     * Iteracts with preferences
+     */
+    private static BazelConfigurationManager configurationManager;
 
     // LIFECYCLE
     
@@ -126,9 +139,12 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         CommandBuilder  commandBuilder = new ShellCommandBuilder(consoleFactory);
         ResourceHelper eclipseResourceHelper = new EclipseResourceHelper();
         JavaCoreHelper eclipseJavaCoreHelper = new EclipseJavaCoreHelper();
+        BazelProjectManager projectMgr = new EclipseBazelProjectManager(eclipseResourceHelper, eclipseJavaCoreHelper);
         OperatingEnvironmentDetectionStrategy osEnvStrategy = new RealOperatingEnvironmentDetectionStrategy();
+        BazelConfigurationManager configManager = new EclipseBazelConfigurationManager(eclipseResourceHelper);
         
-        startInternal(aspectLocation, commandBuilder, consoleFactory, eclipseResourceHelper, eclipseJavaCoreHelper, osEnvStrategy);
+        startInternal(aspectLocation, commandBuilder, consoleFactory, projectMgr, eclipseResourceHelper, eclipseJavaCoreHelper, 
+        		osEnvStrategy, configManager);
     }
 
     /**
@@ -137,7 +153,8 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * the passed collaborators are all the real ones, when running mock tests the collaborators are mocks.
      */
     public void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory, 
-            ResourceHelper rh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv) throws Exception {
+    		BazelProjectManager projectMgr, ResourceHelper rh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, 
+    		BazelConfigurationManager configMgr) throws Exception {
         // reset internal state (this is so tests run in a clean env)
         bazelWorkspace = null;
         bazelWorkspaceCommandRunner = null;
@@ -147,22 +164,24 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         plugin = this;
         javaCoreHelper = javac;
         osEnvStrategy = osEnv;
+        bazelProjectManager = projectMgr;
+        configurationManager = configMgr;
 
         // Get the bazel executable path from the settings, defaults to /usr/local/bin/bazel
-        String bazelPath = BazelProjectPreferences.getBazelExecutablePath(this);
+        String bazelPath = configurationManager.getBazelExecutablePath();
         File bazelPathFile = new File(bazelPath);
 
         // Build the command manager for the workspace (runs Bazel commands)
         bazelCommandManager = new BazelCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelPathFile);
 
         // setup a listener, if the user changes the path to Bazel executable notify the command manager
-        BazelProjectPreferences.setBazelExecutablePathListener(this, bazelCommandManager);
+        configurationManager.setBazelExecutablePathListener(bazelCommandManager);
 
         // Get the bazel workspace path from the settings: 
         //   ECLIPSE_WS_ROOT/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.salesforce.bazel.eclipse.core.prefs
-        String bazelWorkspacePathFromPrefs = BazelProjectPreferences.getBazelWorkspacePath(this);
+        String bazelWorkspacePathFromPrefs = configurationManager.getBazelWorkspacePath();
         if (bazelWorkspacePathFromPrefs != null && !bazelWorkspacePathFromPrefs.isEmpty()) {
-            String workspaceName = BazelEclipseProjectFactory.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
+            String workspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
             this.setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
         } else {
             LOG.info("The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
@@ -171,9 +190,6 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     
     @Override
     public void stop(BundleContext context) throws Exception {
-        plugin = null;
-        bazelCommandManager = null;
-        resourceHelper = null;
         super.stop(context);
     }
 
@@ -230,7 +246,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         bazelWorkspace.setBazelWorkspaceMetadataStrategy(getWorkspaceCommandRunner());
 
         // write it to the preferences file
-        BazelProjectPreferences.setBazelWorkspacePath(this, rootDirectory.getAbsolutePath());
+        configurationManager.setBazelWorkspacePath(rootDirectory.getAbsolutePath());
     }
     
     
@@ -258,6 +274,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     }
     
     /**
+     * Returns the manager for imported projects
+     * @return
+     */
+    public static BazelProjectManager getBazelProjectManager() {
+    	return bazelProjectManager;
+    }
+    
+    /**
      * Returns the unique instance of {@link ResourceHelper}, this helper helps retrieve workspace and project
      * objects from the environment
      */
@@ -271,6 +295,20 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      */
     public static JavaCoreHelper getJavaCoreHelper() {
         return javaCoreHelper;
+    }
+    
+    /**
+     * Provides details of the operating environment (OS, real vs. tests, etc)
+     */
+    public OperatingEnvironmentDetectionStrategy getOperatingEnvironmentDetectionStrategy() {
+        return osEnvStrategy;
+    }
+    
+    /**
+     * Returns the config manager for projects
+     */
+    public BazelConfigurationManager getConfigurationManager() {
+    	return configurationManager;
     }
     
     // LOGGING

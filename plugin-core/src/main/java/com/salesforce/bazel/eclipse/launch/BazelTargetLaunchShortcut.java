@@ -45,9 +45,9 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IEditorPart;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.TargetKind;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
  * Supports the Run/Debug operations for Java classes with a main method.
@@ -106,7 +106,7 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
             support.setLaunchConfigDefaults(config);
             AspectPackageInfo api = matchingInfos.iterator().next();
             BazelLabel label = new BazelLabel(api.getLabel());
-            TargetKind kind = TargetKind.valueOfIgnoresCase(api.getKind());
+            BazelTargetKind kind = BazelTargetKind.valueOfIgnoresCase(api.getKind());
             support.populateBazelLaunchConfig(config, projectName, label, kind);
             DebugUITools.launch(config.doSave(), mode);
 

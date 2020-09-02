@@ -62,10 +62,11 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelProjectHelper;
-import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
-import com.salesforce.bazel.eclipse.config.EclipseProjectBazelTargets;
-import com.salesforce.bazel.eclipse.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProjectTargets;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Provide the runtime classpath for JUnit tests. These are obtained from the test rule's generated param files that
@@ -137,11 +138,15 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
         IJavaProject project = JavaRuntime.getJavaProject(configuration);
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();        
         File base = bazelWorkspace.getBazelExecRootDirectory();
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         String testClassName = configuration.getAttribute("org.eclipse.jdt.launching.MAIN_TYPE", (String) null);
         String suffix = getParamsJarSuffix(isSource);
 
-        EclipseProjectBazelTargets targets = BazelProjectPreferences.getConfiguredBazelTargets(project.getProject(), false);
+    	String projectName = project.getProject().getName();
+    	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+        
+    	BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
         Set<File> paramFiles = new HashSet<File>();
         
         for (String eachTarget : targets.getConfiguredTargets()) {
@@ -188,7 +193,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                         "Error parsing " + paramsFile.getAbsolutePath(), e));
             }
             for (String rawPath : jarPaths) {
-                String canonicalPath = BazelProjectHelper.getCanonicalPathStringSafely(new File(base, rawPath));
+                String canonicalPath = BazelPathHelper.getCanonicalPathStringSafely(new File(base, rawPath));
                 IPath eachPath = new Path(canonicalPath);
                 if (eachPath.toFile().exists()) {
                     IRuntimeClasspathEntry src = JavaRuntime.newArchiveRuntimeClasspathEntry(eachPath);

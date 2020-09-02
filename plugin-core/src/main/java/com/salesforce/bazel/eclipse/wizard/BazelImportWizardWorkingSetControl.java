@@ -68,7 +68,7 @@ import org.eclipse.ui.IWorkingSet;
 import org.eclipse.ui.IWorkingSetManager;
 import org.eclipse.ui.PlatformUI;
 
-import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 
 public class BazelImportWizardWorkingSetControl {
 

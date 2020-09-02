@@ -62,28 +62,33 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.abstractions.WorkProgressMonitor;
 import com.salesforce.bazel.eclipse.builder.BazelBuilder;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer;
-import com.salesforce.bazel.eclipse.classpath.JavaLanguageLevelHelper;
-import com.salesforce.bazel.eclipse.command.BazelCommandManager;
-import com.salesforce.bazel.eclipse.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfo;
-import com.salesforce.bazel.eclipse.model.AspectPackageInfos;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelPackageLocation;
-import com.salesforce.bazel.eclipse.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.model.BazelWorkspaceCommandOptions;
-import com.salesforce.bazel.eclipse.model.projectview.ProjectView;
-import com.salesforce.bazel.eclipse.model.projectview.ProjectViewConstants;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.lang.jvm.JavaLanguageLevelHelper;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.ProjectView;
+import com.salesforce.bazel.sdk.project.ProjectViewConstants;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
+import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
+import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 
 /**
  * A factory class to create Eclipse projects from packages in a Bazel workspace.
@@ -111,16 +116,17 @@ public class BazelEclipseProjectFactory {
      *         the IProject object created for the 'bazel workspace' project node which is a special container project
      */
     public static List<IProject> importWorkspace(BazelPackageLocation bazelWorkspaceRootPackageInfo,
-            List<BazelPackageLocation> selectedBazelPackages, WorkProgressMonitor progressMonitor,
-          IProgressMonitor monitor) {
+            List<BazelPackageLocation> selectedBazelPackages, ProjectOrderResolver importOrderResolver,
+            WorkProgressMonitor progressMonitor, IProgressMonitor monitor) {
+        SimplePerfRecorder.reset();
 
-        File bazelWorkspaceRootDirectory = BazelProjectHelper.getCanonicalFileSafely(bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory());
+        File bazelWorkspaceRootDirectory = BazelPathHelper.getCanonicalFileSafely(bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory());
 
         SubMonitor subMonitor = SubMonitor.convert(monitor, selectedBazelPackages.size());
         subMonitor.setTaskName("Getting the Aspect Information for targets");
         subMonitor.split(1);
 
-        String bazelWorkspaceName = getBazelWorkspaceName(bazelWorkspaceRootDirectory.getName());
+        String bazelWorkspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspaceRootDirectory.getName());
 
         // Many collaborators need the Bazel workspace directory location, so we stash it in an accessible global location
         // currently we only support one Bazel workspace in an Eclipse workspace
@@ -144,22 +150,30 @@ public class BazelEclipseProjectFactory {
         int sourceLevel = JavaLanguageLevelHelper.getSourceLevelAsInt(javacoptString);
         
         // create the Eclipse project for the Bazel workspace (directory that contains the WORKSPACE file)
+        long startTimeMS = System.currentTimeMillis();
         IProject rootEclipseProject = createEclipseRootWorkspaceProject(bazelWorkspaceName, bazelWorkspaceRootDirectory, sourceLevel, 
                 selectedBazelPackages, monitor);
+        SimplePerfRecorder.addTime("import_createroot", startTimeMS);
+
         List<IProject> importedProjectsList = new ArrayList<>();
         importedProjectsList.add(rootEclipseProject);
 
         // see the method level comment about this option (currently disabled)
         AspectPackageInfos aspects = null;
+        startTimeMS = System.currentTimeMillis();
         if (PRECOMPUTE_ALL_ASPECTS_FOR_WORKSPACE) {
             aspects = precomputeBazelAspectsForWorkspace(rootEclipseProject, selectedBazelPackages, progressMonitor);
         }
+        SimplePerfRecorder.addTime("import_computeaspects", startTimeMS);
         
-        Iterable<BazelPackageLocation> postOrderedModules = ImportOrderResolver
-                .resolveModulesImportOrder(bazelWorkspaceRootPackageInfo, selectedBazelPackages, aspects);
+        startTimeMS = System.currentTimeMillis();
+        Iterable<BazelPackageLocation> postOrderedModules = importOrderResolver
+                .computePackageOrder(bazelWorkspaceRootPackageInfo, selectedBazelPackages, aspects);
+        SimplePerfRecorder.addTime("import_computeorder", startTimeMS);
 
         // finally, create an Eclipse Project for each Bazel Package being imported
         subMonitor.setTaskName("Importing bazel packages: ");
+        startTimeMS = System.currentTimeMillis();
         for (BazelPackageLocation childPackageInfo : postOrderedModules) {
             subMonitor.subTask("Importing " + childPackageInfo.getBazelPackageFSRelativePath());
             if (childPackageInfo.isWorkspaceRoot()) {
@@ -169,29 +183,17 @@ public class BazelEclipseProjectFactory {
             importBazelWorkspacePackagesAsProjects(childPackageInfo, bazelWorkspaceRootDirectory, importedProjectsList, sourceLevel);
             subMonitor.split(1);
         }
+        SimplePerfRecorder.addTime("import_createprojects_all", startTimeMS);
 
         subMonitor.done();
         // reset flag that indicates we are doing import
         importInProgress.set(false);
+        
+        SimplePerfRecorder.logResults();
 
         return importedProjectsList;
     }
     
-    public static String getBazelWorkspaceName(String bazelWorkspaceRootDirectory) {
-        // TODO pull the workspace name out of the WORKSPACE file, until then use the directory name (e.g. bazel-demo)
-        String bazelWorkspaceName = "workspace";
-        if (bazelWorkspaceRootDirectory != null) {
-            int lastSlash = bazelWorkspaceRootDirectory.lastIndexOf(File.separator);
-            if (lastSlash >= 0 && (bazelWorkspaceRootDirectory.length() - lastSlash) > 3) {
-                // add the directory name to the label, if it is meaningful (>3 chars)
-                bazelWorkspaceName = bazelWorkspaceRootDirectory.substring(lastSlash + 1);
-            } else {
-                bazelWorkspaceName = bazelWorkspaceRootDirectory;
-            }
-        }
-        return bazelWorkspaceName;
-    }
-
     private static void importBazelWorkspacePackagesAsProjects(BazelPackageLocation packageInfo, File bazelWorkspaceRootDirectory,
             List<IProject> importedProjectsList, int javaLanguageVersion) {
         List<String> packageSourceCodeFSPaths = new ArrayList<>();
@@ -283,12 +285,15 @@ public class BazelEclipseProjectFactory {
     private static IProject createEclipseProjectForBazelPackage(String projectName, URI eclipseProjectLocation,
             File bazelWorkspaceRootDirectory, String packageFSPath, List<String> packageSourceCodeFSPaths,
             List<String> bazelTargets, int javaLanguageVersion) {
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         IProject eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation, bazelWorkspaceRootDirectory);
+        BazelProject bazelProject = bazelProjectManager.getProject(projectName);
         try {
             addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID);
             addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID);
-            BazelProjectPreferences.addSettingsToEclipseProject(eclipseProject, bazelWorkspaceRootDirectory.getAbsolutePath(), 
+            BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
+            projMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), 
                 packageFSPath, bazelTargets, ImmutableList.of()); // TODO pass buildFlags
 
             // this may throw if the user has deleted the .project file on disk while the project is open for import
@@ -298,16 +303,16 @@ public class BazelEclipseProjectFactory {
             setBuildersOnEclipseProject(eclipseProject);
         } catch (CoreException e) {
             LOG.error(e.getMessage(), e);
-        } catch (BackingStoreException e) {
-            LOG.error(e.getMessage(), e);
-        }
+        } 
 
         try {
             // TODO investigate using the configure() hook in the BazelNature for the configuration part of this createProject() method
             IJavaProject eclipseJavaProject =
                     BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(eclipseProject);
+            long startTimeMS = System.currentTimeMillis();
             createBazelClasspathForEclipseProject(new Path(bazelWorkspaceRootDirectory.getAbsolutePath()), packageFSPath, packageSourceCodeFSPaths,
                 eclipseJavaProject, javaLanguageVersion);
+            SimplePerfRecorder.addTime("import_createprojects_cp_all", startTimeMS);
         } catch (CoreException e) {
             LOG.error(e.getMessage(), e);
             eclipseProject = null;
@@ -349,12 +354,12 @@ public class BazelEclipseProjectFactory {
                 resourceHelper.createFileLink(projectFile, Path.fromOSString(f.getCanonicalPath()), IResource.NONE, null);
             } catch (Exception anyE) {
                 // TODO throwing this exception just writes a log message, we need a modal error popup for this error
-                BazelPluginActivator.error("Failure to link file ["+BazelProjectHelper.getCanonicalPathStringSafely(f)+"] for project ["+
+                BazelPluginActivator.error("Failure to link file ["+BazelPathHelper.getCanonicalPathStringSafely(f)+"] for project ["+
                         eclipseProject.getName()+"]");
                 throw new IllegalStateException(anyE);
             }
         } else {
-            BazelPluginActivator.error("Tried to link a non-existant file ["+BazelProjectHelper.getCanonicalPathStringSafely(f)+"] for project ["+
+            BazelPluginActivator.error("Tried to link a non-existant file ["+BazelPathHelper.getCanonicalPathStringSafely(f)+"] for project ["+
                     eclipseProject.getName()+"]");
             retval = false;
         }
@@ -370,6 +375,7 @@ public class BazelEclipseProjectFactory {
         List<IClasspathEntry> classpathEntries = new LinkedList<>();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
 
+        long startTimeMS = System.currentTimeMillis();
         for (String path : packageSourceCodeFSRelativePaths) {
             IPath realSourceDir = Path.fromOSString(bazelWorkspacePath + File.separator + path);
             IFolder projectSourceFolder =
@@ -393,10 +399,13 @@ public class BazelEclipseProjectFactory {
             IClasspathEntry sourceClasspathEntry = BazelPluginActivator.getJavaCoreHelper().newSourceEntry(sourceDir, outputDir, isTestSource);
             classpathEntries.add(sourceClasspathEntry);
         }
+        SimplePerfRecorder.addTime("import_createprojects_cp_1", startTimeMS);
 
+        startTimeMS = System.currentTimeMillis();
         IClasspathEntry bazelClasspathContainerEntry = BazelPluginActivator.getJavaCoreHelper()
                 .newContainerEntry(new Path(BazelClasspathContainer.CONTAINER_NAME));
         classpathEntries.add(bazelClasspathContainerEntry);
+        SimplePerfRecorder.addTime("import_createprojects_cp_2", startTimeMS);
 
         // add in a JDK to the classpath
         String jdk;
@@ -409,7 +418,9 @@ public class BazelEclipseProjectFactory {
         classpathEntries.add(BazelPluginActivator.getJavaCoreHelper().newContainerEntry(new Path(jdk)));
 
         IClasspathEntry[] newClasspath = classpathEntries.toArray(new IClasspathEntry[classpathEntries.size()]);
+        startTimeMS = System.currentTimeMillis();
         eclipseProject.setRawClasspath(newClasspath, null);
+        SimplePerfRecorder.addTime("import_createprojects_cp_3", startTimeMS);
     }
 
     private static IFolder createFoldersForRelativePackagePath(IProject project, String bazelPackageFSPath,
@@ -490,6 +501,7 @@ public class BazelEclipseProjectFactory {
             createdEclipseProject = newEclipseProject;
         }
 
+        BazelPluginActivator.getBazelProjectManager().addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
         return createdEclipseProject;
     }
 
@@ -524,7 +536,7 @@ public class BazelEclipseProjectFactory {
         boolean foundSourceCodePaths = false;
 
         // add this node buildable target
-        String bazelPackageRootDirectory = BazelProjectHelper.getCanonicalPathStringSafely(packageNode.getWorkspaceRootDirectory());
+        String bazelPackageRootDirectory = BazelPathHelper.getCanonicalPathStringSafely(packageNode.getWorkspaceRootDirectory());
         File packageDirectory = new File(packageNode.getWorkspaceRootDirectory(), packageNode.getBazelPackageFSRelativePath());
 
         // TODO here is where we assume that the Java project is conforming  NON_CONFORMING PROJECT SUPPORT
@@ -617,7 +629,7 @@ public class BazelEclipseProjectFactory {
         // run the aspect for specified targets and get an AspectPackageInfo for each
         AspectPackageInfos aspectPackageInfos = null;
         try {
-            Map<String, Set<AspectPackageInfo>> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(rootEclipseProject.getName(),
+            Map<String, Set<AspectPackageInfo>> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(
                 packageBazelTargets, progressMonitor, "importWorkspace");
             List<AspectPackageInfo> allPackageInfos = new ArrayList<>();
             for (Set<AspectPackageInfo> targetPackageInfos : packageInfos.values()) {

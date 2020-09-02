@@ -6,9 +6,8 @@
 <feature
       id="com.salesforce.bazel.eclipse.feature"
       label="Bazel Eclipse Feature"
-      version="1.1.0.qualifier"
-      provider-name="Salesforce"
-      >
+      version="1.2.5.qualifier"
+      provider-name="Salesforce">
 
    <description url="https://github.com/salesforce/bazel-eclipse">
       The Bazel Eclipse Feature supports importing, building, and testing Java projects that are built using the Bazel build system.
@@ -228,33 +227,10 @@
    </url>
 
    <plugin
-         id="com.salesforce.bazel.eclipse.abstractions"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="com.salesforce.bazel.eclipse.command"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <!--
-     Core Plugin
-     Contains the integration with the Eclipse APIs.
-
-     NOTE: this must be unpack=true because the Aspect files in the resources directory must be available on the
-        file system. They get included in the command line builds by reference.
-     bazel build -override_repository=local_eclipse_aspect=/xyz/2018-12/Eclipse.app/C/E/p/c.s.b.e.core_0.0.6/resources
-   -->
-   <plugin
          id="com.salesforce.bazel.eclipse.core"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.salesforce.bazel.eclipse.deps"
@@ -263,7 +239,7 @@
          version="0.0.0"/>
 
    <plugin
-         id="com.salesforce.bazel.eclipse.model"
+         id="com.salesforce.bazel-java-sdk"
          download-size="0"
          install-size="0"
          version="0.0.0"

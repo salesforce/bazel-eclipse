@@ -52,10 +52,14 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.wizards.datatransfer.ProjectConfigurator;
 
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelBuildFileHelper;
+import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelBuildFileHelper;
+import com.salesforce.bazel.sdk.workspace.BazelPackageFinder;
 
-// copied from m2e MavenProjectConfigurator
+// initial version copied from m2e MavenProjectConfigurator
+
+// TODO test if any of this used at all. maybe just legacy cruft 
 
 public class BazelProjectConfigurator implements ProjectConfigurator {
     static final LogHelper LOG = LogHelper.log(BazelProjectConfigurator.class);
@@ -70,67 +74,19 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
      *
      * @param root
      *            the root directory on which to start the discovery
-     * @param monitor
+     * @param eclipseMonitor
      *            the progress monitor
      * @return the children (at any depth) that this configurator suggests to import as project
      */
     @Override
-    public Set<File> findConfigurableLocations(File root, IProgressMonitor monitor) {
+    public Set<File> findConfigurableLocations(File root, IProgressMonitor eclipseMonitor) {
         Set<File> buildFileLocations = new TreeSet<>();
+        BazelPackageFinder packageFinder = new BazelPackageFinder();
+        EclipseWorkProgressMonitor abstractMonitor = new EclipseWorkProgressMonitor(eclipseMonitor);
 
-        findBuildFileLocations(root, monitor, buildFileLocations, 0);
+        packageFinder.findBuildFileLocations(root, abstractMonitor, buildFileLocations, 0);
 
         return buildFileLocations;
-    }
-
-    // TODO our workspace scanner is looking for Java packages, but uses primitive techniques. switch to use the aspect
-    // approach here, like we do with the classpath computation. 
-    private void findBuildFileLocations(File dir, IProgressMonitor monitor, Set<File> buildFileLocations, int depth) {
-        if (!dir.isDirectory()) {
-            return;
-        }
-
-        try {
-            File[] dirFiles = dir.listFiles();
-            for (File dirFile : dirFiles) {
-
-                if (shouldIgnore(dirFile, depth)) {
-                    continue;
-                }
-
-                if (isBuildFile(dirFile)) {
-
-                    // great, this dir is a Bazel package (but this may be a non-Java package)
-                    // scan the BUILD file looking for java rules, only add if this is a java project
-                    if (BazelBuildFileHelper.hasJavaRules(dirFile)) {
-                        buildFileLocations.add(BazelProjectHelper.getCanonicalFileSafely(dir));
-                    }
-                } else if (dirFile.isDirectory()) {
-                    findBuildFileLocations(dirFile, monitor, buildFileLocations, depth + 1);
-                }
-            }
-        } catch (Exception anyE) {
-            LOG.error("ERROR scanning for Bazel packages: {}", anyE.getMessage());
-        }
-    }
-
-    private static boolean shouldIgnore(File f, int depth) {
-        if (depth == 0 && f.isDirectory() && f.getName().startsWith("bazel-")) {
-            // this is a Bazel internal directory at the root of the project dir, ignore
-            // TODO should this use one of the ignore directory facilities at the bottom of this class?
-            return true;
-        }
-        return false;
-    }
-    
-    private static boolean isBuildFile(File candidate) {
-        if ("BUILD".equals(candidate.getName())) {
-            return true;
-        }
-        if ("BUILD.bazel".equals(candidate.getName())) {
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -151,7 +107,10 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
     public boolean shouldBeAnEclipseProject(IContainer container, IProgressMonitor monitor) {
         IFile buildFile = container.getFile(new Path("BUILD"));
         if (!buildFile.exists()) {
-            return false;
+        	buildFile = container.getFile(new Path("BUILD.bazel"));
+            if (!buildFile.exists()) {
+            	return false;
+            }
         }
 
         boolean hasJavaRule = false;
@@ -231,7 +190,8 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
     public Set<IFolder> getFoldersToIgnore(IProject project, IProgressMonitor monitor) {
         Set<IFolder> res = new HashSet<IFolder>();
 
-        // do we want to exclude any folders in a package from scanning for BUILD files? Not so far.
+        // do we want to exclude any folders in a package from scanning for BUILD files? 
+        // TODO .bazelignore
 
         return res;
     }

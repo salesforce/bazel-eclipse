@@ -155,7 +155,7 @@ public class MockResourceHelper implements ResourceHelper {
     }
     
     @Override
-    public IResource findMemberInWorkspace(IWorkspaceRoot workspaceRoot, IPath path) {
+    public IResource findMemberInWorkspace(IPath path) {
         return workspaceRoot.findMember(path);
     }
 
@@ -194,7 +194,7 @@ public class MockResourceHelper implements ResourceHelper {
     }
 
     @Override
-    public void setProjectDescription(IProject project, IProjectDescription description) {
+    public boolean setProjectDescription(IProject project, IProjectDescription description) {
         mockDescriptions.put(project.getName(), description);
         
         if (description.getReferencedProjects().length > 0) {
@@ -204,6 +204,16 @@ public class MockResourceHelper implements ResourceHelper {
                 throw new IllegalStateException(anyE);
             }
         }
+        return false;
+    }
+    
+    /**
+     * When setProjectDescription() fails, it is likely because the resource tree is locked.
+     * Call this method outside of a locked code path if setProjectDescription() returned true.
+     */
+    @Override
+    public void applyDeferredProjectDescriptionUpdates() {
+        // the mocking layer does not model locking behaviors of Eclipse
     }
 
     @Override

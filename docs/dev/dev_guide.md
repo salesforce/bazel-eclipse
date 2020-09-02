@@ -67,7 +67,7 @@ Follow these steps to begin development of the Bazel Eclipse Feature in the Ecli
 - Launch the Eclipse SDK
 - *File* -> *Import* -> *Existing Project*
 - Select the *bazel-eclipse* folder as the root directory
-- Eclipse should detect that the projects are there, and offer to import projects *Bazel Eclipse Feature*, *plugin-model* and others.
+- Eclipse should detect that the projects are there, and offer to import projects *Bazel Eclipse Feature*, *bazel-java-sdk* and others.
 - Click Finish
 
 :fire: if you see errors or warnings at this point, see the [dev issues page](dev_issues.md)  for help.

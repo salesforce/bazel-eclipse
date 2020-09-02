@@ -47,7 +47,9 @@ import org.junit.rules.TemporaryFolder;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
-import com.salesforce.bazel.eclipse.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 public class BazelCommandRunnerFTest {
     @Rule

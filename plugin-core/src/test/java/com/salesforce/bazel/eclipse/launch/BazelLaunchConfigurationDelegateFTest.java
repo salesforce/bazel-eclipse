@@ -37,8 +37,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.eclipse.command.mock.MockCommandBuilder.MockCommandSimulatedOutputMatcher;
-import com.salesforce.bazel.eclipse.command.mock.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
@@ -46,6 +44,8 @@ import com.salesforce.bazel.eclipse.mock.MockILaunch;
 import com.salesforce.bazel.eclipse.mock.MockILaunchConfiguration;
 import com.salesforce.bazel.eclipse.mock.MockResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
+import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutputMatcher;
+import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
 
 public class BazelLaunchConfigurationDelegateFTest {
     @Rule

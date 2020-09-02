@@ -95,15 +95,11 @@ It makes sense to look over the fence at the Maven plugins to see how they have 
 
 - [M2Eclipse plugins](https://github.com/eclipse/m2e-core)
 
-### The 4 plugins that compose the Bazel Eclipse Feature
+### The plugins that compose the Bazel Eclipse Feature
 
-Internally, the Bazel Eclipse Feature is implemented using 4 Eclipse plugins.
+Internally, the Bazel Eclipse Feature is implemented using several Eclipse plugins.
 Not only does this separate concerns, but it makes unit testing simpler.
 Only one plugin (the *plugin-core*) has access to Eclipse APIs.
 
 - **plugin-core**: this plugin is the one that is integrated with Eclipse APIs, and contains classes such as the activator
-- **plugin-model**: model objects for the various concepts within the feature
-- **plugin-abstractions**: has plain interfaces to stand in the place of Eclipse APIs
-- **plugin-command**: provides the Bazel command line integration
-
-You can find more documentation of each in the [plugin-core](../../plugin-core) and [plugin-libs](../../plugin-libs) directories.
+- **bazel-java-sdk**: handles model abstractions and command execution for Bazel

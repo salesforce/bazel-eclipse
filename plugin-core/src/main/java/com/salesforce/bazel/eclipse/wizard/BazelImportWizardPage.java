@@ -56,11 +56,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelProjectPreferences;
-import com.salesforce.bazel.eclipse.importer.BazelProjectImportScanner;
-import com.salesforce.bazel.eclipse.logging.LogHelper;
-import com.salesforce.bazel.eclipse.model.BazelLabel;
-import com.salesforce.bazel.eclipse.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 
 /**
  * Class that sets up the UI for the Bazel Import Workspace wizard.
@@ -127,7 +128,7 @@ public class BazelImportWizardPage extends WizardPage {
     @SuppressWarnings("deprecation")
     public void scanProjects() {
         // this the heavy lifting of scanning the file system for BUILD files, checking if BUILD file is a Java package
-        BazelProjectImportScanner projectScanner = new BazelProjectImportScanner();
+        BazelWorkspaceScanner workspaceScanner = new BazelWorkspaceScanner();
         try {
             List<String> newFilesystemLocations = new ArrayList<>();
             List<BazelPackageInfo> newEclipseProjects = new ArrayList<>();
@@ -136,7 +137,7 @@ public class BazelImportWizardPage extends WizardPage {
             // when the wizard is first opened, the location field is blank and we have a null root package
             if (this.locationControl.rootDirectory != null) {
                 this.projectTree.setRootWorkspaceDirectory(this.locationControl.rootDirectory);
-                this.workspaceRootPackage = projectScanner.getProjects(this.locationControl.rootDirectory);
+                this.workspaceRootPackage = workspaceScanner.getPackages(this.locationControl.rootDirectory);
                 if (workspaceRootPackage != null) {
                     // make sure the user chose a Bazel workspace
                     newEclipseProjects.add(workspaceRootPackage);
@@ -185,9 +186,13 @@ public class BazelImportWizardPage extends WizardPage {
     private static List<BazelPackageInfo> getImportedBazelPackages(BazelPackageInfo rootPackage) {
         List<BazelPackageInfo> importedPackages = new ArrayList<>();
         IJavaProject[] javaProjects = BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false);
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+
         for (IJavaProject javaProject : javaProjects) {
             // TODO it is possible there are no targets configured for a project
-            String target = BazelProjectPreferences.getConfiguredBazelTargets(javaProject.getProject(), false).getConfiguredTargets().iterator().next();
+        	String projectName = javaProject.getProject().getName();
+        	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+            String target = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets().iterator().next();
             BazelLabel label = new BazelLabel(target);
             String pack = label.getDefaultPackageLabel().getLabel();
             BazelPackageInfo bpi = rootPackage.findByPackage(pack);

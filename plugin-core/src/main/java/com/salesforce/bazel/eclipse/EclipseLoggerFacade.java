@@ -37,8 +37,8 @@ package com.salesforce.bazel.eclipse;
 
 import org.osgi.framework.Bundle;
 
-import com.salesforce.bazel.eclipse.logging.BasicLoggerFacade;
-import com.salesforce.bazel.eclipse.logging.LoggerFacade;
+import com.salesforce.bazel.sdk.logging.BasicLoggerFacade;
+import com.salesforce.bazel.sdk.logging.LoggerFacade;
 
 /**
  * Add Eclipse Platform logging to WARN and ERROR log messages as well as slf4j logging api.

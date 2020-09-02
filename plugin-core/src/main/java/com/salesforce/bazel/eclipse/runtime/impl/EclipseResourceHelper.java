@@ -24,6 +24,8 @@
 package com.salesforce.bazel.eclipse.runtime.impl;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -132,8 +134,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     }
     
     @Override
-    public IResource findMemberInWorkspace(IWorkspaceRoot workspaceRoot, IPath path) {
-        IResource resource = workspaceRoot.findMember(path);        
+    public IResource findMemberInWorkspace(IPath path) {
+        IResource resource = this.getEclipseWorkspaceRoot().findMember(path);        
         //System.out.println("findMemberInWorkspace: path="+path.toOSString()+" member.location="+getResourceAbsolutePath(resource));
         return resource;
     }
@@ -157,14 +159,47 @@ public class EclipseResourceHelper implements ResourceHelper {
         }
     }
     
-    @Override
-    public void setProjectDescription(IProject project, IProjectDescription description) {
-        try {
-            project.setDescription(description, null);
-        } catch (CoreException ce) {
-            throw new IllegalStateException(ce);
+    private static class DeferredProjectDescriptionUpdate {
+        public IProject project;
+        public IProjectDescription description;
+        public DeferredProjectDescriptionUpdate(IProject project, IProjectDescription description) {
+            this.project = project;
+            this.description = description;
         }
     }
+    private List<DeferredProjectDescriptionUpdate> deferredProjectDescriptionUpdates = new ArrayList<>();
+    
+    @Override
+    public boolean setProjectDescription(IProject project, IProjectDescription description) {
+        boolean needsDeferredApplication = false;
+        try {
+            project.setDescription(description, null);
+        } catch (Exception ex) {
+            // this is likely an issue with the resource tree being locked, so we have to defer this update
+            // but it works for any type of issue
+        	BazelPluginActivator.info("Deferring updates to project "+project.getName()+" because workspace is locked.");
+            deferredProjectDescriptionUpdates.add(new DeferredProjectDescriptionUpdate(project, description));
+            needsDeferredApplication = true;
+        }
+        return needsDeferredApplication;
+    }
+    
+    /**
+     * When setProjectDescription() fails, it is likely because the resource tree is locked.
+     * Call this method outside of a locked code path if setProjectDescription() returned true.
+     */
+    public void applyDeferredProjectDescriptionUpdates() {
+        if (this.deferredProjectDescriptionUpdates.size() == 0) {
+            return;
+        }
+        List<DeferredProjectDescriptionUpdate> updates =  this.deferredProjectDescriptionUpdates;
+        this.deferredProjectDescriptionUpdates = new ArrayList<>();
+        for (DeferredProjectDescriptionUpdate update : updates) {
+            // this could theoretically still fail, but we don't want an infinite retry so let this go if it fails
+            setProjectDescription(update.project, update.description);
+        }
+    }
+    
     
     @Override
     public IScopeContext getProjectScopeContext(IProject project) {

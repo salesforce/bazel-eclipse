@@ -1,11 +1,11 @@
 ## Bazel Eclipse Feature: Core Plugin
 
-In the [architecture](../docs/dev/architecture.md) of the Bazel Eclipse Feature, the implementation is spread across 4 Eclipse plugins.
+In the [architecture](../docs/dev/architecture.md) of the Bazel Eclipse Feature, the implementation is spread across a few Eclipse plugins.
 
 - **plugin-core**: this plugin is the one that is integrated with Eclipse APIs, and contains classes such as the activator
-- **plugin-model**: model objects for the various concepts within the feature
-- **plugin-abstractions**: has plain interfaces to stand in the place of Eclipse APIs
-- **plugin-command**: provides the Bazel command line integration
+- **bazel-java-sdk**: handles model abstractions and command execution for Bazel
+
+This package contains the core plugin.
 
 ### Eclipse API Integration
 

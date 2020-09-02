@@ -16,10 +16,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.command.mock.MockCommandBuilder;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
+import com.salesforce.bazel.sdk.command.test.MockCommandBuilder;
 
 @SuppressWarnings("unused")
 public class BazelBuilderFTest {
@@ -42,10 +42,6 @@ public class BazelBuilderFTest {
         IProject builderProject = bazelBuilder.getProject();
         assertEquals(javalib1_IProject.getName(), builderProject.getName());
         
-        List<String> outputLines = new ArrayList<>();
-        outputLines.add("Build succeeded."); // TODO add convenience methods in MockCommandBuilder to add simulated build output
-        List<String> errorLines = new ArrayList<>();
-        mockCommandBuilder.addSimulatedOutput("testBazelBuilder_Success", outputLines, errorLines);
         bazelBuilder.build(1, null, new EclipseWorkProgressMonitor());
     }
     
