@@ -130,21 +130,50 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
         return false;
     }
 
-	@Override
-	public void setProjectReferences(BazelProject thisProject, List<BazelProject> updatedRefList) {
-    	IProject thisEclipseProject = (IProject)thisProject.getProjectImpl();
-    	IProject[] updatedEclipseRefList = new IProject[updatedRefList.size()];
-    	int i = 0;
-    	for (BazelProject ref : updatedRefList) {
-    		updatedEclipseRefList[i] = (IProject)ref.getProjectImpl();
-    		i++;
-    	}    	
+    @Override
+    public void setProjectReferences(BazelProject thisProject, List<BazelProject> updatedRefList) {
+        IProject thisEclipseProject = (IProject)thisProject.getProjectImpl();
         IProjectDescription projectDescription = this.resourceHelper.getProjectDescription(thisEclipseProject);
-        
+
+        IProject[] existingEclipseRefList = projectDescription.getReferencedProjects();
+        IProject[] updatedEclipseRefList = new IProject[updatedRefList.size()];
+        int i = 0;
+        for (BazelProject ref : updatedRefList) {
+            updatedEclipseRefList[i] = (IProject)ref.getProjectImpl();
+            i++;
+        }
+
+        // setProjectDescription requires a lock and should cause a rebuild on the project so only do it if necessary
+        if (!areDifferent(existingEclipseRefList, updatedEclipseRefList)) {
+            return;
+        }
+
         projectDescription.setReferencedProjects(updatedEclipseRefList);
         resourceHelper.setProjectDescription(thisEclipseProject, projectDescription);
-	}
-	
+    }
+
+    /**
+     * Returns true if the arrays of projects contain different projects
+     */
+    private boolean areDifferent(IProject[] list1, IProject[] list2) {
+        if (list1.length != list2.length) {
+            return true;
+        }
+        for (IProject p1 : list1) {
+            boolean found = false;
+            for (IProject p2 : list2) {
+                if (p1.getName().equals(p2.getName())) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * The label that identifies the Bazel package that represents this Eclipse project. This will
      * be the 'module' label when we start supporting multiple BUILD files in a single 'module'.
