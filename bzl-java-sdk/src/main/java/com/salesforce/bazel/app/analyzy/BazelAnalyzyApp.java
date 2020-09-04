@@ -28,7 +28,7 @@ import com.salesforce.bazel.sdk.workspace.ProjectOrderResolverImpl;
 import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
 
 /**
- * This app, as a tool, is not useful. It simply uses the Bazel Java SDK to 
+ * This app, as a tool, is not useful. It simply uses the Bazel Java SDK to
  * read a Bazel workspace, compute the dependency graph, and a few other tasks.
  * <p>
  * The value in this app is the code sample, that shows how to use the SDK to
@@ -37,11 +37,11 @@ import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrat
 public class BazelAnalyzyApp {
 	private static String bazelWorkspacePath;
 	private static File bazelWorkspaceDir;
-	
+
 	// update this to your local environment
 	private static final String BAZEL_EXECUTABLE = "/usr/local/bin/bazel";
-	private static final String ASPECT_LOCATION = "/Users/plaird/dev/bazel-eclipse/bazel-java-sdk/aspect";
-	
+	private static final String ASPECT_LOCATION = "/Users/plaird/dev/bazel-eclipse/bzl-java-sdk/aspect";
+
 	private static BazelWorkspaceScanner workspaceScanner = new BazelWorkspaceScanner();
 
 	public static void main(String[] args) throws Exception {
@@ -55,19 +55,19 @@ public class BazelAnalyzyApp {
 		CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
 		BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = new BazelWorkspaceCommandRunner(bazelExecutable, aspectLocation,
 				commandBuilder, consoleFactory, bazelWorkspaceDir);
-		
+
 		// create the Bazel workspace SDK objects
 		String workspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspacePath); // TODO use a File arg
 		OperatingEnvironmentDetectionStrategy osDetector =  new RealOperatingEnvironmentDetectionStrategy();
 		BazelWorkspace bazelWorkspace = new BazelWorkspace(workspaceName, bazelWorkspaceDir, osDetector, bazelWorkspaceCmdRunner);
 		BazelWorkspaceCommandOptions bazelOptions = bazelWorkspace.getBazelWorkspaceCommandOptions();
 		printBazelOptions(bazelOptions);
-		
+
 		// scan for Bazel packages
 		BazelPackageInfo rootPackage = workspaceScanner.getPackages(bazelWorkspaceDir);
 		printPackageListToStdOut(rootPackage);
 		List<BazelPackageLocation> allPackages = rootPackage.gatherChildren();
-		
+
 		// run the Aspects to compute the dependency data
 		AspectPackageInfos aspects = new AspectPackageInfos();
 		Map<String, Set<AspectPackageInfo>> aspectMap = bazelWorkspaceCmdRunner.getAspectPackageInfoForPackages(allPackages, null, "BazelBuildyApp");
@@ -75,21 +75,21 @@ public class BazelAnalyzyApp {
 			Set<AspectPackageInfo> aspectsForTarget = aspectMap.get(target);
 			aspects.addAll(aspectsForTarget);
 		}
-		
+
 		// use the dependency data to interact with the dependency graph
 		BazelDependencyGraph depGraph = AspectDependencyGraphBuilder.build(aspects, false);
 		Set<String> rootLabels = depGraph.getRootLabels();
 		printRootLabels(rootLabels);
-				
+
 		// put them in the right order for analysis
 		ProjectOrderResolver projectOrderResolver = new ProjectOrderResolverImpl();
         Iterable<BazelPackageLocation> orderedPackages = projectOrderResolver.computePackageOrder(rootPackage, aspects);
         printPackageListOrder(orderedPackages);
 	}
-	
-	
+
+
 	// HELPERS
-	
+
 	private static void parseArgs(String[] args) {
 		if (args.length < 1) {
 			throw new IllegalArgumentException("Usage: java -jar buildyapp.jar [Bazel workspace absolute path]");
@@ -97,7 +97,7 @@ public class BazelAnalyzyApp {
 		bazelWorkspacePath = args[0];
 		bazelWorkspaceDir = new File(bazelWorkspacePath);
 		bazelWorkspaceDir = BazelPathHelper.getCanonicalFileSafely(bazelWorkspaceDir);
-		
+
 		if (!bazelWorkspaceDir.exists()) {
 			throw new IllegalArgumentException("Usage: java -jar buildyapp.jar [Bazel workspace absolute path]");
 		}
@@ -105,17 +105,17 @@ public class BazelAnalyzyApp {
 			throw new IllegalArgumentException("Usage: java -jar buildyapp.jar [Bazel workspace absolute path]");
 		}
 	}
-	
+
 	private static void printBazelOptions(BazelWorkspaceCommandOptions bazelOptions) {
 		System.out.println("\nBazel configuration options for the workspace:");
 		System.out.println(bazelOptions.toString());
 	}
-	
+
 	private static void printPackageListToStdOut(BazelPackageInfo rootPackage) {
 		System.out.println("\nFound packages eligible for import:");
 		printPackage(rootPackage, "");
 	}
-	
+
 	private static void printPackage(BazelPackageInfo pkg, String prefix) {
 		if (pkg.isWorkspaceRoot()) {
 			System.out.println("WORKSPACE");

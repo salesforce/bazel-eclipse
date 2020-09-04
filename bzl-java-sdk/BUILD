@@ -1,7 +1,7 @@
 load("//tools:feature_version_def.bzl", "VERSION")
 
 java_library(
-    name = "bazel-java-sdk",
+    name = "bzl-java-sdk",
     srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
@@ -19,7 +19,7 @@ java_library(
     ]),
     visibility = ["//visibility:public"],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
         ":test-workspace-support",
 
         "//plugin-libs/plugin-testdeps:org_junit_junit",
@@ -49,7 +49,7 @@ java_test(
     name = "AspectPackageInfosTest",
     srcs = ["src/test/java/com/salesforce/bazel/sdk/aspect/AspectPackageInfosTest.java",],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
         "//plugin-libs/plugin-deps:com_google_guava",
     ],
 )
@@ -96,7 +96,7 @@ java_test(
     name = "BazelProjectInfoTest",
     srcs = ["src/test/java/com/salesforce/bazel/sdk/model/BazelProjectInfoTest.java"],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
 
         "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-testdeps:com_google_truth",
@@ -110,7 +110,7 @@ java_test(
     name = "BazelBuildFileHelperTest",
     srcs = ["src/test/java/com/salesforce/bazel/sdk/model/BazelBuildFileHelperTest.java"],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
 
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
@@ -132,7 +132,7 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/sdk/logging/CaptureLoggerFacade.java",
             "src/test/java/com/salesforce/bazel/sdk/logging/LogHelperTest.java"],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
 
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
@@ -156,7 +156,7 @@ java_test(
         "src/test/java/com/salesforce/bazel/sdk/model/**/*.java",
     ]),
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
 
         "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-deps:org_json_json",
@@ -171,7 +171,7 @@ java_test(
     name = "BazelCommandArgsTest",
     srcs = ["src/test/java/com/salesforce/bazel/sdk/command/BazelCommandArgsTest.java"],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
 
         "//plugin-libs/plugin-testdeps:org_junit_junit",
         "//plugin-libs/plugin-testdeps:com_google_truth",
@@ -186,7 +186,7 @@ java_test(
        "src/test/java/com/salesforce/bazel/sdk/command/BazelLauncherBuilderTest.java",
     ],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
         ":test-command-mocks",
         ":test-workspace-support",
 
@@ -202,7 +202,7 @@ java_test(
     name = "BazelWorkspaceScannerTest",
     srcs = ["src/test/java/com/salesforce/bazel/sdk/workspace/BazelWorkspaceScannerTest.java"],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
         ":test-workspace-support",
     ],
     runtime_deps = [
@@ -220,7 +220,7 @@ java_test(
        "src/test/java/com/salesforce/bazel/sdk/command/BazelWorkspaceCommandRunnerTest.java",
     ],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
         ":test-command-mocks",
         ":test-workspace-support",
 
@@ -238,7 +238,7 @@ java_test(
        "src/test/java/com/salesforce/bazel/sdk/command/ShellCommandTest.java",
     ],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
 
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
@@ -252,7 +252,7 @@ java_test(
        "src/test/java/com/salesforce/bazel/sdk/command/internal/BazelWorkspaceAspectHelperTest.java",
     ],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
         ":test-command-mocks",
         ":test-workspace-support",
 
@@ -270,7 +270,7 @@ java_test(
        "src/test/java/com/salesforce/bazel/sdk/command/internal/BazelCommandExecutorTest.java",
     ],
     deps = [
-        ":bazel-java-sdk",
+        ":bzl-java-sdk",
         ":test-command-mocks",
         ":test-workspace-support",
 

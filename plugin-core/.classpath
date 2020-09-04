@@ -13,12 +13,12 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/plugin-deps"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/bazel-java-sdk"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/plugin-testdeps">
 		<attributes>
 			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/bazel-java-sdk"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
