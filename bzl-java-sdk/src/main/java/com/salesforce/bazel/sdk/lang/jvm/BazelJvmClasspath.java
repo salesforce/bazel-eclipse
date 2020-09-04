@@ -189,7 +189,7 @@ public class BazelJvmClasspath {
                             
                             // now make a project reference between this project and the other project; this allows for features like
                             // code refactoring across projects to work correctly
-                            response.classpathProjectReferences.add(otherProject);
+                            addProjectReference(response.classpathProjectReferences, otherProject);
                         }
                     }
                 }
@@ -290,6 +290,16 @@ public class BazelJvmClasspath {
             i++;
         }
         return entries;
+    }
+    
+    private void addProjectReference(List<BazelProject> projectList, BazelProject addThis) {
+    	for (BazelProject existingProject : projectList) {
+    		if (existingProject.name.equals(addThis.name)) {
+    			// we already have a reference to this project
+    			return;
+    		}
+    	}
+    	projectList.add(addThis);
     }
 
     private void continueOrThrow(Throwable th) {
