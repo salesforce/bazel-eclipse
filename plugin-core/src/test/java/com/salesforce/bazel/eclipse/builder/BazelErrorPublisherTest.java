@@ -21,7 +21,7 @@ import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.project.BazelProject;
 
 public class BazelErrorPublisherTest {
-    
+
     @Test
     public void testAssignErrorsToOwningProject() throws Exception {
         IProject project1 = getMockedProject("P1").getProject();
@@ -35,8 +35,8 @@ public class BazelErrorPublisherTest {
         labelToProject.put(l2, new BazelProject("P2", project2));
         IProject rootProject = getMockedProject("ROOT").getProject();
 
-        Map<IProject, List<BazelProblem>> projectToErrors =
-                BazelErrorPublisher.assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, rootProject);
+        Map<IProject, List<BazelProblem>> projectToErrors = BazelErrorPublisher
+                .assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, rootProject);
 
         assertEquals(2, projectToErrors.size());
         Collection<BazelProblem> p1Errors = projectToErrors.get(project1);
@@ -52,7 +52,7 @@ public class BazelErrorPublisherTest {
         assertEquals(22, p2Error.getLineNumber());
         assertEquals("blah", p2Error.getDescription());
     }
-    
+
     @Test
     public void testUnassignedErrors() throws Exception {
         IProject project1 = getMockedProject("P1").getProject();
@@ -62,8 +62,8 @@ public class BazelErrorPublisherTest {
         BazelProblem error2 = BazelProblem.createError("projects/libs/lib2/src/Test2.java", 22, "blah");
         IProject rootProject = getMockedProject("ROOT").getProject();
 
-        Map<IProject, List<BazelProblem>> projectToErrors =
-                BazelErrorPublisher.assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, rootProject);
+        Map<IProject, List<BazelProblem>> projectToErrors = BazelErrorPublisher
+                .assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, rootProject);
 
         assertEquals(2, projectToErrors.size());
         Collection<BazelProblem> rootLevelErrors = projectToErrors.get(rootProject);
@@ -74,11 +74,11 @@ public class BazelErrorPublisherTest {
         assertTrue(rootError.getDescription().contains("projects/libs/lib2/src/Test2.java"));
         assertTrue(rootError.getDescription().contains("blah"));
     }
-    
+
     private IJavaProject getMockedProject(String projectName) throws Exception {
-        return getMockedProject(projectName, new String[]{});
+        return getMockedProject(projectName, new String[] {});
     }
-    
+
     private IJavaProject getMockedProject(String projectName, String[] requiredProjectNames) throws Exception {
         IJavaProject javaProject = mock(IJavaProject.class);
         when(javaProject.getRequiredProjectNames()).thenReturn(requiredProjectNames);

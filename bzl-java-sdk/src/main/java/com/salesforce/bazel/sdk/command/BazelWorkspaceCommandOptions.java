@@ -8,23 +8,22 @@ import java.util.TreeMap;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
- * Holds the list of command options defined for the Workspace.
- * Command options come from .bazelrc file(s) (and additional files imported therein) found
- * in the standard file system locations.
+ * Holds the list of command options defined for the Workspace. Command options come from .bazelrc file(s) (and
+ * additional files imported therein) found in the standard file system locations.
  * <p>
  * https://docs.bazel.build/versions/2.0.0/guide.html#bazelrc
  * <p>
- * To see the list of options used for your workspace, run this command:  bazel test --announce_rc
- * It probably seems odd to use 'test' as the verb, but that provides the most visibility into the set options.
+ * To see the list of options used for your workspace, run this command: bazel test --announce_rc It probably seems odd
+ * to use 'test' as the verb, but that provides the most visibility into the set options.
  * <p>
- * This gets populated at runtime by BazelWorkspaceMetadataStrategy.populateBazelWorkspaceCommandOptions() 
+ * This gets populated at runtime by BazelWorkspaceMetadataStrategy.populateBazelWorkspaceCommandOptions()
  */
 public class BazelWorkspaceCommandOptions {
 
     private BazelWorkspace bazelWorkspace;
     private Map<String, String> allExplicitOptions = new HashMap<>();
     private Map<String, Map<String, String>> contextualExplicitOptions = new HashMap<>();
-    
+
     public BazelWorkspaceCommandOptions(BazelWorkspace bazelWorkspace) {
         this.bazelWorkspace = bazelWorkspace;
     }
@@ -37,8 +36,8 @@ public class BazelWorkspaceCommandOptions {
     }
 
     /**
-     * Contextual options are indexed based on their source context (e.g. test, build)
-     * This method does not follow Inherited conventions.
+     * Contextual options are indexed based on their source context (e.g. test, build) This method does not follow
+     * Inherited conventions.
      */
     public String getContextualOption(String context, String optionName) {
         Map<String, String> contextualMap = contextualExplicitOptions.get(context);
@@ -53,28 +52,28 @@ public class BazelWorkspaceCommandOptions {
      */
     public String getOptionWithDefault(String optionName) {
         String optionValue = allExplicitOptions.get(optionName);
-        
+
         if (optionValue == null) {
             // apply the default TODO build the dictionary of default values for options
         }
-        
+
         return optionValue;
     }
 
     /**
-     * Contextual options are indexed based on their source context (e.g. test, build)
-     * This method does not follow Inherited conventions.
+     * Contextual options are indexed based on their source context (e.g. test, build) This method does not follow
+     * Inherited conventions.
      */
     public String getContextualOptionWithDefault(String context, String optionName) {
         String optionValue = getContextualOption(context, optionName);
-        
+
         if (optionValue == null) {
             // apply the default TODO build the dictionary of default values for options
         }
 
         return optionValue;
     }
-    
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("BazelWorkspaceCommandOptions: workspace_name:");
@@ -86,10 +85,10 @@ public class BazelWorkspaceCommandOptions {
             sb.append(allExplicitOptions.get(optionName));
             sb.append("]");
         }
-        
+
         return sb.toString();
     }
-    
+
     /**
      * Method to parse options from a 'bazel test' command run with the --announce_rc option
      */
@@ -117,15 +116,15 @@ public class BazelWorkspaceCommandOptions {
             // some lines are prefixed with "Inherited", remove that
             int inheritedIndex = line.indexOf("Inherited");
             if (inheritedIndex != -1) {
-                line = line.substring(inheritedIndex+10);
+                line = line.substring(inheritedIndex + 10);
                 line = line.trim();
                 optionsIndex = line.indexOf("options:");
             }
 
             // pick apart the context name from the sequence of options
-            String optionsContext = line.substring(1, optionsIndex-2);  // 'build' options: ...         => build
-            String optionsFullString = line.substring(optionsIndex+9);  // 'common' options: --isatty=1 => --isatty=1
-            
+            String optionsContext = line.substring(1, optionsIndex - 2); // 'build' options: ...         => build
+            String optionsFullString = line.substring(optionsIndex + 9); // 'common' options: --isatty=1 => --isatty=1
+
             String[] optionsSplitList = optionsFullString.split(" --");
             for (String option : optionsSplitList) {
                 if (option.startsWith("--")) {
@@ -134,7 +133,7 @@ public class BazelWorkspaceCommandOptions {
                 }
                 String[] optionTokens = option.split("=");
                 if (optionTokens.length > 2) {
-                    System.err.println("Did not know how to parse option ["+option+"] from line "+line);
+                    System.err.println("Did not know how to parse option [" + option + "] from line " + line);
                     continue;
                 } else if (optionTokens.length == 1) {
                     // if only the option name is provided, the value is implied to be 'true' (e.g. --stamp is interpreted as --stamp=true)
@@ -147,7 +146,7 @@ public class BazelWorkspaceCommandOptions {
             }
         }
     }
-    
+
     private Map<String, String> getContextualMap(String context) {
         Map<String, String> contextualMap = this.contextualExplicitOptions.get(context);
         if (contextualMap == null) {

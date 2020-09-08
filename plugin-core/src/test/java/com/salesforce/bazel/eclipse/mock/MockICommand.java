@@ -28,9 +28,10 @@ import java.util.Map;
 import org.eclipse.core.resources.ICommand;
 
 public class MockICommand implements ICommand {
-    private static final String UOE_MSG = "MockICommand is pay as you go, you have hit a method that is not implemented."; 
+    private static final String UOE_MSG =
+            "MockICommand is pay as you go, you have hit a method that is not implemented.";
     private String builderName;
-    
+
     @Override
     public String getBuilderName() {
         return builderName;
@@ -41,8 +42,6 @@ public class MockICommand implements ICommand {
         this.builderName = builderName;
     }
 
-
-    
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
 

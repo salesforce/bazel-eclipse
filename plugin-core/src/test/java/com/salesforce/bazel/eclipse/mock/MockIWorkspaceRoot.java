@@ -53,55 +53,56 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 
 public class MockIWorkspaceRoot implements IWorkspaceRoot {
-    private static final String UOE_MSG = "MockIWorkspaceRoot is pay as you go, you have hit a method that is not implemented."; 
+    private static final String UOE_MSG =
+            "MockIWorkspaceRoot is pay as you go, you have hit a method that is not implemented.";
 
     private MockEclipse mockEclipse;
     private File eclipseWorkspaceDir;
-    
+
     /**
      * This is where we stored the linked folder bookkeeping.
      * <p>
-     * The key is the virtual path in the workspace:         /Users/plaird/dev/runtime-InnerEclipse-413/apple-api/src/main/java
-     * The value is the actual path in the Bazel workspace:  /Users/plaird/dev/simplejava/projects/libs/apple/apple-api/src/main/java
+     * The key is the virtual path in the workspace: /Users/plaird/dev/runtime-InnerEclipse-413/apple-api/src/main/java
+     * The value is the actual path in the Bazel workspace:
+     * /Users/plaird/dev/simplejava/projects/libs/apple/apple-api/src/main/java
      * <p>
-     * Note that the path keys are made absolute before storing in the map, and you must do the same prior to lookups: 
-     *   IPath path = ...
-     *   linkedFolders.get(path.makeAbsolute().toOSString()); 
+     * Note that the path keys are made absolute before storing in the map, and you must do the same prior to lookups:
+     * IPath path = ... linkedFolders.get(path.makeAbsolute().toOSString());
      */
     public final Map<String, IFolder> linkedFolders = new TreeMap<>();
 
     /**
      * This is where we stored the linked file bookkeeping.
      * <p>
-     * The key is the virtual path in the workspace:         /Users/plaird/dev/runtime-InnerEclipse-413/apple-api/src/main/java
-     * The value is the actual path in the Bazel workspace:  /Users/plaird/dev/simplejava/projects/libs/apple/apple-api/src/main/java
+     * The key is the virtual path in the workspace: /Users/plaird/dev/runtime-InnerEclipse-413/apple-api/src/main/java
+     * The value is the actual path in the Bazel workspace:
+     * /Users/plaird/dev/simplejava/projects/libs/apple/apple-api/src/main/java
      * <p>
-     * Note that the path keys are made absolute before storing in the map, and you must do the same prior to lookups: 
-     *   IPath path = ...
-     *   linkedFiles.get(path.makeAbsolute().toOSString()); 
+     * Note that the path keys are made absolute before storing in the map, and you must do the same prior to lookups:
+     * IPath path = ... linkedFiles.get(path.makeAbsolute().toOSString());
      */
     public final Map<String, IFile> linkedFiles = new TreeMap<>();
 
-    
-    
     public MockIWorkspaceRoot(MockEclipse mockEclipse, File eclipseWorkspaceDir) {
         this.mockEclipse = mockEclipse;
         this.eclipseWorkspaceDir = eclipseWorkspaceDir;
     }
-    
+
     // IMPLEMENTED METHODS
 
     @Override
     public IResource findMember(IPath path) {
         IResource res = null;
         if (path == null) {
-            System.err.println("MockIWorkspaceRoot.findMember was called with a null 'path' parameter, which is suspicious.");
+            System.err.println(
+                "MockIWorkspaceRoot.findMember was called with a null 'path' parameter, which is suspicious.");
             return null;
         }
         String[] segments = path.segments();
 
         if (segments.length == 0) {
-            System.err.println("MockIWorkspaceRoot.findMember was called with an empty 'path' parameter, which is suspicious.");
+            System.err.println(
+                "MockIWorkspaceRoot.findMember was called with an empty 'path' parameter, which is suspicious.");
         } else if (segments.length == 1) {
             // if there is only one token, it is a project name and we will return the IProject
             // which will have a location in the Eclipse workspace directory
@@ -115,7 +116,7 @@ public class MockIWorkspaceRoot implements IWorkspaceRoot {
                 res = linkedFiles.get(path.makeAbsolute().toOSString());
             }
         }
-        
+
         return res;
     }
 
@@ -134,7 +135,6 @@ public class MockIWorkspaceRoot implements IWorkspaceRoot {
         return mockEclipse.getImportedProjectsList().toArray(new IProject[] {});
     }
 
-    
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
 

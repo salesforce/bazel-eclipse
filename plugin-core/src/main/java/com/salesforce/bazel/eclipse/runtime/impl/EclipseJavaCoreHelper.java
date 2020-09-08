@@ -95,8 +95,9 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
             IClasspathAttribute testAttr = JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true");
             extraAttributes = new IClasspathAttribute[] { testAttr };
         }
-        
-        IClasspathEntry entry = JavaCore.newSourceEntry(sourcePath, inclusionPatterns, exclusionPatterns, outputPath, extraAttributes); 
+
+        IClasspathEntry entry =
+                JavaCore.newSourceEntry(sourcePath, inclusionPatterns, exclusionPatterns, outputPath, extraAttributes);
         return entry;
     }
 
@@ -111,7 +112,8 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
     }
 
     @Override
-    public IClasspathEntry newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath, boolean isTestLib) {
+    public IClasspathEntry newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath,
+            boolean isTestLib) {
         IClasspathAttribute[] extraAttributes = {};
         if (isTestLib) {
             IClasspathAttribute testAttr = JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true");
@@ -120,8 +122,8 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
         IAccessRule[] accessRules = null;
         boolean isExported = false;
 
-        return JavaCore.newLibraryEntry(path, sourceAttachmentPath, sourceAttachmentRootPath, accessRules, extraAttributes,
-            isExported);
+        return JavaCore.newLibraryEntry(path, sourceAttachmentPath, sourceAttachmentRootPath, accessRules,
+            extraAttributes, isExported);
     }
 
     @Override
@@ -130,7 +132,7 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         IWorkspaceRoot eclipseWorkspaceRoot = resourceHelper.getEclipseWorkspaceRoot();
         try {
-            IJavaModel eclipseWorkspaceJavaModel = this.getJavaModelForWorkspace(eclipseWorkspaceRoot); 
+            IJavaModel eclipseWorkspaceJavaModel = this.getJavaModelForWorkspace(eclipseWorkspaceRoot);
             IJavaProject[] javaProjects = eclipseWorkspaceJavaModel.getJavaProjects();
             List<IJavaProject> bazelProjects = new ArrayList<>(javaProjects.length);
             for (IJavaProject candidate : javaProjects) {

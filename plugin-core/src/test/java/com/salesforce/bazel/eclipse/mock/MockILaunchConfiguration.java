@@ -41,7 +41,8 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchDelegate;
 
 public class MockILaunchConfiguration implements ILaunchConfiguration {
-    private static final String UOE_MSG = "MockILaunchConfiguration is pay as you go, you have hit a method that is not implemented.";
+    private static final String UOE_MSG =
+            "MockILaunchConfiguration is pay as you go, you have hit a method that is not implemented.";
     public Map<String, Object> attributes = new TreeMap<>();
 
     // IMPLEMENTED METHODS
@@ -89,7 +90,6 @@ public class MockILaunchConfiguration implements ILaunchConfiguration {
     public boolean hasAttribute(String attributeName) throws CoreException {
         return attributes.containsKey(attributeName);
     }
-
 
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.

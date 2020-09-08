@@ -94,7 +94,6 @@ public class BazelPackageInfoTest {
         new BazelPackageInfo(root, "nestedWS");
     }
 
-
     // HELPERS
 
     private BazelPackageInfo getRootBazelPackageInfo(boolean useAltWsFilename) throws IOException {

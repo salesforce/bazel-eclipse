@@ -32,8 +32,8 @@ import com.salesforce.bazel.sdk.console.CommandConsole;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 
 /**
- * Implementation of CommandBuilder that builds real command line commands (as opposed to
- * mock commands used in testing). 
+ * Implementation of CommandBuilder that builds real command line commands (as opposed to mock commands used in
+ * testing).
  * <p>
  * It creates instances of type ShellCommand.
  */
@@ -48,13 +48,13 @@ public class ShellCommandBuilder extends CommandBuilder {
      */
     public ShellCommand build_impl() throws IOException {
         Preconditions.checkNotNull(directory);
-        ImmutableList<String> iargs = ImmutableList.copyOf(this.args); 
+        ImmutableList<String> iargs = ImmutableList.copyOf(this.args);
         CommandConsole console = consoleName == null ? null : consoleFactory.get(consoleName,
             "Running " + String.join(" ", args) + " from " + directory.toString());
-        
-        ShellCommand command = new ShellCommand(console, directory, iargs, stdoutSelector, stderrSelector, stdout, stderr,
-            progressMonitor, timeoutMS);
-        
+
+        ShellCommand command = new ShellCommand(console, directory, iargs, stdoutSelector, stderrSelector, stdout,
+                stderr, progressMonitor, timeoutMS);
+
         return command;
     }
 

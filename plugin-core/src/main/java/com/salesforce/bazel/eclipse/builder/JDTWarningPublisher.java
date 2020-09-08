@@ -29,9 +29,10 @@ import com.salesforce.bazel.sdk.model.BazelProblem;
  *
  */
 class JDTWarningPublisher implements IElementChangedListener {
-    
+
     // maps a project name to a map of filePath -> BazelProblems in that file
-    private final ConcurrentHashMap<String, Map<String, List<BazelProblem>>> projectNameToProblems = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Map<String, List<BazelProblem>>> projectNameToProblems =
+            new ConcurrentHashMap<>();
 
     @Override
     public void elementChanged(ElementChangedEvent event) {
@@ -54,7 +55,7 @@ class JDTWarningPublisher implements IElementChangedListener {
             }
         }
     }
-    
+
     public void publish(Collection<IProject> projects, IProgressMonitor monitor) {
         for (IProject project : projects) {
             Map<String, List<BazelProblem>> filePathToWarnings = projectNameToProblems.remove(project.toString());
@@ -99,7 +100,7 @@ class JDTWarningPublisher implements IElementChangedListener {
         }
         int i = path.indexOf(File.separator);
         if (i != -1) {
-            path = path.substring(i+1);
+            path = path.substring(i + 1);
         }
         return path;
     }

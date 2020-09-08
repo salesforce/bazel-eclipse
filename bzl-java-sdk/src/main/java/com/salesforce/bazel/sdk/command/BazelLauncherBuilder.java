@@ -36,8 +36,8 @@ import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
- * Convenience class that manufactures Bazel Command instances used for Bazel 'run' or 'test' commands
- * (e.g. for Eclipse Launch Configs).
+ * Convenience class that manufactures Bazel Command instances used for Bazel 'run' or 'test' commands (e.g. for Eclipse
+ * Launch Configs).
  */
 public class BazelLauncherBuilder {
 
@@ -67,14 +67,13 @@ public class BazelLauncherBuilder {
         this.outputDirectoryBuilder = Objects.requireNonNull(outputDirectoryBuilder);
     }
 
-    BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder,
-            BazelLabel bazelLabel, BazelTargetKind targetKind, List<String> bazelArgs) {
+    BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder, BazelLabel bazelLabel,
+            BazelTargetKind targetKind, List<String> bazelArgs) {
         this(bazelRunner, commandBuilder, bazelLabel, targetKind, bazelArgs, new BazelOutputDirectoryBuilder());
     }
 
-    BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder,
-        BazelLabel bazelLabel, BazelTargetKind targetKind, List<String> bazelArgs,
-        BazelOutputDirectoryBuilder outputDirectoryBuilder) {
+    BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder, BazelLabel bazelLabel,
+            BazelTargetKind targetKind, List<String> bazelArgs, BazelOutputDirectoryBuilder outputDirectoryBuilder) {
         this.bazelCommandRunner = Objects.requireNonNull(bazelRunner);
         this.commandBuilder = Objects.requireNonNull(commandBuilder);
         this.bazelLabel = Objects.requireNonNull(bazelLabel);
@@ -83,23 +82,22 @@ public class BazelLauncherBuilder {
         this.outputDirectoryBuilder = Objects.requireNonNull(outputDirectoryBuilder);
     }
 
-
     // SETTERS
 
     public BazelLauncherBuilder setLabel(BazelLabel bazelLabel) {
-         this.bazelLabel = bazelLabel;
-         return this;
+        this.bazelLabel = bazelLabel;
+        return this;
     }
 
     public BazelLauncherBuilder setTargetKind(BazelTargetKind targetKind) {
         this.targetKind = targetKind;
         return this;
-   }
+    }
 
     public BazelLauncherBuilder setArgs(List<String> bazelArgs) {
         this.bazelArgs = bazelArgs;
         return this;
-   }
+    }
 
     public BazelLauncherBuilder setDebugMode(boolean isDebugMode, String debugHost, int debugPort) {
         this.isDebugMode = isDebugMode;
@@ -107,7 +105,6 @@ public class BazelLauncherBuilder {
         this.debugPort = debugPort;
         return this;
     }
-
 
     // BUILD
 
@@ -118,8 +115,7 @@ public class BazelLauncherBuilder {
         Objects.requireNonNull(bazelArgs);
 
         try {
-            return targetKind.isTestable()
-                    ? getBazelTestCommand(bazelLabel, isDebugMode, bazelArgs)
+            return targetKind.isTestable() ? getBazelTestCommand(bazelLabel, isDebugMode, bazelArgs)
                     : getBazelRunCommand(bazelLabel, isDebugMode, bazelArgs);
         } catch (IOException | BazelCommandLineToolConfigurationException ex) {
             throw new IllegalStateException(ex);
@@ -152,12 +148,8 @@ public class BazelLauncherBuilder {
         File workspaceDirectory = this.bazelCommandRunner.getBazelWorkspaceRootDirectory();
         String consoleName = ConsoleType.WORKSPACE.getConsoleName(workspaceDirectory);
 
-        return commandBuilder
-                .setConsoleName(consoleName)
-                .setDirectory(workspaceDirectory)
-                .addArguments(Collections.unmodifiableList(args))
-                .setProgressMonitor(progressMonitor)
-                .build();
+        return commandBuilder.setConsoleName(consoleName).setDirectory(workspaceDirectory)
+                .addArguments(Collections.unmodifiableList(args)).setProgressMonitor(progressMonitor).build();
     }
 
     /**
@@ -191,13 +183,9 @@ public class BazelLauncherBuilder {
         File workspaceDirectory = this.bazelCommandRunner.getBazelWorkspaceRootDirectory();
         String consoleName = ConsoleType.WORKSPACE.getConsoleName(workspaceDirectory);
 
-        return commandBuilder
-                .setConsoleName(consoleName)
-                .setDirectory(workspaceDirectory)
+        return commandBuilder.setConsoleName(consoleName).setDirectory(workspaceDirectory)
                 .addArguments(BazelWorkspaceCommandRunner.getBazelExecutablePath())
-                .addArguments(Collections.unmodifiableList(args))
-                .setProgressMonitor(progressMonitor)
-                .build();
+                .addArguments(Collections.unmodifiableList(args)).setProgressMonitor(progressMonitor).build();
     }
 
 }

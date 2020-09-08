@@ -41,7 +41,7 @@ import com.salesforce.bazel.eclipse.wizard.BazelProjectImporter;
 public class ProjectViewEditor extends AbstractDecoratedTextEditor {
 
     private static final String CONFIRMATION_TEXT =
-        "Update the Bazel Project(s) in your Workspace to match the content of this file?";
+            "Update the Bazel Project(s) in your Workspace to match the content of this file?";
 
     private static final LogHelper LOG = LogHelper.log(ProjectViewEditor.class);
 
@@ -91,10 +91,13 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
             List<BazelPackageLocation> currentlyImportedPackages = getPackages(currentlyImportedProjects);
             List<BazelPackageLocation> packagesToImport = projectView.getPackages();
 
-            if (currentlyImportedPackages != null && new HashSet<>(currentlyImportedPackages).equals(new HashSet<>(packagesToImport))) {
-                LOG.info("The Bazel Packages in the " + ProjectViewConstants.PROJECT_VIEW_FILE_NAME + " file match the set of Eclipse Projects currently imported");
+            if (currentlyImportedPackages != null
+                    && new HashSet<>(currentlyImportedPackages).equals(new HashSet<>(packagesToImport))) {
+                LOG.info("The Bazel Packages in the " + ProjectViewConstants.PROJECT_VIEW_FILE_NAME
+                        + " file match the set of Eclipse Projects currently imported");
             } else {
-                boolean ok = MessageDialog.openConfirm(this.getSite().getShell(), "Update Imported Projects", CONFIRMATION_TEXT);
+                boolean ok = MessageDialog.openConfirm(this.getSite().getShell(), "Update Imported Projects",
+                    CONFIRMATION_TEXT);
                 if (ok) {
                     deleteProjects(currentlyImportedProjects);
                     BazelProjectImporter.run(this.rootPackage, packagesToImport);
@@ -111,7 +114,8 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
             BazelProject bazelProject = bazelProjectManager.getProject(projectName);
 
             // get the target to get at the package path
-            Set<String> targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets();
+            Set<String> targets =
+                    bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets();
 
             if (targets == null || targets.isEmpty()) {
                 // this shouldn't happen, but if it does, we do not want to blow up here
@@ -119,7 +123,8 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
                 return null;
             }
             // TODO it is possible there are no targets configured for a project
-            String target = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets().iterator().next();
+            String target = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets()
+                    .iterator().next();
             BazelLabel label = new BazelLabel(target);
             packageLocations.add(new ProjectViewPackageLocation(this.rootDirectory, label.getPackagePath()));
         }

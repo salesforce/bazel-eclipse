@@ -84,19 +84,23 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
 
         String fqClassName = packageName + "." + fileName;
         IWorkspaceRoot eclipseWorkspaceRoot = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot();
-        IJavaModel eclipseJavaModel = BazelPluginActivator.getJavaCoreHelper().getJavaModelForWorkspace(eclipseWorkspaceRoot);
+        IJavaModel eclipseJavaModel =
+                BazelPluginActivator.getJavaCoreHelper().getJavaModelForWorkspace(eclipseWorkspaceRoot);
         IProject project = eclipseJavaModel.getJavaProject(projectName).getProject();
 
         Collection<AspectPackageInfo> apis = support.getLaunchableAspectPackageInfosForProject(project);
-        Collection<AspectPackageInfo> matchingInfos = apis.stream().filter(api -> fqClassName.equals(api.getMainClass())).collect(Collectors.toList());
+        Collection<AspectPackageInfo> matchingInfos =
+                apis.stream().filter(api -> fqClassName.equals(api.getMainClass())).collect(Collectors.toList());
         if (matchingInfos.isEmpty()) {
             // bazel allows a java binary rule to specify the main_class as the target name, so we should also look at the name of the targets
             // however bazel does not like the common "src/main/java" root:
             // error: "main_class was not provided and cannot be inferred: source path doesn't include a known root (java, javatests, src, testsrc)"
-            throw new IllegalStateException("Unable to find a java_binary target that has a main_class of " + fqClassName);
+            throw new IllegalStateException(
+                    "Unable to find a java_binary target that has a main_class of " + fqClassName);
         } else if (matchingInfos.size() > 1) {
             // surface correctly
-            throw new IllegalStateException("Found multiple java_binary targets that have a main_class of " + fqClassName + " - create a launch configuration manually");
+            throw new IllegalStateException("Found multiple java_binary targets that have a main_class of "
+                    + fqClassName + " - create a launch configuration manually");
         }
 
         ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();

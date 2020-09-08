@@ -1,8 +1,8 @@
 package com.salesforce.bazel.sdk.workspace;
 
 /**
- * Real implementation of OperatingEnvironmentDetectionStrategy to be used when running in a tool.
- * It looks at system properties to determine the operating environment.
+ * Real implementation of OperatingEnvironmentDetectionStrategy to be used when running in a tool. It looks at system
+ * properties to determine the operating environment.
  *
  */
 public class RealOperatingEnvironmentDetectionStrategy implements OperatingEnvironmentDetectionStrategy {
@@ -14,7 +14,7 @@ public class RealOperatingEnvironmentDetectionStrategy implements OperatingEnvir
             osName = System.getProperty("os.name", "unknown");
         }
         osName = osName.toLowerCase();
-        
+
         return osName;
     }
 

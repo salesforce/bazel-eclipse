@@ -49,67 +49,67 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
 public class MockResourceHelper implements ResourceHelper {
-    
+
     /**
-     * List of mock projects that will be used during the test. Your test might add projects
-     * that will be retrieved during the test if you are testing 'existing' projects use cases. 
-     * The key is the project name, and the value is the mock project.
-     * For projects that are being created new during the test, don't add the project for best results.
+     * List of mock projects that will be used during the test. Your test might add projects that will be retrieved
+     * during the test if you are testing 'existing' projects use cases. The key is the project name, and the value is
+     * the mock project. For projects that are being created new during the test, don't add the project for best
+     * results.
      */
     public Map<String, IProject> mockProjects = new TreeMap<>();
-    
+
     /**
-     * Preference objects that are kept for each project.
-     * The key is the project name, and the value is the mock prefs object.
+     * Preference objects that are kept for each project. The key is the project name, and the value is the mock prefs
+     * object.
      */
     public Map<String, MockIEclipsePreferences> mockPrefs = new TreeMap<>();
 
     /**
-     * Description objects that are kept for each project.
-     * The key is the project name, and the value is the mock prefs object.
+     * Description objects that are kept for each project. The key is the project name, and the value is the mock prefs
+     * object.
      */
     public Map<String, IProjectDescription> mockDescriptions = new TreeMap<>();
-    
+
     /**
-     * Scope objects that are kept for each project.
-     * The key is the project name, and the value is the mock prefs object.
+     * Scope objects that are kept for each project. The key is the project name, and the value is the mock prefs
+     * object.
      */
     public Map<String, IScopeContext> mockScopeContexts = new TreeMap<>();
-    
+
     private MockIWorkspace workspace = null;
     private MockIWorkspaceRoot workspaceRoot = null;
     private File eclipseWorkspaceDir;
     private MockEclipse mockEclipse;
-    
+
     public MockResourceHelper(File eclipseWorkspaceDir, MockEclipse mockEclipse) {
         this.eclipseWorkspaceDir = eclipseWorkspaceDir;
         this.mockEclipse = mockEclipse;
     }
-    
+
     @Override
     public IProject getProjectByName(String projectName) {
         IProject project = mockProjects.get(projectName);
-        
+
         if (project == null) {
-            project = new MockIProjectFactory().buildGenericIProject(projectName, this.eclipseWorkspaceDir.getAbsolutePath(),
-                null);
+            project = new MockIProjectFactory().buildGenericIProject(projectName,
+                this.eclipseWorkspaceDir.getAbsolutePath(), null);
         }
-        
+
         return project;
     }
-    
+
     @Override
     public boolean isBazelRootProject(IProject project) {
         return false;
     }
-    
+
     @Override
     public IProject createProject(IProject newProject, IProjectDescription description, IProgressMonitor monitor)
             throws CoreException {
 
         Mockito.when(newProject.getDescription()).thenReturn(description);
         Mockito.when(newProject.exists()).thenReturn(true);
-        
+
         return newProject;
     }
 
@@ -117,7 +117,7 @@ public class MockResourceHelper implements ResourceHelper {
     public void openProject(IProject project, IProgressMonitor monitor) throws CoreException {
         Mockito.when(project.isOpen()).thenReturn(true);
     }
-    
+
     public IWorkspace getEclipseWorkspace() {
         if (workspace == null) {
             workspace = new MockIWorkspace(this);
@@ -142,7 +142,7 @@ public class MockResourceHelper implements ResourceHelper {
             prefs = new MockIEclipsePreferences();
             mockPrefs.put(project.getName(), prefs);
         }
-        
+
         return prefs;
     }
 
@@ -150,10 +150,10 @@ public class MockResourceHelper implements ResourceHelper {
     public String getResourceAbsolutePath(IResource resource) {
         IPath projectLocation = resource.getLocation();
         String absProjectRoot = projectLocation.toOSString();
-    
+
         return absProjectRoot;
     }
-    
+
     @Override
     public IResource findMemberInWorkspace(IPath path) {
         return workspaceRoot.findMember(path);
@@ -167,14 +167,15 @@ public class MockResourceHelper implements ResourceHelper {
     @Override
     public IProjectDescription createProjectDescription(IProject project) {
         if (mockDescriptions.containsKey(project.getName())) {
-            System.err.println("Bazel Eclipse Feature is creating a new description for a project, but the project already has one.");
+            System.err.println(
+                "Bazel Eclipse Feature is creating a new description for a project, but the project already has one.");
         }
-        
+
         IProjectDescription description = new MockIProjectDescription();
         mockDescriptions.put(project.getName(), description);
         return description;
     }
-    
+
     @Override
     public IProjectDescription getProjectDescription(IProject project) {
         IProjectDescription description = mockDescriptions.get(project.getName());
@@ -183,7 +184,7 @@ public class MockResourceHelper implements ResourceHelper {
             try {
                 description = project.getDescription();
             } catch (Exception anyE) {}
-            
+
             // the description is not available, create it
             if (description == null) {
                 description = new MockIProjectDescription();
@@ -196,7 +197,7 @@ public class MockResourceHelper implements ResourceHelper {
     @Override
     public boolean setProjectDescription(IProject project, IProjectDescription description) {
         mockDescriptions.put(project.getName(), description);
-        
+
         if (description.getReferencedProjects().length > 0) {
             try {
                 Mockito.when(project.getReferencedProjects()).thenReturn(description.getReferencedProjects());
@@ -206,10 +207,10 @@ public class MockResourceHelper implements ResourceHelper {
         }
         return false;
     }
-    
+
     /**
-     * When setProjectDescription() fails, it is likely because the resource tree is locked.
-     * Call this method outside of a locked code path if setProjectDescription() returned true.
+     * When setProjectDescription() fails, it is likely because the resource tree is locked. Call this method outside of
+     * a locked code path if setProjectDescription() returned true.
      */
     @Override
     public void applyDeferredProjectDescriptionUpdates() {
@@ -229,12 +230,13 @@ public class MockResourceHelper implements ResourceHelper {
     @Override
     public IFile getProjectFile(IProject project, String filename) {
         IFile file = MockIFileFactory.createMockIFile(false, project, new Path(filename));
-        
+
         return file;
     }
 
     @Override
-    public void createFileLink(IFile thisFile, IPath bazelWorkspaceLocation, int updateFlags, IProgressMonitor monitor) {
+    public void createFileLink(IFile thisFile, IPath bazelWorkspaceLocation, int updateFlags,
+            IProgressMonitor monitor) {
         if (thisFile == null) {
             throw new IllegalArgumentException("createFileLink with a null 'thisFile'");
         }
@@ -249,13 +251,14 @@ public class MockResourceHelper implements ResourceHelper {
         // create the target to the actual location on disk
         IProject project = thisFile.getProject();
         IFile targetFile = MockIFileFactory.createMockIFile(true, project, bazelWorkspaceLocation);
-        
+
         // MockIWorkspaceRoot is where the link bookkeeping is stored, as links are usually resolved with IWorkspaceRoot.findMember() calls.
         workspaceRoot.linkedFiles.put(thisFile.getLocation().makeAbsolute().toOSString(), targetFile);
     }
 
     @Override
-    public void createFolderLink(IFolder thisFolder, IPath bazelWorkspaceLocation, int updateFlags, IProgressMonitor monitor) {
+    public void createFolderLink(IFolder thisFolder, IPath bazelWorkspaceLocation, int updateFlags,
+            IProgressMonitor monitor) {
         if (thisFolder == null) {
             throw new IllegalArgumentException("createFolderLink with a null 'thisFolder'");
         }
@@ -267,13 +270,13 @@ public class MockResourceHelper implements ResourceHelper {
         // create the target to the actual location on disk
         IProject project = thisFolder.getProject();
         IFolder targetFile = new MockIFolder(project, bazelWorkspaceLocation);
-        
+
         // MockIWorkspaceRoot is where the link bookkeeping is stored, as links are usually resolved with IWorkspaceRoot.findMember() calls.
         workspaceRoot.linkedFolders.put(thisFolder.getLocation().makeAbsolute().toOSString(), targetFile);
     }
 
     public String[] lastExecCommandLine = null;
-    
+
     @Override
     public Process exec(String[] cmdLine, File workingDirectory) throws CoreException {
         // just return a simple Mock here, as it normally is used as an opaque object

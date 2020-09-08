@@ -56,14 +56,15 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
 @SuppressWarnings("restriction")
 public class MockIWorkspace implements IWorkspace {
-    private static final String UOE_MSG = "MockIWorkspace is pay as you go, you have hit a method that is not implemented."; 
+    private static final String UOE_MSG =
+            "MockIWorkspace is pay as you go, you have hit a method that is not implemented.";
 
     private MockResourceHelper resourceHelper;
-    
+
     public MockIWorkspace(MockResourceHelper resourceHelper) {
         this.resourceHelper = resourceHelper;
     }
-    
+
     // IMPLEMENTED METHODS
 
     @Override
@@ -79,10 +80,9 @@ public class MockIWorkspace implements IWorkspace {
         return desc;
     }
 
-    
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
-    
+
     @Override
     public <T> T getAdapter(Class<T> adapter) {
         throw new UnsupportedOperationException(UOE_MSG);
@@ -195,7 +195,6 @@ public class MockIWorkspace implements IWorkspace {
     public IWorkspaceDescription getDescription() {
         throw new UnsupportedOperationException(UOE_MSG);
     }
-
 
     @Override
     public IResourceRuleFactory getRuleFactory() {

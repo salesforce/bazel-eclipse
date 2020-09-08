@@ -45,9 +45,7 @@ public class BazelLaunchConfigurationTabGroup extends AbstractLaunchConfiguratio
 
     @Override
     public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
-        setTabs(new ILaunchConfigurationTab[] {
-            new BazelLaunchConfigurationTab(),
-            new BazelLaunchConfigurationArgumentsTab()
-        });
+        setTabs(new ILaunchConfigurationTab[] { new BazelLaunchConfigurationTab(),
+                new BazelLaunchConfigurationArgumentsTab() });
     }
 }

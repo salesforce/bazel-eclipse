@@ -118,7 +118,8 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
             }
         }
 
-        BazelLabel label = targetTextInput.getText().trim().isEmpty() ? null : new BazelLabel(targetTextInput.getText());
+        BazelLabel label =
+                targetTextInput.getText().trim().isEmpty() ? null : new BazelLabel(targetTextInput.getText());
         BazelTargetKind targetKind = label == null ? null : lookupLabelKind(label);
         if (targetKind == null && loadedTargetKind != null) {
             targetKind = BazelTargetKind.valueOfIgnoresCase(loadedTargetKind);
@@ -313,7 +314,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
     private ILabelProvider BAZEL_LABEL_LABEL_PROVIDER = new DefaultLabelProvider() {
         @Override
         public String getText(Object element) {
-            BazelLabel label = ((BazelLabel)element);
+            BazelLabel label = ((BazelLabel) element);
             BazelTargetKind targetKind = BazelLaunchConfigurationTab.this.lookupLabelKind(label);
             return toFriendlyLabelRepresentation(label, targetKind);
         }

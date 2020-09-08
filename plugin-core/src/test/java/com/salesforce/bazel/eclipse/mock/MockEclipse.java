@@ -43,18 +43,17 @@ import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
-
 /**
- * Primary entry point into the mocking framework for the core plugin. We only mock the small slice of Eclipse
- * that is used by our plugins. But it is enough to unit test the Core plugin which is the where we put all of our
- * code that integrates with Eclipse APIs.
+ * Primary entry point into the mocking framework for the core plugin. We only mock the small slice of Eclipse that is
+ * used by our plugins. But it is enough to unit test the Core plugin which is the where we put all of our code that
+ * integrates with Eclipse APIs.
  * 
  * @author plaird
  */
 public class MockEclipse {
 
     public static final String BAZEL_WORKSPACE_NAME = "bazel-workspace";
-    
+
     private File eclipseWorkspaceRoot;
     private File bazelWorkspaceRoot;
     private File bazelOutputBase;
@@ -68,7 +67,7 @@ public class MockEclipse {
     private MockJavaCoreHelper mockJavaCoreHelper;
     private OperatingEnvironmentDetectionStrategy mockOsEnvStrategy = new MockOperatingEnvironmentDetectionStrategy();
     private MockIEclipsePreferences mockPrefs;
-    
+
     // Feature collaborators
     private BazelPluginActivator pluginActivator;
     private BazelLaunchConfigurationDelegate launchDelegate;
@@ -82,23 +81,24 @@ public class MockEclipse {
     // if this is a full functional test, we will import the Bazel workspace which will result in 
     // a list of imported IProjects, which is kept here 
     private List<IProject> importedProjectsList = new ArrayList<>();
-    
+
     /**
-     * Create a MockEclipse environment with a richer Bazel workspace. First, the caller will create a 
-     * Bazel workspace on disk with the TestBazelWorkspaceFactory harness. Typically it will be created with
-     * some Java packages and maybe some genrule packages. 
+     * Create a MockEclipse environment with a richer Bazel workspace. First, the caller will create a Bazel workspace
+     * on disk with the TestBazelWorkspaceFactory harness. Typically it will be created with some Java packages and
+     * maybe some genrule packages.
      * <p>
-     * Note that after this method is complete, the MockEclipse object is configured but the import step has
-     * not been run so there will be no Eclipse projects created. See EclipseFunctionalTestEnvironmentFactory
-     * for convenience methods for setting up a Bazel workspace, MockEclipse, and then import of the Bazel packages. 
+     * Note that after this method is complete, the MockEclipse object is configured but the import step has not been
+     * run so there will be no Eclipse projects created. See EclipseFunctionalTestEnvironmentFactory for convenience
+     * methods for setting up a Bazel workspace, MockEclipse, and then import of the Bazel packages.
      */
     public MockEclipse(TestBazelWorkspaceFactory bazelWorkspace, File testTempDir) throws Exception {
         this.bazelCommandEnvironment = new TestBazelCommandEnvironmentFactory();
-        this.bazelCommandEnvironment.createTestEnvironment(bazelWorkspace, testTempDir, bazelWorkspace.workspaceDescriptor.testOptions);
-        
+        this.bazelCommandEnvironment.createTestEnvironment(bazelWorkspace, testTempDir,
+            bazelWorkspace.workspaceDescriptor.testOptions);
+
         setup(bazelWorkspace, testTempDir);
     }
-    
+
     private void setup(TestBazelWorkspaceFactory bazelWorkspaceFactory, File testTempDir) throws Exception {
         this.bazelWorkspaceFactory = bazelWorkspaceFactory;
         this.bazelWorkspaceRoot = bazelWorkspaceFactory.workspaceDescriptor.workspaceRootDirectory;
@@ -108,13 +108,13 @@ public class MockEclipse {
 
         this.eclipseWorkspaceRoot = new File(testTempDir, "eclipse-workspace");
         this.eclipseWorkspaceRoot.mkdir();
-        
+
         this.mockResourceHelper = new MockResourceHelper(eclipseWorkspaceRoot, this);
         this.mockPrefs = new MockIEclipsePreferences();
         this.mockPrefsStore = new MockIPreferenceStore();
         this.mockIProjectFactory = new MockIProjectFactory();
         this.mockJavaCoreHelper = new MockJavaCoreHelper();
-        this.mockPrefsStore.strings.put( BazelPreferencePage.BAZEL_PATH_PREF_NAME, 
+        this.mockPrefsStore.strings.put(BazelPreferencePage.BAZEL_PATH_PREF_NAME,
             this.bazelCommandEnvironment.bazelExecutable.getAbsolutePath());
 
         // feature collaborators
@@ -125,35 +125,34 @@ public class MockEclipse {
 
         // initialize our plugins/feature with all the mock infrastructure
         // this simulates how our feature starts up when run inside of Eclipse
-        this.pluginActivator.startInternal(this.bazelCommandEnvironment.bazelAspectLocation, 
-            this.bazelCommandEnvironment.commandBuilder, this.bazelCommandEnvironment.commandConsole, 
-            this.projectManager, this.mockResourceHelper, this.mockJavaCoreHelper, this.mockOsEnvStrategy, 
+        this.pluginActivator.startInternal(this.bazelCommandEnvironment.bazelAspectLocation,
+            this.bazelCommandEnvironment.commandBuilder, this.bazelCommandEnvironment.commandConsole,
+            this.projectManager, this.mockResourceHelper, this.mockJavaCoreHelper, this.mockOsEnvStrategy,
             this.configManager);
-        
+
         // At this point our plugins are wired up, the Bazel workspace is created, but the user
         // has not run a Bazel Import... wizard yet. See EclipseFunctionalTestEnvironmentFactory
         // for how to run import.
     }
-    
-    
+
     // GETTERS
 
     // File system provisioning
-    
+
     public TestBazelWorkspaceFactory getBazelWorkspaceCreator() {
         return this.bazelWorkspaceFactory;
     }
-    
+
     public void setBazelWorkspaceCreator(TestBazelWorkspaceFactory creator) {
         this.bazelWorkspaceFactory = creator;
     }
-    
+
     public TestBazelCommandEnvironmentFactory getBazelCommandEnvironmentFactory() {
         return this.bazelCommandEnvironment;
     }
 
     // File system
-    
+
     public File getEclipseWorkspaceRoot() {
         return this.eclipseWorkspaceRoot;
     }
@@ -179,15 +178,15 @@ public class MockEclipse {
     }
 
     // Mock Objects
-    
+
     public MockJavaCoreHelper getMockJavaCoreHelper() {
         return this.mockJavaCoreHelper;
     }
-    
+
     public MockResourceHelper getMockResourceHelper() {
         return this.mockResourceHelper;
     }
-    
+
     public MockIEclipsePreferences getMockPrefs() {
         return this.mockPrefs;
     }
@@ -203,27 +202,25 @@ public class MockEclipse {
     public MockCommandConsole getMockCommandConsole() {
         return this.bazelCommandEnvironment.commandConsole;
     }
-    
+
     public MockCommandBuilder getMockCommandBuilder() {
         return this.bazelCommandEnvironment.commandBuilder;
     }
-    
+
     public MockIProjectFactory getMockIProjectFactory() {
         return this.mockIProjectFactory;
     }
-    
-    
+
     // INTERNAL FEATURE COLLABORATORS
-    
+
     public BazelPluginActivator getPluginActivator() {
         return this.pluginActivator;
     }
-    
+
     public BazelLaunchConfigurationDelegate getLaunchDelegate() {
         return this.launchDelegate;
     }
-    
-    
+
     // INTERNAL STATE
 
     public List<IProject> getImportedProjectsList() {
@@ -239,7 +236,7 @@ public class MockEclipse {
         }
         return null;
     }
-    
+
     public void setImportedProjectsList(List<IProject> importedProjectsList) {
         this.importedProjectsList = importedProjectsList;
     }

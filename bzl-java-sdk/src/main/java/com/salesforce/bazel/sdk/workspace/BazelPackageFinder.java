@@ -9,17 +9,16 @@ import com.salesforce.bazel.sdk.util.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 public class BazelPackageFinder {
-	LogHelper logger;
-	
-	
-	public BazelPackageFinder() {
-		logger = LogHelper.log(this.getClass());	
-	}
-	
+    LogHelper logger;
+
+    public BazelPackageFinder() {
+        logger = LogHelper.log(this.getClass());
+    }
+
     // TODO our workspace scanner is looking for Java packages, but uses primitive techniques. switch to use the aspect
     // approach here, like we do with the classpath computation. 
 
-	public void findBuildFileLocations(File dir, WorkProgressMonitor monitor, Set<File> buildFileLocations, int depth) {
+    public void findBuildFileLocations(File dir, WorkProgressMonitor monitor, Set<File> buildFileLocations, int depth) {
         if (!dir.isDirectory()) {
             return;
         }
@@ -56,7 +55,7 @@ public class BazelPackageFinder {
         }
         return false;
     }
-    
+
     private static boolean isBuildFile(File candidate) {
         if ("BUILD".equals(candidate.getName())) {
             return true;

@@ -123,10 +123,9 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
         Object[] selectedBazelPackages = page.projectTree.projectTreeViewer.getCheckedElements();
         List<Object> grayedBazelPackages = Arrays.asList(page.projectTree.projectTreeViewer.getGrayedElements());
 
-        List<BazelPackageLocation> bazelPackagesToImport =
-                Arrays.asList(selectedBazelPackages).stream().filter(bpi -> bpi != workspaceRootProject).
-                        filter(bpi -> !grayedBazelPackages.contains(bpi)).
-                        map(bpi -> (BazelPackageInfo) bpi).collect(Collectors.toList());
+        List<BazelPackageLocation> bazelPackagesToImport = Arrays.asList(selectedBazelPackages).stream()
+                .filter(bpi -> bpi != workspaceRootProject).filter(bpi -> !grayedBazelPackages.contains(bpi))
+                .map(bpi -> (BazelPackageInfo) bpi).collect(Collectors.toList());
 
         BazelProjectImporter.run(workspaceRootProject, bazelPackagesToImport);
 

@@ -50,26 +50,26 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Manages running, collecting, and caching all of the build info aspects for a specific workspace.
  */
 public class BazelWorkspaceAspectHelper {
-    static final LogHelper LOG = LogHelper.log(BazelWorkspaceAspectHelper.class);;    
-    
+    static final LogHelper LOG = LogHelper.log(BazelWorkspaceAspectHelper.class);;
+
     private final BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
     private final BazelCommandExecutor bazelCommandExecutor;
-    
+
     /**
      * These arguments are added to all "bazel build" commands that run for aspect processing
      */
     private List<String> aspectOptions;
 
     /**
-     * Cache of the Aspect data for each target. key=String target (//a/b/c) value=Set<AspectPackageInfo> data that came from
-     * running the aspect. 
+     * Cache of the Aspect data for each target. key=String target (//a/b/c) value=Set<AspectPackageInfo> data that came
+     * from running the aspect.
      */
     @VisibleForTesting
     final Map<String, Set<AspectPackageInfo>> aspectInfoCache_current = new HashMap<>();
 
     /**
-     * For wildcard targets //a/b/c:* we need to capture the resulting aspects that come from evaluation
-     * so that the underlying list of aspects can be rebuilt from cache
+     * For wildcard targets //a/b/c:* we need to capture the resulting aspects that come from evaluation so that the
+     * underlying list of aspects can be rebuilt from cache
      */
     @VisibleForTesting
     final Map<String, Set<String>> aspectInfoCache_wildcards = new HashMap<>();
@@ -87,22 +87,21 @@ public class BazelWorkspaceAspectHelper {
      */
     @VisibleForTesting
     int numberCacheHits = 0;
-    
-    
+
     // CTORS
-    
-    public BazelWorkspaceAspectHelper(BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner, BazelAspectLocation aspectLocation,
-            BazelCommandExecutor bazelCommandExecutor) {
+
+    public BazelWorkspaceAspectHelper(BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner,
+            BazelAspectLocation aspectLocation, BazelCommandExecutor bazelCommandExecutor) {
         this.bazelWorkspaceCommandRunner = bazelWorkspaceCommandRunner;
         this.bazelCommandExecutor = bazelCommandExecutor;
-        
+
         this.aspectOptions = null;
         if (aspectLocation != null) {
-	        this.aspectOptions = ImmutableList.<String> builder()
-	                .add("--override_repository=local_eclipse_aspect=" + aspectLocation.getAspectDirectory(),
-	                    "--aspects=@local_eclipse_aspect" + aspectLocation.getAspectLabel(), "-k",
-	                    "--output_groups=json-files,classpath-jars,-_,-defaults", "--experimental_show_artifacts")
-	                .build();
+            this.aspectOptions = ImmutableList.<String> builder()
+                    .add("--override_repository=local_eclipse_aspect=" + aspectLocation.getAspectDirectory(),
+                        "--aspects=@local_eclipse_aspect" + aspectLocation.getAspectLabel(), "-k",
+                        "--output_groups=json-files,classpath-jars,-_,-defaults", "--experimental_show_artifacts")
+                    .build();
         }
     }
 
@@ -119,13 +118,13 @@ public class BazelWorkspaceAspectHelper {
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(
-            Collection<String> targets, WorkProgressMonitor progressMonitor, String caller)
+    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(Collection<String> targets,
+            WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-    	
-    	if (progressMonitor != null) {
-    		progressMonitor.subTask("Load Bazel dependency information");
-    	}
+
+        if (progressMonitor != null) {
+            progressMonitor.subTask("Load Bazel dependency information");
+        }
         Map<String, Set<AspectPackageInfo>> resultMap = new LinkedHashMap<>();
 
         for (String target : targets) {
@@ -151,12 +150,12 @@ public class BazelWorkspaceAspectHelper {
         }
 
         if (progressMonitor != null) {
-        	progressMonitor.worked(resultMap.size());
+            progressMonitor.worked(resultMap.size());
         }
 
         return resultMap;
     }
-    
+
     /**
      * Clear the entire AspectPackageInfo cache. This flushes the dependency graph for the workspace.
      */
@@ -188,16 +187,16 @@ public class BazelWorkspaceAspectHelper {
     }
 
     /**
-     * Clear the AspectPackageInfo cache for the passed package. This flushes the dependency graph for any
-     * target that contains the package name. 
+     * Clear the AspectPackageInfo cache for the passed package. This flushes the dependency graph for any target that
+     * contains the package name.
      */
     public synchronized Set<String> flushAspectInfoCacheForPackage(String packageName) {
         Set<String> flushedTargets = new LinkedHashSet<>();
-        
+
         // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
         // if the target exists in either it will get flushed
         Iterator<String> iter = this.aspectInfoCache_current.keySet().iterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             String key = iter.next();
             if (key.contains(packageName)) {
                 flushedTargets.add(key);
@@ -205,26 +204,25 @@ public class BazelWorkspaceAspectHelper {
             }
         }
         iter = this.aspectInfoCache_wildcards.keySet().iterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             String key = iter.next();
             if (key.contains(packageName)) {
                 flushedTargets.add(key);
                 iter.remove();
             }
         }
-        
+
         return flushedTargets;
     }
 
     // INTERNALS
-    
-    private void getAspectPackageInfoForTarget(String target, 
-            WorkProgressMonitor progressMonitor, String caller,
+
+    private void getAspectPackageInfoForTarget(String target, WorkProgressMonitor progressMonitor, String caller,
             Map<String, Set<AspectPackageInfo>> resultMap)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         String logstr = " [target=" + target + ", src=" + caller + "]";
-        
-        Set<AspectPackageInfo> aspectInfos = aspectInfoCache_current.get(target); 
+
+        Set<AspectPackageInfo> aspectInfos = aspectInfoCache_current.get(target);
         if (aspectInfos != null) {
             LOG.info("ASPECT CACHE HIT target: " + target + logstr);
             resultMap.put(target, aspectInfos);
@@ -234,8 +232,9 @@ public class BazelWorkspaceAspectHelper {
             List<String> lookupTargets = new ArrayList<>();
             lookupTargets.add(target);
             List<String> discoveredAspectFilePaths = generateAspectPackageInfoFiles(lookupTargets, progressMonitor);
-            ImmutableMap<String, AspectPackageInfo> map = AspectPackageInfo.loadAspectFilePaths(discoveredAspectFilePaths);
-            
+            ImmutableMap<String, AspectPackageInfo> map =
+                    AspectPackageInfo.loadAspectFilePaths(discoveredAspectFilePaths);
+
             if (map.size() == 0) {
                 // still don't have the aspect for the target, use the last known one that computed
                 // it could be because the user introduced a compile error in it and the Aspect wont run.
@@ -259,30 +258,33 @@ public class BazelWorkspaceAspectHelper {
                 aspectInfoCache_lastgood.put(target, values);
             }
         }
-        
+
         if (progressMonitor != null) {
-        	progressMonitor.worked(resultMap.size());
+            progressMonitor.worked(resultMap.size());
         }
     }
-    
+
     /**
      * Runs the Aspect for the list of passed targets. Returns the list of file paths to the output artifacts created by
      * the Aspects.
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    private synchronized List<String> generateAspectPackageInfoFiles(Collection<String> targets, WorkProgressMonitor progressMonitor)
+    private synchronized List<String> generateAspectPackageInfoFiles(Collection<String> targets,
+            WorkProgressMonitor progressMonitor)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        List<String> args = ImmutableList.<String> builder().add("build").addAll(this.aspectOptions).addAll(targets).build();
+        List<String> args =
+                ImmutableList.<String> builder().add("build").addAll(this.aspectOptions).addAll(targets).build();
 
         // Strip out the artifact list, keeping the xyz.bzleclipse-build.json files (located in subdirs in the bazel-out path)
         // Line must start with >>> and end with the aspect file suffix
         Function<String, String> filter = t -> t.startsWith(">>>")
                 ? (t.endsWith(AspectPackageInfo.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
 
-        List<String> listOfGeneratedFilePaths = this.bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE,
-            this.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), progressMonitor, args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
+        List<String> listOfGeneratedFilePaths = this.bazelCommandExecutor.runBazelAndGetErrorLines(
+            ConsoleType.WORKSPACE, this.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), progressMonitor,
+            args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
 
         return listOfGeneratedFilePaths;
     }

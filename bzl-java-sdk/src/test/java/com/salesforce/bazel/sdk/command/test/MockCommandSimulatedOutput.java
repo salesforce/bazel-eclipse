@@ -22,7 +22,8 @@ public class MockCommandSimulatedOutput {
         this.errorLines = errorLines;
     }
 
-    public MockCommandSimulatedOutput(String nameForLog, List<String> outputLines, List<String> errorLines, List<MockCommandSimulatedOutputMatcher> matchers) {
+    public MockCommandSimulatedOutput(String nameForLog, List<String> outputLines, List<String> errorLines,
+            List<MockCommandSimulatedOutputMatcher> matchers) {
         this.nameForLog = nameForLog;
         this.outputLines = outputLines;
         this.errorLines = errorLines;
@@ -57,5 +58,5 @@ public class MockCommandSimulatedOutput {
         matchesRemaining--;
         return true;
     }
-    
+
 }

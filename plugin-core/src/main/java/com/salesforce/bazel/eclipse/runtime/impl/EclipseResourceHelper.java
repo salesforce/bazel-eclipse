@@ -52,6 +52,7 @@ import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
 /**
  * Resource helper implementation used when running in a live Eclipse runtime.
+ * 
  * @author plaird
  *
  */
@@ -64,19 +65,20 @@ public class EclipseResourceHelper implements ResourceHelper {
     public IProject getProjectByName(String projectName) {
         return getEclipseWorkspaceRoot().getProject(projectName);
     }
+
     /**
      * Creates the project described by newProject, with the passed description.
      */
-    public IProject createProject(IProject newProject, IProjectDescription description, IProgressMonitor monitor) 
+    public IProject createProject(IProject newProject, IProjectDescription description, IProgressMonitor monitor)
             throws CoreException {
         if (newProject == null) {
             throw new IllegalArgumentException("EclipseResourceHelper.create() was passed a null project.");
         }
         newProject.create(description, monitor);
-        
+
         return newProject;
     }
-    
+
     /**
      * Opens the project, or no-op if already open
      */
@@ -88,14 +90,15 @@ public class EclipseResourceHelper implements ResourceHelper {
     public Preferences getProjectBazelPreferences(IProject project) {
         IScopeContext eclipseProjectScope = new ProjectScope(project);
         Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(BazelPluginActivator.PLUGIN_ID);
-        
+
         if (eclipseProjectPrefs == null) {
-            BazelPluginActivator.error("Could not find the Preferences node for the Bazel plugin for project ["+project.getName()+"]");
+            BazelPluginActivator.error(
+                "Could not find the Preferences node for the Bazel plugin for project [" + project.getName() + "]");
         }
-        
+
         return eclipseProjectPrefs;
     }
-    
+
     @Override
     public boolean isBazelRootProject(IProject project) {
         try {
@@ -121,7 +124,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     public IWorkspaceRoot getEclipseWorkspaceRoot() {
         return ResourcesPlugin.getWorkspace().getRoot();
     }
-    
+
     @Override
     public String getResourceAbsolutePath(IResource resource) {
         if (resource == null) {
@@ -129,27 +132,27 @@ public class EclipseResourceHelper implements ResourceHelper {
         }
         IPath projectLocation = resource.getLocation();
         String absProjectRoot = projectLocation.toOSString();
-    
+
         return absProjectRoot;
     }
-    
+
     @Override
     public IResource findMemberInWorkspace(IPath path) {
-        IResource resource = this.getEclipseWorkspaceRoot().findMember(path);        
+        IResource resource = this.getEclipseWorkspaceRoot().findMember(path);
         //System.out.println("findMemberInWorkspace: path="+path.toOSString()+" member.location="+getResourceAbsolutePath(resource));
         return resource;
     }
-    
+
     @Override
     public IPreferenceStore getPreferenceStore(BazelPluginActivator activator) {
         return activator.getPreferenceStore();
     }
-    
+
     @Override
     public IProjectDescription createProjectDescription(IProject project) {
         return ResourcesPlugin.getWorkspace().newProjectDescription(project.getName());
     }
-    
+
     @Override
     public IProjectDescription getProjectDescription(IProject project) {
         try {
@@ -158,17 +161,19 @@ public class EclipseResourceHelper implements ResourceHelper {
             throw new IllegalStateException(ce);
         }
     }
-    
+
     private static class DeferredProjectDescriptionUpdate {
         public IProject project;
         public IProjectDescription description;
+
         public DeferredProjectDescriptionUpdate(IProject project, IProjectDescription description) {
             this.project = project;
             this.description = description;
         }
     }
+
     private List<DeferredProjectDescriptionUpdate> deferredProjectDescriptionUpdates = new ArrayList<>();
-    
+
     @Override
     public boolean setProjectDescription(IProject project, IProjectDescription description) {
         boolean needsDeferredApplication = false;
@@ -177,35 +182,35 @@ public class EclipseResourceHelper implements ResourceHelper {
         } catch (Exception ex) {
             // this is likely an issue with the resource tree being locked, so we have to defer this update
             // but it works for any type of issue
-        	BazelPluginActivator.info("Deferring updates to project "+project.getName()+" because workspace is locked.");
+            BazelPluginActivator
+                    .info("Deferring updates to project " + project.getName() + " because workspace is locked.");
             deferredProjectDescriptionUpdates.add(new DeferredProjectDescriptionUpdate(project, description));
             needsDeferredApplication = true;
         }
         return needsDeferredApplication;
     }
-    
+
     /**
-     * When setProjectDescription() fails, it is likely because the resource tree is locked.
-     * Call this method outside of a locked code path if setProjectDescription() returned true.
+     * When setProjectDescription() fails, it is likely because the resource tree is locked. Call this method outside of
+     * a locked code path if setProjectDescription() returned true.
      */
     public void applyDeferredProjectDescriptionUpdates() {
         if (this.deferredProjectDescriptionUpdates.size() == 0) {
             return;
         }
-        List<DeferredProjectDescriptionUpdate> updates =  this.deferredProjectDescriptionUpdates;
+        List<DeferredProjectDescriptionUpdate> updates = this.deferredProjectDescriptionUpdates;
         this.deferredProjectDescriptionUpdates = new ArrayList<>();
         for (DeferredProjectDescriptionUpdate update : updates) {
             // this could theoretically still fail, but we don't want an infinite retry so let this go if it fails
             setProjectDescription(update.project, update.description);
         }
     }
-    
-    
+
     @Override
     public IScopeContext getProjectScopeContext(IProject project) {
         return new ProjectScope(project);
     }
-    
+
     @Override
     public IFile getProjectFile(IProject project, String filename) {
         if (project == null) {
@@ -213,11 +218,12 @@ public class EclipseResourceHelper implements ResourceHelper {
         }
         return project.getFile(filename);
     }
-    
+
     @Override
-    public void createFileLink(IFile thisFile, IPath bazelWorkspaceLocation, int updateFlags, IProgressMonitor monitor) {
+    public void createFileLink(IFile thisFile, IPath bazelWorkspaceLocation, int updateFlags,
+            IProgressMonitor monitor) {
         //System.out.println("createFileLink: thisFile="+thisFile.getLocation().toOSString()+" bazelWorkspaceLocation="+bazelWorkspaceLocation.toOSString());
-        
+
         try {
             thisFile.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
@@ -226,20 +232,22 @@ public class EclipseResourceHelper implements ResourceHelper {
     }
 
     @Override
-    public void createFolderLink(IFolder thisFolder, IPath bazelWorkspaceLocation, int updateFlags, IProgressMonitor monitor) {
+    public void createFolderLink(IFolder thisFolder, IPath bazelWorkspaceLocation, int updateFlags,
+            IProgressMonitor monitor) {
         //System.out.println("createFolderLink: thisFolder="+thisFolder.getLocation().toOSString()+" bazelWorkspaceLocation="+bazelWorkspaceLocation.toOSString());
-        
+
         try {
             thisFolder.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);
         }
     }
+
     @Override
     public Process exec(String[] cmdLine, File workingDirectory) throws CoreException {
         return DebugPlugin.exec(cmdLine, workingDirectory);
     }
-    
+
     @Override
     public IProcess newProcess(ILaunch launch, Process process, String label) {
         return DebugPlugin.newProcess(launch, process, label);

@@ -64,7 +64,7 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
         protected boolean doCheckState() {
             return isValid();
         }
-        
+
         @Override
         public boolean isValid() {
             try {

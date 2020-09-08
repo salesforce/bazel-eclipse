@@ -84,11 +84,11 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
     static final String BAZEL_SRC_DEPLOY_PARAMS_SUFFIX = "_deploy-src.jar-0.params";
 
     private static final Bundle BUNDLE = FrameworkUtil.getBundle(BazelRuntimeClasspathProvider.class);
-    
+
     // computeUnresolvedClassPathEntries() is called multiple times while trying to run a single test, 
     // we need this variable to keep track of when to open the error dialog
     public static AtomicBoolean canOpenErrorDialog = new AtomicBoolean(true);
-    
+
     /**
      * Compute classpath entries for test
      */
@@ -112,11 +112,11 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                 result.add(resolvedEntry);
             }
         }
-        
+
         for (IRuntimeClasspathEntry entry : JavaRuntime.resolveSourceLookupPath(entries, configuration)) {
             result.add(entry);
         }
-        
+
         return result.toArray(new IRuntimeClasspathEntry[result.size()]);
 
     }
@@ -129,47 +129,49 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
      *            - calculate binary or source entries
      * @return
      * @throws CoreException
-     * @throws InterruptedException 
-     * @throws InvocationTargetException 
+     * @throws InterruptedException
+     * @throws InvocationTargetException
      */
     IRuntimeClasspathEntry[] computeUnresolvedClasspath(ILaunchConfiguration configuration, boolean isSource)
             throws CoreException {
         List<IRuntimeClasspathEntry> result = new ArrayList<>();
         IJavaProject project = JavaRuntime.getJavaProject(configuration);
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();        
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         File base = bazelWorkspace.getBazelExecRootDirectory();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         String testClassName = configuration.getAttribute("org.eclipse.jdt.launching.MAIN_TYPE", (String) null);
         String suffix = getParamsJarSuffix(isSource);
 
-    	String projectName = project.getProject().getName();
-    	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
-        
-    	BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
+        String projectName = project.getProject().getName();
+        BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+
+        BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
         Set<File> paramFiles = new HashSet<File>();
-        
+
         for (String eachTarget : targets.getConfiguredTargets()) {
-        	
-        	if( testClassName == null || testClassName.equals("")) {
-                String query = "tests("+ eachTarget +")";
+
+            if (testClassName == null || testClassName.equals("")) {
+                String query = "tests(" + eachTarget + ")";
                 List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
                 File bazelBinDir = BazelPluginActivator.getBazelWorkspace().getBazelBinDirectory();
-                
-                for(String label : labels) {
-                	String testRuleName = label.substring(label.lastIndexOf(":")+1);
-                    File pFile = new File(new File(bazelBinDir, eachTarget.split(":")[0]), testRuleName+suffix);
+
+                for (String label : labels) {
+                    String testRuleName = label.substring(label.lastIndexOf(":") + 1);
+                    File pFile = new File(new File(bazelBinDir, eachTarget.split(":")[0]), testRuleName + suffix);
                     if (pFile.exists()) {
                         paramFiles.add(pFile);
                     } else {
                         Display.getDefault().asyncExec(new Runnable() {
                             @Override
                             public void run() {
-                                if(canOpenErrorDialog.get()) {
-                                	canOpenErrorDialog.set(false);
+                                if (canOpenErrorDialog.get()) {
+                                    canOpenErrorDialog.set(false);
                                     Display.getDefault().syncExec(new Runnable() {
                                         public void run() {
-                                            MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target", "One or all of the tests trying to be executed are not part of a Bazel java_test target");
+                                            MessageDialog.openError(Display.getDefault().getActiveShell(),
+                                                "Unknown Target",
+                                                "One or all of the tests trying to be executed are not part of a Bazel java_test target");
                                         }
                                     });
                                 }
@@ -181,10 +183,10 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                 Set<File> pFiles = findParamsJar(project, eachTarget, testClassName, suffix);
                 paramFiles.addAll(pFiles);
             }
-        	
+
         }
-        	
-        for(File paramsFile: paramFiles) {
+
+        for (File paramsFile : paramFiles) {
             List<String> jarPaths;
             try {
                 jarPaths = getPathsToJars(paramsFile);
@@ -223,24 +225,25 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
      * @return
      */
     Set<File> findParamsJar(IJavaProject project, String target, String className, String suffix) {
-    	Set<File> paramFiles = new HashSet<>();
-    	
+        Set<File> paramFiles = new HashSet<>();
+
         String targetPath = target.split(":")[0];
         // testJar for bazel's iterative test rules
         File bazelBinDir = BazelPluginActivator.getBazelWorkspace().getBazelBinDirectory();
         String paramsName = className.replace('.', '/') + suffix;
-        
+
         File paramFile = new File(new File(new File(bazelBinDir, targetPath), "src/test/java"), paramsName);
         if (paramFile.exists()) {
-        	paramFiles.add(paramFile);
+            paramFiles.add(paramFile);
         } else {
             // testJar for single test rule
             // test rules where testName is not the same as testClass 
-        	String query = "attr(test_class, "+className+"$, "+target+")";
-        	BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace(); 
-        	List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
-        	for(String label : labels) {
-                paramFile = new File(new File(bazelBinDir, targetPath), label.substring(label.lastIndexOf(":")+1) +suffix );
+            String query = "attr(test_class, " + className + "$, " + target + ")";
+            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+            List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
+            for (String label : labels) {
+                paramFile = new File(new File(bazelBinDir, targetPath),
+                        label.substring(label.lastIndexOf(":") + 1) + suffix);
                 paramFiles.add(paramFile);
             }
         }

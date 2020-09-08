@@ -50,17 +50,17 @@ public class MockTest {
         MockIProjectFactory mockIProjectFactory = new MockIProjectFactory();
         MockResourceHelper resourceHelper = new MockResourceHelper(tmpFolder.newFolder(), null);
         BazelPluginActivator.setResourceHelperForTests(resourceHelper);
-        
+
         // create the bill of materials
-        MockIProjectFactory.MockIProjectDescriptor desc = new MockIProjectFactory.MockIProjectDescriptor("test1");        
+        MockIProjectFactory.MockIProjectDescriptor desc = new MockIProjectFactory.MockIProjectDescriptor("test1");
         desc.customNatures.put("greenNature", Mockito.mock(IProjectNature.class));
         desc.customNatures.put("redNature", Mockito.mock(IProjectNature.class));
-        
+
         // create the mock project
         IProject proj = mockIProjectFactory.buildIProject(desc);
-        
+
         // test it
-        assertEquals(desc.name, proj.getName());        
+        assertEquals(desc.name, proj.getName());
         // check for the custom natures
         assertNotNull(proj.getNature("greenNature"));
         assertNotNull(proj.getNature("redNature"));

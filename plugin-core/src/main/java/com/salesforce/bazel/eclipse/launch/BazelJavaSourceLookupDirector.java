@@ -83,7 +83,8 @@ public class BazelJavaSourceLookupDirector extends AbstractSourceLookupDirector 
     }
 
     private static void addSourceJarsForDependencies(IJavaProject project, List<ISourceContainer> sourceContainers) {
-        IClasspathEntry[] resolvedClasspath = BazelPluginActivator.getJavaCoreHelper().getResolvedClasspath(project, true);
+        IClasspathEntry[] resolvedClasspath =
+                BazelPluginActivator.getJavaCoreHelper().getResolvedClasspath(project, true);
         for (IClasspathEntry e : resolvedClasspath) {
             if (e.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
                 IPath sourceAttachmentPath = e.getSourceAttachmentPath();

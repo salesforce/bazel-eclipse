@@ -69,7 +69,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  */
 public class BazelClasspathContainer implements IClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
-    
+
     private final BazelWorkspace bazelWorkspace;
     private final BazelProjectManager bazelProjectManager;
     private BazelProject bazelProject;
@@ -80,46 +80,40 @@ public class BazelClasspathContainer implements IClasspathContainer {
     private final OperatingEnvironmentDetectionStrategy osDetector;
     private final LogHelper logger;
 
-    
     private static List<BazelJvmClasspath> instances = new ArrayList<>();
-    
-    public BazelClasspathContainer(IProject eclipseProject)
-            throws IOException, InterruptedException, BackingStoreException, JavaModelException,
-            BazelCommandLineToolConfigurationException {
+
+    public BazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
+            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
-    
+
     BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
-    	this.bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-    	this.bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+        this.bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        this.bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         this.eclipseProjectPath = eclipseProject.getLocation();
         this.eclipseProjectIsRoot = resourceHelper.isBazelRootProject(eclipseProject);
         this.osDetector = BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy();
-        
+
         this.bazelProject = this.bazelProjectManager.getProject(eclipseProject.getName());
         if (this.bazelProject == null) {
-        	this.bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
-        	this.bazelProjectManager.addProject(bazelProject);
+            this.bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
+            this.bazelProjectManager.addProject(bazelProject);
         }
-        
-        bazelClasspath = new BazelJvmClasspath(this.bazelWorkspace, 
-        		bazelProjectManager,
-        		bazelProject, 
-        		new EclipseImplicitClasspathHelper(), 
-        		osDetector, 
-        		BazelPluginActivator.getBazelCommandManager());
+
+        bazelClasspath = new BazelJvmClasspath(this.bazelWorkspace, bazelProjectManager, bazelProject,
+                new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
         instances.add(bazelClasspath);
-        
+
         javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
-		logger = LogHelper.log(this.getClass());
+        logger = LogHelper.log(this.getClass());
 
     }
-    
+
     public static void clean() {
         for (BazelJvmClasspath instance : instances) {
-        	instance.clean();
+            instance.clean();
         }
     }
 
@@ -131,44 +125,44 @@ public class BazelClasspathContainer implements IClasspathContainer {
         }
 
         /**
-         * Observed behavior of Eclipse is that this method can get called multiple times before the first invocation completes, therefore 
-         * the cache is not as effective as it could be. Synchronize on this instance such that the first invocation completes and populates
-         * the cache before the subsequent calls are allowed to proceed.
+         * Observed behavior of Eclipse is that this method can get called multiple times before the first invocation
+         * completes, therefore the cache is not as effective as it could be. Synchronize on this instance such that the
+         * first invocation completes and populates the cache before the subsequent calls are allowed to proceed.
          */
         BazelJvmClasspathResponse computedClasspath = null;
         List<IClasspathEntry> eclipseClasspathEntries = new ArrayList<>();
         synchronized (this) {
 
-		    // the Java SDK will produce a list of logical classpath entries 
-        	computedClasspath = bazelClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
-			
-			// convert the logical entries into concrete Eclipse entries			
-		    File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
-		    File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
-			for (JvmClasspathEntry entry : computedClasspath.jvmClasspathEntries) {
-				if (entry.pathToJar != null) {
-		            IPath jarPath = getIPathOnDisk(bazelOutputBase, bazelExecRoot, entry.pathToJar);
-		            if (jarPath != null) {
-		                IPath srcJarPath = getIPathOnDisk(bazelOutputBase, bazelExecRoot, entry.pathToSourceJar);
-		                IPath srcJarRootPath = null;
-		        		eclipseClasspathEntries.add(javaCoreHelper.newLibraryEntry(jarPath, srcJarPath, 
-		        				srcJarRootPath, entry.isTestJar));
-		            }
-				} else {
-					IProject iproject = (IProject)entry.bazelProject.projectImpl;
-					IPath ipath = iproject.getFullPath();
-					eclipseClasspathEntries.add(javaCoreHelper.newProjectEntry(ipath));
-				}
-			}
+            // the Java SDK will produce a list of logical classpath entries 
+            computedClasspath = bazelClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
+
+            // convert the logical entries into concrete Eclipse entries			
+            File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
+            File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
+            for (JvmClasspathEntry entry : computedClasspath.jvmClasspathEntries) {
+                if (entry.pathToJar != null) {
+                    IPath jarPath = getIPathOnDisk(bazelOutputBase, bazelExecRoot, entry.pathToJar);
+                    if (jarPath != null) {
+                        IPath srcJarPath = getIPathOnDisk(bazelOutputBase, bazelExecRoot, entry.pathToSourceJar);
+                        IPath srcJarRootPath = null;
+                        eclipseClasspathEntries.add(
+                            javaCoreHelper.newLibraryEntry(jarPath, srcJarPath, srcJarRootPath, entry.isTestJar));
+                    }
+                } else {
+                    IProject iproject = (IProject) entry.bazelProject.projectImpl;
+                    IPath ipath = iproject.getFullPath();
+                    eclipseClasspathEntries.add(javaCoreHelper.newProjectEntry(ipath));
+                }
+            }
         } // end synchronized
-        
+
         // Now update project refs, which includes adding new ones and removing any that may now be obsolete 
         // (e.g. dep was removed, project removed from IDE workspace)
         // We need to do this outside of the synchronized block because this next statement requires a lock on the 
         // Eclipse workspace, and this may take some time to acquire. 
         bazelProjectManager.setProjectReferences(bazelProject, computedClasspath.classpathProjectReferences);
 
-	    return eclipseClasspathEntries.toArray(new IClasspathEntry[] {});
+        return eclipseClasspathEntries.toArray(new IClasspathEntry[] {});
     }
 
     @Override
@@ -206,7 +200,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
             } catch (IOException ex) {
                 // TODO this can happen if someone does a 'bazel clean' using the command line #113
                 // https://github.com/salesforce/bazel-eclipse/issues/113
-            	logger.error("Problem adding jar to project ["+bazelProject.name+"] because it does not exist on the filesystem: "+path);
+                logger.error("Problem adding jar to project [" + bazelProject.name
+                        + "] because it does not exist on the filesystem: " + path);
                 continueOrThrow(ex);
             }
         } else {
@@ -214,7 +209,8 @@ public class BazelClasspathContainer implements IClasspathContainer {
             if (!Files.exists(path)) {
                 // TODO this can happen if someone does a 'bazel clean' using the command line #113
                 // https://github.com/salesforce/bazel-eclipse/issues/113
-            	logger.error("Problem adding jar to project ["+bazelProject.name+"] because it does not exist on the filesystem: "+path);
+                logger.error("Problem adding jar to project [" + bazelProject.name
+                        + "] because it does not exist on the filesystem: " + path);
             }
         }
         return org.eclipse.core.runtime.Path.fromOSString(path.toString());

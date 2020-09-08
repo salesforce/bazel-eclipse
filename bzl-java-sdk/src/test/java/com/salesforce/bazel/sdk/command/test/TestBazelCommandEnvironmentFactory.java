@@ -36,9 +36,9 @@ import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 /**
- * Factory for creating test environments for Bazel Command functional tests. Produces a real BazelWorkspaceCommandRunner with 
- * collaborators, with mock command execution underneath it all. Logically, this layer replaces the real Bazel executable with
- * command simulations.
+ * Factory for creating test environments for Bazel Command functional tests. Produces a real
+ * BazelWorkspaceCommandRunner with collaborators, with mock command execution underneath it all. Logically, this layer
+ * replaces the real Bazel executable with command simulations.
  * 
  * @author plaird
  */
@@ -46,15 +46,15 @@ public class TestBazelCommandEnvironmentFactory {
     public TestBazelWorkspaceFactory testWorkspace;
     public BazelWorkspaceCommandRunner globalCommandRunner;
     public BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
-    
+
     public MockBazelAspectLocation bazelAspectLocation;
     public MockCommandConsole commandConsole;
     public MockCommandBuilder commandBuilder;
     public MockBazelExecutable bazelExecutable;
 
     /**
-     * Basic testing environment for the command layer. It creates a simple Bazel workspace on the filesystem
-     * with no Java/generic packages. This is only useful for very basic tests that don't need a Bazel workspace.
+     * Basic testing environment for the command layer. It creates a simple Bazel workspace on the filesystem with no
+     * Java/generic packages. This is only useful for very basic tests that don't need a Bazel workspace.
      */
     public void createTestEnvironment(File tempDir, TestOptions testOptions) throws Exception {
         // the name of the directory that contains the bazel workspace is significant, as the Eclipse feature
@@ -63,46 +63,48 @@ public class TestBazelCommandEnvironmentFactory {
         workspaceDir.mkdirs();
         File outputBase = new File(tempDir, "outputbase");
         outputBase.mkdirs();
-        
+
         if (testOptions == null) {
             testOptions = new TestOptions();
         }
-        
-        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputBase, "bazel_command_executor_test");
+
+        TestBazelWorkspaceDescriptor descriptor =
+                new TestBazelWorkspaceDescriptor(workspaceDir, outputBase, "bazel_command_executor_test");
         TestBazelWorkspaceFactory testWorkspace = new TestBazelWorkspaceFactory(descriptor);
         testWorkspace.build();
         createTestEnvironment(testWorkspace, tempDir, testOptions);
     }
-    
+
     /**
-     * Creates a testing environment based on a test workspace passed in from the caller. If you are testing
-     * commands in the context of actual Bazel packages (e.g. Java) this is the form to use.
+     * Creates a testing environment based on a test workspace passed in from the caller. If you are testing commands in
+     * the context of actual Bazel packages (e.g. Java) this is the form to use.
      */
     public void createTestEnvironment(TestBazelWorkspaceFactory testWorkspace, File tempDir, TestOptions testOptions) {
         this.testWorkspace = testWorkspace;
-        
+
         File execDir = new File(tempDir, "executable");
         execDir.mkdir();
         this.bazelExecutable = new MockBazelExecutable(execDir);
-        
+
         if (testOptions == null) {
             testOptions = new TestOptions();
         }
-        
+
         this.bazelAspectLocation = new MockBazelAspectLocation(tempDir, "test-aspect-label");
         this.commandConsole = new MockCommandConsole();
         this.commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace, testOptions);
 
-        BazelCommandManager bazelCommandManager = new BazelCommandManager(bazelAspectLocation, commandBuilder, commandConsole, 
-            bazelExecutable.bazelExecutableFile);
+        BazelCommandManager bazelCommandManager = new BazelCommandManager(bazelAspectLocation, commandBuilder,
+                commandConsole, bazelExecutable.bazelExecutableFile);
         bazelCommandManager.setBazelExecutablePath(bazelExecutable.bazelExecutableFile.getAbsolutePath());
-        
-        BazelWorkspace bazelWorkspace = new BazelWorkspace("test", testWorkspace.workspaceDescriptor.workspaceRootDirectory, 
-            Mockito.mock(OperatingEnvironmentDetectionStrategy.class));
+
+        BazelWorkspace bazelWorkspace =
+                new BazelWorkspace("test", testWorkspace.workspaceDescriptor.workspaceRootDirectory,
+                        Mockito.mock(OperatingEnvironmentDetectionStrategy.class));
         bazelWorkspace.setBazelWorkspaceMetadataStrategy(bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace));
-        
+
         this.globalCommandRunner = bazelCommandManager.getGlobalCommandRunner();
         this.bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
     }
-    
+
 }

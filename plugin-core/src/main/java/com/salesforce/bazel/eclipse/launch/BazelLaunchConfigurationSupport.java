@@ -73,7 +73,6 @@ class BazelLaunchConfigurationSupport {
 
     static final LogHelper LOG = LogHelper.log(BazelLaunchConfigurationSupport.class);
 
-
     /**
      * Groups a BazelLabel with its TargetKind.
      */
@@ -154,7 +153,6 @@ class BazelLaunchConfigurationSupport {
          */
         USER_BAZEL_ARGS("user_bazel_args");
 
-
         private final String attributeName;
 
         private BazelLaunchConfigAttributes(String attributeName) {
@@ -167,7 +165,7 @@ class BazelLaunchConfigurationSupport {
 
         String getStringValue(ILaunchConfiguration configuration) {
             try {
-                return configuration.getAttribute(getAttributeName(), (String)null);
+                return configuration.getAttribute(getAttributeName(), (String) null);
             } catch (CoreException ex) {
                 LOG.error("Failed to load attribute value {}", ex, getAttributeName());
                 return null;
@@ -190,7 +188,8 @@ class BazelLaunchConfigurationSupport {
         config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_ALLOW_TERMINATE, true);
     }
 
-    void populateBazelLaunchConfig(ILaunchConfigurationWorkingCopy config, String projectName, BazelLabel label, BazelTargetKind targetKind) {
+    void populateBazelLaunchConfig(ILaunchConfigurationWorkingCopy config, String projectName, BazelLabel label,
+            BazelTargetKind targetKind) {
         Objects.requireNonNull(config);
         Objects.requireNonNull(projectName);
 
@@ -200,7 +199,6 @@ class BazelLaunchConfigurationSupport {
         config.setAttribute(BazelLaunchConfigAttributes.LABEL.getAttributeName(), labelStr);
         config.setAttribute(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), kindStr);
     }
-
 
     /**
      * Returns all runnable AspectPackageInfo instances for the specified project.
@@ -214,7 +212,8 @@ class BazelLaunchConfigurationSupport {
     /**
      * Returns all AspectPackageInfo instances that represent targets of the specified type, for the specified project.
      */
-    Collection<AspectPackageInfo> getAspectPackageInfosForProject(IProject project, EnumSet<BazelTargetKind> targetTypes) {
+    Collection<AspectPackageInfo> getAspectPackageInfosForProject(IProject project,
+            EnumSet<BazelTargetKind> targetTypes) {
         BazelWorkspaceCommandRunner bazelRunner = BazelPluginActivator.getInstance().getWorkspaceCommandRunner();
         AspectPackageInfos apis = computeAspectPackageInfos(project, bazelRunner, WorkProgressMonitor.NOOP);
         return apis.lookupByTargetKind(targetTypes);
@@ -242,16 +241,16 @@ class BazelLaunchConfigurationSupport {
         return typedBazelLabels;
     }
 
-    private static AspectPackageInfos computeAspectPackageInfos(IProject project, BazelWorkspaceCommandRunner bazelRunner,
-            WorkProgressMonitor monitor) {
+    private static AspectPackageInfos computeAspectPackageInfos(IProject project,
+            BazelWorkspaceCommandRunner bazelRunner, WorkProgressMonitor monitor) {
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         try {
             // TODO switch this to use the BazelBuildFile value object
-        	String projectName = project.getName();
-        	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
-        	BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
-            Map<String, Set<AspectPackageInfo>> packageInfos = bazelRunner.getAspectPackageInfos(targets.getConfiguredTargets(),
-                monitor, "launcher:computeAspectPackageInfos");
+            String projectName = project.getName();
+            BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+            BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
+            Map<String, Set<AspectPackageInfo>> packageInfos = bazelRunner.getAspectPackageInfos(
+                targets.getConfiguredTargets(), monitor, "launcher:computeAspectPackageInfos");
             return AspectPackageInfos.fromSets(packageInfos.values());
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException ex) {
             throw new IllegalStateException(ex);

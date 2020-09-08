@@ -90,10 +90,10 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private static final AtomicBoolean REGISTERED_EL_CHANGE_LISTENER = new AtomicBoolean(false);
     private static final LogHelper LOG = LogHelper.log(BazelBuilder.class);
-    
+
     // we only need one instance of this one
     private static JDTWarningPublisher warningPublisher = new JDTWarningPublisher();
-    
+
     public BazelBuilder() {
         if (!REGISTERED_EL_CHANGE_LISTENER.getAndSet(true)) {
             // is there a better way/place to register a singleton?
@@ -120,20 +120,23 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         if (bazelWorkspace == null) {
             return new IProject[] {};
         }
-        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
+        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
+                bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
         if (bazelWorkspaceCmdRunner == null) {
             return new IProject[] {};
         }
 
         try {
-            boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project), progressMonitor, null, monitor);
+            boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project),
+                progressMonitor, null, monitor);
             if (buildSuccessful && !importInProgress()) {
                 IJavaProject[] allImportedProjects = javaCoreHelper.getAllBazelJavaProjects(true);
                 IProject rootWorkspaceProject = Arrays.stream(allImportedProjects)
-                        .filter(p -> resourceHelper.isBazelRootProject(p.getProject()))
-                        .collect(onlyElement()).getProject();
+                        .filter(p -> resourceHelper.isBazelRootProject(p.getProject())).collect(onlyElement())
+                        .getProject();
                 Set<IProject> downstreamProjects = getDownstreamProjectsOf(project, allImportedProjects);
-                buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject, monitor);
+                buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject,
+                    monitor);
 
                 // TODO this is too slow, we need to fix this in https://github.com/salesforce/bazel-eclipse/issues/145
                 // when you uncomment this, make sure to also un-ignore the related test in BazelBuilderTest
@@ -142,7 +145,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         } catch (BazelCommandLineToolConfigurationException e) {
             LOG.error("Bazel not found: {} ", e.getMessage());
         } catch (Exception e) {
-            LOG.error("Failed to build: "+e.getMessage(), e);
+            LOG.error("Failed to build: " + e.getMessage(), e);
             e.printStackTrace();
         } finally {
             progressMonitor.done();
@@ -151,13 +154,12 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     }
 
     void refreshProjectClasspath(IProject project, WorkProgressMonitor progressMonitor, IProgressMonitor monitor,
-            BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner)
-                    throws Exception{
+            BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner) throws Exception {
         String pname = project.getName();
         BazelProject bazelProject = BazelPluginActivator.getBazelProjectManager().getProject(pname);
         BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
         String packageLabel = projMgr.getBazelLabelForProject(bazelProject);
-        System.out.println("Refreshing the classpath for project ["+pname+"] for package ["+packageLabel+"]");
+        System.out.println("Refreshing the classpath for project [" + pname + "] for package [" + packageLabel + "]");
 
         // Force update of classpath container and the aspect cache
         BazelClasspathContainer.clean();
@@ -192,7 +194,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
+        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
+                bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
         if (bazelWorkspaceCmdRunner == null) {
             super.clean(monitor);
@@ -204,27 +207,27 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         BazelClasspathContainer.clean();
     }
 
-    private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects, WorkProgressMonitor progressMonitor, IProject rootProject, IProgressMonitor monitor)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException
-    {
+    private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects,
+            WorkProgressMonitor progressMonitor, IProject rootProject, IProgressMonitor monitor)
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         Set<String> bazelTargets = new TreeSet<>();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         List<BazelProject> bazelProjects = new ArrayList<>();
 
         // figure out the list of targets to build
         for (IProject project : projects) {
-        	String projectName = project.getName();
-        	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
-        	BazelProjectTargets activatedTargets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
+            String projectName = project.getName();
+            BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+            BazelProjectTargets activatedTargets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
             bazelTargets.addAll(activatedTargets.getConfiguredTargets());
             bazelProjects.add(bazelProject);
         }
-        
+
         if (bazelTargets.isEmpty()) {
             return true;
         } else {
             List<String> bazelBuildFlags = getAllBazelBuildFlags(projects);
-            List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, bazelBuildFlags, progressMonitor);            
+            List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, bazelBuildFlags, progressMonitor);
             // publish errors (even if no errors, this must run so that previous errors are cleared)
             Map<BazelLabel, BazelProject> labelToProject = bazelProjectManager.getBazelLabelToProjectMap(bazelProjects);
             BazelErrorPublisher errorPublisher = new BazelErrorPublisher(rootProject, projects, labelToProject);
@@ -240,8 +243,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         for (IProject project : projects) {
-        	String projectName = project.getName();
-        	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+            String projectName = project.getName();
+            BazelProject bazelProject = bazelProjectManager.getProject(projectName);
             buildFlags.addAll(bazelProjectManager.getBazelBuildFlagsForProject(bazelProject));
         }
         return buildFlags;
@@ -255,7 +258,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     // determines all downstream projects, including transitives, of the specified "upstream" project, by looking at the
     // specified "allImportedProjects", and adds them to the specified "downstreams" Set.
-    private static void collectDownstreamProjects(IProject upstream, Set<IProject> downstreams, IJavaProject[] allImportedProjects) {
+    private static void collectDownstreamProjects(IProject upstream, Set<IProject> downstreams,
+            IJavaProject[] allImportedProjects) {
         for (IJavaProject project : allImportedProjects) {
             try {
                 for (String requiredProjectName : project.getRequiredProjectNames()) {

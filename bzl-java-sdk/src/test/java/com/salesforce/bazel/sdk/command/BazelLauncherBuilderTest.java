@@ -184,7 +184,8 @@ public class BazelLauncherBuilderTest {
         workspaceDir.mkdirs();
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
-        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(3);
+        TestBazelWorkspaceDescriptor descriptor =
+                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(3);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
         env.createTestEnvironment(workspace, testDir, null);
@@ -192,7 +193,8 @@ public class BazelLauncherBuilderTest {
         return env;
     }
 
-    private void addBazelCommandOutput(TestBazelCommandEnvironmentFactory env, int verbIndex, String verb, String resultLine) {
+    private void addBazelCommandOutput(TestBazelCommandEnvironmentFactory env, int verbIndex, String verb,
+            String resultLine) {
         List<String> outputLines = new ArrayList<>();
         outputLines.add(resultLine);
         List<String> errorLines = new ArrayList<>();

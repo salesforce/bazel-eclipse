@@ -14,9 +14,9 @@ public class AspectOutputJarsTest {
     //   "source_jar":"external/com_google_guava_guava/jar/guava-20.0-sources.jar"
     //  }
     private final String GUAVA_JAR = "external/com_google_guava_guava/jar/guava-20.0.jar";
-    private final String GUAVA_IJAR = "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar";
+    private final String GUAVA_IJAR =
+            "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar";
     private final String GUAVA_SJAR = "external/com_google_guava_guava/jar/guava-20.0-sources.jar";
-
 
     @Test
     public void testDeserializationHappy() {
@@ -57,7 +57,6 @@ public class AspectOutputJarsTest {
         assertEquals(GUAVA_IJAR, parsedJars.getInterfaceJar());
         assertNull(parsedJars.getSrcJar());
     }
-
 
     private JSONObject createJarsArray(String jar, String ijar, String sourcejar) {
 

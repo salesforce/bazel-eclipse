@@ -17,17 +17,18 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolverImpl;
 
 /**
- * Imports projects with a Progress Dialog.  This is used by the Import Wizard and the ProjectView machinery.
+ * Imports projects with a Progress Dialog. This is used by the Import Wizard and the ProjectView machinery.
  */
 public class BazelProjectImporter {
-    
-    public static void run(BazelPackageLocation workspaceRootProject, List<BazelPackageLocation> bazelPackagesToImport) {
+
+    public static void run(BazelPackageLocation workspaceRootProject,
+            List<BazelPackageLocation> bazelPackagesToImport) {
         WorkProgressMonitor progressMonitor = new EclipseWorkProgressMonitor(null);
         IRunnableWithProgress op = new IRunnableWithProgress() {
             @Override
             public void run(IProgressMonitor monitor) {
                 try {
-                    BazelEclipseProjectFactory.importWorkspace(workspaceRootProject, bazelPackagesToImport, 
+                    BazelEclipseProjectFactory.importWorkspace(workspaceRootProject, bazelPackagesToImport,
                         new ProjectOrderResolverImpl(), progressMonitor, monitor);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -44,7 +45,7 @@ public class BazelProjectImporter {
             openError("Error", e);
         }
     }
-    
+
     private static void openError(String title, Throwable ex) {
         Display.getDefault().syncExec(new Runnable() {
             public void run() {

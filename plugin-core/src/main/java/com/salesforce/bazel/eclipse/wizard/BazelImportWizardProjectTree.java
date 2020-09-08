@@ -89,7 +89,7 @@ import com.salesforce.bazel.sdk.project.ProjectViewConstants;
  */
 public class BazelImportWizardProjectTree {
     private static final Object[] EMPTY = new Object[0];
-    
+
     private String rootWorkspaceDirectory;
 
     private Button btnSelectTree;
@@ -280,24 +280,27 @@ public class BazelImportWizardProjectTree {
                 dialog.setFilterPath(BazelImportWizardProjectTree.this.rootWorkspaceDirectory);
                 String path = dialog.open();
                 if (path != null) {
-                    Set<BazelPackageInfo> packagesToImport = new HashSet<>();                        
-                    ProjectView projectView = new ProjectView(new File(BazelImportWizardProjectTree.this.rootWorkspaceDirectory), readFile(path));
-                    Set<String> projectViewPaths = projectView.getPackages().stream().map(p -> p.getBazelPackageFSRelativePath()).collect(Collectors.toSet());                        
+                    Set<BazelPackageInfo> packagesToImport = new HashSet<>();
+                    ProjectView projectView = new ProjectView(
+                            new File(BazelImportWizardProjectTree.this.rootWorkspaceDirectory), readFile(path));
+                    Set<String> projectViewPaths = projectView.getPackages().stream()
+                            .map(p -> p.getBazelPackageFSRelativePath()).collect(Collectors.toSet());
                     for (BazelPackageInfo bpi : getAllBazelPackageInfos()) {
                         if (projectViewPaths.contains(bpi.getBazelPackageFSRelativePath())) {
                             packagesToImport.add(bpi);
-                        }                            
+                        }
                     }
                     for (BazelPackageInfo bpi : packagesToImport) {
                         projectTreeViewer.setChecked(bpi, true);
-                    }                    
-                    MessageDialog.openInformation(page.getShell(), "Imported Project View", "Selected " + packagesToImport.size() + " Bazel Packages to import");
+                    }
+                    MessageDialog.openInformation(page.getShell(), "Imported Project View",
+                        "Selected " + packagesToImport.size() + " Bazel Packages to import");
                     page.setPageComplete();
                 }
             }
         });
     }
-    
+
     private static String readFile(String path) {
         try {
             return new String(Files.readAllBytes(Paths.get(path)));
@@ -305,20 +308,17 @@ public class BazelImportWizardProjectTree {
             throw new IllegalStateException(ex);
         }
     }
-    
+
     private List<BazelPackageInfo> getAllBazelPackageInfos() {
         // seems hacky - but this will change again as we update the import UI
         setAllChecked(true);
         try {
-            return Arrays.stream(projectTreeViewer.getCheckedElements())
-                .filter(el -> (el instanceof BazelPackageInfo))
-                .map(el -> (BazelPackageInfo)el)
-                .collect(Collectors.toList());
+            return Arrays.stream(projectTreeViewer.getCheckedElements()).filter(el -> (el instanceof BazelPackageInfo))
+                    .map(el -> (BazelPackageInfo) el).collect(Collectors.toList());
         } finally {
             setAllChecked(false);
         }
-        
-        
+
     }
 
     public void updateCheckedState() {
@@ -404,7 +404,7 @@ public class BazelImportWizardProjectTree {
         updateCheckedState();
         page.setPageComplete();
     }
-    
+
     void setRootWorkspaceDirectory(String rootWorkspaceDirectory) {
         this.rootWorkspaceDirectory = rootWorkspaceDirectory;
     }

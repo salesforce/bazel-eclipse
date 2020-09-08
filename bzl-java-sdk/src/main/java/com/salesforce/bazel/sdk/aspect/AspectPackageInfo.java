@@ -210,10 +210,9 @@ public final class AspectPackageInfo {
     public List<String> getSources() {
         return sources;
     }
-    
+
     /**
-     * The value of the "main_class" attribute of this target, may be null if this target
-     * doesn't specify a main_class.
+     * The value of the "main_class" attribute of this target, may be null if this target doesn't specify a main_class.
      */
     public String getMainClass() {
         return mainClass;
@@ -223,7 +222,7 @@ public final class AspectPackageInfo {
 
     static AspectPackageInfo loadAspectFromJson(File aspectDataFile, JSONObject object) {
         AspectPackageInfo info = null;
-        
+
         try {
             ImmutableList<AspectOutputJarSet> jars = jsonToJarArray(object.getJSONArray("jars"));
             ImmutableList<AspectOutputJarSet> generated_jars = jsonToJarArray(object.getJSONArray("generated_jars"));
@@ -233,9 +232,9 @@ public final class AspectPackageInfo {
             ImmutableList<String> deps = jsonToStringArray(object.getJSONArray("dependencies"));
             ImmutableList<String> sources = jsonToStringArray(object.getJSONArray("sources"));
             String mainClass = object.has("main_class") ? object.getString("main_class") : null;
-            
-            info = new AspectPackageInfo(aspectDataFile, jars, generated_jars, build_file_artifact_location, kind, 
-                label, deps, sources, mainClass);
+
+            info = new AspectPackageInfo(aspectDataFile, jars, generated_jars, build_file_artifact_location, kind,
+                    label, deps, sources, mainClass);
         } catch (Exception anyE) {
             //System.err.println("Error parsing Bazel aspect info from file "+aspectDataFile.getAbsolutePath()+". Error: "+anyE.getMessage());
             throw anyE;

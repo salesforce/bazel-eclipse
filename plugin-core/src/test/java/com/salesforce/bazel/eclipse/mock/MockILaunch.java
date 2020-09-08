@@ -34,17 +34,17 @@ import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.debug.core.model.ISourceLocator;
 
 public class MockILaunch implements ILaunch {
-    private static final String UOE_MSG = "MockILaunch is pay as you go, you have hit a method that is not implemented."; 
+    private static final String UOE_MSG =
+            "MockILaunch is pay as you go, you have hit a method that is not implemented.";
     private ILaunchConfiguration launchConfig;
     private Map<String, String> attributes = new TreeMap<>();
     @SuppressWarnings("unused")
     private IProcess process;
 
-    
-    public MockILaunch( ILaunchConfiguration launchConfig) {
+    public MockILaunch(ILaunchConfiguration launchConfig) {
         this.launchConfig = launchConfig;
     }
-    
+
     // IMPLEMENTED METHODS
 
     @Override
@@ -56,7 +56,7 @@ public class MockILaunch implements ILaunch {
     public String getAttribute(String key) {
         return this.attributes.get(key);
     }
-    
+
     @Override
     public ILaunchConfiguration getLaunchConfiguration() {
         return this.launchConfig;
@@ -67,7 +67,6 @@ public class MockILaunch implements ILaunch {
         this.attributes.put(key, value);
     }
 
-    
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
 

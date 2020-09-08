@@ -34,9 +34,9 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
  */
 public final class BazelPackageContentAssistProcessor implements IContentAssistProcessor {
 
-    private static final ICompletionProposal[] NO_PROPOSALS= new ICompletionProposal[0];
-    private static final IContextInformation[] NO_CONTEXTS= new IContextInformation[0];
-    
+    private static final ICompletionProposal[] NO_PROPOSALS = new ICompletionProposal[0];
+    private static final IContextInformation[] NO_CONTEXTS = new IContextInformation[0];
+
     @Override
     public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
         try {
@@ -48,7 +48,7 @@ public final class BazelPackageContentAssistProcessor implements IContentAssistP
             if (f.isDirectory()) {
                 if (!prefix.isEmpty() && !prefix.endsWith(File.separator)) {
                     suggestionPrefix = File.separator;
-                }                
+                }
             } else {
                 int i = prefix.lastIndexOf(File.separator);
                 if (i == -1) {
@@ -56,11 +56,11 @@ public final class BazelPackageContentAssistProcessor implements IContentAssistP
                 } else {
                     f = new File(BazelPluginActivator.getBazelWorkspaceRootDirectory(), prefix.substring(0, i));
                 }
-                matchSuffix = prefix.substring(i+1);    
+                matchSuffix = prefix.substring(i + 1);
             }
-            
+
             if (f.isDirectory()) {
-                List<String> directories = Arrays.asList(f.list(new FilenameFilter() {                    
+                List<String> directories = Arrays.asList(f.list(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
                         File f = new File(dir, name);
@@ -94,7 +94,7 @@ public final class BazelPackageContentAssistProcessor implements IContentAssistP
         if (doc == null || offset > doc.getLength())
             return null;
 
-        int length= 0;
+        int length = 0;
         while (--offset >= 0 && doc.getChar(offset) != '\n') {
             length++;
         }
@@ -127,15 +127,16 @@ public final class BazelPackageContentAssistProcessor implements IContentAssistP
         return null;
     }
 
-    private static final class Proposal implements ICompletionProposal, ICompletionProposalExtension, ICompletionProposalExtension2, ICompletionProposalExtension3 {
+    private static final class Proposal implements ICompletionProposal, ICompletionProposalExtension,
+            ICompletionProposalExtension2, ICompletionProposalExtension3 {
         private final String fString;
         private final String fPrefix;
         private final int fOffset;
 
         Proposal(String string, String prefix, int offset) {
-            fString= string;
-            fPrefix= prefix;
-            fOffset= offset;
+            fString = string;
+            fPrefix = prefix;
+            fOffset = offset;
         }
 
         @Override
@@ -171,10 +172,9 @@ public final class BazelPackageContentAssistProcessor implements IContentAssistP
         @Override
         public void apply(IDocument document, char trigger, int offset) {
             try {
-                String replacement= fString.substring(offset - fOffset);
+                String replacement = fString.substring(offset - fOffset);
                 document.replace(offset, 0, replacement);
-            } catch (BadLocationException x) {
-            }
+            } catch (BadLocationException x) {}
         }
 
         @Override
@@ -198,18 +198,18 @@ public final class BazelPackageContentAssistProcessor implements IContentAssistP
         }
 
         @Override
-        public void selected(ITextViewer viewer, boolean smartToggle) {
-        }
+        public void selected(ITextViewer viewer, boolean smartToggle) {}
 
         @Override
-        public void unselected(ITextViewer viewer) {
-        }
+        public void unselected(ITextViewer viewer) {}
 
         @Override
         public boolean validate(IDocument document, int offset, DocumentEvent event) {
             try {
-                int prefixStart= fOffset - fPrefix.length();
-                return offset >= fOffset && offset < fOffset + fString.length() && document.get(prefixStart, offset - (prefixStart)).equals((fPrefix + fString).substring(0, offset - prefixStart));
+                int prefixStart = fOffset - fPrefix.length();
+                return offset >= fOffset && offset < fOffset + fString.length()
+                        && document.get(prefixStart, offset - (prefixStart))
+                                .equals((fPrefix + fString).substring(0, offset - prefixStart));
             } catch (BadLocationException x) {
                 return false;
             }

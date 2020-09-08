@@ -44,23 +44,23 @@ public class MockCommand implements Command {
     static {
         TestOptions.advertise(TESTOPTION_FAILTESTFORUNKNOWNTARGET);
     }
-    
+
     // INPUTS
     public List<String> commandTokens;
     public Map<String, String> testOptions;
     public TestBazelWorkspaceFactory testWorkspaceFactory;
-    
+
     // OUTPUTS
     public List<String> outputLines;
     public List<String> errorLines;
-    
 
-    public MockCommand(List<String> commandTokens, Map<String, String> testOptions, TestBazelWorkspaceFactory testWorkspaceFactory) {
+    public MockCommand(List<String> commandTokens, Map<String, String> testOptions,
+            TestBazelWorkspaceFactory testWorkspaceFactory) {
         this.commandTokens = commandTokens;
         this.testOptions = testOptions;
         this.testWorkspaceFactory = testWorkspaceFactory;
     }
-    
+
     public void addSimulatedOutputToCommandStdOut(String... someStrings) {
         this.outputLines = new ArrayList<>();
         for (String someString : someStrings) {
@@ -93,10 +93,10 @@ public class MockCommand implements Command {
     @Override
     public BazelProcessBuilder getProcessBuilder() {
         BazelProcessBuilder pb = Mockito.mock(BazelProcessBuilder.class);
-        
+
         // you may need to add more mocking behaviors
         Mockito.when(pb.command()).thenReturn(commandTokens);
-        
+
         return pb;
     }
 
@@ -107,15 +107,15 @@ public class MockCommand implements Command {
         }
         return ImmutableList.of();
     }
-    
+
     // HELPERS
-    
+
     protected String findBazelTargetInArgs() {
         // we expect the target to be the last arg, but that is not always the case
         // sometimes there are args after, prefixed by --
         int numArgs = commandTokens.size();
         String target = commandTokens.get(numArgs - 1);
-        for (int i = numArgs-1; i >= 0; i--) {
+        for (int i = numArgs - 1; i >= 0; i--) {
             if (commandTokens.get(i).startsWith("--")) {
                 continue;
             }
@@ -124,26 +124,25 @@ public class MockCommand implements Command {
         }
         return target;
     }
-    
+
     /**
-     * Checks if a passed target to a command is valid. This is useful for commands such as build/test that
-     * operate on targets in that they can simulate failed build output
+     * Checks if a passed target to a command is valid. This is useful for commands such as build/test that operate on
+     * targets in that they can simulate failed build output
      */
     protected boolean isValidBazelTarget(String target) {
-        
+
         if (target == null) {
             returnFalseOrThrow(target);
         }
         if (target.endsWith(":")) {
             // bug in a mock or the test itself
-            throw new IllegalArgumentException("Target ["+target+"] is invalid.");
+            throw new IllegalArgumentException("Target [" + target + "] is invalid.");
         }
         if (testWorkspaceFactory.workspaceDescriptor == null) {
             // there is no workspace to validate against, just return true
             return true;
         }
-        
-        
+
         if (target.startsWith("//")) {
             target = target.substring(2);
         }
@@ -152,9 +151,9 @@ public class MockCommand implements Command {
         int colonIndex = target.indexOf(":");
         if (colonIndex >= 0) {
             packageLabel = target.substring(0, colonIndex);
-            ruleName = target.substring(colonIndex+1);
+            ruleName = target.substring(colonIndex + 1);
         }
-        
+
         if (testWorkspaceFactory.workspaceDescriptor.getCreatedPackageByName(packageLabel) == null) {
             returnFalseOrThrow(target);
         }
@@ -164,7 +163,7 @@ public class MockCommand implements Command {
                 returnFalseOrThrow(target);
             }
         }
-        
+
         return true;
     }
 
@@ -177,6 +176,6 @@ public class MockCommand implements Command {
         if ("false".equals(failOnMissingStr)) {
             return false;
         }
-        throw new IllegalArgumentException("Bazel command attempted to process an unknown target ["+target+"]");
+        throw new IllegalArgumentException("Bazel command attempted to process an unknown target [" + target + "]");
     }
 }

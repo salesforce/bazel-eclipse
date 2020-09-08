@@ -54,7 +54,8 @@ public class AspectPackageInfosTest {
         AspectPackageInfo lib = getAspectPackageInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
         AspectPackageInfo test = getAspectPackageInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
         AspectPackageInfo bin = getAspectPackageInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectPackageInfo seleniumTest =
+                getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
         AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
 
@@ -70,7 +71,8 @@ public class AspectPackageInfosTest {
         AspectPackageInfo lib = getAspectPackageInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
         AspectPackageInfo test = getAspectPackageInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
         AspectPackageInfo bin = getAspectPackageInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectPackageInfo seleniumTest =
+                getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
         AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
 
@@ -81,14 +83,15 @@ public class AspectPackageInfosTest {
         infos = apis.lookupByTargetKind(EnumSet.of(BazelTargetKind.JAVA_WEB_TEST_SUITE));
         assertEquals(1, infos.size());
         assertSame(seleniumTest, infos.iterator().next());
-}
+    }
 
     @Test
     public void testLookupByTargetKind__multipleTargetKinds() {
         AspectPackageInfo lib = getAspectPackageInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
         AspectPackageInfo test = getAspectPackageInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
         AspectPackageInfo bin = getAspectPackageInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo seleniumTest = getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectPackageInfo seleniumTest =
+                getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
         AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
 
@@ -178,9 +181,11 @@ public class AspectPackageInfosTest {
         return getAspectPackageInfo(label, BazelTargetKind.JAVA_LIBRARY, sourcePaths);
     }
 
-    private static AspectPackageInfo getAspectPackageInfo(String label, BazelTargetKind targetKind, String... sourcePaths) {
+    private static AspectPackageInfo getAspectPackageInfo(String label, BazelTargetKind targetKind,
+            String... sourcePaths) {
         return new AspectPackageInfo(new File(""), ImmutableList.of(), ImmutableList.of(), "some/path",
-                targetKind.toString().toLowerCase(), label, ImmutableList.of(), ImmutableList.copyOf(sourcePaths), "main-class");
+                targetKind.toString().toLowerCase(), label, ImmutableList.of(), ImmutableList.copyOf(sourcePaths),
+                "main-class");
     }
 
 }

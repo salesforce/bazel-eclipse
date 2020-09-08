@@ -34,8 +34,7 @@ public class MockCommandConsole implements CommandConsole, CommandConsoleFactory
     final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     final ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
-    public MockCommandConsole() {
-    }
+    public MockCommandConsole() {}
 
     @Override
     public OutputStream createOutputStream() {

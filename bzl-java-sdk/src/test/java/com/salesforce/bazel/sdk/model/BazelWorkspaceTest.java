@@ -19,11 +19,12 @@ public class BazelWorkspaceTest {
 
         // mostly just looking for NPE/runtime exceptions
         String wsDir = ws.getBazelWorkspaceRootDirectory().getAbsolutePath();
-        assertTrue(wsDir.contains("bazel-eclipse-feature-"+wsName+"-workspace"));
-        assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath().contains("bazel-eclipse-feature-"+wsName+"-outputdir"));
-        assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot/"+wsName));
+        assertTrue(wsDir.contains("bazel-eclipse-feature-" + wsName + "-workspace"));
+        assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath()
+                .contains("bazel-eclipse-feature-" + wsName + "-outputdir"));
+        assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot/" + wsName));
         String binDir = ws.getBazelBinDirectory().getAbsolutePath();
-        assertTrue(binDir.contains("execroot/"+wsName+"/bazel-out/darwin-fastbuild/bin"));
+        assertTrue(binDir.contains("execroot/" + wsName + "/bazel-out/darwin-fastbuild/bin"));
     }
 
     @Test
@@ -33,11 +34,12 @@ public class BazelWorkspaceTest {
 
         // mostly just looking for NPE/runtime exceptions
         String wsDir = ws.getBazelWorkspaceRootDirectory().getAbsolutePath();
-        assertTrue(wsDir.contains("bazel-eclipse-feature-"+wsName+"-workspace"));
-        assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath().contains("bazel-eclipse-feature-"+wsName+"-outputdir"));
-        assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot/"+wsName));
+        assertTrue(wsDir.contains("bazel-eclipse-feature-" + wsName + "-workspace"));
+        assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath()
+                .contains("bazel-eclipse-feature-" + wsName + "-outputdir"));
+        assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot/" + wsName));
         String binDir = ws.getBazelBinDirectory().getAbsolutePath();
-        assertTrue(binDir.contains("execroot/"+wsName+"/bazel-out/linux-fastbuild/bin"));
+        assertTrue(binDir.contains("execroot/" + wsName + "/bazel-out/linux-fastbuild/bin"));
     }
 
     @Test
@@ -47,11 +49,12 @@ public class BazelWorkspaceTest {
 
         // mostly just looking for NPE/runtime exceptions
         String wsDir = ws.getBazelWorkspaceRootDirectory().getAbsolutePath();
-        assertTrue(wsDir.contains("bazel-eclipse-feature-"+wsName+"-workspace"));
-        assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath().contains("bazel-eclipse-feature-"+wsName+"-outputdir"));
-        assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot/"+wsName));
+        assertTrue(wsDir.contains("bazel-eclipse-feature-" + wsName + "-workspace"));
+        assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath()
+                .contains("bazel-eclipse-feature-" + wsName + "-outputdir"));
+        assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot/" + wsName));
         String binDir = ws.getBazelBinDirectory().getAbsolutePath();
-        assertTrue(binDir.contains("execroot/"+wsName+"/bazel-out/windows-fastbuild/bin"));
+        assertTrue(binDir.contains("execroot/" + wsName + "/bazel-out/windows-fastbuild/bin"));
     }
 
     @Test
@@ -65,16 +68,16 @@ public class BazelWorkspaceTest {
         assertTrue(options.getOption("stamp").equals("true")); // this is a default option in the MockBazelWorkspaceMetadataStrategy log lines
     }
 
-
     // HELPERS
 
     private BazelWorkspace createTestWorkspaceObject(String testName, String osName) throws Exception {
-        File testBazelRoot = File.createTempFile("bazel-eclipse-feature-"+testName+"-workspace", "");
-        File testBazelOutput = File.createTempFile("bazel-eclipse-feature-"+testName+"-outputdir", "");
+        File testBazelRoot = File.createTempFile("bazel-eclipse-feature-" + testName + "-workspace", "");
+        File testBazelOutput = File.createTempFile("bazel-eclipse-feature-" + testName + "-outputdir", "");
         MockOperatingEnvironmentDetectionStrategy os = new MockOperatingEnvironmentDetectionStrategy(osName);
 
         // this mock simulates .bazelrc options
-        MockBazelWorkspaceMetadataStrategy metadata = new MockBazelWorkspaceMetadataStrategy(testName, testBazelRoot, testBazelOutput, os);
+        MockBazelWorkspaceMetadataStrategy metadata =
+                new MockBazelWorkspaceMetadataStrategy(testName, testBazelRoot, testBazelOutput, os);
 
         return new BazelWorkspace(testName, testBazelRoot, os, metadata);
     }

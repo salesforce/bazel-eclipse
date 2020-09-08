@@ -55,7 +55,8 @@ public class BazelOutputParserTest {
         List<BazelProblem> errors = p.getErrors(lines);
 
         assertEquals(1, errors.size());
-        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java",
+            errors.get(0).getResourcePath());
         assertEquals(50, errors.get(0).getLineNumber());
         assertEquals("Cannot find symbol: this.numSeeds = numSeeds;", errors.get(0).getDescription());
     }
@@ -89,20 +90,20 @@ public class BazelOutputParserTest {
         List<String> lines = ImmutableList.of(
             "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:41: error: ';' expected\n",
-            "  public int numSeeds\n",
-            "                     ^\n",
+            "  public int numSeeds\n", "                     ^\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n",
-            "  private String species\n",
-            "                        ^");
+            "  private String species\n", "                        ^");
 
         List<BazelProblem> errors = p.getErrors(lines);
 
         assertEquals(2, errors.size());
-        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java",
+            errors.get(0).getResourcePath());
         assertEquals(41, errors.get(0).getLineNumber());
         assertEquals("';' expected: public int numSeeds", errors.get(0).getDescription());
 
-        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(1).getResourcePath());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java",
+            errors.get(1).getResourcePath());
         assertEquals(42, errors.get(1).getLineNumber());
         assertEquals("';' expected: private String species", errors.get(1).getDescription());
     }
@@ -115,19 +116,21 @@ public class BazelOutputParserTest {
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:41: error: ';' expected\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:45: error: ';' expected\n",
-            "    this.species = species",
-            "                        ^");
+            "    this.species = species", "                        ^");
 
         List<BazelProblem> errors = p.getErrors(lines);
 
         assertEquals(3, errors.size());
-        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(0).getResourcePath());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java",
+            errors.get(0).getResourcePath());
         assertEquals(41, errors.get(0).getLineNumber());
         assertEquals("';' expected", errors.get(0).getDescription());
-        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(1).getResourcePath());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java",
+            errors.get(1).getResourcePath());
         assertEquals(42, errors.get(1).getLineNumber());
         assertEquals("';' expected", errors.get(1).getDescription());
-        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java", errors.get(1).getResourcePath());
+        assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java",
+            errors.get(1).getResourcePath());
         assertEquals(45, errors.get(2).getLineNumber());
         assertEquals("';' expected: this.species = species", errors.get(2).getDescription());
     }
@@ -135,9 +138,8 @@ public class BazelOutputParserTest {
     @Test
     public void testUnformattedError() {
         BazelOutputParser p = new BazelOutputParser();
-        List<String> lines = ImmutableList.of(
-            "ERROR: this is just a string that we should probably handle but we don't right now"
-        );
+        List<String> lines =
+                ImmutableList.of("ERROR: this is just a string that we should probably handle but we don't right now");
 
         List<BazelProblem> errors = p.getErrors(lines);
 

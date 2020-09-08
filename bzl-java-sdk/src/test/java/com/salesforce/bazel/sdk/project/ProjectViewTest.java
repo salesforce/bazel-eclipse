@@ -21,7 +21,8 @@ public class ProjectViewTest {
         packages.add(getPackage("d/e/f"));
         StringBuilder expectedContent = new StringBuilder();
         expectedContent.append("directories:").append(System.lineSeparator());
-        expectedContent.append(ProjectView.INDENT).append(ProjectView.DIRECTORIES_COMMENT).append(System.lineSeparator());
+        expectedContent.append(ProjectView.INDENT).append(ProjectView.DIRECTORIES_COMMENT)
+                .append(System.lineSeparator());
         expectedContent.append(ProjectView.INDENT).append("a/b/c").append(System.lineSeparator());
         expectedContent.append(ProjectView.INDENT).append("d/e/f").append(System.lineSeparator());
 
@@ -56,9 +57,20 @@ public class ProjectViewTest {
 
     private BazelPackageLocation getPackage(String path) {
         return new ProjectViewPackageLocation(new File(""), path) {
-            @Override public String getBazelPackageNameLastSegment() { throw new AssertionError(); }
-            @Override public File getWorkspaceRootDirectory() { throw new AssertionError(); }
-            @Override public boolean isWorkspaceRoot() { throw new AssertionError(); }
+            @Override
+            public String getBazelPackageNameLastSegment() {
+                throw new AssertionError();
+            }
+
+            @Override
+            public File getWorkspaceRootDirectory() {
+                throw new AssertionError();
+            }
+
+            @Override
+            public boolean isWorkspaceRoot() {
+                throw new AssertionError();
+            }
         };
     }
 }

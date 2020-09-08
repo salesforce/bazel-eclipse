@@ -65,22 +65,22 @@ public class BazelLaunchConfigurationArgumentsTab extends AbstractLaunchConfigur
             @Override
             public void keyTraversed(TraverseEvent e) {
                 switch (e.detail) {
-                    case SWT.TRAVERSE_ESCAPE:
-                    case SWT.TRAVERSE_PAGE_NEXT:
-                    case SWT.TRAVERSE_PAGE_PREVIOUS:
+                case SWT.TRAVERSE_ESCAPE:
+                case SWT.TRAVERSE_PAGE_NEXT:
+                case SWT.TRAVERSE_PAGE_PREVIOUS:
+                    e.doit = true;
+                    break;
+                case SWT.TRAVERSE_RETURN:
+                case SWT.TRAVERSE_TAB_NEXT:
+                case SWT.TRAVERSE_TAB_PREVIOUS:
+                    if ((programArgumentsText.getStyle() & SWT.SINGLE) != 0) {
                         e.doit = true;
-                        break;
-                    case SWT.TRAVERSE_RETURN:
-                    case SWT.TRAVERSE_TAB_NEXT:
-                    case SWT.TRAVERSE_TAB_PREVIOUS:
-                        if ((programArgumentsText.getStyle() & SWT.SINGLE) != 0) {
+                    } else {
+                        if (!programArgumentsText.isEnabled() || (e.stateMask & SWT.MODIFIER_MASK) != 0) {
                             e.doit = true;
-                        } else {
-                            if (!programArgumentsText.isEnabled() || (e.stateMask & SWT.MODIFIER_MASK) != 0) {
-                                e.doit = true;
-                            }
                         }
-                        break;
+                    }
+                    break;
                 }
             }
         });
@@ -98,8 +98,7 @@ public class BazelLaunchConfigurationArgumentsTab extends AbstractLaunchConfigur
     }
 
     @Override
-    public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
-    }
+    public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {}
 
     @Override
     public void initializeFrom(ILaunchConfiguration configuration) {

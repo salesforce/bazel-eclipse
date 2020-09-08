@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.List;
 
 /**
- * In memory package location. 
+ * In memory package location.
  * <p>
  * TODO we need to rethink BazelPackageLocation abstraction.
  *
@@ -12,7 +12,6 @@ import java.util.List;
 public class InMemoryBazelPackageLocation implements BazelPackageLocation {
     private String path;
     private String lastSegment;
-    
 
     // root node
     public InMemoryBazelPackageLocation() {
@@ -22,17 +21,17 @@ public class InMemoryBazelPackageLocation implements BazelPackageLocation {
 
     public InMemoryBazelPackageLocation(String path) {
         if (path.startsWith("//")) {
-            this.path = path.substring(2); 
+            this.path = path.substring(2);
         } else {
             this.path = path;
         }
         this.lastSegment = "";
         int lastSlash = path.indexOf("/");
         if (lastSlash > 0) {
-            this.lastSegment = path.substring(lastSlash+1);
+            this.lastSegment = path.substring(lastSlash + 1);
         }
     }
-    
+
     @Override
     public String getBazelPackageNameLastSegment() {
         return lastSegment;
@@ -58,10 +57,10 @@ public class InMemoryBazelPackageLocation implements BazelPackageLocation {
         return path;
     }
 
-	@Override
-	public List<BazelPackageLocation> gatherChildren() {
-		// TODO hard to implement, we plan to rework this class
-		return null;
-	}
+    @Override
+    public List<BazelPackageLocation> gatherChildren() {
+        // TODO hard to implement, we plan to rework this class
+        return null;
+    }
 
 }

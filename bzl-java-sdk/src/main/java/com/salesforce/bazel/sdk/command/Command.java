@@ -48,7 +48,7 @@ public interface Command {
      * @see {@link CommandBuilder#setStderrLineSelector(Function)}
      */
     ImmutableList<String> getSelectedErrorLines();
-    
+
     /**
      * Returns the list of lines selected from the standard output stream. Lines printed to the standard output stream
      * by the executed command can be filtered to be added to that list.

@@ -26,16 +26,16 @@ package com.salesforce.bazel.sdk.command.test;
 import java.io.File;
 
 /**
- * Creates a mock executable binary on the file system, for tests that expect to have an 
- * actual Bazel executable.
+ * Creates a mock executable binary on the file system, for tests that expect to have an actual Bazel executable.
  */
 public class MockBazelExecutable {
     public File bazelExecutableFile;
-    
+
     /**
      * Creates the fake executable file.
      * 
-     * @param executableDir directory in which the binary file will be placed, must exist, must be writable
+     * @param executableDir
+     *            directory in which the binary file will be placed, must exist, must be writable
      */
     public MockBazelExecutable(File executableDir) {
         this.bazelExecutableFile = new File(executableDir, "bazel");
@@ -46,7 +46,7 @@ public class MockBazelExecutable {
             throw new RuntimeException(anyE);
         }
     }
-    
+
     public String getAbsolutePath() {
         return bazelExecutableFile.getAbsolutePath();
     }

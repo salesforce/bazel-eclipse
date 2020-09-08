@@ -55,7 +55,7 @@ public class BazelBuildFileHelper {
      * enough to trigger the detector.
      */
     public static final String[] JAVA_PROJECT_INDICATORS =
-            { "java_binary", "java_library", "java_test", "java_web_test_suite", "springboot", "springboot_test", 
+            { "java_binary", "java_library", "java_test", "java_web_test_suite", "springboot", "springboot_test",
                     "java_proto_library", "java_lite_proto_library", "java_grpc_library" };
 
     /**

@@ -32,7 +32,7 @@ public class MockWorkProgressMonitor implements WorkProgressMonitor {
     public String subtask = null;
     public int worked = 0;
     public boolean isDone = false;
-    
+
     @Override
     public void beginTask(String name, int totalWork) {
         this.name = name;

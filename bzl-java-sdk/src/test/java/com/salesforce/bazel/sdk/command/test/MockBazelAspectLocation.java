@@ -27,16 +27,16 @@ import java.io.File;
 
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 
-public class MockBazelAspectLocation implements BazelAspectLocation{
+public class MockBazelAspectLocation implements BazelAspectLocation {
 
-    public File aspectDir; 
+    public File aspectDir;
     public String aspectLabel;
-    
+
     public MockBazelAspectLocation(File aspectDir, String aspectLabel) {
         this.aspectDir = aspectDir;
         this.aspectLabel = aspectLabel;
     }
-    
+
     @Override
     public File getAspectDirectory() {
         return aspectDir;

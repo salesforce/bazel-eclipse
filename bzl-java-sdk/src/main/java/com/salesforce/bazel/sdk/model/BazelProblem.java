@@ -74,7 +74,8 @@ public class BazelProblem {
     /**
      * Returns the matching BazelLabel for this problem's resourcePath.
      *
-     * @param labels  all BazelLabel instances to consider
+     * @param labels
+     *            all BazelLabel instances to consider
      * @return the matching BazelLabel, null if no match is found
      */
     public BazelLabel getOwningLabel(Collection<BazelLabel> labels) {
@@ -83,7 +84,8 @@ public class BazelProblem {
         for (BazelLabel label : labels) {
             String relativeResourcePath = getRelativeResourcePath(label);
             if (relativeResourcePath != null) {
-                if (shortestRelativeResourcePath == null || relativeResourcePath.length() < shortestRelativeResourcePath.length()) {
+                if (shortestRelativeResourcePath == null
+                        || relativeResourcePath.length() < shortestRelativeResourcePath.length()) {
                     bestMatch = label;
                     shortestRelativeResourcePath = relativeResourcePath;
                 }
@@ -111,13 +113,15 @@ public class BazelProblem {
     public BazelProblem toErrorWithRelativizedResourcePath(BazelLabel label) {
         String rel = getRelativeResourcePath(label);
         if (rel == null) {
-            throw new IllegalArgumentException("Unable to build a relative path for " + resourcePath + " based on label " + label);
+            throw new IllegalArgumentException(
+                    "Unable to build a relative path for " + resourcePath + " based on label " + label);
         }
         return new BazelProblem(rel, lineNumber, description, isError);
     }
 
     public BazelProblem toGenericWorkspaceLevelError(String descriptionPrefix) {
-        return new BazelProblem(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description, isError);
+        return new BazelProblem(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description,
+                isError);
     }
 
     @Override
@@ -130,7 +134,7 @@ public class BazelProblem {
         if (!(other instanceof BazelProblem)) {
             return false;
         }
-        BazelProblem o = (BazelProblem)other;
+        BazelProblem o = (BazelProblem) other;
         return resourcePath.equals(o.resourcePath) && description.equals(o.description) && lineNumber == o.lineNumber;
     }
 

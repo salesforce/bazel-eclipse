@@ -19,8 +19,8 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 
 /**
- * Publishes {@link BazelProblem} instances as {@link IMarker} markers to the Problems View.
- * Keeps track of previously published markers so they can be removed again.
+ * Publishes {@link BazelProblem} instances as {@link IMarker} markers to the Problems View. Keeps track of previously
+ * published markers so they can be removed again.
  *
  * TODO Review the need for running within a WorkspaceModifyOperation, and whether it is done correctly.
  *
@@ -43,7 +43,8 @@ public class BazelProblemMarkerManager {
      *
      * Each BazelProblemMarkerManager references a shared marker store.
      *
-     * @param ownerId  an opaque String to associate published markers with, so that they can be found again later
+     * @param ownerId
+     *            an opaque String to associate published markers with, so that they can be found again later
      */
     public BazelProblemMarkerManager(String ownerId) {
         this.ownerId = Objects.requireNonNull(ownerId);
@@ -52,22 +53,27 @@ public class BazelProblemMarkerManager {
     /**
      * Publishes specified BazelProblem instances as markers to the Problems View.
      *
-     * @param problems  the problems to publish
-     * @param project   the project to associate the published markers with
-     * @param monitor   the progress monitor to use during publishing
+     * @param problems
+     *            the problems to publish
+     * @param project
+     *            the project to associate the published markers with
+     * @param monitor
+     *            the progress monitor to use during publishing
      */
     public void publish(List<BazelProblem> problems, IProject project, IProgressMonitor monitor) {
         publish(problems, project, monitor, false);
     }
 
     /**
-     * Publishes specified BazelProblem instances as markers to the Problems View. Previous
-     * markers that were published and associated with the specified project and this insgance's
-     * ownerId are first removed, before publishing.
+     * Publishes specified BazelProblem instances as markers to the Problems View. Previous markers that were published
+     * and associated with the specified project and this insgance's ownerId are first removed, before publishing.
      *
-     * @param problems  the problems to publish
-     * @param project   the project to associate the published markers with
-     * @param monitor   the progress monitor to use during publishing
+     * @param problems
+     *            the problems to publish
+     * @param project
+     *            the project to associate the published markers with
+     * @param monitor
+     *            the progress monitor to use during publishing
      */
     public void clearAndPublish(List<BazelProblem> problems, IProject project, IProgressMonitor monitor) {
         publish(problems, project, monitor, true);
@@ -76,8 +82,10 @@ public class BazelProblemMarkerManager {
     /**
      * Clears the markers associated with the specified project and this instance's ownerId.
      *
-     * @param project   the project to clear the markers for
-     * @param monitor   the progress monitor to use during marker clearing
+     * @param project
+     *            the project to clear the markers for
+     * @param monitor
+     *            the progress monitor to use during marker clearing
      */
     public void clear(IProject project, IProgressMonitor monitor) {
         clear(Collections.singleton(project), monitor);
@@ -86,8 +94,10 @@ public class BazelProblemMarkerManager {
     /**
      * Clears the markers associated with the specified projects and this instance's ownerId.
      *
-     * @param project   the project to clear the markers for
-     * @param monitor   the progress monitor to use during marker clearing
+     * @param project
+     *            the project to clear the markers for
+     * @param monitor
+     *            the progress monitor to use during marker clearing
      */
     public void clear(Collection<IProject> projects, IProgressMonitor monitor) {
         BazelEclipseProjectSupport.runWithProgress(monitor, new WorkspaceModifyOperation() {
@@ -116,7 +126,8 @@ public class BazelProblemMarkerManager {
         }
     }
 
-    private void publish(List<BazelProblem> problems, IProject project, IProgressMonitor monitor, boolean clearBeforePublish) {
+    private void publish(List<BazelProblem> problems, IProject project, IProgressMonitor monitor,
+            boolean clearBeforePublish) {
         BazelEclipseProjectSupport.runWithProgress(monitor, new WorkspaceModifyOperation() {
             @Override
             protected void execute(IProgressMonitor monitor) {

@@ -33,14 +33,15 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
 public class MockIProjectDescription implements IProjectDescription {
-    private static final String UOE_MSG = "MockIProjectDescription is pay as you go, you have hit a method that is not implemented."; 
+    private static final String UOE_MSG =
+            "MockIProjectDescription is pay as you go, you have hit a method that is not implemented.";
 
     private ICommand[] buildSpec;
     private IProject[] referencedProjects = new IProject[] {};
     private String[] natureIds = new String[] {};
     private IPath location = null;
     private URI locationURI = null;
-    
+
     @Override
     public ICommand[] getBuildSpec() {
         return buildSpec;
@@ -50,7 +51,7 @@ public class MockIProjectDescription implements IProjectDescription {
     public String[] getNatureIds() {
         return this.natureIds;
     }
-    
+
     @Override
     public IPath getLocation() {
         return location;
@@ -76,7 +77,6 @@ public class MockIProjectDescription implements IProjectDescription {
         this.buildSpec = buildSpec;
     }
 
-    
     @Override
     public void setLocation(IPath path) {
         this.location = path;
@@ -88,7 +88,7 @@ public class MockIProjectDescription implements IProjectDescription {
     }
 
     @Override
-    public void setLocationURI(URI uri) {            
+    public void setLocationURI(URI uri) {
         this.locationURI = uri;
         if (uri != null) {
             this.location = new Path(uri.getPath());
@@ -97,7 +97,7 @@ public class MockIProjectDescription implements IProjectDescription {
         }
 
     }
-    
+
     @Override
     public void setNatureIds(String[] natures) {
         this.natureIds = natures;
@@ -107,12 +107,9 @@ public class MockIProjectDescription implements IProjectDescription {
     public void setReferencedProjects(IProject[] projects) {
         this.referencedProjects = projects;
     }
-    
 
-    
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
-    
 
     @Override
     public IBuildConfiguration[] getBuildConfigReferences(String configName) {
@@ -168,6 +165,5 @@ public class MockIProjectDescription implements IProjectDescription {
     public void setName(String projectName) {
         throw new UnsupportedOperationException(UOE_MSG);
     }
-
 
 }

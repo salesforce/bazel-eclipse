@@ -132,7 +132,7 @@ public class BazelImportWizardPage extends WizardPage {
         try {
             List<String> newFilesystemLocations = new ArrayList<>();
             List<BazelPackageInfo> newEclipseProjects = new ArrayList<>();
-            
+
             // get the selected location
             // when the wizard is first opened, the location field is blank and we have a null root package
             if (this.locationControl.rootDirectory != null) {
@@ -169,8 +169,8 @@ public class BazelImportWizardPage extends WizardPage {
         }
     }
 
-    
-    private void uncheckAlreadyImportedProjects(CheckboxTreeViewer projectTreeViewer, BazelPackageInfo rootBazelPackage) {
+    private void uncheckAlreadyImportedProjects(CheckboxTreeViewer projectTreeViewer,
+            BazelPackageInfo rootBazelPackage) {
         List<BazelPackageInfo> importedBazelPackages = getImportedBazelPackages(rootBazelPackage);
 
         if (importedBazelPackages.size() > 0) {
@@ -182,7 +182,7 @@ public class BazelImportWizardPage extends WizardPage {
             }
         }
     }
-    
+
     private static List<BazelPackageInfo> getImportedBazelPackages(BazelPackageInfo rootPackage) {
         List<BazelPackageInfo> importedPackages = new ArrayList<>();
         IJavaProject[] javaProjects = BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false);
@@ -190,9 +190,10 @@ public class BazelImportWizardPage extends WizardPage {
 
         for (IJavaProject javaProject : javaProjects) {
             // TODO it is possible there are no targets configured for a project
-        	String projectName = javaProject.getProject().getName();
-        	BazelProject bazelProject = bazelProjectManager.getProject(projectName);
-            String target = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets().iterator().next();
+            String projectName = javaProject.getProject().getName();
+            BazelProject bazelProject = bazelProjectManager.getProject(projectName);
+            String target = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets()
+                    .iterator().next();
             BazelLabel label = new BazelLabel(target);
             String pack = label.getDefaultPackageLabel().getLabel();
             BazelPackageInfo bpi = rootPackage.findByPackage(pack);
@@ -202,5 +203,5 @@ public class BazelImportWizardPage extends WizardPage {
         }
         return importedPackages;
     }
-    
+
 }

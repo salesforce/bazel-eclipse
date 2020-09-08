@@ -43,7 +43,6 @@ public class BazelDependencyGraphTest {
         assertEquals("rootA", orderedLabels.get(2).getBazelPackageName());
     }
 
-
     @Test
     public void testMultiDistinctTrees() {
         BazelDependencyGraph graph = new BazelDependencyGraph();

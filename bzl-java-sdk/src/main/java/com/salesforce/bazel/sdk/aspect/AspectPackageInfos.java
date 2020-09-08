@@ -67,7 +67,8 @@ public class AspectPackageInfos {
                     labelToAspectPackageInfo.put(aspectPackageInfo.getLabel(), aspectPackageInfo);
             if (previousValue != null) {
                 if (!previousValue.toString().equals(aspectPackageInfo.toString())) {
-                    throw new IllegalStateException("Did not expect a duplicate label with different contents: " + previousValue.getLabel());
+                    throw new IllegalStateException(
+                            "Did not expect a duplicate label with different contents: " + previousValue.getLabel());
                 }
             }
         }
@@ -82,17 +83,17 @@ public class AspectPackageInfos {
         }
         return new AspectPackageInfos(infoList);
     }
-    
+
     public void addAll(Set<AspectPackageInfo> aspectPackageInfoSet) {
-    	for (AspectPackageInfo info : aspectPackageInfoSet) {
-    		labelToAspectPackageInfo.put(info.getLabel(), info);
-    	}
+        for (AspectPackageInfo info : aspectPackageInfoSet) {
+            labelToAspectPackageInfo.put(info.getLabel(), info);
+        }
     }
 
     public AspectPackageInfo lookupByLabel(String label) {
         return labelToAspectPackageInfo.get(label);
     }
-    
+
     public AspectPackageInfo lookByPackageName(String name) {
         for (String key : labelToAspectPackageInfo.keySet()) {
             if (key.startsWith(name)) {
@@ -133,7 +134,7 @@ public class AspectPackageInfos {
     public Iterable<AspectPackageInfo> getPackageInfos() {
         return this.labelToAspectPackageInfo.values();
     }
-    
+
     private static void assertAllSourcesHaveSameRootPath(Path rootSourcePath, AspectPackageInfo aspectPackageInfo) {
         for (String sourcePath : aspectPackageInfo.getSources()) {
             if (!Paths.get(sourcePath).startsWith(rootSourcePath)) {

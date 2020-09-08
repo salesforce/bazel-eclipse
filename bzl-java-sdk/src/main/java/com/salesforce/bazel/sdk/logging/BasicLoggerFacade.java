@@ -35,7 +35,7 @@
  */
 package com.salesforce.bazel.sdk.logging;
 
-// we will revisit this later, see https://github.com/salesforce/bazel-eclipse/issues/10 
+// we will revisit this later, see https://github.com/salesforce/bazel-eclipse/issues/10
 // import org.slf4j.LoggerFactory;
 
 /**
@@ -76,7 +76,7 @@ public class BasicLoggerFacade extends LoggerFacade {
     }
 
     private String formatMsg(Class<?> from, String message, Object... args) {
-        return "["+from.getName()+"] "+message;
+        return "[" + from.getName() + "] " + message;
     }
-    
+
 }

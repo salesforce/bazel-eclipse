@@ -17,12 +17,13 @@ public class MockLauncherCommand extends MockCommand {
     /**
      * Test must provide a set of simulatedOutputLinesProvidedByTest
      */
-    public MockLauncherCommand(List<String> commandTokens, Map<String, String> testOptions, TestBazelWorkspaceFactory testWorkspaceFactory,
+    public MockLauncherCommand(List<String> commandTokens, Map<String, String> testOptions,
+            TestBazelWorkspaceFactory testWorkspaceFactory,
             List<MockCommandSimulatedOutput> simulatedOutputLinesProvidedByTest) {
         super(commandTokens, testOptions, testWorkspaceFactory);
 
         boolean handled = false;
-        for (MockCommandSimulatedOutput candidateOutput: simulatedOutputLinesProvidedByTest) {
+        for (MockCommandSimulatedOutput candidateOutput : simulatedOutputLinesProvidedByTest) {
             if (candidateOutput.doesMatch(commandTokens)) {
                 // the output is targeted to this command
                 outputLines = candidateOutput.outputLines;
@@ -31,14 +32,16 @@ public class MockLauncherCommand extends MockCommand {
                 break;
             }
         }
-        
+
         if (!handled) {
             String commandPretty = "";
             for (String token : commandTokens) {
                 commandPretty = commandPretty + token + " ";
             }
-            throw new IllegalStateException("The MockLauncherCommand does not have enough output to provide to simulate the launcher commands. There are "+
-                    simulatedOutputLinesProvidedByTest.size()+" outputs configured. Command as received:\n" + commandPretty);
+            throw new IllegalStateException(
+                    "The MockLauncherCommand does not have enough output to provide to simulate the launcher commands. There are "
+                            + simulatedOutputLinesProvidedByTest.size() + " outputs configured. Command as received:\n"
+                            + commandPretty);
         }
     }
 }

@@ -44,9 +44,9 @@ public class BazelQueryHelper {
      * Underlying command invoker which takes built Command objects and executes them.
      */
     private final BazelCommandExecutor bazelCommandExecutor;
-    
+
     private final Map<String, BazelBuildFile> buildFileCache = new HashMap<>();
-    
+
     public BazelQueryHelper(BazelCommandExecutor bazelCommandExecutor) {
         this.bazelCommandExecutor = bazelCommandExecutor;
     }
@@ -60,46 +60,51 @@ public class BazelQueryHelper {
      * @throws BazelCommandLineToolConfigurationException
      */
     @Deprecated
-    public synchronized List<String> listBazelTargetsInBuildFiles(File bazelWorkspaceRootDirectory, WorkProgressMonitor progressMonitor,
-            File... directories) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+    public synchronized List<String> listBazelTargetsInBuildFiles(File bazelWorkspaceRootDirectory,
+            WorkProgressMonitor progressMonitor, File... directories)
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
         argBuilder.add("query");
         for (File f : directories) {
             String directoryPath = f.toURI().relativize(bazelWorkspaceRootDirectory.toURI()).getPath();
-            argBuilder.add(directoryPath+"/...");
+            argBuilder.add(directoryPath + "/...");
         }
-        return bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, 
+        return bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor,
             argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
     }
-    
+
     /**
-     * Returns the list of targets, with type data, found in a BUILD files for the given package. Uses Bazel Query to build the list.
-     * @param bazelPackageName the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
+     * Returns the list of targets, with type data, found in a BUILD files for the given package. Uses Bazel Query to
+     * build the list.
+     * 
+     * @param bazelPackageName
+     *            the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
      */
-    public synchronized BazelBuildFile queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory, WorkProgressMonitor progressMonitor,
-            String bazelPackageName) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+    public synchronized BazelBuildFile queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory,
+            WorkProgressMonitor progressMonitor, String bazelPackageName)
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if ("//".equals(bazelPackageName)) {
             // we don't support having buildable code at the root of the WORKSPACE
             return new BazelBuildFile("//...");
         }
-        
+
         BazelBuildFile buildFile = buildFileCache.get(bazelPackageName);
         if (buildFile != null) {
-            System.out.println("Retrieved list of targets for package ["+bazelPackageName+"] from cache.");
+            System.out.println("Retrieved list of targets for package [" + bazelPackageName + "] from cache.");
             return buildFile;
         }
-        
+
         // bazel query 'kind(rule, [label]:*)' --output label_kind
-        
+
         ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
         argBuilder.add("query");
-        argBuilder.add("kind(rule, "+bazelPackageName+":*)");
+        argBuilder.add("kind(rule, " + bazelPackageName + ":*)");
         argBuilder.add("--output");
         argBuilder.add("label_kind");
-        List<String> resultLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, 
-            argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
-        
+        List<String> resultLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory,
+            progressMonitor, argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
+
         // Sample Output:  (format: rule_type 'rule' label)
         // java_binary rule //projects/libs/apple/apple-api:apple-main
         // java_test rule //projects/libs/apple/apple-api:apple-api-test2
@@ -116,16 +121,14 @@ public class BazelQueryHelper {
             buildFile.addTarget(ruleType, targetLabel);
         }
         buildFileCache.put(bazelPackageName, buildFile);
-        
+
         return buildFile;
     }
-    
+
     public void flushCache(String bazelPackageName) {
         buildFileCache.remove(bazelPackageName);
     }
-    
 
-    
     /**
      * Gives a list of target completions for the given beginning string. The result is the list of possible completion
      * for a target pattern starting with string.
@@ -138,7 +141,8 @@ public class BazelQueryHelper {
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public List<String> getMatchingTargets(File bazelWorkspaceRootDirectory, String userSearchString, WorkProgressMonitor progressMonitor)
+    public List<String> getMatchingTargets(File bazelWorkspaceRootDirectory, String userSearchString,
+            WorkProgressMonitor progressMonitor)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         if (userSearchString.equals("/") || userSearchString.isEmpty()) {
             return ImmutableList.of("//");
@@ -174,7 +178,8 @@ public class BazelQueryHelper {
             final String suffix = lastSlash > 0 ? userSearchString.substring(lastSlash + 1) : userSearchString;
             final String directory = (prefix.isEmpty() || prefix.equals("//")) ? ""
                     : prefix.substring(userSearchString.startsWith("//") ? 2 : 0, prefix.length() - 1);
-            File file = directory.isEmpty() ? bazelWorkspaceRootDirectory : new File(bazelWorkspaceRootDirectory, directory);
+            File file = directory.isEmpty() ? bazelWorkspaceRootDirectory
+                    : new File(bazelWorkspaceRootDirectory, directory);
             ImmutableList.Builder<String> builder = ImmutableList.builder();
             File[] files = file.listFiles((f) -> {
                 // Only give directories whose name starts with suffix...

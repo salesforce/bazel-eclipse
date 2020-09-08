@@ -11,15 +11,17 @@ import java.util.Map;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
- * The <a href="http://ij.bazel.build/docs/project-views.html">project view</a> file. 
+ * The <a href="http://ij.bazel.build/docs/project-views.html">project view</a> file.
  * </p>
- * This implementations currently only supports a subset of the functionality provided by the IntelliJ Bazel Plugin, namely these sections:
+ * This implementations currently only supports a subset of the functionality provided by the IntelliJ Bazel Plugin,
+ * namely these sections:
  * </p>
  * <ul>
  * <li>directories</li>
  * </ul>
  * 
  * Example project view file:
+ * 
  * <pre>
  * directories:
  *   path/to/bazel/package/1
@@ -30,13 +32,13 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
  * @since March 2020
  */
 public class ProjectView {
-    
+
     static String DIRECTORIES_COMMENT = "# Add the directories you want added as source here";
     static String INDENT = "  ";
-    
+
     private final File rootWorkspaceDirectory;
     private final Map<BazelPackageLocation, Integer> bazelPackageToLineNumber;
-    
+
     /**
      * Create a new ProjectView instance with the specified bazel packages added to the "directories" section.
      */
@@ -61,15 +63,14 @@ public class ProjectView {
         sb.append("directories:").append(System.lineSeparator());
         sb.append(INDENT).append(DIRECTORIES_COMMENT).append(System.lineSeparator());
         for (BazelPackageLocation pack : this.bazelPackageToLineNumber.keySet()) {
-            sb.append(INDENT)
-                .append(pack.getBazelPackageFSRelativePath())
-                .append(System.lineSeparator());
-        } 
-        return sb.toString();        
+            sb.append(INDENT).append(pack.getBazelPackageFSRelativePath()).append(System.lineSeparator());
+        }
+        return sb.toString();
     }
 
     /**
-     * Returns the line number, in the raw project view file content, of the specified bazel package, in the "directories" section.
+     * Returns the line number, in the raw project view file content, of the specified bazel package, in the
+     * "directories" section.
      */
     public int getLineNumber(BazelPackageLocation pack) {
         Integer lineNumber = bazelPackageToLineNumber.get(pack);
@@ -77,7 +78,7 @@ public class ProjectView {
             throw new IllegalArgumentException("Unknown " + pack);
         }
         return lineNumber;
-    } 
+    }
 
     /**
      * Returns all invalid bazel packages from the "directories" section.
@@ -86,9 +87,10 @@ public class ProjectView {
         List<BazelPackageLocation> invalidPackages = new ArrayList<>();
         for (BazelPackageLocation pack : bazelPackageToLineNumber.keySet()) {
             boolean packageIsValid = false;
-            for (String buildFileName : new String[]{"BUILD", "BUILD.bazel"}) {
+            for (String buildFileName : new String[] { "BUILD", "BUILD.bazel" }) {
                 // this should go through bazel (aspect machinery?) instead of directly checking for BUILD file presence on the fs
-                File b = new File(rootWorkspaceDirectory, Paths.get(pack.getBazelPackageFSRelativePath(), buildFileName).toString());
+                File b = new File(rootWorkspaceDirectory,
+                        Paths.get(pack.getBazelPackageFSRelativePath(), buildFileName).toString());
                 if (b.exists() && b.isFile()) {
                     packageIsValid = true;
                     break;
@@ -116,12 +118,12 @@ public class ProjectView {
         Map<BazelPackageLocation, Integer> bazelPackageToLineNumber = new LinkedHashMap<>(packages.size());
         for (BazelPackageLocation pack : packages) {
             bazelPackageToLineNumber.put(pack, lineNumber);
-            
+
         }
         return Collections.unmodifiableMap(bazelPackageToLineNumber);
     }
 
-    private static Map<BazelPackageLocation, Integer> parse(String content, File rootWorkspaceDirectory) {       
+    private static Map<BazelPackageLocation, Integer> parse(String content, File rootWorkspaceDirectory) {
         Map<BazelPackageLocation, Integer> bazelPackageToLineNumber = new LinkedHashMap<>(); // preserve insertion order
         boolean withinDirectoriesSection = false;
         int lineNumber = 0;

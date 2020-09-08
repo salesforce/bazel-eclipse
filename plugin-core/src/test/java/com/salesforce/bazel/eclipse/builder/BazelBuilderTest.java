@@ -26,14 +26,14 @@ public class BazelBuilderTest {
         // B -> C
         // C -> D
         // starting with D, find all projects that depend on D, including transitives
-        IJavaProject A = getMockedProject("A", new String[]{"B", "C"});
-        IJavaProject B = getMockedProject("B", new String[]{"C"});
-        IJavaProject C = getMockedProject("C", new String[]{"D"});
-        IJavaProject D = getMockedProject("D", new String[]{});
-        IJavaProject unrelated = getMockedProject("unrelated", new String[]{"Z"});
+        IJavaProject A = getMockedProject("A", new String[] { "B", "C" });
+        IJavaProject B = getMockedProject("B", new String[] { "C" });
+        IJavaProject C = getMockedProject("C", new String[] { "D" });
+        IJavaProject D = getMockedProject("D", new String[] {});
+        IJavaProject unrelated = getMockedProject("unrelated", new String[] { "Z" });
 
-        Set<IProject> downstreams = BazelBuilder.getDownstreamProjectsOf(D.getProject(),
-                new IJavaProject[]{A, B, C, D, unrelated});
+        Set<IProject> downstreams =
+                BazelBuilder.getDownstreamProjectsOf(D.getProject(), new IJavaProject[] { A, B, C, D, unrelated });
 
         assertEquals(3, downstreams.size());
         assertTrue(downstreams.contains(A.getProject()));
@@ -45,29 +45,29 @@ public class BazelBuilderTest {
     // (IProject's impl doesn't implement Comparable)
     @Test
     public void testDownstreamSetImpl() throws Exception {
-        IJavaProject A = getMockedProject("A", new String[]{});
+        IJavaProject A = getMockedProject("A", new String[] {});
 
-        Set<IProject> downstreams = BazelBuilder.getDownstreamProjectsOf(A.getProject(), new IJavaProject[]{});
+        Set<IProject> downstreams = BazelBuilder.getDownstreamProjectsOf(A.getProject(), new IJavaProject[] {});
 
         assertFalse("Do not use a TreeSet", downstreams instanceof TreeSet);
     }
-    
-    @Test 
+
+    @Test
     @Ignore
     public void testClasspathRefresh() throws Exception {
-    	BazelBuilder subject = new BazelBuilder();
-    	IProject project = mock(IProject.class);
-    	BazelWorkspaceCommandRunner runner = mock(BazelWorkspaceCommandRunner.class);
-    	
-    	subject.refreshProjectClasspath(project, null, null, runner);
-    	
-    	// Verify the methods we can are called. Each one allows the classpath container
-    	// to be refreshed from the current state of the build
-    	Mockito.verify(runner).flushAspectInfoCache();
-    	Mockito.verify(project).refreshLocal(IResource.DEPTH_ONE, null);
-    	Mockito.verify(project).touch(null);
+        BazelBuilder subject = new BazelBuilder();
+        IProject project = mock(IProject.class);
+        BazelWorkspaceCommandRunner runner = mock(BazelWorkspaceCommandRunner.class);
+
+        subject.refreshProjectClasspath(project, null, null, runner);
+
+        // Verify the methods we can are called. Each one allows the classpath container
+        // to be refreshed from the current state of the build
+        Mockito.verify(runner).flushAspectInfoCache();
+        Mockito.verify(project).refreshLocal(IResource.DEPTH_ONE, null);
+        Mockito.verify(project).touch(null);
     }
-    
+
     private IJavaProject getMockedProject(String projectName, String[] requiredProjectNames) throws Exception {
         IJavaProject javaProject = mock(IJavaProject.class);
         when(javaProject.getRequiredProjectNames()).thenReturn(requiredProjectNames);

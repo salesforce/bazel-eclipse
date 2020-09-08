@@ -63,35 +63,35 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     static final LogHelper LOG = LogHelper.log(BazelClasspathContainerInitializer.class);
 
     private static List<IProject> importedProjects = Collections.synchronizedList(new ArrayList<IProject>());
-    
+
     // error state
     public static AtomicBoolean isCorrupt = new AtomicBoolean(false);
     private static String corruptPackage = null;
-    
+
     @Override
     public void initialize(IPath eclipseProjectPath, IJavaProject eclipseJavaProject) throws CoreException {
         IProject eclipseProject = eclipseJavaProject.getProject();
-        try {      
+        try {
             //remove projects added to the workspace after a corrupted package in identified
             if (isCorrupt.get()) {
                 undo(eclipseJavaProject.getProject());
                 return;
             }
-            
+
             // create the BazelProject if necessary
             BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
             BazelProject bazelProject = bazelProjectManager.getProject(eclipseProject.getName());
             if (bazelProject == null) {
-            	bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
-            	bazelProjectManager.addProject(bazelProject);
+                bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
+                bazelProjectManager.addProject(bazelProject);
             }
-            
+
             BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
             BazelCommandManager commandManager = BazelPluginActivator.getBazelCommandManager();
             BazelClasspathContainer container = new BazelClasspathContainer(eclipseProject);
             if (bazelProjectManager.isValid(bazelWorkspace, commandManager, bazelProject)) {
-                BazelPluginActivator.getJavaCoreHelper().setClasspathContainer(eclipseProjectPath, new IJavaProject[] { eclipseJavaProject },
-                    new IClasspathContainer[] { container }, null);
+                BazelPluginActivator.getJavaCoreHelper().setClasspathContainer(eclipseProjectPath,
+                    new IJavaProject[] { eclipseJavaProject }, new IClasspathContainer[] { container }, null);
                 importedProjects.add(eclipseJavaProject.getProject());
             } else {
                 // this is not exactly the package path, it is just the leaf node name
@@ -106,14 +106,14 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 }
                 undo();
             }
-            
+
         } catch (IOException | InterruptedException | BackingStoreException e) {
             BazelPluginActivator.error("Error while creating Bazel classpath container.", e);
         } catch (BazelCommandLineToolConfigurationException e) {
             BazelPluginActivator.error("Bazel not found: " + e.getMessage());
         }
     }
-    
+
     // Remove projects imported successfully 
     private void undo() throws CoreException {
         synchronized (importedProjects) {
@@ -121,38 +121,39 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 // cannot delete projects, as the workspace is locked
                 return;
             }
-            for(IProject project: importedProjects) {
+            for (IProject project : importedProjects) {
                 // TODO we need a checkbox pref to disable this; if a user in the field hits an import bug, it may be useful for them
                 // to check the 'disable import cleanup on error' checkbox so they can at least get some usable projects out of their import
                 project.delete(true, null);
-            }            
+            }
         }
         isCorrupt.set(true);
-        
+
         Display.getDefault().syncExec(new Runnable() {
             public void run() {
                 MessageDialog.openError(Display.getDefault().getActiveShell(), "Error", generateImportErrorMessage());
             }
         });
     }
-    
+
     private String generateImportErrorMessage() {
-        String errorMsg = "Failed during Bazel dependency computation and import has been cancelled."+
-                "\nEnsure that the Bazel workspace builds correctly on the command line before importing into Eclipse.";
+        String errorMsg = "Failed during Bazel dependency computation and import has been cancelled."
+                + "\nEnsure that the Bazel workspace builds correctly on the command line before importing into Eclipse.";
         if (corruptPackage != null) {
-            errorMsg = "Failed to compute dependencies for package "+corruptPackage+" and import has been cancelled."+
-                    "\nEnsure that the Bazel workspace builds correctly on the command line before importing into Eclipse.";
+            errorMsg = "Failed to compute dependencies for package " + corruptPackage
+                    + " and import has been cancelled."
+                    + "\nEnsure that the Bazel workspace builds correctly on the command line before importing into Eclipse.";
         }
         return errorMsg;
     }
-    
+
     private void undo(IProject project) {
         if (BazelPluginActivator.getResourceHelper().getEclipseWorkspace().isTreeLocked()) {
             return;
         }
 
         try {
-            project.delete(true,  null);
+            project.delete(true, null);
         } catch (CoreException e) {
             e.printStackTrace();
         }

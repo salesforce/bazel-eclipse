@@ -33,19 +33,19 @@ import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 
 public class MockIClasspathEntry implements IClasspathEntry {
-    private static final String UOE_MSG = "MockIClasspathEntry is pay as you go, you have hit a method that is not implemented."; 
+    private static final String UOE_MSG =
+            "MockIClasspathEntry is pay as you go, you have hit a method that is not implemented.";
 
     private final int entryKind;
     private final IPath sourcePath;
     private IPath outputLocation;
-    
+
     // TODO need to test behaviors related to inclusion/exclusion patterns, right now we assume they aren't set, which is the default behavior
     private IPath[] exclusionPatterns = new IPath[] {};
     private IPath[] inclusionPatterns = new IPath[] {};
-    
+
     private List<IClasspathAttribute> extraAttributes = new ArrayList<>();
-    
-    
+
     /*
      * Kinds
      * CPE_LIBRARY = 1;
@@ -54,22 +54,22 @@ public class MockIClasspathEntry implements IClasspathEntry {
      * CPE_VARIABLE = 4;
      * CPE_CONTAINER = 5;
      */
-    
+
     public MockIClasspathEntry(int ekind, IPath path) {
         this.entryKind = ekind;
         this.sourcePath = path;
     }
-    
+
     public void addExtraAttribute(IClasspathAttribute attr) {
         this.extraAttributes.add(attr);
     }
-    
+
     public void setOutputLocation(IPath out) {
         this.outputLocation = out;
     }
-    
+
     // API
-    
+
     @Override
     public int getEntryKind() {
         return this.entryKind;
@@ -95,22 +95,19 @@ public class MockIClasspathEntry implements IClasspathEntry {
         return this.outputLocation;
     }
 
-
     @Override
     public IPath getPath() {
         return sourcePath;
     }
 
-
-
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
-    
+
     @Override
     public int getContentKind() {
         throw new UnsupportedOperationException(UOE_MSG);
     }
-    
+
     @Override
     public boolean combineAccessRules() {
         throw new UnsupportedOperationException(UOE_MSG);

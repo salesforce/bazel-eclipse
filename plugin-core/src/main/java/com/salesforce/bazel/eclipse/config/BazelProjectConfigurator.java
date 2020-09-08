@@ -59,7 +59,7 @@ import com.salesforce.bazel.sdk.workspace.BazelPackageFinder;
 
 // initial version copied from m2e MavenProjectConfigurator
 
-// TODO test if any of this used at all. maybe just legacy cruft 
+// TODO test if any of this used at all. maybe just legacy cruft
 
 public class BazelProjectConfigurator implements ProjectConfigurator {
     static final LogHelper LOG = LogHelper.log(BazelProjectConfigurator.class);
@@ -107,9 +107,9 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
     public boolean shouldBeAnEclipseProject(IContainer container, IProgressMonitor monitor) {
         IFile buildFile = container.getFile(new Path("BUILD"));
         if (!buildFile.exists()) {
-        	buildFile = container.getFile(new Path("BUILD.bazel"));
+            buildFile = container.getFile(new Path("BUILD.bazel"));
             if (!buildFile.exists()) {
-            	return false;
+                return false;
             }
         }
 

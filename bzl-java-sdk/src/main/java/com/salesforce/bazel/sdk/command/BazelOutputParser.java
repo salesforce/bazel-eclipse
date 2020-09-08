@@ -62,7 +62,7 @@ public class BazelOutputParser {
                     this.moreDetailsLine = null;
                 }
             }
-            
+
             else if (isInitialErrorSourcePathLine(line)) {
                 if (this.errorSourcePathLine == null) {
                     this.errorSourcePathLine = line;
@@ -93,16 +93,16 @@ public class BazelOutputParser {
                 this.parsingErrors = true;
             }
         }
-        
+
         if (this.moreDetailsLine != null) {
             allBazelMarkerDetails.add(buildErrorDetails(this.errorSourcePathLine, this.moreDetailsLine));
             this.errorSourcePathLine = null;
             this.moreDetailsLine = null;
         }
-        
+
         return allBazelMarkerDetails;
     }
-    
+
     public List<BazelProblem> getErrors(List<String> lines) {
         this.parsingErrors = false;
         this.errorSourcePathLine = null;
@@ -125,7 +125,7 @@ public class BazelOutputParser {
             i = errorSourcePathLine.indexOf(":", sourcePath.length());
             int j = errorSourcePathLine.indexOf(":", i + 1);
             if (j == -1) {
-                j = errorSourcePathLine.length()-1;
+                j = errorSourcePathLine.length() - 1;
             }
             lineNumber = Integer.parseInt(errorSourcePathLine.substring(i + 1, j));
             description = errorSourcePathLine.substring(j + 1).trim();
@@ -142,7 +142,7 @@ public class BazelOutputParser {
             // BUILD file update error TODO
             // errorSourcePathLine: ERROR: /Users/plaird/dev/sfdc-bazel/projects/libs/scone/scone-starter-jetty/scone-starter-jetty-impl/BUILD:81:1: Target '//projects/libs/scone/scone-starter-jetty/scone-starter-jetty-impl:src/main/java/com/salesforce/sconems/jetty/HttpTraceDisabler.java' contains an error and its package is in error and referenced by '//projects/libs/scone/scone-starter-jetty/scone-starter-jetty-impl:scone-starter-jetty-impl' 
             // moreDetailsLine: null
-            System.err.println("Failed to parse line: "+errorSourcePathLine+" with details: "+moreDetailsLine);
+            System.err.println("Failed to parse line: " + errorSourcePathLine + " with details: " + moreDetailsLine);
             description = "BUILD file error";
         }
         return BazelProblem.createError(sourcePath, lineNumber, description);

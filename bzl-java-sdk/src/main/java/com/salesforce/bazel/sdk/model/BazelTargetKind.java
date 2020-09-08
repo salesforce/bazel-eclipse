@@ -90,7 +90,7 @@ public enum BazelTargetKind {
             return true;
         }
     },
-    
+
     JAVA_PROTO_LIBRARY("java_proto_library") {
 
         @Override
@@ -103,7 +103,7 @@ public enum BazelTargetKind {
             return false;
         }
     },
-    
+
     JAVA_LITE_PROTO_LIBRARY("java_lite_proto_library") {
 
         @Override
@@ -116,8 +116,7 @@ public enum BazelTargetKind {
             return false;
         }
     },
-    
-    
+
     JAVA_GRPC_LIBRARY("java_grpc_library") {
 
         @Override
@@ -130,7 +129,7 @@ public enum BazelTargetKind {
             return false;
         }
     };
-    
+
     private final String targetKind;
 
     private BazelTargetKind(String targetKind) {

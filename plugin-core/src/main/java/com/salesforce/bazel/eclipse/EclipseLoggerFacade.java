@@ -43,11 +43,11 @@ import com.salesforce.bazel.sdk.logging.LoggerFacade;
 /**
  * Add Eclipse Platform logging to WARN and ERROR log messages as well as slf4j logging api.
  * <p>
- * TODO we will revisit this logging feature later, see https://github.com/salesforce/bazel-eclipse/issues/10 
+ * TODO we will revisit this logging feature later, see https://github.com/salesforce/bazel-eclipse/issues/10
  */
 public class EclipseLoggerFacade extends BasicLoggerFacade {
     //private static final Bundle BUNDLE = FrameworkUtil.getBundle(EclipseLoggerFacade.class);
-   // private static final ILog LOG = Platform.getLog(BUNDLE);
+    // private static final ILog LOG = Platform.getLog(BUNDLE);
 
     /**
      * Install the facade as the singleton and configure logging system
@@ -94,55 +94,55 @@ public class EclipseLoggerFacade extends BasicLoggerFacade {
      * @throws JoranException
      * @throws IOException
      */
-//    private void configureLogging(Bundle bundle) throws JoranException, IOException {
-        // capture the logger context, but guard against:
-        // org.slf4j.helpers.NOPLoggerFactory cannot be cast to ch.qos.logback.classic.LoggerContext
-//        ILoggerFactory iFactory = LoggerFactory.getILoggerFactory();
-//        if (iFactory instanceof LoggerContext) {
-//           LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-//           JoranConfigurator jc = new JoranConfigurator();
-//            jc.setContext(context);
-//            context.reset();
-//
-//            IPath pluginPath = ResourcesPlugin.getPlugin().getStateLocation();
-//            String logFile = new File(pluginPath.toFile(), bundle.getSymbolicName().replace('.', '_') + ".log")
-//                    .getAbsolutePath();
-//            context.putProperty("logFile", logFile);
-//            eclipseOnlyInfo("Debug log file: {}", logFile);
-//
-//            URL logbackConfig = FileLocator.find(bundle, new Path("logback.xml"), null);
-//            if (null == logbackConfig) {
-//                //not found log an event to the error log
-//                error(getClass(), "logback.xml not found. All slf4j output to console");
-//            }
-//            jc.doConfigure(logbackConfig);
-//        } else {
-//            // Logback was missing from the classpath when logging was initialized for some reason 
-//
-//            // check classloader to see if it is there now (if it is, there must be a load order issue?) 
-//            String isLoggerContextIsInClasspathStr =
-//                    "The class ch.qos.logback.classic.LoggerContext is not present in the classpath which means the plugin never imported it.";
-//            try {
-//                Class.forName("ch.qos.logback.classic.LoggerContext");
-//                isLoggerContextIsInClasspathStr =
-//                        "The class ch.qos.logback.classic.LoggerContext is NOW available in the classpath, which means there was a startup loading issue. The class wasn't there when logging was initialized.";
-//            } catch (Exception cnfe) {}
-//
-//            System.err.println(
-//                "com.salesforce.bazel.eclipse.core: EclipseLoggerFacade could not configure file (INFO, DEBUG) logging. LoggerFactory is of type ["
-//                        + iFactory.getClass()
-//                        + "] but needed [ch.qos.logback.classic.LoggerContext] to configure the file log. "
-//                        + isLoggerContextIsInClasspathStr + " See "
-//                        + "bazel-eclipse/docs/dev/logging.md for more details.");
-//
-//            // set the activator convenience methods to log to sys err
-//            BazelPluginActivator.logToSystemErr();
-//        }
-//    }
+    //    private void configureLogging(Bundle bundle) throws JoranException, IOException {
+    // capture the logger context, but guard against:
+    // org.slf4j.helpers.NOPLoggerFactory cannot be cast to ch.qos.logback.classic.LoggerContext
+    //        ILoggerFactory iFactory = LoggerFactory.getILoggerFactory();
+    //        if (iFactory instanceof LoggerContext) {
+    //           LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+    //           JoranConfigurator jc = new JoranConfigurator();
+    //            jc.setContext(context);
+    //            context.reset();
+    //
+    //            IPath pluginPath = ResourcesPlugin.getPlugin().getStateLocation();
+    //            String logFile = new File(pluginPath.toFile(), bundle.getSymbolicName().replace('.', '_') + ".log")
+    //                    .getAbsolutePath();
+    //            context.putProperty("logFile", logFile);
+    //            eclipseOnlyInfo("Debug log file: {}", logFile);
+    //
+    //            URL logbackConfig = FileLocator.find(bundle, new Path("logback.xml"), null);
+    //            if (null == logbackConfig) {
+    //                //not found log an event to the error log
+    //                error(getClass(), "logback.xml not found. All slf4j output to console");
+    //            }
+    //            jc.doConfigure(logbackConfig);
+    //        } else {
+    //            // Logback was missing from the classpath when logging was initialized for some reason 
+    //
+    //            // check classloader to see if it is there now (if it is, there must be a load order issue?) 
+    //            String isLoggerContextIsInClasspathStr =
+    //                    "The class ch.qos.logback.classic.LoggerContext is not present in the classpath which means the plugin never imported it.";
+    //            try {
+    //                Class.forName("ch.qos.logback.classic.LoggerContext");
+    //                isLoggerContextIsInClasspathStr =
+    //                        "The class ch.qos.logback.classic.LoggerContext is NOW available in the classpath, which means there was a startup loading issue. The class wasn't there when logging was initialized.";
+    //            } catch (Exception cnfe) {}
+    //
+    //            System.err.println(
+    //                "com.salesforce.bazel.eclipse.core: EclipseLoggerFacade could not configure file (INFO, DEBUG) logging. LoggerFactory is of type ["
+    //                        + iFactory.getClass()
+    //                        + "] but needed [ch.qos.logback.classic.LoggerContext] to configure the file log. "
+    //                        + isLoggerContextIsInClasspathStr + " See "
+    //                        + "bazel-eclipse/docs/dev/logging.md for more details.");
+    //
+    //            // set the activator convenience methods to log to sys err
+    //            BazelPluginActivator.logToSystemErr();
+    //        }
+    //    }
 
-//    private void eclipseOnlyInfo(String message, Object... args) {
-//        String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
-//        LOG.log(new Status(Status.INFO, BUNDLE.getSymbolicName(), resolved));
-//    }
+    //    private void eclipseOnlyInfo(String message, Object... args) {
+    //        String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
+    //        LOG.log(new Status(Status.INFO, BUNDLE.getSymbolicName(), resolved));
+    //    }
 
 }

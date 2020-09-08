@@ -33,15 +33,15 @@ import org.osgi.service.prefs.Preferences;
 
 public class MockIEclipsePreferences implements IEclipsePreferences {
 
-    private static final String UOE_MSG = "MockPreferences is pay as you go, you have hit a method that is not implemented."; 
+    private static final String UOE_MSG =
+            "MockPreferences is pay as you go, you have hit a method that is not implemented.";
 
     public Map<String, String> strings = new TreeMap<>();
-    
+
     // MOCKED METHODS
 
     @Override
-    public void flush() throws BackingStoreException {
-    }
+    public void flush() throws BackingStoreException {}
 
     @Override
     public String get(String key, String def) {
@@ -57,11 +57,9 @@ public class MockIEclipsePreferences implements IEclipsePreferences {
     public void put(String key, String value) {
         strings.put(key, value);
     }
-    
 
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
-
 
     @Override
     public void remove(String key) {

@@ -56,9 +56,11 @@ public class BazelCommandExecutorTest {
         args.add("fake"); // instead of passing a real command like build or test, pass a fake one since we are just testing invocation
         args.add("//projects/libs/javalib0");
 
-        BazelCommandExecutor executor = new BazelCommandExecutor(env.bazelExecutable.bazelExecutableFile, env.commandBuilder);
-        List<String> result = executor.runBazelAndGetOutputLines(env.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(),
-            new MockWorkProgressMonitor(), args, (t) -> t, 0);
+        BazelCommandExecutor executor =
+                new BazelCommandExecutor(env.bazelExecutable.bazelExecutableFile, env.commandBuilder);
+        List<String> result =
+                executor.runBazelAndGetOutputLines(env.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(),
+                    new MockWorkProgressMonitor(), args, (t) -> t, 0);
 
         assertEquals(2, result.size());
         assertEquals("result line 1", result.get(0));
@@ -79,9 +81,11 @@ public class BazelCommandExecutorTest {
         args.add("fake"); // instead of passing a real command like build or test, pass a fake one since we are just testing invocation
         args.add("//projects/libs/javalib0");
 
-        BazelCommandExecutor executor = new BazelCommandExecutor(env.bazelExecutable.bazelExecutableFile, env.commandBuilder);
-        List<String> result = executor.runBazelAndGetErrorLines(env.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(),
-            new MockWorkProgressMonitor(), args, (t) -> t, 0);
+        BazelCommandExecutor executor =
+                new BazelCommandExecutor(env.bazelExecutable.bazelExecutableFile, env.commandBuilder);
+        List<String> result =
+                executor.runBazelAndGetErrorLines(env.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(),
+                    new MockWorkProgressMonitor(), args, (t) -> t, 0);
 
         assertEquals(2, result.size());
         assertEquals("result line 1", result.get(0));
@@ -103,7 +107,6 @@ public class BazelCommandExecutorTest {
         assertEquals("result line 4", result.get(2));
     }
 
-
     // INTERNAL
 
     private TestBazelCommandEnvironmentFactory createEnv() throws Exception {
@@ -113,7 +116,8 @@ public class BazelCommandExecutorTest {
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
 
-        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(1);
+        TestBazelWorkspaceDescriptor descriptor =
+                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(1);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
         env.createTestEnvironment(workspace, testDir, null);

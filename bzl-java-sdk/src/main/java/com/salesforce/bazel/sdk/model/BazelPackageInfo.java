@@ -100,8 +100,8 @@ public class BazelPackageInfo implements BazelPackageLocation {
         if (!workspaceFile.exists()) {
             workspaceFile = new File(this.workspaceRoot, WORKSPACE_FILENAME_ALT);
             if (!workspaceFile.exists()) {
-                throw new IllegalArgumentException("The path [" + rootDirectory.getAbsolutePath() + "] does not contain a "
-                        + WORKSPACE_FILENAME + " file.");
+                throw new IllegalArgumentException("The path [" + rootDirectory.getAbsolutePath()
+                        + "] does not contain a " + WORKSPACE_FILENAME + " file.");
             }
         }
 
@@ -409,24 +409,23 @@ public class BazelPackageInfo implements BazelPackageLocation {
         }
         return null;
     }
-    
-	@Override
-	public List<BazelPackageLocation> gatherChildren() {
-		List<BazelPackageLocation> gatherList = new ArrayList<>();
-		gatherChildrenRecur(gatherList);
-		return gatherList;
-	}
 
-	public void gatherChildrenRecur(List<BazelPackageLocation> gatherList) {
-		if (!this.isWorkspaceRoot()) {
-			gatherList.add(this);
-		}
-		for (BazelPackageLocation child : this.childPackages.values()) {
-			BazelPackageInfo childInfo = (BazelPackageInfo)child;
-			childInfo.gatherChildrenRecur(gatherList);
-		}
-	}
+    @Override
+    public List<BazelPackageLocation> gatherChildren() {
+        List<BazelPackageLocation> gatherList = new ArrayList<>();
+        gatherChildrenRecur(gatherList);
+        return gatherList;
+    }
 
+    public void gatherChildrenRecur(List<BazelPackageLocation> gatherList) {
+        if (!this.isWorkspaceRoot()) {
+            gatherList.add(this);
+        }
+        for (BazelPackageLocation child : this.childPackages.values()) {
+            BazelPackageInfo childInfo = (BazelPackageInfo) child;
+            childInfo.gatherChildrenRecur(gatherList);
+        }
+    }
 
     @Override
     public int hashCode() {

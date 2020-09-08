@@ -9,12 +9,11 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 /**
  * Represents a line in a project view file.
  * <p>
- * TODO having this distinct from BazelPackageInfo adds complexity to the import logic. Revisit
- * whether we can merge it.
+ * TODO having this distinct from BazelPackageInfo adds complexity to the import logic. Revisit whether we can merge it.
  *
  */
 public class ProjectViewPackageLocation implements BazelPackageLocation {
-    
+
     private final File workspaceRootDirectory;
     private final String packagePath;
 
@@ -45,7 +44,7 @@ public class ProjectViewPackageLocation implements BazelPackageLocation {
     public boolean isWorkspaceRoot() {
         return this.packagePath.isEmpty();
     }
-    
+
     @Override
     public String getBazelPackageName() {
         if ("".equals(packagePath)) {
@@ -58,35 +57,36 @@ public class ProjectViewPackageLocation implements BazelPackageLocation {
             // For now, assume that anything referring to the root dir is a proxy for 'whole repo'
             return "//...";
         }
-        return "//"+packagePath;
+        return "//" + packagePath;
     }
-    
+
     @Override
     public int hashCode() {
         return this.workspaceRootDirectory.hashCode() ^ this.packagePath.hashCode();
     }
-    
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {
             return true;
         }
         if (other instanceof ProjectViewPackageLocation) {
-            ProjectViewPackageLocation o = (ProjectViewPackageLocation)other;
-            return this.workspaceRootDirectory.equals(o.workspaceRootDirectory) && this.packagePath.equals(o.packagePath);
+            ProjectViewPackageLocation o = (ProjectViewPackageLocation) other;
+            return this.workspaceRootDirectory.equals(o.workspaceRootDirectory)
+                    && this.packagePath.equals(o.packagePath);
         }
         return false;
     }
-    
+
     @Override
     public String toString() {
         return "package path: " + this.packagePath;
     }
 
-	@Override
-	public List<BazelPackageLocation> gatherChildren() {
-		// TODO hard to implement, this class is planned for a rework
-		return null;
-	}
+    @Override
+    public List<BazelPackageLocation> gatherChildren() {
+        // TODO hard to implement, this class is planned for a rework
+        return null;
+    }
 
 }

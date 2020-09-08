@@ -8,11 +8,11 @@ import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 
 public class MockImportOrderResolver implements ProjectOrderResolver {
 
-	@Override
-	public Iterable<BazelPackageLocation> computePackageOrder(BazelPackageLocation rootPackage,
-			AspectPackageInfos aspects) {
-		return rootPackage.gatherChildren();
-	}
+    @Override
+    public Iterable<BazelPackageLocation> computePackageOrder(BazelPackageLocation rootPackage,
+            AspectPackageInfos aspects) {
+        return rootPackage.gatherChildren();
+    }
 
     @Override
     public Iterable<BazelPackageLocation> computePackageOrder(BazelPackageLocation rootPackage,

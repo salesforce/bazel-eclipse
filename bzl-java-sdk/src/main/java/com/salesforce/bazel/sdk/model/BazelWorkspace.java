@@ -10,9 +10,9 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class BazelWorkspace {
-    
+
     // DATA
-    
+
     /**
      * The location on disk for the workspace.
      */
@@ -22,7 +22,7 @@ public class BazelWorkspace {
      * Workspace name, as assigned in the WORKSPACE file or computed from directory name
      */
     private final String name;
-    
+
     // COLLABORATORS
 
     /**
@@ -30,10 +30,8 @@ public class BazelWorkspace {
      */
     private BazelWorkspaceMetadataStrategy metadataStrategy;
 
-    
-    
     // COMPUTED DATA
-    
+
     /**
      * The internal location on disk for Bazel's 'execroot' for this workspace. E.g.
      * <i>/private/var/tmp/_bazel_plaird/edb34c7f4bfffeb66012c4fc6aaab239/execroot/bazel_demo_simplejava</i>
@@ -57,7 +55,7 @@ public class BazelWorkspace {
      * Determined by running this command line: <i>bazel info bazel-bin</i>
      */
     private File bazelBinDirectory;
-    
+
     /**
      * The operating system running Bazel and our BEF: osx, linux, windows
      * https://github.com/bazelbuild/bazel/blob/c35746d7f3708acb0d39f3082341de0ff09bd95f/src/main/java/com/google/devtools/build/lib/util/OS.java#L21
@@ -68,32 +66,32 @@ public class BazelWorkspace {
      * The OS identifier used in file system constructs: darwin, linux, windows
      */
     private String operatingSystemFoldername;
-    
+
     /**
-     * List of Bazel command options that apply for all workspace commands (i.e. from .bazelrc) 
+     * List of Bazel command options that apply for all workspace commands (i.e. from .bazelrc)
      */
     private BazelWorkspaceCommandOptions commandOptions;
 
-    
     // CTORS AND INITIALIZERS
 
-    public BazelWorkspace(String name, File bazelWorkspaceRootDirectory, OperatingEnvironmentDetectionStrategy osEnvStrategy,
-            BazelWorkspaceMetadataStrategy metadataStrategy) {
+    public BazelWorkspace(String name, File bazelWorkspaceRootDirectory,
+            OperatingEnvironmentDetectionStrategy osEnvStrategy, BazelWorkspaceMetadataStrategy metadataStrategy) {
         this(name, bazelWorkspaceRootDirectory, osEnvStrategy);
         this.metadataStrategy = metadataStrategy;
     }
 
-    public BazelWorkspace(String name, File bazelWorkspaceRootDirectory, OperatingEnvironmentDetectionStrategy osEnvStrategy) {
+    public BazelWorkspace(String name, File bazelWorkspaceRootDirectory,
+            OperatingEnvironmentDetectionStrategy osEnvStrategy) {
         this.name = name;
         this.bazelWorkspaceRootDirectory = getCanonicalFileSafely(bazelWorkspaceRootDirectory);
         this.operatingSystem = osEnvStrategy.getOperatingSystemName();
         this.operatingSystemFoldername = osEnvStrategy.getOperatingSystemDirectoryName(this.operatingSystem);
     }
-    
+
     public void setBazelWorkspaceMetadataStrategy(BazelWorkspaceMetadataStrategy metadataStrategy) {
         this.metadataStrategy = metadataStrategy;
     }
-    
+
     /**
      * Resolve softlinks and other abstractions in the workspace path.
      */
@@ -108,9 +106,8 @@ public class BazelWorkspace {
         }
         return directory;
     }
-    
-    // GETTERS AND SETTERS    
 
+    // GETTERS AND SETTERS    
 
     public File getBazelWorkspaceRootDirectory() {
         return this.bazelWorkspaceRootDirectory;
@@ -119,7 +116,7 @@ public class BazelWorkspace {
     public boolean hasBazelWorkspaceRootDirectory() {
         return this.bazelWorkspaceRootDirectory != null;
     }
-    
+
     public String getName() {
         return this.name;
     }
@@ -137,15 +134,15 @@ public class BazelWorkspace {
         }
         return this.bazelOutputBaseDirectory;
     }
-    
+
     public List<String> getTargetsForBazelQuery(String query) {
-    	List<String> results = new ArrayList<String>();
-    	for(String line: metadataStrategy.computeBazelQuery(query)) {
-    		if (line.startsWith("//")) {
+        List<String> results = new ArrayList<String>();
+        for (String line : metadataStrategy.computeBazelQuery(query)) {
+            if (line.startsWith("//")) {
                 results.add(line);
             }
-    	}
-    	return results;
+        }
+        return results;
     }
 
     public File getBazelBinDirectory() {

@@ -111,19 +111,19 @@ public class BazelLabel {
     }
 
     /**
-     * Returns the default package label for this label.  The default package label does not specify
-     * an explicit target and only corresponds to the package path.
+     * Returns the default package label for this label. The default package label does not specify an explicit target
+     * and only corresponds to the package path.
      * 
      * For example, given //foo/blah/goo:t1, the corresponding default package label is //foo/blah/goo.
      * 
      * @return BazelLabel instance representing the default package label.
-     * @throws IllegalArgumentException if this label is a root-level label (//...) and therefore doesn't have a
-     *     package path. 
+     * @throws IllegalArgumentException
+     *             if this label is a root-level label (//...) and therefore doesn't have a package path.
      */
     public BazelLabel getDefaultPackageLabel() {
         return new BazelLabel(getPackagePath());
     }
-    
+
     /**
      * Returns the package name of this label, which is the right-most path component of the package path.
      * 

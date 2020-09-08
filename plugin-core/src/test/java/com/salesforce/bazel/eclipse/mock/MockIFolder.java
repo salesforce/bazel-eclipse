@@ -51,17 +51,18 @@ import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
 public class MockIFolder implements IFolder {
-    private static final String UOE_MSG = "MockIFolder is pay as you go, you have hit a method that is not implemented."; 
+    private static final String UOE_MSG =
+            "MockIFolder is pay as you go, you have hit a method that is not implemented.";
 
     public IProject project;
     public IFolder parent;
     public IPath location;
     public Map<String, IFolder> children = new TreeMap<>();
-    
+
     public String pathComponent;
     public String fullPathStr;
     public IPath fullPath;
-    
+
     // IMPLEMENTED METHODS
 
     /**
@@ -83,16 +84,16 @@ public class MockIFolder implements IFolder {
     }
 
     /**
-     * Ctor to use if the IFolder is a subdirectory within a project (e.g. src/main/java) and
-     * we have the parent IFolder.
+     * Ctor to use if the IFolder is a subdirectory within a project (e.g. src/main/java) and we have the parent
+     * IFolder.
      */
     public MockIFolder(IProject project, MockIFolder parent, String pathComponent) {
         this.project = project;
         this.parent = parent;
         this.pathComponent = pathComponent;
         this.fullPathStr = parent.fullPathStr + File.separatorChar + pathComponent;
-        
-        this.location = Path.fromOSString(fullPathStr); 
+
+        this.location = Path.fromOSString(fullPathStr);
     }
 
     @Override
@@ -104,7 +105,7 @@ public class MockIFolder implements IFolder {
     public IProject getProject() {
         return project;
     }
-    
+
     @Override
     public IFolder getFolder(String name) {
         IFolder child = children.get(name);
@@ -114,7 +115,7 @@ public class MockIFolder implements IFolder {
         }
         return child;
     }
-    
+
     @Override
     public boolean exists() {
         // so we avoid actually creating folders, not sure if this will work
@@ -125,17 +126,14 @@ public class MockIFolder implements IFolder {
     public void createLink(IPath localLocation, int updateFlags, IProgressMonitor monitor) throws CoreException {
         // WHAT TO DO HERE
     }
-    
+
     @Override
     public IPath getFullPath() {
         return Path.fromOSString(fullPathStr);
     }
 
-
-
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
-    
 
     @Override
     public boolean exists(IPath path) {

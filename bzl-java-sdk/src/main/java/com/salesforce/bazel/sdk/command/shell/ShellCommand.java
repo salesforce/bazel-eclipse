@@ -53,8 +53,8 @@ import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
- * A utility class to spawn a command in the shell and parse its output. It allows to filter the output, 
- * redirecting part of it to the console and getting the rest in a list of string.
+ * A utility class to spawn a command in the shell and parse its output. It allows to filter the output, redirecting
+ * part of it to the console and getting the rest in a list of string.
  * <p>
  * This class can only be initialized using a builder created with the {@link #builder()} method.
  */
@@ -119,7 +119,7 @@ public final class ShellCommand implements Command {
         for (String arg : args) {
             command = command + arg + " ";
         }
-        System.out.println("Executing command (timeout = "+timeoutMS+"): "+command);
+        System.out.println("Executing command (timeout = " + timeoutMS + "): " + command);
         long startTimeMS = System.currentTimeMillis();
 
         try {
@@ -135,17 +135,16 @@ public final class ShellCommand implements Command {
             return exitCode;
         } catch (InterruptedException interrupted) {
             throw interrupted;
-        }
-        finally {
+        } finally {
             closeQuietly(stderr);
             closeQuietly(stdout);
             if (args.size() > 1) {
                 // arg 1 typically has the more interesting command token
-                SimplePerfRecorder.addTime("commmand_"+args.get(1), startTimeMS);
+                SimplePerfRecorder.addTime("commmand_" + args.get(1), startTimeMS);
             } else {
-                SimplePerfRecorder.addTime("commmand_"+args.get(0), startTimeMS);
+                SimplePerfRecorder.addTime("commmand_" + args.get(0), startTimeMS);
             }
-            System.out.println("Finished command: "+command);
+            System.out.println("Finished command: " + command);
         }
     }
 

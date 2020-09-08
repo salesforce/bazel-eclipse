@@ -76,8 +76,8 @@ public class BazelCommandLineToolConfigurationException extends Exception {
         private static final long serialVersionUID = 1L;
 
         public BazelTooOldException(String actualVersion, String wantedVersion, String path) {
-            super("Bazel version (" + actualVersion + ") of " + path + " is unsupported (want "+wantedVersion+" or higher), "
-                    + "please update your Bazel installation.");
+            super("Bazel version (" + actualVersion + ") of " + path + " is unsupported (want " + wantedVersion
+                    + " or higher), " + "please update your Bazel installation.");
         }
     }
 }

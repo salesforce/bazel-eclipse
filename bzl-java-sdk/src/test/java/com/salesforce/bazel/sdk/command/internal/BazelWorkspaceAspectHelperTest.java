@@ -45,8 +45,8 @@ import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 /**
  * Tests various behaviors of the BazelWorkspaceAspectHelper collaborator.
  * <p>
- * These tests use a test harness to generate real json files on the file system, which are then
- * read in by the helper. See TestBazelCommandEnvironmentFactory for how that is done.
+ * These tests use a test harness to generate real json files on the file system, which are then read in by the helper.
+ * See TestBazelCommandEnvironmentFactory for how that is done.
  */
 public class BazelWorkspaceAspectHelperTest {
     @Rule
@@ -60,8 +60,8 @@ public class BazelWorkspaceAspectHelperTest {
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets,
-            new MockWorkProgressMonitor(), "testAspectLoading");
+        Map<String, Set<AspectPackageInfo>> aspectMap =
+                aspectHelper.getAspectPackageInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.get("//projects/libs/javalib0:*").size());
 
@@ -79,8 +79,8 @@ public class BazelWorkspaceAspectHelperTest {
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:javalib0");
-        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets,
-            new MockWorkProgressMonitor(), "testAspectLoading");
+        Map<String, Set<AspectPackageInfo>> aspectMap =
+                aspectHelper.getAspectPackageInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.get("//projects/libs/javalib0:javalib0").size()); // TODO this should be only 3 entries, javalib0-test should not be loaded
 
@@ -97,8 +97,8 @@ public class BazelWorkspaceAspectHelperTest {
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets,
-            new MockWorkProgressMonitor(), "testAspectLoading");
+        Map<String, Set<AspectPackageInfo>> aspectMap =
+                aspectHelper.getAspectPackageInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(1, aspectMap.size());
         assertEquals(0, aspectHelper.numberCacheHits);
@@ -118,8 +118,8 @@ public class BazelWorkspaceAspectHelperTest {
         // retrieve the aspects for the target
         List<String> targets = new ArrayList<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectPackageInfo>> aspectMap = aspectHelper.getAspectPackageInfos(targets,
-            new MockWorkProgressMonitor(), "testAspectLoading");
+        Map<String, Set<AspectPackageInfo>> aspectMap =
+                aspectHelper.getAspectPackageInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(1, aspectMap.size());
         assertEquals(0, aspectHelper.numberCacheHits);
@@ -143,7 +143,6 @@ public class BazelWorkspaceAspectHelperTest {
         assertEquals(1, aspectHelper.numberCacheHits); // the entries all came from cache
     }
 
-
     // INTERNAL
 
     private TestBazelCommandEnvironmentFactory createEnv() throws Exception {
@@ -153,7 +152,8 @@ public class BazelWorkspaceAspectHelperTest {
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
 
-        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(1);
+        TestBazelWorkspaceDescriptor descriptor =
+                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(1);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
         env.createTestEnvironment(workspace, testDir, null);

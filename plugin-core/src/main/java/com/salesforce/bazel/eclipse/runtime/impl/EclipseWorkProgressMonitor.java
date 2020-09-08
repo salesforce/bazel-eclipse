@@ -64,7 +64,7 @@ public class EclipseWorkProgressMonitor implements WorkProgressMonitor, IProgres
     public EclipseWorkProgressMonitor() {
         eclipseMonitor = null;
     }
-    
+
     @Override
     public void beginTask(String name, int totalWork) {
         if (this.eclipseMonitor != null) {

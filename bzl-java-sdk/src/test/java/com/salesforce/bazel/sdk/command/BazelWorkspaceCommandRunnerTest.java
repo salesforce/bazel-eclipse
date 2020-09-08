@@ -46,7 +46,6 @@ public class BazelWorkspaceCommandRunnerTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
-
     // GLOBAL COMMAND RUNNER TESTS
     // The global runner is for commands that aren't associated with a particular workspace, typically
     // executed by an IDE prior to import of a workspace.
@@ -86,7 +85,6 @@ public class BazelWorkspaceCommandRunnerTest {
         globalRunner.runBazelVersionCheck();
     }
 
-
     // WORKSPACE COMMAND RUNNER BASIC TESTS
     // This set mostly tests our mocking framework to make sure everything is wired up correctly
     // and workspace specific commands are successful.
@@ -100,7 +98,8 @@ public class BazelWorkspaceCommandRunnerTest {
         outputbaseDir.mkdirs();
 
         // setup a test workspace on disk, this will write out WORKSPACE, BUILD and aspect files
-        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(3);
+        TestBazelWorkspaceDescriptor descriptor =
+                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(3);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
         env.createTestEnvironment(workspace, testDir, null);
@@ -111,8 +110,8 @@ public class BazelWorkspaceCommandRunnerTest {
         // test the setup, for example we are loading the workspace aspects from the file system
         Set<String> targets = new TreeSet<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectPackageInfo>> aspectMap = workspaceRunner.getAspectPackageInfos(targets, new MockWorkProgressMonitor(),
-            "testWorkspaceRunner");
+        Map<String, Set<AspectPackageInfo>> aspectMap =
+                workspaceRunner.getAspectPackageInfos(targets, new MockWorkProgressMonitor(), "testWorkspaceRunner");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.get("//projects/libs/javalib0:*").size());
 

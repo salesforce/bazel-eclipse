@@ -75,53 +75,53 @@ public class BazelPluginActivator extends AbstractUIPlugin {
 
     // GLOBAL COLLABORATORS
     // TODO move the collaborators to some other place, perhaps a dedicated static context object
-    
+
     // The shared instance
     private static BazelPluginActivator plugin;
 
     /**
-     * The Bazel workspace that is in scope.
-     * Currently, we only support one Bazel workspace in an Eclipse workspace so this is a static singleton.
+     * The Bazel workspace that is in scope. Currently, we only support one Bazel workspace in an Eclipse workspace so
+     * this is a static singleton.
      */
     private static BazelWorkspace bazelWorkspace = null;
-    
+
     /**
      * Facade that enables the plugin to execute the bazel command line tool outside of a workspace
      */
     private static BazelCommandManager bazelCommandManager;
-    
+
     /**
      * Runs bazel commands in the loaded workspace.
      */
     private static BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
-    
+
     /**
      * ProjectManager manages all of the imported projects
      */
     private static BazelProjectManager bazelProjectManager;
-    
+
     /**
      * ResourceHelper is a useful singleton for looking up workspace/projects from the Eclipse environment
      */
     private static ResourceHelper resourceHelper;
-    
+
     /**
      * JavaCoreHelper is a useful singleton for working with Java projects in the Eclipse workspace
      */
     private static JavaCoreHelper javaCoreHelper;
-    
+
     /**
      * Looks up the operating environment (e.g. OS type)
      */
     private static OperatingEnvironmentDetectionStrategy osEnvStrategy;
-    
+
     /**
      * Iteracts with preferences
      */
     private static BazelConfigurationManager configurationManager;
 
     // LIFECYCLE
-    
+
     /**
      * The constructor
      */
@@ -136,29 +136,30 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         super.start(context);
         BazelAspectLocation aspectLocation = new BazelAspectLocationImpl();
         CommandConsoleFactory consoleFactory = new EclipseConsole();
-        CommandBuilder  commandBuilder = new ShellCommandBuilder(consoleFactory);
+        CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
         ResourceHelper eclipseResourceHelper = new EclipseResourceHelper();
         JavaCoreHelper eclipseJavaCoreHelper = new EclipseJavaCoreHelper();
         BazelProjectManager projectMgr = new EclipseBazelProjectManager(eclipseResourceHelper, eclipseJavaCoreHelper);
         OperatingEnvironmentDetectionStrategy osEnvStrategy = new RealOperatingEnvironmentDetectionStrategy();
         BazelConfigurationManager configManager = new EclipseBazelConfigurationManager(eclipseResourceHelper);
-        
-        startInternal(aspectLocation, commandBuilder, consoleFactory, projectMgr, eclipseResourceHelper, eclipseJavaCoreHelper, 
-        		osEnvStrategy, configManager);
+
+        startInternal(aspectLocation, commandBuilder, consoleFactory, projectMgr, eclipseResourceHelper,
+            eclipseJavaCoreHelper, osEnvStrategy, configManager);
     }
 
     /**
-     * This is the inner entrypoint where the initialization really begins. Both the real activation entrypoint
-     * (when running in Eclipse, seen above) and the mocking framework call in here. When running for real,
-     * the passed collaborators are all the real ones, when running mock tests the collaborators are mocks.
+     * This is the inner entrypoint where the initialization really begins. Both the real activation entrypoint (when
+     * running in Eclipse, seen above) and the mocking framework call in here. When running for real, the passed
+     * collaborators are all the real ones, when running mock tests the collaborators are mocks.
      */
-    public void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory, 
-    		BazelProjectManager projectMgr, ResourceHelper rh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, 
-    		BazelConfigurationManager configMgr) throws Exception {
+    public void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
+            CommandConsoleFactory consoleFactory, BazelProjectManager projectMgr, ResourceHelper rh,
+            JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, BazelConfigurationManager configMgr)
+            throws Exception {
         // reset internal state (this is so tests run in a clean env)
         bazelWorkspace = null;
         bazelWorkspaceCommandRunner = null;
-        
+
         // global collaborators
         resourceHelper = rh;
         plugin = this;
@@ -184,10 +185,11 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             String workspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
             this.setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
         } else {
-            LOG.info("The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
+            LOG.info(
+                "The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
         }
     }
-    
+
     @Override
     public void stop(BundleContext context) throws Exception {
         super.stop(context);
@@ -204,7 +206,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
 
     // COLLABORATORS
     // TODO move the collaborators to some other place, perhaps a dedicated static context object
-    
+
     /**
      * Has the Bazel workspace location been imported/loaded? This is a good sanity check before doing any operation
      * related to Bazel or Bazel Java projects.
@@ -221,16 +223,16 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     }
 
     /**
-     * Returns the location on disk where the Bazel workspace is located. There must be a WORKSPACE file
-     * in this location. Prior to importing/opening a Bazel workspace, this location will be null
+     * Returns the location on disk where the Bazel workspace is located. There must be a WORKSPACE file in this
+     * location. Prior to importing/opening a Bazel workspace, this location will be null
      */
     public static File getBazelWorkspaceRootDirectory() {
         return bazelWorkspace.getBazelWorkspaceRootDirectory();
     }
 
     /**
-     * Sets the location on disk where the Bazel workspace is located. There must be a WORKSPACE file
-     * in this location. Changing this location is a big deal, so use this method only during setup/import.
+     * Sets the location on disk where the Bazel workspace is located. There must be a WORKSPACE file in this location.
+     * Changing this location is a big deal, so use this method only during setup/import.
      */
     public void setBazelWorkspaceRootDirectory(String workspaceName, File rootDirectory) {
         File workspaceFile = new File(rootDirectory, "WORKSPACE");
@@ -238,7 +240,9 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             workspaceFile = new File(rootDirectory, "WORKSPACE.bazel");
             if (!workspaceFile.exists()) {
                 new Throwable().printStackTrace();
-                BazelPluginActivator.error("BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: "+rootDirectory.getAbsolutePath());
+                BazelPluginActivator.error(
+                    "BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: "
+                            + rootDirectory.getAbsolutePath());
                 return;
             }
         }
@@ -248,8 +252,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         // write it to the preferences file
         configurationManager.setBazelWorkspacePath(rootDirectory.getAbsolutePath());
     }
-    
-    
+
     /**
      * Returns the unique instance of {@link BazelCommandManager}, the facade enables the plugin to execute the bazel
      * command line tool.
@@ -272,47 +275,48 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         }
         return bazelWorkspaceCommandRunner;
     }
-    
+
     /**
      * Returns the manager for imported projects
+     * 
      * @return
      */
     public static BazelProjectManager getBazelProjectManager() {
-    	return bazelProjectManager;
+        return bazelProjectManager;
     }
-    
+
     /**
-     * Returns the unique instance of {@link ResourceHelper}, this helper helps retrieve workspace and project
-     * objects from the environment
+     * Returns the unique instance of {@link ResourceHelper}, this helper helps retrieve workspace and project objects
+     * from the environment
      */
     public static ResourceHelper getResourceHelper() {
         return resourceHelper;
     }
 
     /**
-     * Returns the unique instance of {@link JavaCoreHelper}, this helper helps manipulate the Java configuration
-     * of a Java project
+     * Returns the unique instance of {@link JavaCoreHelper}, this helper helps manipulate the Java configuration of a
+     * Java project
      */
     public static JavaCoreHelper getJavaCoreHelper() {
         return javaCoreHelper;
     }
-    
+
     /**
      * Provides details of the operating environment (OS, real vs. tests, etc)
      */
     public OperatingEnvironmentDetectionStrategy getOperatingEnvironmentDetectionStrategy() {
         return osEnvStrategy;
     }
-    
+
     /**
      * Returns the config manager for projects
      */
     public BazelConfigurationManager getConfigurationManager() {
-    	return configurationManager;
+        return configurationManager;
     }
-    
+
     // LOGGING
-    
+
     /**
      * Log an error to the eclipse log.
      */
@@ -355,19 +359,18 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     }
 
     /**
-     * If there is a failure in configuring the logging subsytem, this method gets called such that logging is
-     * sent to System.err
+     * If there is a failure in configuring the logging subsytem, this method gets called such that logging is sent to
+     * System.err
      */
     public static void logToSystemErr() {
         logToSystemErr = true;
     }
 
-    
     // TEST ONLY
-    
+
     /**
-     * For some partial mocked tests, setting the ResourceHelper (which is used widely) without
-     * fully initializing the plugin can be faster, and less code. Do NOT use this method otherwise.
+     * For some partial mocked tests, setting the ResourceHelper (which is used widely) without fully initializing the
+     * plugin can be faster, and less code. Do NOT use this method otherwise.
      */
     public static void setResourceHelperForTests(ResourceHelper rh) {
         resourceHelper = rh;

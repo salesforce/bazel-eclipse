@@ -90,16 +90,16 @@ public class BazelProblemTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void toErrorWithRelativizedResourcePath__matchingBazelPackagePrefix() {
-        BazelProblem details =
-                BazelProblem.createError("projects/libs/cake/abstractions_foo/src/main/java/com/MyClass.java", 1, "desc");
+        BazelProblem details = BazelProblem
+                .createError("projects/libs/cake/abstractions_foo/src/main/java/com/MyClass.java", 1, "desc");
 
         details.toErrorWithRelativizedResourcePath(new BazelLabel("//projects/libs/cake/abstractions"));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void toErrorWithRelativizedResourcePath__differentBazelPackage() {
-        BazelProblem details = BazelProblem.createError(
-                "projects/libs/cake/metrics-abstractions/src/main/java/com/MyClass.java", 1, "desc");
+        BazelProblem details = BazelProblem
+                .createError("projects/libs/cake/metrics-abstractions/src/main/java/com/MyClass.java", 1, "desc");
 
         details.toErrorWithRelativizedResourcePath(new BazelLabel("projects/libs/cake/abstractions"));
     }

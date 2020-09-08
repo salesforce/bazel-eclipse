@@ -58,7 +58,8 @@ public class BazelLaunchConfigurationDelegateFTest {
         ILaunchConfiguration launchConfig = createLaunchConfiguration("run");
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
-        addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 0, "bazel-bin/projects/libs/javalib0/javalib0", "bazel run result");
+        addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 0,
+            "bazel-bin/projects/libs/javalib0/javalib0", "bazel run result");
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
 
         // method under test
@@ -140,8 +141,9 @@ public class BazelLaunchConfigurationDelegateFTest {
         // create the mock Eclipse runtime in the correct state
         int numberOfJavaPackages = 1;
         boolean computeClasspaths = true;
-        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(
-            testTempDir, numberOfJavaPackages, computeClasspaths, false);
+        MockEclipse mockEclipse =
+                EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
+                    numberOfJavaPackages, computeClasspaths, false);
 
         return mockEclipse;
     }
@@ -149,14 +151,14 @@ public class BazelLaunchConfigurationDelegateFTest {
     private MockILaunchConfiguration createLaunchConfiguration(String verb) {
         MockILaunchConfiguration testConfig = new MockILaunchConfiguration();
         testConfig.attributes.put(BazelLaunchConfigAttributes.PROJECT.getAttributeName(), "javalib0");
-        testConfig.attributes.put(BazelLaunchConfigAttributes.LABEL.getAttributeName(),
-            "//projects/libs/javalib0");
+        testConfig.attributes.put(BazelLaunchConfigAttributes.LABEL.getAttributeName(), "//projects/libs/javalib0");
         if ("test".equals(verb)) {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_test");
         } else if ("run".equals(verb)) {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_binary");
         } else if ("selenium".equals(verb)) {
-            testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_web_test_suite");
+            testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(),
+                "java_web_test_suite");
         }
 
         List<String> args = new ArrayList<>();
@@ -168,7 +170,8 @@ public class BazelLaunchConfigurationDelegateFTest {
         return testConfig;
     }
 
-    private void addBazelCommandOutput(TestBazelCommandEnvironmentFactory env, int verbIndex, String verb, String resultLine) {
+    private void addBazelCommandOutput(TestBazelCommandEnvironmentFactory env, int verbIndex, String verb,
+            String resultLine) {
         List<String> outputLines = new ArrayList<>();
         outputLines.add(resultLine);
         List<String> errorLines = new ArrayList<>();

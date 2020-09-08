@@ -8,20 +8,20 @@ import java.io.OutputStream;
  */
 public class StandardCommandConsoleFactory implements CommandConsoleFactory {
 
-	@Override
-	public CommandConsole get(String name, String title) throws IOException {
-		return new CommandConsole() {
+    @Override
+    public CommandConsole get(String name, String title) throws IOException {
+        return new CommandConsole() {
 
-			@Override
-			public OutputStream createOutputStream() {
-				return System.out;
-			}
+            @Override
+            public OutputStream createOutputStream() {
+                return System.out;
+            }
 
-			@Override
-			public OutputStream createErrorStream() {
-				return System.err;
-			}
-		};
-	}
+            @Override
+            public OutputStream createErrorStream() {
+                return System.err;
+            }
+        };
+    }
 
 }

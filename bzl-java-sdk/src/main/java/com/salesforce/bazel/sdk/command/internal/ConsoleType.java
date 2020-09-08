@@ -26,11 +26,11 @@ package com.salesforce.bazel.sdk.command.internal;
 import java.io.File;
 
 /**
- * Prompt to use to precede each log line from the command. 
+ * Prompt to use to precede each log line from the command.
  */
 public enum ConsoleType {
     NO_CONSOLE, SYSTEM, WORKSPACE;
-    
+
     public String getConsoleName(File directory) {
         switch (this) {
         case SYSTEM:

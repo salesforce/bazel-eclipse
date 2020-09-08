@@ -46,7 +46,7 @@ import org.eclipse.core.runtime.CoreException;
 public class BazelNature implements IProjectNature {
     public static final String BAZEL_NATURE_ID = "com.salesforce.bazel.eclipse.bazelNature"; //$NON-NLS-1$
     private IProject project;
-    
+
     @Override
     public void configure() throws CoreException {
         // TODO we aren't doing anything right now for BazelNature configure hook, seems like it should be used for something

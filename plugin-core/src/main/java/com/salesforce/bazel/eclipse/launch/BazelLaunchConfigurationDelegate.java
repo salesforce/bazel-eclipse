@@ -86,7 +86,6 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
     private static int DEBUG_PORT = getAvailablePort();
     private static String DEBUG_HOST = "localhost";
 
-
     @Override
     public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
             throws CoreException {
@@ -110,8 +109,8 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
 
         BazelWorkspaceCommandRunner bazelCommandRunner = BazelPluginActivator.getInstance().getWorkspaceCommandRunner();
 
-        Command cmd = bazelCommandRunner.getBazelLauncherBuilder().setLabel(label).setTargetKind(targetKind).setArgs(allArgs)
-                .setDebugMode(isDebugMode, DEBUG_HOST, DEBUG_PORT).build();
+        Command cmd = bazelCommandRunner.getBazelLauncherBuilder().setLabel(label).setTargetKind(targetKind)
+                .setArgs(allArgs).setDebugMode(isDebugMode, DEBUG_HOST, DEBUG_PORT).build();
         BazelProcessBuilder processBuilder = cmd.getProcessBuilder();
 
         List<String> commandTokens = processBuilder.command();

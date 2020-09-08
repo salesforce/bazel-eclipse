@@ -54,49 +54,48 @@ public class BazelCommandManager {
     private final CommandConsoleFactory consoleFactory;
 
     /**
-     * BazelWorkspaceCommandRunner instance that is not tied to a workspace. Used to check the Bazel version, and to do a workspace
-     * lookup given a random file system directory (since we don't know the workspace in advance, we can't use a
-     * workspace specific runner for that).
+     * BazelWorkspaceCommandRunner instance that is not tied to a workspace. Used to check the Bazel version, and to do
+     * a workspace lookup given a random file system directory (since we don't know the workspace in advance, we can't
+     * use a workspace specific runner for that).
      * <p>
      * Be careful about adding new operations using this instance. Prefer to use an instance attached to workspace
      * instead, as that can pass in workspace specific options when running the command.
      */
     private final BazelWorkspaceCommandRunner genericCommandRunner;
-    
+
     /**
-    * The set of workspace specific command runners. The key is the File workspaceRoot. We don't yet support
-    * multiple Bazel workspaces, but when we do this will be important.
-    */
-    private final Map<File, BazelWorkspaceCommandRunner> workspaceCommandRunners = new TreeMap<>();    
+     * The set of workspace specific command runners. The key is the File workspaceRoot. We don't yet support multiple
+     * Bazel workspaces, but when we do this will be important.
+     */
+    private final Map<File, BazelWorkspaceCommandRunner> workspaceCommandRunners = new TreeMap<>();
 
     /**
      * Create a {@link BazelCommandManager} object, providing the implementation for locating aspect and getting console
      * streams.
      */
-    public BazelCommandManager(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory,
-            File bazelExecutablePath) {
+    public BazelCommandManager(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
+            CommandConsoleFactory consoleFactory, File bazelExecutablePath) {
         this.aspectLocation = aspectLocation;
         this.commandBuilder = commandBuilder;
         this.consoleFactory = consoleFactory;
-        
+
         BazelWorkspaceCommandRunner.setBazelExecutablePath(bazelExecutablePath.getAbsolutePath());
         this.genericCommandRunner = new BazelWorkspaceCommandRunner(bazelExecutablePath, commandBuilder);
     }
 
-    
     // COMMAND RUNNERS
-    
+
     /**
-     * Provides a generic command runner not associated with any workspace. The set of commands that will work correctly using this
-     * runner is very limited. Getting the bazel executable version is one.
+     * Provides a generic command runner not associated with any workspace. The set of commands that will work correctly
+     * using this runner is very limited. Getting the bazel executable version is one.
      */
     public BazelWorkspaceCommandRunner getGlobalCommandRunner() {
         return genericCommandRunner;
     }
 
     /**
-     * Returns a {@link BazelWorkspaceCommandRunner} for the given Bazel workspace. It looks for the
-     * enclosing workspace and returns the instance that corresponds to it. If not in a Bazel workspace, returns null.
+     * Returns a {@link BazelWorkspaceCommandRunner} for the given Bazel workspace. It looks for the enclosing workspace
+     * and returns the instance that corresponds to it. If not in a Bazel workspace, returns null.
      */
     public BazelWorkspaceCommandRunner getWorkspaceCommandRunner(BazelWorkspace bazelWorkspace) {
         if (bazelWorkspace == null) {
@@ -112,18 +111,16 @@ public class BazelCommandManager {
                 ex.printStackTrace();
                 return null;
             }
-            
-            workspaceCommandRunner = new BazelWorkspaceCommandRunner(bazelExecutable, this.aspectLocation, 
-                this.commandBuilder, this.consoleFactory, bazelWorkspaceRootDirectory); 
+
+            workspaceCommandRunner = new BazelWorkspaceCommandRunner(bazelExecutable, this.aspectLocation,
+                    this.commandBuilder, this.consoleFactory, bazelWorkspaceRootDirectory);
             workspaceCommandRunners.put(bazelWorkspaceRootDirectory, workspaceCommandRunner);
         }
         return workspaceCommandRunner;
     }
-    
 
-    
     // BAZEL EXECUTABLE
-    
+
     /**
      * Set the path to the Bazel binary. Allows the user to override the default via the Preferences ui.
      */

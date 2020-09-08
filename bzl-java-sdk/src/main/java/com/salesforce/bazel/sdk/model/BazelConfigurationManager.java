@@ -4,24 +4,24 @@ import com.salesforce.bazel.sdk.command.BazelCommandManager;
 
 public interface BazelConfigurationManager {
 
-	/**
-	 * Gets the file system absolute path to the Bazel executable
-	 */
-	String getBazelExecutablePath();
-	
-	/**
-	 * Configure a listener for changes to the path (often by the user) to the Bazel executable
-	 */
-	void setBazelExecutablePathListener(BazelCommandManager bazelCommandManager);
-	
-	/**
-	 * Gets the absoluate path to the root of the Bazel workspace
-	 */
-	String getBazelWorkspacePath();
-	
-	/**
-	 * Sets the absoluate path to the root of the Bazel workspace
-	 */
-	void setBazelWorkspacePath(String bazelWorkspacePath);
+    /**
+     * Gets the file system absolute path to the Bazel executable
+     */
+    String getBazelExecutablePath();
+
+    /**
+     * Configure a listener for changes to the path (often by the user) to the Bazel executable
+     */
+    void setBazelExecutablePathListener(BazelCommandManager bazelCommandManager);
+
+    /**
+     * Gets the absoluate path to the root of the Bazel workspace
+     */
+    String getBazelWorkspacePath();
+
+    /**
+     * Sets the absoluate path to the root of the Bazel workspace
+     */
+    void setBazelWorkspacePath(String bazelWorkspacePath);
 
 }

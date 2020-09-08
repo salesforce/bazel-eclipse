@@ -33,15 +33,16 @@ import org.eclipse.core.runtime.preferences.IScopeContext;
 
 public class MockIScopeContext implements IScopeContext {
 
-    private static final String UOE_MSG = "MockIScopeContext is pay as you go, you have hit a method that is not implemented."; 
+    private static final String UOE_MSG =
+            "MockIScopeContext is pay as you go, you have hit a method that is not implemented.";
 
     public IProject project = null;
     public Map<String, MockIEclipsePreferences> prefStore = new TreeMap<>();
-    
+
     public MockIScopeContext(IProject project) {
         this.project = project;
     }
-    
+
     // MOCKED METHODS
 
     @Override
@@ -56,7 +57,6 @@ public class MockIScopeContext implements IScopeContext {
     public String getName() {
         throw new UnsupportedOperationException(UOE_MSG);
     }
-
 
     @Override
     public IPath getLocation() {

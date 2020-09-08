@@ -45,13 +45,13 @@ import java.io.OutputStream;
  */
 public interface CommandConsole {
 
-    /** 
-     * Create an {@link OuputStream} suitable to print standard output of a command. 
+    /**
+     * Create an {@link OuputStream} suitable to print standard output of a command.
      */
     OutputStream createOutputStream();
 
-    /** 
-     * Create an {@link OuputStream} suitable to print standard error output of a command. 
+    /**
+     * Create an {@link OuputStream} suitable to print standard error output of a command.
      */
     OutputStream createErrorStream();
 

@@ -44,10 +44,11 @@ public class BazelWorkspaceScannerTest {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
         File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
 
-//        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws");
-//        File tmpOutputBase = new File("/tmp/bazeltest/bin");
+        //        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws");
+        //        File tmpOutputBase = new File("/tmp/bazeltest/bin");
 
-        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(5).genrulePackages(2);
+        TestBazelWorkspaceDescriptor descriptor =
+                new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(5).genrulePackages(2);
         new TestBazelWorkspaceFactory(descriptor).build();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
@@ -70,7 +71,8 @@ public class BazelWorkspaceScannerTest {
     public void testNoJavaProjects() throws Exception {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
         File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
-        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(0).genrulePackages(2);
+        TestBazelWorkspaceDescriptor descriptor =
+                new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(0).genrulePackages(2);
         new TestBazelWorkspaceFactory(descriptor).build();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();

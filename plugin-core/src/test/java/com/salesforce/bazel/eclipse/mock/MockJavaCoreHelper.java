@@ -40,17 +40,18 @@ import org.eclipse.jdt.core.JavaModelException;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 
 public class MockJavaCoreHelper implements JavaCoreHelper {
-    private static final String UOE_MSG = "MockJavaCoreHelper is pay as you go, you have hit a method that is not implemented."; 
+    private static final String UOE_MSG =
+            "MockJavaCoreHelper is pay as you go, you have hit a method that is not implemented.";
 
     Map<String, MockIJavaProject> javaProjects = new TreeMap<>();
-    
+
     // IMPLEMENTED METHODS
 
     @Override
     public IJavaProject[] getAllBazelJavaProjects(boolean includeBazelWorkspaceRootProject) {
         return javaProjects.values().toArray(new IJavaProject[] {});
     }
-    
+
     @Override
     public IJavaProject getJavaProjectForProject(IProject project) {
         String projectName = project.getName();
@@ -107,13 +108,14 @@ public class MockJavaCoreHelper implements JavaCoreHelper {
     }
 
     @Override
-    public IClasspathEntry newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath, boolean isTestLib) {
+    public IClasspathEntry newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath,
+            boolean isTestLib) {
         return new MockIClasspathEntry(IClasspathEntry.CPE_LIBRARY, path);
     }
-    
+
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
-    
+
     @Override
     public void setClasspathContainer(IPath containerPath, IJavaProject[] affectedProjects,
             IClasspathContainer[] respectiveContainers, IProgressMonitor monitor) throws JavaModelException {
@@ -124,6 +126,5 @@ public class MockJavaCoreHelper implements JavaCoreHelper {
     public IJavaModel getJavaModelForWorkspace(IWorkspaceRoot root) {
         throw new UnsupportedOperationException(UOE_MSG);
     }
-
 
 }

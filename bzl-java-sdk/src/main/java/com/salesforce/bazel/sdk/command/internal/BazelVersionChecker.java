@@ -39,7 +39,7 @@ import com.salesforce.bazel.sdk.command.CommandBuilder;
 public class BazelVersionChecker {
 
     /**
-     * Builder for Bazel commands, which may be a ShellCommandBuilder (for real Eclipse use) or a MockCommandBuilder 
+     * Builder for Bazel commands, which may be a ShellCommandBuilder (for real Eclipse use) or a MockCommandBuilder
      * (for simulations during functional tests).
      */
     private CommandBuilder commandBuilder;
@@ -56,7 +56,7 @@ public class BazelVersionChecker {
     public BazelVersionChecker(CommandBuilder commandBuilder) {
         this.commandBuilder = commandBuilder;
     }
-    
+
     /**
      * Checks the version of the bazel binary installed at the path specified in the Preferences.
      *
@@ -66,12 +66,15 @@ public class BazelVersionChecker {
      *            optional directory in which to run the bazel command
      * @throws BazelCommandLineToolConfigurationException
      */
-    public void runBazelVersionCheck(File bazelExecutable, File bazelWorkspaceRootDirectory) throws BazelCommandLineToolConfigurationException {
+    public void runBazelVersionCheck(File bazelExecutable, File bazelWorkspaceRootDirectory)
+            throws BazelCommandLineToolConfigurationException {
         if (!bazelExecutable.exists()) {
-            throw new BazelCommandLineToolConfigurationException.BazelNotFoundException(bazelExecutable.getAbsolutePath());
+            throw new BazelCommandLineToolConfigurationException.BazelNotFoundException(
+                    bazelExecutable.getAbsolutePath());
         }
         if (!bazelExecutable.canExecute()) {
-            throw new BazelCommandLineToolConfigurationException.BazelNotExecutableException(bazelExecutable.getAbsolutePath());
+            throw new BazelCommandLineToolConfigurationException.BazelNotExecutableException(
+                    bazelExecutable.getAbsolutePath());
         }
         File execDir = bazelWorkspaceRootDirectory;
         if (execDir == null || !execDir.exists()) {
@@ -85,12 +88,12 @@ public class BazelVersionChecker {
                     .setStdoutLineSelector((s) -> s.startsWith("Build label:") ? s.substring(13) : null).build();
             if (command.run() != 0) {
                 throw new BazelCommandLineToolConfigurationException.BazelNotExecutableException(
-                    bazelExecutable.getAbsolutePath());
+                        bazelExecutable.getAbsolutePath());
             }
             List<String> resultLines = command.getSelectedOutputLines();
             if (resultLines.size() == 0) {
-                throw new BazelCommandLineToolConfigurationException.BazelTooOldException("unknown", MINIMUM_BAZEL_VERSION_STR,
-                    bazelExecutable.getAbsolutePath());
+                throw new BazelCommandLineToolConfigurationException.BazelTooOldException("unknown",
+                        MINIMUM_BAZEL_VERSION_STR, bazelExecutable.getAbsolutePath());
             }
             String version = "unknown";
             Matcher versionMatcher = null;
@@ -106,17 +109,18 @@ public class BazelVersionChecker {
                 }
             }
             if (versionMatcher == null || !versionMatcher.matches()) {
-                throw new BazelCommandLineToolConfigurationException.BazelTooOldException(version, MINIMUM_BAZEL_VERSION_STR,
-                    bazelExecutable.getAbsolutePath());
+                throw new BazelCommandLineToolConfigurationException.BazelTooOldException(version,
+                        MINIMUM_BAZEL_VERSION_STR, bazelExecutable.getAbsolutePath());
             }
             int[] versionNumbers = { Integer.parseInt(versionMatcher.group(1)),
                     Integer.parseInt(versionMatcher.group(2)), Integer.parseInt(versionMatcher.group(3)) };
             if (compareVersion(versionNumbers, MINIMUM_BAZEL_VERSION) < 0) {
-                throw new BazelCommandLineToolConfigurationException.BazelTooOldException(version, MINIMUM_BAZEL_VERSION_STR,
-                    bazelExecutable.getAbsolutePath());
+                throw new BazelCommandLineToolConfigurationException.BazelTooOldException(version,
+                        MINIMUM_BAZEL_VERSION_STR, bazelExecutable.getAbsolutePath());
             }
         } catch (IOException | InterruptedException e) {
-            throw new BazelCommandLineToolConfigurationException.BazelNotFoundException(bazelExecutable.getAbsolutePath());
+            throw new BazelCommandLineToolConfigurationException.BazelNotFoundException(
+                    bazelExecutable.getAbsolutePath());
         }
     }
 

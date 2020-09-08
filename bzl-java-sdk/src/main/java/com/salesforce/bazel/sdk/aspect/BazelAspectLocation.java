@@ -44,8 +44,8 @@ import java.io.File;
 public interface BazelAspectLocation {
 
     /**
-     * Returns a {@link File} object that points to the Bazel directory containing the aspect bzl file. See 
-     * implementor of this interface for details.
+     * Returns a {@link File} object that points to the Bazel directory containing the aspect bzl file. See implementor
+     * of this interface for details.
      */
     public File getAspectDirectory();
 

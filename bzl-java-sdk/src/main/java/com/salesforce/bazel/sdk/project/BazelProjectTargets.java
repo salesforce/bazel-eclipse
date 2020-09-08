@@ -41,44 +41,40 @@ import java.util.TreeSet;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 
 /**
- * Object that encapsulates the logic and state regarding the active targets configured for a
- * BazelProject.
+ * Object that encapsulates the logic and state regarding the active targets configured for a BazelProject.
  */
 public class BazelProjectTargets {
     private BazelProject project;
     private String projectBazelLabel;
 
     /**
-     * This is the list of targets listed as listed in the project preferences.
-     * This may contain a single entry that is the wildcard target (:*), or it can be a list
-     * of specific targets
+     * This is the list of targets listed as listed in the project preferences. This may contain a single entry that is
+     * the wildcard target (:*), or it can be a list of specific targets
      */
     private Set<String> configuredTargets = new TreeSet<>();
 
     /**
-     * Convenience flag that indicates that the activatedTargets list contains one entry and it is
-     * the wildcard entry
+     * Convenience flag that indicates that the activatedTargets list contains one entry and it is the wildcard entry
      */
     private boolean isActivatedWildcardTarget = false;
 
     /**
-     * Contains the list of targets configured for building/testing. This will be the same as
-     * configuredTargets if isActivatedWildcardTarget==false, or will be the actual list of all targets
-     * found in the BUILD file if isActivatedWildcardTarget==true
+     * Contains the list of targets configured for building/testing. This will be the same as configuredTargets if
+     * isActivatedWildcardTarget==false, or will be the actual list of all targets found in the BUILD file if
+     * isActivatedWildcardTarget==true
      */
     private Set<String> actualTargets;
 
-
     public BazelProjectTargets(BazelProject project, String projectBazelLabel) {
-         this.project = project;
-         this.projectBazelLabel = projectBazelLabel;
+        this.project = project;
+        this.projectBazelLabel = projectBazelLabel;
     }
 
     // TODO weave these into the constructor
 
     public void activateWildcardTarget() {
         this.isActivatedWildcardTarget = true;
-        this.configuredTargets.add(projectBazelLabel+":*");
+        this.configuredTargets.add(projectBazelLabel + ":*");
     }
 
     public void activateSpecificTargets(Set<String> activatedTargets) {

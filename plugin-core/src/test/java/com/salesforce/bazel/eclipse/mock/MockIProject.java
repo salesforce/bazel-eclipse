@@ -52,43 +52,40 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.mockito.Mockito;
 
 /**
- * DO NOT USE: the IProject interface has not been stable across the set of Eclipse versions we 
- * currently support, so creating a concrete mock is problematic. Use the MockIProjectFactory instead.
- * Leaving this file in place just in case a concrete mock is viable in the future.
+ * DO NOT USE: the IProject interface has not been stable across the set of Eclipse versions we currently support, so
+ * creating a concrete mock is problematic. Use the MockIProjectFactory instead. Leaving this file in place just in case
+ * a concrete mock is viable in the future.
  * <p>
- * org.eclipse.core.internal.resources.Project brings in a truckload of dependencies, so this is 
- * a lightweight version for testing. But that said, the API itself requires a long list of dependencies
- * (at least most are interfaces) so this can't be super lightweight either.
+ * org.eclipse.core.internal.resources.Project brings in a truckload of dependencies, so this is a lightweight version
+ * for testing. But that said, the API itself requires a long list of dependencies (at least most are interfaces) so
+ * this can't be super lightweight either.
  */
 public abstract class MockIProject implements IProject {
 
-    private static final String UOE_MSG = "MockIProject is pay as you go, you have hit a method that is not implemented."; 
-    
-    
-    public MockIProject() {
-    }
-    
-    
+    private static final String UOE_MSG =
+            "MockIProject is pay as you go, you have hit a method that is not implemented.";
+
+    public MockIProject() {}
+
     // IMPLEMENTED METHODS
     // REMINDER: DO NOT USE THIS CLASS, SEE THE CLASS LEVEL COMMENT
-    
+
     @Override
     public IProject getProject() {
         return this;
     }
-    
+
     @Override
     public IFile getFile(String name) {
         IFile file = Mockito.mock(IFile.class);
         Mockito.when(file.exists()).thenReturn(false);
-        
+
         return file;
     }
 
-    
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
-    
+
     @Override
     public boolean exists(IPath path) {
         throw new UnsupportedOperationException(UOE_MSG);

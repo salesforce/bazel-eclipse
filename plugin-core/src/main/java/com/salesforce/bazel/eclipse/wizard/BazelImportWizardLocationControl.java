@@ -119,7 +119,8 @@ public class BazelImportWizardLocationControl {
                     dialog.setText("Locate the Bazel WORKSPACE file");
                     String path = rootDirectoryCombo.getText();
                     if (path.length() == 0) {
-                        path = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot().getLocation().toPortableString();
+                        path = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot().getLocation()
+                                .toPortableString();
                     }
                     dialog.setFilterPath(path);
 
@@ -129,7 +130,8 @@ public class BazelImportWizardLocationControl {
                         if (!workspaceFile.isFile() || !hasWorkspaceFilename(workspaceFile)) {
                             Display.getDefault().syncExec(new Runnable() {
                                 public void run() {
-                                    MessageDialog.openError(page.getShell(), "Import WORKSPACE", "You must select a Bazel WORKSPACE File");
+                                    MessageDialog.openError(page.getShell(), "Import WORKSPACE",
+                                        "You must select a Bazel WORKSPACE File");
                                 }
                             });
                         } else {
@@ -213,7 +215,7 @@ public class BazelImportWizardLocationControl {
             combos.add(combo);
         }
     }
-    
+
     private boolean hasWorkspaceFilename(File candidateWorkspaceFile) {
         if (candidateWorkspaceFile.getName().equals("WORKSPACE")) {
             return true;

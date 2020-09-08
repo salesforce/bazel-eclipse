@@ -33,8 +33,9 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 
 public class MockIPreferenceStore implements IPreferenceStore {
 
-    private static final String UOE_MSG = "MockIPreferenceStore is pay as you go, you have hit a method that is not implemented."; 
-    
+    private static final String UOE_MSG =
+            "MockIPreferenceStore is pay as you go, you have hit a method that is not implemented.";
+
     public Map<String, String> strings = new TreeMap<>();
     private List<IPropertyChangeListener> propChangeListeners = new ArrayList<>();
 
@@ -49,17 +50,14 @@ public class MockIPreferenceStore implements IPreferenceStore {
     public String getString(String name) {
         return strings.get(name);
     }
-    
+
     @Override
     public void setValue(String name, String value) {
         strings.put(name, value);
     }
 
-
-    
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
-    
 
     @Override
     public boolean contains(String name) {
