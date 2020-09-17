@@ -77,6 +77,8 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 undo(eclipseJavaProject.getProject());
                 return;
             }
+            
+            boolean isRootProject = eclipseJavaProject.getProject().getName().contains("Bazel Workspace");
 
             // create the BazelProject if necessary
             BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
@@ -88,11 +90,21 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
 
             BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
             BazelCommandManager commandManager = BazelPluginActivator.getBazelCommandManager();
-            BazelClasspathContainer container = new BazelClasspathContainer(eclipseProject);
+            
+            BaseBazelClasspathContainer container = null;
+            if (isRootProject) {
+                container = new BazelSearchClasspathContainer(eclipseProject);
+            } else {
+                container = new BazelClasspathContainer(eclipseProject);
+            }
+            
             if (bazelProjectManager.isValid(bazelWorkspace, commandManager, bazelProject)) {
                 BazelPluginActivator.getJavaCoreHelper().setClasspathContainer(eclipseProjectPath,
                     new IJavaProject[] { eclipseJavaProject }, new IClasspathContainer[] { container }, null);
                 importedProjects.add(eclipseJavaProject.getProject());
+            } else if (isRootProject) {
+                BazelPluginActivator.getJavaCoreHelper().setClasspathContainer(eclipseProjectPath,
+                    new IJavaProject[] { eclipseJavaProject }, new IClasspathContainer[] { container }, null);
             } else {
                 // this is not exactly the package path, it is just the leaf node name
                 corruptPackage = eclipseJavaProject.getPath().toString();

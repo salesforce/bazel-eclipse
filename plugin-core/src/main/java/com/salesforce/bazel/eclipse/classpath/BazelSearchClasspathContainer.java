@@ -48,34 +48,33 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.sdk.index.BazelJvmIndexClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 
-public class BazelClasspathContainer extends BaseBazelClasspathContainer {
-    public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
+public class BazelSearchClasspathContainer extends BaseBazelClasspathContainer {
+    public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_SEARCH_CONTAINER";
 
-    protected final BazelJvmClasspath bazelClasspath;
+    protected final BazelJvmIndexClasspath bazelClasspath;
     
     private static List<BazelJvmClasspath> instances = new ArrayList<>();
 
-    public BazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
+    public BazelSearchClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
             BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException { 
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
     
-    public BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper) 
+    public BazelSearchClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper) 
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper);
         
-        bazelClasspath = new BazelJvmClasspath(this.bazelWorkspace, bazelProjectManager, bazelProject,
-            new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
-        instances.add(bazelClasspath);
+        bazelClasspath = new BazelJvmIndexClasspath(this.bazelWorkspace);
     }
     
     @Override
     public String getDescription() {
-        return "Bazel Classpath Container";
+        return "Bazel Search Classpath Container";
     }
 
     @Override
@@ -86,8 +85,12 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     
     @Override
     protected BazelJvmClasspathResponse computeClasspath() {
-        // the Java SDK will produce a list of logical classpath entries 
+        // the Java SDK will produce a list of logical classpath entries
+        long startTime = System.currentTimeMillis();
         BazelJvmClasspathResponse computedClasspath = bazelClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
+        long endTime = System.currentTimeMillis();
+        
+        BazelPluginActivator.info("BazelSearchContainerClasspath completed indexing in "+(endTime-startTime)+" milliseconds.");
         
         return computedClasspath;
     }
