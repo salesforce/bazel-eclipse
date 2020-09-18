@@ -5,6 +5,8 @@ The Bazel Eclipse Feature supports importing, building, and testing Java project
 
 This project is supported by Salesforce.
 
+:octocat: Please do us a huge favor. If you think this project could be useful for you, now or in the future, please hit the **Star** button at the top. That helps us advocate for more resources on this project. Thanks!
+
 ## BEF Status and Roadmap
 
 Active development of this feature is currently being done by a team within Salesforce.
