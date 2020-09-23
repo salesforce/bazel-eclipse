@@ -15,6 +15,7 @@ For example, your *.bazelrc* file is honored by the feature.
 
 For more information on how the feature invokes Bazel, see the [architecture page](dev/architecture.md).
 
-### Next Topic: Launching binaries and tests from Eclipse
+### Next Topic: Understanding the Java Classpath
 
-The next page in our guide discusses the [Launchers](using_the_feature_launching.md) with the Bazel Eclipse Feature.
+The next page in our guide discusses the [Java classpath](using_the_feature_classpath.md)
+  of your Java projects within the Bazel Eclipse Feature.

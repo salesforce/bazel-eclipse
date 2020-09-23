@@ -23,6 +23,9 @@
  */
 package com.salesforce.bazel.sdk.index.model;
 
+/**
+ * Identifier for the location of code. There are subclasses that are more specific.
+ */
 public class CodeLocationIdentifier {
     // context specific identifier
     public String locationIdentifier;

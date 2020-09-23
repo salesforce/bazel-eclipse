@@ -93,7 +93,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
             
             BaseBazelClasspathContainer container = null;
             if (isRootProject) {
-                container = new BazelSearchClasspathContainer(eclipseProject);
+                container = new BazelGlobalSearchClasspathContainer(eclipseProject);
             } else {
                 container = new BazelClasspathContainer(eclipseProject);
             }

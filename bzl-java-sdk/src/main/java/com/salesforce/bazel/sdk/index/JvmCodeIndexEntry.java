@@ -21,20 +21,42 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.index.source;
+package com.salesforce.bazel.sdk.index;
 
-import com.salesforce.bazel.sdk.index.model.ClassIdentifier;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
-import com.salesforce.bazel.sdk.index.model.CodeLocationIdentifier;
 
 /**
- * Variant of the location identifier for JVM source files (e.g. .java)
+ * A entry that is the value for each map in the JvmCodeIndex.
+ * This class strives to be light on memory since there can be tens of thousands, 
+ * so we don't create a List for single length entries. 
  */
-public class SourceFileIdentifier extends CodeLocationIdentifier {
-    public ClassIdentifier classId;
-
-    public SourceFileIdentifier(CodeLocationDescriptor artifact, ClassIdentifier classId) {
-        super(artifact.id.locationIdentifier+":"+classId.toString());
-        this.classId = classId;
+public class JvmCodeIndexEntry {
+    public CodeLocationDescriptor singleLocation = null;
+    public List<CodeLocationDescriptor> multipleLocations = null;
+    
+    public void addLocation(CodeLocationDescriptor newLocation) {
+        if (multipleLocations != null) {
+            for (CodeLocationDescriptor existing : multipleLocations) {
+                if (existing.id.locationIdentifier.equals(newLocation.id.locationIdentifier)) {
+                    // somehow we already added this (soft link?)
+                    return;
+                }
+            }
+            multipleLocations.add(newLocation);
+        } else if (singleLocation != null) {
+            if (singleLocation.id.locationIdentifier.equals(newLocation.id.locationIdentifier)) {
+                // somehow we already added this (soft link?)
+                return;
+            }
+            multipleLocations = new ArrayList<>(2);
+            multipleLocations.add(singleLocation);
+            multipleLocations.add(newLocation);
+            singleLocation = null;
+        } else {
+            singleLocation = newLocation;
+        }
     }
 }

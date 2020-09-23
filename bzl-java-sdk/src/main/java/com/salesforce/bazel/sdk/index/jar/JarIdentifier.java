@@ -25,6 +25,9 @@ package com.salesforce.bazel.sdk.index.jar;
 
 import com.salesforce.bazel.sdk.index.model.CodeLocationIdentifier;
 
+/**
+ * Variant of the location identifier for JVM jar files.
+ */
 public class JarIdentifier extends CodeLocationIdentifier {
     // Maven GAV - all supported build systems require jars to have GAV
     public String group;

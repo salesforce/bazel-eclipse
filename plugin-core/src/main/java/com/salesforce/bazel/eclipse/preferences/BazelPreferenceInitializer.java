@@ -36,32 +36,59 @@
 package com.salesforce.bazel.eclipse.preferences;
 
 import java.io.File;
+import java.io.FileReader;
+import java.util.Properties;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.sdk.lang.jvm.BazelJvmExternalUtil;
+import com.salesforce.bazel.sdk.util.BazelExecutableUtil;
+import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
- * Initialize the preferences of Bazel. The only preferences stored for now is the path to the Bazel binary, which is
- * expected to be in /usr/local/bin/bazel by default.
+ * Initialize the preferences of Bazel. 
  */
 public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
-
-    private static String which(String name, String def) {
-        for (String dirname : System.getenv("PATH").split(File.pathSeparator)) {
-            File file = new File(dirname, name);
-            if (file.isFile() && file.canExecute()) {
-                return file.getAbsolutePath();
-            }
-        }
-        return def;
-    }
 
     @Override
     public void initializeDefaultPreferences() {
         IPreferenceStore store = BazelPluginActivator.getInstance().getPreferenceStore();
-        store.setDefault(BazelPreferencePage.BAZEL_PATH_PREF_NAME, which("bazel", "/usr/local/bin/bazel"));
+        Properties defaultPrefs = loadMasterPreferences();
+        
+        String bazelExecLocationFromEnv = BazelExecutableUtil.which("bazel", "/usr/local/bin/bazel");
+        String value = defaultPrefs.getProperty(BazelPreferencePage.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
+        store.setDefault(BazelPreferencePage.BAZEL_PATH_PREF_NAME, value);
+        
+        // enable global classpath search by default
+        value = defaultPrefs.getProperty(BazelPreferencePage.GLOBALCLASSPATH_SEARCH_PREF_NAME, "true");
+        store.setDefault(BazelPreferencePage.GLOBALCLASSPATH_SEARCH_PREF_NAME, "true".equals(value));
+
+        // determine the location on local disk for the downloaded jar cache
+        OperatingEnvironmentDetectionStrategy os = BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy();
+        File externalJarCacheDefaultLocation = BazelJvmExternalUtil.getDownloadedJarCacheLocation(os);
+        String externalJarCacheDefaultPath = externalJarCacheDefaultLocation.getAbsolutePath();
+        value = defaultPrefs.getProperty(BazelPreferencePage.EXTERNAL_JAR_CACHE_PATH_PREF_NAME, externalJarCacheDefaultPath);
+        store.setDefault(BazelPreferencePage.EXTERNAL_JAR_CACHE_PATH_PREF_NAME, value);
     }
 
+    /**
+     * A user may place an eclipse.properties file in their ~/.bazel directory which will persist
+     * preferences to be used for any new Eclipse workspace. This is a savior for those of us who 
+     * work on BEF and create new Elipse workspaces all the time. Might be useful for regular users too.
+     */
+    private Properties loadMasterPreferences() {
+        Properties masterProperties = new Properties();
+        String userHome = System.getProperty("user.home");
+        File masterPropertiesFile = new File(userHome+File.separator+".bazel", "eclipse.properties");
+        if (masterPropertiesFile.exists()) {
+            try (FileReader fileReader = new FileReader(masterPropertiesFile)) {
+                masterProperties.load(fileReader);
+            } catch (Exception anyE) {}
+        }
+        
+        return masterProperties;
+    }
+    
 }

@@ -26,7 +26,104 @@ package com.salesforce.bazel.sdk.index.jar;
 import java.io.File;
 import java.util.zip.ZipFile;
 
-public abstract class JarIdentiferResolver {
+public class JarIdentiferResolver {
+    private String startWord;
 
-    public abstract JarIdentifier resolveJarIdentifier(File path, ZipFile jarFile);
+    /**
+     * Creates a resolver, with the important startWord. The startWord delimits the path part that
+     * divides the location on disk for the directory structure from the important structure information
+     * that identifies the artifact. For example, in a Maven repository, the path information below the 
+     * .m2/repository directory contains the groupId and versionId.
+     * 
+     * @param startWord  for Maven repo, "repository"; for a bazel workspace using maven_install, "public"
+     */
+    public JarIdentiferResolver(String startWord) {
+        this.startWord = startWord;
+    }
+
+    public JarIdentifier resolveJarIdentifier(File pathFile, ZipFile zipFile) {
+        String path = pathFile.getAbsolutePath();
+        int startIndex = path.lastIndexOf(startWord);
+        if (startIndex == -1) {
+            return null;
+        }
+        // do some quick Bazel exclusions (TODO how best to identify the interesting jars in the Bazel output dirs?)
+        if (path.contains("-hjar.jar")) {
+            return null; // perf optimization jar, not intended for non-Bazel consumption
+        }
+        if (path.contains("-native-header.jar")) {
+            return null; // perf optimization jar, not intended for non-Bazel consumption
+        }
+        if (path.contains("-class.jar")) {
+            return null; // perf optimization jar, not intended for non-Bazel consumption
+        }
+        if (path.contains("-src.jar")) {
+            return null; // source jar, this will be pulled in as an attribute of the main jar
+        }
+        if (path.contains("-sources.jar")) {
+            return null; // source jar, this will be pulled in as an attribute of the main jar
+        }
+        if (path.contains("-gensrc.jar")) {
+            return null; // source jar, this will be pulled in as an attribute of the main jar
+        }
+        if (path.contains("Test.jar")) {
+            return null; // by convention, a jar that contains a test to run in bazel
+        }
+        if (path.contains("IT.jar")) {
+            return null; // by convention, a jar that contains a test to run in bazel
+        }
+        
+        // Maven: com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8.jar
+        // Bazel: com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8-ijar.jar
+
+        String gavPart = path.substring(startIndex+startWord.length());
+        String[] gavParts = gavPart.split("/");
+
+        // open-context-impl-0.1.8.jar => open-context-impl
+        String artifact = gavParts[gavParts.length-1];
+        if (artifact.endsWith("-ijar.jar")) {
+            // Bazel convention, need to customize it here because the extra hyphen confuses the logic below
+            artifact = artifact.substring(0, artifact.length()-9);
+        } else if (artifact.endsWith(".jar")) {
+            // standard jars
+            artifact = artifact.substring(0, artifact.length()-4);
+        }
+        int artifactVersionIndex = artifact.lastIndexOf("-");
+        String version = "none";
+        int groupOffset = 1;
+        if (artifactVersionIndex != -1) {
+            artifact = artifact.substring(0, artifactVersionIndex); // remove the embedded version
+            version = gavParts[gavParts.length-2];
+            groupOffset = 3;
+        }
+
+        String group = "";
+        boolean firstToken = true;
+        for (int i = 0; i<gavParts.length-groupOffset; i++) {
+            if (!firstToken) {
+                group = group + "." + gavParts[i];
+            } else if (!gavParts[i].isEmpty()) {
+                group = gavParts[i];
+                firstToken = false;
+            }
+        }
+        JarIdentifier id = new JarIdentifier(group, artifact, version);
+        return id;
+    }
+
+    // test
+    public static void main(String[] args) {
+
+        // Maven build system
+        JarIdentiferResolver resolver = new JarIdentiferResolver("/repository/");
+        File pathFile = new File("/Users/mbenioff/.m2/repository/com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8.jar");
+        JarIdentifier id = resolver.resolveJarIdentifier(pathFile, null);
+        System.out.println(id.locationIdentifier);
+
+        // Bazel build system
+        resolver = new JarIdentiferResolver("/public/");
+        pathFile = new File("/tmp/_bazel_benioff/dsf87dsfsl/execroot/__main__/bazel-out/darwin-fastbuild/bin/external/maven/v1/https/benioff%40nexus.acme.com/nexus/content/groups/public/com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8-ijar.jar");
+        id = resolver.resolveJarIdentifier(pathFile, null);
+        System.out.println(id.locationIdentifier);
+    }
 }

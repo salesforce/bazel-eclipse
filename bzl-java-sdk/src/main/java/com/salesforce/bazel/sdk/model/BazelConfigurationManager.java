@@ -15,7 +15,7 @@ public interface BazelConfigurationManager {
     void setBazelExecutablePathListener(BazelCommandManager bazelCommandManager);
 
     /**
-     * Gets the absoluate path to the root of the Bazel workspace
+     * Gets the absolute path to the root of the Bazel workspace
      */
     String getBazelWorkspacePath();
 
@@ -23,5 +23,11 @@ public interface BazelConfigurationManager {
      * Sets the absoluate path to the root of the Bazel workspace
      */
     void setBazelWorkspacePath(String bazelWorkspacePath);
+    
+    /**
+     * Global search is the feature for doing type (e.g. Java class) searches across all dependencies in the 
+     * Bazel workspace, not just the dependencies of the imported packages.
+     */
+    boolean isGlobalClasspathSearchEnabled();
 
 }

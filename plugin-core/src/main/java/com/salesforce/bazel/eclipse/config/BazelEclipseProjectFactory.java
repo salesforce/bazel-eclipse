@@ -69,7 +69,7 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.builder.BazelBuilder;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer;
-import com.salesforce.bazel.eclipse.classpath.BazelSearchClasspathContainer;
+import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
 import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
@@ -429,7 +429,7 @@ public class BazelEclipseProjectFactory {
             // the imported projects (remember, this could be a small subset of all total Bazel packages)
             // has the dependency on the classpath
             bazelClasspathContainerEntry = BazelPluginActivator.getJavaCoreHelper()
-                    .newContainerEntry(new Path(BazelSearchClasspathContainer.CONTAINER_NAME));
+                    .newContainerEntry(new Path(BazelGlobalSearchClasspathContainer.CONTAINER_NAME));
         } else {
             bazelClasspathContainerEntry = BazelPluginActivator.getJavaCoreHelper()
                     .newContainerEntry(new Path(BazelClasspathContainer.CONTAINER_NAME));

@@ -26,16 +26,20 @@ package com.salesforce.bazel.sdk.index.source;
 import java.io.File;
 import java.io.FilenameFilter;
 
-import com.salesforce.bazel.sdk.index.index.CodeIndex;
+import com.salesforce.bazel.sdk.index.JvmCodeIndex;
 import com.salesforce.bazel.sdk.index.model.ClassIdentifier;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.index.model.CodeLocationIdentifier;
 
+/**
+ * Crawler that descends into nested directories of source files and adds found files
+ * to the index.
+ */
 public class JavaSourceCrawler {
-    private CodeIndex index;
+    private JvmCodeIndex index;
     private String artifactMarkerFileName;
 
-    public JavaSourceCrawler(CodeIndex index, String artifactMarkerFileName) {
+    public JavaSourceCrawler(JvmCodeIndex index, String artifactMarkerFileName) {
         this.index = index;
         this.artifactMarkerFileName = artifactMarkerFileName;
     }
@@ -43,9 +47,11 @@ public class JavaSourceCrawler {
     public void index(File basePath) {
         indexRecur(basePath, "", null, true);
     }
-    protected void indexRecur(File path, String relativeToClosestArtifact, CodeLocationDescriptor closestArtifactLocationDescriptor, boolean isRootDir) {
-        // have we descended into a new artifact (e.g. pom.xml for Maven, or BUILD for Bazel)
+    
+    protected void indexRecur(File path, String relativePathToClosestArtifact, CodeLocationDescriptor closestArtifactLocationDescriptor, 
+            boolean isRootDir) {
         if (path.isDirectory()) {
+            // have we descended into a new artifact? (i.e. directory contains pom.xml for Maven, or BUILD for Bazel)
             String[] artifactMarkerSearch = path.list(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
@@ -56,11 +62,11 @@ public class JavaSourceCrawler {
                 if (closestArtifactLocationDescriptor != null) {
                     parentId = closestArtifactLocationDescriptor.id.locationIdentifier+"/";
                 }
-                CodeLocationIdentifier myId = new CodeLocationIdentifier(parentId+relativeToClosestArtifact);
+                CodeLocationIdentifier myId = new CodeLocationIdentifier(parentId+relativePathToClosestArtifact);
                 closestArtifactLocationDescriptor = new CodeLocationDescriptor(path, myId);
 
                 index.addArtifactLocation(path.getName(), closestArtifactLocationDescriptor);
-                relativeToClosestArtifact = "";
+                relativePathToClosestArtifact = "";
             }
         }
 
@@ -74,12 +80,12 @@ public class JavaSourceCrawler {
                         continue;
                     }
                     if (isRootDir && candidateFile.getName().equals("tools")) {
-                        // this is the standard location for build tools, ignore
+                        // this is the standard location for bazel build tools, ignore //tools
                         continue;
                     }
                     String childRelative = candidateFile.getName();
-                    if (!relativeToClosestArtifact.isEmpty()) {
-                        childRelative = relativeToClosestArtifact+"/"+candidateFile.getName();
+                    if (!relativePathToClosestArtifact.isEmpty()) {
+                        childRelative = relativePathToClosestArtifact+"/"+candidateFile.getName();
                     }
                     indexRecur(candidateFile, childRelative, closestArtifactLocationDescriptor, false);
                 } else if (candidateFile.canRead()) {
