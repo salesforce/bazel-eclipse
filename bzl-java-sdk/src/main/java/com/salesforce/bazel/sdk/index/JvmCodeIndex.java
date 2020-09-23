@@ -21,33 +21,49 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.index.index;
+package com.salesforce.bazel.sdk.index;
 
 import java.util.Map;
 import java.util.TreeMap;
 
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 
-public class CodeIndex {
-    // map artifact name to entry(s)
-    public Map<String, CodeIndexEntry> artifactDictionary = new TreeMap<>();
-    // map class name to entry(s)
-    public Map<String, CodeIndexEntry> classDictionary = new TreeMap<>();
+/**
+ * An index of JVM types.
+ * This is the output of an indexer that knows how to traverse the file system looking for JVM types.
+ * This is useful for tools that need to have a full list of available JVM types. For example, a Bazel IDE
+ * will want to be able to list all types imported by the workspace. 
+ * <p>
+ * There are two parts to the index: the artifactDictionary and the classDictionary.
+ * <p>
+ * The artifactDictionary maps the Maven style artifactId to the one or more jar files found that contains
+ * that artifactId. If your directories contains multiple versions of the same artifactId, this will be a list
+ * of artifacts.
+ * <p>
+ * The classDictionary maps each found classname to the discovered location in jar files or raw source files. 
+ * <p>
+ * This is intentionally a lighter indexing system than provided by the MavenIndexer project, which generates
+ * full Lucene indexes of code. We found the performance of that indexing solution to be too slow for our needs.
+ */
+public class JvmCodeIndex {
+    // key: artifact name  value: jar locations
+    Map<String, JvmCodeIndexEntry> artifactDictionary = new TreeMap<>();
+    // key: classname  value: locations where that classname is found
+    Map<String, JvmCodeIndexEntry> classDictionary = new TreeMap<>();
 
     public void addArtifactLocation(String artifact, CodeLocationDescriptor location) {
-        CodeIndexEntry indexEntry = this.artifactDictionary.get(artifact);
+        JvmCodeIndexEntry indexEntry = this.artifactDictionary.get(artifact);
         if (indexEntry == null) {
-            indexEntry = new CodeIndexEntry();
+            indexEntry = new JvmCodeIndexEntry();
         }
         indexEntry.addLocation(location);
         this.artifactDictionary.put(artifact, indexEntry);
-        System.out.println("ADD: "+location.locationOnDisk.getPath());
     }
 
     public void addClassnameLocation(String classname, CodeLocationDescriptor location) {
-        CodeIndexEntry indexEntry = this.classDictionary.get(classname);
+        JvmCodeIndexEntry indexEntry = this.classDictionary.get(classname);
         if (indexEntry == null) {
-            indexEntry = new CodeIndexEntry();
+            indexEntry = new JvmCodeIndexEntry();
         }
         indexEntry.addLocation(location);
         this.classDictionary.put(classname, indexEntry);
@@ -69,7 +85,7 @@ public class CodeIndex {
         println("");
     }
 
-    private void printArtifact(String artifact, CodeIndexEntry entry) {
+    private void printArtifact(String artifact, JvmCodeIndexEntry entry) {
         println("  "+artifact);
         if (entry.singleLocation != null) {
             println("    "+entry.singleLocation.id.locationIdentifier);

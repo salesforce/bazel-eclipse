@@ -12,7 +12,7 @@
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
             class="com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer"
-            id="com.salesforce.bazel.eclipse.BAZEL_SEARCH_CONTAINER">
+            id="com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER">
       </classpathContainerInitializer>
    </extension>
    <extension

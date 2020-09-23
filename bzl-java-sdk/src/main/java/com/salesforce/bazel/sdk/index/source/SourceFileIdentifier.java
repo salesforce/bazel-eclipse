@@ -27,6 +27,9 @@ import com.salesforce.bazel.sdk.index.model.ClassIdentifier;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.index.model.CodeLocationIdentifier;
 
+/**
+ * Variant of the location identifier for JVM source files (e.g. .java)
+ */
 public class SourceFileIdentifier extends CodeLocationIdentifier {
     public ClassIdentifier classId;
 

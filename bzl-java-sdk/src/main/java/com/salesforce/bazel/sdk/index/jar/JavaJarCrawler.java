@@ -28,16 +28,20 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import com.salesforce.bazel.sdk.index.index.CodeIndex;
+import com.salesforce.bazel.sdk.index.JvmCodeIndex;
 import com.salesforce.bazel.sdk.index.model.ClassIdentifier;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 
+/**
+ * Crawler that descends into nested directories of jar files and adds found files
+ * to the index.
+ */
 public class JavaJarCrawler {
 
-    private CodeIndex index;
+    private JvmCodeIndex index;
     private JarIdentiferResolver resolver;
 
-    public JavaJarCrawler(CodeIndex index, JarIdentiferResolver resolver) {
+    public JavaJarCrawler(JvmCodeIndex index, JarIdentiferResolver resolver) {
         this.index = index;
         this.resolver = resolver;
     }
@@ -97,7 +101,7 @@ public class JavaJarCrawler {
             return;
         }
         
-        // add to our index using classnames
+        // add to our index by the enclosed classnames
         Enumeration<? extends ZipEntry> entries = null;
         try {
             entries = zipFile.entries();

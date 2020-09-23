@@ -27,6 +27,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Location on disk of a file (e.g. jar file) that contains classes.
+ */
 public class CodeLocationDescriptor {
     public CodeLocationIdentifier id;
     public File locationOnDisk;

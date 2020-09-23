@@ -37,6 +37,8 @@ package com.salesforce.bazel.eclipse.preferences;
 
 import java.io.File;
 
+import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.swt.widgets.Composite;
@@ -46,14 +48,14 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 
 /**
- * Page to configure the Bazel Eclipse plugin. The only configuration parameter is the path to the Bazel binary so this
- * page provides a file field to specify it.
- * <p>
+ * Page to configure the Bazel Eclipse plugin. 
  * See BazelPreferenceInitializer for how this preference is initialized with a default value.
  */
 public class BazelPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
     public static final String BAZEL_PATH_PREF_NAME = "BAZEL_PATH";
+    public static final String GLOBALCLASSPATH_SEARCH_PREF_NAME = "GLOBALCLASSPATH_SEARCH_ENABLED";
+    public static final String EXTERNAL_JAR_CACHE_PATH_PREF_NAME = "EXTERNAL_JAR_CACHE_PATH";
 
     private static class BazelBinaryFieldEditor extends FileFieldEditor {
         BazelBinaryFieldEditor(Composite parent) {
@@ -85,6 +87,41 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
             }
         }
     }
+    
+    private static class BazelGlobalClasspathSearchEnabledFieldEditor extends BooleanFieldEditor { 
+        
+        public BazelGlobalClasspathSearchEnabledFieldEditor(Composite parent) {
+            super(GLOBALCLASSPATH_SEARCH_PREF_NAME, "Enable &global classpath search?", SEPARATE_LABEL, parent);
+        }
+    }
+    
+    private static class BazelExternalDownloadCachePathEditor extends DirectoryFieldEditor {
+        BazelExternalDownloadCachePathEditor(Composite parent) {
+            super(EXTERNAL_JAR_CACHE_PATH_PREF_NAME, "Path to the local &cache of downloaded jar files:", parent);
+        }
+
+        @Override
+        protected boolean doCheckState() {
+            return isValid();
+        }
+
+        @Override
+        public boolean isValid() {
+            try {
+                String cachePath = getStringValue();
+                File cachePathFile = new File(cachePath);
+                if (!cachePathFile.exists()) {
+                    setErrorMessage(cachePath + " does not exist");
+                    return false;
+                }
+                return true;
+            } catch (Exception e) {
+                setErrorMessage(e.getMessage());
+                return false;
+            }
+        }
+    }
+
 
     public BazelPreferencePage() {
         super(GRID);
@@ -92,11 +129,13 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
 
     public void createFieldEditors() {
         addField(new BazelBinaryFieldEditor(getFieldEditorParent()));
+        addField(new BazelGlobalClasspathSearchEnabledFieldEditor(getFieldEditorParent()));
+        addField(new BazelExternalDownloadCachePathEditor(getFieldEditorParent()));
     }
 
     @Override
     public void init(IWorkbench workbench) {
         setPreferenceStore(BazelPluginActivator.getInstance().getPreferenceStore());
-        setDescription("Bazel Settings");
+        setDescription("Configure the Bazel feature.");
     }
 }

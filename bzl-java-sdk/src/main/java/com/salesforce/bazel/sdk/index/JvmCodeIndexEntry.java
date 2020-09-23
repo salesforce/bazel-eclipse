@@ -21,14 +21,19 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.index.index;
+package com.salesforce.bazel.sdk.index;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 
-public class CodeIndexEntry {
+/**
+ * A entry that is the value for each map in the JvmCodeIndex.
+ * This class strives to be light on memory since there can be tens of thousands, 
+ * so we don't create a List for single length entries. 
+ */
+public class JvmCodeIndexEntry {
     public CodeLocationDescriptor singleLocation = null;
     public List<CodeLocationDescriptor> multipleLocations = null;
     

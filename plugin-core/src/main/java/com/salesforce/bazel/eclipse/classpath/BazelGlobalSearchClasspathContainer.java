@@ -35,6 +35,7 @@
  */
 package com.salesforce.bazel.eclipse.classpath;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,39 +43,68 @@ import java.util.List;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.preferences.BazelPreferencePage;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.index.BazelJvmIndexClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
+import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 
-public class BazelSearchClasspathContainer extends BaseBazelClasspathContainer {
-    public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_SEARCH_CONTAINER";
+/**
+ * The global search feature enables the user to search for types (e.g. Java classes) using the Open Type dialog,
+ * and find results that are in the Bazel Workspace even if none of the currently imported packages
+ * has that type in the transitive closure of dependencies. 
+ * <p> 
+ * Internally, this means we take the union of all dependencies (currently, jar and source files) found in the 
+ * Bazel Workspace, plus all of the types built within the workspace, and adding them to this synthetic 
+ * classpath container attached to the 'Bazel Workspace' project in Eclipse. If the Bazel Workspace has 
+ * an enormous set of dependencies, this may make type search  slow so we allow the user to disable it 
+ * in the Bazel preferences. 
+ */
+public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathContainer {
+    public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER";
 
+    protected final BazelConfigurationManager config;
     protected final BazelJvmIndexClasspath bazelClasspath;
     
     private static List<BazelJvmClasspath> instances = new ArrayList<>();
 
-    public BazelSearchClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
+    public BazelGlobalSearchClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
             BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException { 
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
     
-    public BazelSearchClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper) 
+    public BazelGlobalSearchClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper) 
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper);
+        config = BazelPluginActivator.getInstance().getConfigurationManager();
+
+        // lookup the directory that contains the cache of all the downloaded jars
+        // this depends on your jar tech (maven_install, jvm_import) and if you have
+        // overridden the chosen tech's default location
+        IPreferenceStore prefs = BazelPluginActivator.getInstance().getPreferenceStore();
+        String jarCacheDir = prefs.getString(BazelPreferencePage.EXTERNAL_JAR_CACHE_PATH_PREF_NAME);
+        File jarCacheDirFile = null;
+        if (jarCacheDir != null) {
+            jarCacheDirFile = new File(jarCacheDir);
+            if (!jarCacheDirFile.exists()) {
+                jarCacheDirFile = null;
+            }
+        }
         
-        bazelClasspath = new BazelJvmIndexClasspath(this.bazelWorkspace);
+        bazelClasspath = new BazelJvmIndexClasspath(this.bazelWorkspace, jarCacheDirFile);
     }
     
     @Override
     public String getDescription() {
-        return "Bazel Search Classpath Container";
+        return "Bazel Global Search Classpath";
     }
 
     @Override
@@ -85,6 +115,11 @@ public class BazelSearchClasspathContainer extends BaseBazelClasspathContainer {
     
     @Override
     protected BazelJvmClasspathResponse computeClasspath() {
+        if (!config.isGlobalClasspathSearchEnabled()) {
+            // user has disabled the global search feature
+            return new BazelJvmClasspathResponse();
+        }
+        
         // the Java SDK will produce a list of logical classpath entries
         long startTime = System.currentTimeMillis();
         BazelJvmClasspathResponse computedClasspath = bazelClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));

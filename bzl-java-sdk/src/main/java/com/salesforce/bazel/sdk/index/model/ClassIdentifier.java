@@ -23,10 +23,18 @@
  */
 package com.salesforce.bazel.sdk.index.model;
 
+/**
+ * Holder object for a JVM type: package name + class name
+ */
 public class ClassIdentifier {
     public String packageName;
     public String classname;
 
+    public ClassIdentifier(String packageName, String classname) {
+        this.packageName = packageName;
+        this.classname = classname;
+    }
+    
     public ClassIdentifier(String fqClassname) {
         int lastDot = fqClassname.lastIndexOf(".");
         if (lastDot == -1) {
@@ -39,11 +47,6 @@ public class ClassIdentifier {
         }
     }
 
-    public static void main(String[] args) {
-        new ClassIdentifier("com.salesforce.blue.Dog").printId();
-        new ClassIdentifier("Dog").printId();
-    }
-
     public String toString() {
         return packageName+"."+classname;
     }
@@ -51,4 +54,10 @@ public class ClassIdentifier {
     private void printId() {
         System.out.println("p["+packageName+"] c["+classname+"]");
     }
+
+    public static void main(String[] args) {
+        new ClassIdentifier("com.salesforce.blue.Dog").printId();
+        new ClassIdentifier("Dog").printId();
+    }
+
 }
