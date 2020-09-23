@@ -21,42 +21,13 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.index.model;
+package com.salesforce.bazel.sdk.index.index;
 
-/**
- * Holder object for a JVM type: package name + class name
- */
-public class ClassIdentifier {
-    public String packageName;
-    public String classname;
+import java.io.File;
 
-    public ClassIdentifier(String packageName, String classname) {
-        this.packageName = packageName;
-        this.classname = classname;
-    }
-    
-    public ClassIdentifier(String fqClassname) {
-        int lastDot = fqClassname.lastIndexOf(".");
-        if (lastDot == -1) {
-            // brave soul, they used the default package
-            packageName = "";
-            classname = fqClassname;
-        } else {
-            packageName = fqClassname.substring(0, lastDot);
-            classname = fqClassname.substring(lastDot+1);
-        }
-    }
+public class CodeIndexPersister {
 
-    public String toString() {
-        return packageName+"."+classname;
-    }
-
-    private void printId() {
-        System.out.println("p["+packageName+"] c["+classname+"]");
-    }
-
-    public static void main(String[] args) {
-        new ClassIdentifier("com.salesforce.blue.Dog").printId();
-        new ClassIdentifier("Dog").printId();
+    public CodeIndexPersister(File outputDirectory) {
+        // TODO
     }
 }
