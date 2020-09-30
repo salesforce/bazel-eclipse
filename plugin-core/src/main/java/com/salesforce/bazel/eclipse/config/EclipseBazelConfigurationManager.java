@@ -40,7 +40,7 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.preferences.BazelPreferencePage;
+import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
@@ -60,7 +60,7 @@ public class EclipseBazelConfigurationManager implements BazelConfigurationManag
     @Override
     public String getBazelExecutablePath() {
         IPreferenceStore prefsStore = this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
-        return prefsStore.getString(BazelPreferencePage.BAZEL_PATH_PREF_NAME);
+        return prefsStore.getString(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class EclipseBazelConfigurationManager implements BazelConfigurationManag
         prefsStore.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent event) {
-                if (event.getProperty().equals(BazelPreferencePage.BAZEL_PATH_PREF_NAME)) {
+                if (event.getProperty().equals(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME)) {
                     bazelCommandManager.setBazelExecutablePath(event.getNewValue().toString());
                 }
             }
@@ -95,7 +95,7 @@ public class EclipseBazelConfigurationManager implements BazelConfigurationManag
     @Override
     public boolean isGlobalClasspathSearchEnabled() {
         IPreferenceStore prefsStore = this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
-        return prefsStore.getBoolean(BazelPreferencePage.GLOBALCLASSPATH_SEARCH_PREF_NAME);
+        return prefsStore.getBoolean(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME);
     }
     
 }

@@ -104,30 +104,28 @@ public class JvmCodeIndexer {
         if (jarResolver != null) {
             JavaJarCrawler jarCrawler = new JavaJarCrawler(index, jarResolver);
             jarCrawler.index(externalJarRootFile, true);
+        } else {
+            logInfo("Could not determine the build system (maven/bazel) from the jar root. Skipping jar scanning...");
         }
 
-        if (sourceRoot == null) {
-            logInfo("The provided source code root directory does not exist. This is ok.");
-            return index;
+        if (sourceRoot != null) {
+            File sourceRootFile = new File(sourceRoot);
+            if (!sourceRootFile.exists()) {
+                logInfo("The provided source code root directory does not exist. This is ok.");
+                return index;
+            }
+            JavaSourceCrawler sourceCrawler = new JavaSourceCrawler(index, pickJavaSourceArtifactMarker(externalJarRoot));
+            sourceCrawler.index(sourceRootFile);
         }
-        File sourceRootFile = new File(sourceRoot);
-        if (!sourceRootFile.exists()) {
+        else {
             logInfo("The provided source code root directory does not exist. This is ok.");
-            return index;
         }
-        JavaSourceCrawler sourceCrawler = new JavaSourceCrawler(index, pickJavaSourceArtifactMarker(externalJarRoot));
-        sourceCrawler.index(sourceRootFile);
 
         return index;
     }
 
     private static JarIdentiferResolver pickJavaJarResolver(String jarRepoPath) {
-        if (jarRepoPath.contains(".m2/repository")) {
-            return new JarIdentiferResolver("repository");
-        } else if (jarRepoPath.contains("bazel-out")) {
-            return new JarIdentiferResolver("public");
-        }
-        return null;
+        return new JarIdentiferResolver();
     }
 
     private static String pickJavaSourceArtifactMarker(String jarRepoPath) {

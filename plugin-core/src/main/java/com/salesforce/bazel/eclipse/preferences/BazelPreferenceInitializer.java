@@ -43,9 +43,7 @@ import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.sdk.lang.jvm.BazelJvmExternalUtil;
 import com.salesforce.bazel.sdk.util.BazelExecutableUtil;
-import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
  * Initialize the preferences of Bazel. 
@@ -57,20 +55,21 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
         IPreferenceStore store = BazelPluginActivator.getInstance().getPreferenceStore();
         Properties defaultPrefs = loadMasterPreferences();
         
+        // USER FACING PREFS (visible on Prefs page)
+        
         String bazelExecLocationFromEnv = BazelExecutableUtil.which("bazel", "/usr/local/bin/bazel");
-        String value = defaultPrefs.getProperty(BazelPreferencePage.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
-        store.setDefault(BazelPreferencePage.BAZEL_PATH_PREF_NAME, value);
+        String value = defaultPrefs.getProperty(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
+        store.setDefault(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, value);
         
         // enable global classpath search by default
-        value = defaultPrefs.getProperty(BazelPreferencePage.GLOBALCLASSPATH_SEARCH_PREF_NAME, "true");
-        store.setDefault(BazelPreferencePage.GLOBALCLASSPATH_SEARCH_PREF_NAME, "true".equals(value));
+        value = defaultPrefs.getProperty(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME, "false");
+        store.setDefault(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME, "true".equals(value));
 
-        // determine the location on local disk for the downloaded jar cache
-        OperatingEnvironmentDetectionStrategy os = BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy();
-        File externalJarCacheDefaultLocation = BazelJvmExternalUtil.getDownloadedJarCacheLocation(os);
-        String externalJarCacheDefaultPath = externalJarCacheDefaultLocation.getAbsolutePath();
-        value = defaultPrefs.getProperty(BazelPreferencePage.EXTERNAL_JAR_CACHE_PATH_PREF_NAME, externalJarCacheDefaultPath);
-        store.setDefault(BazelPreferencePage.EXTERNAL_JAR_CACHE_PATH_PREF_NAME, value);
+        // BEF DEVELOPER PREFS (for efficient repetitive testing of BEF)
+        value = defaultPrefs.getProperty(BazelPreferenceKeys.BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME);
+        if (value != null) {
+            store.setDefault(BazelPreferenceKeys.BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME, value);
+        }
     }
 
     /**
