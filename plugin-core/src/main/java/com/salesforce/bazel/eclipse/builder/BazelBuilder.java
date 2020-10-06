@@ -50,10 +50,12 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -107,12 +109,6 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         IProject project = getProject();
         progressMonitor.beginTask("Bazel build", 1);
 
-        // TODO there is something seriously wrong with Eclipse's resource change mechanism
-        // To be fixed in https://github.com/salesforce/bazel-eclipse/issues/145
-        // We are getting FULL_BUILD commands even if files have not changed.
-        // See also the commented out line below for refreshProjectClasspath
-        //System.out.println(">> Eclipse signaled that project ["+project.getName()+"] is dirty with kind ["+kind+"]");
-
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         JavaCoreHelper javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
@@ -138,9 +134,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject,
                     monitor);
 
-                // TODO this is too slow, we need to fix this in https://github.com/salesforce/bazel-eclipse/issues/145
-                // when you uncomment this, make sure to also un-ignore the related test in BazelBuilderTest
-                //refreshProjectClasspath(project, progressMonitor, monitor, bazelWorkspaceCmdRunner);
+                maybeUpdateClasspathContainer(project, javaCoreHelper);
             }
         } catch (BazelCommandLineToolConfigurationException e) {
             LOG.error("Bazel not found: {} ", e.getMessage());
@@ -153,37 +147,19 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         return null;
     }
 
-    void refreshProjectClasspath(IProject project, WorkProgressMonitor progressMonitor, IProgressMonitor monitor,
-            BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner) throws Exception {
-        String pname = project.getName();
-        BazelProject bazelProject = BazelPluginActivator.getBazelProjectManager().getProject(pname);
-        BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
-        String packageLabel = projMgr.getBazelLabelForProject(bazelProject);
-        System.out.println("Refreshing the classpath for project [" + pname + "] for package [" + packageLabel + "]");
-
-        // Force update of classpath container and the aspect cache
-        BazelClasspathContainer.clean();
-
-        // Clean the aspect cache, and reload
-        Set<String> flushedTargets = bazelWorkspaceCmdRunner.flushAspectInfoCacheForPackage(packageLabel);
-        bazelWorkspaceCmdRunner.getAspectPackageInfos(flushedTargets, progressMonitor, "refreshProjectClasspath");
-
-        // Clean the query cache and reload
-        bazelWorkspaceCmdRunner.flushQueryCache(packageLabel);
-        bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor, packageLabel);
-
-        // refresh the project immediately to reload classpath
-        project.refreshLocal(IResource.DEPTH_ONE, monitor);
-
-        // If a BUILD file added a reference from this project to another project in the Eclipse workspace, it is likely
-        // the project ref update failed because the resource tree was locked. Retry any queued project updates now.
-        // This operation is a no-op if no deferred updates are necessary
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-        resourceHelper.applyDeferredProjectDescriptionUpdates();
-
-        // Force refresh of GUI
-        project.touch(monitor);
-        //System.out.println("Done refreshing the classpath for project ["+pname+"] for package ["+packageLabel+"]");
+    void maybeUpdateClasspathContainer(IProject project, JavaCoreHelper javaCoreHelper) throws CoreException {
+        IResourceDelta delta = getDelta(project);
+        if (delta == null) {
+            // arguably we should refresh the classpath container by default in this case (?)
+        } else {
+            if (ResourceDeltaInspector.deltaHasChangedBuildFiles(delta)) {
+                // we request a classpath container update only if detect a BUILD file change
+                // this should also consider added/removed BUILD files (?)
+                IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
+                ClasspathContainerInitializer cpInit = JavaCore.getClasspathContainerInitializer(BazelClasspathContainer.CONTAINER_NAME);
+                cpInit.requestClasspathContainerUpdate(Path.fromPortableString(BazelClasspathContainer.CONTAINER_NAME), javaProject, null);
+            }
+        }
     }
 
     @Override
