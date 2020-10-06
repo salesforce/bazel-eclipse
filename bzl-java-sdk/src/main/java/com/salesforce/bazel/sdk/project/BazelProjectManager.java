@@ -119,4 +119,14 @@ public abstract class BazelProjectManager {
     public abstract void addSettingsToProject(BazelProject bazelProject, String bazelWorkspaceRoot,
             String bazelProjectLabel, List<String> bazelTargets, List<String> bazelBuildFlags);
 
+    /**
+     * Clears all backing caches for the specified project
+     */
+    public void flushCaches(String projectName, BazelWorkspaceCommandRunner cmdRunner) {
+        BazelProject bazelProject = getProject(projectName);
+        String packageLabel = getBazelLabelForProject(bazelProject);
+        cmdRunner.flushAspectInfoCacheForPackage(packageLabel);
+        cmdRunner.flushQueryCache(packageLabel);
+    }
+
 }

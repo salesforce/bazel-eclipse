@@ -359,7 +359,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     }
 
     /**
-     * If there is a failure in configuring the logging subsytem, this method gets called such that logging is sent to
+     * If there is a failure in configuring the logging subsystem, this method gets called such that logging is sent to
      * System.err
      */
     public static void logToSystemErr() {

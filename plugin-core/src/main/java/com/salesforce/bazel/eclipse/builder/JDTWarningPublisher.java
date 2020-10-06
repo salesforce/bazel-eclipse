@@ -56,7 +56,7 @@ class JDTWarningPublisher implements IElementChangedListener {
         }
     }
 
-    public void publish(Collection<IProject> projects, IProgressMonitor monitor) {
+    void publish(Collection<IProject> projects, IProgressMonitor monitor) {
         for (IProject project : projects) {
             Map<String, List<BazelProblem>> filePathToWarnings = projectNameToProblems.remove(project.toString());
             if (filePathToWarnings != null) {

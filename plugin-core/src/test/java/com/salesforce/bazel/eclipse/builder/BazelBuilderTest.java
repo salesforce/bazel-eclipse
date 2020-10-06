@@ -10,13 +10,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IJavaProject;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.Mockito;
-
-import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 
 public class BazelBuilderTest {
 
@@ -50,22 +45,6 @@ public class BazelBuilderTest {
         Set<IProject> downstreams = BazelBuilder.getDownstreamProjectsOf(A.getProject(), new IJavaProject[] {});
 
         assertFalse("Do not use a TreeSet", downstreams instanceof TreeSet);
-    }
-
-    @Test
-    @Ignore
-    public void testClasspathRefresh() throws Exception {
-        BazelBuilder subject = new BazelBuilder();
-        IProject project = mock(IProject.class);
-        BazelWorkspaceCommandRunner runner = mock(BazelWorkspaceCommandRunner.class);
-
-        subject.refreshProjectClasspath(project, null, null, runner);
-
-        // Verify the methods we can are called. Each one allows the classpath container
-        // to be refreshed from the current state of the build
-        Mockito.verify(runner).flushAspectInfoCache();
-        Mockito.verify(project).refreshLocal(IResource.DEPTH_ONE, null);
-        Mockito.verify(project).touch(null);
     }
 
     private IJavaProject getMockedProject(String projectName, String[] requiredProjectNames) throws Exception {
