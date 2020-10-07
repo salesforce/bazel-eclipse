@@ -26,27 +26,18 @@ package com.salesforce.bazel.sdk.index.jar;
 import java.io.File;
 import java.util.zip.ZipFile;
 
+/**
+ * Resolver that decides if the passed File is an interesting jar file, and if so it will deduce
+ * GAV information from the path. 
+ */
 public class JarIdentiferResolver {
-    private String startWord;
-
-    /**
-     * Creates a resolver, with the important startWord. The startWord delimits the path part that
-     * divides the location on disk for the directory structure from the important structure information
-     * that identifies the artifact. For example, in a Maven repository, the path information below the 
-     * .m2/repository directory contains the groupId and versionId.
-     * 
-     * @param startWord  for Maven repo, "repository"; for a bazel workspace using maven_install, "public"
-     */
-    public JarIdentiferResolver(String startWord) {
-        this.startWord = startWord;
+    
+    public JarIdentiferResolver() {
     }
 
-    public JarIdentifier resolveJarIdentifier(File pathFile, ZipFile zipFile) {
+    public JarIdentifier resolveJarIdentifier(File gavRoot, File pathFile, ZipFile zipFile) {
         String path = pathFile.getAbsolutePath();
-        int startIndex = path.lastIndexOf(startWord);
-        if (startIndex == -1) {
-            return null;
-        }
+        
         // do some quick Bazel exclusions (TODO how best to identify the interesting jars in the Bazel output dirs?)
         if (path.contains("-hjar.jar")) {
             return null; // perf optimization jar, not intended for non-Bazel consumption
@@ -64,7 +55,10 @@ public class JarIdentiferResolver {
             return null; // source jar, this will be pulled in as an attribute of the main jar
         }
         if (path.contains("-gensrc.jar")) {
-            return null; // source jar, this will be pulled in as an attribute of the main jar
+            return null; // generated source jar, this will be pulled in as an attribute of the main jar
+        }
+        if (path.contains("_deploy.jar")) {
+            return null; // uber jar, which contains exploded classes from other jars
         }
         if (path.contains("Test.jar")) {
             return null; // by convention, a jar that contains a test to run in bazel
@@ -73,10 +67,10 @@ public class JarIdentiferResolver {
             return null; // by convention, a jar that contains a test to run in bazel
         }
         
-        // Maven: com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8.jar
-        // Bazel: com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8-ijar.jar
+        // Maven compatible: com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8.jar
+        // Bazel internal:   com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8-ijar.jar
 
-        String gavPart = path.substring(startIndex+startWord.length());
+        String gavPart = path.substring(gavRoot.getAbsolutePath().length()); 
         String[] gavParts = gavPart.split("/");
 
         // open-context-impl-0.1.8.jar => open-context-impl
@@ -115,15 +109,22 @@ public class JarIdentiferResolver {
     public static void main(String[] args) {
 
         // Maven build system
-        JarIdentiferResolver resolver = new JarIdentiferResolver("/repository/");
+        JarIdentiferResolver resolver = new JarIdentiferResolver();
+        File gavRoot = new File("/Users/mbenioff/.m2/repository");
         File pathFile = new File("/Users/mbenioff/.m2/repository/com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8.jar");
-        JarIdentifier id = resolver.resolveJarIdentifier(pathFile, null);
+        JarIdentifier id = resolver.resolveJarIdentifier(gavRoot, pathFile, null);
         System.out.println(id.locationIdentifier);
+        if (!id.locationIdentifier.equals("com.acme.libs:my-blue-impl:0.1.8")) {
+            System.err.println("FAIL!");
+        }
 
         // Bazel build system
-        resolver = new JarIdentiferResolver("/public/");
+        gavRoot = new File("/tmp/_bazel_benioff/dsf87dsfsl/execroot/__main__/bazel-out/darwin-fastbuild/bin/external/maven/v1/https/benioff%40nexus.acme.com/nexus/content/groups/public");
         pathFile = new File("/tmp/_bazel_benioff/dsf87dsfsl/execroot/__main__/bazel-out/darwin-fastbuild/bin/external/maven/v1/https/benioff%40nexus.acme.com/nexus/content/groups/public/com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8-ijar.jar");
-        id = resolver.resolveJarIdentifier(pathFile, null);
+        id = resolver.resolveJarIdentifier(gavRoot, pathFile, null);
         System.out.println(id.locationIdentifier);
+        if (!id.locationIdentifier.equals("com.acme.libs:my-blue-impl:0.1.8")) {
+            System.err.println("FAIL!");
+        }
     }
 }

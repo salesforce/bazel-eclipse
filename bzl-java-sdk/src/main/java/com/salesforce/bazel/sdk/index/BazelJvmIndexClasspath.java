@@ -27,13 +27,16 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.salesforce.bazel.sdk.index.jar.JavaJarCrawler;
 import com.salesforce.bazel.sdk.index.jar.JarIdentiferResolver;
+import com.salesforce.bazel.sdk.index.jar.JavaJarCrawler;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
+import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
+import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleType;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
+import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
  * Creates a classpath containing all downloaded jars (binary and source) and all workspace built jars 
@@ -42,87 +45,80 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * that needs to enumerate all available types in a workspace. 
  */
 public class BazelJvmIndexClasspath {
+    /**
+     * Associated workspace.
+     */
     protected  BazelWorkspace bazelWorkspace;
-    protected File bazelBin;
-    protected File jarCacheDir;
-    private List<File> bazelBinInternals = new ArrayList<>();
+    
+    // collaborators
+    protected OperatingEnvironmentDetectionStrategy os;
+    protected BazelExternalJarRuleManager externalJarRuleManager;
+    
+    /**
+     * User provided locations to search.
+     */
+    protected List<File> additionalJarLocations;
 
-    private BazelJvmClasspathResponse cacheResponse;
+    protected BazelJvmClasspathResponse cacheResponse;
     
     /**
      * Ctor with workspace.
      */
-    public BazelJvmIndexClasspath(BazelWorkspace bazelWorkspace, File jarCacheDir) {
+    public BazelJvmIndexClasspath(BazelWorkspace bazelWorkspace, OperatingEnvironmentDetectionStrategy os,
+            BazelExternalJarRuleManager externalJarRuleManager, List<File> additionalJarLocations) {
         this.bazelWorkspace = bazelWorkspace;
-        this.bazelBin = bazelWorkspace.getBazelBinDirectory();
-        
-        if (jarCacheDir != null) {
-            // maven_install for example stores all downloaded jars outside of the bazel-out directory structure
-            this.jarCacheDir = jarCacheDir;
-        } else {
-            // default is to hunt around in the bazel-bin/external directory
-            this.jarCacheDir = new File(bazelBin, "external");
-        }
-        
-        File bazelBinInternal = new File(bazelBin, "projects"); // TODO needs to be configurable/computable, this is just our convention
-        if (bazelBinInternal.exists()) {
-            bazelBinInternals.add(bazelBinInternal);
-        }
+        this.os = os;
+        this.externalJarRuleManager = externalJarRuleManager;
+        this.additionalJarLocations = additionalJarLocations;
     }
     
-    /**
-     * Ctor with workspace, and the names of the root directories in the Bazel workspace that are interesting to
-     * index. This will typically exclude //tools and other non-production code. For example, if your production code
-     * base is rooted in //projects and //libs you would pass ['projects', 'libs'] for the second param. 
-     */
-    public BazelJvmIndexClasspath(BazelWorkspace bazelWorkspace, File jarCacheDir, List<String> internalRootDirectoryNames) {
-        this(bazelWorkspace, jarCacheDir);
-        
-        for (String name : internalRootDirectoryNames) {
-            File internalRoot = new File(bazelBin, name);
-            if (internalRoot.exists()) {
-                bazelBinInternals.add(internalRoot);
-            }
-        }
-    }
 
     /**
-     * Computes the JVM classpath for the associated BazelProject
+     * Computes the JVM classpath for the associated Bazel workspace
      */
     public BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
         if (cacheResponse != null) {
-            return cacheResponse; // TODO expire the cache
+            return cacheResponse;
         }
-
-        return getClasspathEntriesInternal(this.bazelBinInternals, this.jarCacheDir, progressMonitor);
-    }
-    
-    /* visible for testing */
-    BazelJvmClasspathResponse getClasspathEntriesInternal(List<File> bazelBinInternals, File jarCacheDir, 
-            WorkProgressMonitor progressMonitor) {
         JvmCodeIndex index = new JvmCodeIndex();
+        List<File> locations = new ArrayList<>();
         
-        // EXTERNAL (aka maven_install downloaded)
-        if (jarCacheDir != null) {
-            JarIdentiferResolver jarResolver = new JarIdentiferResolver("/public/"); // TODO this is only maven_install convention
-            JavaJarCrawler jarCrawler = new JavaJarCrawler(index, jarResolver);
-            jarCrawler.index(jarCacheDir, false);
+        // for each jar downloading rule type in the workspace, add the appropriate local directories of the downloaded jars
+        List<BazelExternalJarRuleType> ruleTypes = externalJarRuleManager.findInUseExternalJarRuleTypes(this.bazelWorkspace);
+        for (BazelExternalJarRuleType ruleType : ruleTypes) {
+            System.out.println("");
+            List<File> ruleSpecificLocations = ruleType.getDownloadedJarLocations(bazelWorkspace);
+            locations.addAll(ruleSpecificLocations);
         }
         
-        // INTERNAL (jars produced by Bazel)
-        if (bazelBinInternals != null && bazelBinInternals.size() > 0) {
-            
-            // TODO we should actually add the source files directly instead of indexing the built jars
-            
-            JarIdentiferResolver jarResolver = new JarIdentiferResolver("/bin/");
-            JavaJarCrawler jarCrawler = new JavaJarCrawler(index, jarResolver);
-            for (File bazelBinInternal : bazelBinInternals) {
-                jarCrawler.index(bazelBinInternal, false);
-            }
+        // add internal location (jars built by the bazel workspace
+        addInternalLocations(locations);
+        
+        // add the additional directories the user wants to search
+        if (additionalJarLocations != null) {
+            locations.addAll(additionalJarLocations);
+        }
+        
+        // now do the searching
+        for (File location : locations) {
+            getClasspathEntriesInternal(location, index, progressMonitor);
         }
         
         cacheResponse = convertIndexIntoResponse(index);
         return cacheResponse;
+    }
+    
+    public void clearCache() {
+        cacheResponse = null;
+    }
+    
+    /* visible for testing */
+    void getClasspathEntriesInternal(File location, JvmCodeIndex index, WorkProgressMonitor progressMonitor) {        
+        if (location != null && location.exists()) {
+            JarIdentiferResolver jarResolver = new JarIdentiferResolver();
+            JavaJarCrawler jarCrawler = new JavaJarCrawler(index, jarResolver);
+            jarCrawler.index(location, false);
+        }
     }
     
     protected BazelJvmClasspathResponse convertIndexIntoResponse(JvmCodeIndex index) {
@@ -166,5 +162,9 @@ public class BazelJvmIndexClasspath {
             cpEntry = new JvmClasspathEntry(location.locationOnDisk.getPath(), candidateSourcePath.getPath(), false);
         }
         entries.add(cpEntry);
+    }
+    
+    protected void addInternalLocations(List<File> locations) {
+        // TODO INTERNAL (jars produced by Bazel)
     }
 }

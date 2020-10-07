@@ -18,7 +18,8 @@ Navigate to your Eclipse Preferences (menu option varies by platform) and click 
 Topics:
 
 - The output location for each source directory - needed to launch Java apps
-
+- where to find the prefs file for the workspace
+- global prefs: ~/.bazel/eclipse.properties
 
 ### Next Topic: Builds and the Bazel Eclipse Feature
 

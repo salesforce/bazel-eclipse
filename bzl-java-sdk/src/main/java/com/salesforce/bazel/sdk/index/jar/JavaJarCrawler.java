@@ -24,6 +24,7 @@
 package com.salesforce.bazel.sdk.index.jar;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -47,14 +48,31 @@ public class JavaJarCrawler {
     }
 
     public void index(File basePath, boolean doIndexClasses) {
-        indexRecur(basePath, doIndexClasses);
+        indexRecur(null, basePath, doIndexClasses);
     }
 
-    protected void indexRecur(File path, boolean doIndexClasses) {
+    protected void indexRecur(File gavRoot, File path, boolean doIndexClasses) {
         File[] children = path.listFiles();
         if (children == null) {
             return;
         }
+        
+        // some file system layouts put gav information in the path, e.g.
+        // ~/.m2/repository/com/acme/blue/1.0.0/blue.jar
+        // we want to track the start of the gav info in the path if possible
+        if (gavRoot == null) {
+            File[] gavRootIndicators = path.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    // TODO sketchy logic here, we assume at least one downloaded jar comes from a common domain 
+                    return name.equals("com") || name.equals("org") || name.equals("net");
+                }
+            });
+            if (gavRootIndicators.length > 0) {
+                gavRoot = path;
+            }
+        }
+        
         for (File child : children) {
             ZipFile zipFile = null;
             try {
@@ -63,11 +81,11 @@ public class JavaJarCrawler {
                         // bazel test sandbox, stay out of here as the jars in here are for running tests
                         return;
                     }
-                    indexRecur(child, doIndexClasses);
+                    indexRecur(gavRoot, child, doIndexClasses);
                 } else if (child.canRead()) {
                     if (child.getName().endsWith(".jar")) {
                         zipFile = new ZipFile(child);
-                        foundJar(child, zipFile, doIndexClasses);
+                        foundJar(gavRoot, child, zipFile, doIndexClasses);
                     }
                 }
             }
@@ -84,9 +102,10 @@ public class JavaJarCrawler {
         }
     }
 
-    protected void foundJar(File jarFile, ZipFile zipFile, boolean doIndexClasses) {
+    protected void foundJar(File gavRoot, File jarFile, ZipFile zipFile, boolean doIndexClasses) {
         // precisely identify the jar file
-        JarIdentifier jarId = resolver.resolveJarIdentifier(jarFile, zipFile);
+        log("jar:" , jarFile.getName(), null);
+        JarIdentifier jarId = resolver.resolveJarIdentifier(gavRoot, jarFile, zipFile);
         if (jarId == null) {
             // this jar is not part of the typical dependencies (e.g. it is a jar used in the build toolchain); ignore
             return;

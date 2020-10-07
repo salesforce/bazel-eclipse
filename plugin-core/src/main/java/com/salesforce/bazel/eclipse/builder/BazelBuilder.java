@@ -63,6 +63,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import com.google.common.collect.Lists;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
+import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -181,6 +182,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         }
 
         BazelClasspathContainer.clean();
+        BazelGlobalSearchClasspathContainer.clean();
     }
 
     private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects,

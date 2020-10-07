@@ -54,6 +54,7 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -119,6 +120,11 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * Iteracts with preferences
      */
     private static BazelConfigurationManager configurationManager;
+    
+    /**
+     * Manager for working with external jars
+     */
+    private static BazelExternalJarRuleManager externalJarRuleManager;
 
     // LIFECYCLE
 
@@ -142,9 +148,10 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         BazelProjectManager projectMgr = new EclipseBazelProjectManager(eclipseResourceHelper, eclipseJavaCoreHelper);
         OperatingEnvironmentDetectionStrategy osEnvStrategy = new RealOperatingEnvironmentDetectionStrategy();
         BazelConfigurationManager configManager = new EclipseBazelConfigurationManager(eclipseResourceHelper);
+        BazelExternalJarRuleManager externalJarRuleManager = new BazelExternalJarRuleManager(osEnvStrategy);
 
         startInternal(aspectLocation, commandBuilder, consoleFactory, projectMgr, eclipseResourceHelper,
-            eclipseJavaCoreHelper, osEnvStrategy, configManager);
+            eclipseJavaCoreHelper, osEnvStrategy, configManager, externalJarRuleManager);
     }
 
     /**
@@ -154,7 +161,8 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      */
     public void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
             CommandConsoleFactory consoleFactory, BazelProjectManager projectMgr, ResourceHelper rh,
-            JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, BazelConfigurationManager configMgr)
+            JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, BazelConfigurationManager configMgr,
+            BazelExternalJarRuleManager externalJarRuleMgr)
             throws Exception {
         // reset internal state (this is so tests run in a clean env)
         bazelWorkspace = null;
@@ -167,6 +175,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         osEnvStrategy = osEnv;
         bazelProjectManager = projectMgr;
         configurationManager = configMgr;
+        externalJarRuleManager = externalJarRuleMgr;
 
         // Get the bazel executable path from the settings, defaults to /usr/local/bin/bazel
         String bazelPath = configurationManager.getBazelExecutablePath();
@@ -315,6 +324,10 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         return configurationManager;
     }
 
+    public BazelExternalJarRuleManager getBazelExternalJarRuleManager() {
+        return externalJarRuleManager;
+    }
+    
     // LOGGING
 
     /**
