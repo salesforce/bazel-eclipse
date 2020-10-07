@@ -25,7 +25,7 @@ For example, if this is in your *.bazelrc* file, JDK 8 will be in every project'
 build --javacopt=-source 8 -target 10
 ```
 
-After import, you are free to change the JDK for each project using the Eclipse Build Path user interface.
+After import, you are free to [change the JDK](using_the_feature_classpath.md) for each project using the Eclipse Build Path user interface.
 Please see [Support package level JDK configuration for Build Path](https://github.com/salesforce/bazel-eclipse/issues/89) for status on improvement.
 
 #### Limitation: Only Import Conforming Java Packages

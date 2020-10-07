@@ -51,3 +51,7 @@ Method 2: Package Explorer context menu
 
 :warning: the standard JUnit Launcher *JUnit Test* does not work.
 [Issue 18](https://github.com/salesforce/bazel-eclipse/issues/18) tracks that work item.
+
+### Next Topic: Setting Preferences
+
+The next page in our guide discusses the [Preferences](using_the_feature_preferences.md) available with the Bazel Eclipse Feature.
