@@ -3,24 +3,24 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Bazel Java SDK Plugin
 Bundle-SymbolicName: com.salesforce.bazel-java-sdk;singleton:=true
 Automatic-Module-Name: com.salesforce.bazel.eclipse.model
-Bundle-Version: 1.2.1.qualifier
+Bundle-Version: 1.2.2.qualifier
 Export-Package: com.salesforce.bazel.sdk.aspect,
- com.salesforce.bazel.sdk.command;version="1.2.1.qualifier",
- com.salesforce.bazel.sdk.command.shell;version="1.2.1.qualifier",
- com.salesforce.bazel.sdk.command.test;version="1.2.1.qualifier",
+ com.salesforce.bazel.sdk.command;version="1.2.2.qualifier",
+ com.salesforce.bazel.sdk.command.shell;version="1.2.2.qualifier",
+ com.salesforce.bazel.sdk.command.test;version="1.2.2.qualifier",
  com.salesforce.bazel.sdk.console,
- com.salesforce.bazel.sdk.index;version="1.2.1.qualifier",
- com.salesforce.bazel.sdk.lang.jvm;version="1.2.1.qualifier",
- com.salesforce.bazel.sdk.lang.jvm.external;version="1.2.1.qualifier",
- com.salesforce.bazel.sdk.logging;version="1.2.1.qualifier",
- com.salesforce.bazel.sdk.model;version="1.2.1.qualifier",
- com.salesforce.bazel.sdk.project;version="1.2.1.qualifier",
- com.salesforce.bazel.sdk.util;version="1.2.1.qualifier",
+ com.salesforce.bazel.sdk.index;version="1.2.2.qualifier",
+ com.salesforce.bazel.sdk.lang.jvm;version="1.2.2.qualifier",
+ com.salesforce.bazel.sdk.lang.jvm.external;version="1.2.2.qualifier",
+ com.salesforce.bazel.sdk.logging;version="1.2.2.qualifier",
+ com.salesforce.bazel.sdk.model;version="1.2.2.qualifier",
+ com.salesforce.bazel.sdk.project;version="1.2.2.qualifier",
+ com.salesforce.bazel.sdk.util;version="1.2.2.qualifier",
  com.salesforce.bazel.sdk.workspace,
- com.salesforce.bazel.sdk.workspace.test;version="1.2.1.qualifier"
+ com.salesforce.bazel.sdk.workspace.test;version="1.2.2.qualifier"
 Import-Package: com.google.common.base;version="28.2",
  com.google.common.collect;version="28.2",
- com.salesforce.bazel.sdk.logging;version="1.2.1.qualifier",
+ com.salesforce.bazel.sdk.logging;version="1.2.2.qualifier",
  org.json;version=20160212
 Bundle-Vendor: Salesforce
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
