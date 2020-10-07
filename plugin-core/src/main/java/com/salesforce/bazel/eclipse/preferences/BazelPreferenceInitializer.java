@@ -53,20 +53,20 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
     @Override
     public void initializeDefaultPreferences() {
         IPreferenceStore store = BazelPluginActivator.getInstance().getPreferenceStore();
-        Properties defaultPrefs = loadMasterPreferences();
+        Properties globalPrefs = loadGlobalPreferences();
         
         // USER FACING PREFS (visible on Prefs page)
         
         String bazelExecLocationFromEnv = BazelExecutableUtil.which("bazel", "/usr/local/bin/bazel");
-        String value = defaultPrefs.getProperty(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
+        String value = globalPrefs.getProperty(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
         store.setDefault(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, value);
         
         // enable global classpath search by default
-        value = defaultPrefs.getProperty(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME, "false");
+        value = globalPrefs.getProperty(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME, "false");
         store.setDefault(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME, "true".equals(value));
 
         // BEF DEVELOPER PREFS (for efficient repetitive testing of BEF)
-        value = defaultPrefs.getProperty(BazelPreferenceKeys.BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME);
+        value = globalPrefs.getProperty(BazelPreferenceKeys.BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME);
         if (value != null) {
             store.setDefault(BazelPreferenceKeys.BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME, value);
         }
@@ -77,7 +77,7 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
      * preferences to be used for any new Eclipse workspace. This is a savior for those of us who 
      * work on BEF and create new Elipse workspaces all the time. Might be useful for regular users too.
      */
-    private Properties loadMasterPreferences() {
+    private Properties loadGlobalPreferences() {
         Properties masterProperties = new Properties();
         String userHome = System.getProperty("user.home");
         File masterPropertiesFile = new File(userHome+File.separator+".bazel", "eclipse.properties");
