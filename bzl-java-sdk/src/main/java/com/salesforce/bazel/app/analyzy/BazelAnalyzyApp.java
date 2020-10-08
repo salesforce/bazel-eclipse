@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.salesforce.bazel.sdk.aspect.AspectDependencyGraphBuilder;
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.aspect.LocalBazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
@@ -69,11 +69,11 @@ public class BazelAnalyzyApp {
         List<BazelPackageLocation> allPackages = rootPackage.gatherChildren();
 
         // run the Aspects to compute the dependency data
-        AspectPackageInfos aspects = new AspectPackageInfos();
-        Map<String, Set<AspectPackageInfo>> aspectMap =
-                bazelWorkspaceCmdRunner.getAspectPackageInfoForPackages(allPackages, null, "BazelBuildyApp");
+        AspectTargetInfos aspects = new AspectTargetInfos();
+        Map<String, Set<AspectTargetInfo>> aspectMap =
+                bazelWorkspaceCmdRunner.getAspectTargetInfoForPackages(allPackages, null, "BazelBuildyApp");
         for (String target : aspectMap.keySet()) {
-            Set<AspectPackageInfo> aspectsForTarget = aspectMap.get(target);
+            Set<AspectTargetInfo> aspectsForTarget = aspectMap.get(target);
             aspects.addAll(aspectsForTarget);
         }
 

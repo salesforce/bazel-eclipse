@@ -45,7 +45,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IEditorPart;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
@@ -88,8 +88,8 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
                 BazelPluginActivator.getJavaCoreHelper().getJavaModelForWorkspace(eclipseWorkspaceRoot);
         IProject project = eclipseJavaModel.getJavaProject(projectName).getProject();
 
-        Collection<AspectPackageInfo> apis = support.getLaunchableAspectPackageInfosForProject(project);
-        Collection<AspectPackageInfo> matchingInfos =
+        Collection<AspectTargetInfo> apis = support.getLaunchableAspectTargetInfosForProject(project);
+        Collection<AspectTargetInfo> matchingInfos =
                 apis.stream().filter(api -> fqClassName.equals(api.getMainClass())).collect(Collectors.toList());
         if (matchingInfos.isEmpty()) {
             // bazel allows a java binary rule to specify the main_class as the target name, so we should also look at the name of the targets
@@ -108,7 +108,7 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
         try {
             ILaunchConfigurationWorkingCopy config = type.newInstance(null, fileName);
             support.setLaunchConfigDefaults(config);
-            AspectPackageInfo api = matchingInfos.iterator().next();
+            AspectTargetInfo api = matchingInfos.iterator().next();
             BazelLabel label = new BazelLabel(api.getLabel());
             BazelTargetKind kind = BazelTargetKind.valueOfIgnoresCase(api.getKind());
             support.populateBazelLaunchConfig(config, projectName, label, kind);

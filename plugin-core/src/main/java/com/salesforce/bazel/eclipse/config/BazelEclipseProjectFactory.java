@@ -71,8 +71,8 @@ import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -162,7 +162,7 @@ public class BazelEclipseProjectFactory {
         importedProjectsList.add(rootEclipseProject);
 
         // see the method level comment about this option (currently disabled)
-        AspectPackageInfos aspects = null;
+        AspectTargetInfos aspects = null;
         startTimeMS = System.currentTimeMillis();
         if (PRECOMPUTE_ALL_ASPECTS_FOR_WORKSPACE) {
             aspects = precomputeBazelAspectsForWorkspace(rootEclipseProject, selectedBazelPackages, progressMonitor);
@@ -647,36 +647,36 @@ public class BazelEclipseProjectFactory {
      * an early point in the Bazel Eclipse Feature history, but this no longer is necessary. Retaining the code just in
      * case we find it useful again.
      */
-    private static AspectPackageInfos precomputeBazelAspectsForWorkspace(IProject rootEclipseProject,
+    private static AspectTargetInfos precomputeBazelAspectsForWorkspace(IProject rootEclipseProject,
             List<BazelPackageLocation> selectedBazelPackages, WorkProgressMonitor progressMonitor) {
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
-        // figure out which Bazel targets will be imported, and generated AspectPackageInfos for each
-        // The AspectPackageInfos have useful information that we use during import
+        // figure out which Bazel targets will be imported, and generated AspectTargetInfos for each
+        // The AspectTargetInfos have useful information that we use during import
         List<String> packageBazelTargets = new ArrayList<>();
         for (BazelPackageLocation childPackageInfo : selectedBazelPackages) {
             BazelEclipseProjectFactory.computePackageSourceCodePaths(childPackageInfo, new ArrayList<>(),
                 packageBazelTargets);
         }
 
-        // run the aspect for specified targets and get an AspectPackageInfo for each
-        AspectPackageInfos aspectPackageInfos = null;
+        // run the aspect for specified targets and get an AspectTargetInfo for each
+        AspectTargetInfos aspectTargetInfos = null;
         try {
-            Map<String, Set<AspectPackageInfo>> packageInfos = bazelWorkspaceCmdRunner
-                    .getAspectPackageInfos(packageBazelTargets, progressMonitor, "importWorkspace");
-            List<AspectPackageInfo> allPackageInfos = new ArrayList<>();
-            for (Set<AspectPackageInfo> targetPackageInfos : packageInfos.values()) {
-                allPackageInfos.addAll(targetPackageInfos);
+            Map<String, Set<AspectTargetInfo>> targetInfos = bazelWorkspaceCmdRunner
+                    .getAspectTargetInfos(packageBazelTargets, progressMonitor, "importWorkspace");
+            List<AspectTargetInfo> allTargetInfos = new ArrayList<>();
+            for (Set<AspectTargetInfo> targetTargetInfos : targetInfos.values()) {
+                allTargetInfos.addAll(targetTargetInfos);
             }
-            aspectPackageInfos = new AspectPackageInfos(allPackageInfos);
+            aspectTargetInfos = new AspectTargetInfos(allTargetInfos);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        return aspectPackageInfos;
+        return aspectTargetInfos;
     }
 
 }

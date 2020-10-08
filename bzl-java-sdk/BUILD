@@ -46,8 +46,8 @@ java_test(
 )
 
 java_test(
-    name = "AspectPackageInfosTest",
-    srcs = ["src/test/java/com/salesforce/bazel/sdk/aspect/AspectPackageInfosTest.java",],
+    name = "AspectTargetInfosTest",
+    srcs = ["src/test/java/com/salesforce/bazel/sdk/aspect/AspectTargetInfosTest.java",],
     deps = [
         ":bzl-java-sdk",
         "//plugin-libs/plugin-deps:com_google_guava",

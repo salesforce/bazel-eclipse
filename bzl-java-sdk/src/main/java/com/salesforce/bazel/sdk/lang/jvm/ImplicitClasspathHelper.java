@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -28,10 +28,10 @@ import com.salesforce.bazel.sdk.util.BazelPathHelper;
 public class ImplicitClasspathHelper {
 
     public Set<JvmClasspathEntry> computeImplicitDependencies(BazelWorkspace bazelWorkspace,
-            AspectPackageInfo packageInfo) {
+            AspectTargetInfo targetInfo) {
         Set<JvmClasspathEntry> deps = new HashSet<>();
 
-        String ruleKind = packageInfo.getKind();
+        String ruleKind = targetInfo.getKind();
         if (!"java_test".equals(ruleKind)) {
             deps = new TreeSet<>();
         }
@@ -50,7 +50,7 @@ public class ImplicitClasspathHelper {
         //     bazel-bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_darwin/java_tools/Runner_deploy-ijar.jar
         // which comes in from the transitive graph (not sure how the toolchain points to the TestRunner though):
         // java_test => @bazel_tools//tools/jdk:current_java_toolchain => @remote_java_tools_darwin//:toolchain  ?=> TestRunner 
-        String filePathForRunnerJar = computeFilePathForRunnerJar(bazelWorkspace, packageInfo);
+        String filePathForRunnerJar = computeFilePathForRunnerJar(bazelWorkspace, targetInfo);
         if (filePathForRunnerJar != null) {
             // now manufacture the classpath entry
             boolean isTestLib = true;
@@ -60,7 +60,7 @@ public class ImplicitClasspathHelper {
         return deps;
     }
 
-    String computeFilePathForRunnerJar(BazelWorkspace bazelWorkspace, AspectPackageInfo packageInfo) {
+    String computeFilePathForRunnerJar(BazelWorkspace bazelWorkspace, AspectTargetInfo targetInfo) {
         // The IJ plugin gets this path somehow from query/aspect but we are going to wedge it in via path here since we need to
         // overhaul our query/aspect in the near future TODO stop using file system hacking for implicit deps
         // Because of the way we are doing this, there is no aspect json file written on disk that we can consume.
@@ -71,21 +71,21 @@ public class ImplicitClasspathHelper {
 
         LogHelper logger = LogHelper.log(this.getClass());
         if (!testRunnerDir.exists()) {
-            logger.error("Could not add implicit test deps to target [" + packageInfo.getLabel() + "], directory ["
+            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabel() + "], directory ["
                     + BazelPathHelper.getCanonicalPathStringSafely(testRunnerDir) + "] does not exist.");
             return null;
         }
         File javaToolsDir = new File(testRunnerDir,
                 "external/remote_java_tools_" + bazelWorkspace.getOperatingSystemFoldername() + "/java_tools");
         if (!javaToolsDir.exists()) {
-            logger.error("Could not add implicit test deps to target [" + packageInfo.getLabel() + "], directory ["
+            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabel() + "], directory ["
                     + BazelPathHelper.getCanonicalPathStringSafely(javaToolsDir) + "] does not exist.");
             return null;
         }
         File runnerJar = new File(javaToolsDir, "Runner_deploy-ijar.jar");
         if (!runnerJar.exists()) {
             logger.error(
-                "Could not add implicit test deps to target [" + packageInfo.getLabel() + "], test runner jar ["
+                "Could not add implicit test deps to target [" + targetInfo.getLabel() + "], test runner jar ["
                         + BazelPathHelper.getCanonicalPathStringSafely(runnerJar) + "] does not exist.");
             return null;
         }

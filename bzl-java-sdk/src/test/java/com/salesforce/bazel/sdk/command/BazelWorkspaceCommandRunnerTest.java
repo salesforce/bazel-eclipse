@@ -34,7 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.test.MockWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.sdk.command.test.type.MockVersionCommand;
@@ -110,8 +110,8 @@ public class BazelWorkspaceCommandRunnerTest {
         // test the setup, for example we are loading the workspace aspects from the file system
         Set<String> targets = new TreeSet<>();
         targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectPackageInfo>> aspectMap =
-                workspaceRunner.getAspectPackageInfos(targets, new MockWorkProgressMonitor(), "testWorkspaceRunner");
+        Map<String, Set<AspectTargetInfo>> aspectMap =
+                workspaceRunner.getAspectTargetInfos(targets, new MockWorkProgressMonitor(), "testWorkspaceRunner");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.get("//projects/libs/javalib0:*").size());
 

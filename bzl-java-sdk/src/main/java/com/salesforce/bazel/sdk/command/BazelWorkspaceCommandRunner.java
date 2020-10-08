@@ -49,7 +49,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.internal.BazelCommandExecutor;
 import com.salesforce.bazel.sdk.command.internal.BazelQueryHelper;
@@ -445,7 +445,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
 
     /**
      * Runs the analysis of the given list of targets using the build information Bazel Aspect and returns a map of
-     * {@link AspectPackageInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
+     * {@link AspectTargetInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
      * by the aspect.
      * <p>
      * This method caches its results and won't recompute a previously computed version unless
@@ -456,7 +456,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfoForPackages(
+    public synchronized Map<String, Set<AspectTargetInfo>> getAspectTargetInfoForPackages(
             Collection<BazelPackageLocation> targetPackages, WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> targetLabels = new ArrayList<>();
@@ -465,12 +465,12 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             targetLabels.add(target);
         }
 
-        return this.aspectHelper.getAspectPackageInfos(targetLabels, progressMonitor, caller);
+        return this.aspectHelper.getAspectTargetInfos(targetLabels, progressMonitor, caller);
     }
 
     /**
      * Runs the analysis of the given list of targets using the build information Bazel Aspect and returns a map of
-     * {@link AspectPackageInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
+     * {@link AspectTargetInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
      * by the aspect.
      * <p>
      * This method caches its results and won't recompute a previously computed version unless
@@ -481,16 +481,16 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(Collection<String> targetLabels,
+    public synchronized Map<String, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<String> targetLabels,
             WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        return this.aspectHelper.getAspectPackageInfos(targetLabels, progressMonitor, caller);
+        return this.aspectHelper.getAspectTargetInfos(targetLabels, progressMonitor, caller);
     }
 
     /**
      * Runs the analysis of the given list of targets using the build information Bazel Aspect and returns a map of
-     * {@link AspectPackageInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
+     * {@link AspectTargetInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
      * by the aspect.
      * <p>
      * This method caches its results and won't recompute a previously computed version unless
@@ -501,16 +501,16 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Set<AspectPackageInfo> getAspectPackageInfos(String targetLabel,
+    public synchronized Set<AspectTargetInfo> getAspectTargetInfos(String targetLabel,
             WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         Set<String> targetLabels = new TreeSet<>();
         targetLabels.add(targetLabel);
-        Map<String, Set<AspectPackageInfo>> results =
-                this.aspectHelper.getAspectPackageInfos(targetLabels, progressMonitor, caller);
+        Map<String, Set<AspectTargetInfo>> results =
+                this.aspectHelper.getAspectTargetInfos(targetLabels, progressMonitor, caller);
 
-        Set<AspectPackageInfo> resultSet = results.get(targetLabel);
+        Set<AspectTargetInfo> resultSet = results.get(targetLabel);
         if (resultSet == null) {
             // this is a non-Java target, just return an empty set
             resultSet = new TreeSet<>();
@@ -519,28 +519,28 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     }
 
     /**
-     * Clear the entire AspectPackageInfo cache. This flushes the dependency graph for the workspace.
+     * Clear the entire AspectTargetInfo cache. This flushes the dependency graph for the workspace.
      */
     public synchronized void flushAspectInfoCache() {
         this.aspectHelper.flushAspectInfoCache();
     }
 
     /**
-     * Clear the AspectPackageInfo cache for the passed target. This flushes the dependency graph for that target.
+     * Clear the AspectTargetInfo cache for the passed target. This flushes the dependency graph for that target.
      */
     public synchronized void flushAspectInfoCache(String target) {
         this.aspectHelper.flushAspectInfoCache(target);
     }
 
     /**
-     * Clear the AspectPackageInfo cache for the passed targets. This flushes the dependency graph for those targets.
+     * Clear the AspectTargetInfo cache for the passed targets. This flushes the dependency graph for those targets.
      */
     public synchronized void flushAspectInfoCache(Set<String> targets) {
         this.aspectHelper.flushAspectInfoCache(targets);
     }
 
     /**
-     * Clear the AspectPackageInfo cache for the passed package. This flushes the dependency graph for any target that
+     * Clear the AspectTargetInfo cache for the passed package. This flushes the dependency graph for any target that
      * contains the package name.
      */
     public synchronized Set<String> flushAspectInfoCacheForPackage(String packageName) {

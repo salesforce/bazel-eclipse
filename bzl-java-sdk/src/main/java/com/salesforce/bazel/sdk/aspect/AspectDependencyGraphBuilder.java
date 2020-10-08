@@ -17,10 +17,10 @@ public class AspectDependencyGraphBuilder {
      * package. Generally, this is more data than applications need. If includeTarget=false then the graph will have an
      * edge in between two packages if any target in package A depends on any target in package B.
      */
-    public static BazelDependencyGraph build(AspectPackageInfos aspects, boolean includeTarget) {
+    public static BazelDependencyGraph build(AspectTargetInfos aspects, boolean includeTarget) {
         BazelDependencyGraph graph = new BazelDependencyGraph();
 
-        for (AspectPackageInfo info : aspects.getPackageInfos()) {
+        for (AspectTargetInfo info : aspects.getTargetInfos()) {
             String sourceLabel = info.getLabel();
             if (!includeTarget) {
                 sourceLabel = stripTargetFromLabel(sourceLabel);

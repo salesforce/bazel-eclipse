@@ -9,7 +9,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.lang.jvm.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -31,11 +31,11 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
 public class EclipseImplicitClasspathHelper extends ImplicitClasspathHelper {
 
     Set<IClasspathEntry> computeImplicitDependencies(IProject eclipseIProject, BazelWorkspace bazelWorkspace,
-            AspectPackageInfo packageInfo) throws IOException {
+            AspectTargetInfo targetInfo) throws IOException {
         Set<IClasspathEntry> deps = new HashSet<>();
         Set<JvmClasspathEntry> generic_deps = new HashSet<>();
 
-        generic_deps = this.computeImplicitDependencies(bazelWorkspace, packageInfo);
+        generic_deps = this.computeImplicitDependencies(bazelWorkspace, targetInfo);
         if (generic_deps.size() > 0) {
             // convert the generic classpath entries into Eclipse classpath entries
             for (JvmClasspathEntry generic_dep : generic_deps) {

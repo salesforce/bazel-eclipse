@@ -3,7 +3,7 @@ package com.salesforce.bazel.sdk.workspace;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.aspect.AspectDependencyGraphBuilder;
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfos;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelDependencyGraph;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
@@ -29,7 +29,7 @@ public class ProjectOrderResolverImpl implements ProjectOrderResolver {
      *         root module
      */
     public Iterable<BazelPackageLocation> computePackageOrder(BazelPackageLocation rootPackage,
-            AspectPackageInfos aspects) {
+            AspectTargetInfos aspects) {
         List<BazelPackageLocation> selectedPackages = rootPackage.gatherChildren();
 
         return computePackageOrder(rootPackage, selectedPackages, aspects);
@@ -47,7 +47,7 @@ public class ProjectOrderResolverImpl implements ProjectOrderResolver {
      *         root module
      */
     public Iterable<BazelPackageLocation> computePackageOrder(BazelPackageLocation rootPackage,
-            List<BazelPackageLocation> selectedPackages, AspectPackageInfos aspects) {
+            List<BazelPackageLocation> selectedPackages, AspectTargetInfos aspects) {
 
         if (aspects == null) {
             return selectedPackages;

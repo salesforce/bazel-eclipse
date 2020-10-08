@@ -52,7 +52,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * A parsed version of the JSON files returned by the application of the Bazel aspect.
+ * A parsed version of the JSON file produced by the application of the Bazel aspect.
+ * Each target in each package will have such a file.
  * <p>
  * The JSON document format is like this:
  *
@@ -75,7 +76,7 @@ import com.google.common.collect.ImmutableMap;
  * <p>
  * See resources/bzleclipse_aspect.bzl for the code that creates the JSON files
  */
-public final class AspectPackageInfo {
+public final class AspectTargetInfo {
 
     public static final String ASPECT_FILENAME_SUFFIX = ".bzleclipse-build.json";
     private static final Joiner COMMA_JOINER = Joiner.on(",");
@@ -94,7 +95,7 @@ public final class AspectPackageInfo {
     @Override
     public String toString() {
         StringBuffer builder = new StringBuffer();
-        builder.append("AspectPackageInfo(\n");
+        builder.append("AspectTargetInfo(\n");
         builder.append("  label = ").append(label).append(",\n");
         builder.append("  build_file_artifact_location = ").append(workspaceRelativePath).append(",\n");
         builder.append("  kind = ").append(kind).append(",\n");
@@ -107,11 +108,11 @@ public final class AspectPackageInfo {
     }
 
     /**
-     * Constructs a map of label -> @link AspectPackageInfo} from a list of file paths, parsing each files into a
-     * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectPackageInfo} object.
+     * Constructs a map of label -> @link AspectTargetInfo} from a list of file paths, parsing each files into a
+     * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
      */
     @VisibleForTesting
-    public static ImmutableMap<String, AspectPackageInfo> loadAspectFilePaths(List<String> aspectFilePaths)
+    public static ImmutableMap<String, AspectTargetInfo> loadAspectFilePaths(List<String> aspectFilePaths)
             throws IOException, InterruptedException {
 
         List<File> fileList = new ArrayList<>();
@@ -125,30 +126,30 @@ public final class AspectPackageInfo {
     }
 
     /**
-     * Constructs a map of label -> {@link AspectPackageInfo} from a list of files, parsing each files into a
-     * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectPackageInfo} object.
+     * Constructs a map of label -> {@link AspectTargetInfo} from a list of files, parsing each files into a
+     * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
      */
     @VisibleForTesting
-    public static ImmutableMap<String, AspectPackageInfo> loadAspectFiles(List<File> aspectFiles)
+    public static ImmutableMap<String, AspectTargetInfo> loadAspectFiles(List<File> aspectFiles)
             throws IOException, InterruptedException {
-        ImmutableMap.Builder<String, AspectPackageInfo> infos = ImmutableMap.builder();
+        ImmutableMap.Builder<String, AspectTargetInfo> infos = ImmutableMap.builder();
         for (File aspectFile : aspectFiles) {
-            AspectPackageInfo buildInfo = loadAspectFile(aspectFile);
+            AspectTargetInfo buildInfo = loadAspectFile(aspectFile);
             infos.put(buildInfo.label, buildInfo);
         }
         return infos.build();
     }
 
     /**
-     * Constructs a map of label -> {@link AspectPackageInfo} from a list of files, parsing each files into a
-     * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectPackageInfo} object.
+     * Constructs a map of label -> {@link AspectTargetInfo} from a list of files, parsing each files into a
+     * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
      */
     @VisibleForTesting
-    public static AspectPackageInfo loadAspectFile(File aspectFile) throws IOException, InterruptedException {
-        AspectPackageInfo buildInfo = null;
+    public static AspectTargetInfo loadAspectFile(File aspectFile) throws IOException, InterruptedException {
+        AspectTargetInfo buildInfo = null;
         if (aspectFile.exists()) {
             JSONObject json = new JSONObject(new JSONTokener(new FileInputStream(aspectFile)));
-            buildInfo = AspectPackageInfo.loadAspectFromJson(aspectFile, json);
+            buildInfo = AspectTargetInfo.loadAspectFromJson(aspectFile, json);
         }
         return buildInfo;
     }
@@ -220,8 +221,8 @@ public final class AspectPackageInfo {
 
     // INTERNAL
 
-    static AspectPackageInfo loadAspectFromJson(File aspectDataFile, JSONObject object) {
-        AspectPackageInfo info = null;
+    static AspectTargetInfo loadAspectFromJson(File aspectDataFile, JSONObject object) {
+        AspectTargetInfo info = null;
 
         try {
             ImmutableList<AspectOutputJarSet> jars = jsonToJarArray(object.getJSONArray("jars"));
@@ -233,7 +234,7 @@ public final class AspectPackageInfo {
             ImmutableList<String> sources = jsonToStringArray(object.getJSONArray("sources"));
             String mainClass = object.has("main_class") ? object.getString("main_class") : null;
 
-            info = new AspectPackageInfo(aspectDataFile, jars, generated_jars, build_file_artifact_location, kind,
+            info = new AspectTargetInfo(aspectDataFile, jars, generated_jars, build_file_artifact_location, kind,
                     label, deps, sources, mainClass);
         } catch (Exception anyE) {
             //System.err.println("Error parsing Bazel aspect info from file "+aspectDataFile.getAbsolutePath()+". Error: "+anyE.getMessage());
@@ -242,7 +243,7 @@ public final class AspectPackageInfo {
         return info;
     }
 
-    AspectPackageInfo(File aspectDataFile, ImmutableList<AspectOutputJarSet> jars,
+    AspectTargetInfo(File aspectDataFile, ImmutableList<AspectOutputJarSet> jars,
             ImmutableList<AspectOutputJarSet> generatedJars, String workspaceRelativePath, String kind, String label,
             ImmutableList<String> deps, ImmutableList<String> sources, String mainClass) {
         this.aspectDataFile = aspectDataFile;

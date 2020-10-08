@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import com.salesforce.bazel.sdk.aspect.AspectOutputJarSet;
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -125,23 +125,23 @@ public class BazelJvmClasspath {
                 String targetType = bazelBuildFileModel.getRuleTypeForTarget(targetLabel);
                 boolean isTestTarget = "java_test".equals(targetType);
 
-                Set<AspectPackageInfo> packageInfos = bazelWorkspaceCmdRunner.getAspectPackageInfos(targetLabel,
+                Set<AspectTargetInfo> targetInfos = bazelWorkspaceCmdRunner.getAspectTargetInfos(targetLabel,
                     progressMonitor, "getClasspathEntries");
 
-                for (AspectPackageInfo packageInfo : packageInfos) {
-                    if (actualActivatedTargets.contains(packageInfo.getLabel())) {
+                for (AspectTargetInfo targetInfo : targetInfos) {
+                    if (actualActivatedTargets.contains(targetInfo.getLabel())) {
                         // this info describes a target in the current package, don't add it to the classpath
                         // as this classpath strategy does not include them as all targets in this package are
                         // assumed to be represented by source code entries instead
                         continue;
                     }
                     
-                    BazelProject otherProject = getSourceProjectForSourcePaths(packageInfo.getSources());
+                    BazelProject otherProject = getSourceProjectForSourcePaths(targetInfo.getSources());
 
                     if (otherProject == null) {
                         // no project found that houses the sources of this bazel target, add the jars to the classpath
                         // this means that this is an external jar, or a jar produced by a bazel target that was not imported
-                        for (AspectOutputJarSet jarSet : packageInfo.getGeneratedJars()) {
+                        for (AspectOutputJarSet jarSet : targetInfo.getGeneratedJars()) {
                             JvmClasspathEntry cpEntry = jarsToClasspathEntry(jarSet, isTestTarget);
                             if (cpEntry != null) {
                                 addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget,
@@ -152,7 +152,7 @@ public class BazelJvmClasspath {
                                         .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
                             }
                         }
-                        for (AspectOutputJarSet jarSet : packageInfo.getJars()) {
+                        for (AspectOutputJarSet jarSet : targetInfo.getJars()) {
                             JvmClasspathEntry cpEntry = jarsToClasspathEntry(jarSet, isTestTarget);
                             if (cpEntry != null) {
                                 addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget,
@@ -171,7 +171,7 @@ public class BazelJvmClasspath {
                             // some rule types have hidden dependencies that we need to add
                             // if our project has any of those rules, we need to add in the dependencies to our classpath
                             Set<JvmClasspathEntry> implicitDeps =
-                                    implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, packageInfo);
+                                    implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, targetInfo);
                             for (JvmClasspathEntry implicitDep : implicitDeps) {
                                 addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, implicitDep,
                                     isTestTarget, mainClasspathEntryMap, testClasspathEntryMap);

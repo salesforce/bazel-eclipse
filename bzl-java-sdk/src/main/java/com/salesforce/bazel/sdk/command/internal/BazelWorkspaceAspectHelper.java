@@ -39,7 +39,7 @@ import java.util.function.Function;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.salesforce.bazel.sdk.aspect.AspectPackageInfo;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -61,11 +61,11 @@ public class BazelWorkspaceAspectHelper {
     private List<String> aspectOptions;
 
     /**
-     * Cache of the Aspect data for each target. key=String target (//a/b/c) value=Set<AspectPackageInfo> data that came
+     * Cache of the Aspect data for each target. key=String target (//a/b/c) value=Set<AspectTargetInfo> data that came
      * from running the aspect.
      */
     @VisibleForTesting
-    final Map<String, Set<AspectPackageInfo>> aspectInfoCache_current = new HashMap<>();
+    final Map<String, Set<AspectTargetInfo>> aspectInfoCache_current = new HashMap<>();
 
     /**
      * For wildcard targets //a/b/c:* we need to capture the resulting aspects that come from evaluation so that the
@@ -75,15 +75,15 @@ public class BazelWorkspaceAspectHelper {
     final Map<String, Set<String>> aspectInfoCache_wildcards = new HashMap<>();
 
     /**
-     * Cache of the Aspect data for each target. key=String target (//a/b/c) value=AspectPackageInfo data that came from
+     * Cache of the Aspect data for each target. key=String target (//a/b/c) value=AspectTargetInfo data that came from
      * running the aspect. This cache is never cleared and is used for cases in which the developer introduces a compile
      * error into the package, such that the Aspect will fail to run.
      */
     @VisibleForTesting
-    final Map<String, Set<AspectPackageInfo>> aspectInfoCache_lastgood = new HashMap<>();
+    final Map<String, Set<AspectTargetInfo>> aspectInfoCache_lastgood = new HashMap<>();
 
     /**
-     * Tracks the number of cache hits for getAspectPackageInfos() invocations.
+     * Tracks the number of cache hits for getAspectTargetInfos() invocations.
      */
     @VisibleForTesting
     int numberCacheHits = 0;
@@ -107,7 +107,7 @@ public class BazelWorkspaceAspectHelper {
 
     /**
      * Runs the analysis of the given list of targets using the build information Bazel Aspect and returns a map of
-     * {@link AspectPackageInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
+     * {@link AspectTargetInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
      * by the aspect.
      * <p>
      * This method caches its results and won't recompute a previously computed version unless
@@ -118,14 +118,14 @@ public class BazelWorkspaceAspectHelper {
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, Set<AspectPackageInfo>> getAspectPackageInfos(Collection<String> targets,
+    public synchronized Map<String, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<String> targets,
             WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if (progressMonitor != null) {
             progressMonitor.subTask("Load Bazel dependency information");
         }
-        Map<String, Set<AspectPackageInfo>> resultMap = new LinkedHashMap<>();
+        Map<String, Set<AspectTargetInfo>> resultMap = new LinkedHashMap<>();
 
         for (String target : targets) {
             // is this a wildcard target? we have to handle that differently
@@ -135,17 +135,17 @@ public class BazelWorkspaceAspectHelper {
                 if (wildcardTargets != null) {
                     // we know what sub-targets resolve from the wildcard target, so add each sub-target aspect
                     for (String wildcardTarget : wildcardTargets) {
-                        getAspectPackageInfoForTarget(wildcardTarget, progressMonitor, caller, resultMap);
+                        getAspectTargetInfoForTarget(wildcardTarget, progressMonitor, caller, resultMap);
                     }
                 } else {
                     // we haven't seen this wildcard before, we need to ask bazel what sub-targets it maps to
-                    Map<String, Set<AspectPackageInfo>> wildcardResultMap = new LinkedHashMap<>();
-                    getAspectPackageInfoForTarget(target, progressMonitor, caller, wildcardResultMap);
+                    Map<String, Set<AspectTargetInfo>> wildcardResultMap = new LinkedHashMap<>();
+                    getAspectTargetInfoForTarget(target, progressMonitor, caller, wildcardResultMap);
                     resultMap.putAll(wildcardResultMap);
                     aspectInfoCache_wildcards.put(target, wildcardResultMap.keySet());
                 }
             } else {
-                getAspectPackageInfoForTarget(target, progressMonitor, caller, resultMap);
+                getAspectTargetInfoForTarget(target, progressMonitor, caller, resultMap);
             }
         }
 
@@ -157,7 +157,7 @@ public class BazelWorkspaceAspectHelper {
     }
 
     /**
-     * Clear the entire AspectPackageInfo cache. This flushes the dependency graph for the workspace.
+     * Clear the entire AspectTargetInfo cache. This flushes the dependency graph for the workspace.
      */
     public synchronized void flushAspectInfoCache() {
         this.aspectInfoCache_current.clear();
@@ -165,7 +165,7 @@ public class BazelWorkspaceAspectHelper {
     }
 
     /**
-     * Clear the AspectPackageInfo cache for the passed target. This flushes the dependency graph for those target.
+     * Clear the AspectTargetInfo cache for the passed target. This flushes the dependency graph for those target.
      */
     public synchronized void flushAspectInfoCache(String target) {
         // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
@@ -175,7 +175,7 @@ public class BazelWorkspaceAspectHelper {
     }
 
     /**
-     * Clear the AspectPackageInfo cache for the passed targets. This flushes the dependency graph for those targets.
+     * Clear the AspectTargetInfo cache for the passed targets. This flushes the dependency graph for those targets.
      */
     public synchronized void flushAspectInfoCache(Set<String> targets) {
         for (String target : targets) {
@@ -187,7 +187,7 @@ public class BazelWorkspaceAspectHelper {
     }
 
     /**
-     * Clear the AspectPackageInfo cache for the passed package. This flushes the dependency graph for any target that
+     * Clear the AspectTargetInfo cache for the passed package. This flushes the dependency graph for any target that
      * contains the package name.
      */
     public synchronized Set<String> flushAspectInfoCacheForPackage(String packageName) {
@@ -217,12 +217,12 @@ public class BazelWorkspaceAspectHelper {
 
     // INTERNALS
 
-    private void getAspectPackageInfoForTarget(String target, WorkProgressMonitor progressMonitor, String caller,
-            Map<String, Set<AspectPackageInfo>> resultMap)
+    private void getAspectTargetInfoForTarget(String target, WorkProgressMonitor progressMonitor, String caller,
+            Map<String, Set<AspectTargetInfo>> resultMap)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         String logstr = " [target=" + target + ", src=" + caller + "]";
 
-        Set<AspectPackageInfo> aspectInfos = aspectInfoCache_current.get(target);
+        Set<AspectTargetInfo> aspectInfos = aspectInfoCache_current.get(target);
         if (aspectInfos != null) {
             LOG.info("ASPECT CACHE HIT target: " + target + logstr);
             resultMap.put(target, aspectInfos);
@@ -231,9 +231,9 @@ public class BazelWorkspaceAspectHelper {
             LOG.info("ASPECT CACHE MISS target: " + target + logstr);
             List<String> lookupTargets = new ArrayList<>();
             lookupTargets.add(target);
-            List<String> discoveredAspectFilePaths = generateAspectPackageInfoFiles(lookupTargets, progressMonitor);
-            ImmutableMap<String, AspectPackageInfo> map =
-                    AspectPackageInfo.loadAspectFilePaths(discoveredAspectFilePaths);
+            List<String> discoveredAspectFilePaths = generateAspectTargetInfoFiles(lookupTargets, progressMonitor);
+            ImmutableMap<String, AspectTargetInfo> map =
+                    AspectTargetInfo.loadAspectFilePaths(discoveredAspectFilePaths);
 
             if (map.size() == 0) {
                 // still don't have the aspect for the target, use the last known one that computed
@@ -241,15 +241,15 @@ public class BazelWorkspaceAspectHelper {
                 // In this case use the last known good result of the Aspect for that target and hope for the best. The lastgood cache is never
                 // cleared, so if the Aspect ran correctly at least once since the IDE started it should be here (but possibly out of date depending
                 // on what changes were introduced along with the compile error)
-                Set<AspectPackageInfo> lastgood = aspectInfoCache_lastgood.get(target);
+                Set<AspectTargetInfo> lastgood = aspectInfoCache_lastgood.get(target);
                 if (lastgood != null) {
                     resultMap.put(target, lastgood);
                 } else {
                     LOG.info("ASPECT CACHE FAIL target: " + target + logstr);
                 }
             } else {
-                Set<AspectPackageInfo> values = new HashSet<>();
-                for (AspectPackageInfo info : map.values()) {
+                Set<AspectTargetInfo> values = new HashSet<>();
+                for (AspectTargetInfo info : map.values()) {
                     values.add(info); // TODO this is super dumb, immutablemap causes type issues, fix it
                 }
                 resultMap.put(target, values);
@@ -270,7 +270,7 @@ public class BazelWorkspaceAspectHelper {
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    private synchronized List<String> generateAspectPackageInfoFiles(Collection<String> targets,
+    private synchronized List<String> generateAspectTargetInfoFiles(Collection<String> targets,
             WorkProgressMonitor progressMonitor)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
@@ -280,7 +280,7 @@ public class BazelWorkspaceAspectHelper {
         // Strip out the artifact list, keeping the xyz.bzleclipse-build.json files (located in subdirs in the bazel-out path)
         // Line must start with >>> and end with the aspect file suffix
         Function<String, String> filter = t -> t.startsWith(">>>")
-                ? (t.endsWith(AspectPackageInfo.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
+                ? (t.endsWith(AspectTargetInfo.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
 
         List<String> listOfGeneratedFilePaths = this.bazelCommandExecutor.runBazelAndGetErrorLines(
             ConsoleType.WORKSPACE, this.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), progressMonitor,

@@ -47,17 +47,17 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
-public class AspectPackageInfosTest {
+public class AspectTargetInfosTest {
 
     @Test
     public void testLookupByLabel() {
-        AspectPackageInfo lib = getAspectPackageInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo test = getAspectPackageInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
-        AspectPackageInfo bin = getAspectPackageInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo seleniumTest =
-                getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
+        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
+        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
+        AspectTargetInfo seleniumTest =
+                getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
+        AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
         assertSame(lib, apis.lookupByLabel("foo1"));
         assertSame(test, apis.lookupByLabel("foo2"));
@@ -68,15 +68,15 @@ public class AspectPackageInfosTest {
 
     @Test
     public void testLookupByTargetKind__singleTargetKind() {
-        AspectPackageInfo lib = getAspectPackageInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo test = getAspectPackageInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
-        AspectPackageInfo bin = getAspectPackageInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo seleniumTest =
-                getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
+        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
+        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
+        AspectTargetInfo seleniumTest =
+                getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
+        AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
-        Collection<AspectPackageInfo> infos = apis.lookupByTargetKind(EnumSet.of(BazelTargetKind.JAVA_TEST));
+        Collection<AspectTargetInfo> infos = apis.lookupByTargetKind(EnumSet.of(BazelTargetKind.JAVA_TEST));
         assertEquals(1, infos.size());
         assertSame(test, infos.iterator().next());
 
@@ -87,15 +87,15 @@ public class AspectPackageInfosTest {
 
     @Test
     public void testLookupByTargetKind__multipleTargetKinds() {
-        AspectPackageInfo lib = getAspectPackageInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo test = getAspectPackageInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
-        AspectPackageInfo bin = getAspectPackageInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectPackageInfo seleniumTest =
-                getAspectPackageInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
+        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
+        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
+        AspectTargetInfo seleniumTest =
+                getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(lib, test, bin, seleniumTest);
+        AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
-        Collection<AspectPackageInfo> infos =
+        Collection<AspectTargetInfo> infos =
                 apis.lookupByTargetKind(EnumSet.of(BazelTargetKind.JAVA_TEST, BazelTargetKind.JAVA_BINARY));
 
         assertEquals(2, infos.size());
@@ -105,9 +105,9 @@ public class AspectPackageInfosTest {
 
     @Test
     public void testLookupByRootSourcePath() {
-        AspectPackageInfo api = getAspectPackageInfo("foo", "a/b/c/d/Foo.java");
+        AspectTargetInfo api = getAspectTargetInfo("foo", "a/b/c/d/Foo.java");
 
-        AspectPackageInfos infos = new AspectPackageInfos(api);
+        AspectTargetInfos infos = new AspectTargetInfos(api);
 
         assertSame(api, infos.lookupByRootSourcePath("a/b/c/d/Foo.java").iterator().next());
         assertSame(api, infos.lookupByRootSourcePath("a/b/c/d").iterator().next());
@@ -120,10 +120,10 @@ public class AspectPackageInfosTest {
 
     @Test
     public void testLookupByRootSourcePath__noSubstringMatch() {
-        AspectPackageInfo api = getAspectPackageInfo("myclass", "projects/services/scone/MyClass.java");
+        AspectTargetInfo api = getAspectTargetInfo("myclass", "projects/services/scone/MyClass.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(api);
-        Collection<AspectPackageInfo> infos = apis.lookupByRootSourcePath("projects/services/scone");
+        AspectTargetInfos apis = new AspectTargetInfos(api);
+        Collection<AspectTargetInfo> infos = apis.lookupByRootSourcePath("projects/services/scone");
 
         assertEquals(1, infos.size());
         assertSame(api, infos.iterator().next());
@@ -132,12 +132,12 @@ public class AspectPackageInfosTest {
 
     @Test
     public void testLookupByRootSourcePath__multipleMatching() {
-        AspectPackageInfo foo = getAspectPackageInfo("foo", "a/b/c/aaa/Foo.java");
-        AspectPackageInfo blah = getAspectPackageInfo("blah", "a/b/c/zzz/Blah.java");
+        AspectTargetInfo foo = getAspectTargetInfo("foo", "a/b/c/aaa/Foo.java");
+        AspectTargetInfo blah = getAspectTargetInfo("blah", "a/b/c/zzz/Blah.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(foo, blah);
+        AspectTargetInfos apis = new AspectTargetInfos(foo, blah);
 
-        Collection<AspectPackageInfo> infos = apis.lookupByRootSourcePath("a/b/c");
+        Collection<AspectTargetInfo> infos = apis.lookupByRootSourcePath("a/b/c");
         assertEquals(2, infos.size());
         assertTrue(infos.contains(foo));
         assertTrue(infos.contains(blah));
@@ -148,11 +148,11 @@ public class AspectPackageInfosTest {
 
     @Test
     public void testLookupByRootSourcePath__sourcesWithCommonRootPathValidation() {
-        AspectPackageInfo foo = getAspectPackageInfo("foo", "a/b/c/aaa/ccc/Foo.java", "a/b/c/aaa/ddd/Blah.java");
+        AspectTargetInfo foo = getAspectTargetInfo("foo", "a/b/c/aaa/ccc/Foo.java", "a/b/c/aaa/ddd/Blah.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(foo);
+        AspectTargetInfos apis = new AspectTargetInfos(foo);
 
-        Collection<AspectPackageInfo> infos = apis.lookupByRootSourcePath("a/b/c");
+        Collection<AspectTargetInfo> infos = apis.lookupByRootSourcePath("a/b/c");
         assertEquals(1, infos.size());
 
         infos = apis.lookupByRootSourcePath("a/b/c/aaa");
@@ -161,29 +161,29 @@ public class AspectPackageInfosTest {
 
     @Test(expected = IllegalStateException.class)
     public void testLookupByRootSourcePath__sourcesWithoutCommonRootPathValidation_partialPath() {
-        AspectPackageInfo foo = getAspectPackageInfo("foo", "a/b/c/aaa/Foo.java", "a/b/c/zzz/Blah.java");
+        AspectTargetInfo foo = getAspectTargetInfo("foo", "a/b/c/aaa/Foo.java", "a/b/c/zzz/Blah.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(foo);
+        AspectTargetInfos apis = new AspectTargetInfos(foo);
 
         apis.lookupByRootSourcePath("a/b/c/aaa");
     }
 
     @Test(expected = IllegalStateException.class)
     public void testLookupByRootSourcePath__sourcesWithoutCommonRootPathValidation_fullPath() {
-        AspectPackageInfo foo = getAspectPackageInfo("foo", "a/b/c/aaa/Foo.java", "x/y/z/aaa/Blah.java");
+        AspectTargetInfo foo = getAspectTargetInfo("foo", "a/b/c/aaa/Foo.java", "x/y/z/aaa/Blah.java");
 
-        AspectPackageInfos apis = new AspectPackageInfos(foo);
+        AspectTargetInfos apis = new AspectTargetInfos(foo);
 
         apis.lookupByRootSourcePath("a/b/c");
     }
 
-    private static AspectPackageInfo getAspectPackageInfo(String label, String... sourcePaths) {
-        return getAspectPackageInfo(label, BazelTargetKind.JAVA_LIBRARY, sourcePaths);
+    private static AspectTargetInfo getAspectTargetInfo(String label, String... sourcePaths) {
+        return getAspectTargetInfo(label, BazelTargetKind.JAVA_LIBRARY, sourcePaths);
     }
 
-    private static AspectPackageInfo getAspectPackageInfo(String label, BazelTargetKind targetKind,
+    private static AspectTargetInfo getAspectTargetInfo(String label, BazelTargetKind targetKind,
             String... sourcePaths) {
-        return new AspectPackageInfo(new File(""), ImmutableList.of(), ImmutableList.of(), "some/path",
+        return new AspectTargetInfo(new File(""), ImmutableList.of(), ImmutableList.of(), "some/path",
                 targetKind.toString().toLowerCase(), label, ImmutableList.of(), ImmutableList.copyOf(sourcePaths),
                 "main-class");
     }
