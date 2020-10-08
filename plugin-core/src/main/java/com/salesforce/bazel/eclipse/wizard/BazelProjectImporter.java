@@ -49,7 +49,14 @@ public class BazelProjectImporter {
     private static void openError(String title, Throwable ex) {
         Display.getDefault().syncExec(new Runnable() {
             public void run() {
-                MessageDialog.openError(new Shell(), title, ex.getMessage());
+                String exceptionMessage = ex.getMessage();
+                if (exceptionMessage == null || exceptionMessage.isEmpty()) {
+                    // Exception does not have a message, which usually means it is an NPE.
+                    exceptionMessage = "An exception of type ["+ex.getClass().getName()+
+                            "] was thrown, but no additional message details are available. "+
+                            "Check the console window where you launched Eclipse, or Eclipse log for the full stack trace.";
+                }
+                MessageDialog.openError(new Shell(), title, exceptionMessage);
             }
         });
     }
