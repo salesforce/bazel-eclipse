@@ -30,7 +30,8 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * <p>
  * This classpath implementation collapses the dependencies for all Java rules in the package into a single classpath, 
  * with entries being either 'main' or 'test' entries. This may not be precise enough for all use cases. Also, targets
- * within the package are excluded from the classpath.
+ * within the package are excluded from the classpath, as they are presumed to be represented by source code found in
+ * source folders.
  */
 public class BazelJvmClasspath {
     // TODO make classpath cache timeout configurable
@@ -69,7 +70,7 @@ public class BazelJvmClasspath {
      * Computes the JVM classpath for the associated BazelProject
      * <p>
      * TODO provide different classpath strategies. This one the Maven-like/Eclipse JDT style, where the 
-     * classpath is the union of all java rules in the package.
+     * classpath is the union of the classpaths of all java rules in the package.
      */
     public BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
         // sanity check

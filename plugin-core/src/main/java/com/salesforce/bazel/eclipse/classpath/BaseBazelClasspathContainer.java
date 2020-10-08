@@ -74,6 +74,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     protected final JavaCoreHelper javaCoreHelper;
     protected final OperatingEnvironmentDetectionStrategy osDetector;
     protected final LogHelper logger;
+    protected IClasspathEntry[] lastComputedClasspath = null;
 
     public BaseBazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
             BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
@@ -102,6 +103,28 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
 
     @Override
     public IClasspathEntry[] getClasspathEntries() {
+        // Fast exit - check the caller of this method to decide if we need to incur the expense of a full classpath compute
+        // The saveContainers() caller is useful if we were persisting classpath data to disk for faster restarts later
+        // but currently we feel that is riskier than just recomputing the classpath on restart.
+        // Also, if the user is shutting down the IDE don't waste cycles computing classpaths.
+        if (lastComputedClasspath != null) {
+            StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+            for (int i = 0; i<stackTraceElements.length; i++) {
+                StackTraceElement caller = stackTraceElements[i];
+                if (caller.getMethodName().equals("saveContainers")) {
+                    // fullname: JavaModelManager@VariablesAndContainersSaveHelper.saveContainers()
+
+                    // the last computed classpath is good enough for saveContainers() use cases
+                    return lastComputedClasspath;
+                }
+                if (i == 4) {
+                    // we don't know exactly which index it could be, it dependes on subclassing, etc.
+                    // but the saveContainers method should be in the first 5 entries 
+                    break;
+                }
+            }
+        }
+        
         /**
          * Observed behavior of Eclipse is that this method can get called multiple times before the first invocation
          * completes, therefore the cache is not as effective as it could be. Synchronize on this instance such that the
@@ -140,7 +163,8 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
         // Eclipse workspace, and this may take some time to acquire. 
         bazelProjectManager.setProjectReferences(bazelProject, computedClasspath.classpathProjectReferences);
 
-        return eclipseClasspathEntries.toArray(new IClasspathEntry[] {});
+        lastComputedClasspath = eclipseClasspathEntries.toArray(new IClasspathEntry[] {});
+        return lastComputedClasspath;
     }
 
     @Override
