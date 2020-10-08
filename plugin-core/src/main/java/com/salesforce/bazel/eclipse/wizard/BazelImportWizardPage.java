@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -97,7 +98,8 @@ public class BazelImportWizardPage extends WizardPage {
         composite.setLayout(new GridLayout(3, false));
         setControl(composite);
 
-        locationControl = new BazelImportWizardLocationControl(this);
+        IPreferenceStore prefs = BazelPluginActivator.getInstance().getPreferenceStore();
+        locationControl = new BazelImportWizardLocationControl(this, prefs);
         locationControl.addLocationControl(composite);
 
         labelProvider = new BazelImportWizardLabelProvider(this);

@@ -45,6 +45,7 @@
 package com.salesforce.bazel.eclipse.wizard;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +56,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
@@ -71,10 +73,24 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 
+/**
+ * This class encapsulates the two controls above the tree control on the first page of the import wizard.
+ * The combo box which holds the chosen file system path, and the Browse button.
+ */
 public class BazelImportWizardLocationControl {
 
     protected BazelImportWizardPage page;
+    
+    // We support Bazel workspaces in which the WORKSPACE file in the root is actually a soft link to the actual
+    // file in a subdirectory. Due to the way the system Open dialog works, we have to do some sad logic to figure
+    // out this is the case. This features is enabled if this boolean is true.
+    // https://github.com/salesforce/bazel-eclipse/issues/164
+    // Please drop a note in that Issue if this feature causes a problem for you.
+    // Disable it with this pref in your global prefs file (~/.bazel/eclipse.properties)
+    //    DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK=true
+    protected boolean doUnresolveWorkspaceFileSoftLink = true;
 
     protected Combo rootDirectoryCombo;
     protected String rootDirectory;
@@ -87,8 +103,13 @@ public class BazelImportWizardLocationControl {
     /** the Map of field ids to List of comboboxes that share the same history */
     private Map<String, List<Combo>> fieldsWithHistory;
 
-    public BazelImportWizardLocationControl(BazelImportWizardPage page) {
+    public BazelImportWizardLocationControl(BazelImportWizardPage page, IPreferenceStore prefs) {
         this.page = page;
+        
+        if (prefs != null) {
+            // default response is false if the pref is not set
+            doUnresolveWorkspaceFileSoftLink = !prefs.getBoolean(BazelPreferenceKeys.DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK);
+        }
     }
 
     public void addLocationControl(Composite composite) {
@@ -135,6 +156,7 @@ public class BazelImportWizardLocationControl {
                                 }
                             });
                         } else {
+                            workspaceFile = unresolveSoftLink(workspaceFile);
                             rootDirectoryCombo.setText(workspaceFile.getParentFile().getAbsolutePath());
                             if (rootDirectoryChanged()) {
                                 page.scanProjects();
@@ -215,12 +237,65 @@ public class BazelImportWizardLocationControl {
             combos.add(combo);
         }
     }
+    
+    // See note at top of file for what this feature does and how to disable it if it causes problems
+    protected File unresolveSoftLink(File resolvedWorkspaceFile) {
+        if (!doUnresolveWorkspaceFileSoftLink) {
+            return resolvedWorkspaceFile;
+        }
+        
+        try {
+            if (!resolvedWorkspaceFile.exists()) {
+                return resolvedWorkspaceFile;
+            }
+            File directory = resolvedWorkspaceFile.getParentFile().getParentFile();
+            // traverse up in the directory hierarchy, looking for a WORKSPACE file that is a soft link
+            // to the one returned by the system Open dialog. We max it out at 5 since it seems unreasonable
+            // to go further
+            for (int i=0; i<5; i++) { 
+                if (!directory.exists() || !directory.canRead()) {
+                    return resolvedWorkspaceFile;
+                }
+                File[] workspaceFiles = directory.listFiles(new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        return hasWorkspaceFilename(name);
+                    }
+                });
+                for (File candidateFile : workspaceFiles) {
+                    if (candidateFile.exists() && candidateFile.canRead()) {
+                        String absPath = candidateFile.getAbsolutePath();
+                        String canonPath = candidateFile.getCanonicalFile().getAbsolutePath();
+                        if (canonPath.equals(resolvedWorkspaceFile.getAbsolutePath())) {
+                            
+                            // The candidateFile is a soft link to the real WORKSPACE file returned by the Open dialog
+                            // This means the candidateFile is probably in the real root directory of the Bazel workspace.
+                            
+                            System.out.println("WORKSPACE file ["+absPath+"] is a soft link to ["+canonPath+
+                                "]. Setting workspace root as ["+candidateFile.getParentFile().getAbsolutePath()+"]");
+                            return candidateFile;
+                        }
+                    }
+                }
+            }
+        } catch (Exception anyE) {
+            anyE.printStackTrace();
+            return resolvedWorkspaceFile;
+        }
+        
+        return resolvedWorkspaceFile;
+    }
 
-    private boolean hasWorkspaceFilename(File candidateWorkspaceFile) {
-        if (candidateWorkspaceFile.getName().equals("WORKSPACE")) {
+    // TODO move these functions to bazel sdk
+    protected boolean hasWorkspaceFilename(File candidateWorkspaceFile) {
+        return hasWorkspaceFilename(candidateWorkspaceFile.getName());
+    }
+
+    protected boolean hasWorkspaceFilename(String candidateWorkspaceFilename) {
+        if (candidateWorkspaceFilename.equals("WORKSPACE")) {
             return true;
         }
-        if (candidateWorkspaceFile.getName().equals("WORKSPACE.bazel")) {
+        if (candidateWorkspaceFilename.equals("WORKSPACE.bazel")) {
             return true;
         }
         return false;

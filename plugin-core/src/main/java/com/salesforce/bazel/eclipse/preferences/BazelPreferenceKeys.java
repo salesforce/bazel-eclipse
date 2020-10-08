@@ -5,6 +5,7 @@ package com.salesforce.bazel.eclipse.preferences;
  */
 public class BazelPreferenceKeys {
     
+    // *********************************************************************
     // USER FACING PREFS (visible on Prefs page)
     
     // path the the bazel executable
@@ -17,6 +18,18 @@ public class BazelPreferenceKeys {
     public static final String EXTERNAL_JAR_CACHE_PATH_PREF_NAME = "EXTERNAL_JAR_CACHE_PATH";
 
     
+    // *********************************************************************
+    // BREAK GLASS PREFS (emergency feature flags to disable certain features in case of issues)
+    // Naming convention: these should all started with the token DISABLE_
+
+    // We support Bazel workspaces in which the WORKSPACE file in the root is actually a soft link to the actual
+    // file in a subdirectory. Due to the way the system Open dialog works, we have to do some sad logic to figure
+    // out this is the case. This flag disables this feature, in case that logic causes problems for some users. 
+    // https://github.com/salesforce/bazel-eclipse/issues/164
+    public static final String DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK = "DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK";
+    
+    
+    // *********************************************************************
     // BEF DEVELOPER PREFS (for efficient repetitive testing of BEF)
     
     // The import wizard will be populated by this path if set, which saves time during repetitive testing of imports
