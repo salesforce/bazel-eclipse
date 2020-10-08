@@ -27,6 +27,10 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 /**
  * Computes a JVM classpath for a BazelProject based on the dependencies defined in Bazel, including resolving file
  * paths to jar files and accounting for references to BazelProjects.
+ * <p>
+ * This classpath implementation collapses the dependencies for all Java rules in the package into a single classpath, 
+ * with entries being either 'main' or 'test' entries. This may not be precise enough for all use cases. Also, targets
+ * within the package are excluded from the classpath.
  */
 public class BazelJvmClasspath {
     // TODO make classpath cache timeout configurable
@@ -63,6 +67,9 @@ public class BazelJvmClasspath {
 
     /**
      * Computes the JVM classpath for the associated BazelProject
+     * <p>
+     * TODO provide different classpath strategies. This one the Maven-like/Eclipse JDT style, where the 
+     * classpath is the union of all java rules in the package.
      */
     public BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
         // sanity check
@@ -122,6 +129,13 @@ public class BazelJvmClasspath {
                     progressMonitor, "getClasspathEntries");
 
                 for (AspectPackageInfo packageInfo : packageInfos) {
+                    if (actualActivatedTargets.contains(packageInfo.getLabel())) {
+                        // this info describes a target in the current package, don't add it to the classpath
+                        // as this classpath strategy does not include them as all targets in this package are
+                        // assumed to be represented by source code entries instead
+                        continue;
+                    }
+                    
                     BazelProject otherProject = getSourceProjectForSourcePaths(packageInfo.getSources());
 
                     if (otherProject == null) {
