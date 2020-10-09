@@ -102,11 +102,6 @@ public class BazelEclipseProjectFactory {
     static final String STANDARD_VM_CONTAINER_PREFIX = "org.eclipse.jdt.launching.JRE_CONTAINER/"
             + "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-";
 
-    /**
-     * Alternate code path that we no longer use, but retained for possible future use.
-     */
-    private static final boolean PRECOMPUTE_ALL_ASPECTS_FOR_WORKSPACE = true;
-
     // signals that we are in a delicate bootstrapping operation
     public static AtomicBoolean importInProgress = new AtomicBoolean(false);
 
@@ -161,12 +156,10 @@ public class BazelEclipseProjectFactory {
         List<IProject> importedProjectsList = new ArrayList<>();
         importedProjectsList.add(rootEclipseProject);
 
-        // see the method level comment about this option (currently disabled)
+        // computes all the aspects (data from Bazel's dependency graph) all in one go
         AspectTargetInfos aspects = null;
         startTimeMS = System.currentTimeMillis();
-        if (PRECOMPUTE_ALL_ASPECTS_FOR_WORKSPACE) {
-            aspects = precomputeBazelAspectsForWorkspace(rootEclipseProject, selectedBazelPackages, progressMonitor);
-        }
+        aspects = precomputeBazelAspectsForWorkspace(rootEclipseProject, selectedBazelPackages, progressMonitor);
         SimplePerfRecorder.addTime("import_computeaspects", startTimeMS);
 
         startTimeMS = System.currentTimeMillis();
