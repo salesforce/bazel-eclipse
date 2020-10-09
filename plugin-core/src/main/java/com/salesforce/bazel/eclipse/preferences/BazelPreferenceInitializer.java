@@ -55,6 +55,11 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
         IPreferenceStore store = BazelPluginActivator.getInstance().getPreferenceStore();
         Properties globalPrefs = loadGlobalPreferences();
         
+        // TODO Instead of doing this manual mapping of global prefs into prefs, which requires an entry
+        // for each new pref, all users of prefs in BEF should not use the prefs store directly but a 
+        // wrapper class that will do this global pref lookup in real time
+        
+        
         // USER FACING PREFS (visible on Prefs page)
         
         String bazelExecLocationFromEnv = BazelExecutableUtil.which("bazel", "/usr/local/bin/bazel");
@@ -65,6 +70,11 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
         value = globalPrefs.getProperty(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME, "false");
         store.setDefault(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME, "true".equals(value));
 
+        // FEATURE FLAGS
+        value = globalPrefs.getProperty(BazelPreferenceKeys.DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK, "false");
+        store.setDefault(BazelPreferenceKeys.DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK, "true".equals(value));
+        
+        
         // BEF DEVELOPER PREFS (for efficient repetitive testing of BEF)
         value = globalPrefs.getProperty(BazelPreferenceKeys.BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME);
         if (value != null) {
