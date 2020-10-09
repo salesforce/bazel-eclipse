@@ -14,7 +14,17 @@ You can track our past/current/future work using these links:
 
 - [BEF project management](https://github.com/salesforce/bazel-eclipse/projects)
 
-:fire: currently the feature is still in development. There are known scalability issues, and current development is focused on Java projects that follow [certain file layout conventions](docs/conforming_java_packages.md).
+Current development is dedicated to Bazel workspaces with Java rules.
+The **1.x** release line is focused on:
+- Basic features of Java editing (code completion, incremental compilation, launching programs, debugging, etc)
+- Correctness of the Bazel-derived classpath
+- Scalability
+- Gradually reducing [certain file layout restrictions](docs/conforming_java_packages.md).
+
+The **2.x** release line will work towards adding Bazel specific features to Eclipse:
+- BUILD file editor
+- Automatic dependency management
+- Support for more complex package layouts
 
 ## Using the Feature
 
