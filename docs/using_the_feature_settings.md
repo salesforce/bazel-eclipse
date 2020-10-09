@@ -3,23 +3,32 @@
 As a power user, you will want to configure your IDE the way you like it.
 This page documents some ways to do that.
 
-### Preferences
+### Bazel Preferences
 
 The Bazel Eclipse Feature does allow you to set some preferences.
-This is a growing list, and so this documentation may not cover all of them.
 Navigate to your Eclipse Preferences (menu option varies by platform) and click on the Bazel submenu.
+This is a growing list, and each should be documented in the topic specific pages.
+As a new BEF user, the default values should be fine.
+
+There is one key preference that you may need to adjust:
 
 - *Path to the Bazel binary*: tells BEF which Bazel binary to invoke for build commands
-- *Enable global classpath search*: if true, allows BEF to index all jars used by the Bazel workspace such that they are visible when you do a Type Search.
-- *Path to the local cache of downloaded jar files*: if global classpath search is enabled, allows you to override where BEF should look for the local cache of jar files. In some cases, this is difficult for BEF to determine.
 
-### More Docs TODO
+### User Default Preferences
 
-Topics:
+If you are a power user of BEF, and create many workspaces, you may wish to save your common defaults to a global file.
+This will save time when creating a new BEF workspace.
 
-- The output location for each source directory - needed to launch Java apps
-- where to find the prefs file for the workspace
-- global prefs: ~/.bazel/eclipse.properties
+File location: **~/.bazel/eclipse.properties**
+
+```
+# always default Bazel executable to be bazelisk in my non-standard location
+BAZEL_PATH=/Users/mbenioff/dev/tools/bazelisk-darwin-amd64
+```
+
+Instead of documenting the available properties here (which would get outdated),
+  please search for the *BazelPreferenceKeys.java* class in the code base.
+
 
 ### Next Topic: Builds and the Bazel Eclipse Feature
 
