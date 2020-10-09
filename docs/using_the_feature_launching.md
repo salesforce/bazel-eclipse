@@ -52,6 +52,12 @@ Method 2: Package Explorer context menu
 :warning: the standard JUnit Launcher *JUnit Test* does not work.
 [Issue 18](https://github.com/salesforce/bazel-eclipse/issues/18) tracks that work item.
 
-### Next Topic: Setting Preferences
+### Next Topic: Explore!
 
-The next page in our guide discusses the [Preferences](using_the_feature_preferences.md) available with the Bazel Eclipse Feature.
+This is the end of the step by step user guide.
+At this point you have hopefully imported your Bazel workspace and are ready to develop.
+
+Please press the 'star' button at the top of this page if you have not already done so.
+This helps us get more time and resources for this project.
+
+If you have problems using BEF, please file an Issue and we will try to help you.

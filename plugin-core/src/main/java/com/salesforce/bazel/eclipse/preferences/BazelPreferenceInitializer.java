@@ -46,40 +46,40 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.util.BazelExecutableUtil;
 
 /**
- * Initialize the preferences of Bazel. 
+ * Initialize the preferences of Bazel plugins. See the BazelPreferenceKeys class for the 
+ * supported preferences.
  */
 public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
 
     @Override
     public void initializeDefaultPreferences() {
         IPreferenceStore store = BazelPluginActivator.getInstance().getPreferenceStore();
-        Properties globalPrefs = loadGlobalPreferences();
+        Properties userDefaults = loadUserDefaultPreferencesFile();
         
-        // TODO Instead of doing this manual mapping of global prefs into prefs, which requires an entry
-        // for each new pref, all users of prefs in BEF should not use the prefs store directly but a 
-        // wrapper class that will do this global pref lookup in real time
+        // STRING PREFS
         
+        for (String prefName : BazelPreferenceKeys.ALL_STRING_PREFS) {
+            String befDefaultValue = BazelPreferenceKeys.defaultValues.get(prefName);
+            String value = userDefaults.getProperty(prefName, befDefaultValue);
+            if (value != null) {
+                store.setDefault(prefName, value);
+            }
+        }
+
+        // BOOLEAN PREFS
         
-        // USER FACING PREFS (visible on Prefs page)
+        for (String prefName : BazelPreferenceKeys.ALL_BOOLEAN_PREFS) {
+            String befDefaultValue = BazelPreferenceKeys.defaultValues.get(prefName);
+            String value = userDefaults.getProperty(prefName, befDefaultValue);
+            store.setDefault(prefName, "true".equals(value));
+        }
         
+        // SPECIAL CASES
+
         String bazelExecLocationFromEnv = BazelExecutableUtil.which("bazel", "/usr/local/bin/bazel");
-        String value = globalPrefs.getProperty(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
+        String value = userDefaults.getProperty(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
         store.setDefault(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, value);
         
-        // enable global classpath search by default
-        value = globalPrefs.getProperty(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME, "false");
-        store.setDefault(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME, "true".equals(value));
-
-        // FEATURE FLAGS
-        value = globalPrefs.getProperty(BazelPreferenceKeys.DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK, "false");
-        store.setDefault(BazelPreferenceKeys.DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK, "true".equals(value));
-        
-        
-        // BEF DEVELOPER PREFS (for efficient repetitive testing of BEF)
-        value = globalPrefs.getProperty(BazelPreferenceKeys.BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME);
-        if (value != null) {
-            store.setDefault(BazelPreferenceKeys.BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME, value);
-        }
     }
 
     /**
@@ -87,7 +87,7 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
      * preferences to be used for any new Eclipse workspace. This is a savior for those of us who 
      * work on BEF and create new Elipse workspaces all the time. Might be useful for regular users too.
      */
-    private Properties loadGlobalPreferences() {
+    private Properties loadUserDefaultPreferencesFile() {
         Properties masterProperties = new Properties();
         String userHome = System.getProperty("user.home");
         File masterPropertiesFile = new File(userHome+File.separator+".bazel", "eclipse.properties");
