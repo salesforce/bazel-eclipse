@@ -43,6 +43,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * Interface for looking up Eclipse Workspace and Project resources, and subcomponents of each.
@@ -64,6 +65,16 @@ public interface ResourceHelper {
      */
     IProject getProjectByName(String projectName);
 
+    /**
+     * Returns the IProject reference for the Bazel Workspace project.
+     */
+    IProject getBazelWorkspaceProject(BazelWorkspace bazelWorkspace);
+
+    /**
+     * Returns the IProjects for the Bazel Workspace project.
+     */
+    IProject[] getProjectsForBazelWorkspace(BazelWorkspace bazelWorkspace);
+    
     /**
      * Creates a new project resource in the workspace using the given project description. Upon successful completion,
      * the project will exist but be closed.
