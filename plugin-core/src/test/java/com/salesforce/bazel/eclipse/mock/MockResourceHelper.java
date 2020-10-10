@@ -47,6 +47,7 @@ import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 public class MockResourceHelper implements ResourceHelper {
 
@@ -97,6 +98,22 @@ public class MockResourceHelper implements ResourceHelper {
 
         return project;
     }
+    
+    @Override
+    public IProject getBazelWorkspaceProject(BazelWorkspace bazelWorkspace) {
+        for (IProject candidate : getEclipseWorkspaceRoot().getProjects()) {
+            if (isBazelRootProject(candidate)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public IProject[] getProjectsForBazelWorkspace(BazelWorkspace bazelWorkspace) {
+        return mockProjects.values().toArray(new IProject[] {});
+    }
+    
 
     @Override
     public boolean isBazelRootProject(IProject project) {

@@ -49,6 +49,7 @@ import org.osgi.service.prefs.Preferences;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * Resource helper implementation used when running in a live Eclipse runtime.
@@ -66,6 +67,28 @@ public class EclipseResourceHelper implements ResourceHelper {
         return getEclipseWorkspaceRoot().getProject(projectName);
     }
 
+    /**
+     * Returns the IProject reference for the Bazel Workspace project.
+     */
+    @Override
+    public IProject getBazelWorkspaceProject(BazelWorkspace bazelWorkspace) {
+        for (IProject candidate : getEclipseWorkspaceRoot().getProjects()) {
+            if (isBazelRootProject(candidate)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Returns the IProjects for the Bazel Workspace project.
+     */
+    @Override
+    public IProject[] getProjectsForBazelWorkspace(BazelWorkspace bazelWorkspace) {
+        // todo once we support multiple Bazel workspaces, this will need to figure that out
+        return  getEclipseWorkspaceRoot().getProjects(); 
+    }
+    
     /**
      * Creates the project described by newProject, with the passed description.
      */
@@ -124,7 +147,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     public IWorkspaceRoot getEclipseWorkspaceRoot() {
         return ResourcesPlugin.getWorkspace().getRoot();
     }
-
+    
     @Override
     public String getResourceAbsolutePath(IResource resource) {
         if (resource == null) {
