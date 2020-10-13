@@ -64,7 +64,7 @@ import com.google.common.collect.Lists;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
-import com.salesforce.bazel.eclipse.config.BazelEclipseProjectFactory;
+import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
@@ -258,6 +258,6 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private boolean importInProgress() {
         // what's the right way to do this?
-        return BazelEclipseProjectFactory.importInProgress.get();
+        return ProjectImporterFactory.importInProgress.get();
     }
 }
