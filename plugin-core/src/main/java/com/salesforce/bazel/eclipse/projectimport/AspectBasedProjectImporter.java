@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
+ * Copyright (c) 2020, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -33,7 +33,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.eclipse.config;
+package com.salesforce.bazel.eclipse.projectimport;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -45,8 +45,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IFile;
@@ -71,6 +71,7 @@ import com.salesforce.bazel.eclipse.builder.BazelBuilder;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
+import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
@@ -93,31 +94,28 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 
 /**
- * A factory class to create Eclipse projects from packages in a Bazel workspace.
- * <p>
- * TODO add test coverage.
+ * This is the original, (bazel) aspect based project importer.
  */
-public class BazelEclipseProjectFactory {
-    static final LogHelper LOG = LogHelper.log(BazelEclipseProjectFactory.class);
+class AspectBasedProjectImporter implements ProjectImporter {
+    
+    static final LogHelper LOG = LogHelper.log(AspectBasedProjectImporter.class);
 
     static final String STANDARD_VM_CONTAINER_PREFIX = "org.eclipse.jdt.launching.JRE_CONTAINER/"
             + "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-";
 
-    // signals that we are in a delicate bootstrapping operation
-    public static AtomicBoolean importInProgress = new AtomicBoolean(false);
+    private final BazelPackageLocation bazelWorkspaceRootPackageInfo;
+    private final List<BazelPackageLocation> selectedBazelPackages;
+    private final ProjectOrderResolver projectOrderResolver;
+    
+    AspectBasedProjectImporter(BazelPackageLocation bazelWorkspaceRootPackageInfo, List<BazelPackageLocation> selectedBazelPackages, ProjectOrderResolver projectOrderResolver) {
+        this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
+        this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
+        this.projectOrderResolver = Objects.requireNonNull(projectOrderResolver);
+    }
 
-    /**
-     * Imports a workspace. This could either be an initial import into a blank workspace, or an incremental import
-     * of additional projects into an existing workspace.
-     * 
-     * TODO test the return assumption below with incremental import
-     *
-     * @return the list of Eclipse IProject objects created during this import; projects that were created during a previous
-     *    import for this Eclipse workspace will not be returned
-     */
-    public static List<IProject> importWorkspace(BazelPackageLocation bazelWorkspaceRootPackageInfo,
-            List<BazelPackageLocation> selectedBazelPackages, ProjectOrderResolver importOrderResolver,
-            WorkProgressMonitor progressMonitor, IProgressMonitor monitor) {
+    @Override
+    public List<IProject> run(WorkProgressMonitor progressMonitor, IProgressMonitor monitor) {
+
         SimplePerfRecorder.reset();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         
@@ -143,7 +141,7 @@ public class BazelEclipseProjectFactory {
         }
         
         // Set the flag that an import is in progress
-        importInProgress.set(true);
+        ProjectImporterFactory.importInProgress.set(true);
 
         // clear out state flag in the Bazel classpath initializer in case there was a previous failed import run
         BazelClasspathContainerInitializer.isCorrupt.set(false);
@@ -181,7 +179,7 @@ public class BazelEclipseProjectFactory {
 
         startTimeMS = System.currentTimeMillis();
         Iterable<BazelPackageLocation> postOrderedModules =
-                importOrderResolver.computePackageOrder(bazelWorkspaceRootPackageInfo, selectedBazelPackages, aspects);
+                projectOrderResolver.computePackageOrder(bazelWorkspaceRootPackageInfo, selectedBazelPackages, aspects);
         SimplePerfRecorder.addTime("import_computeorder", startTimeMS);
 
         // finally, create an Eclipse Project for each Bazel Package being imported
@@ -202,7 +200,7 @@ public class BazelEclipseProjectFactory {
 
         subMonitor.done();
         // reset flag that indicates we are doing import
-        importInProgress.set(false);
+        ProjectImporterFactory.importInProgress.set(false);
 
         SimplePerfRecorder.logResults();
 
@@ -213,8 +211,7 @@ public class BazelEclipseProjectFactory {
             List<IProject> previouslyImportedProjects, List<IProject> currentlyImportedProjectsList, int javaLanguageVersion) {
         List<String> packageSourceCodeFSPaths = new ArrayList<>();
         List<String> packageBazelTargets = new ArrayList<>();
-        BazelEclipseProjectFactory.computePackageSourceCodePaths(packageInfo, packageSourceCodeFSPaths,
-            packageBazelTargets);
+        computePackageSourceCodePaths(packageInfo, packageSourceCodeFSPaths, packageBazelTargets);
 
         String eclipseProjectNameForBazelPackage = computeEclipseProjectNameForBazelPackage(packageInfo, previouslyImportedProjects, currentlyImportedProjectsList);
         URI eclipseProjectLocation = null; // let Eclipse use the default location
@@ -345,8 +342,8 @@ public class BazelEclipseProjectFactory {
                 createBaseEclipseProject(projectName, eclipseProjectLocation, bazelWorkspaceRootDirectory);
         BazelProject bazelProject = bazelProjectManager.getProject(projectName);
         try {
-            addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID);
-            addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID);
+            ProjectImporterUtils.addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID);
+            ProjectImporterUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID);
             BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
             projMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), packageFSPath,
                 bazelTargets, ImmutableList.of()); // TODO pass buildFlags
@@ -582,22 +579,6 @@ public class BazelEclipseProjectFactory {
         return createdEclipseProject;
     }
 
-    // TODO this code also exists in BazelProjectConfigurator, dedupe
-    static void addNatureToEclipseProject(IProject eclipseProject, String nature) throws CoreException {
-        if (!eclipseProject.hasNature(nature)) {
-            ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-
-            IProjectDescription eclipseProjectDescription = resourceHelper.getProjectDescription(eclipseProject);
-            String[] prevNatures = eclipseProjectDescription.getNatureIds();
-            String[] newNatures = new String[prevNatures.length + 1];
-            System.arraycopy(prevNatures, 0, newNatures, 0, prevNatures.length);
-            newNatures[prevNatures.length] = nature;
-            eclipseProjectDescription.setNatureIds(newNatures);
-
-            resourceHelper.setProjectDescription(eclipseProject, eclipseProjectDescription);
-        }
-    }
-
     /**
      * This method populates the following arguments, based on the value of the specified packageNode:
      *
@@ -701,8 +682,7 @@ public class BazelEclipseProjectFactory {
         // The AspectTargetInfos have useful information that we use during import
         List<String> packageBazelTargets = new ArrayList<>();
         for (BazelPackageLocation childPackageInfo : selectedBazelPackages) {
-            BazelEclipseProjectFactory.computePackageSourceCodePaths(childPackageInfo, new ArrayList<>(),
-                packageBazelTargets);
+            computePackageSourceCodePaths(childPackageInfo, new ArrayList<>(), packageBazelTargets);
         }
 
         // run the aspect for specified targets and get an AspectTargetInfo for each
