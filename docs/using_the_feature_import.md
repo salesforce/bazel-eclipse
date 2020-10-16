@@ -15,17 +15,24 @@ If you do development in multiple Bazel workspaces, you will need to have multip
 
 This issue tracks this limitation: [Support multiple Bazel workspaces in a single Eclipse workspace](https://github.com/salesforce/bazel-eclipse/issues/25)
 
-#### Limitation: Only the Workspace JDK Source Level is Honored
+#### Limitation: Global Java Compiler Compliance Level is not Updated
 
-Currently, only the workspace global *javacopt* setting will be honored.
-If not present, JDK 11 will be assumed.
-For example, if this is in your *.bazelrc* file, JDK 8 will be in every project's build path after import:
+Note also that BEF does not currently configure the *Eclipse Compiler Preferences* during import, which is a global setting for the Eclipse workspace.
+If you launch your Eclipse using JDK8, the default *Compiler Compliance Level* will be set to JDK8 regardless of your Bazel workspace.
+You can manually change this in the Eclipse preferences in *Eclipse -> Preferences -> Java -> Compiler*.
+This will be improved with [Update Eclipse workspace Java compiler compliance level based on Bazel workspace .bazelrc](https://github.com/salesforce/bazel-eclipse/issues/184).
+
+#### Limitation: Only the Bazel Workspace JRE Source Level is Honored
+
+Currently, only the Bazel workspace global *javacopt* setting will be honored when configuring the JRE for each imported project.
+If not present, JRE 11 will be assumed.
+For example, if this is in your *.bazelrc* file, JRE 8 will be in every Eclipse project's build path after import:
 
 ```
 build --javacopt=-source 8 -target 10
 ```
 
-After import, you are free to [change the JDK](using_the_feature_classpath.md) for each project using the Eclipse Build Path user interface.
+After import, you are free to [change the JRE](using_the_feature_classpath.md) for each project using the Eclipse *Build Path* user interface.
 Please see [Support package level JDK configuration for Build Path](https://github.com/salesforce/bazel-eclipse/issues/89) for status on improvement.
 
 #### Limitation: Only Import Conforming Java Packages
