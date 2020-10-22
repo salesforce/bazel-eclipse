@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A lightweight wrapper around java.lang.ProcessBuilder. To make functional testing possible where ProcessBuilder
@@ -39,6 +40,16 @@ public class BazelProcessBuilder {
 
     public BazelProcessBuilder(List<String> args) {
         this.innerProcessBuilder = new ProcessBuilder(args);
+    }
+
+    public BazelProcessBuilder(List<String> args, Map<String, String> bazelEnvironmentVariables) {
+        this.innerProcessBuilder = new ProcessBuilder(args);
+        if (bazelEnvironmentVariables != null) {
+            Map<String, String> liveEnvironmentVariables = this.innerProcessBuilder.environment();
+            if (liveEnvironmentVariables != null) {
+                liveEnvironmentVariables.putAll(bazelEnvironmentVariables);
+            }
+        }
     }
 
     /**

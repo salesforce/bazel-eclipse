@@ -178,7 +178,10 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             super.clean(monitor);
         } else {
             bazelWorkspaceCmdRunner.flushAspectInfoCache();
-            bazelWorkspaceCmdRunner.runBazelClean(null);
+            
+            // TODO make a pref to enable a bazel clean, but in almost any circumstance 'bazel clean' is not correct
+            // https://github.com/salesforce/bazel-eclipse/issues/185
+            // bazelWorkspaceCmdRunner.runBazelClean(null);
         }
 
         BazelClasspathContainer.clean();
