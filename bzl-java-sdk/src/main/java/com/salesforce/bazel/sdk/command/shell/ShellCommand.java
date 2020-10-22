@@ -40,6 +40,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
@@ -65,7 +67,9 @@ public final class ShellCommand implements Command {
     private final SelectOutputStream stdout;
     private final SelectOutputStream stderr;
     private final WorkProgressMonitor progressMonitor;
-    private final long timeoutMS;
+    
+    // TODO ShellCommand timeouts are not usable; if a command times out subsequent commands hang, etc. https://github.com/salesforce/bazel-eclipse/issues/191
+    private long timeoutMS = 0;
 
     private boolean executed = false;
 
@@ -86,13 +90,18 @@ public final class ShellCommand implements Command {
         this.stdout = new SelectOutputStream(stdout, stdoutSelector);
         this.progressMonitor = progressMonitor;
         this.timeoutMS = timeoutMS;
+        
     }
 
     /**
      * Returns a ProcessBuilder configured to run this Command instance.
      */
     public BazelProcessBuilder getProcessBuilder() {
-        BazelProcessBuilder builder = new BazelProcessBuilder(args);
+        // TODO make env variables sent to ShellCommand configurable https://github.com/salesforce/bazel-eclipse/issues/190
+        Map<String, String> bazelEnvironmentVariables = new HashMap<>();
+        bazelEnvironmentVariables.put("PULLER_TIMEOUT", "3000"); // increases default timeout from 600 to 3000 seconds for rules_docker downloads
+        
+        BazelProcessBuilder builder = new BazelProcessBuilder(args, bazelEnvironmentVariables);
         builder.directory(directory);
         return builder;
     }
@@ -119,9 +128,11 @@ public final class ShellCommand implements Command {
         for (String arg : args) {
             command = command + arg + " ";
         }
+        System.out.println("");
         System.out.println("Executing command (timeout = " + timeoutMS + "): " + command);
         long startTimeMS = System.currentTimeMillis();
-
+        boolean success = false;
+        
         try {
             Thread err = copyStream(process.getErrorStream(), stderr);
             Thread out = copyStream(process.getInputStream(), stdout);
@@ -132,6 +143,7 @@ public final class ShellCommand implements Command {
             if (out != null) {
                 out.join(timeoutMS);
             }
+            success = exitCode == 0;
             return exitCode;
         } catch (InterruptedException interrupted) {
             throw interrupted;
@@ -144,7 +156,23 @@ public final class ShellCommand implements Command {
             } else {
                 SimplePerfRecorder.addTime("commmand_" + args.get(0), startTimeMS);
             }
-            System.out.println("Finished command: " + command);
+            
+            // report results to console
+            long elapsedTimeMS = System.currentTimeMillis() - startTimeMS;
+            System.out.println("Finished command ("+elapsedTimeMS+" millis) (success="+success+"): " + command);
+            System.out.println("  >> stdout:");
+            for (String line : stdout.getLines()) {
+                if (!line.trim().isEmpty()) {
+                    System.out.println("  >> "+line);
+                }
+            }
+            System.out.println("  >> stderr:");
+            for (String line : stderr.getLines()) {
+                if (!line.trim().isEmpty()) {
+                    System.out.println("  >> "+line);
+                }
+            }
+            System.out.println("");
         }
     }
 
@@ -169,11 +197,10 @@ public final class ShellCommand implements Command {
             int read;
             try {
                 while ((read = inputStream.read(buffer)) > 0) {
-                    synchronized (outputStream) {
-                        outputStream.write(buffer, 0, read);
-                    }
+                    outputStream.write(buffer, 0, read);
                 }
-            } catch (IOException ex) {
+            } catch (Exception ex) {
+                ex.printStackTrace();
                 // we simply terminate the thread on exceptions
             }
         }

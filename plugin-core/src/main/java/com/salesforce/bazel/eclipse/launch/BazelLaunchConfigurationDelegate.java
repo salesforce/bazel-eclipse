@@ -94,6 +94,10 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
         String projectName = BazelLaunchConfigAttributes.PROJECT.getStringValue(configuration);
         BazelLabel label = new BazelLabel(BazelLaunchConfigAttributes.LABEL.getStringValue(configuration));
         String targetKindStr = BazelLaunchConfigAttributes.TARGET_KIND.getStringValue(configuration);
+        if (targetKindStr == null) {
+            LOG.error("Target is of unknown type. Cannot create a launcher.");
+            return;
+        }
         BazelTargetKind targetKind = BazelTargetKind.valueOfIgnoresCaseRequiresMatch(targetKindStr);
         IProject project = BazelPluginActivator.getResourceHelper().getProjectByName(projectName);
 
