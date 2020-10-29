@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -54,25 +54,25 @@ import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
 
-    protected final BazelJvmClasspath bazelClasspath;
-    
+    protected  BazelJvmClasspath bazelClasspath;
+
     private static List<BazelJvmClasspath> instances = new ArrayList<>();
 
     public BazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException { 
+            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
-    
-    public BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper) 
+
+    public BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper);
-        
+
         bazelClasspath = new BazelJvmClasspath(this.bazelWorkspace, bazelProjectManager, bazelProject,
             new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
         instances.add(bazelClasspath);
     }
-    
+
     @Override
     public String getDescription() {
         return "Bazel Classpath Container";
@@ -83,13 +83,11 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
         // this method is overridden just for a breakpoint opportunity
         return super.getClasspathEntries();
     }
-    
+
     @Override
     protected BazelJvmClasspathResponse computeClasspath() {
-        // the Java SDK will produce a list of logical classpath entries 
-        BazelJvmClasspathResponse computedClasspath = bazelClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
-        
-        return computedClasspath;
+        // the Java SDK will produce a list of logical classpath entries
+        return bazelClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
     }
 
     // TODO this clean() method should not be static

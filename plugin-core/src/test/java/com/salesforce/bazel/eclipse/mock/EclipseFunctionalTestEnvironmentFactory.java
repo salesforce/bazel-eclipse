@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
@@ -112,9 +113,10 @@ public class EclipseFunctionalTestEnvironmentFactory {
 
         ProjectImporterFactory projectImporterFactory = new ProjectImporterFactory(workspaceRootProject, bazelPackagesToImport);
         projectImporterFactory.setImportOrderResolver(new MockImportOrderResolver());
+        projectImporterFactory.skipJREWarmup();
         ProjectImporter projectImporter = projectImporterFactory.build();
         // run the import process (this is actually done in BazelImportWizard.performFinish() when a user is running the show)
-        List<IProject> importedProjectsList =    projectImporter.run(new EclipseWorkProgressMonitor(), null);
+        List<IProject> importedProjectsList = projectImporter.run(new EclipseWorkProgressMonitor(), new MockProgressMonitor());
         mockEclipse.setImportedProjectsList(importedProjectsList);
 
         // do you want to simulate Eclipse calling getClasspath on the classpath container for each project?
@@ -135,5 +137,16 @@ public class EclipseFunctionalTestEnvironmentFactory {
             // eventually this method should accept filter criteria, but for now we are just importing all packages
             bazelPackagesToImport.add(child);
         }
+    }
+
+    private static class MockProgressMonitor implements IProgressMonitor {
+        @Override public void beginTask(String name, int totalWork) {}
+        @Override public void done() {}
+        @Override public void internalWorked(double work) {}
+        @Override public boolean isCanceled() { return false; }
+        @Override public void setCanceled(boolean value) {}
+        @Override public void setTaskName(String name) {}
+        @Override public void subTask(String name) {}
+        @Override public void worked(int work) {}
     }
 }

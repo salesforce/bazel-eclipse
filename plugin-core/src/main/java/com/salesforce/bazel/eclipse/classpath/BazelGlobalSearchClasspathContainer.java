@@ -132,7 +132,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
         BazelJvmClasspathResponse computedClasspath = bazelJvmIndexClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
         long endTime = System.currentTimeMillis();
         
-        BazelPluginActivator.info("BazelSearchContainerClasspath completed indexing in "+(endTime-startTime)+" milliseconds.");
+        BazelPluginActivator.info("BazelGlobalSearchClasspathContainer completed indexing in "+(endTime-startTime)+" milliseconds.");
         
         return computedClasspath;
     }

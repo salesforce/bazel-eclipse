@@ -35,35 +35,69 @@
  */
 package com.salesforce.bazel.eclipse.projectimport;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.salesforce.bazel.eclipse.projectimport.flow.CreateProjectsFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.CreateRootProjectFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.FlowProjectImporter;
+import com.salesforce.bazel.eclipse.projectimport.flow.ImportFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.InitImportFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.InitJREFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.LoadAspectsFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.OrderProjectsFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.SetupClasspathContainersFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.SetupProjectBuildersFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.SetupRootClasspathContainerFlow;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolverImpl;
 
 public class ProjectImporterFactory {
-    
+
+    private static final ImportFlow[] FLOWS_TEMPLATE = {
+            new InitJREFlow(),
+            new InitImportFlow(),
+            new LoadAspectsFlow(),
+            new CreateRootProjectFlow(),
+            new OrderProjectsFlow(),
+            new CreateProjectsFlow(),
+            new SetupProjectBuildersFlow(),
+            new SetupClasspathContainersFlow(),
+            new SetupRootClasspathContainerFlow(),
+        };
+
     // signals that we are in a delicate bootstrapping operation
     public static AtomicBoolean importInProgress = new AtomicBoolean(false);
 
     private final BazelPackageLocation bazelWorkspaceRootPackageInfo;
     private final List<BazelPackageLocation> selectedBazelPackages;
+    private List<ImportFlow> flows;
     private ProjectOrderResolver projectOrderResolver = new ProjectOrderResolverImpl();
-    
+
     public ProjectImporterFactory(
             BazelPackageLocation bazelWorkspaceRootPackageInfo,
             List<BazelPackageLocation> selectedBazelPackages) {
         this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
-        this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);        
+        this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
+        this.flows = new ArrayList<>(Arrays.asList(FLOWS_TEMPLATE));
     }
-    
+
     public void setImportOrderResolver(ProjectOrderResolver projectOrderResolver) {
         this.projectOrderResolver = projectOrderResolver;
     }
-    
+
+    @VisibleForTesting
+    public void skipJREWarmup() {
+        flows = flows.stream().filter(f -> f.getClass() != InitJREFlow.class).collect(Collectors.toList());
+    }
+
     public ProjectImporter build() {
-        return new AspectBasedProjectImporter(bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver);
+        return new FlowProjectImporter(flows.toArray(new ImportFlow[flows.size()]), bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver);
     }
 }

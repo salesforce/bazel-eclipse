@@ -44,7 +44,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -59,6 +58,7 @@ import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.logging.LoggerFacade;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
@@ -113,7 +113,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     private static File bazelExecutable = null;
 
-    // COLLABORATORS 
+    // COLLABORATORS
 
     /**
      * Builder for Bazel commands, which may be a ShellCommandBuilder (for real IDE use) or a MockCommandBuilder (for
@@ -225,7 +225,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
 
     /**
      * Returns the list of targets for the given bazel query
-     * 
+     *
      * @param query
      *            is a String with the bazel query
      */
@@ -302,7 +302,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     public void populateBazelWorkspaceCommandOptions(BazelWorkspaceCommandOptions commandOptions) {
         try {
             ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
-            // to get the options, the verb could be info, build, test etc but 'test' gives us the most coverage of the contexts for options 
+            // to get the options, the verb could be info, build, test etc but 'test' gives us the most coverage of the contexts for options
             argBuilder.add("test").add("--announce_rc");
 
             List<String> outputLines = bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory, null,
@@ -351,7 +351,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * Returns the list of targets found in the BUILD file for the given label. Uses Bazel Query to build the list. This
      * operation is cached internally, so repeated calls in the same label are cheap.
      * <p>
-     * 
+     *
      * @param bazelPackageName
      *            the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
      */
@@ -456,13 +456,13 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, Set<AspectTargetInfo>> getAspectTargetInfoForPackages(
+    public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfoForPackages(
             Collection<BazelPackageLocation> targetPackages, WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        List<String> targetLabels = new ArrayList<>();
+        List<BazelLabel> targetLabels = new ArrayList<>();
         for (BazelPackageLocation pkg : targetPackages) {
             String target = pkg.getBazelPackageFSRelativePath() + ":*";
-            targetLabels.add(target);
+            targetLabels.add(new BazelLabel(target));
         }
 
         return this.aspectHelper.getAspectTargetInfos(targetLabels, progressMonitor, caller);
@@ -479,43 +479,15 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * TODO it would be worthwhile to evaluate whether Aspects are the best way to get build info, as we could otherwise
      * use Bazel Query here as well.
      *
+     * @return Mapping of the requested label to its AspectTargetInfo instances
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<String> targetLabels,
+    public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<String> targetLabels,
             WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        return this.aspectHelper.getAspectTargetInfos(targetLabels, progressMonitor, caller);
-    }
-
-    /**
-     * Runs the analysis of the given list of targets using the build information Bazel Aspect and returns a map of
-     * {@link AspectTargetInfo}-s (key is the label of the target) containing the parsed form of the JSON file created
-     * by the aspect.
-     * <p>
-     * This method caches its results and won't recompute a previously computed version unless
-     * {@link #flushAspectInfoCache()} has been called in between.
-     * <p>
-     * TODO it would be worthwhile to evaluate whether Aspects are the best way to get build info, as we could otherwise
-     * use Bazel Query here as well.
-     *
-     * @throws BazelCommandLineToolConfigurationException
-     */
-    public synchronized Set<AspectTargetInfo> getAspectTargetInfos(String targetLabel,
-            WorkProgressMonitor progressMonitor, String caller)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-
-        Set<String> targetLabels = new TreeSet<>();
-        targetLabels.add(targetLabel);
-        Map<String, Set<AspectTargetInfo>> results =
-                this.aspectHelper.getAspectTargetInfos(targetLabels, progressMonitor, caller);
-
-        Set<AspectTargetInfo> resultSet = results.get(targetLabel);
-        if (resultSet == null) {
-            // this is a non-Java target, just return an empty set
-            resultSet = new TreeSet<>();
-        }
-        return resultSet;
+        Collection<BazelLabel> labels = targetLabels.stream().map(BazelLabel::new).collect(Collectors.toList());
+        return this.aspectHelper.getAspectTargetInfos(labels, progressMonitor, caller);
     }
 
     /**
@@ -529,14 +501,15 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * Clear the AspectTargetInfo cache for the passed target. This flushes the dependency graph for that target.
      */
     public synchronized void flushAspectInfoCache(String target) {
-        this.aspectHelper.flushAspectInfoCache(target);
+        this.aspectHelper.flushAspectInfoCache(new BazelLabel(target));
     }
 
     /**
      * Clear the AspectTargetInfo cache for the passed targets. This flushes the dependency graph for those targets.
      */
     public synchronized void flushAspectInfoCache(Set<String> targets) {
-        this.aspectHelper.flushAspectInfoCache(targets);
+        Set<BazelLabel> labels = targets.stream().map(BazelLabel::new).collect(Collectors.toSet());
+        this.aspectHelper.flushAspectInfoCache(labels);
     }
 
     /**
@@ -544,7 +517,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * contains the package name.
      */
     public synchronized Set<String> flushAspectInfoCacheForPackage(String packageName) {
-        return this.aspectHelper.flushAspectInfoCacheForPackage(packageName);
+        Set<BazelLabel> flushedPackages = this.aspectHelper.flushAspectInfoCacheForPackage(new BazelLabel(packageName));
+        return flushedPackages.stream().map(BazelLabel::getPackagePath).collect(Collectors.toSet());
     }
 
     /**

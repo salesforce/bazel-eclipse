@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -60,6 +60,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
@@ -103,6 +104,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
 
     @Override
     public IClasspathEntry[] getClasspathEntries() {
+        long startTimeMillis = System.currentTimeMillis();
         // Fast exit - check the caller of this method to decide if we need to incur the expense of a full classpath compute
         // The saveContainers() caller is useful if we were persisting classpath data to disk for faster restarts later
         // but currently we feel that is riskier than just recomputing the classpath on restart.
@@ -119,12 +121,12 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
                 }
                 if (i == 4) {
                     // we don't know exactly which index it could be, it dependes on subclassing, etc.
-                    // but the saveContainers method should be in the first 5 entries 
+                    // but the saveContainers method should be in the first 5 entries
                     break;
                 }
             }
         }
-        
+
         /**
          * Observed behavior of Eclipse is that this method can get called multiple times before the first invocation
          * completes, therefore the cache is not as effective as it could be. Synchronize on this instance such that the
@@ -134,10 +136,10 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
         List<IClasspathEntry> eclipseClasspathEntries = new ArrayList<>();
         synchronized (this) {
 
-            // the Java SDK will produce a list of logical classpath entries 
+            // the Java SDK will produce a list of logical classpath entries
             computedClasspath = computeClasspath();
 
-            // convert the logical entries into concrete Eclipse entries			
+            // convert the logical entries into concrete Eclipse entries
             File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
             File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
             for (JvmClasspathEntry entry : computedClasspath.jvmClasspathEntries) {
@@ -157,13 +159,16 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
             }
         } // end synchronized
 
-        // Now update project refs, which includes adding new ones and removing any that may now be obsolete 
+        // Now update project refs, which includes adding new ones and removing any that may now be obsolete
         // (e.g. dep was removed, project removed from IDE workspace)
-        // We need to do this outside of the synchronized block because this next statement requires a lock on the 
-        // Eclipse workspace, and this may take some time to acquire. 
+        // We need to do this outside of the synchronized block because this next statement requires a lock on the
+        // Eclipse workspace, and this may take some time to acquire.
         bazelProjectManager.setProjectReferences(bazelProject, computedClasspath.classpathProjectReferences);
 
         lastComputedClasspath = eclipseClasspathEntries.toArray(new IClasspathEntry[] {});
+
+        SimplePerfRecorder.addTime("classpath_getClasspathEntry", startTimeMillis);
+
         return lastComputedClasspath;
     }
 
@@ -176,11 +181,11 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     public IPath getPath() {
         return eclipseProjectPath;
     }
-    
+
     // OVERRIDES
-    
+
     protected abstract BazelJvmClasspathResponse computeClasspath();
-    
+
     // HELPERS
 
     protected IPath getIPathOnDisk(File bazelOutputBase, File bazelExecRoot, String file) {
