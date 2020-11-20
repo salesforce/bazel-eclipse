@@ -32,7 +32,7 @@ public class TestAspectFileCreator {
             json = createAspectJsonForJavaLibraryTarget(packageRelativePath, packageName, targetName, extraDependencies,
                 sources);
         } else {
-            json = createAspectJsonForJavaTestTarget(packageRelativePath, packageName, targetName, targetName + "-test",
+            json = createAspectJsonForJavaTestTarget(packageRelativePath, packageName, targetName, targetName + "Test",
                 extraDependencies, sources, explicitJavaTestDeps);
         }
 
@@ -121,9 +121,10 @@ public class TestAspectFileCreator {
             // See ImplicitDependencyHelper.java
             // if the workspace is configured to disallow implicit test deps, the BUILD file (and thus the aspect) needs to
             // explicitly include junit/hamcrest
-            explicitDependencies = "\"@junit_junit//jar:jar\",\n    \"org_hamcrest_hamcrest_core//jar:jar\",\n    ";
+            explicitDependencies = "\"@junit_junit//jar:jar\",\n    \"@org_hamcrest_hamcrest_core//jar:jar\",\n    ";
         }
-        String dependencies = explicitDependencies + "\":" + targetName + "\",\n";
+        String targetLabel = packageRelativePath + ":" + targetName;
+        String dependencies = explicitDependencies + "\"" + targetLabel + "\",\n";
         if (extraDependencies != null) {
             dependencies = dependencies + extraDependencies;
         }

@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -85,7 +85,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 undo(eclipseJavaProject.getProject());
                 return;
             }
-            
+
             // create the BazelProject if necessary
             BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
             BazelProject bazelProject = bazelProjectManager.getProject(eclipseProject.getName());
@@ -94,30 +94,39 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 bazelProjectManager.addProject(bazelProject);
             }
 
-            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-            BazelCommandManager commandManager = BazelPluginActivator.getBazelCommandManager();
-            
             boolean isRootProject = eclipseJavaProject.getProject().getName().contains("Bazel Workspace");
             IClasspathContainer container = getClasspathContainer(eclipseProject, isRootProject);
-            
-            if (bazelProjectManager.isValid(bazelWorkspace, commandManager, bazelProject)) {
-                setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
-                importedProjects.add(eclipseJavaProject.getProject());
-            } else if (isRootProject) {
+
+            if (isRootProject) {
                 setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
             } else {
-                // this is not exactly the package path, it is just the leaf node name
-                corruptPackage = eclipseJavaProject.getPath().toString();
-                String errorMsg = generateImportErrorMessage();
-                BazelPluginActivator.error(errorMsg);
-                LOG.error(errorMsg);
-
-                if (!isCorrupt.get()) {
-                    isCorrupt.set(true);
-                    importedProjects.add(eclipseProject);
-                }
-                undo();
+                setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
             }
+
+            // We need more solid import/classpath container error handling
+            // https://github.com/salesforce/bazel-eclipse/issues/193
+//            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+//            BazelCommandManager commandManager = BazelPluginActivator.getBazelCommandManager();
+//
+//
+//            if (bazelProjectManager.isValid(bazelWorkspace, commandManager, bazelProject)) {
+//                setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
+//                importedProjects.add(eclipseJavaProject.getProject());
+//            } else if (isRootProject) {
+//                setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
+//            } else {
+//                // this is not exactly the package path, it is just the leaf node name
+//                corruptPackage = eclipseJavaProject.getPath().toString();
+//                String errorMsg = generateImportErrorMessage();
+//                BazelPluginActivator.error(errorMsg);
+//                LOG.error(errorMsg);
+//
+//                if (!isCorrupt.get()) {
+//                    isCorrupt.set(true);
+//                    importedProjects.add(eclipseProject);
+//                }
+//                undo();
+//            }
 
         } catch (IOException | InterruptedException | BackingStoreException e) {
             BazelPluginActivator.error("Error while creating Bazel classpath container.", e);
@@ -158,7 +167,8 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
         BazelPluginActivator.getBazelProjectManager().flushCaches(projectName, bzlWsCmdRunner);
     }
 
-    // Remove projects imported successfully 
+    // Remove projects imported successfully
+    @SuppressWarnings("unused")
     private void undo() throws CoreException {
         synchronized (importedProjects) {
             if (BazelPluginActivator.getResourceHelper().getEclipseWorkspace().isTreeLocked()) {

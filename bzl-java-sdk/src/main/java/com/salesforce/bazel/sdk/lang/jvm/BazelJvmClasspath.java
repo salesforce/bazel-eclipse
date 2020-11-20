@@ -1,8 +1,32 @@
+/**
+ * Copyright (c) 2020, Salesforce.com, Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ * disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ * following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package com.salesforce.bazel.sdk.lang.jvm;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +40,7 @@ import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -28,7 +53,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * Computes a JVM classpath for a BazelProject based on the dependencies defined in Bazel, including resolving file
  * paths to jar files and accounting for references to BazelProjects.
  * <p>
- * This classpath implementation collapses the dependencies for all Java rules in the package into a single classpath, 
+ * This classpath implementation collapses the dependencies for all Java rules in the package into a single classpath,
  * with entries being either 'main' or 'test' entries. This may not be precise enough for all use cases. Also, targets
  * within the package are excluded from the classpath, as they are presumed to be represented by source code found in
  * source folders.
@@ -69,7 +94,7 @@ public class BazelJvmClasspath {
     /**
      * Computes the JVM classpath for the associated BazelProject
      * <p>
-     * TODO provide different classpath strategies. This one the Maven-like/Eclipse JDT style, where the 
+     * TODO provide different classpath strategies. This one the Maven-like/Eclipse JDT style, where the
      * classpath is the union of the classpaths of all java rules in the package.
      */
     public BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
@@ -122,12 +147,19 @@ public class BazelJvmClasspath {
             // now get the actual list of activated targets, with wildcard resolved using the BUILD file model if necessary
             Set<String> actualActivatedTargets = configuredTargetsForProject.getActualTargets(bazelBuildFileModel);
 
+            Map<BazelLabel, Set<AspectTargetInfo>> targetLabelToAspectTargetInfos =
+                    bazelWorkspaceCmdRunner.getAspectTargetInfos(actualActivatedTargets, progressMonitor, "getClasspathEntries");
+
             for (String targetLabel : actualActivatedTargets) {
                 String targetType = bazelBuildFileModel.getRuleTypeForTarget(targetLabel);
                 boolean isTestTarget = "java_test".equals(targetType);
 
-                Set<AspectTargetInfo> targetInfos = bazelWorkspaceCmdRunner.getAspectTargetInfos(targetLabel,
-                    progressMonitor, "getClasspathEntries");
+                Set<AspectTargetInfo> targetInfos = targetLabelToAspectTargetInfos.get(new BazelLabel(targetLabel));
+
+                if (targetInfos == null) {
+                    logger.warn("Failed to inspect target: " + targetLabel + ", skipping");
+                    targetInfos = Collections.emptySet();
+                }
 
                 for (AspectTargetInfo targetInfo : targetInfos) {
                     if (actualActivatedTargets.contains(targetInfo.getLabel())) {
@@ -136,7 +168,7 @@ public class BazelJvmClasspath {
                         // assumed to be represented by source code entries instead
                         continue;
                     }
-                    
+
                     BazelProject otherProject = getSourceProjectForSourcePaths(targetInfo.getSources());
 
                     if (otherProject == null) {
@@ -164,7 +196,7 @@ public class BazelJvmClasspath {
                                         .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
                             }
                         }
-                    } else { // otherProject != null 
+                    } else { // otherProject != null
                         String otherBazelProjectName = otherProject.name;
                         if (bazelProject.name.equals(otherBazelProjectName)) {
                             // the project referenced is actually the the current project that this classpath container is for
@@ -258,7 +290,6 @@ public class BazelJvmClasspath {
         List<JvmClasspathEntry> classpathEntries = new ArrayList<>();
         classpathEntries.addAll(mainClasspathEntryMap.values());
         classpathEntries.addAll(testClasspathEntryMap.values());
-
         return classpathEntries.toArray(new JvmClasspathEntry[] {});
     }
 

@@ -26,7 +26,7 @@ package com.salesforce.bazel.sdk.command.internal;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +39,7 @@ import org.junit.rules.TemporaryFolder;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.test.MockWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
@@ -56,18 +57,19 @@ public class BazelWorkspaceAspectHelperTest {
     public void testAspectLoading() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
+        BazelLabel label = new BazelLabel("//projects/libs/javalib0:*");
 
         // retrieve the aspects for the target
-        List<String> targets = new ArrayList<>();
-        targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectTargetInfo>> aspectMap =
+        List<BazelLabel> targets = Collections.singletonList(label);
+        Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
                 aspectHelper.getAspectTargetInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
-        assertEquals(4, aspectMap.get("//projects/libs/javalib0:*").size());
+        assertEquals(4, aspectMap.get(label).size());
 
         // now check that the caches are populated
-        assertEquals(1, aspectHelper.aspectInfoCache_current.size());
-        assertEquals(1, aspectHelper.aspectInfoCache_lastgood.size());
+        // javalib0:javalib0, javalib0:javalib0-test, javalib0:*
+        assertEquals(3, aspectHelper.aspectInfoCache_current.size());
+        assertEquals(3, aspectHelper.aspectInfoCache_lastgood.size());
     }
 
     @Test
@@ -75,14 +77,14 @@ public class BazelWorkspaceAspectHelperTest {
     public void testAspectLoadingSpecificTarget() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
+        BazelLabel label = new BazelLabel("//projects/libs/javalib0:javalib0");
 
         // retrieve the aspects for the target
-        List<String> targets = new ArrayList<>();
-        targets.add("//projects/libs/javalib0:javalib0");
-        Map<String, Set<AspectTargetInfo>> aspectMap =
+        List<BazelLabel> targets = Collections.singletonList(label);
+        Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
                 aspectHelper.getAspectTargetInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
-        assertEquals(4, aspectMap.get("//projects/libs/javalib0:javalib0").size()); // TODO this should be only 3 entries, javalib0-test should not be loaded
+        assertEquals(4, aspectMap.get(label).size()); // TODO this should be only 3 entries, javalib0-test should not be loaded
 
         // now check that the caches are populated
         assertEquals(1, aspectHelper.aspectInfoCache_current.size());
@@ -93,11 +95,11 @@ public class BazelWorkspaceAspectHelperTest {
     public void testAspectLoadingAndCaching() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
+        BazelLabel label = new BazelLabel("//projects/libs/javalib0:*");
 
         // retrieve the aspects for the target
-        List<String> targets = new ArrayList<>();
-        targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectTargetInfo>> aspectMap =
+        List<BazelLabel> targets = Collections.singletonList(label);
+        Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
                 aspectHelper.getAspectTargetInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(1, aspectMap.size());
@@ -114,32 +116,32 @@ public class BazelWorkspaceAspectHelperTest {
     public void testAspectCacheFlush() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
+        BazelLabel label = new BazelLabel("//projects/libs/javalib0:*");
 
         // retrieve the aspects for the target
-        List<String> targets = new ArrayList<>();
-        targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectTargetInfo>> aspectMap =
+        List<BazelLabel> targets = Collections.singletonList(label);
+        Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
                 aspectHelper.getAspectTargetInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
-        // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(1, aspectMap.size());
+        assertEquals(label, aspectMap.keySet().iterator().next());
         assertEquals(0, aspectHelper.numberCacheHits);
 
         // ask for the same target again
         aspectMap = aspectHelper.getAspectTargetInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
-        // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(1, aspectMap.size());
+        assertEquals(label, aspectMap.keySet().iterator().next());
         assertEquals(1, aspectHelper.numberCacheHits); // the entries all came from cache
 
         // flush the cache (we do this when the user executes a 'clean' in Eclipse
         aspectHelper.flushAspectInfoCache();
         assertEquals(0, aspectHelper.aspectInfoCache_current.size());
-        assertEquals(0, aspectHelper.aspectInfoCache_wildcards.size());
-        assertEquals(1, aspectHelper.aspectInfoCache_lastgood.size()); // last good is an emergency fallback, not flushed
+        // javalib0:javalib0, javalib0:javalib0-test, javalib0:*
+        assertEquals(3, aspectHelper.aspectInfoCache_lastgood.size()); // last good is an emergency fallback, not flushed
 
         // ask for the same target again
         aspectMap = aspectHelper.getAspectTargetInfos(targets, new MockWorkProgressMonitor(), "testAspectLoading");
-        // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(1, aspectMap.size());
+        assertEquals(label, aspectMap.keySet().iterator().next());
         assertEquals(1, aspectHelper.numberCacheHits); // the entries all came from cache
     }
 

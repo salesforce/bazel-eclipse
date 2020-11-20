@@ -38,6 +38,7 @@ import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.test.MockWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.sdk.command.test.type.MockVersionCommand;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 import com.salesforce.bazel.sdk.workspace.test.TestOptions;
@@ -108,12 +109,13 @@ public class BazelWorkspaceCommandRunnerTest {
         BazelWorkspaceCommandRunner workspaceRunner = env.bazelWorkspaceCommandRunner;
 
         // test the setup, for example we are loading the workspace aspects from the file system
+        String label = "//projects/libs/javalib0:*";
         Set<String> targets = new TreeSet<>();
-        targets.add("//projects/libs/javalib0:*");
-        Map<String, Set<AspectTargetInfo>> aspectMap =
+        targets.add(label);
+        Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
                 workspaceRunner.getAspectTargetInfos(targets, new MockWorkProgressMonitor(), "testWorkspaceRunner");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
-        assertEquals(4, aspectMap.get("//projects/libs/javalib0:*").size());
+        assertEquals(4, aspectMap.get(new BazelLabel(label)).size());
 
         // run a clean, should not throw an exception
         workspaceRunner.runBazelClean(new MockWorkProgressMonitor());

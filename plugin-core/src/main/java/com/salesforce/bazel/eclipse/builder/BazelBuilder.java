@@ -106,6 +106,10 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     @Override
     protected IProject[] build(int kind, Map<String, String> args, IProgressMonitor monitor) throws CoreException {
+        if (importInProgress()) {
+            // during import we run bazel build through a different code path
+            return null;
+        }
         WorkProgressMonitor progressMonitor = new EclipseWorkProgressMonitor(monitor);
         IProject project = getProject();
         progressMonitor.beginTask("Bazel build", 1);
@@ -126,7 +130,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         try {
             boolean buildSuccessful = buildProjects(bazelWorkspaceCmdRunner, Collections.singletonList(project),
                 progressMonitor, null, monitor);
-            if (buildSuccessful && !importInProgress()) {
+            if (buildSuccessful) {
                 IJavaProject[] allImportedProjects = javaCoreHelper.getAllBazelJavaProjects(true);
                 IProject rootWorkspaceProject = Arrays.stream(allImportedProjects)
                         .filter(p -> resourceHelper.isBazelRootProject(p.getProject())).collect(onlyElement())
@@ -178,7 +182,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             super.clean(monitor);
         } else {
             bazelWorkspaceCmdRunner.flushAspectInfoCache();
-            
+
             // TODO make a pref to enable a bazel clean, but in almost any circumstance 'bazel clean' is not correct
             // https://github.com/salesforce/bazel-eclipse/issues/185
             // bazelWorkspaceCmdRunner.runBazelClean(null);

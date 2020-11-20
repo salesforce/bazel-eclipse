@@ -26,6 +26,7 @@ package com.salesforce.bazel.sdk.command.internal;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,22 +36,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Manages running, collecting, and caching all of the build info aspects for a specific workspace.
  */
 public class BazelWorkspaceAspectHelper {
-    static final LogHelper LOG = LogHelper.log(BazelWorkspaceAspectHelper.class);;
+    static final LogHelper LOG = LogHelper.log(BazelWorkspaceAspectHelper.class);
 
     private final BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
     private final BazelCommandExecutor bazelCommandExecutor;
@@ -63,16 +66,11 @@ public class BazelWorkspaceAspectHelper {
     /**
      * Cache of the Aspect data for each target. key=String target (//a/b/c) value=Set<AspectTargetInfo> data that came
      * from running the aspect.
+     *
+     * This cache includes wildcard (//a/b/c:*) targets and concrete targets.
      */
     @VisibleForTesting
-    final Map<String, Set<AspectTargetInfo>> aspectInfoCache_current = new HashMap<>();
-
-    /**
-     * For wildcard targets //a/b/c:* we need to capture the resulting aspects that come from evaluation so that the
-     * underlying list of aspects can be rebuilt from cache
-     */
-    @VisibleForTesting
-    final Map<String, Set<String>> aspectInfoCache_wildcards = new HashMap<>();
+    final Map<BazelLabel, Set<AspectTargetInfo>> aspectInfoCache_current = new HashMap<>();
 
     /**
      * Cache of the Aspect data for each target. key=String target (//a/b/c) value=AspectTargetInfo data that came from
@@ -80,7 +78,7 @@ public class BazelWorkspaceAspectHelper {
      * error into the package, such that the Aspect will fail to run.
      */
     @VisibleForTesting
-    final Map<String, Set<AspectTargetInfo>> aspectInfoCache_lastgood = new HashMap<>();
+    final Map<BazelLabel, Set<AspectTargetInfo>> aspectInfoCache_lastgood = new HashMap<>();
 
     /**
      * Tracks the number of cache hits for getAspectTargetInfos() invocations.
@@ -118,35 +116,18 @@ public class BazelWorkspaceAspectHelper {
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<String, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<String> targets,
+    public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<BazelLabel> targets,
             WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if (progressMonitor != null) {
             progressMonitor.subTask("Load Bazel dependency information");
         }
-        Map<String, Set<AspectTargetInfo>> resultMap = new LinkedHashMap<>();
 
-        for (String target : targets) {
-            // is this a wildcard target? we have to handle that differently
-            // TODO we are no longer using this now that we query each target directly
-            if (target.endsWith("*")) {
-                Set<String> wildcardTargets = aspectInfoCache_wildcards.get(target);
-                if (wildcardTargets != null) {
-                    // we know what sub-targets resolve from the wildcard target, so add each sub-target aspect
-                    for (String wildcardTarget : wildcardTargets) {
-                        getAspectTargetInfoForTarget(wildcardTarget, progressMonitor, caller, resultMap);
-                    }
-                } else {
-                    // we haven't seen this wildcard before, we need to ask bazel what sub-targets it maps to
-                    Map<String, Set<AspectTargetInfo>> wildcardResultMap = new LinkedHashMap<>();
-                    getAspectTargetInfoForTarget(target, progressMonitor, caller, wildcardResultMap);
-                    resultMap.putAll(wildcardResultMap);
-                    aspectInfoCache_wildcards.put(target, wildcardResultMap.keySet());
-                }
-            } else {
-                getAspectTargetInfoForTarget(target, progressMonitor, caller, resultMap);
-            }
+        Map<BazelLabel, Set<AspectTargetInfo>> resultMap = new LinkedHashMap<>();
+        Collection<BazelLabel> cacheMisses = populateFromCache(targets, resultMap, caller);
+        if (!cacheMisses.isEmpty()) {
+            loadTargetInfos(cacheMisses, resultMap, progressMonitor, caller);
         }
 
         if (progressMonitor != null) {
@@ -161,28 +142,25 @@ public class BazelWorkspaceAspectHelper {
      */
     public synchronized void flushAspectInfoCache() {
         this.aspectInfoCache_current.clear();
-        this.aspectInfoCache_wildcards.clear();
     }
 
     /**
      * Clear the AspectTargetInfo cache for the passed target. This flushes the dependency graph for those target.
      */
-    public synchronized void flushAspectInfoCache(String target) {
+    public synchronized void flushAspectInfoCache(BazelLabel target) {
         // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
         // if the target exists in either it will get flushed
         this.aspectInfoCache_current.remove(target);
-        this.aspectInfoCache_wildcards.remove(target);
     }
 
     /**
      * Clear the AspectTargetInfo cache for the passed targets. This flushes the dependency graph for those targets.
      */
-    public synchronized void flushAspectInfoCache(Set<String> targets) {
-        for (String target : targets) {
+    public synchronized void flushAspectInfoCache(Set<BazelLabel> targets) {
+        for (BazelLabel target : targets) {
             // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
             // if the target exists in either it will get flushed
             this.aspectInfoCache_current.remove(target);
-            this.aspectInfoCache_wildcards.remove(target);
         }
     }
 
@@ -190,78 +168,166 @@ public class BazelWorkspaceAspectHelper {
      * Clear the AspectTargetInfo cache for the passed package. This flushes the dependency graph for any target that
      * contains the package name.
      */
-    public synchronized Set<String> flushAspectInfoCacheForPackage(String packageName) {
-        Set<String> flushedTargets = new LinkedHashSet<>();
+    public synchronized Set<BazelLabel> flushAspectInfoCacheForPackage(BazelLabel bazelPackage) {
+        Set<BazelLabel> flushedTargets = new LinkedHashSet<>();
 
         // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
         // if the target exists in either it will get flushed
-        Iterator<String> iter = this.aspectInfoCache_current.keySet().iterator();
+        Iterator<BazelLabel> iter = this.aspectInfoCache_current.keySet().iterator();
         while (iter.hasNext()) {
-            String key = iter.next();
-            if (key.contains(packageName)) {
+            BazelLabel key = iter.next();
+            if (key.getPackagePath().equals(bazelPackage.getPackagePath())) {
                 flushedTargets.add(key);
                 iter.remove();
             }
         }
-        iter = this.aspectInfoCache_wildcards.keySet().iterator();
-        while (iter.hasNext()) {
-            String key = iter.next();
-            if (key.contains(packageName)) {
-                flushedTargets.add(key);
-                iter.remove();
-            }
-        }
-
         return flushedTargets;
     }
 
+
     // INTERNALS
 
-    private void getAspectTargetInfoForTarget(String target, WorkProgressMonitor progressMonitor, String caller,
-            Map<String, Set<AspectTargetInfo>> resultMap)
+    /**
+     * Populates the specified resultMap from cache.  Returns the cache misses.
+     */
+    private synchronized Collection<BazelLabel> populateFromCache(Collection<BazelLabel> labels, Map<BazelLabel, Set<AspectTargetInfo>> resultMap, String caller) {
+        List<BazelLabel> cacheMisses = new ArrayList<>();
+        for (BazelLabel target : labels) {
+            String logstr = getLogStr(target, caller);
+            Set<AspectTargetInfo> aspectInfos = aspectInfoCache_current.get(target);
+            if (aspectInfos == null) {
+                LOG.info("ASPECT CACHE MISS target: " + target + logstr);
+                cacheMisses.add(target);
+            } else {
+                LOG.info("ASPECT CACHE GET target: " + target + logstr);
+                resultMap.put(target, aspectInfos);
+                this.numberCacheHits++;
+            }
+        }
+        return cacheMisses;
+    }
+
+    private synchronized void loadTargetInfos(Collection<BazelLabel> cacheMisses, Map<BazelLabel, Set<AspectTargetInfo>> resultMap, WorkProgressMonitor progressMonitor, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        String logstr = " [target=" + target + ", src=" + caller + "]";
+        List<String> discoveredAspectFilePaths = generateAspectTargetInfoFiles(cacheMisses, progressMonitor);
+        Map<BazelLabel, AspectTargetInfo> aspectInfos = loadAspectFilePaths(discoveredAspectFilePaths);
 
-        Set<AspectTargetInfo> aspectInfos = aspectInfoCache_current.get(target);
-        if (aspectInfos != null) {
-            LOG.info("ASPECT CACHE HIT target: " + target + logstr);
-            resultMap.put(target, aspectInfos);
-            this.numberCacheHits++;
-        } else {
-            LOG.info("ASPECT CACHE MISS target: " + target + logstr);
-            List<String> lookupTargets = new ArrayList<>();
-            lookupTargets.add(target);
-            List<String> discoveredAspectFilePaths = generateAspectTargetInfoFiles(lookupTargets, progressMonitor);
-            ImmutableMap<String, AspectTargetInfo> map =
-                    AspectTargetInfo.loadAspectFilePaths(discoveredAspectFilePaths);
-
-            if (map.size() == 0) {
-                // still don't have the aspect for the target, use the last known one that computed
-                // it could be because the user introduced a compile error in it and the Aspect wont run.
-                // In this case use the last known good result of the Aspect for that target and hope for the best. The lastgood cache is never
-                // cleared, so if the Aspect ran correctly at least once since the IDE started it should be here (but possibly out of date depending
-                // on what changes were introduced along with the compile error)
-                Set<AspectTargetInfo> lastgood = aspectInfoCache_lastgood.get(target);
-                if (lastgood != null) {
-                    resultMap.put(target, lastgood);
+        if (aspectInfos.isEmpty()) {
+            // We were not able to load any aspects, this generally indicates some sort of error condition;
+            // it could be because the user introduced a compile error in it and the Aspect wont run.
+            // In this case use the last known good result of the Aspect for that target and hope for the best. The lastgood cache is never
+            // cleared, so if the Aspect ran correctly at least once since the IDE started it should be here (but possibly out of date depending
+            // on what changes were introduced along with the compile error)
+            for (BazelLabel label : cacheMisses) {
+                Set<AspectTargetInfo> lastgood = aspectInfoCache_lastgood.get(label);
+                if (lastgood == null) {
+                    LOG.info("ASPECT CACHE FAIL target: " + label + getLogStr(label, caller));
                 } else {
-                    LOG.info("ASPECT CACHE FAIL target: " + target + logstr);
+                    resultMap.put(label, lastgood);
+                }
+            }
+        } else {
+            Map<BazelLabel, Set<AspectTargetInfo>> owningLabelToAspectInfos = new HashMap<>();
+            for (BazelLabel label : cacheMisses) {
+                Map<BazelLabel, Set<AspectTargetInfo>> m = assignAspectsToOwningLabel(label, aspectInfos);
+                owningLabelToAspectInfos.putAll(m);
+            }
+            for (BazelLabel label : owningLabelToAspectInfos.keySet()) {
+                Set<AspectTargetInfo> infos = owningLabelToAspectInfos.get(label);
+                aspectInfoCache_current.put(label, infos);
+                aspectInfoCache_lastgood.put(label, infos);
+                LOG.info("ASPECT CACHE PUT target: " + label + getLogStr(label, caller));
+            }
+            for (BazelLabel label : cacheMisses) {
+                // since we just populated the caches above, we should now find results
+                // this could be done in the loop above, but this is good sanity
+                Set<AspectTargetInfo> atis = aspectInfoCache_current.get(label);
+                if (atis == null) {
+                    LOG.warn("ASPECT CACHE BUG target: " + label + getLogStr(label, caller));
+                    atis = Collections.emptySet();
+                }
+                resultMap.put(label, atis);
+            }
+        }
+    }
+
+    /**
+     * This method creates and returns a mapping of a Label to the AspectTargetInfo (ATI)
+     * instances belonging to that Label. These ATI instances are the transitive closure of
+     * ATIs referenced by the mapped Label.
+     *
+     * This method behaves differently based on whatever the specified requestingLabel is a wildcard
+     * label or a concrete Label:
+     *
+     * If the specified requestedLabel is concrete (//a/b/c), this method returns a single mapping:
+     * BazelLabel(//a/b/c) -> Set of all ATI instances (transitive closure) owned by that label.
+     *
+     * If the specified requestingLabel is a wildcard label (//a/b/c:*), this method looks at all
+     * ATIs passed into this method and returns a mapping for each that has the same Bazel Package
+     * as the specified owningLabel, in additional to the mapping for the wildcard target.
+     *
+     * For example, with ATIs for these targets: //a/b/c:t1 and //a/b/c:t2 and a requestingLabel of
+     * //a/b/c:*, this method returns:
+     *
+     * //a/b/c:* -> all specified ATIs
+     * //a/b/c:t1 -> transitive closure of ATIs for t1
+     * //a/b/c:t2 -> transitive closure of ATIs for t2
+     */
+    private static Map<BazelLabel, Set<AspectTargetInfo>> assignAspectsToOwningLabel(BazelLabel requestingLabel,
+            Map<BazelLabel, AspectTargetInfo> depNameToTargetInfo)
+    {
+        Map<BazelLabel, Set<AspectTargetInfo>> transitivesClosures = new HashMap<>();
+
+        // find starting point, based on target - this is trivial, but we also support wildcard
+        // targets (so that we can run a single bazal build cmd and get all aspects)
+        for (AspectTargetInfo ati : depNameToTargetInfo.values()) {
+            BazelLabel currentLabel = new BazelLabel(ati.getLabel());
+            if (requestingLabel.isConcrete()) {
+                if (requestingLabel.equals(currentLabel)) {
+                    Set<AspectTargetInfo> allDeps = getTransitiveClosure(ati, depNameToTargetInfo);
+                    transitivesClosures.put(new BazelLabel(ati.getLabel()), allDeps);
                 }
             } else {
-                Set<AspectTargetInfo> values = new HashSet<>();
-                for (AspectTargetInfo info : map.values()) {
-                    values.add(info); // TODO this is super dumb, immutablemap causes type issues, fix it
+                // all targets in the requested package qualify
+                if (currentLabel.getPackagePath().equals(requestingLabel.getPackagePath())) {
+                    Set<AspectTargetInfo> allDeps = getTransitiveClosure(ati, depNameToTargetInfo);
+                    transitivesClosures.put(new BazelLabel(ati.getLabel()), allDeps);
                 }
-                resultMap.put(target, values);
-                LOG.info("ASPECT CACHE LOAD target: " + target + logstr);
-                aspectInfoCache_current.put(target, values);
-                aspectInfoCache_lastgood.put(target, values);
             }
         }
 
-        if (progressMonitor != null) {
-            progressMonitor.worked(resultMap.size());
+        if (!requestingLabel.isConcrete()) {
+            // also return a mapping of wildcard target -> all AspectTargetInfo instances
+            transitivesClosures.put(requestingLabel, new HashSet<>(depNameToTargetInfo.values()));
         }
+
+        return transitivesClosures;
+
+    }
+
+    private static Set<AspectTargetInfo> getTransitiveClosure(AspectTargetInfo aspectTargetInfo,
+            Map<BazelLabel, AspectTargetInfo> depNameToTargetInfo)
+    {
+        Set<AspectTargetInfo> allDeps = new HashSet<>();
+        List<AspectTargetInfo> queue = new ArrayList<>();
+        queue.add(aspectTargetInfo);
+        while (!queue.isEmpty()) {
+           AspectTargetInfo ati = queue.remove(0);
+           if (ati != aspectTargetInfo) {
+               allDeps.add(ati);
+           }
+           List<String> depLabels = ati.getDeps();
+           for (String label : depLabels) {
+               BazelLabel depLabel = new BazelLabel(label);
+               AspectTargetInfo dep = depNameToTargetInfo.get(depLabel);
+               if (dep == null) {
+                   throw new RuntimeException("No AspectTargetInstance exists for " + depLabel + " - this is a bug");
+               } else {
+                   queue.add(dep);
+               }
+            }
+        }
+        return Collections.unmodifiableSet(allDeps);
     }
 
     /**
@@ -270,12 +336,16 @@ public class BazelWorkspaceAspectHelper {
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    private synchronized List<String> generateAspectTargetInfoFiles(Collection<String> targets,
+    private synchronized List<String> generateAspectTargetInfoFiles(Collection<BazelLabel> targets,
             WorkProgressMonitor progressMonitor)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        List<String> args =
-                ImmutableList.<String> builder().add("build").addAll(this.aspectOptions).addAll(targets).build();
+        Preconditions.checkArgument(!targets.isEmpty(), "Do not call without targets");
+
+        List<String> args = new ArrayList<>();
+        args.add("build");
+        args.addAll(this.aspectOptions);
+        args.addAll(targets.stream().map(BazelLabel::toString).collect(Collectors.toList()));
 
         // Strip out the artifact list, keeping the xyz.bzleclipse-build.json files (located in subdirs in the bazel-out path)
         // Line must start with >>> and end with the aspect file suffix
@@ -289,4 +359,17 @@ public class BazelWorkspaceAspectHelper {
         return listOfGeneratedFilePaths;
     }
 
+    private static String getLogStr(BazelLabel target, String caller) {
+        return " [target=" + target + ", src=" + caller + "]";
+    }
+
+    public static Map<BazelLabel, AspectTargetInfo> loadAspectFilePaths(List<String> aspectFilePaths)
+            throws IOException, InterruptedException {
+        Map<String, AspectTargetInfo> lToAtis = AspectTargetInfo.loadAspectFilePaths(aspectFilePaths);
+        Map<BazelLabel, AspectTargetInfo> bzToAtis = new HashMap<>(lToAtis.size());
+        for (Map.Entry<String, AspectTargetInfo> e : lToAtis.entrySet()) {
+            bzToAtis.put(new BazelLabel(e.getKey()), e.getValue());
+        }
+        return bzToAtis;
+    }
 }
