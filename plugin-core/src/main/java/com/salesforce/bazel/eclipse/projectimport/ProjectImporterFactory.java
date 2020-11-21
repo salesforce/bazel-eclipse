@@ -40,7 +40,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.salesforce.bazel.eclipse.projectimport.flow.CreateProjectsFlow;
@@ -60,18 +59,6 @@ import com.salesforce.bazel.sdk.workspace.ProjectOrderResolverImpl;
 
 public class ProjectImporterFactory {
 
-    private static final ImportFlow[] FLOWS_TEMPLATE = {
-            new InitJREFlow(),
-            new InitImportFlow(),
-            new LoadAspectsFlow(),
-            new CreateRootProjectFlow(),
-            new OrderProjectsFlow(),
-            new CreateProjectsFlow(),
-            new SetupProjectBuildersFlow(),
-            new SetupClasspathContainersFlow(),
-            new SetupRootClasspathContainerFlow(),
-        };
-
     // signals that we are in a delicate bootstrapping operation
     public static AtomicBoolean importInProgress = new AtomicBoolean(false);
 
@@ -83,10 +70,18 @@ public class ProjectImporterFactory {
     public ProjectImporterFactory(
             BazelPackageLocation bazelWorkspaceRootPackageInfo,
             List<BazelPackageLocation> selectedBazelPackages) {
+        this(bazelWorkspaceRootPackageInfo, selectedBazelPackages, createFlows());
+    }
+
+    ProjectImporterFactory(
+            BazelPackageLocation bazelWorkspaceRootPackageInfo,
+            List<BazelPackageLocation> selectedBazelPackages,
+            List<ImportFlow> flows) {
         this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
         this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
-        this.flows = new ArrayList<>(Arrays.asList(FLOWS_TEMPLATE));
+        this.flows = Objects.requireNonNull(flows);
     }
+
 
     public void setImportOrderResolver(ProjectOrderResolver projectOrderResolver) {
         this.projectOrderResolver = projectOrderResolver;
@@ -94,10 +89,28 @@ public class ProjectImporterFactory {
 
     @VisibleForTesting
     public void skipJREWarmup() {
-        flows = flows.stream().filter(f -> f.getClass() != InitJREFlow.class).collect(Collectors.toList());
+        flows.removeIf(flow -> flow.getClass() == InitJREFlow.class);
     }
 
     public ProjectImporter build() {
         return new FlowProjectImporter(flows.toArray(new ImportFlow[flows.size()]), bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver);
+    }
+
+    private static List<ImportFlow> createFlows() {
+        // each project import uses a new list of flow instances so that flows can have state
+        // the List returned here needs to be modifiable
+        return new ArrayList<>(
+            Arrays.asList(
+                new ImportFlow[] {
+                    new InitJREFlow(),
+                    new InitImportFlow(),
+                    new LoadAspectsFlow(),
+                    new CreateRootProjectFlow(),
+                    new OrderProjectsFlow(),
+                    new CreateProjectsFlow(),
+                    new SetupProjectBuildersFlow(),
+                    new SetupClasspathContainersFlow(),
+                    new SetupRootClasspathContainerFlow(),
+            }));
     }
 }

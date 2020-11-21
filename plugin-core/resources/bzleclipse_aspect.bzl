@@ -67,34 +67,35 @@ def jars_from_output(output):
 
 def java_rule_ide_info(target, ctx):
   if hasattr(ctx.rule.attr, "srcs"):
-     sources = [artifact_location_or_none(file)
-                for src in ctx.rule.attr.srcs
-                for file in src.files.to_list()]
+    sources = [artifact_location_or_none(file)
+               for src in ctx.rule.attr.srcs
+               for file in src.files.to_list()]
   else:
-     sources = []
+    sources = []
 
   jars = []
-  classpath_jars = depset()
-  if target[JavaInfo].outputs.jars != None and len(target[JavaInfo].outputs.jars) > 0:
-    # standard Java library or test rule
-    jars = [library_artifact(target, output) for output in target[JavaInfo].outputs.jars]
-    classpath_jars = depset([jar
-       for output in target[JavaInfo].outputs.jars
-       for jar in jars_from_output(output)])
-  else:
-    # proto-java library rules end up in here, no jars listed on the output object, so we resort to using transitive_runtime_deps
-    #print("No output jars for "+target.label.name+", resorting to use transitive_runtime_deps")
-    
-    if target[JavaInfo].transitive_runtime_deps != None:
-      # transitive_runtime_deps is a depset of File objects
-      #print("Adding class jars via transitive_runtime_deps for "+target.label.name)
-      jars = [library_artifact_onlyclasses(target, output) for output in target[JavaInfo].transitive_runtime_deps.to_list()]
-      classpath_jars = depset([jar for jar in target[JavaInfo].transitive_runtime_deps.to_list()])
-
   gen_jars = []
-  if target[JavaInfo].annotation_processing and target[JavaInfo].annotation_processing.enabled:
-    gen_jars = [annotation_processing_jars(target[JavaInfo].annotation_processing)]
-    classpath_jars =  depset([ jar
+  classpath_jars = depset()
+  if JavaInfo in target:
+    if target[JavaInfo].outputs.jars != None and len(target[JavaInfo].outputs.jars) > 0:
+        # standard Java library or test rule
+      jars = [library_artifact(target, output) for output in target[JavaInfo].outputs.jars]
+      classpath_jars = depset([jar
+        for output in target[JavaInfo].outputs.jars
+        for jar in jars_from_output(output)])
+    else:
+      # proto-java library rules end up in here, no jars listed on the output object, so we resort to using transitive_runtime_deps
+      #print("No output jars for "+target.label.name+", resorting to use transitive_runtime_deps")
+    
+      if target[JavaInfo].transitive_runtime_deps != None:
+        # transitive_runtime_deps is a depset of File objects
+        #print("Adding class jars via transitive_runtime_deps for "+target.label.name)
+        jars = [library_artifact_onlyclasses(target, output) for output in target[JavaInfo].transitive_runtime_deps.to_list()]
+        classpath_jars = depset([jar for jar in target[JavaInfo].transitive_runtime_deps.to_list()])
+
+    if target[JavaInfo].annotation_processing and target[JavaInfo].annotation_processing.enabled:
+      gen_jars = [annotation_processing_jars(target[JavaInfo].annotation_processing)]
+      classpath_jars =  depset([jar
         for jar in [target[JavaInfo].annotation_processing.class_jar,
                     target[JavaInfo].annotation_processing.source_jar]
         if jar != None and not jar.is_source], transitive = [classpath_jars])
@@ -120,6 +121,7 @@ def _aspect_impl(target, ctx):
 
   json_files = []
   classpath_jars = depset()
+  target_classpath_jars = depset()
   all_deps = []
 
   #print("Aspect Target: "+target.label.name)
@@ -146,23 +148,27 @@ def _aspect_impl(target, ctx):
         all_deps += [str(dep.label) for dep in deps]
         hasDepAttr = True
 
-  hasJavaAttr = False
-  if JavaInfo in target:
-    hasJavaAttr = True
-    (java_rule_ide_info_struct, target_classpath_jars) = java_rule_ide_info(target, ctx)
-    json_data = struct(
-        label = str(target.label),
-        kind = rule_kind,
-        dependencies = all_deps,
-        build_file_artifact_location = ctx.build_file_path,
-    ) + java_rule_ide_info_struct
-    classpath_jars = depset(target_classpath_jars.to_list(), transitive = [classpath_jars])
-    json_file_path = ctx.actions.declare_file(target.label.name + ".bzleclipse-build.json")
-    ctx.actions.write(json_file_path, json_data.to_json())
+
+  (java_rule_ide_info_struct, target_classpath_jars) = java_rule_ide_info(target, ctx)
+  json_data = struct(
+      label = str(target.label),
+      kind = rule_kind,
+      dependencies = all_deps,
+      build_file_artifact_location = ctx.build_file_path,
+  ) + java_rule_ide_info_struct
+  classpath_jars = depset(target_classpath_jars.to_list(), transitive = [classpath_jars])
+  json_file_path = ctx.actions.declare_file(target.label.name + ".bzleclipse-build.json")
+
+  # we write a json file for every target encountered, regardless of whether
+  # the target provides a JavaInfo, so that we do not end up with dangling dep
+  # references: every dep references in a json file also has its own top level
+  # json file
+  ctx.actions.write(json_file_path, json_data.to_json())
     #print("  JSON FILE PATH")
     #print(json_file_path)
-    json_files += [json_file_path]
+  json_files += [json_file_path]
 
+  #hasJavaAttr = JavaInfo in target
   #print(target.label.name+"  Attr State: DEP: %r JAVA: %r" % (hasDepAttr, hasJavaAttr))
   #print("  JSON FILES")
   #print(json_files)
