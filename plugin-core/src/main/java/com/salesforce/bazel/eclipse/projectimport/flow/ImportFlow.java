@@ -28,8 +28,6 @@ import org.eclipse.core.runtime.CoreException;
 /**
  * A single project import step.
  *
- * ImportFlow implementations must be stateless.
- *
  * @author stoens
  * @since Fall 2020
  */

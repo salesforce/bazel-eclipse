@@ -54,7 +54,7 @@ import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
 
-    protected  BazelJvmClasspath bazelClasspath;
+    protected final BazelJvmClasspath bazelClasspath;
 
     private static List<BazelJvmClasspath> instances = new ArrayList<>();
 

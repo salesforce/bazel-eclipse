@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -41,13 +41,15 @@ package com.salesforce.bazel.sdk.model;
  * <b>IMPORTANT NOTE</b> internally this class assumes that '/' is the path separator used in label/target names. This
  * will most likely need to get fixed to support running on Windows.
  * </p>
- * 
+ *
  * @author stoens
  * @since Hawaii 2019
  */
 public class BazelLabel {
 
-    private final String label;
+    private final String localLabelPart;
+    private final String repositoryName;
+    private final String fullLabel;
 
     /**
      * A BazelLabel instance can be created with any syntactically valid Bazel Label String.
@@ -58,9 +60,45 @@ public class BazelLabel {
      * blah/...<br>
      */
     public BazelLabel(String label) {
-        validate(label);
-        this.label = normalize(label);
+        if (label == null) {
+            throw new IllegalArgumentException("label cannot be null");
+        }
+        if (label.startsWith("@")) {
+            int i = label.indexOf("//");
+            this.repositoryName = label.substring(1, i);
+            label = label.substring(i);
+        } else {
+            this.repositoryName = null;
+        }
+        label = sanitize(label);
+        this.localLabelPart = label;
+        this.fullLabel = getFullLabel(this.repositoryName, this.localLabelPart);
     }
+
+    private BazelLabel(String repositoryName, String localLabelPart) {
+        this.repositoryName = repositoryName;
+        this.localLabelPart = sanitize(localLabelPart);
+        this.fullLabel = getFullLabel(repositoryName, localLabelPart);
+    }
+
+    /**
+     * Returns the label as a String.
+     *
+     * @return the label
+     */
+    public String getLabel() {
+        return fullLabel;
+    }
+
+    /**
+     * Returns the repository of this label, null if no repository was specified for this label.
+     *
+     * @return the repository name, without the leading '@' and trailing "//"
+     */
+    public String getRepositoryName() {
+        return repositoryName;
+    }
+
 
     /**
      * If a label omits the target name it refers to and it doesn't use wildcard syntax, it refers to the
@@ -72,7 +110,7 @@ public class BazelLabel {
         if (!isConcrete()) {
             return false;
         }
-        int i = this.label.lastIndexOf(":");
+        int i = this.localLabelPart.lastIndexOf(":");
         return i == -1;
     }
 
@@ -82,19 +120,19 @@ public class BazelLabel {
      * @return true if this instance represents a concrete label, false otherwise
      */
     public boolean isConcrete() {
-        return !this.label.endsWith("*") && !this.label.endsWith("...");
+        return !this.localLabelPart.endsWith("*") && !this.localLabelPart.endsWith("...");
     }
 
     /**
      * Returns the package path of this label, which is the "path part" of the label, excluding any specific target or
      * target wildcard pattern.
-     * 
+     *
      * For example, given a label //foo/blah/goo:t1, the package path is foo/blah/goo.
-     * 
+     *
      * @return the package path of this label
      */
     public String getPackagePath() {
-        String packagePath = this.label;
+        String packagePath = this.localLabelPart;
         int i = packagePath.lastIndexOf("...");
         if (i != -1) {
             packagePath = packagePath.substring(0, i);
@@ -102,7 +140,7 @@ public class BazelLabel {
                 packagePath = packagePath.substring(0, packagePath.length() - 1);
             }
         } else {
-            i = this.label.lastIndexOf(":");
+            i = this.localLabelPart.lastIndexOf(":");
             if (i != -1) {
                 packagePath = packagePath.substring(0, i);
             }
@@ -113,22 +151,22 @@ public class BazelLabel {
     /**
      * Returns the default package label for this label. The default package label does not specify an explicit target
      * and only corresponds to the package path.
-     * 
+     *
      * For example, given //foo/blah/goo:t1, the corresponding default package label is //foo/blah/goo.
-     * 
+     *
      * @return BazelLabel instance representing the default package label.
      * @throws IllegalArgumentException
      *             if this label is a root-level label (//...) and therefore doesn't have a package path.
      */
     public BazelLabel getDefaultPackageLabel() {
-        return new BazelLabel(getPackagePath());
+        return new BazelLabel(repositoryName, getPackagePath());
     }
 
     /**
      * Returns the package name of this label, which is the right-most path component of the package path.
-     * 
+     *
      * For example, given a label //foo/blah/goo:t1, the package name is goo.
-     * 
+     *
      * @return the package name of this label
      */
     public String getPackageName() {
@@ -147,9 +185,9 @@ public class BazelLabel {
             if (isPackageDefault()) {
                 return getPackageName();
             } else {
-                int i = this.label.lastIndexOf(":");
+                int i = this.localLabelPart.lastIndexOf(":");
                 // label cannot end with ":", so this is ok
-                return this.label.substring(i + 1);
+                return this.localLabelPart.substring(i + 1);
             }
         } else {
             return null;
@@ -159,10 +197,10 @@ public class BazelLabel {
     /**
      * Some Bazel Target names use a path-like syntax. This method returns the last component of that path. If the
      * target name doesn't use a path-like syntax, this method returns the target name.
-     * 
+     *
      * For example: if the target name is "a/b/c/d", this method returns "d". if the target name is "a/b/c/", this
      * method returns "c". if the target name is "foo", this method returns "foo".
-     * 
+     *
      * @return the last path component of the target name if the target name is path-like
      */
     public String getLastComponentOfTargetName() {
@@ -178,15 +216,6 @@ public class BazelLabel {
     }
 
     /**
-     * Returns the label as a String.
-     *
-     * @return the label
-     */
-    public String getLabel() {
-        return "//" + this.label;
-    }
-
-    /**
      * Adds package wildcard syntax to a package default label.
      *
      * For example: //foo/blah -> //foo:blah:*
@@ -197,14 +226,14 @@ public class BazelLabel {
      */
     public BazelLabel toPackageWildcardLabel() {
         if (!isPackageDefault()) {
-            throw new IllegalStateException("label " + this.label + " is not package default");
+            throw new IllegalStateException("label " + this.localLabelPart + " is not package default");
         }
-        return new BazelLabel(this.label + ":*");
+        return new BazelLabel(this.repositoryName, getPackagePath() + ":*");
     }
 
     @Override
     public int hashCode() {
-        return label.hashCode();
+        return fullLabel.hashCode();
     }
 
     @Override
@@ -214,17 +243,17 @@ public class BazelLabel {
         }
         if (other instanceof BazelLabel) {
             BazelLabel o = (BazelLabel) other;
-            return label.equals(o.label);
+            return fullLabel.equals(o.fullLabel);
         }
         return false;
     }
 
     @Override
     public String toString() {
-        return getLabel();
+        return this.fullLabel;
     }
 
-    private static void validate(String label) {
+    private static String sanitize(String label) {
         if (label == null) {
             throw new IllegalArgumentException(label);
         }
@@ -241,14 +270,13 @@ public class BazelLabel {
         if (label.equals("//")) {
             throw new IllegalArgumentException(label);
         }
-    }
-
-    private static String normalize(String label) {
-        label = label.trim();
-        // internally we store the label without leading "//"
         if (label.startsWith("//")) {
             label = label.substring(2);
         }
         return label;
+    }
+
+    private static String getFullLabel(String repositoryName, String localLabelPart) {
+        return (repositoryName == null ? "" : "@" + repositoryName) +  "//" + localLabelPart;
     }
 }
