@@ -81,12 +81,13 @@ public class FlowProjectImporter implements ProjectImporter {
             flow.assertContextState(ctx);
             try {
                 flow.run(ctx);
-            } catch (CoreException ex) {
+            } catch (Throwable th) {
+                th.printStackTrace();
                 // this needs to be handled better - generally, error handing is still a mess
                 // this could call a cleanup method on each Flow instance already processed if we
                 // need to undo work done so far
                 // https://github.com/salesforce/bazel-eclipse/issues/193
-                throw new RuntimeException(ex);
+                throw new RuntimeException(th);
             }
             SimplePerfRecorder.addTime("import_" + flow.getClass().getSimpleName(), startTimeMillis);
         }
