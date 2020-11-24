@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.salesforce.bazel.sdk.logging.LogHelper;
+
 /**
  * The Bazel dependency graph of the entire workspace. This is implemented using simple Java JDK primitives rather than
  * bring in a new graph dependency for the purpose. It is a directed acyclic graph with multiple root/starting nodes. It
@@ -33,6 +35,8 @@ import java.util.TreeMap;
  */
 public class BazelDependencyGraph {
 
+    private static final LogHelper LOG = LogHelper.log(BazelDependencyGraph.class);
+
     // lookup maps
     Set<String> rootLabels = new LinkedHashSet<>();
     Set<String> leafLabels = new LinkedHashSet<>();
@@ -52,7 +56,7 @@ public class BazelDependencyGraph {
 
     /**
      * Makes a dependency from source -> dep
-     * 
+     *
      * @param sourceLabel
      *            the label for the source package (//a/b/c)
      * @param depLabel
@@ -153,20 +157,20 @@ public class BazelDependencyGraph {
         /*
          * This is a simple algorithm. It is based on the idea that this method will be used in cases
          * in which the dependency graph can be HUGE (100,000+ edges, 10,000+ nodes) and COMPLEX (lots of overlap
-         * of trees). And the user is likely working on a small subset of that graph. 
-         * For example, an IDE user wants to import a handful of related packages from a monorepo in which 
+         * of trees). And the user is likely working on a small subset of that graph.
+         * For example, an IDE user wants to import a handful of related packages from a monorepo in which
          * hundreds/thousands of packages live, and most of the dependency graph is not reachable by the
          * imported packages. It still works if the selectedLabels reach most/all of the graph, it just is
-         * not the most efficient solution in those cases. 
+         * not the most efficient solution in those cases.
          */
 
         Map<String, Boolean> depCache = new HashMap<>();
         for (int i = 0; i < selectedLabels.size(); i++) {
             /*
              * Why do we do the ordering more than once? There are cases in which a single pass, or even two,
-             * will not be correct. Since we cache isDep() decisions (the expensive part) multiple passes are  
-             * a cheap operation, so just do it as many times as there are elements in the selected array. 
-             * In all known cases the answer will be correct. But this is not guaranteed. If you find a use case 
+             * will not be correct. Since we cache isDep() decisions (the expensive part) multiple passes are
+             * a cheap operation, so just do it as many times as there are elements in the selected array.
+             * In all known cases the answer will be correct. But this is not guaranteed. If you find a use case
              * where this approach is not good enough, we will need to implement a more powerful solution.
              */
 
@@ -185,7 +189,7 @@ public class BazelDependencyGraph {
                     currentIndex++;
                 }
                 if (!inserted) {
-                    // none of the previously seen labels depends on the current label, so just add it to the end 
+                    // none of the previously seen labels depends on the current label, so just add it to the end
                     orderedLabels.add(currentLabel);
                 }
             }
@@ -202,32 +206,32 @@ public class BazelDependencyGraph {
     /**
      * Depth first search to determine if the passed <i>possibleDependency</i> is a direct or transitive dependency of
      * the pass <i>label</i>
-     * 
+     *
      * @param label
      * @param possibleDependency
      * @return
      */
     public boolean isDependency(String label, String possibleDependency) {
-        boolean isDep = isDependencyRecur(label, possibleDependency, null);
+        boolean isDep = isDependencyRecur(label, possibleDependency, null, new HashSet<>());
         return isDep;
     }
 
     /**
      * Depth first search to determine if the passed <i>possibleDependency</i> is a direct or transitive dependency of
-     * the pass <i>label</i>. This version of the method allows the caller to pass a cache object (opaque). If you will
+     * the passed <i>label</i>. This version of the method allows the caller to pass a cache object (opaque). If you will
      * call isDependency many times, with repetitive crawls of the dependency graph, the cache will be used so we only
      * compute areas of the graph once.
-     * 
+     *
      * @param label
      * @param possibleDependency
      * @param depCache
      */
     public boolean isDependency(String label, String possibleDependency, Map<String, Boolean> depCache) {
-        boolean isDep = isDependencyRecur(label, possibleDependency, depCache);
+        boolean isDep = isDependencyRecur(label, possibleDependency, depCache, new HashSet<>());
         return isDep;
     }
 
-    private boolean isDependencyRecur(String label, String possibleDependency, Map<String, Boolean> depCache) {
+    private boolean isDependencyRecur(String label, String possibleDependency, Map<String, Boolean> depCache, Set<String> processedLabels) {
         String cacheKey = null;
         if (depCache != null) {
             cacheKey = label + "~" + possibleDependency;
@@ -237,16 +241,26 @@ public class BazelDependencyGraph {
             }
         }
 
+        if (processedLabels.contains(label)) {
+            LOG.error("Breaking out of infinite loop while computing project import order for label " + label + "(issue #197)");
+            return dependencyResponse(false, depCache, cacheKey);
+        }
+        processedLabels.add(label);
+
+
         Set<String> dependencies = this.dependsOnMap.get(label);
+
         if (dependencies == null) {
             // this could be an external label, like @somejar, in which case we will not have any dep information
             return dependencyResponse(false, depCache, cacheKey);
         }
+
+
         for (String dependency : dependencies) {
             if (dependency.equals(possibleDependency)) {
                 return dependencyResponse(true, depCache, cacheKey);
             }
-            if (isDependencyRecur(dependency, possibleDependency, depCache)) {
+            if (isDependencyRecur(dependency, possibleDependency, depCache, processedLabels)) {
                 return true;
             }
         }
