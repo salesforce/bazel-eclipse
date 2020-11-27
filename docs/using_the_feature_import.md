@@ -90,7 +90,7 @@ To use an existing Project View file during import:
 - Click the *Import Project View* button below the tree control and navigate to the Project View file for your team
 - Click *Open*, and BEF will select the proper Bazel packages in the tree control
 
-Currently, BEF supports the *directories* stanza, and [Issue 68](https://github.com/salesforce/bazel-eclipse/issues/68) will provide for *targets* support.
+Currently, BEF supports the *directories* and *targets* stanzas.
 Please consult the IntelliJ documentation linked above for details on how to author a Project View file.
 
 ### Next Topic: Manage your Project Configuration

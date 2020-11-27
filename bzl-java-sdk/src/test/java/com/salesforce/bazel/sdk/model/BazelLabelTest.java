@@ -121,10 +121,10 @@ public class BazelLabelTest {
         assertEquals("blah", new BazelLabel("//foo/blah").getTargetName());
         assertEquals("t1", new BazelLabel("foo/blah:t1").getTargetName());
         assertEquals(null, new BazelLabel("blah/...").getTargetName());
-        assertEquals(null, new BazelLabel("blah:*").getTargetName());
+        assertEquals("*", new BazelLabel("blah:*").getTargetName());
         assertEquals("query", new BazelLabel("//:query").getTargetName());
         assertEquals(null, new BazelLabel("//...").getTargetName());
-        assertEquals(null, new BazelLabel("//:*").getTargetName());
+        assertEquals("*", new BazelLabel("//:*").getTargetName());
         assertEquals("t1", new BazelLabel("@foo//blah/goo:t1").getTargetName());
     }
 
@@ -165,6 +165,10 @@ public class BazelLabelTest {
         assertEquals(2, s.size());
         assertTrue(s.contains(new BazelLabel("//a/b/c")));
         assertTrue(s.contains(new BazelLabel("@repo//a/b/c")));
+    }
+
+    public void testFromPackageAndTarget() {
+        assertEquals(new BazelLabel("a/b/c:foo"), BazelLabel.fromPackageAndTarget("a/b/c", "foo"));
     }
 
     @Test(expected = IllegalStateException.class)

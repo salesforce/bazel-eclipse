@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;

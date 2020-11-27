@@ -117,7 +117,7 @@ public abstract class BazelProjectManager {
      * Persists preferences for the given project
      */
     public abstract void addSettingsToProject(BazelProject bazelProject, String bazelWorkspaceRoot,
-            String bazelProjectLabel, List<String> bazelTargets, List<String> bazelBuildFlags);
+            String bazelProjectPackage, List<BazelLabel> bazelTargets, List<String> bazelBuildFlags);
 
     /**
      * Clears all backing caches for the specified project

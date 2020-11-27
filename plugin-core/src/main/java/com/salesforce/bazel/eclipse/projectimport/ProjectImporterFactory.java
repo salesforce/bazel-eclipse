@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.annotations.VisibleForTesting;
 import com.salesforce.bazel.eclipse.projectimport.flow.CreateProjectsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.CreateRootProjectFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.DetermineTargetsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.FlowProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.flow.ImportFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.InitImportFlow;
@@ -104,6 +105,7 @@ public class ProjectImporterFactory {
                 new ImportFlow[] {
                     new InitJREFlow(),
                     new InitImportFlow(),
+                    new DetermineTargetsFlow(),
                     new LoadAspectsFlow(),
                     new CreateRootProjectFlow(),
                     new OrderProjectsFlow(),

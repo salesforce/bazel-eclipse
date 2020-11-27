@@ -271,20 +271,21 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
     @Override
     public void addSettingsToProject(BazelProject bazelProject, String bazelWorkspaceRoot, String bazelProjectLabel,
-            List<String> bazelTargets, List<String> bazelBuildFlags) {
+            List<BazelLabel> bazelTargets, List<String> bazelBuildFlags) {
 
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
         Preferences eclipseProjectBazelPrefs = this.resourceHelper.getProjectBazelPreferences(eclipseProject);
 
         eclipseProjectBazelPrefs.put(BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspaceRoot);
+
         if (!bazelProjectLabel.startsWith("//")) {
             bazelProjectLabel = "//" + bazelProjectLabel;
         }
         eclipseProjectBazelPrefs.put(PROJECT_PACKAGE_LABEL, bazelProjectLabel);
 
         int i = 0;
-        for (String bazelTarget : bazelTargets) {
-            eclipseProjectBazelPrefs.put(TARGET_PROPERTY_PREFIX + i, bazelTarget);
+        for (BazelLabel bazelTarget : bazelTargets) {
+            eclipseProjectBazelPrefs.put(TARGET_PROPERTY_PREFIX + i, bazelTarget.getLabel());
             i++;
         }
         i = 0;

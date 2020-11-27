@@ -2,6 +2,7 @@ package com.salesforce.bazel.eclipse.projectview;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,7 @@ import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.builder.BazelProblemMarkerManager;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.wizard.BazelProjectImporter;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
@@ -35,8 +37,6 @@ import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.ProjectView;
 import com.salesforce.bazel.sdk.project.ProjectViewConstants;
 import com.salesforce.bazel.sdk.project.ProjectViewPackageLocation;
-
-import com.salesforce.bazel.eclipse.wizard.BazelProjectImporter;
 
 public class ProjectViewEditor extends AbstractDecoratedTextEditor {
 
@@ -51,14 +51,17 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
     private final File rootDirectory;
     private final ProjectViewPackageLocation rootPackage;
     private final BazelProblemMarkerManager markerManager;
+    private final BazelProjectManager projectManager;
 
     public ProjectViewEditor() {
         this.rootProject = getBazelRootProject();
         this.rootDirectory = BazelPluginActivator.getBazelWorkspace().getBazelWorkspaceRootDirectory();
         this.rootPackage = new ProjectViewPackageLocation(this.rootDirectory, "");
         this.markerManager = new BazelProblemMarkerManager(getClass().getName());
+        this.projectManager = BazelPluginActivator.getBazelProjectManager();
         setDocumentProvider(new TextFileDocumentProvider());
         super.setSourceViewerConfiguration(new SourceViewerConfiguration() {
+            @Override
             public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
                 ContentAssistant ca = new ContentAssistant();
                 IContentAssistProcessor cap = new BazelPackageContentAssistProcessor();
@@ -74,59 +77,66 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
         });
     }
 
+    @Override
     protected void editorSaved() {
         super.editorSaved();
         String projectViewContent = getSourceViewer().getTextWidget().getText();
-        ProjectView projectView = new ProjectView(this.rootDirectory, projectViewContent);
-        List<BazelPackageLocation> invalidPackages = projectView.getInvalidPackages();
+        ProjectView proposedProjectView = new ProjectView(this.rootDirectory, projectViewContent);
+        List<BazelPackageLocation> invalidPackages = proposedProjectView.getInvalidPackages();
         List<BazelProblem> problems = new ArrayList<>();
         for (BazelPackageLocation invalidPackage : invalidPackages) {
-            problems.add(BazelProblem.createError(PROJECT_VIEW_RESOURCE, projectView.getLineNumber(invalidPackage),
+            problems.add(BazelProblem.createError(PROJECT_VIEW_RESOURCE, proposedProjectView.getLineNumber(invalidPackage),
                 "Bad Bazel Package: " + invalidPackage.getBazelPackageFSRelativePath()));
         }
         markerManager.clearAndPublish(problems, this.rootProject, getProgressMonitor());
         if (problems.isEmpty()) {
-            IJavaProject[] currentlyImportedProjects = getAllJavaBazelProjects();
-
-            List<BazelPackageLocation> currentlyImportedPackages = getPackages(currentlyImportedProjects);
-            List<BazelPackageLocation> packagesToImport = projectView.getPackages();
-
-            if (currentlyImportedPackages != null
-                    && new HashSet<>(currentlyImportedPackages).equals(new HashSet<>(packagesToImport))) {
+            // build the current project state and compare it to the proposed state
+            IJavaProject[] importedProjects = getAllJavaBazelProjects();
+            List<BazelLabel> configuredTargets = getConfiguredTargetsFor(importedProjects);
+            List<BazelPackageLocation> importedPackages = getUniquePackages(configuredTargets);
+            ProjectView projectView = new ProjectView(rootDirectory, importedPackages, configuredTargets);
+            proposedProjectView.addDefaultTargets();
+            if (proposedProjectView.equals(projectView)) {
+                // no change, nothing to do
                 LOG.info("The Bazel Packages in the " + ProjectViewConstants.PROJECT_VIEW_FILE_NAME
                         + " file match the set of Eclipse Projects currently imported");
             } else {
                 boolean ok = MessageDialog.openConfirm(this.getSite().getShell(), "Update Imported Projects",
                     CONFIRMATION_TEXT);
                 if (ok) {
-                    deleteProjects(currentlyImportedProjects);
-                    BazelProjectImporter.run(this.rootPackage, packagesToImport);
+                    deleteProjects(importedProjects);
+                    List<BazelPackageLocation> projectsToImport = proposedProjectView.getDirectories();
+                    BazelProjectImporter.run(this.rootPackage, projectsToImport);
                 }
             }
         }
     }
 
-    private List<BazelPackageLocation> getPackages(IJavaProject[] projects) {
-        List<BazelPackageLocation> packageLocations = new ArrayList<>(projects.length);
-        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+    private List<BazelLabel> getConfiguredTargetsFor(IJavaProject[] projects) {
+        List<BazelLabel> allTargets = new ArrayList<>();
         for (IJavaProject project : projects) {
             String projectName = project.getProject().getName();
-            BazelProject bazelProject = bazelProjectManager.getProject(projectName);
-
-            // get the target to get at the package path
-            Set<String> targets =
-                    bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets();
-
+            BazelProject bazelProject = projectManager.getProject(projectName);
+            Set<String> targets = projectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets();
             if (targets == null || targets.isEmpty()) {
-                // this shouldn't happen, but if it does, we do not want to blow up here
-                // instead return null to force re-import
-                return null;
+                LOG.info("No configured targets for " + projectName);
+                targets = Collections.emptySet();
             }
-            // TODO it is possible there are no targets configured for a project
-            String target = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets()
-                    .iterator().next();
-            BazelLabel label = new BazelLabel(target);
-            packageLocations.add(new ProjectViewPackageLocation(this.rootDirectory, label.getPackagePath()));
+            for (String t : targets) {
+                allTargets.add(new BazelLabel(t));
+            }
+        }
+        return allTargets;
+    }
+
+    private List<BazelPackageLocation> getUniquePackages(List<BazelLabel> labels) {
+        Set<String> handledPackages = new HashSet<>();
+        List<BazelPackageLocation> packageLocations = new ArrayList<>();
+        for (BazelLabel label : labels) {
+            String packagePath = label.getPackagePath();
+            if (!handledPackages.contains(packagePath)) {
+                packageLocations.add(new ProjectViewPackageLocation(this.rootDirectory, packagePath));
+            }
         }
         return packageLocations;
     }

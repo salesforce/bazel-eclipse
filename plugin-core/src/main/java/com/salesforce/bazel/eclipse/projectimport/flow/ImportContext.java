@@ -34,6 +34,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
@@ -56,6 +57,7 @@ public class ImportContext {
     private File bazelWorkspaceRootDirectory;
     private Integer javaLanguageLevel;
     private AspectTargetInfos aspectTargetInfos;
+    private Map<BazelPackageLocation, List<BazelLabel>> packageLocationToTargets;
     private Iterable<BazelPackageLocation> orderedModules;
 
     private EclipseProjectCreator eclipseProjectCreator;
@@ -87,6 +89,14 @@ public class ImportContext {
 
     public List<BazelPackageLocation> getSelectedBazelPackages() {
         return selectedBazelPackages;
+    }
+
+    public Map<BazelPackageLocation, List<BazelLabel>> getPackageLocationToTargets() {
+        return packageLocationToTargets;
+    }
+
+    public void setPackageLocationToTargets(Map<BazelPackageLocation, List<BazelLabel>> packageLocationToTargets) {
+        this.packageLocationToTargets = packageLocationToTargets;
     }
 
     public ProjectOrderResolver getProjectOrderResolver() {

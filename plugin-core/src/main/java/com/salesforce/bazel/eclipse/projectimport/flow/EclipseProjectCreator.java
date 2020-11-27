@@ -42,6 +42,7 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterUtils;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
@@ -50,7 +51,7 @@ import com.salesforce.bazel.sdk.project.BazelProjectManager;
  */
 class EclipseProjectCreator {
 
-    static final LogHelper LOG = LogHelper.log(EclipseProjectCreator.class);
+    private static final LogHelper LOG = LogHelper.log(EclipseProjectCreator.class);
 
     private final File bazelWorkspaceRootDirectory;
 
@@ -68,7 +69,7 @@ class EclipseProjectCreator {
     }
 
     IProject createProject(String projectName, String packageFSPath, List<String> packageSourceCodeFSPaths,
-            List<String> bazelTargets) {
+            List<BazelLabel> bazelTargets) {
         URI eclipseProjectLocation = null; // let Eclipse use the default location
 
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
@@ -84,7 +85,6 @@ class EclipseProjectCreator {
         } catch (CoreException e) {
             LOG.error(e.getMessage(), e);
         }
-
         return eclipseProject;
     }
 

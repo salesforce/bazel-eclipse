@@ -52,6 +52,13 @@ public class BazelLabel {
     private final String fullLabel;
 
     /**
+     * Creates a new BazelLabel instance with the specified package and target.
+     */
+    public static BazelLabel fromPackageAndTarget(String bazelPackage, String target) {
+        return new BazelLabel(bazelPackage + ":" + target);
+    }
+
+    /**
      * A BazelLabel instance can be created with any syntactically valid Bazel Label String.
      * </p>
      * Examples:<br>
@@ -176,21 +183,20 @@ public class BazelLabel {
     }
 
     /**
-     * Returns the target name this label refers to.
+     * Returns the target part of this label.
      *
-     * @return the target name this label refers to, or null if it doesn't refer to a single target name
+     * @return the target name this label refers to, null if this label uses "..." syntax.
      */
     public String getTargetName() {
-        if (isConcrete()) {
-            if (isPackageDefault()) {
-                return getPackageName();
-            } else {
-                int i = this.localLabelPart.lastIndexOf(":");
-                // label cannot end with ":", so this is ok
-                return this.localLabelPart.substring(i + 1);
-            }
-        } else {
+        if (localLabelPart.endsWith("...")) {
             return null;
+        }
+        if (isPackageDefault()) {
+            return getPackageName();
+        } else {
+            int i = localLabelPart.lastIndexOf(":");
+            // label cannot end with ":", so this is ok
+            return localLabelPart.substring(i + 1);
         }
     }
 
