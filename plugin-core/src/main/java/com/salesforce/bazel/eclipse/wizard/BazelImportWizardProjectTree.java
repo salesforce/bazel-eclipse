@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -33,7 +33,7 @@
  */
 /*******************************************************************************
  * Copyright (c) 2008-2013 Sonatype, Inc. and others. Copyright 2018-2019 Salesforce
- * 
+ *
  * All rights reserved. This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License v1.0 which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
@@ -114,6 +114,7 @@ public class BazelImportWizardProjectTree {
         projectTreeViewer = new CheckboxTreeViewer(composite, SWT.BORDER);
 
         projectTreeViewer.addCheckStateListener(new ICheckStateListener() {
+            @Override
             public void checkStateChanged(CheckStateChangedEvent event) {
                 updateCheckedState();
                 page.setPageComplete();
@@ -122,6 +123,7 @@ public class BazelImportWizardProjectTree {
 
         projectTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 
+            @Override
             public void selectionChanged(SelectionChangedEvent event) {
                 IStructuredSelection selection = (IStructuredSelection) event.getSelection();
                 btnSelectTree.setEnabled(!selection.isEmpty());
@@ -143,6 +145,7 @@ public class BazelImportWizardProjectTree {
 
         projectTreeViewer.setContentProvider(new ITreeContentProvider() {
 
+            @Override
             public Object[] getElements(Object element) {
                 if (element instanceof List) {
                     @SuppressWarnings("unchecked")
@@ -152,6 +155,7 @@ public class BazelImportWizardProjectTree {
                 return EMPTY;
             }
 
+            @Override
             public Object[] getChildren(Object parentElement) {
                 if (parentElement instanceof List) {
                     @SuppressWarnings("unchecked")
@@ -165,10 +169,12 @@ public class BazelImportWizardProjectTree {
                 return EMPTY;
             }
 
+            @Override
             public Object getParent(Object element) {
                 return null;
             }
 
+            @Override
             public boolean hasChildren(Object parentElement) {
                 if (parentElement instanceof List) {
                     List<?> projects = (List<?>) parentElement;
@@ -180,8 +186,10 @@ public class BazelImportWizardProjectTree {
                 return false;
             }
 
+            @Override
             public void dispose() {}
 
+            @Override
             public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {}
         });
 
@@ -218,6 +226,7 @@ public class BazelImportWizardProjectTree {
         selectAllButton.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, false));
         selectAllButton.setText("Select All");
         selectAllButton.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 projectTreeViewer.expandAll();
                 setAllChecked(true);
@@ -230,6 +239,7 @@ public class BazelImportWizardProjectTree {
         deselectAllButton.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, false));
         deselectAllButton.setText("Deselect All");
         deselectAllButton.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 setAllChecked(false);
                 // projectTreeViewer.setSubtreeChecked(projectTreeViewer.getInput(), false);
@@ -263,6 +273,7 @@ public class BazelImportWizardProjectTree {
         refreshButton.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, true));
         refreshButton.setText("Refresh");
         refreshButton.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 page.scanProjects();
             }
@@ -273,6 +284,7 @@ public class BazelImportWizardProjectTree {
         importProjectViewButton.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, true));
         importProjectViewButton.setText("Import Project View");
         importProjectViewButton.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 FileDialog dialog = new FileDialog(page.getShell());
                 dialog.setText("Locate the Project View file to import");
@@ -283,7 +295,7 @@ public class BazelImportWizardProjectTree {
                     Set<BazelPackageInfo> packagesToImport = new HashSet<>();
                     ProjectView projectView = new ProjectView(
                             new File(BazelImportWizardProjectTree.this.rootWorkspaceDirectory), readFile(path));
-                    Set<String> projectViewPaths = projectView.getPackages().stream()
+                    Set<String> projectViewPaths = projectView.getDirectories().stream()
                             .map(p -> p.getBazelPackageFSRelativePath()).collect(Collectors.toSet());
                     for (BazelPackageInfo bpi : getAllBazelPackageInfos()) {
                         if (projectViewPaths.contains(bpi.getBazelPackageFSRelativePath())) {

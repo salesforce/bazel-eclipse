@@ -43,7 +43,7 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
  */
 public class InitImportFlow implements ImportFlow {
 
-    static final LogHelper LOG = LogHelper.log(InitImportFlow.class);
+    private static final LogHelper LOG = LogHelper.log(InitImportFlow.class);
 
     @Override
     public void assertContextState(ImportContext ctx) {
@@ -54,22 +54,25 @@ public class InitImportFlow implements ImportFlow {
 
     @Override
     public void run(ImportContext ctx) {
-        // Set the flag that an import is in progress
         ProjectImporterFactory.importInProgress.set(true);
+
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+
 
         SubMonitor subMonitor = SubMonitor.convert(ctx.getProgressMonitor(), ctx.getSelectedBazelPackages().size());
         subMonitor.setTaskName("Running import");
         subMonitor.split(1);
 
+
+
         BazelPackageLocation bazelWorkspaceRootPackageInfo = ctx.getBazelWorkspaceRootPackageInfo();
         File bazelWorkspaceRootDirectory =
                 BazelPathHelper.getCanonicalFileSafely(bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory());
-
         ctx.init(bazelWorkspaceRootDirectory);
 
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        boolean isInitialImport = bazelWorkspace == null;
 
+
+        boolean isInitialImport = bazelWorkspace == null;
         String bazelWorkspaceName = null;
         if (isInitialImport) {
             bazelWorkspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspaceRootDirectory.getName());
@@ -81,8 +84,11 @@ public class InitImportFlow implements ImportFlow {
             bazelWorkspaceName = bazelWorkspace.getName();
         }
 
+
         // TODO send this message to the EclipseConsole so the user actually sees it
         LOG.info("Starting import of [{}]. This may take some time, please be patient.", bazelWorkspaceName);
+
+
 
         bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         // get the Workspace options (.bazelrc)
@@ -92,6 +98,8 @@ public class InitImportFlow implements ImportFlow {
         String javacoptString = options.getContextualOption("build", "javacopt");
         int sourceLevel = JavaLanguageLevelHelper.getSourceLevelAsInt(javacoptString);
         ctx.setJavaLanguageLevel(sourceLevel);
+
+
 
         // these are cached - initialize them now so we do not incur the cost of determining these locations
         // later when creating projects
@@ -103,5 +111,4 @@ public class InitImportFlow implements ImportFlow {
     public void finish(ImportContext ctx) {
         ProjectImporterFactory.importInProgress.set(false);
     }
-
 }

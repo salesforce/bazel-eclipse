@@ -25,6 +25,7 @@ package com.salesforce.bazel.eclipse.projectimport.flow;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -89,7 +90,7 @@ public class CreateRootProjectFlow implements ImportFlow {
 
     private static void writeProjectViewFile(File bazelWorkspaceRootDirectory, IProject project,
             List<BazelPackageLocation> importedBazelPackages, IProgressMonitor monitor) {
-        ProjectView projectView = new ProjectView(bazelWorkspaceRootDirectory, importedBazelPackages);
+        ProjectView projectView = new ProjectView(bazelWorkspaceRootDirectory, importedBazelPackages, Collections.emptyList());
         IFile f = BazelPluginActivator.getResourceHelper().getProjectFile(project,
             ProjectViewConstants.PROJECT_VIEW_FILE_NAME);
         try {

@@ -32,6 +32,7 @@ import java.util.function.Function;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
@@ -39,6 +40,8 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Helper that knows how to run bazel query commands.
  */
 public class BazelQueryHelper {
+
+    private static final LogHelper LOG = LogHelper.log(BazelQueryHelper.class);
 
     /**
      * Underlying command invoker which takes built Command objects and executes them.
@@ -76,7 +79,7 @@ public class BazelQueryHelper {
     /**
      * Returns the list of targets, with type data, found in a BUILD files for the given package. Uses Bazel Query to
      * build the list.
-     * 
+     *
      * @param bazelPackageName
      *            the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
      */
@@ -91,7 +94,7 @@ public class BazelQueryHelper {
 
         BazelBuildFile buildFile = buildFileCache.get(bazelPackageName);
         if (buildFile != null) {
-            System.out.println("Retrieved list of targets for package [" + bazelPackageName + "] from cache.");
+            LOG.info("Retrieved list of targets for package [" + bazelPackageName + "] from cache.");
             return buildFile;
         }
 
@@ -126,7 +129,10 @@ public class BazelQueryHelper {
     }
 
     public void flushCache(String bazelPackageName) {
-        buildFileCache.remove(bazelPackageName);
+        BazelBuildFile previousValue = buildFileCache.remove(bazelPackageName);
+        if (previousValue != null) {
+            LOG.info("Flushed query cache for package " + bazelPackageName);
+        }
     }
 
     /**

@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.CoreException;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
@@ -42,7 +43,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  */
 public class CreateProjectsFlow implements ImportFlow {
 
-    static final LogHelper LOG = LogHelper.log(CreateProjectsFlow.class);
+    private static final LogHelper LOG = LogHelper.log(CreateProjectsFlow.class);
 
     @Override
     public void assertContextState(ImportContext ctx) {
@@ -51,6 +52,7 @@ public class CreateProjectsFlow implements ImportFlow {
         Objects.requireNonNull(ctx.getJavaLanguageLevel());
         Objects.requireNonNull(ctx.getEclipseProjectCreator());
         Objects.requireNonNull(ctx.getEclipseFileLinker());
+        Objects.requireNonNull(ctx.getPackageLocationToTargets());
     }
 
     @Override
@@ -69,7 +71,8 @@ public class CreateProjectsFlow implements ImportFlow {
                 String projectName = computeEclipseProjectNameForBazelPackage(packageLocation, previouslyImportedProjects, ctx.getImportedProjects());
                 EclipseProjectStructureInspector inspector = new EclipseProjectStructureInspector(packageLocation);
                 String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
-                IProject project = projectCreator.createProject(projectName, packageFSPath, inspector.getPackageSourceCodeFSPaths(), inspector.getBazelTargets());
+                List<BazelLabel> targets = Objects.requireNonNull(ctx.getPackageLocationToTargets().get(packageLocation));
+                IProject project = projectCreator.createProject(projectName, packageFSPath, inspector.getPackageSourceCodeFSPaths(), targets);
                 boolean foundFile = fileLinker.link(packageFSPath, project, "BUILD");
                 if (!foundFile) {
                     foundFile = fileLinker.link(packageFSPath, project, "BUILD.bazel");

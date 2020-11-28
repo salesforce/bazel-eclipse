@@ -38,7 +38,7 @@ import com.salesforce.bazel.sdk.util.BazelPathHelper;
 class EclipseProjectStructureInspector {
 
     private final List<String> packageSourceCodeFSPaths = new ArrayList<>();
-    private final List<String> bazelTargets = new ArrayList<>();
+    private final List<BazelLabel> bazelTargets = new ArrayList<>();
 
     EclipseProjectStructureInspector(BazelPackageLocation packageNode) {
         computePackageSourceCodePaths(packageNode);
@@ -48,7 +48,7 @@ class EclipseProjectStructureInspector {
         return packageSourceCodeFSPaths;
     }
 
-    List<String> getBazelTargets() {
+    List<BazelLabel> getBazelTargets() {
         return bazelTargets;
     }
 
@@ -111,7 +111,7 @@ class EclipseProjectStructureInspector {
                 // BUILD file, instead of only the default package target
                 packageTarget = packageTarget.toPackageWildcardLabel();
             }
-            this.bazelTargets.add(packageTarget.getLabel());
+            this.bazelTargets.add(packageTarget);
         }
     }
 

@@ -47,6 +47,7 @@ public class LoadAspectsFlow implements ImportFlow {
     public void assertContextState(ImportContext ctx) {
         Objects.requireNonNull(ctx.getSelectedBazelPackages());
         Objects.requireNonNull(ctx.getWorkProgressMonitor());
+        Objects.requireNonNull(ctx.getPackageLocationToTargets());
     }
 
     @Override
@@ -56,30 +57,26 @@ public class LoadAspectsFlow implements ImportFlow {
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
-        // figure out which Bazel targets will be imported, and generated AspectTargetInfos for each
-        // The AspectTargetInfos have useful information that we use during import
-        List<String> packageBazelTargets = new ArrayList<>();
-        for (BazelPackageLocation childPackageInfo : ctx.getSelectedBazelPackages()) {
-            EclipseProjectStructureInspector inspector = new EclipseProjectStructureInspector(childPackageInfo);
-            packageBazelTargets.addAll(inspector.getBazelTargets());
+        List<String> labels = new ArrayList<>();
+        for (BazelPackageLocation packageLocation : ctx.getSelectedBazelPackages()) {
+            List<BazelLabel> targets = Objects.requireNonNull(ctx.getPackageLocationToTargets().get(packageLocation));
+            for (BazelLabel target : targets) {
+                labels.add(target.getLabel());
+            }
         }
 
         // run the aspect for specified targets and get an AspectTargetInfo for each
-        AspectTargetInfos aspectTargetInfos = null;
         try {
             Map<BazelLabel, Set<AspectTargetInfo>> targetInfos = bazelWorkspaceCmdRunner
-                    .getAspectTargetInfos(packageBazelTargets, ctx.getWorkProgressMonitor(),
-                            "importWorkspace");
+                    .getAspectTargetInfos(labels, ctx.getWorkProgressMonitor(), "importWorkspace");
             List<AspectTargetInfo> allTargetInfos = new ArrayList<>();
             for (Set<AspectTargetInfo> targetTargetInfos : targetInfos.values()) {
                 allTargetInfos.addAll(targetTargetInfos);
             }
-            aspectTargetInfos = new AspectTargetInfos(allTargetInfos);
+            ctx.setAspectTargetInfos(new AspectTargetInfos(allTargetInfos));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        ctx.setAspectTargetInfos(aspectTargetInfos);
     }
 
 }

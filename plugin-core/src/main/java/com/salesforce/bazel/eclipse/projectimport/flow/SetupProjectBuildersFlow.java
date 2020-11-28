@@ -38,7 +38,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  */
 public class SetupProjectBuildersFlow implements ImportFlow {
 
-    static final LogHelper LOG = LogHelper.log(SetupProjectBuildersFlow.class);
+    private static final LogHelper LOG = LogHelper.log(SetupProjectBuildersFlow.class);
 
     @Override
     public void assertContextState(ImportContext ctx) {
