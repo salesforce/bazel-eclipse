@@ -228,14 +228,15 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
             if (propertyName.startsWith(TARGET_PROPERTY_PREFIX)) {
                 String target = eclipseProjectBazelPrefs.get(propertyName, "");
                 if (!target.isEmpty()) {
-                    if (!target.startsWith(projectLabel)) {
+                    BazelLabel label = new BazelLabel(target);
+                    if (!label.getLabel().startsWith(projectLabel)) {
                         // the user jammed in a label not associated with this project, ignore
                         //continue;
                     }
-                    if (target.endsWith(":*")) {
+                    if (!label.isConcrete()) {
                         // we have a wildcard target, so discard any existing targets we gathered (if the user messed up their prefs)
                         // and just go with that.
-                        activatedTargets.activateWildcardTarget();
+                        activatedTargets.activateWildcardTarget(label.getTargetName());
                         return activatedTargets;
                     }
                     activeTargets.add(target);

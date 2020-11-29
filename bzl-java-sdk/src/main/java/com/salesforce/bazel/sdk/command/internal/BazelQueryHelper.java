@@ -25,15 +25,18 @@ package com.salesforce.bazel.sdk.command.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
@@ -85,10 +88,24 @@ public class BazelQueryHelper {
      *            the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
      */
     public synchronized BazelBuildFile queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory,
-            WorkProgressMonitor progressMonitor, String bazelPackageName)
+            WorkProgressMonitor progressMonitor, Collection<BazelLabel> bazelLabels)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        if ("//".equals(bazelPackageName)) {
+        String bazelPackageName = null;
+        for (BazelLabel label : bazelLabels) {
+            if (bazelPackageName == null) {
+                bazelPackageName = label.getPackagePath();
+            } else {
+                // all specified labels *must be* for the same bazel package currently, because
+                // we use the package name as a cache key
+                // (and the whole import machinery is setup to run for each imported package ...)
+                if (!bazelPackageName.equals(label.getPackagePath())) {
+                    throw new IllegalArgumentException("Can't query across packages " + bazelPackageName + " " + label.getPackagePath());
+                }
+            }
+        }
+
+        if (bazelPackageName.isEmpty()) {
             // we don't support having buildable code at the root of the WORKSPACE
             return new BazelBuildFile("//...");
         }
@@ -99,11 +116,13 @@ public class BazelQueryHelper {
             return buildFile;
         }
 
+        String labels = bazelLabels.stream().map(BazelLabel::getLabel).collect(Collectors.joining(" "));
+
         // bazel query 'kind(rule, [label]:*)' --output label_kind
 
         ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
         argBuilder.add("query");
-        argBuilder.add("kind(rule, " + bazelPackageName + ":*)");
+        argBuilder.add("kind(rule, set(" + labels + "))");
         argBuilder.add("--output");
         argBuilder.add("label_kind");
         List<String> resultLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory,

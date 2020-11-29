@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import com.salesforce.bazel.sdk.aspect.AspectOutputJarSet;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
@@ -138,8 +139,11 @@ public class BazelJvmClasspath {
             // of all targets if configured with the wildcard target
             BazelBuildFile bazelBuildFileModel = null;
             try {
-                bazelBuildFileModel = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor,
-                    this.bazelProjectManager.getBazelLabelForProject(bazelProject));
+                // we pass the targets that are configured for the current project to bazel query
+                // typically, this is a single wildcard target, but the user may
+                // also have specified explicit targets to use
+                List<BazelLabel> labels = configuredTargetsForProject.getConfiguredTargets().stream().map(BazelLabel::new).collect(Collectors.toList());
+                bazelBuildFileModel = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor, labels);
             } catch (Exception anyE) {
                 logger.error("Unable to compute classpath containers entries for project " + bazelProject.name, anyE);
                 return returnEmptyClasspathOrThrow(anyE);

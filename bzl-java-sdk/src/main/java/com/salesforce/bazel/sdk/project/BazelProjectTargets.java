@@ -72,9 +72,9 @@ public class BazelProjectTargets {
 
     // TODO weave these into the constructor
 
-    public void activateWildcardTarget() {
+    public void activateWildcardTarget(String wildcardTarget) {
         this.isActivatedWildcardTarget = true;
-        this.configuredTargets.add(projectBazelLabel + ":*");
+        this.configuredTargets.add(projectBazelLabel + ":" + wildcardTarget);
     }
 
     public void activateSpecificTargets(Set<String> activatedTargets) {
@@ -107,6 +107,11 @@ public class BazelProjectTargets {
 
     public boolean isAllTargetsDeactivated() {
         return this.configuredTargets.size() == 0;
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(getConfiguredTargets());
     }
 
 }
