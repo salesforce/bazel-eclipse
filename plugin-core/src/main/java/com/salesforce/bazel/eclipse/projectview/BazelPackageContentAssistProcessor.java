@@ -32,7 +32,7 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
  * @author stoens
  * @since March 2020
  */
-public final class BazelPackageContentAssistProcessor implements IContentAssistProcessor {
+final class BazelPackageContentAssistProcessor implements IContentAssistProcessor {
 
     private static final ICompletionProposal[] NO_PROPOSALS = new ICompletionProposal[0];
     private static final IContextInformation[] NO_CONTEXTS = new IContextInformation[0];

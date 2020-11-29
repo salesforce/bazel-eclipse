@@ -45,6 +45,7 @@ import org.eclipse.core.runtime.CoreException;
 
 import com.google.common.base.Preconditions;
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.util.BazelConstants;
 
 /**
  * Convenience methods for looking into a IResourceDelta.
@@ -57,10 +58,10 @@ class ResourceDeltaInspector {
     private static final LogHelper LOG = LogHelper.log(ResourceDeltaInspector.class);
 
     static boolean deltaHasChangedBuildFiles(IResourceDelta delta) {
-        return hasChangedFiles(delta, "BUILD", "BUILD.bazel");
+        return hasChangedFiles(delta, BazelConstants.BUILD_FILE_NAMES);
     }
 
-    private static boolean hasChangedFiles(IResourceDelta delta, String... filenameNeedles) {
+    private static boolean hasChangedFiles(IResourceDelta delta, Collection<String> filenameNeedles) {
         Preconditions.checkNotNull(delta);
         try {
             Collection<IResource> matchingResources = new ArrayList<>();
@@ -74,10 +75,10 @@ class ResourceDeltaInspector {
 
     private static class ChangedResourceVisitor implements IResourceDeltaVisitor {
 
-        private final String[] filenameNeedles;
+        private final Collection<String> filenameNeedles;
         private Collection<IResource> matchingResources;
 
-        private ChangedResourceVisitor(String[] filenameNeedles, Collection<IResource> matchingResources) {
+        private ChangedResourceVisitor(Collection<String> filenameNeedles, Collection<IResource> matchingResources) {
             this.filenameNeedles = filenameNeedles;
             this.matchingResources = matchingResources;
         }
@@ -88,11 +89,9 @@ class ResourceDeltaInspector {
                 if ((delta.getFlags() & IResourceDelta.CONTENT) != 0) {
                     IResource resource = delta.getResource();
                     if (resource.getType() == IResource.FILE) {
-                        for (String filenameNeedle : filenameNeedles) {
-                            if (resource.getName().equals(filenameNeedle)) {
-                                matchingResources.add(resource);
-                                return false; // stop visiting
-                            }
+                        if (filenameNeedles.contains(resource.getName())) {
+                            matchingResources.add(resource);
+                            return false; // stop visiting
                         }
                     }
                 }
@@ -100,5 +99,4 @@ class ResourceDeltaInspector {
             return true;
         }
     }
-
 }

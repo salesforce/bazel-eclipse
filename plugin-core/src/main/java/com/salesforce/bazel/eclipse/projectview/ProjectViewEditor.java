@@ -82,7 +82,8 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
         super.editorSaved();
         String projectViewContent = getSourceViewer().getTextWidget().getText();
         ProjectView proposedProjectView = new ProjectView(this.rootDirectory, projectViewContent);
-        List<BazelPackageLocation> invalidPackages = proposedProjectView.getInvalidPackages();
+        proposedProjectView = ProjectViewProcessor.resolvePackages(proposedProjectView);
+        List<BazelPackageLocation> invalidPackages = ProjectViewProcessor.getInvalidDirectories(proposedProjectView);
         List<BazelProblem> problems = new ArrayList<>();
         for (BazelPackageLocation invalidPackage : invalidPackages) {
             problems.add(BazelProblem.createError(PROJECT_VIEW_RESOURCE, proposedProjectView.getLineNumber(invalidPackage),
