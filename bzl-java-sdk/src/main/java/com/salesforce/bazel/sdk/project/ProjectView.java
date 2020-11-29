@@ -1,7 +1,6 @@
 package com.salesforce.bazel.sdk.project;
 
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -108,29 +107,6 @@ public class ProjectView {
     }
 
     /**
-     * Returns all invalid bazel packages from the "directories" section.
-     */
-    public List<BazelPackageLocation> getInvalidPackages() {
-        List<BazelPackageLocation> invalidPackages = new ArrayList<>();
-        for (BazelPackageLocation pack : packageToLineNumber.keySet()) {
-            boolean packageIsValid = false;
-            for (String buildFileName : new String[] { "BUILD", "BUILD.bazel" }) {
-                // this should go through bazel (aspect machinery?) instead of directly checking for BUILD file presence on the fs
-                File b = new File(rootWorkspaceDirectory,
-                        Paths.get(pack.getBazelPackageFSRelativePath(), buildFileName).toString());
-                if (b.exists() && b.isFile()) {
-                    packageIsValid = true;
-                    break;
-                }
-            }
-            if (!packageIsValid) {
-                invalidPackages.add(pack);
-            }
-        }
-        return invalidPackages;
-    }
-
-    /**
      * Returns the directories with their targets.
      */
     public List<BazelPackageLocation> getDirectories() {
@@ -146,7 +122,7 @@ public class ProjectView {
     /**
      * Returns only the targets from the targets: section.
      */
-    List<BazelLabel> getTargets() {
+    public List<BazelLabel> getTargets() {
         return Collections.unmodifiableList(new ArrayList<>(targetToLineNumber.keySet()));
     }
 
@@ -174,6 +150,10 @@ public class ProjectView {
             // to be incorrect
             targetToLineNumber.put(dflt, 0);
         }
+    }
+
+    public File getWorkspaceRootDirectory() {
+        return rootWorkspaceDirectory;
     }
 
     @Override

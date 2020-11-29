@@ -52,13 +52,6 @@ public class BazelLabel {
     private final String fullLabel;
 
     /**
-     * Creates a new BazelLabel instance with the specified package and target.
-     */
-    public static BazelLabel fromPackageAndTarget(String bazelPackage, String target) {
-        return new BazelLabel(bazelPackage + ":" + target);
-    }
-
-    /**
      * A BazelLabel instance can be created with any syntactically valid Bazel Label String.
      * </p>
      * Examples:<br>
@@ -80,12 +73,6 @@ public class BazelLabel {
         label = sanitize(label);
         this.localLabelPart = label;
         this.fullLabel = getFullLabel(this.repositoryName, this.localLabelPart);
-    }
-
-    private BazelLabel(String repositoryName, String localLabelPart) {
-        this.repositoryName = repositoryName;
-        this.localLabelPart = sanitize(localLabelPart);
-        this.fullLabel = getFullLabel(repositoryName, localLabelPart);
     }
 
     /**
@@ -166,7 +153,7 @@ public class BazelLabel {
      *             if this label is a root-level label (//...) and therefore doesn't have a package path.
      */
     public BazelLabel getDefaultPackageLabel() {
-        return new BazelLabel(repositoryName, getPackagePath());
+        return withRepositoryNameAndLocalLabelPart(repositoryName, getPackagePath());
     }
 
     /**
@@ -234,7 +221,7 @@ public class BazelLabel {
         if (!isPackageDefault()) {
             throw new IllegalStateException("label " + this.localLabelPart + " is not package default");
         }
-        return new BazelLabel(this.repositoryName, getPackagePath() + ":*");
+        return withRepositoryNameAndLocalLabelPart(repositoryName, getPackagePath() + ":*");
     }
 
     @Override
@@ -257,6 +244,12 @@ public class BazelLabel {
     @Override
     public String toString() {
         return this.fullLabel;
+    }
+
+    private static BazelLabel withRepositoryNameAndLocalLabelPart(String repositoryName, String localLabelPart) {
+        return repositoryName == null ?
+            new BazelLabel(localLabelPart) :
+            new BazelLabel("@" + repositoryName + "//" + localLabelPart);
     }
 
     private static String sanitize(String label) {

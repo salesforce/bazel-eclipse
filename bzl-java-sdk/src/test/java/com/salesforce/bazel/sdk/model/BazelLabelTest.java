@@ -167,10 +167,6 @@ public class BazelLabelTest {
         assertTrue(s.contains(new BazelLabel("@repo//a/b/c")));
     }
 
-    public void testFromPackageAndTarget() {
-        assertEquals(new BazelLabel("a/b/c:foo"), BazelLabel.fromPackageAndTarget("a/b/c", "foo"));
-    }
-
     @Test(expected = IllegalStateException.class)
     public void testToPackageWildcardLabel_invalidLabel() {
         assertEquals("//foo:*", new BazelLabel("foo:test").toPackageWildcardLabel().getLabel());

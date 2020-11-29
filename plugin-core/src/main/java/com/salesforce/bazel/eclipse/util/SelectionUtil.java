@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -61,10 +61,11 @@ import org.eclipse.ui.IWorkingSet;
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.util.BazelConstants;
 
 /**
  * Helper methods to deal with workspace resources passed as navigator selection to actions and wizards.
- * 
+ *
  * Adapted from m2e org.eclipse.m2e.core.ui.internal.actions.SelectionUtil
  */
 public class SelectionUtil {
@@ -114,7 +115,7 @@ public class SelectionUtil {
         IFile file = getType(element, IFile.class);
         if (file != null) {
             String lastSegment = file.getFullPath().lastSegment();
-            if ("BUILD".equals(lastSegment) || "BUILD.bazel".equals(lastSegment)) {
+            if (BazelConstants.BUILD_FILE_NAMES.contains(lastSegment)) {
                 return POM_FILE;
             }
         }
@@ -180,7 +181,7 @@ public class SelectionUtil {
     /**
      * Returns all the Bazel projects found in the given selection. If no projects are found in the selection and
      * <code>includeAll</code> is true, all workspace projects are returned.
-     * 
+     *
      * @param selection
      * @param includeAll
      *            flag to return all workspace projects if selection doesn't contain any Maven projects.

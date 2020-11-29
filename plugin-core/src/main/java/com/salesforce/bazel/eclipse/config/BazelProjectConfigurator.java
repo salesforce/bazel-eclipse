@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -56,6 +56,7 @@ import com.salesforce.bazel.eclipse.projectimport.ProjectImporterUtils;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFileHelper;
+import com.salesforce.bazel.sdk.util.BazelConstants;
 import com.salesforce.bazel.sdk.workspace.BazelPackageFinder;
 
 // initial version copied from m2e MavenProjectConfigurator
@@ -106,12 +107,15 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
      */
     @Override
     public boolean shouldBeAnEclipseProject(IContainer container, IProgressMonitor monitor) {
-        IFile buildFile = container.getFile(new Path("BUILD"));
-        if (!buildFile.exists()) {
-            buildFile = container.getFile(new Path("BUILD.bazel"));
-            if (!buildFile.exists()) {
-                return false;
+        IFile buildFile = null;
+        for (String buildFileName : BazelConstants.BUILD_FILE_NAMES) {
+            buildFile = container.getFile(new Path(buildFileName));
+            if (buildFile.exists()) {
+                break;
             }
+        }
+        if (buildFile == null || !buildFile.exists()) {
+            return false;
         }
 
         boolean hasJavaRule = false;
@@ -191,7 +195,7 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
     public Set<IFolder> getFoldersToIgnore(IProject project, IProgressMonitor monitor) {
         Set<IFolder> res = new HashSet<IFolder>();
 
-        // do we want to exclude any folders in a package from scanning for BUILD files? 
+        // do we want to exclude any folders in a package from scanning for BUILD files?
         // TODO .bazelignore
 
         return res;

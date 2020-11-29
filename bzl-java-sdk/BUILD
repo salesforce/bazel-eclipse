@@ -121,6 +121,7 @@ java_test(
 java_test(
     name = "BazelPackageInfoTest",
     srcs = [
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelLabel.java",
         "src/main/java/com/salesforce/bazel/sdk/model/BazelPackageInfo.java",
         "src/test/java/com/salesforce/bazel/sdk/model/BazelPackageInfoTest.java",
         "src/main/java/com/salesforce/bazel/sdk/model/BazelPackageLocation.java",
@@ -143,6 +144,7 @@ java_test(
 java_test(
     name = "ProjectViewTest",
     srcs = [
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelLabel.java",
         "src/main/java/com/salesforce/bazel/sdk/model/BazelPackageLocation.java",
         "src/main/java/com/salesforce/bazel/sdk/project/ProjectView.java",
         "src/main/java/com/salesforce/bazel/sdk/project/ProjectViewPackageLocation.java",

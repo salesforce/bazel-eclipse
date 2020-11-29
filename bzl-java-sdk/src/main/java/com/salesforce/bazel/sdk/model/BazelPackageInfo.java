@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -55,7 +55,7 @@ import java.util.Map;
  * WORKSPACE root (BazelPackageInfo instance 1)<br/>
  * //projects/libs/apple (BazelPackageInfo instance 2) <br/>
  * //projects/libs/banana (BazelPackageInfo instance 3) <br/>
- * 
+ *
  * @author plaird
  */
 public class BazelPackageInfo implements BazelPackageLocation {
@@ -70,8 +70,6 @@ public class BazelPackageInfo implements BazelPackageLocation {
 
     public static final String WORKSPACE_FILENAME = "WORKSPACE";
     public static final String WORKSPACE_FILENAME_ALT = "WORKSPACE.bazel";
-    public static final String BUILD_FILENAME = "BUILD";
-    public static final String BUILD_FILENAME_ALT = "BUILD.bazel";
 
     private String computedPackageName = null;
     private String computedPackageNameLastSegment = null;
@@ -81,7 +79,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
     /**
      * Creates the root info object for a Bazel workspace. This is not normally associated with an actual Bazel package
      * (hopefully not), so it is a special case node. All other info nodes descend from this node.
-     * 
+     *
      * @param rootDirectory
      *            the file system location that holds the workspace. This directory must have a WORKSPACE file.
      */
@@ -117,7 +115,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
 
     /**
      * Creates a new info object for a Bazel package
-     * 
+     *
      * @param anotherNode
      *            another node of the BazelPackageInfo tree, this cannot be null. The 'best' parent node for this new
      *            node will be found using the passed node's links to the other nodes in the tree. The parent package
@@ -202,7 +200,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
 
     /**
      * Is this node the workspace root?
-     * 
+     *
      * @return true if the root, false otherwise
      */
     @Override
@@ -212,7 +210,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
 
     /**
      * Gets the workspace root filesystem directory.
-     * 
+     *
      * @return the root directory
      */
     @Override
@@ -228,7 +226,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
 
     /**
      * Gets the WORKSPACE file
-     * 
+     *
      * @return the file
      */
     public File getWorkspaceFile() {
@@ -251,7 +249,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
      * Returns the absolute file system path of the package in the workspace. The separator char will be the OS file
      * separator.
      * <p>
-     * 
+     *
      * e.g. "/home/joe/dev/projects/libs/apple" or "C:\dev\projects\libs\apple"
      */
     public String getBazelPackageFSAbsolutePath() {
@@ -263,7 +261,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
      * Returns the relative file system path of the package in the workspace. The separator char will be the OS file
      * separator.
      * <p>
-     * 
+     *
      * e.g. "projects/libs/apple" or "projects\libs\apple"
      */
     @Override
@@ -295,9 +293,10 @@ public class BazelPackageInfo implements BazelPackageLocation {
     /**
      * Provides the proper Bazel label for the Bazel package.
      * <p>
-     * 
+     *
      * e.g. "//projects/libs/apple"
      */
+    @Override
     public String getBazelPackageName() {
         if (computedPackageName != null) {
             return computedPackageName;
@@ -307,8 +306,8 @@ public class BazelPackageInfo implements BazelPackageLocation {
             // the caller is referring to the WORKSPACE root, which for build operations can
             // (but not always) means that the user wants to build the entire workspace.
 
-            // TODO refine this, so that if the root directory contains a BUILD file with a Java package to 
-            // somehow handle that workspace differently 
+            // TODO refine this, so that if the root directory contains a BUILD file with a Java package to
+            // somehow handle that workspace differently
             // Docs should indicate that a better practice is to keep the root dir free of an actual package
             // For now, assume that anything referring to the root dir is a proxy for 'whole repo'
             computedPackageName = "//...";
@@ -362,7 +361,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
 
     /**
      * Find a node in the tree that has the passed Bazel package path
-     * 
+     *
      * @param bazelPackagePath
      *            path to find, such as //projects/libs/apple
      * @return the node if found, or null

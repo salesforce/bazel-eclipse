@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
+import com.salesforce.bazel.sdk.util.BazelConstants;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
@@ -198,8 +199,11 @@ public class BazelQueryHelper {
             if (files != null) {
                 for (File d : files) {
                     builder.add(prefix + d.getName() + "/");
-                    if (new File(d, "BUILD").exists() || new File(d, "BUILD.bazel").exists()) {
-                        builder.add(prefix + d.getName() + ":");
+                    for (String buildFileName : BazelConstants.BUILD_FILE_NAMES) {
+                        if (new File(d, buildFileName).exists()) {
+                            builder.add(prefix + d.getName() + ":");
+                            break;
+                        }
                     }
                 }
             }

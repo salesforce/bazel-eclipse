@@ -25,6 +25,9 @@ package com.salesforce.bazel.eclipse.projectimport.flow;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.runtime.SubMonitor;
 
@@ -107,8 +110,14 @@ public class InitImportFlow implements ImportFlow {
         bazelWorkspace.getBazelExecRootDirectory();
     }
 
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
     @Override
     public void finish(ImportContext ctx) {
-        ProjectImporterFactory.importInProgress.set(false);
+        // an import triggers a full build for each imported project
+        // since during import, we already ran a full build (to generate aspects),
+        // we will ignore these requests by keeping the "import in progress" state
+        // just a little longer
+        scheduler.schedule(() -> ProjectImporterFactory.importInProgress.set(false), 1, TimeUnit.SECONDS);
     }
 }
