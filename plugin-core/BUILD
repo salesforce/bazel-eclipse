@@ -119,8 +119,8 @@ java_test(
 )
 
 java_test(
-    name = "BazelBuilderTest",
-    srcs = ["src/test/java/com/salesforce/bazel/eclipse/builder/BazelBuilderTest.java"] + mock_src,
+    name = "EclipseClasspathUtilTest",
+    srcs = ["src/test/java/com/salesforce/bazel/eclipse/builder/EclipseClasspathUtilTest.java"] + mock_src,
     deps = [
         ":com.salesforce.bazel.eclipse.core-bin",
         "//bzl-java-sdk",

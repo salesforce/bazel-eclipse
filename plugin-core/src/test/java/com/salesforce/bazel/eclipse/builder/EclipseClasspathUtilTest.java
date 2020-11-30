@@ -13,7 +13,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.junit.Test;
 
-public class BazelBuilderTest {
+import com.salesforce.bazel.eclipse.classpath.EclipseClasspathUtil;
+
+public class EclipseClasspathUtilTest {
 
     @Test
     public void testGetDownstreamProjectsOf() throws Exception {
@@ -28,7 +30,7 @@ public class BazelBuilderTest {
         IJavaProject unrelated = getMockedProject("unrelated", new String[] { "Z" });
 
         Set<IProject> downstreams =
-                BazelBuilder.getDownstreamProjectsOf(D.getProject(), new IJavaProject[] { A, B, C, D, unrelated });
+                EclipseClasspathUtil.getDownstreamProjectsOf(D.getProject(), new IJavaProject[] { A, B, C, D, unrelated });
 
         assertEquals(3, downstreams.size());
         assertTrue(downstreams.contains(A.getProject()));
@@ -42,7 +44,7 @@ public class BazelBuilderTest {
     public void testDownstreamSetImpl() throws Exception {
         IJavaProject A = getMockedProject("A", new String[] {});
 
-        Set<IProject> downstreams = BazelBuilder.getDownstreamProjectsOf(A.getProject(), new IJavaProject[] {});
+        Set<IProject> downstreams = EclipseClasspathUtil.getDownstreamProjectsOf(A.getProject(), new IJavaProject[] {});
 
         assertFalse("Do not use a TreeSet", downstreams instanceof TreeSet);
     }

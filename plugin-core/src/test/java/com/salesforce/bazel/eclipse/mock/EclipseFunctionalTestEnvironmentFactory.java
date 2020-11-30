@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 package com.salesforce.bazel.eclipse.mock;
 
@@ -46,7 +46,7 @@ import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 /**
  * Factory for creating test environments for Eclipse functional tests. Produces a Mock Eclipse workspace from
  * templates.
- * 
+ *
  * @author plaird
  */
 public class EclipseFunctionalTestEnvironmentFactory {
@@ -114,6 +114,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
         ProjectImporterFactory projectImporterFactory = new ProjectImporterFactory(workspaceRootProject, bazelPackagesToImport);
         projectImporterFactory.setImportOrderResolver(new MockImportOrderResolver());
         projectImporterFactory.skipJREWarmup();
+        projectImporterFactory.skipQueryCacheWarmup();
         ProjectImporter projectImporter = projectImporterFactory.build();
         // run the import process (this is actually done in BazelImportWizard.performFinish() when a user is running the show)
         List<IProject> importedProjectsList = projectImporter.run(new EclipseWorkProgressMonitor(), new MockProgressMonitor());

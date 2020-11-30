@@ -31,34 +31,54 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.util;
+package com.salesforce.bazel.eclipse.projectimport.flow;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
-public interface BazelConstants {
+import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
-    /**
-     * The Bazel BUILD files BEF looks for.
-     */
-    Collection<String> BUILD_FILE_NAMES =
-        Collections.unmodifiableSet(
-            new HashSet<>(
-                Arrays.asList(
-                    new String[]{"BUILD", "BUILD.bazel"})));
+/**
+ * Runs bazel query for all targets to warmup the query cache.
+ *
+ * This flow loads all targets with a single "bazel query" invocation.
+ */
+public class LoadTargetsFlow implements ImportFlow {
 
-    /**
-     * The targets configured by default for each imported Bazel package.
-     */
-    Collection<String> DEFAULT_PACKAGE_TARGETS =
-        Collections.unmodifiableSet(
-            new HashSet<>(
-                Arrays.asList(
-                    // "*" includes test _deploy jars, which we currently need for our Eclipse JUnit
-                    // integration to work - unfortunately building those jars can be slow if there
-                    // are many test targets
-                    new String[]{"*"})));
+    @Override
+    public void assertContextState(ImportContext ctx) {
+        Objects.requireNonNull(ctx.getPackageLocationToTargets());
+    }
+
+    @Override
+    public void run(ImportContext ctx) throws Exception {
+        BazelWorkspace bazelWorkspace = Objects.requireNonNull(BazelPluginActivator.getBazelWorkspace());
+        BazelCommandManager cmdMgr = BazelPluginActivator.getBazelCommandManager();
+        BazelWorkspaceCommandRunner cmdRunner = cmdMgr.getWorkspaceCommandRunner(bazelWorkspace);
+        Collection<BazelLabel> allTargets = new HashSet<>();
+        Map<BazelPackageLocation, List<BazelLabel>> packageLocationToTargets = ctx.getPackageLocationToTargets();
+        for (BazelPackageLocation packageLocation : packageLocationToTargets.keySet()) {
+            List<BazelLabel> targets = packageLocationToTargets.get(packageLocation);
+            if (!targets.isEmpty()) {
+                // flush the cache for each package because we don't know whether the previously loaded targets
+                // match or not (we could do better - actually check which targets were loaded?)
+                cmdRunner.flushQueryCache(packageLocation.getBazelPackageFSRelativePath());
+                // collect the targets
+                allTargets.addAll(targets);
+            }
+        }
+        // run bazel query once, for all targets - the results are cached
+        cmdRunner.queryBazelTargetsInBuildFile(ctx.getWorkProgressMonitor(), allTargets);
+    }
+
+
 
 }

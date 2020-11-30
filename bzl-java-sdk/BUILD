@@ -63,6 +63,15 @@ java_test(
 )
 
 java_test(
+    name = "BazelLabelUtilTest",
+    srcs = [
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelLabel.java",
+        "src/main/java/com/salesforce/bazel/sdk/model/BazelLabelUtil.java",
+        "src/test/java/com/salesforce/bazel/sdk/model/BazelLabelUtilTest.java",
+    ],
+)
+
+java_test(
     name = "BazelProblemTest",
     srcs = [
         "src/main/java/com/salesforce/bazel/sdk/model/BazelLabel.java",
@@ -149,6 +158,7 @@ java_test(
         "src/main/java/com/salesforce/bazel/sdk/project/ProjectView.java",
         "src/main/java/com/salesforce/bazel/sdk/project/ProjectViewPackageLocation.java",
         "src/test/java/com/salesforce/bazel/sdk/project/ProjectViewTest.java",
+        "src/main/java/com/salesforce/bazel/sdk/util/BazelConstants.java",
     ],
 )
 

@@ -70,9 +70,17 @@ public class BazelLabel {
         } else {
             this.repositoryName = null;
         }
-        label = sanitize(label);
+        label = sanitizeLabel(label);
         this.localLabelPart = label;
         this.fullLabel = getFullLabel(this.repositoryName, this.localLabelPart);
+    }
+
+    /**
+     * Instantiates a BazelLabel instance with the Bazel package path and the label
+     * name specified separately. For example: "a/b/c" and "my-target-name".
+     */
+    public BazelLabel(String packagePath, String targetName) {
+        this(sanitizePackagePath(packagePath) + ":" + sanitizeTargetName(targetName));
     }
 
     /**
@@ -114,7 +122,9 @@ public class BazelLabel {
      * @return true if this instance represents a concrete label, false otherwise
      */
     public boolean isConcrete() {
-        return !this.localLabelPart.endsWith("*") && !this.localLabelPart.endsWith("...");
+        return !(this.localLabelPart.endsWith("*") ||
+               this.localLabelPart.endsWith("...") ||
+               this.localLabelPart.endsWith("all"));
     }
 
     /**
@@ -152,7 +162,7 @@ public class BazelLabel {
      * @throws IllegalArgumentException
      *             if this label is a root-level label (//...) and therefore doesn't have a package path.
      */
-    public BazelLabel getDefaultPackageLabel() {
+    public BazelLabel toDefaultPackageLabel() {
         return withRepositoryNameAndLocalLabelPart(repositoryName, getPackagePath());
     }
 
@@ -252,7 +262,29 @@ public class BazelLabel {
             new BazelLabel("@" + repositoryName + "//" + localLabelPart);
     }
 
-    private static String sanitize(String label) {
+    private static String sanitizePackagePath(String path) {
+        if (path == null) {
+            throw new IllegalAccessError(path);
+        }
+        path = path.trim();
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        return path;
+    }
+
+    private static String sanitizeTargetName(String target) {
+        if (target == null) {
+            throw new IllegalArgumentException(target);
+        }
+        target = target.strip();
+        if (target.startsWith(":")) {
+            target = target.substring(1);
+        }
+        return target;
+    }
+
+    private static String sanitizeLabel(String label) {
         if (label == null) {
             throw new IllegalArgumentException(label);
         }
@@ -271,6 +303,9 @@ public class BazelLabel {
         }
         if (label.startsWith("//")) {
             label = label.substring(2);
+        }
+        if (label.startsWith("/")) {
+            label = label.substring(1);
         }
         return label;
     }

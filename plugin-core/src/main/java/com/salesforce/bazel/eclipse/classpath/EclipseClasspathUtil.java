@@ -21,6 +21,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ * Copyright 2016 The Bazel Authors. All rights reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -31,34 +33,48 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.util;
+package com.salesforce.bazel.eclipse.classpath;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
-public interface BazelConstants {
+import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaModelException;
 
-    /**
-     * The Bazel BUILD files BEF looks for.
-     */
-    Collection<String> BUILD_FILE_NAMES =
-        Collections.unmodifiableSet(
-            new HashSet<>(
-                Arrays.asList(
-                    new String[]{"BUILD", "BUILD.bazel"})));
+public final class EclipseClasspathUtil {
 
-    /**
-     * The targets configured by default for each imported Bazel package.
-     */
-    Collection<String> DEFAULT_PACKAGE_TARGETS =
-        Collections.unmodifiableSet(
-            new HashSet<>(
-                Arrays.asList(
-                    // "*" includes test _deploy jars, which we currently need for our Eclipse JUnit
-                    // integration to work - unfortunately building those jars can be slow if there
-                    // are many test targets
-                    new String[]{"*"})));
+    public static Set<IProject> getDownstreamProjectsOf(IProject project, IJavaProject[] allImportedProjects) {
+        Set<IProject> downstreamProjects = new LinkedHashSet<>(); // cannot be a TreeSet because Project doesn't implement Comparable
+        collectDownstreamProjects(project, downstreamProjects, allImportedProjects);
+        return downstreamProjects;
+    }
+
+    // determines all downstream projects, including transitives, of the specified "upstream" project, by looking at the
+    // specified "allImportedProjects", and adds them to the specified "downstreams" Set.
+    private static void collectDownstreamProjects(IProject upstream, Set<IProject> downstreams,
+            IJavaProject[] allImportedProjects) {
+        for (IJavaProject project : allImportedProjects) {
+            try {
+                for (String requiredProjectName : project.getRequiredProjectNames()) {
+                    String upstreamProjectName = upstream.getName();
+                    if (upstreamProjectName.equals(requiredProjectName)) {
+                        IProject downstream = project.getProject();
+                        if (!downstreams.contains(downstream)) {
+                            downstreams.add(downstream);
+                            collectDownstreamProjects(downstream, downstreams, allImportedProjects);
+                        }
+                    }
+                }
+            } catch (JavaModelException ex) {
+                throw new IllegalStateException(ex);
+            }
+        }
+    }
+
+
+    private EclipseClasspathUtil() {
+        throw new IllegalArgumentException("Not meant to be instantiated");
+    }
 
 }

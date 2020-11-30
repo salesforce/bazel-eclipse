@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,12 +57,12 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 
 import com.google.common.collect.Lists;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
+import com.salesforce.bazel.eclipse.classpath.EclipseClasspathUtil;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -135,7 +134,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 IProject rootWorkspaceProject = Arrays.stream(allImportedProjects)
                         .filter(p -> resourceHelper.isBazelRootProject(p.getProject())).collect(onlyElement())
                         .getProject();
-                Set<IProject> downstreamProjects = getDownstreamProjectsOf(project, allImportedProjects);
+                Set<IProject> downstreamProjects = EclipseClasspathUtil.getDownstreamProjectsOf(project, allImportedProjects);
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject,
                     monitor);
 
@@ -233,34 +232,6 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             buildFlags.addAll(bazelProjectManager.getBazelBuildFlagsForProject(bazelProject));
         }
         return buildFlags;
-    }
-
-    static Set<IProject> getDownstreamProjectsOf(IProject project, IJavaProject[] allImportedProjects) {
-        Set<IProject> downstreamProjects = new LinkedHashSet<>(); // cannot be a TreeSet because Project doesn't implement Comparable
-        collectDownstreamProjects(project, downstreamProjects, allImportedProjects);
-        return downstreamProjects;
-    }
-
-    // determines all downstream projects, including transitives, of the specified "upstream" project, by looking at the
-    // specified "allImportedProjects", and adds them to the specified "downstreams" Set.
-    private static void collectDownstreamProjects(IProject upstream, Set<IProject> downstreams,
-            IJavaProject[] allImportedProjects) {
-        for (IJavaProject project : allImportedProjects) {
-            try {
-                for (String requiredProjectName : project.getRequiredProjectNames()) {
-                    String upstreamProjectName = upstream.getName();
-                    if (upstreamProjectName.equals(requiredProjectName)) {
-                        IProject downstream = project.getProject();
-                        if (!downstreams.contains(downstream)) {
-                            downstreams.add(downstream);
-                            collectDownstreamProjects(downstream, downstreams, allImportedProjects);
-                        }
-                    }
-                }
-            } catch (JavaModelException ex) {
-                throw new IllegalStateException(ex);
-            }
-        }
     }
 
     private boolean importInProgress() {

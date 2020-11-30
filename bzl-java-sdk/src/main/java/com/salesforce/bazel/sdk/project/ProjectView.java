@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.util.BazelConstants;
 
 /**
  * The <a href="http://ij.bazel.build/docs/project-views.html">project view</a> file.
@@ -127,7 +128,7 @@ public class ProjectView {
     }
 
     /**
-     * Adds a default target for each directory that does not have one (or more) entries
+     * Adds the default targets for each directory that does not have one (or more) entries
      * in the "targets:" section.
      */
     public void addDefaultTargets() {
@@ -142,12 +143,14 @@ public class ProjectView {
                 }
             }
             if (!foundLabel) {
-                defaultLabels.add(bazelPackage.toPackageWildcardLabel());
+                for (String target : BazelConstants.DEFAULT_PACKAGE_TARGETS) {
+                    defaultLabels.add(new BazelLabel(bazelPackage.getPackagePath(), target));
+                }
             }
         }
         for (BazelLabel dflt : defaultLabels) {
-            // this method is used to adjust internal state, it is ok for the line number is
-            // to be incorrect
+            // since this method is used to adjust internal state, it is ok for the
+            // line number to not be correct.
             targetToLineNumber.put(dflt, 0);
         }
     }
@@ -198,11 +201,13 @@ public class ProjectView {
         int lineNumber = 3;
         for (BazelPackageLocation pack : packages) {
             packageToLineNumber.put(pack, lineNumber);
+            lineNumber += 1;
         }
         // newline
         lineNumber += 1;
         for (BazelLabel target : targets) {
             targetToLineNumber.put(target, lineNumber);
+            lineNumber += 1;
         }
     }
 
