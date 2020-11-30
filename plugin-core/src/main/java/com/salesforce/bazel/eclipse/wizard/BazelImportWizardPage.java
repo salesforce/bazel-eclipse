@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -33,7 +33,7 @@
  */
 /*******************************************************************************
  * Copyright (c) 2008-2013 Sonatype, Inc. and others. Copyright 2018-2019 Salesforce
- * 
+ *
  * All rights reserved. This program and the accompanying materials are made available under the terms of the Eclipse
  * Public License v1.0 which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
@@ -197,7 +197,7 @@ public class BazelImportWizardPage extends WizardPage {
             String target = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets()
                     .iterator().next();
             BazelLabel label = new BazelLabel(target);
-            String pack = label.getDefaultPackageLabel().getLabel();
+            String pack = label.toDefaultPackageLabel().getLabel();
             BazelPackageInfo bpi = rootPackage.findByPackage(pack);
             if (bpi != null) {
                 importedPackages.add(bpi);

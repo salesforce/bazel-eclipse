@@ -50,6 +50,7 @@ import com.salesforce.bazel.eclipse.projectimport.flow.ImportFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.InitImportFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.InitJREFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.LoadAspectsFlow;
+import com.salesforce.bazel.eclipse.projectimport.flow.LoadTargetsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.OrderProjectsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.SetupClasspathContainersFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.SetupProjectBuildersFlow;
@@ -93,6 +94,11 @@ public class ProjectImporterFactory {
         flows.removeIf(flow -> flow.getClass() == InitJREFlow.class);
     }
 
+    @VisibleForTesting
+    public void skipQueryCacheWarmup() {
+        flows.removeIf(flow -> flow.getClass() == LoadTargetsFlow.class);
+    }
+
     public ProjectImporter build() {
         return new FlowProjectImporter(flows.toArray(new ImportFlow[flows.size()]), bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver);
     }
@@ -107,6 +113,7 @@ public class ProjectImporterFactory {
                     new InitImportFlow(),
                     new DetermineTargetsFlow(),
                     new LoadAspectsFlow(),
+                    new LoadTargetsFlow(),
                     new CreateRootProjectFlow(),
                     new OrderProjectsFlow(),
                     new CreateProjectsFlow(),

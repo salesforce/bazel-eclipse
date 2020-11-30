@@ -204,6 +204,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * Returns the execution root of the current Bazel workspace.
      */
+    @Override
     public File computeBazelWorkspaceExecRoot() {
 
         if (bazelExecRootDirectory == null) {
@@ -257,6 +258,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * Returns the output base of the current Bazel workspace.
      */
+    @Override
     public File computeBazelWorkspaceOutputBase() {
         if (bazelOutputBaseDirectory == null) {
             try {
@@ -278,6 +280,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * Returns the bazel-bin of the current Bazel workspace.
      */
+    @Override
     public File computeBazelWorkspaceBin() {
         if (bazelBinDirectory == null) {
             try {
@@ -299,6 +302,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * Returns the explicitly set options in the workspace config files (.bazelrc et al)
      */
+    @Override
     public void populateBazelWorkspaceCommandOptions(BazelWorkspaceCommandOptions commandOptions) {
         try {
             ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
@@ -352,14 +356,13 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * operation is cached internally, so repeated calls in the same label are cheap.
      * <p>
      *
-     * @param bazelPackageName
-     *            the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
+     * @param labels
+     *            the labels to query
      */
-    public synchronized BazelBuildFile queryBazelTargetsInBuildFile(WorkProgressMonitor progressMonitor,
-            String bazelPackageName)
+    public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(WorkProgressMonitor progressMonitor,
+            Collection<BazelLabel> labels)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        return this.bazelQueryHelper.queryBazelTargetsInBuildFile(bazelWorkspaceRootDirectory, progressMonitor,
-            bazelPackageName);
+        return this.bazelQueryHelper.queryBazelTargetsInBuildFile(bazelWorkspaceRootDirectory, progressMonitor, labels);
     }
 
     /**
@@ -367,7 +370,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      *            the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
      */
     public synchronized void flushQueryCache(String bazelPackageName) {
-        this.bazelQueryHelper.flushCache(bazelPackageName);
+        this.bazelQueryHelper.flushCache(new BazelLabel(bazelPackageName));
     }
 
     /**
@@ -383,24 +386,6 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             File... directories) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         return this.bazelQueryHelper.listBazelTargetsInBuildFiles(bazelWorkspaceRootDirectory, progressMonitor,
             directories);
-    }
-
-    /**
-     * Gives a list of target completions for the given beginning string. The result is the list of possible completion
-     * for a target pattern starting with string.
-     * <p>
-     * <b>WARNING:</b> this method was written for the original Bazel plugin for a search feature, but was not actually
-     * used as far as we can tell. It may or may not work as advertised.
-     *
-     * @param userSearchString
-     *            the partial target string entered by the user
-     *
-     * @throws BazelCommandLineToolConfigurationException
-     */
-    public List<String> getMatchingTargets(String userSearchString, WorkProgressMonitor progressMonitor)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        return this.bazelQueryHelper.getMatchingTargets(this.bazelWorkspaceRootDirectory, userSearchString,
-            progressMonitor);
     }
 
     /**
@@ -518,6 +503,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized Set<String> flushAspectInfoCacheForPackage(String packageName) {
         Set<BazelLabel> flushedPackages = this.aspectHelper.flushAspectInfoCacheForPackage(new BazelLabel(packageName));
+        LOG.info("Flushed aspect cache for packages: " + flushedPackages);
         return flushedPackages.stream().map(BazelLabel::getPackagePath).collect(Collectors.toSet());
     }
 

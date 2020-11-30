@@ -27,15 +27,15 @@ public class MockQueryCommand extends MockCommand {
         // determine the type of query
         String queryArg = commandTokens.get(2);
 
-        if (queryArg.startsWith("kind(rule, //")) {
-            // QUERY: 
-            //    kind(rule, //projects/libs/javalib0:*)
+        if (queryArg.startsWith("kind(rule, set(//")) {
+            // QUERY:
+            //    kind(rule, set(//projects/libs/javalib0:*))
             // RESPONSE: for each target in the package, a line is written to stdout such as:
             //    java_library rule //projects/libs/javalib0:javalib0
             //    java_test rule //projects/libs/javalib0:javalib0Test
 
             // strip target to be just '//projects/libs/javalib0'
-            String queryPackage = queryArg.substring(13, queryArg.length() - 3);
+            String queryPackage = queryArg.substring(17, queryArg.length() - 4);
 
             if (!isValidBazelTarget(queryPackage)) {
                 // by default, isValidBazelTarget() will throw an exception if the package is missing, but the test may configure it to return false instead

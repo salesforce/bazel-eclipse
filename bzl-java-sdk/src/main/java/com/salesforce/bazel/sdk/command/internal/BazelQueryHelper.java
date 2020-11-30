@@ -25,16 +25,22 @@ package com.salesforce.bazel.sdk.command.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
-import com.salesforce.bazel.sdk.util.BazelConstants;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelLabelUtil;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
@@ -49,7 +55,7 @@ public class BazelQueryHelper {
      */
     private final BazelCommandExecutor bazelCommandExecutor;
 
-    private final Map<String, BazelBuildFile> buildFileCache = new HashMap<>();
+    private final Map<BazelLabel, BazelBuildFile> buildFileCache = new HashMap<>();
 
     public BazelQueryHelper(BazelCommandExecutor bazelCommandExecutor) {
         this.bazelCommandExecutor = bazelCommandExecutor;
@@ -84,26 +90,45 @@ public class BazelQueryHelper {
      * @param bazelPackageName
      *            the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
      */
-    public synchronized BazelBuildFile queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory,
-            WorkProgressMonitor progressMonitor, String bazelPackageName)
+    public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory,
+            WorkProgressMonitor progressMonitor, Collection<BazelLabel> bazelLabels)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        if ("//".equals(bazelPackageName)) {
-            // we don't support having buildable code at the root of the WORKSPACE
-            return new BazelBuildFile("//...");
+        if (bazelLabels.isEmpty()) {
+            return Collections.singletonList(new BazelBuildFile("//..."));
         }
 
-        BazelBuildFile buildFile = buildFileCache.get(bazelPackageName);
-        if (buildFile != null) {
-            LOG.info("Retrieved list of targets for package [" + bazelPackageName + "] from cache.");
-            return buildFile;
+        Collection<BazelLabel> cacheMisses = new HashSet<>();
+        Collection<BazelBuildFile> buildFiles = new HashSet<>();
+        Map<BazelLabel, Collection<BazelLabel>> packageToLabels = BazelLabelUtil.groupByPackage(bazelLabels);
+
+        for (BazelLabel pack : packageToLabels.keySet()) {
+            BazelBuildFile buildFile = buildFileCache.get(pack);
+            if (buildFile == null) {
+                cacheMisses.addAll(packageToLabels.get(pack));
+                LOG.info("QUERY CACHE MISS package: " + pack);
+            } else {
+                buildFiles.add(buildFile);
+                LOG.info("QUERY CACHE GET package: " + pack);
+            }
         }
+
+        if (!cacheMisses.isEmpty()) {
+            Collection<BazelBuildFile> loadedBuildFiles = runQuery(cacheMisses, bazelWorkspaceRootDirectory, progressMonitor);
+            buildFiles.addAll(loadedBuildFiles);
+        }
+        return buildFiles;
+    }
+
+    // runs query and populates cache, returns loaded BazelBuildFile instances
+    private Collection<BazelBuildFile> runQuery(Collection<BazelLabel> bazelLabels, File bazelWorkspaceRootDirectory, WorkProgressMonitor progressMonitor) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+        String labels = bazelLabels.stream().map(BazelLabel::getLabel).collect(Collectors.joining(" "));
 
         // bazel query 'kind(rule, [label]:*)' --output label_kind
 
         ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
         argBuilder.add("query");
-        argBuilder.add("kind(rule, " + bazelPackageName + ":*)");
+        argBuilder.add("kind(rule, set(" + labels + "))");
         argBuilder.add("--output");
         argBuilder.add("label_kind");
         List<String> resultLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory,
@@ -114,7 +139,7 @@ public class BazelQueryHelper {
         // java_test rule //projects/libs/apple/apple-api:apple-api-test2
         // java_library rule //projects/libs/apple/apple-api:apple-api
 
-        buildFile = new BazelBuildFile(bazelPackageName);
+        Map<BazelLabel, String> labelToRuleType = new HashMap<>();
         for (String resultLine : resultLines) {
             String[] tokens = resultLine.split(" ");
             if (tokens.length != 3) {
@@ -122,96 +147,41 @@ public class BazelQueryHelper {
             }
             String ruleType = tokens[0];
             String targetLabel = tokens[2];
-            buildFile.addTarget(ruleType, targetLabel);
+            labelToRuleType.put(new BazelLabel(targetLabel), ruleType);
         }
-        buildFileCache.put(bazelPackageName, buildFile);
 
-        return buildFile;
+        Set<BazelLabel> unprocessed = new HashSet<>(BazelLabelUtil.groupByPackage(bazelLabels).keySet());
+
+        Map<BazelLabel, Collection<BazelLabel>> packageToLabel = BazelLabelUtil.groupByPackage(labelToRuleType.keySet());
+
+        Collection<BazelBuildFile> buildFiles = new HashSet<>();
+        for (BazelLabel pack : packageToLabel.keySet()) {
+            BazelBuildFile buildFile = new BazelBuildFile(pack.getLabel());
+            buildFileCache.put(pack, buildFile);
+            LOG.info("QUERY CACHE PUT package: " + pack);
+            buildFiles.add(buildFile);
+            unprocessed.remove(pack);
+            for (BazelLabel target : packageToLabel.get(pack)) {
+                String ruleType = Objects.requireNonNull(labelToRuleType.get(target));
+                buildFile.addTarget(ruleType, target.getLabel());
+            }
+        }
+
+        // some packages may not have any targets - they need to be accounted for
+        for (BazelLabel pack : unprocessed) {
+            BazelBuildFile buildFile = new BazelBuildFile(pack.getLabel());
+            buildFileCache.put(pack, buildFile);
+            LOG.info("QUERY CACHE PUT (no targets) package: " + pack);
+        }
+
+        return buildFiles;
     }
 
-    public void flushCache(String bazelPackageName) {
-        BazelBuildFile previousValue = buildFileCache.remove(bazelPackageName);
+    public void flushCache(BazelLabel bazelPackageName) {
+        BazelLabel pack = bazelPackageName.toDefaultPackageLabel();
+        BazelBuildFile previousValue = buildFileCache.remove(pack);
         if (previousValue != null) {
-            LOG.info("Flushed query cache for package " + bazelPackageName);
+            LOG.info("QUERY CACHE FLUSH package " + pack);
         }
     }
-
-    /**
-     * Gives a list of target completions for the given beginning string. The result is the list of possible completion
-     * for a target pattern starting with string.
-     * <p>
-     * <b>WARNING:</b> this method was written for the original Bazel plugin for a search feature, but was not actually
-     * used as far as we can tell. It may or may not work as advertised.
-     *
-     * @param userSearchString
-     *            the partial target string entered by the user
-     *
-     * @throws BazelCommandLineToolConfigurationException
-     */
-    public List<String> getMatchingTargets(File bazelWorkspaceRootDirectory, String userSearchString,
-            WorkProgressMonitor progressMonitor)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        if (userSearchString.equals("/") || userSearchString.isEmpty()) {
-            return ImmutableList.of("//");
-        } else if (userSearchString.contains(":")) {
-            // complete targets using `bazel query`
-            int idx = userSearchString.indexOf(':');
-            final String packageName = userSearchString.substring(0, idx);
-            final String targetPrefix = userSearchString.substring(idx + 1);
-            List<String> args = ImmutableList.<String> builder().add("query", packageName + ":*").build();
-            Function<String, String> selector = line -> {
-                int i = line.indexOf(':');
-                String s = line.substring(i + 1);
-                return !s.isEmpty() && s.startsWith(targetPrefix) ? (packageName + ":" + s) : null;
-            };
-
-            List<String> outputLines = this.bazelCommandExecutor.runBazelAndGetOuputLines(ConsoleType.WORKSPACE,
-                bazelWorkspaceRootDirectory, progressMonitor, args, selector, BazelCommandExecutor.TIMEOUT_INFINITE);
-
-            ImmutableList.Builder<String> builder = ImmutableList.builder();
-            builder.addAll(outputLines);
-
-            if ("all".startsWith(targetPrefix)) {
-                builder.add(packageName + ":all");
-            }
-            if ("*".startsWith(targetPrefix)) {
-                builder.add(packageName + ":*");
-            }
-            return builder.build();
-        } else {
-            // complete packages
-            int lastSlash = userSearchString.lastIndexOf('/');
-            final String prefix = lastSlash > 0 ? userSearchString.substring(0, lastSlash + 1) : "";
-            final String suffix = lastSlash > 0 ? userSearchString.substring(lastSlash + 1) : userSearchString;
-            final String directory = (prefix.isEmpty() || prefix.equals("//")) ? ""
-                    : prefix.substring(userSearchString.startsWith("//") ? 2 : 0, prefix.length() - 1);
-            File file = directory.isEmpty() ? bazelWorkspaceRootDirectory
-                    : new File(bazelWorkspaceRootDirectory, directory);
-            ImmutableList.Builder<String> builder = ImmutableList.builder();
-            File[] files = file.listFiles((f) -> {
-                // Only give directories whose name starts with suffix...
-                return f.getName().startsWith(suffix) && f.isDirectory()
-                // ...that does not start with '.'...
-                        && !f.getName().startsWith(".")
-                // ...and is not a Bazel convenience link
-                        && (!file.equals(bazelWorkspaceRootDirectory) || !f.getName().startsWith("bazel-"));
-            });
-            if (files != null) {
-                for (File d : files) {
-                    builder.add(prefix + d.getName() + "/");
-                    for (String buildFileName : BazelConstants.BUILD_FILE_NAMES) {
-                        if (new File(d, buildFileName).exists()) {
-                            builder.add(prefix + d.getName() + ":");
-                            break;
-                        }
-                    }
-                }
-            }
-            if ("...".startsWith(suffix)) {
-                builder.add(prefix + "...");
-            }
-            return builder.build();
-        }
-    }
-
 }

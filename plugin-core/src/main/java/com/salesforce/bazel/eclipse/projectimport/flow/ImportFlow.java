@@ -23,8 +23,6 @@
  */
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
-import org.eclipse.core.runtime.CoreException;
-
 /**
  * A single project import step.
  *
@@ -36,7 +34,7 @@ public interface ImportFlow {
     /**
      * Run the import step.
      */
-    void run(ImportContext ctx) throws CoreException;
+    void run(ImportContext ctx) throws Exception;
 
     /**
      * Asserts invariants about the state of the specified ctx.

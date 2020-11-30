@@ -26,12 +26,14 @@ package com.salesforce.bazel.sdk.lang.jvm;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import com.salesforce.bazel.sdk.aspect.AspectOutputJarSet;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
@@ -138,8 +140,19 @@ public class BazelJvmClasspath {
             // of all targets if configured with the wildcard target
             BazelBuildFile bazelBuildFileModel = null;
             try {
-                bazelBuildFileModel = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor,
-                    this.bazelProjectManager.getBazelLabelForProject(bazelProject));
+                // we pass the targets that are configured for the current project to bazel query
+                // typically, this is a single wildcard target, but the user may
+                // also have specified explicit targets to use
+                List<BazelLabel> labels = configuredTargetsForProject.getConfiguredTargets().stream().map(BazelLabel::new).collect(Collectors.toList());
+                Collection<BazelBuildFile> buildFiles = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor, labels);
+                // since we only call query with labels for the same package, we expect to get a single BazelBuildFile instance back
+                if (buildFiles.isEmpty()) {
+                    throw new IllegalStateException("Unexpected empty BazelBuildFile collection, this is a bug");
+                } else if (buildFiles.size() > 1) {
+                    throw new IllegalStateException("Expected a single BazelBuildFile instance, this is a bug");
+                } else {
+                    bazelBuildFileModel = buildFiles.iterator().next();
+                }
             } catch (Exception anyE) {
                 logger.error("Unable to compute classpath containers entries for project " + bazelProject.name, anyE);
                 return returnEmptyClasspathOrThrow(anyE);

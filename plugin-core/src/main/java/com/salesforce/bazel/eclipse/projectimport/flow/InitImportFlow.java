@@ -25,9 +25,6 @@ package com.salesforce.bazel.eclipse.projectimport.flow;
 
 import java.io.File;
 import java.util.Objects;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.runtime.SubMonitor;
 
@@ -59,22 +56,51 @@ public class InitImportFlow implements ImportFlow {
     public void run(ImportContext ctx) {
         ProjectImporterFactory.importInProgress.set(true);
 
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-
-
         SubMonitor subMonitor = SubMonitor.convert(ctx.getProgressMonitor(), ctx.getSelectedBazelPackages().size());
         subMonitor.setTaskName("Running import");
         subMonitor.split(1);
 
+        File bazelWorkspaceRootDirectory = initContext(ctx);
 
+        BazelWorkspace bazelWorkspace = initBazelWorkspace(bazelWorkspaceRootDirectory);
 
+        initWorkspaceOptions(ctx, bazelWorkspace);
+
+        warmupCaches(bazelWorkspace);
+    }
+
+    @Override
+    public void finish(ImportContext ctx) {
+        ProjectImporterFactory.importInProgress.set(false);
+    }
+
+    private static void warmupCaches(BazelWorkspace bazelWorkspace) {
+        // these are cached - initialize them now so we do not incur the cost of determining these locations
+        // later when creating projects
+        bazelWorkspace.getBazelOutputBaseDirectory();
+        bazelWorkspace.getBazelExecRootDirectory();
+    }
+
+    private static void initWorkspaceOptions(ImportContext ctx, BazelWorkspace bazelWorkspace) {
+        // get the Workspace options (.bazelrc)
+        // note that this ends up running bazel (bazel test --announce_rc)
+        BazelWorkspaceCommandOptions options = bazelWorkspace.getBazelWorkspaceCommandOptions();
+        // determine the Java levels
+        String javacoptString = options.getContextualOption("build", "javacopt");
+        int sourceLevel = JavaLanguageLevelHelper.getSourceLevelAsInt(javacoptString);
+        ctx.setJavaLanguageLevel(sourceLevel);
+    }
+
+    private static File initContext(ImportContext ctx) {
         BazelPackageLocation bazelWorkspaceRootPackageInfo = ctx.getBazelWorkspaceRootPackageInfo();
         File bazelWorkspaceRootDirectory =
                 BazelPathHelper.getCanonicalFileSafely(bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory());
         ctx.init(bazelWorkspaceRootDirectory);
+        return bazelWorkspaceRootDirectory;
+    }
 
-
-
+    private static BazelWorkspace initBazelWorkspace(File bazelWorkspaceRootDirectory) {
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         boolean isInitialImport = bazelWorkspace == null;
         String bazelWorkspaceName = null;
         if (isInitialImport) {
@@ -91,33 +117,8 @@ public class InitImportFlow implements ImportFlow {
         // TODO send this message to the EclipseConsole so the user actually sees it
         LOG.info("Starting import of [{}]. This may take some time, please be patient.", bazelWorkspaceName);
 
-
-
         bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        // get the Workspace options (.bazelrc)
-        // note that this ends up running bazel (bazel test --announce_rc)
-        BazelWorkspaceCommandOptions options = bazelWorkspace.getBazelWorkspaceCommandOptions();
-        // determine the Java levels
-        String javacoptString = options.getContextualOption("build", "javacopt");
-        int sourceLevel = JavaLanguageLevelHelper.getSourceLevelAsInt(javacoptString);
-        ctx.setJavaLanguageLevel(sourceLevel);
 
-
-
-        // these are cached - initialize them now so we do not incur the cost of determining these locations
-        // later when creating projects
-        bazelWorkspace.getBazelOutputBaseDirectory();
-        bazelWorkspace.getBazelExecRootDirectory();
-    }
-
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
-    @Override
-    public void finish(ImportContext ctx) {
-        // an import triggers a full build for each imported project
-        // since during import, we already ran a full build (to generate aspects),
-        // we will ignore these requests by keeping the "import in progress" state
-        // just a little longer
-        scheduler.schedule(() -> ProjectImporterFactory.importInProgress.set(false), 1, TimeUnit.SECONDS);
+        return bazelWorkspace;
     }
 }

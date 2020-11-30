@@ -243,7 +243,7 @@ public class BazelWorkspaceAspectHelper {
                 // this could be done in the loop above, but this is good sanity
                 Set<AspectTargetInfo> atis = aspectInfoCache_current.get(label);
                 if (atis == null) {
-                    LOG.warn("ASPECT CACHE BUG target: " + label + getLogStr(label, caller));
+                    LOG.error("ASPECT CACHE BUG target: " + label + getLogStr(label, caller));
                     atis = Collections.emptySet();
                 }
                 resultMap.put(label, atis);

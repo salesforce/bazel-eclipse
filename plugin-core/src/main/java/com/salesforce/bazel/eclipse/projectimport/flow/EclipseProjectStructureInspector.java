@@ -30,6 +30,7 @@ import java.util.List;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.util.BazelConstants;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
@@ -105,13 +106,10 @@ class EclipseProjectStructureInspector {
         }
 
         if (foundSourceCodePaths) {
-            BazelLabel packageTarget = new BazelLabel(packageNode.getBazelPackageFSRelativePath());
-            if (packageTarget.isPackageDefault()) {
-                // if the label is //foo, we want foo:* so that we pick up all targets in the
-                // BUILD file, instead of only the default package target
-                packageTarget = packageTarget.toPackageWildcardLabel();
+            String packagePath = packageNode.getBazelPackageFSRelativePath();
+            for (String target : BazelConstants.DEFAULT_PACKAGE_TARGETS) {
+                this.bazelTargets.add(new BazelLabel(packagePath, target));
             }
-            this.bazelTargets.add(packageTarget);
         }
     }
 
