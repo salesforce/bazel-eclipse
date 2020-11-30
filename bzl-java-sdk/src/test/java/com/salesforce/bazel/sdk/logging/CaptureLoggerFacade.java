@@ -37,8 +37,6 @@ package com.salesforce.bazel.sdk.logging;
 
 import java.util.function.Consumer;
 
-import com.salesforce.bazel.sdk.logging.LoggerFacade;
-
 public class CaptureLoggerFacade extends LoggerFacade {
     Consumer<LogEvent> consumer;
 

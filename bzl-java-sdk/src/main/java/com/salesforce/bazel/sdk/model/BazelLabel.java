@@ -277,7 +277,7 @@ public class BazelLabel {
         if (target == null) {
             throw new IllegalArgumentException(target);
         }
-        target = target.strip();
+        target = target.trim();
         if (target.startsWith(":")) {
             target = target.substring(1);
         }
