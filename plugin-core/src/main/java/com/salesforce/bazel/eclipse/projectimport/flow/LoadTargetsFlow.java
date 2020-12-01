@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.eclipse.core.runtime.SubMonitor;
+
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -54,12 +56,17 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
 public class LoadTargetsFlow implements ImportFlow {
 
     @Override
+    public String getProgressText() {
+        return "Loading Bazel targets";
+    }
+
+    @Override
     public void assertContextState(ImportContext ctx) {
         Objects.requireNonNull(ctx.getPackageLocationToTargets());
     }
 
     @Override
-    public void run(ImportContext ctx) throws Exception {
+    public void run(ImportContext ctx, SubMonitor progressSubMonitor) throws Exception {
         BazelWorkspace bazelWorkspace = Objects.requireNonNull(BazelPluginActivator.getBazelWorkspace());
         BazelCommandManager cmdMgr = BazelPluginActivator.getBazelCommandManager();
         BazelWorkspaceCommandRunner cmdRunner = cmdMgr.getWorkspaceCommandRunner(bazelWorkspace);
@@ -76,7 +83,7 @@ public class LoadTargetsFlow implements ImportFlow {
             }
         }
         // run bazel query once, for all targets - the results are cached
-        cmdRunner.queryBazelTargetsInBuildFile(ctx.getWorkProgressMonitor(), allTargets);
+        cmdRunner.queryBazelTargetsInBuildFile(allTargets);
     }
 
 

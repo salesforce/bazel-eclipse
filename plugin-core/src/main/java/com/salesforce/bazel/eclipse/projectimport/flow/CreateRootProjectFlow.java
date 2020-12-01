@@ -32,7 +32,7 @@ import java.util.Objects;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
@@ -48,16 +48,20 @@ import com.salesforce.bazel.sdk.project.ProjectViewConstants;
 public class CreateRootProjectFlow implements ImportFlow {
 
     @Override
+    public String getProgressText() {
+        return "Creating root project";
+    }
+
+    @Override
     public void assertContextState(ImportContext ctx) {
         Objects.requireNonNull(ctx.getBazelWorkspaceRootDirectory());
         Objects.requireNonNull(ctx.getSelectedBazelPackages());
-        Objects.requireNonNull(ctx.getProgressMonitor());
         Objects.requireNonNull(ctx.getEclipseProjectCreator());
         Objects.requireNonNull(ctx.getEclipseFileLinker());
     }
 
     @Override
-    public void run(ImportContext ctx) {
+    public void run(ImportContext ctx, SubMonitor progressMonitor) {
         EclipseFileLinker fileLinker = ctx.getEclipseFileLinker();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         File bazelWorkspaceRootDirectory = ctx.getBazelWorkspaceRootDirectory();
@@ -81,20 +85,18 @@ public class CreateRootProjectFlow implements ImportFlow {
         }
         if (linkedFile) {
             List<BazelPackageLocation> selectedBazelPackages = ctx.getSelectedBazelPackages();
-            IProgressMonitor monitor = ctx.getProgressMonitor();
-            writeProjectViewFile(bazelWorkspaceRootDirectory, rootProject, selectedBazelPackages, monitor);
+            writeProjectViewFile(bazelWorkspaceRootDirectory, rootProject, selectedBazelPackages);
         }
         ctx.setRootProject(rootProject);
     }
 
 
-    private static void writeProjectViewFile(File bazelWorkspaceRootDirectory, IProject project,
-            List<BazelPackageLocation> importedBazelPackages, IProgressMonitor monitor) {
+    private static void writeProjectViewFile(File bazelWorkspaceRootDirectory, IProject project, List<BazelPackageLocation> importedBazelPackages) {
         ProjectView projectView = new ProjectView(bazelWorkspaceRootDirectory, importedBazelPackages, Collections.emptyList());
         IFile f = BazelPluginActivator.getResourceHelper().getProjectFile(project,
             ProjectViewConstants.PROJECT_VIEW_FILE_NAME);
         try {
-            f.create(new ByteArrayInputStream(projectView.getContent().getBytes()), false, monitor);
+            f.create(new ByteArrayInputStream(projectView.getContent().getBytes()), false, null);
         } catch (CoreException e) {
             throw new IllegalStateException(e);
         }

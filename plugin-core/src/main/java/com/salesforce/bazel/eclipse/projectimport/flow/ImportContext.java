@@ -31,12 +31,10 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 
 /**
@@ -47,8 +45,6 @@ public class ImportContext {
     private final BazelPackageLocation bazelWorkspaceRootPackageInfo;
     private final List<BazelPackageLocation> selectedBazelPackages;
     private final ProjectOrderResolver projectOrderResolver;
-    private final WorkProgressMonitor workProgressMonitor;
-    private final IProgressMonitor progressMonitor;
 
     private final List<IProject> importedProjects = new ArrayList<>();
     private final Map<IProject, BazelPackageLocation> projectToPackageLocation = new HashMap<>();
@@ -66,15 +62,11 @@ public class ImportContext {
     ImportContext(
             BazelPackageLocation bazelWorkspaceRootPackageInfo,
             List<BazelPackageLocation> selectedBazelPackages,
-            ProjectOrderResolver projectOrderResolver,
-            WorkProgressMonitor workProgressMonitor,
-            IProgressMonitor progressMonitor)
+            ProjectOrderResolver projectOrderResolver)
     {
         this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
         this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
         this.projectOrderResolver = Objects.requireNonNull(projectOrderResolver);
-        this.workProgressMonitor = Objects.requireNonNull(workProgressMonitor);
-        this.progressMonitor = Objects.requireNonNull(progressMonitor);
     }
 
     public void init(File bazelWorkspaceRootDirectory) {
@@ -101,14 +93,6 @@ public class ImportContext {
 
     public ProjectOrderResolver getProjectOrderResolver() {
         return projectOrderResolver;
-    }
-
-    public WorkProgressMonitor getWorkProgressMonitor() {
-        return workProgressMonitor;
-    }
-
-    public IProgressMonitor getProgressMonitor() {
-        return progressMonitor;
     }
 
     public File getBazelWorkspaceRootDirectory() {

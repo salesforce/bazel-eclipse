@@ -26,6 +26,7 @@ package com.salesforce.bazel.eclipse.projectimport.flow;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.internal.launching.JREContainerInitializer;
 
 /**
@@ -37,7 +38,12 @@ import org.eclipse.jdt.internal.launching.JREContainerInitializer;
 public class InitJREFlow implements ImportFlow {
 
     @Override
-    public void run(ImportContext ctx) throws CoreException {
+    public String getProgressText() {
+        return "Initializing Java Runtime";
+    }
+
+    @Override
+    public void run(ImportContext ctx, SubMonitor progressMonitor) throws CoreException {
         IPath path = Path.fromOSString("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11");
         // on my machine, this takes ~2 seconds
         JREContainerInitializer.resolveVM(path);

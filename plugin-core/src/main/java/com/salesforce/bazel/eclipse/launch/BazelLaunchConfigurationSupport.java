@@ -60,7 +60,6 @@ import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
-import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Supporting logic for Bazel Launch Configurations.
@@ -215,7 +214,7 @@ class BazelLaunchConfigurationSupport {
     Collection<AspectTargetInfo> getAspectTargetInfosForProject(IProject project,
             EnumSet<BazelTargetKind> targetTypes) {
         BazelWorkspaceCommandRunner bazelRunner = BazelPluginActivator.getInstance().getWorkspaceCommandRunner();
-        AspectTargetInfos apis = computeAspectTargetInfos(project, bazelRunner, WorkProgressMonitor.NOOP);
+        AspectTargetInfos apis = computeAspectTargetInfos(project, bazelRunner);
         return apis.lookupByTargetKind(targetTypes);
     }
 
@@ -242,7 +241,7 @@ class BazelLaunchConfigurationSupport {
     }
 
     private static AspectTargetInfos computeAspectTargetInfos(IProject project,
-            BazelWorkspaceCommandRunner bazelRunner, WorkProgressMonitor monitor) {
+            BazelWorkspaceCommandRunner bazelRunner) {
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         try {
             // TODO switch this to use the BazelBuildFile value object
@@ -250,7 +249,7 @@ class BazelLaunchConfigurationSupport {
             BazelProject bazelProject = bazelProjectManager.getProject(projectName);
             BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
             Map<BazelLabel, Set<AspectTargetInfo>> targetInfos = bazelRunner.getAspectTargetInfos(
-                targets.getConfiguredTargets(), monitor, "launcher:computeAspectTargetInfos");
+                targets.getConfiguredTargets(), "launcher:computeAspectTargetInfos");
             return AspectTargetInfos.fromSets(targetInfos.values());
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException ex) {
             throw new IllegalStateException(ex);

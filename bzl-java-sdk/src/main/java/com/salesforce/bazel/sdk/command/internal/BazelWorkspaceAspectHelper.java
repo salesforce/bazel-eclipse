@@ -47,7 +47,6 @@ import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationExcepti
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Manages running, collecting, and caching all of the build info aspects for a specific workspace.
@@ -117,23 +116,14 @@ public class BazelWorkspaceAspectHelper {
      * @throws BazelCommandLineToolConfigurationException
      */
     public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<BazelLabel> targets,
-            WorkProgressMonitor progressMonitor, String caller)
+            String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-
-        if (progressMonitor != null) {
-            progressMonitor.subTask("Load Bazel dependency information");
-        }
 
         Map<BazelLabel, Set<AspectTargetInfo>> resultMap = new LinkedHashMap<>();
         Collection<BazelLabel> cacheMisses = populateFromCache(targets, resultMap, caller);
         if (!cacheMisses.isEmpty()) {
-            loadTargetInfos(cacheMisses, resultMap, progressMonitor, caller);
+            loadTargetInfos(cacheMisses, resultMap, caller);
         }
-
-        if (progressMonitor != null) {
-            progressMonitor.worked(resultMap.size());
-        }
-
         return resultMap;
     }
 
@@ -207,9 +197,9 @@ public class BazelWorkspaceAspectHelper {
         return cacheMisses;
     }
 
-    private synchronized void loadTargetInfos(Collection<BazelLabel> cacheMisses, Map<BazelLabel, Set<AspectTargetInfo>> resultMap, WorkProgressMonitor progressMonitor, String caller)
+    private synchronized void loadTargetInfos(Collection<BazelLabel> cacheMisses, Map<BazelLabel, Set<AspectTargetInfo>> resultMap, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        List<String> discoveredAspectFilePaths = generateAspectTargetInfoFiles(cacheMisses, progressMonitor);
+        List<String> discoveredAspectFilePaths = generateAspectTargetInfoFiles(cacheMisses);
         Map<BazelLabel, AspectTargetInfo> aspectInfos = loadAspectFilePaths(discoveredAspectFilePaths);
 
         if (aspectInfos.isEmpty()) {
@@ -336,10 +326,9 @@ public class BazelWorkspaceAspectHelper {
      *
      * @throws BazelCommandLineToolConfigurationException
      */
-    private synchronized List<String> generateAspectTargetInfoFiles(Collection<BazelLabel> targets,
-            WorkProgressMonitor progressMonitor)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-
+    private synchronized List<String> generateAspectTargetInfoFiles(Collection<BazelLabel> targets)
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException
+    {
         Preconditions.checkArgument(!targets.isEmpty(), "Do not call without targets");
 
         List<String> args = new ArrayList<>();
@@ -353,7 +342,7 @@ public class BazelWorkspaceAspectHelper {
                 ? (t.endsWith(AspectTargetInfo.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
 
         List<String> listOfGeneratedFilePaths = this.bazelCommandExecutor.runBazelAndGetErrorLines(
-            ConsoleType.WORKSPACE, this.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), progressMonitor,
+            ConsoleType.WORKSPACE, this.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), null,
             args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
 
         return listOfGeneratedFilePaths;

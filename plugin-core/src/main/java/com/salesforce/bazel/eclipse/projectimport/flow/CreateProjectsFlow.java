@@ -30,6 +30,7 @@ import java.util.Objects;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -47,6 +48,11 @@ public class CreateProjectsFlow implements ImportFlow {
     private static final LogHelper LOG = LogHelper.log(CreateProjectsFlow.class);
 
     @Override
+    public String getProgressText() {
+        return "Creating projects";
+    }
+
+    @Override
     public void assertContextState(ImportContext ctx) {
         Objects.requireNonNull(ctx.getBazelWorkspaceRootDirectory());
         Objects.requireNonNull(ctx.getOrderedModules());
@@ -57,7 +63,12 @@ public class CreateProjectsFlow implements ImportFlow {
     }
 
     @Override
-    public void run(ImportContext ctx) throws CoreException {
+    public int getTotalWorkTicks(ImportContext ctx) {
+        return ctx.getSelectedBazelPackages().size();
+    }
+
+    @Override
+    public void run(ImportContext ctx, SubMonitor progressMonitor) throws CoreException {
         EclipseFileLinker fileLinker = ctx.getEclipseFileLinker();
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
@@ -86,6 +97,7 @@ public class CreateProjectsFlow implements ImportFlow {
                 } else {
                     LOG.error("Could not find BUILD file for package {}", packageLocation.getBazelPackageFSRelativePath());
                 }
+                progressMonitor.worked(1);
             }
         }
     }

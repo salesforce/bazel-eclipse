@@ -26,6 +26,8 @@ package com.salesforce.bazel.eclipse.projectimport.flow;
 import java.util.List;
 import java.util.Objects;
 
+import org.eclipse.core.runtime.SubMonitor;
+
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
@@ -36,6 +38,11 @@ import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 public class OrderProjectsFlow implements ImportFlow {
 
     @Override
+    public String getProgressText() {
+        return "Determining project order";
+    }
+
+    @Override
     public void assertContextState(ImportContext ctx) {
         Objects.requireNonNull(ctx.getProjectOrderResolver());
         Objects.requireNonNull(ctx.getBazelWorkspaceRootPackageInfo());
@@ -44,7 +51,7 @@ public class OrderProjectsFlow implements ImportFlow {
     }
 
     @Override
-    public void run(ImportContext ctx) {
+    public void run(ImportContext ctx, SubMonitor progressSubMonitor) {
         ProjectOrderResolver projectOrderResolver = ctx.getProjectOrderResolver();
         BazelPackageLocation bazelWorkspaceRootPackageInfo = ctx.getBazelWorkspaceRootPackageInfo();
         List<BazelPackageLocation> selectedBazelPackages = ctx.getSelectedBazelPackages();

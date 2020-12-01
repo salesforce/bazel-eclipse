@@ -12,9 +12,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
-import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Imports projects with a Progress Dialog. This is used by the Import Wizard and the ProjectView machinery.
@@ -29,8 +27,7 @@ public class BazelProjectImporter {
                 ProjectImporterFactory importerFactory = new ProjectImporterFactory(workspaceRootProject, bazelPackagesToImport);
                 ProjectImporter projectImporter = importerFactory.build();
                 try {
-                    WorkProgressMonitor progressMonitor = new EclipseWorkProgressMonitor(monitor);
-                    projectImporter.run(progressMonitor, monitor);
+                    projectImporter.run(monitor);
                 } catch (Exception e) {
                     e.printStackTrace();
                     openError("Error", e);
@@ -49,6 +46,7 @@ public class BazelProjectImporter {
 
     private static void openError(String title, Throwable ex) {
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 String exceptionMessage = ex.getMessage();
                 if (exceptionMessage == null || exceptionMessage.isEmpty()) {

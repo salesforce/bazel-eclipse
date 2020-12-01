@@ -40,19 +40,16 @@ import java.util.List;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
-
 public interface ProjectImporter {
-    
+
     /**
      * Imports a workspace. This could either be an initial import into a blank workspace, or an incremental import
      * of additional projects into an existing workspace.
-     * 
+     *
      * TODO test the return assumption below with incremental import
      *
      * @return the list of Eclipse IProject objects created during this import; projects that were created during a previous
      *    import for this Eclipse workspace will not be returned
-     */    
-    List<IProject> run(WorkProgressMonitor progressMonitor, IProgressMonitor monitor);
-
+     */
+    List<IProject> run(IProgressMonitor monitor);
 }

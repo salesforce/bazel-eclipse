@@ -35,7 +35,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
-import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
@@ -117,7 +116,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
         projectImporterFactory.skipQueryCacheWarmup();
         ProjectImporter projectImporter = projectImporterFactory.build();
         // run the import process (this is actually done in BazelImportWizard.performFinish() when a user is running the show)
-        List<IProject> importedProjectsList = projectImporter.run(new EclipseWorkProgressMonitor(), new MockProgressMonitor());
+        List<IProject> importedProjectsList = projectImporter.run(new MockProgressMonitor());
         mockEclipse.setImportedProjectsList(importedProjectsList);
 
         // do you want to simulate Eclipse calling getClasspath on the classpath container for each project?

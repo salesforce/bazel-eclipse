@@ -31,11 +31,11 @@ import java.util.Objects;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
-import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 
 /**
@@ -63,23 +63,28 @@ public class FlowProjectImporter implements ProjectImporter {
     }
 
     @Override
-    public List<IProject> run(WorkProgressMonitor workProgressMonitor, IProgressMonitor progressMonitor) {
-        ImportContext ctx = new ImportContext(bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver, workProgressMonitor, progressMonitor);
+    public List<IProject> run(IProgressMonitor progressMonitor) {
+        ImportContext ctx = new ImportContext(bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver);
         SimplePerfRecorder.reset();
         long startTimeMillis = System.currentTimeMillis();
-        runFlows(ctx);
+        runFlows(ctx, progressMonitor);
         finishFlows(ctx);
         SimplePerfRecorder.addTime("import_total", startTimeMillis);
         SimplePerfRecorder.logResults();
         return ctx.getAllImportedProjects();
     }
 
-    private void runFlows(ImportContext ctx) {
-        for (ImportFlow flow : flows) {
+    private void runFlows(ImportContext ctx, IProgressMonitor progressMonitor) {
+        SubMonitor subMonitor = SubMonitor.convert(progressMonitor, flows.length);
+        for (int i = 0; i < flows.length; i++) {
+            ImportFlow flow = flows[i];
             long startTimeMillis = System.currentTimeMillis();
             flow.assertContextState(ctx);
             try {
-                flow.run(ctx);
+                subMonitor.setTaskName(flow.getProgressText());
+                subMonitor.setWorkRemaining(flows.length - i + flow.getTotalWorkTicks(ctx));
+                flow.run(ctx, subMonitor);
+                subMonitor.worked(1);
             } catch (Throwable th) {
                 th.printStackTrace();
                 // this needs to be handled better - generally, error handing is still a mess

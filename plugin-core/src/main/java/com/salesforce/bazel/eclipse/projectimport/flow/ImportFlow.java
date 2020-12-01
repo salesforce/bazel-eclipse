@@ -23,6 +23,8 @@
  */
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
+import org.eclipse.core.runtime.SubMonitor;
+
 /**
  * A single project import step.
  *
@@ -33,8 +35,26 @@ public interface ImportFlow {
 
     /**
      * Run the import step.
+     *
+     * @param ctx  the import state passed between ImportFlow implementations
+     * @param progressMonitor  optional - may be used for more detailed progress reporting.
+     *     For progress reporting to work, the {@link #getTotalWorkTicks(ImportContext)}
+     *     method MUST be implemented.
      */
-    void run(ImportContext ctx) throws Exception;
+    void run(ImportContext ctx, SubMonitor progressMonitor) throws Exception;
+
+    /**
+     * The text shown on the progress dialogue when this ImportFlow runs.
+     *
+     * The text should be in present tense and should not include punctuation.
+     *
+     * Examples:
+     *
+     * Creating projects
+     * Loading type information
+     * Analyzing widgets
+     */
+    String getProgressText();
 
     /**
      * Asserts invariants about the state of the specified ctx.
@@ -48,5 +68,15 @@ public interface ImportFlow {
      */
     default void finish(ImportContext ctx) {
 
+    }
+
+    /**
+     * Long running ImportFlow implementations may opt into additional progress reporting by
+     * implementing this method. This method must return the number of "work units" that will
+     * be reported in total to the SubMonitor instance passed to the {@link #run(ImportContext, SubMonitor)}
+     * method.
+     */
+    default int getTotalWorkTicks(ImportContext ctx) {
+        return 0;
     }
 }

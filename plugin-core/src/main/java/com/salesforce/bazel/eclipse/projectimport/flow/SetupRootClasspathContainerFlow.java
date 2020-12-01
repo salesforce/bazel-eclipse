@@ -28,6 +28,7 @@ import java.util.Objects;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 
@@ -40,12 +41,17 @@ import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContaine
 public class SetupRootClasspathContainerFlow implements ImportFlow {
 
     @Override
+    public String getProgressText() {
+        return "Configuring root project classpath";
+    }
+
+    @Override
     public void assertContextState(ImportContext ctx) {
         Objects.requireNonNull(ctx.getRootProject());
     }
 
     @Override
-    public void run(ImportContext ctx) throws CoreException {
+    public void run(ImportContext ctx, SubMonitor progressSubMonitor) throws CoreException {
         IClasspathEntry cpe = BazelPluginActivator.getJavaCoreHelper()
             .newContainerEntry(new Path(BazelGlobalSearchClasspathContainer.CONTAINER_NAME));
         IProject rootProject = ctx.getRootProject();

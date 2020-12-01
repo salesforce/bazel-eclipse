@@ -113,7 +113,7 @@ public class BazelWorkspaceCommandRunnerTest {
         Set<String> targets = new TreeSet<>();
         targets.add(label);
         Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
-                workspaceRunner.getAspectTargetInfos(targets, new MockWorkProgressMonitor(), "testWorkspaceRunner");
+                workspaceRunner.getAspectTargetInfos(targets, "testWorkspaceRunner");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.get(new BazelLabel(label)).size());
 
