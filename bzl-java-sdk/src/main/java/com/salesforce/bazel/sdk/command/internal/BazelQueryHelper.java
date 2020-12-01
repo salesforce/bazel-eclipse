@@ -90,8 +90,7 @@ public class BazelQueryHelper {
      * @param bazelPackageName
      *            the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
      */
-    public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory,
-            WorkProgressMonitor progressMonitor, Collection<BazelLabel> bazelLabels)
+    public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory, Collection<BazelLabel> bazelLabels)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if (bazelLabels.isEmpty()) {
@@ -114,14 +113,14 @@ public class BazelQueryHelper {
         }
 
         if (!cacheMisses.isEmpty()) {
-            Collection<BazelBuildFile> loadedBuildFiles = runQuery(cacheMisses, bazelWorkspaceRootDirectory, progressMonitor);
+            Collection<BazelBuildFile> loadedBuildFiles = runQuery(cacheMisses, bazelWorkspaceRootDirectory);
             buildFiles.addAll(loadedBuildFiles);
         }
         return buildFiles;
     }
 
     // runs query and populates cache, returns loaded BazelBuildFile instances
-    private Collection<BazelBuildFile> runQuery(Collection<BazelLabel> bazelLabels, File bazelWorkspaceRootDirectory, WorkProgressMonitor progressMonitor) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+    private Collection<BazelBuildFile> runQuery(Collection<BazelLabel> bazelLabels, File bazelWorkspaceRootDirectory) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         String labels = bazelLabels.stream().map(BazelLabel::getLabel).collect(Collectors.joining(" "));
 
         // bazel query 'kind(rule, [label]:*)' --output label_kind
@@ -132,7 +131,7 @@ public class BazelQueryHelper {
         argBuilder.add("--output");
         argBuilder.add("label_kind");
         List<String> resultLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory,
-            progressMonitor, argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
+            null, argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
 
         // Sample Output:  (format: rule_type 'rule' label)
         // java_binary rule //projects/libs/apple/apple-api:apple-main

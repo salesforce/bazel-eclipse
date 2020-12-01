@@ -46,7 +46,6 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
@@ -87,7 +86,7 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     @Override
     protected BazelJvmClasspathResponse computeClasspath() {
         // the Java SDK will produce a list of logical classpath entries
-        return bazelClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
+        return bazelClasspath.getClasspathEntries();
     }
 
     // TODO this clean() method should not be static

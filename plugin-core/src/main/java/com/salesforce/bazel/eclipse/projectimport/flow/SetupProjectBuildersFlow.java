@@ -29,6 +29,7 @@ import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.builder.BazelBuilder;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -41,12 +42,17 @@ public class SetupProjectBuildersFlow implements ImportFlow {
     private static final LogHelper LOG = LogHelper.log(SetupProjectBuildersFlow.class);
 
     @Override
+    public String getProgressText() {
+        return "Configuring project builders";
+    }
+
+    @Override
     public void assertContextState(ImportContext ctx) {
         Objects.requireNonNull(ctx.getAllImportedProjects());
     }
 
     @Override
-    public void run(ImportContext ctx) {
+    public void run(ImportContext ctx, SubMonitor progressSubMonitor) {
         for (IProject project : ctx.getImportedProjects()) {
             // this may throw if the user has deleted the .project file on disk while the project is open for import
             // but it will try to recover so we should catch now instead of allowing the entire flow to fail.

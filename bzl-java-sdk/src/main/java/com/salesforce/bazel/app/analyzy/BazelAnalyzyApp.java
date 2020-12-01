@@ -95,7 +95,7 @@ public class BazelAnalyzyApp {
         // run the Aspects to compute the dependency data
         AspectTargetInfos aspects = new AspectTargetInfos();
         Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
-                bazelWorkspaceCmdRunner.getAspectTargetInfoForPackages(allPackages, null, "BazelBuildyApp");
+                bazelWorkspaceCmdRunner.getAspectTargetInfoForPackages(allPackages, "BazelBuildyApp");
         for (BazelLabel target : aspectMap.keySet()) {
             Set<AspectTargetInfo> aspectsForTarget = aspectMap.get(target);
             aspects.addAll(aspectsForTarget);

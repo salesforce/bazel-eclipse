@@ -359,10 +359,9 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * @param labels
      *            the labels to query
      */
-    public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(WorkProgressMonitor progressMonitor,
-            Collection<BazelLabel> labels)
+    public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(Collection<BazelLabel> labels)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        return this.bazelQueryHelper.queryBazelTargetsInBuildFile(bazelWorkspaceRootDirectory, progressMonitor, labels);
+        return this.bazelQueryHelper.queryBazelTargetsInBuildFile(bazelWorkspaceRootDirectory, labels);
     }
 
     /**
@@ -442,7 +441,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * @throws BazelCommandLineToolConfigurationException
      */
     public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfoForPackages(
-            Collection<BazelPackageLocation> targetPackages, WorkProgressMonitor progressMonitor, String caller)
+            Collection<BazelPackageLocation> targetPackages, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<BazelLabel> targetLabels = new ArrayList<>();
         for (BazelPackageLocation pkg : targetPackages) {
@@ -450,7 +449,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             targetLabels.add(new BazelLabel(target));
         }
 
-        return this.aspectHelper.getAspectTargetInfos(targetLabels, progressMonitor, caller);
+        return this.aspectHelper.getAspectTargetInfos(targetLabels, caller);
     }
 
     /**
@@ -467,12 +466,11 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * @return Mapping of the requested label to its AspectTargetInfo instances
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<String> targetLabels,
-            WorkProgressMonitor progressMonitor, String caller)
+    public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<String> targetLabels, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         Collection<BazelLabel> labels = targetLabels.stream().map(BazelLabel::new).collect(Collectors.toList());
-        return this.aspectHelper.getAspectTargetInfos(labels, progressMonitor, caller);
+        return this.aspectHelper.getAspectTargetInfos(labels, caller);
     }
 
     /**

@@ -99,7 +99,7 @@ public class BazelJvmClasspath {
      * TODO provide different classpath strategies. This one the Maven-like/Eclipse JDT style, where the
      * classpath is the union of the classpaths of all java rules in the package.
      */
-    public BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
+    public BazelJvmClasspathResponse getClasspathEntries() {
         // sanity check
         if (bazelWorkspace == null) {
             // not sure how we could get here, but just check
@@ -144,7 +144,7 @@ public class BazelJvmClasspath {
                 // typically, this is a single wildcard target, but the user may
                 // also have specified explicit targets to use
                 List<BazelLabel> labels = configuredTargetsForProject.getConfiguredTargets().stream().map(BazelLabel::new).collect(Collectors.toList());
-                Collection<BazelBuildFile> buildFiles = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(progressMonitor, labels);
+                Collection<BazelBuildFile> buildFiles = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(labels);
                 // since we only call query with labels for the same package, we expect to get a single BazelBuildFile instance back
                 if (buildFiles.isEmpty()) {
                     throw new IllegalStateException("Unexpected empty BazelBuildFile collection, this is a bug");
@@ -161,7 +161,7 @@ public class BazelJvmClasspath {
             Set<String> actualActivatedTargets = configuredTargetsForProject.getActualTargets(bazelBuildFileModel);
 
             Map<BazelLabel, Set<AspectTargetInfo>> targetLabelToAspectTargetInfos =
-                    bazelWorkspaceCmdRunner.getAspectTargetInfos(actualActivatedTargets, progressMonitor, "getClasspathEntries");
+                    bazelWorkspaceCmdRunner.getAspectTargetInfos(actualActivatedTargets, "getClasspathEntries");
 
             for (String targetLabel : actualActivatedTargets) {
                 String targetType = bazelBuildFileModel.getRuleTypeForTarget(targetLabel);

@@ -32,7 +32,6 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.lang.jvm.JavaLanguageLevelHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
@@ -43,22 +42,20 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
  */
 public class InitImportFlow implements ImportFlow {
 
-    private static final LogHelper LOG = LogHelper.log(InitImportFlow.class);
+    @Override
+    public String getProgressText() {
+        return "Preparing import";
+    }
 
     @Override
     public void assertContextState(ImportContext ctx) {
-        Objects.requireNonNull(ctx.getProgressMonitor());
         Objects.requireNonNull(ctx.getSelectedBazelPackages());
         Objects.requireNonNull(ctx.getBazelWorkspaceRootPackageInfo());
     }
 
     @Override
-    public void run(ImportContext ctx) {
+    public void run(ImportContext ctx, SubMonitor progressMonitor) {
         ProjectImporterFactory.importInProgress.set(true);
-
-        SubMonitor subMonitor = SubMonitor.convert(ctx.getProgressMonitor(), ctx.getSelectedBazelPackages().size());
-        subMonitor.setTaskName("Running import");
-        subMonitor.split(1);
 
         File bazelWorkspaceRootDirectory = initContext(ctx);
 
@@ -112,10 +109,6 @@ public class InitImportFlow implements ImportFlow {
         } else {
             bazelWorkspaceName = bazelWorkspace.getName();
         }
-
-
-        // TODO send this message to the EclipseConsole so the user actually sees it
-        LOG.info("Starting import of [{}]. This may take some time, please be patient.", bazelWorkspaceName);
 
         bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
 

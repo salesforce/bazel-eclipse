@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.eclipse.core.runtime.SubMonitor;
+
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
@@ -44,14 +46,18 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
 public class LoadAspectsFlow implements ImportFlow {
 
     @Override
+    public String getProgressText() {
+        return "Loading type information";
+    }
+
+    @Override
     public void assertContextState(ImportContext ctx) {
         Objects.requireNonNull(ctx.getSelectedBazelPackages());
-        Objects.requireNonNull(ctx.getWorkProgressMonitor());
         Objects.requireNonNull(ctx.getPackageLocationToTargets());
     }
 
     @Override
-    public void run(ImportContext ctx) {
+    public void run(ImportContext ctx, SubMonitor progressMonitor) {
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
@@ -68,7 +74,7 @@ public class LoadAspectsFlow implements ImportFlow {
         // run the aspect for specified targets and get an AspectTargetInfo for each
         try {
             Map<BazelLabel, Set<AspectTargetInfo>> targetInfos = bazelWorkspaceCmdRunner
-                    .getAspectTargetInfos(labels, ctx.getWorkProgressMonitor(), "importWorkspace");
+                    .getAspectTargetInfos(labels, "importWorkspace");
             List<AspectTargetInfo> allTargetInfos = new ArrayList<>();
             for (Set<AspectTargetInfo> targetTargetInfos : targetInfos.values()) {
                 allTargetInfos.addAll(targetTargetInfos);

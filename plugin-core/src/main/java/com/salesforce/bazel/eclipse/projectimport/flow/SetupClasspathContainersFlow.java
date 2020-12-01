@@ -34,6 +34,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 
@@ -52,21 +53,33 @@ public class SetupClasspathContainersFlow implements ImportFlow {
             + "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-";
 
     @Override
+    public String getProgressText() {
+        return "Configuring classpath containers";
+    }
+
+    @Override
     public void assertContextState(ImportContext ctx) {
         Objects.requireNonNull(ctx.getBazelWorkspaceRootDirectory());
         Objects.requireNonNull(ctx.getImportedProjects());
     }
 
     @Override
-    public void run(ImportContext ctx) throws CoreException {
+    public int getTotalWorkTicks(ImportContext ctx) {
+        return ctx.getImportedProjects().size();
+    }
+
+    @Override
+    public void run(ImportContext ctx, SubMonitor progressSubMonitor) throws CoreException {
         Path bazelWorkspaceRootDirectory = new Path(ctx.getBazelWorkspaceRootDirectory().getAbsolutePath());
-        for (IProject project : ctx.getImportedProjects()) {
+        List<IProject> importedProjects = ctx.getImportedProjects();
+        for (IProject project : importedProjects) {
             BazelPackageLocation packageLocation = ctx.getPackageLocationForProject(project);
             EclipseProjectStructureInspector inspector = new EclipseProjectStructureInspector(packageLocation);
             String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
             IJavaProject javaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
             createClasspath(bazelWorkspaceRootDirectory, packageFSPath, inspector.getPackageSourceCodeFSPaths(),
                     javaProject, ctx.getJavaLanguageLevel());
+            progressSubMonitor.worked(1);
         }
     }
 
