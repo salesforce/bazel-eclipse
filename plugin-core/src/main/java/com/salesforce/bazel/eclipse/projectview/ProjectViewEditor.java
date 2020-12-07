@@ -27,6 +27,7 @@ import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.builder.BazelProblemMarkerManager;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.wizard.BazelProjectImporter;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -52,6 +53,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
     private final ProjectViewPackageLocation rootPackage;
     private final BazelProblemMarkerManager markerManager;
     private final BazelProjectManager projectManager;
+    private final ResourceHelper resourceHelper;
 
     public ProjectViewEditor() {
         this.rootProject = getBazelRootProject();
@@ -59,6 +61,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
         this.rootPackage = new ProjectViewPackageLocation(this.rootDirectory, "");
         this.markerManager = new BazelProblemMarkerManager(getClass().getName());
         this.projectManager = BazelPluginActivator.getBazelProjectManager();
+        this.resourceHelper = BazelPluginActivator.getResourceHelper();
         setDocumentProvider(new TextFileDocumentProvider());
         super.setSourceViewerConfiguration(new SourceViewerConfiguration() {
             @Override
@@ -148,9 +151,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
             @Override
             protected void execute(IProgressMonitor monitor) throws CoreException {
                 for (IJavaProject project : projects) {
-                    final boolean deleteContent = true; // delete metadata also, under the Eclipse Workspace directory
-                    final boolean force = true;
-                    project.getProject().delete(deleteContent, force, monitor);
+                    resourceHelper.deleteProject(project.getProject(), monitor);
                 }
             }
         });

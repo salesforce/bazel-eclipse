@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.IProject;
@@ -144,14 +145,13 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject javaProject, IClasspathContainer containerSuggestion) throws CoreException {
         final boolean isRootProject = false; // this is wrong if the root project has a BUILD file ...
         IProject project = javaProject.getProject();
-        String projectName = project.getName();
-        LOG.info("Updating the Classpath Container of project " + projectName);
-        flushProjectCaches(projectName);
+        flushProjectCaches(project);
         Job.create(CLASSPATH_CONTAINER_UPDATE_JOB_NAME, monitor -> {
             try {
                 // let the ClasspathContainer recompute its entries
                 IClasspathContainer container = getClasspathContainer(project, isRootProject);
                 setClasspathContainerForProject(containerPath, javaProject, container, monitor);
+                LOG.info("Updated classpath container of " + project.getName());
             } catch (IOException | InterruptedException | BackingStoreException e) {
                 BazelPluginActivator.error("Error while updating Bazel classpath container.", e);
             } catch (BazelCommandLineToolConfigurationException e) {
@@ -160,11 +160,20 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
         }).schedule();
     }
 
-    private static void flushProjectCaches(String projectName) {
+    private static void flushProjectCaches(IProject project) {
+        // get downstream projects of the given project
+        JavaCoreHelper javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
+        IJavaProject[] allImportedProjects = javaCoreHelper.getAllBazelJavaProjects(false);
+        Set<IProject> downstreams = EclipseClasspathUtil.getDownstreamProjectsOf(project, allImportedProjects);
+
+        // flush caches
         BazelWorkspace bzlWs = BazelPluginActivator.getBazelWorkspace();
         BazelCommandManager bzlCmdMgr = BazelPluginActivator.getBazelCommandManager();
         BazelWorkspaceCommandRunner bzlWsCmdRunner = bzlCmdMgr.getWorkspaceCommandRunner(bzlWs);
-        BazelPluginActivator.getBazelProjectManager().flushCaches(projectName, bzlWsCmdRunner);
+        BazelPluginActivator.getBazelProjectManager().flushCaches(project.getName(), bzlWsCmdRunner);
+        for (IProject downstreamProject : downstreams) {
+            BazelPluginActivator.getBazelProjectManager().flushCaches(downstreamProject.getName(), bzlWsCmdRunner);
+        }
     }
 
     // Remove projects imported successfully
@@ -184,6 +193,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
         isCorrupt.set(true);
 
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 MessageDialog.openError(Display.getDefault().getActiveShell(), "Error", generateImportErrorMessage());
             }
