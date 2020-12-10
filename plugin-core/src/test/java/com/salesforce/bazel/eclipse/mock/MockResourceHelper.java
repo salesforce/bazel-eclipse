@@ -98,7 +98,7 @@ public class MockResourceHelper implements ResourceHelper {
 
         return project;
     }
-    
+
     @Override
     public IProject getBazelWorkspaceProject(BazelWorkspace bazelWorkspace) {
         for (IProject candidate : getEclipseWorkspaceRoot().getProjects()) {
@@ -113,7 +113,7 @@ public class MockResourceHelper implements ResourceHelper {
     public IProject[] getProjectsForBazelWorkspace(BazelWorkspace bazelWorkspace) {
         return mockProjects.values().toArray(new IProject[] {});
     }
-    
+
 
     @Override
     public boolean isBazelRootProject(IProject project) {
@@ -128,6 +128,11 @@ public class MockResourceHelper implements ResourceHelper {
         Mockito.when(newProject.exists()).thenReturn(true);
 
         return newProject;
+    }
+
+    @Override
+    public void deleteProject(IProject project, IProgressMonitor monitor) {
+
     }
 
     @Override

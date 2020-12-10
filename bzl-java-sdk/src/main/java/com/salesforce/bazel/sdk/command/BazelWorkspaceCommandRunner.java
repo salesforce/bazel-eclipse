@@ -500,8 +500,9 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * contains the package name.
      */
     public synchronized Set<String> flushAspectInfoCacheForPackage(String packageName) {
-        Set<BazelLabel> flushedPackages = this.aspectHelper.flushAspectInfoCacheForPackage(new BazelLabel(packageName));
-        LOG.info("Flushed aspect cache for packages: " + flushedPackages);
+        BazelLabel packageLabel = new BazelLabel(packageName);
+        Set<BazelLabel> flushedPackages = this.aspectHelper.flushAspectInfoCacheForPackage(packageLabel);
+        LOG.info("Flushed aspect cache for package: " + packageLabel);
         return flushedPackages.stream().map(BazelLabel::getPackagePath).collect(Collectors.toSet());
     }
 

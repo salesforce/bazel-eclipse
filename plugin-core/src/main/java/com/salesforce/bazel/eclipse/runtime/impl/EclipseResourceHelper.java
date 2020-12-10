@@ -49,11 +49,13 @@ import org.osgi.service.prefs.Preferences;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * Resource helper implementation used when running in a live Eclipse runtime.
- * 
+ *
  * @author plaird
  *
  */
@@ -79,16 +81,16 @@ public class EclipseResourceHelper implements ResourceHelper {
         }
         return null;
     }
-    
+
     /**
      * Returns the IProjects for the Bazel Workspace project.
      */
     @Override
     public IProject[] getProjectsForBazelWorkspace(BazelWorkspace bazelWorkspace) {
         // todo once we support multiple Bazel workspaces, this will need to figure that out
-        return  getEclipseWorkspaceRoot().getProjects(); 
+        return  getEclipseWorkspaceRoot().getProjects();
     }
-    
+
     /**
      * Creates the project described by newProject, with the passed description.
      */
@@ -100,6 +102,22 @@ public class EclipseResourceHelper implements ResourceHelper {
         newProject.create(description, monitor);
 
         return newProject;
+    }
+
+    /**
+     * Deletes the specified project.
+     */
+    public void deleteProject(IProject project, IProgressMonitor monitor) throws CoreException {
+        if (!isBazelRootProject(project)) {
+            // clear the cached data for this project
+            BazelWorkspace bzlWs = BazelPluginActivator.getBazelWorkspace();
+            BazelCommandManager bzlCmdMgr = BazelPluginActivator.getBazelCommandManager();
+            BazelWorkspaceCommandRunner bzlWsCmdRunner = bzlCmdMgr.getWorkspaceCommandRunner(bzlWs);
+            BazelPluginActivator.getBazelProjectManager().flushCaches(project.getName(), bzlWsCmdRunner);
+        }
+        boolean deleteContent = true; // delete metadata also, under the Eclipse Workspace directory
+        boolean force = true;
+        project.getProject().delete(deleteContent, force, monitor);
     }
 
     /**
@@ -147,7 +165,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     public IWorkspaceRoot getEclipseWorkspaceRoot() {
         return ResourcesPlugin.getWorkspace().getRoot();
     }
-    
+
     @Override
     public String getResourceAbsolutePath(IResource resource) {
         if (resource == null) {

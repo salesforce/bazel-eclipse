@@ -35,6 +35,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.IProcessFactory;
@@ -74,7 +75,7 @@ public interface ResourceHelper {
      * Returns the IProjects for the Bazel Workspace project.
      */
     IProject[] getProjectsForBazelWorkspace(BazelWorkspace bazelWorkspace);
-    
+
     /**
      * Creates a new project resource in the workspace using the given project description. Upon successful completion,
      * the project will exist but be closed.
@@ -103,6 +104,29 @@ public interface ResourceHelper {
      */
     IProject createProject(IProject newProject, IProjectDescription description, IProgressMonitor monitor)
             throws CoreException;
+
+    /**
+     * Deletes this project from the workspace AND flushes relevant caches.
+     * No action is taken if this project does not exist.
+     *
+     * This method is long-running; progress and cancellation are provided
+     * by the given progress monitor.
+     * </p>
+     *
+     * @param project the project to delete
+     * @param monitor a progress monitor, or <code>null</code> if progress
+     *    reporting is not desired
+     * @exception CoreException if this method fails. Reasons include:
+     * <ul>
+     * <li> This project could not be deleted.</li>
+     * <li> This project's contents could not be deleted.</li>
+     * <li> Resource changes are disallowed during certain types of resource change
+     *       event notification. See <code>IResourceChangeEvent</code> for more details.</li>
+     * </ul>
+     * @exception OperationCanceledException if the operation is canceled.
+     * Cancelation can occur even if no progress monitor is provided.
+     */
+    void deleteProject(IProject project, IProgressMonitor monitor) throws CoreException;
 
     /**
      * Opens this project. No action is taken if the project is already open.
@@ -342,7 +366,7 @@ public interface ResourceHelper {
      * If the launch configuration associated with the given launch specifies a process factory, it will be used to
      * instantiate the new process.
      * </p>
-     * 
+     *
      * @param launch
      *            the launch the process is contained in
      * @param process
