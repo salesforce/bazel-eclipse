@@ -176,17 +176,25 @@ public class BazelJvmClasspath {
 
                 for (AspectTargetInfo targetInfo : targetInfos) {
                     if (actualActivatedTargets.contains(targetInfo.getLabel())) {
-                        // this info describes a target in the current package, don't add it to the classpath
-                        // as this classpath strategy does not include them as all targets in this package are
-                        // assumed to be represented by source code entries instead
-                        continue;
+                        if ("java_library".equals(targetInfo.getKind())) {
+                            // this info describes a java_library target in the current package; don't add it to the classpath
+                            // as all java_library targets in this package are assumed to be represented by source code entries
+                            continue;
+                        }
+                        // else in some cases, the target is local, but we still want to proceed to process it below. the expected
+                        // example here are java_import targets in the BUILD file that directly load jars from the file system
+                        //   java_import(name = "zip4j", jars = ["lib/zip4j-2.6.4.jar"])
+                        if (!"java_import".equals(targetInfo.getKind())) {
+                            // some other case that we didn't expect, proceed but log a warn
+                            logger.warn("Unexpected local target type as dependency: " + targetInfo.getKind() + "; expected either java_library or java_import.");
+                        }
                     }
 
                     BazelProject otherProject = getSourceProjectForSourcePaths(targetInfo.getSources());
-
                     if (otherProject == null) {
                         // no project found that houses the sources of this bazel target, add the jars to the classpath
                         // this means that this is an external jar, or a jar produced by a bazel target that was not imported
+
                         for (AspectOutputJarSet jarSet : targetInfo.getGeneratedJars()) {
                             JvmClasspathEntry cpEntry = jarsToClasspathEntry(jarSet, isTestTarget);
                             if (cpEntry != null) {
