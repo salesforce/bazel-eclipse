@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+>
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.salesforce.bazel.eclipse.feature.releng</groupId>
+  <artifactId>bazel-eclipse-feature-maven-parent</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <!-- common settings for all modules -->
+  <properties>
+    <!-- FIXME: this is not UTC (https://jira.codehaus.org/browse/MNG-5452) -->
+    <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
+    <buildTimestamp>${maven.build.timestamp}</buildTimestamp>
+    <buildType>I</buildType>
+    <!-- used as part of file names and also shown in About dialog -->
+    <buildId>${buildType}${buildTimestamp}</buildId>
+    <!-- shown in About dialog -->
+    <buildLabel>${unquialifiedVersion} ${buildType}-${buildId}-${buildTimestamp}</buildLabel>
+
+    <!-- test setting -->
+    <jacoco.version>0.8.0</jacoco.version>
+    <surefire-reports-directory>${project.build.directory}/surefire-reports</surefire-reports-directory>
+    <test.vmparams></test.vmparams>
+    <coretest.vmparams></coretest.vmparams>
+    <uitest.vmparams>-Dorg.eclipse.swtbot.search.timeout=30000 -Dorg.eclipse.swtbot.screenshots.dir=target/screenshots
+      -Xmx1024m
+      -XX:MaxPermSize=150m</uitest.vmparams>
+
+    <tycho.version>2.3.0</tycho.version>
+    <cbi-plugins.version>1.3.1</cbi-plugins.version>
+
+    <eclipserun-repo.url>https://download.eclipse.org/eclipse/updates/4.19/</eclipserun-repo.url>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <!-- property for generating Eclipse source reference bundle headers -->
+    <!-- (note, this needs to be overridden by module poms in other Git repos) -->
+    <tycho.scmUrl>scm:git:https://github.com/salesforce/bazel-eclipse.git</tycho.scmUrl>
+
+    <!-- allow to build with dirty working tree -->
+    <jgit.dirtyWorkingTree>warning</jgit.dirtyWorkingTree>
+  </properties>
+
+  <!-- common plug-in repos for all modules -->
+  <pluginRepositories>
+    <pluginRepository>
+      <id>cbi</id>
+      <url>https://repo.eclipse.org/content/groups/cbi/</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>tycho-snapshots</id>
+      <url>https://repo.eclipse.org/content/repositories/tycho-snapshots/</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+
+  <profiles>
+    <profile>
+      <!-- default buildType when running in CI -->
+      <id>default-buildType</id>
+      <properties>
+        <buildType>${env.BUILD_TYPE}</buildType>
+      </properties>
+      <activation>
+        <property>
+          <name>env.BUILD_TYPE</name>
+        </property>
+      </activation>
+    </profile>
+    <profile>
+      <!-- default buildId when running in CI -->
+      <id>default-buildId</id>
+      <properties>
+        <buildId>${env.BUILD_ID}</buildId>
+      </properties>
+      <activation>
+        <property>
+          <name>env.BUILD_ID</name>
+        </property>
+      </activation>
+    </profile>
+    <profile>
+      <!-- default buildLabel when running in CI -->
+      <id>default-buildLabel</id>
+      <properties>
+        <buildLabel>${env.BUILD_LABEL}</buildLabel>
+      </properties>
+      <activation>
+        <property>
+          <name>env.BUILD_LABEL</name>
+        </property>
+      </activation>
+    </profile>
+    <profile>
+      <!-- profile used for signing the build -->
+      <id>eclipse-sign</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.eclipse.tycho</groupId>
+            <artifactId>target-platform-configuration</artifactId>
+            <version>${tycho.version}</version>
+            <configuration>
+              <includePackedArtifacts>false</includePackedArtifacts>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.eclipse.cbi.maven.plugins</groupId>
+            <artifactId>eclipse-jarsigner-plugin</artifactId>
+            <version>${cbi-plugins.version}</version>
+            <executions>
+              <execution>
+                <id>sign</id>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+                <phase>verify</phase>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.eclipse.tycho</groupId>
+            <artifactId>tycho-p2-plugin</artifactId>
+            <version>${tycho.version}</version>
+            <executions>
+              <execution>
+                <id>p2-metadata</id>
+                <goals>
+                  <goal>p2-metadata</goal>
+                </goals>
+                <phase>verify</phase>
+              </execution>
+            </executions>
+            <configuration>
+              <defaultP2Metadata>false</defaultP2Metadata>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <!-- build using JRE for Bundle Runtime Execution Environment -->
+      <id>bree-libs</id>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.eclipse.tycho</groupId>
+              <artifactId>tycho-compiler-plugin</artifactId>
+              <version>${tycho.version}</version>
+              <configuration>
+                <!-- Note, BREE libraries and toolchain.xml must be setup for this to work (it's done on Jenkins) -->
+                <useJDK>BREE</useJDK>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
+      <id>macosx</id>
+      <activation>
+        <os>
+          <name>mac os x</name>
+          <family>mac</family>
+        </os>
+      </activation>
+      <properties>
+        <ui.test.vmargs>${test.vmparams} ${uitest.vmparams} -XstartOnFirstThread</ui.test.vmargs>
+      </properties>
+    </profile>
+    <profile>
+      <id>other-os</id>
+      <activation>
+        <os>
+          <family>!mac</family>
+        </os>
+      </activation>
+      <properties>
+        <ui.test.vmargs>${test.vmparams} ${uitest.vmparams}</ui.test.vmargs>
+      </properties>
+    </profile>
+  </profiles>
+
+
+  <!-- defaults for all IDE artifacts -->
+  <build>
+    <plugins>
+      <plugin>
+        <!-- set a property pointing to this maven parent directory -->
+        <groupId>org.commonjava.maven.plugins</groupId>
+        <artifactId>directory-maven-plugin</artifactId>
+        <version>0.1</version>
+        <executions>
+          <execution>
+            <id>directories</id>
+            <goals>
+              <goal>directory-of</goal>
+            </goals>
+            <phase>initialize</phase>
+            <configuration>
+              <property>bazel-eclipse-feature-maven-parent.basedir</property>
+              <project>
+                <groupId>com.salesforce.bazel.eclipse.feature.releng</groupId>
+                <artifactId>bazel-eclipse-feature-maven-parent</artifactId>
+              </project>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- enable tycho build extension -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <!-- target platform configuration -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <configuration>
+          <target>
+            <!-- use target platform defined in releng/target-platforms Git repo -->
+            <!-- (note: name of target file must match artifactId) -->
+            <artifact>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>target-platform</artifactId>
+              <version>1.0.0-SNAPSHOT</version>
+            </artifact>
+          </target>
+          <environments>
+            <environment>
+              <os>linux</os>
+              <ws>gtk</ws>
+              <arch>x86_64</arch>
+            </environment>
+            <environment>
+              <os>macosx</os>
+              <ws>cocoa</ws>
+              <arch>x86_64</arch>
+            </environment>
+            <environment>
+              <os>macosx</os>
+              <ws>cocoa</ws>
+              <arch>x86_64</arch>
+            </environment>
+          </environments>
+          <targetDefinitionIncludeSource>honor</targetDefinitionIncludeSource>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- enable generation of source bundles -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>plugin-source</id>
+            <goals>
+              <goal>plugin-source</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-versions-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>target-platform-configuration</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-compiler-plugin</artifactId>
+          <version>${tycho.version}</version>
+          <configuration>
+            <!-- disable some warnings for all projects (they are fine in the IDE) -->
+            <compilerArgument>-warn:-deprecation,raw,unchecked,nullAnnot,null</compilerArgument>
+            <compilerArguments>
+              <!-- use compiler settings from project (if available) -->
+              <properties>${project.basedir}/.settings/org.eclipse.jdt.core.prefs</properties>
+              <verbose />
+              <inlineJSR />
+              <enableJavadoc />
+              <encoding>${project.build.sourceEncoding}</encoding>
+              <log>${project.build.directory}/@dot.xml</log>
+              <!-- <proceedOnError/> -->
+              <!-- <annotationpath>${bazel-eclipse-feature-maven-parent.basedir}/../../.settings/non-null-annotations/</annotationpath> -->
+            </compilerArguments>
+            <showWarnings>true</showWarnings>
+            <excludeResources>
+              <exclude>**/package.html</exclude>
+            </excludeResources>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-packaging-plugin</artifactId>
+          <version>${tycho.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.eclipse.tycho.extras</groupId>
+              <artifactId>tycho-buildtimestamp-jgit</artifactId>
+              <version>${tycho.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.eclipse.tycho.extras</groupId>
+              <artifactId>tycho-sourceref-jgit</artifactId>
+              <version>${tycho.version}</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <!-- generate bundle .qualifier from Git tags/commits -->
+            <timestampProvider>jgit</timestampProvider>
+            <format>'v'yyyyMMdd-HHmm</format>
+            <additionalFileSets>
+              <fileSet>
+                <directory>${project.build.directory}</directory>
+                <includes>
+                  <include>.api_description</include>
+                  <include>about.mappings</include>
+                </includes>
+              </fileSet>
+            </additionalFileSets>
+            <!-- generate bundle Eclipse-SourceReferences header -->
+            <sourceReferences>
+              <generate>true</generate>
+            </sourceReferences>
+            <jgit.dirtyWorkingTree>${jgit.dirtyWorkingTree}</jgit.dirtyWorkingTree>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-source-plugin</artifactId>
+          <version>${tycho.version}</version>
+          <configuration>
+            <strictSrcIncludes>false</strictSrcIncludes>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-p2-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-p2-director-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-p2-repository-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-versions-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho.extras</groupId>
+          <artifactId>tycho-source-feature-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho.extras</groupId>
+          <artifactId>tycho-custom-bundle-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho.extras</groupId>
+          <artifactId>tycho-p2-extras-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>2.6</version>
+          <executions>
+            <execution>
+              <!-- enable special processing for about.mappings file -->
+              <id>process-about.mappings</id>
+              <phase>prepare-package</phase>
+              <configuration>
+                <outputDirectory>${project.build.directory}</outputDirectory>
+                <overwrite>true</overwrite>
+                <resources>
+                  <resource>
+                    <directory>${basedir}</directory>
+                    <includes>
+                      <include>about.mappings</include>
+                    </includes>
+                    <filtering>true</filtering>
+                  </resource>
+                </resources>
+              </configuration>
+              <goals>
+                <goal>copy-resources</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-surefire-plugin</artifactId>
+          <version>${tycho.version}</version>
+          <configuration>
+            <dependencies>
+              <!-- define common default dependencies -->
+              <dependency>
+                <type>p2-installable-unit</type>
+                <artifactId>org.eclipse.equinox.app</artifactId>
+              </dependency>
+              <dependency>
+                <type>p2-installable-unit</type>
+                <artifactId>org.eclipse.equinox.ds</artifactId>
+              </dependency>
+              <dependency>
+                <type>p2-installable-unit</type>
+                <artifactId>org.eclipse.equinox.event</artifactId>
+              </dependency>
+              <dependency>
+                <type>p2-installable-unit</type>
+                <artifactId>org.eclipse.equinox.registry</artifactId>
+              </dependency>
+            </dependencies>
+            <reportsDirectory>${surefire-reports-directory}</reportsDirectory>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho.extras</groupId>
+          <artifactId>tycho-eclipserun-plugin</artifactId>
+          <version>${tycho.version}</version>
+          <configuration>
+            <repositories>
+              <repository>
+                <id>eclipserun-repo</id>
+                <layout>p2</layout>
+                <url>${eclipserun-repo.url}</url>
+              </repository>
+            </repositories>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.sonatype.plugins</groupId>
+          <artifactId>maven-upload-plugin</artifactId>
+          <version>0.0.1</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>
