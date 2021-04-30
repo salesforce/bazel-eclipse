@@ -1,44 +1,17 @@
-/**
- * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
- * following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
- * disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
- * following disclaimer in the documentation and/or other materials provided with the distribution.
- *
- * 3. Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
- * derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- *
- */
 /*******************************************************************************
- * Copyright (c) 2008-2013 Sonatype, Inc. and others. Copyright 2018-2019 Salesforce
- * 
- * All rights reserved. This program and the accompanying materials are made available under the terms of the Eclipse
- * Public License v1.0 which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008-2018 Sonatype, Inc. and others.
  *
- * Contributors: Sonatype, Inc. - initial API and implementation Red Hat, Inc. - refactored lifecycle mapping discovery
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *      Sonatype, Inc. - initial API and implementation
+ *      Red Hat, Inc. - refactored lifecycle mapping discovery
+ *      Salesforce - Adapted for Bazel Eclipse
  *******************************************************************************/
 
 // adapted from M2Eclipse org.eclipse.m2e.core.ui.internal.wizards.MavenImportWizardPage
@@ -82,7 +55,7 @@ import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 public class BazelImportWizardLocationControl {
 
     protected BazelImportWizardPage page;
-    
+
     // We support Bazel workspaces in which the WORKSPACE file in the root is actually a soft link to the actual
     // file in a subdirectory. Due to the way the system Open dialog works, we have to do some sad logic to figure
     // out this is the case. This features is enabled if this boolean is true.
@@ -105,7 +78,7 @@ public class BazelImportWizardLocationControl {
 
     public BazelImportWizardLocationControl(BazelImportWizardPage page, IPreferenceStore prefs) {
         this.page = page;
-        
+
         if (prefs != null) {
             // default response is false if the pref is not set
             doUnresolveWorkspaceFileSoftLink = !prefs.getBoolean(BazelPreferenceKeys.DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK);
@@ -237,13 +210,13 @@ public class BazelImportWizardLocationControl {
             combos.add(combo);
         }
     }
-    
+
     // See note at top of file for what this feature does and how to disable it if it causes problems
     protected File unresolveSoftLink(File resolvedWorkspaceFile) {
         if (!doUnresolveWorkspaceFileSoftLink) {
             return resolvedWorkspaceFile;
         }
-        
+
         try {
             if (!resolvedWorkspaceFile.exists()) {
                 return resolvedWorkspaceFile;
@@ -252,7 +225,7 @@ public class BazelImportWizardLocationControl {
             // traverse up in the directory hierarchy, looking for a WORKSPACE file that is a soft link
             // to the one returned by the system Open dialog. We max it out at 5 since it seems unreasonable
             // to go further
-            for (int i=0; i<5; i++) { 
+            for (int i=0; i<5; i++) {
                 if (!directory.exists() || !directory.canRead()) {
                     return resolvedWorkspaceFile;
                 }
@@ -267,10 +240,10 @@ public class BazelImportWizardLocationControl {
                         String absPath = candidateFile.getAbsolutePath();
                         String canonPath = candidateFile.getCanonicalFile().getAbsolutePath();
                         if (canonPath.equals(resolvedWorkspaceFile.getAbsolutePath())) {
-                            
+
                             // The candidateFile is a soft link to the real WORKSPACE file returned by the Open dialog
                             // This means the candidateFile is probably in the real root directory of the Bazel workspace.
-                            
+
                             System.out.println("WORKSPACE file ["+absPath+"] is a soft link to ["+canonPath+
                                 "]. Setting workspace root as ["+candidateFile.getParentFile().getAbsolutePath()+"]");
                             return candidateFile;
@@ -282,7 +255,7 @@ public class BazelImportWizardLocationControl {
             anyE.printStackTrace();
             return resolvedWorkspaceFile;
         }
-        
+
         return resolvedWorkspaceFile;
     }
 
