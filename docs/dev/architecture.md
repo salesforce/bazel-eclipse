@@ -101,5 +101,5 @@ Internally, the Bazel Eclipse Feature is implemented using several Eclipse plugi
 Not only does this separate concerns, but it makes unit testing simpler.
 Only one plugin (the *plugin-core*) has access to Eclipse APIs.
 
-- **plugin-core**: this plugin is the one that is integrated with Eclipse APIs, and contains classes such as the activator
-- **bazel-java-sdk**: handles model abstractions and command execution for Bazel
+- **com.salesforce.bazel.eclipse.core**: this plugin is the one that is integrated with Eclipse APIs, and contains classes such as the activator
+- **com.salesforce.bazel-java-sdk**: handles model abstractions and command execution for Bazel
