@@ -3,11 +3,6 @@ name: Bazel Eclipse Feature Release
 on:
   # manually from the Actions tab
   workflow_dispatch:
-    inputs:
-      buildId:
-        description: 'Build Identifier (eg., "1.0", "1.0 RC1", "20201002-1227", etc.)'
-        required: true
-        default: 'Mona the Octocat'
 
 jobs:
   build-and-deploy:
