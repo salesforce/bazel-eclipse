@@ -18,13 +18,14 @@ Recommended resources
 We have an [architecture](architecture.md) document.
 It provides a high level explanation of the implementation of the feature.
 
-### Three Build Systems, One Happy World
+### One Build Systems, One Happy World
 
-We maintain three independent build systems for the feature - Bazel, Eclipse SDK (JDT), and
-  Eclipse SDK (Ant).
-You will need all of them.
+We do not use Bazel for building the Bazel Eclipse Feature.
+We use Eclipse PDE and the Maven Tycho extension.
+You will spend most of your time in Eclipse PDE and rarely use Maven.
+Maven Tycho is mostly used as part of CI.
 
-[This document](threebuilds.md) explains this in more detail.
+[This document](thebuild.md) explains this in more detail.
 
 ### Installing your Toolchain
 
@@ -58,7 +59,7 @@ It will look something like:
 ```
 # launch the Eclipse SDK
 /Users/mbenioff/tools/eclipse/sdk49/Eclipse.app/Contents/MacOS/eclipse &
-```  
+```
 
 ### Import the bazel-eclipse projects into the Eclipse SDK
 

@@ -6,10 +6,11 @@ bazel-sfdc-bazel
 bazel-testlogs
 bazel-bazel-eclipse
 
-# Bazel config files
-.company-bazelrc
-.user-bazelrc
-.user-bazelrc-cache
+# compile output
+bin/
+target/
+workspace/
+
 
 # Log files
 *.log
@@ -24,7 +25,6 @@ testbin
 dist
 
 # Eclipse
-.settings
 eclipse.sh
 
 # OS
@@ -32,3 +32,20 @@ eclipse.sh
 
 # Eclipse cleaner script (//tools/eclipse)
 my_env.sh
+
+# temp. files
+*~
+*.rej
+*.bak
+.DS_Store
+.Trashes
+*.swp
+*.lock
+pom.versionBackup
+pom.tycho
+.polyglot.*
+.META_INF_MANIFEST.MF
+.META-INF_MANIFEST.MF
+
+# other
+*.patch
