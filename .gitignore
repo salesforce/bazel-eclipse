@@ -25,7 +25,6 @@ testbin
 dist
 
 # Eclipse
-.settings
 eclipse.sh
 
 # OS
