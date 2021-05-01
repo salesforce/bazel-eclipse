@@ -40,4 +40,4 @@ jobs:
           BUILD_ID: "${{ steps.time.outputs.time }}"
           BUILD_TYPE: "S"
           BUILD_LABEL: "CI ${{ steps.time.outputs.time }} (${{ steps.branch_name.outputs.branch }})"
-        run: mvn --batch-mode --update-snapshots clean verify
+        run: mvn --batch-mode clean verify
