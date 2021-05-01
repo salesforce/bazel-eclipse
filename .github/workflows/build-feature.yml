@@ -1,4 +1,4 @@
-name: Bazel Eclipse Feature CI
+name: Branch & PR Validation
 
 on:
   # on push and PRs
