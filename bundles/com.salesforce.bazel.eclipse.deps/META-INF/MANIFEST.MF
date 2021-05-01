@@ -5,7 +5,7 @@ Automatic-Module-Name: com.salesforce.bazel.eclipse.deps
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.deps;singleton:=true
 Bundle-Version: 1.2.3.qualifier
 Bundle-Vendor: Salesforce
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: lib/guava-28.2.jar,
  lib/json-20160212.jar
