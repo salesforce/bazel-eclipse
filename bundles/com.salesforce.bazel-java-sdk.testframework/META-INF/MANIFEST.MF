@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Test Framework for bazel-java-sdk
+Bundle-SymbolicName: com.salesforce.bazel-java-testframework
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: Salesforce
+Automatic-Module-Name: com.salesforce.bazel.java.sdk.tests
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: org.hamcrest.library;bundle-version="1.3.0",
+ org.junit;bundle-version="4.13.0",
+ org.mockito;bundle-version="2.23.0",
+ com.salesforce.bazel-java-sdk;bundle-version="1.2.3"
+Import-Package: com.google.common.base;version="30.1.0",
+ com.google.common.collect;version="30.1.0",
+ org.json
+Export-Package: com.salesforce.bazel.sdk.command.test,
+ com.salesforce.bazel.sdk.command.test.type,
+ com.salesforce.bazel.sdk.model.test,
+ com.salesforce.bazel.sdk.workspace.test

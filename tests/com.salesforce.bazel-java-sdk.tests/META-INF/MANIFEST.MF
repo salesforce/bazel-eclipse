@@ -4,28 +4,12 @@ Bundle-Name: Tests
 Bundle-SymbolicName: com.salesforce.bazel-java-sdk.tests
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: Salesforce
+Fragment-Host: com.salesforce.bazel-java-sdk;bundle-version="1.2.3"
 Automatic-Module-Name: com.salesforce.bazel.java.sdk.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: org.hamcrest.library;bundle-version="1.3.0",
  org.junit;bundle-version="4.13.0",
  org.mockito;bundle-version="2.23.0",
- com.salesforce.bazel-java-sdk;bundle-version="1.2.3"
+ com.salesforce.bazel-java-testframework;bundle-version="1.0.0"
 Bundle-ClassPath: lib/truth-0.31.jar,
  .
-Export-Package: com.google.common.truth,
- com.salesforce.bazel.sdk.aspect,
- com.salesforce.bazel.sdk.command,
- com.salesforce.bazel.sdk.command.internal,
- com.salesforce.bazel.sdk.command.test,
- com.salesforce.bazel.sdk.command.test.type,
- com.salesforce.bazel.sdk.index,
- com.salesforce.bazel.sdk.lang.jvm,
- com.salesforce.bazel.sdk.logging,
- com.salesforce.bazel.sdk.model,
- com.salesforce.bazel.sdk.model.test,
- com.salesforce.bazel.sdk.project,
- com.salesforce.bazel.sdk.workspace,
- com.salesforce.bazel.sdk.workspace.test
-Import-Package: com.google.common.base;version="30.1.0",
- com.google.common.collect;version="30.1.0",
- org.json

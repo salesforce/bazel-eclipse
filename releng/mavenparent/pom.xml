@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.salesforce.bazel.eclipse.feature.releng</groupId>
@@ -420,6 +417,7 @@
           <artifactId>tycho-surefire-plugin</artifactId>
           <version>${tycho.version}</version>
           <configuration>
+            <reportsDirectory>${surefire-reports-directory}</reportsDirectory>
             <dependencies>
               <!-- define common default dependencies -->
               <dependency>
@@ -428,7 +426,7 @@
               </dependency>
               <dependency>
                 <type>p2-installable-unit</type>
-                <artifactId>org.eclipse.equinox.ds</artifactId>
+                <artifactId>org.eclipse.equinox.console</artifactId>
               </dependency>
               <dependency>
                 <type>p2-installable-unit</type>
@@ -439,7 +437,9 @@
                 <artifactId>org.eclipse.equinox.registry</artifactId>
               </dependency>
             </dependencies>
-            <reportsDirectory>${surefire-reports-directory}</reportsDirectory>
+            <systemProperties>
+              <osgi.console>1234</osgi.console>
+            </systemProperties>
           </configuration>
         </plugin>
         <plugin>
@@ -460,11 +460,6 @@
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
           <version>${jacoco.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.sonatype.plugins</groupId>
-          <artifactId>maven-upload-plugin</artifactId>
-          <version>0.0.1</version>
         </plugin>
       </plugins>
     </pluginManagement>

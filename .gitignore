@@ -1,15 +1,6 @@
-# Bazel
-bazel-bin
-bazel-genfiles
-bazel-out
-bazel-sfdc-bazel
-bazel-testlogs
-bazel-bazel-eclipse
-
 # compile output
 bin/
 target/
-workspace/
 
 
 # Log files
