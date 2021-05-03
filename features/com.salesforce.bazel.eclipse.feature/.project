@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Bazel Eclipse Feature</name>
+	<name>com.salesforce.bazel.eclipse.feature</name>
 	<comment></comment>
 	<projects>
 		<project>bazel-java-sdk</project>
