@@ -18,7 +18,7 @@ Recommended resources
 We have an [architecture](architecture.md) document.
 It provides a high level explanation of the implementation of the feature.
 
-### One Build Systems, One Happy World
+### One Build System, One Happy World
 
 We do not use Bazel for building the Bazel Eclipse Feature.
 We use Eclipse PDE and the Maven Tycho extension.
@@ -66,12 +66,21 @@ It will look something like:
 Follow these steps to begin development of the Bazel Eclipse Feature in the Eclipse SDK IDE.
 
 - Launch the Eclipse SDK
-- *File* -> *Import* -> *Existing Project*
+- Click *File* -> *Import* -> *Existing Project*
 - Select the *bazel-eclipse* folder as the root directory
+- Select **Search for nested projects** (critical step)
 - Eclipse should detect that the projects are there, and offer to import projects *Bazel Eclipse Feature*, *bzl-java-sdk* and others.
 - Click Finish
 
-:fire: if you see errors or warnings at this point, see the [dev issues page](dev_issues.md)  for help.
+There will be errors. This is expected at this point.
+
+- Click *Window* -> *Perspective* -> *Open Perspective* -> *Plug-in Development*
+- Open file *releng/target-platform/target-platform.target* file
+- Click *Reload Target Platform* in the upper right. This will run for a **long** time (20 minutes perhaps).
+- The Problems view should now be free of errors
+
+:fire: if you see errors or warnings at this point, see the [dev issues page](dev_issues.md) for help.
+Also, the [Build Doc](thebuild.md) explains the details of the build system.
 
 ### Apply the Bazel Eclipse code formatter to your Eclipse SDK IDE
 
@@ -91,11 +100,10 @@ Click on *Run* > *Debug Configurations...* menu in the Eclipse SDK instance
    (the one in which you imported the Eclipse plugin projects).
 Let's refer to this one as the **outer** Eclipse.
 In the Debug Configurations, there should already be an entry *Eclipse Application* > *Runtime Eclipse*.
-If not, select *Eclipse App* template in the left nav, give it the name *Inner Eclipse*, then click *Apply*.
+If not, select *Eclipse Application* template in the left nav, click on the *New* button, give it the name *Inner Eclipse*, then click *Apply*.
 Click on it.
 
-On the *Plugins* tab, make sure the Bazel Eclipse plugins are in the list.
-You might have to add it.
+On the *Plugins* tab, make sure *Launch with all workspace and enabled target plug-ins* is selected.
 
 Click the *Debug* button, you should be off and running.
 It will launch a new Eclipse (let's call this the **inner** Eclipse or *runtime* Eclipse) with the Bazel feature installed.
@@ -103,13 +111,12 @@ You can set breakpoints in the plugin code as needed.
 
 :fire: If you get an error about *UnsupportedClassVersionError* see the [dev issues](dev_issues.md) page.
 
-### How to Build and Run the Feature Tests on the Bazel Command Line
+### How to Build and Run the Feature Tests on the Maven Command Line
 
-The Bazel Eclipse Feature uses Bazel as its command line build system.
+The Bazel Eclipse Feature uses Maven as its command line build system.
 
 ```
-bazel build //...
-bazel test //...
+mvn clean package
 ```
 
 If you see any errors or warnings, check the [dev issues page](dev_issues.md) for help.
@@ -120,15 +127,14 @@ Logging has been simplified for plugin development and [instructions](logging.md
 ### Precheckin Procedure
 
 
-1. Run the tests via the Bazel build before submitting a PR, as there is no CI system to catch a mistake. ```bazel test //...```
+1. Run the tests via the Bazel build before submitting a PR, as there is no CI system to catch a mistake. ```mvn clean package```
 2. Make sure the feature builds correctly from the Eclipse SDK
 3. Run the feature from the Eclipse SDK (*Run* -> *Run As* -> *Inner Eclipse*). Import a Bazel workspace to test it.
 4. If you are making big changes, try also to run the feature from a non-SDK install. You will do this by installing the feature updatesite zip file. See the *Testing with a Plain Eclipse Install* section below. Import a Bazel workspace to test it.
 
 ### CI
 
-Within Salesforce, we run CI builds against the Git repo.
-Due to security limitations, we cannot expose these jobs to the public.
+We use [GitHub Actions](https://github.com/salesforce/bazel-eclipse/actions) for our CI system.
 
 ### Releasing the Feature
 
@@ -139,5 +145,4 @@ Some issues only appear when the feature is installed from the update site.
 Eclipse features are released to the public via *update sites*.
 Normally these are hosted on a web server somewhere.
 But for convenience you can also build and install an update site zip file (aka an Eclipse feature archive).
-
-As covered in our [build system doc](threebuilds.md) we currently use the Eclipse SDK *Export...* for creating the update site for the feature.
+This can be found locally in this location: *releng/p2repository/target/p2repository.eclipse-repository-VERSION.zip*

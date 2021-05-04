@@ -1,13 +1,5 @@
 ## Known Build and Developer Issues
 
-### Bazel Build Errors and Warnings
-
-**'//feature:bazeleclipsefeature' depends on deprecated target '@local_jdk//:java'**
-
-This is caused by a Bazel rule we import from a public git repo using an older form of the Bazel API.
-We cannot fix it easily.
-It is benign at this point.
-
 ### Eclipse SDK Build Errors and Warnings
 
 **Classpath Errors in the Eclipse SDK build**
