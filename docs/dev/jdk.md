@@ -2,15 +2,7 @@
 
 We target an older version Java intentionally since we open source the feature publicly.
 We want to be as inclusive as possible.
-Currently the supported JDK is **1.8**.
-
-### Bazel Build JDK Configuration
-
-The Bazel build JDK version is configured in [.base-bazelrc](../../.base-bazelrc)
-
-```
-build --javacopt="-source 8 -target 8"
-```
+Currently the supported JDK is **11**.
 
 ### Eclipse SDK Project JDK Configuration
 
@@ -18,7 +10,7 @@ We like the project configuration approach because it will be automatically be a
 The JDK version is set in each plugin's *MANIFEST.MF* file:
 
 ```
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 ```
 
 ### Eclipse SDK Workspace JDK Configuration
@@ -29,4 +21,4 @@ We don't recommend this approach because it will need to be applied for every de
 
 - Navigate to menu *Eclipse* -> *Preferences* in your **outer** Eclipse
 - Select *Java* -> *Compiler*
-- Choose 1.8 for compliance level
+- Choose *11* for compliance level
