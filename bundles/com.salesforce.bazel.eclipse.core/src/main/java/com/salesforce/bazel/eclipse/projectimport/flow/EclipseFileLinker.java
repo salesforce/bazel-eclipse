@@ -53,20 +53,6 @@ class EclipseFileLinker {
         File f = new File(new File(bazelWorkspaceRootDirectory, packageFSPath), fileName);
         if (f.exists()) {
             IFile projectFile = resourceHelper.getProjectFile(eclipseProject, fileName);
-            if (projectFile.exists()) {
-                // What has happened is the user imported the Bazel workspace into Eclipse, but then deleted it from their Eclipse workspace at some point.
-                // Now they are trying to import it again. Like the IntelliJ plugin we are refusing to do so, but perhaps we will
-                // support this once we are convinced that we are safe to import over an old imported version of the Bazel workspace. TODO
-                // For now, just bail, with a good message.
-                String logMsg =
-                        "You have imported this Bazel workspace into Eclipse previously, but then deleted it from your Eclipse workspace. "
-                                + "This left files on the filesystem in your Eclipse workspace directory and the feature currently does not support overwriting an old imported Bazel workspace. "
-                                + "\nTo import this Bazel workspace, use file system tools to delete the associated Bazel Eclipse project files from the "
-                                + "Eclipse workspace directory, and then try to import again. \nFile: "
-                                + projectFile.getFullPath();
-                // TODO throwing this exception just writes a log message, we need a modal error popup for this error
-                throw new IllegalStateException(logMsg);
-            }
             try {
                 resourceHelper.createFileLink(projectFile, Path.fromOSString(f.getCanonicalPath()), IResource.NONE,
                     null);

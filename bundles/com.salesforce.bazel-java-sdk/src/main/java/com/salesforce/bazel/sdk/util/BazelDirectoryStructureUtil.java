@@ -63,11 +63,22 @@ public final class BazelDirectoryStructureUtil {
         return false;
     }
 
+    public static boolean isWorkspaceRoot(File repositoryRoot) {
+        Path rootPath = repositoryRoot.toPath();
+        for (String buildFileName : BazelConstants.WORKSPACE_FILE_NAMES) {
+            Path buildFilePath = rootPath.resolve(buildFileName);
+            if (Files.isRegularFile(buildFilePath)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static List<String> findBazelPackages(File repositoryRoot, String relativeRepositoryPath) {
         Path rootPath = repositoryRoot.toPath();
         try {
             return
-                Files.walk(rootPath.resolve(relativeRepositoryPath))
+                    Files.walk(rootPath.resolve(relativeRepositoryPath))
                     .filter(Files::isRegularFile)
                     .filter(p -> BazelConstants.BUILD_FILE_NAMES.contains(p.getFileName().toString()))
                     .map(Path::getParent)

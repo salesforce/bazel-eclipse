@@ -41,6 +41,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.ProjectView;
 import com.salesforce.bazel.sdk.project.ProjectViewConstants;
+import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
 /**
  * Creates the root (WORKSPACE-level) project.
@@ -62,9 +63,13 @@ public class CreateRootProjectFlow implements ImportFlow {
 
     @Override
     public void run(ImportContext ctx, SubMonitor progressMonitor) {
+        File bazelWorkspaceRootDirectory = ctx.getBazelWorkspaceRootDirectory();
+        if (!BazelDirectoryStructureUtil.isWorkspaceRoot(bazelWorkspaceRootDirectory)) {
+            throw new IllegalArgumentException();
+        }
+
         EclipseFileLinker fileLinker = ctx.getEclipseFileLinker();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-        File bazelWorkspaceRootDirectory = ctx.getBazelWorkspaceRootDirectory();
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         String rootProjectName =
                 BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME + " (" + bazelWorkspace.getName() + ")";
@@ -72,21 +77,14 @@ public class CreateRootProjectFlow implements ImportFlow {
         if (rootProject == null) {
             rootProject = ctx.getEclipseProjectCreator().createRootProject(rootProjectName);
         }
-        boolean linkedFile = false;
-        IFile workspaceFile = BazelPluginActivator.getResourceHelper().getProjectFile(rootProject, "WORKSPACE");
-        if (!workspaceFile.exists()) {
-            linkedFile = fileLinker.link("", rootProject, "WORKSPACE");
-            if (!linkedFile) {
-                workspaceFile = BazelPluginActivator.getResourceHelper().getProjectFile(rootProject, "WORKSPACE.bazel");
-                if (!workspaceFile.exists()) {
-                    linkedFile = fileLinker.link("", rootProject, "WORKSPACE.bazel");
-                }
-            }
-        }
-        if (linkedFile) {
-            List<BazelPackageLocation> selectedBazelPackages = ctx.getSelectedBazelPackages();
-            writeProjectViewFile(bazelWorkspaceRootDirectory, rootProject, selectedBazelPackages);
-        }
+
+        // link all files in the workspace root into the Eclipse project
+        ctx.getEclipseProjectCreator().linkFilesInPackageDirectory(fileLinker, rootProject, "",
+            bazelWorkspaceRootDirectory, null);
+
+        List<BazelPackageLocation> selectedBazelPackages = ctx.getSelectedBazelPackages();
+        writeProjectViewFile(bazelWorkspaceRootDirectory, rootProject, selectedBazelPackages);
+
         ctx.setRootProject(rootProject);
     }
 

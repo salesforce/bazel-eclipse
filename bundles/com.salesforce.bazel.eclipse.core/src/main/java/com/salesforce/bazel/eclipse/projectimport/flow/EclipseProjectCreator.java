@@ -88,6 +88,26 @@ class EclipseProjectCreator {
         return eclipseProject;
     }
 
+    /**
+     * Links files in the root of package into the Eclipse project.
+     */
+    void linkFilesInPackageDirectory(EclipseFileLinker fileLinker, IProject project, String packageFSPath,
+            File packageDirFile, String fileExtension) {
+        File[] pkgFiles = packageDirFile.listFiles();
+
+        for (File pkgFile : pkgFiles) {
+            if (pkgFile.isFile()) {
+                String name = pkgFile.getName();
+                if (fileExtension != null) {
+                    if (!name.endsWith(fileExtension)) {
+                        continue;
+                    }
+                }
+                fileLinker.link(packageFSPath, project, name);
+            }
+        }
+    }
+
     private static IProject createBaseEclipseProject(String eclipseProjectName, URI location) {
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         IProgressMonitor progressMonitor = null;
