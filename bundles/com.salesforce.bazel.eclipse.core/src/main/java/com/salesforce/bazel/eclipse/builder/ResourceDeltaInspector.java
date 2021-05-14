@@ -43,7 +43,6 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 
-import com.google.common.base.Preconditions;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 
@@ -62,7 +61,9 @@ class ResourceDeltaInspector {
     }
 
     private static boolean hasChangedFiles(IResourceDelta delta, Collection<String> filenameNeedles) {
-        Preconditions.checkNotNull(delta);
+        if (delta == null) {
+            throw new IllegalArgumentException("Field delta cannot be null.");
+        }
         try {
             Collection<IResource> matchingResources = new ArrayList<>();
             delta.accept(new ChangedResourceVisitor(filenameNeedles, matchingResources));

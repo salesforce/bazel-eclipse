@@ -5,7 +5,6 @@ java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-deps:org_json_json",
     ],
 )
@@ -24,7 +23,6 @@ java_library(
 
         "//plugin-libs/plugin-testdeps:org_junit_junit",
         "//plugin-libs/plugin-testdeps:org_mockito_mockito_core",
-        "//plugin-libs/plugin-deps:com_google_guava",
     ],
 )
 
@@ -50,7 +48,6 @@ java_test(
     srcs = ["src/test/java/com/salesforce/bazel/sdk/aspect/AspectTargetInfosTest.java",],
     deps = [
         ":bzl-java-sdk",
-        "//plugin-libs/plugin-deps:com_google_guava",
     ],
 )
 
@@ -98,7 +95,7 @@ java_test(
         "src/main/java/com/salesforce/bazel/sdk/command/BazelOutputParser.java",
         "src/test/java/com/salesforce/bazel/sdk/command/BazelOutputParserTest.java",
     ],
-    deps = ["//plugin-libs/plugin-deps:com_google_guava",],
+    deps = [],
 )
 
 java_test(
@@ -107,7 +104,6 @@ java_test(
     deps = [
         ":bzl-java-sdk",
 
-        "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-testdeps:com_google_truth",
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",
@@ -170,7 +166,6 @@ java_test(
     deps = [
         ":bzl-java-sdk",
 
-        "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-deps:org_json_json",
         "//plugin-libs/plugin-testdeps:org_hamcrest_core",
         "//plugin-libs/plugin-testdeps:org_junit_junit",

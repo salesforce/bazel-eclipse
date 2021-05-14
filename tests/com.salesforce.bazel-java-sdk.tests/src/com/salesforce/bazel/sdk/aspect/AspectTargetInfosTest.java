@@ -39,12 +39,14 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 public class AspectTargetInfosTest {
@@ -183,8 +185,10 @@ public class AspectTargetInfosTest {
 
     private static AspectTargetInfo getAspectTargetInfo(String label, BazelTargetKind targetKind,
             String... sourcePaths) {
-        return new AspectTargetInfo(new File(""), ImmutableList.of(), ImmutableList.of(), "some/path",
-                targetKind.toString().toLowerCase(), label, ImmutableList.of(), ImmutableList.copyOf(sourcePaths),
+        List<String> sourcePathList = Arrays.asList(sourcePaths);
+
+        return new AspectTargetInfo(new File(""), new ArrayList<>(), new ArrayList<>(), "some/path",
+                targetKind.toString().toLowerCase(), label, new ArrayList<>(), sourcePathList,
                 "main-class");
     }
 

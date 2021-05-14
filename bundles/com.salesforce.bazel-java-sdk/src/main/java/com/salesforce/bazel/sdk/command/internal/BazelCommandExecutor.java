@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
@@ -65,7 +64,7 @@ public class BazelCommandExecutor {
 
     public synchronized List<String> runBazelAndGetOutputLines(File workingDirectory,
             WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector, long timeoutMS)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         CommandBuilder builder =
                 getConfiguredCommandBuilder(ConsoleType.WORKSPACE, workingDirectory, progressMonitor, args, timeoutMS);
@@ -77,7 +76,7 @@ public class BazelCommandExecutor {
 
     public synchronized List<String> runBazelAndGetOuputLines(ConsoleType consoleType, File workingDirectory,
             WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector, long timeoutMS)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         CommandBuilder builder =
                 getConfiguredCommandBuilder(consoleType, workingDirectory, progressMonitor, args, timeoutMS);
@@ -86,14 +85,14 @@ public class BazelCommandExecutor {
         if (command.run() == 0) {
             return command.getSelectedOutputLines();
         }
-        return ImmutableList.of();
+        return new ArrayList<>();
     }
 
     // WHEN INTERESTING OUTPUT IS ON STDERR...
 
     public synchronized List<String> runBazelAndGetErrorLines(File directory, WorkProgressMonitor progressMonitor,
             List<String> args, Function<String, String> selector, long timeoutMS)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         CommandBuilder builder =
                 getConfiguredCommandBuilder(ConsoleType.WORKSPACE, directory, progressMonitor, args, timeoutMS);
@@ -105,7 +104,7 @@ public class BazelCommandExecutor {
 
     public synchronized List<String> runBazelAndGetErrorLines(ConsoleType consoleType, File directory,
             WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector, long timeoutMS)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         CommandBuilder builder = getConfiguredCommandBuilder(consoleType, directory, progressMonitor, args, timeoutMS);
         Command command = builder.setStderrLineSelector(selector).build();
@@ -113,7 +112,7 @@ public class BazelCommandExecutor {
             return command.getSelectedErrorLines();
         }
 
-        return ImmutableList.of();
+        return new ArrayList<>();
     }
 
     // HELPERS
@@ -136,12 +135,12 @@ public class BazelCommandExecutor {
 
     private CommandBuilder getConfiguredCommandBuilder(ConsoleType type, File directory,
             WorkProgressMonitor progressMonitor, List<String> args, long timeoutMS)
-            throws BazelCommandLineToolConfigurationException {
+                    throws BazelCommandLineToolConfigurationException {
 
         String consoleName = type.getConsoleName(directory);
 
         return commandBuilder.setConsoleName(consoleName).setDirectory(directory).setTimeout(timeoutMS)
-                .addArguments(this.bazelExecutable.getAbsolutePath()).addArguments(args)
+                .addArguments(bazelExecutable.getAbsolutePath()).addArguments(args)
                 .setProgressMonitor(progressMonitor);
     }
 

@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -59,7 +60,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.launching.IVMConnector;
 import org.eclipse.jdt.launching.JavaRuntime;
 
-import com.google.common.collect.ImmutableMap;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -157,7 +157,10 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
     // INTERNAL
 
     private static Map<String, String> getConnectorDebugArgs() {
-        return ImmutableMap.of("hostname", DEBUG_HOST, "port", String.valueOf(DEBUG_PORT));
+        Map<String, String> map = new HashMap<>();
+        map.put("hostname", DEBUG_HOST);
+        map.put("port", String.valueOf(DEBUG_PORT));
+        return map;
     }
 
     private static void connectDebugger(ILaunchConfiguration configuration, IProject project, IProgressMonitor monitor,

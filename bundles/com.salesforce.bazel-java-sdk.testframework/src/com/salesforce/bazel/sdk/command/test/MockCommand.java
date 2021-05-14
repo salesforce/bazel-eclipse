@@ -30,7 +30,6 @@ import java.util.Map;
 
 import org.mockito.Mockito;
 
-import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
@@ -62,19 +61,19 @@ public class MockCommand implements Command {
     }
 
     public void addSimulatedOutputToCommandStdOut(String... someStrings) {
-        this.outputLines = new ArrayList<>();
+        outputLines = new ArrayList<>();
         for (String someString : someStrings) {
-            this.outputLines.add(someString);
+            outputLines.add(someString);
         }
-        this.errorLines = new ArrayList<>();
+        errorLines = new ArrayList<>();
     }
 
     public void addSimulatedOutputToCommandStdErr(String... someStrings) {
-        this.errorLines = new ArrayList<>();
+        errorLines = new ArrayList<>();
         for (String someString : someStrings) {
-            this.errorLines.add(someString);
+            errorLines.add(someString);
         }
-        this.outputLines = new ArrayList<>();
+        outputLines = new ArrayList<>();
     }
 
     @Override
@@ -83,11 +82,11 @@ public class MockCommand implements Command {
     }
 
     @Override
-    public ImmutableList<String> getSelectedErrorLines() {
+    public List<String> getSelectedErrorLines() {
         if (errorLines != null) {
-            return ImmutableList.copyOf(errorLines);
+            return errorLines;
         }
-        return ImmutableList.of();
+        return new ArrayList<>();
     }
 
     @Override
@@ -101,11 +100,11 @@ public class MockCommand implements Command {
     }
 
     @Override
-    public ImmutableList<String> getSelectedOutputLines() {
+    public List<String> getSelectedOutputLines() {
         if (outputLines != null) {
-            return ImmutableList.copyOf(outputLines);
+            return outputLines;
         }
-        return ImmutableList.of();
+        return new ArrayList<>();
     }
 
     // HELPERS

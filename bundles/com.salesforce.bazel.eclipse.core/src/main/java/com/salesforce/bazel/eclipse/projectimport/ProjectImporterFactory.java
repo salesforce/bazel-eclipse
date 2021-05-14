@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.salesforce.bazel.eclipse.projectimport.flow.CreateProjectsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.CreateRootProjectFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.DetermineTargetsFlow;
@@ -89,12 +88,10 @@ public class ProjectImporterFactory {
         this.projectOrderResolver = projectOrderResolver;
     }
 
-    @VisibleForTesting
     public void skipJREWarmup() {
         flows.removeIf(flow -> flow.getClass() == InitJREFlow.class);
     }
 
-    @VisibleForTesting
     public void skipQueryCacheWarmup() {
         flows.removeIf(flow -> flow.getClass() == LoadTargetsFlow.class);
     }

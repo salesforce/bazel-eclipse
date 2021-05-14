@@ -40,16 +40,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+
 
 /**
  * A parsed version of the JSON file produced by the application of the Bazel aspect.
@@ -79,18 +78,17 @@ import com.google.common.collect.ImmutableMap;
 public final class AspectTargetInfo {
 
     public static final String ASPECT_FILENAME_SUFFIX = ".bzleclipse-build.json";
-    private static final Joiner COMMA_JOINER = Joiner.on(",");
 
     private final File aspectDataFile; // full path to the file on the file system
     private final String workspaceRelativePath; // relative path on the filesystem within the workspace
-    private final ImmutableList<String> deps;
+    private final List<String> deps;
     private final String kind;
     private final String label;
     private final String mainClass;
 
-    private final ImmutableList<AspectOutputJarSet> generatedJars;
-    private final ImmutableList<AspectOutputJarSet> jars;
-    private final ImmutableList<String> sources;
+    private final List<AspectOutputJarSet> generatedJars;
+    private final List<AspectOutputJarSet> jars;
+    private final List<String> sources;
 
     @Override
     public String toString() {
@@ -99,20 +97,28 @@ public final class AspectTargetInfo {
         builder.append("  label = ").append(label).append(",\n");
         builder.append("  build_file_artifact_location = ").append(workspaceRelativePath).append(",\n");
         builder.append("  kind = ").append(kind).append(",\n");
-        builder.append("  jars = [").append(COMMA_JOINER.join(jars)).append("],\n");
-        builder.append("  generated_jars = [").append(COMMA_JOINER.join(generatedJars)).append("],\n");
-        builder.append("  dependencies = [").append(COMMA_JOINER.join(deps)).append("],\n");
-        builder.append("  sources = [").append(COMMA_JOINER.join(sources)).append("]),\n");
+        builder.append("  jars = [").append(commaJoiner(jars)).append("],\n");
+        builder.append("  generated_jars = [").append(commaJoiner(generatedJars)).append("],\n");
+        builder.append("  dependencies = [").append(commaJoiner(deps)).append("],\n");
+        builder.append("  sources = [").append(commaJoiner(sources)).append("]),\n");
         builder.append("  main_class = ").append(mainClass).append("),\n");
         return builder.toString();
+    }
+
+    private String commaJoiner(List<?> things) {
+        StringBuffer sb = new StringBuffer();
+        for (Object thing : things) {
+            sb.append(thing.toString());
+            sb.append(",");
+        }
+        return sb.toString();
     }
 
     /**
      * Constructs a map of label -> @link AspectTargetInfo} from a list of file paths, parsing each files into a
      * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
      */
-    @VisibleForTesting
-    public static ImmutableMap<String, AspectTargetInfo> loadAspectFilePaths(List<String> aspectFilePaths)
+    public static Map<String, AspectTargetInfo> loadAspectFilePaths(List<String> aspectFilePaths)
             throws IOException, InterruptedException {
 
         List<File> fileList = new ArrayList<>();
@@ -129,22 +135,20 @@ public final class AspectTargetInfo {
      * Constructs a map of label -> {@link AspectTargetInfo} from a list of files, parsing each files into a
      * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
      */
-    @VisibleForTesting
-    public static ImmutableMap<String, AspectTargetInfo> loadAspectFiles(List<File> aspectFiles)
+    public static Map<String, AspectTargetInfo> loadAspectFiles(List<File> aspectFiles)
             throws IOException, InterruptedException {
-        ImmutableMap.Builder<String, AspectTargetInfo> infos = ImmutableMap.builder();
+        Map<String, AspectTargetInfo> infos = new HashMap<>();
         for (File aspectFile : aspectFiles) {
             AspectTargetInfo buildInfo = loadAspectFile(aspectFile);
             infos.put(buildInfo.label, buildInfo);
         }
-        return infos.build();
+        return infos;
     }
 
     /**
      * Constructs a map of label -> {@link AspectTargetInfo} from a list of files, parsing each files into a
      * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
      */
-    @VisibleForTesting
     public static AspectTargetInfo loadAspectFile(File aspectFile) throws IOException, InterruptedException {
         AspectTargetInfo buildInfo = null;
         if (aspectFile.exists()) {
@@ -160,7 +164,7 @@ public final class AspectTargetInfo {
      * @return the File
      */
     public File getAspectDataFile() {
-        return this.aspectDataFile;
+        return aspectDataFile;
     }
 
     /**
@@ -225,17 +229,17 @@ public final class AspectTargetInfo {
         AspectTargetInfo info = null;
 
         try {
-            ImmutableList<AspectOutputJarSet> jars = jsonToJarArray(object.getJSONArray("jars"));
-            ImmutableList<AspectOutputJarSet> generated_jars = jsonToJarArray(object.getJSONArray("generated_jars"));
+            List<AspectOutputJarSet> jars = jsonToJarArray(object.getJSONArray("jars"));
+            List<AspectOutputJarSet> generated_jars = jsonToJarArray(object.getJSONArray("generated_jars"));
             String build_file_artifact_location = object.getString("build_file_artifact_location");
             String kind = object.getString("kind");
             String label = object.getString("label");
-            ImmutableList<String> deps = jsonToStringArray(object.getJSONArray("dependencies"));
-            ImmutableList<String> sources = jsonToStringArray(object.getJSONArray("sources"));
+            List<String> deps = jsonToStringArray(object.getJSONArray("dependencies"));
+            List<String> sources = jsonToStringArray(object.getJSONArray("sources"));
             String mainClass = object.has("main_class") ? object.getString("main_class") : null;
 
             info = new AspectTargetInfo(aspectDataFile, jars, generated_jars, build_file_artifact_location, kind,
-                    label, deps, sources, mainClass);
+                label, deps, sources, mainClass);
         } catch (Exception anyE) {
             //System.err.println("Error parsing Bazel aspect info from file "+aspectDataFile.getAbsolutePath()+". Error: "+anyE.getMessage());
             throw anyE;
@@ -243,9 +247,9 @@ public final class AspectTargetInfo {
         return info;
     }
 
-    AspectTargetInfo(File aspectDataFile, ImmutableList<AspectOutputJarSet> jars,
-            ImmutableList<AspectOutputJarSet> generatedJars, String workspaceRelativePath, String kind, String label,
-            ImmutableList<String> deps, ImmutableList<String> sources, String mainClass) {
+    AspectTargetInfo(File aspectDataFile, List<AspectOutputJarSet> jars, List<AspectOutputJarSet> generatedJars,
+        String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources,
+        String mainClass) {
         this.aspectDataFile = aspectDataFile;
         this.jars = jars;
         this.generatedJars = generatedJars;
@@ -257,20 +261,20 @@ public final class AspectTargetInfo {
         this.mainClass = mainClass;
     }
 
-    private static ImmutableList<AspectOutputJarSet> jsonToJarArray(JSONArray array) {
-        ImmutableList.Builder<AspectOutputJarSet> builder = ImmutableList.builder();
+    private static List<AspectOutputJarSet> jsonToJarArray(JSONArray array) {
+        List<AspectOutputJarSet> jarList = new ArrayList<>();
         for (Object o : array) {
-            builder.add(new AspectOutputJarSet((JSONObject) o));
+            jarList.add(new AspectOutputJarSet((JSONObject) o));
         }
-        return builder.build();
+        return jarList;
     }
 
-    private static ImmutableList<String> jsonToStringArray(JSONArray array) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
+    private static List<String> jsonToStringArray(JSONArray array) {
+        List<String> list = new ArrayList<>();
         for (Object o : array) {
-            builder.add(o.toString());
+            list.add(o.toString());
         }
-        return builder.build();
+        return list;
     }
 
 }

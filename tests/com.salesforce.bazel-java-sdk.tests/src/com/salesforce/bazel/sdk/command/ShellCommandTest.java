@@ -36,7 +36,8 @@
 
 package com.salesforce.bazel.sdk.command;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -62,7 +63,7 @@ import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
  */
 public class ShellCommandTest {
 
-    private static Function<String, String> NON_EMPTY_LINES_SELECTOR = (x) -> x.trim().isEmpty() ? null : x;
+    private static Function<String, String> NON_EMPTY_LINES_SELECTOR = x -> x.trim().isEmpty() ? null : x;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -111,31 +112,31 @@ public class ShellCommandTest {
     public void testCommandWithStream() throws IOException, InterruptedException {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-        Function<String, String> stdoutSelector = (x) -> (x.trim().isEmpty() || x.equals("a")) ? null : x;
-        Function<String, String> stderrSelector = (x) -> (x.trim().isEmpty() || x.equals("b")) ? null : x;
+        Function<String, String> stdoutSelector = x -> (x.trim().isEmpty() || x.equals("a")) ? null : x;
+        Function<String, String> stderrSelector = x -> (x.trim().isEmpty() || x.equals("b")) ? null : x;
 
         CommandBuilder builder = ShellCommand.builder(mockConsoleFactory).setConsoleName("test")
                 .setDirectory(folder.getRoot()).setStandardError(stderr).setStandardOutput(stdout)
                 .setStderrLineSelector(stderrSelector).setStdoutLineSelector(stdoutSelector);
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
         Command cmd = builder.build();
-        assertThat(cmd.run()).isEqualTo(0);
+        assertEquals(0, cmd.run());
         String stdoutStr = new String(stdout.toByteArray(), StandardCharsets.UTF_8).trim();
         String stderrStr = new String(stderr.toByteArray(), StandardCharsets.UTF_8).trim();
 
-        assertThat(stdoutStr).isEqualTo("a");
-        assertThat(stderrStr).isEqualTo("b");
-        assertThat(cmd.getSelectedErrorLines()).containsExactly("a");
-        assertThat(cmd.getSelectedOutputLines()).containsExactly("b");
-        assertThat(mockConsoleFactory.consoles).hasSize(1);
+        assertEquals("a", stdoutStr);
+        assertEquals("b", stderrStr);
+        assertEquals("a", cmd.getSelectedErrorLines().get(0));
+        assertEquals("b", cmd.getSelectedOutputLines().get(0));
+        assertEquals(1, mockConsoleFactory.consoles.size());
         MockCommandConsole console = mockConsoleFactory.consoles.get(0);
-        assertThat(console.name).isEqualTo("test");
-        assertThat(console.title)
-                .isEqualTo("Running bash -c echo a; echo b; echo a >&2; echo b >&2 " + "from " + folder.getRoot());
+        assertEquals("test", console.name);
+        assertEquals("Running bash -c echo a; echo b; echo a >&2; echo b >&2 " + "from " + folder.getRoot(),
+            console.title);
         stdoutStr = new String(console.stdout.toByteArray(), StandardCharsets.UTF_8).trim();
         stderrStr = new String(console.stderr.toByteArray(), StandardCharsets.UTF_8).trim();
-        assertThat(stdoutStr).isEmpty();
-        assertThat(stderrStr).isEmpty();
+        assertTrue(stdoutStr.isEmpty());
+        assertTrue(stderrStr.isEmpty());
     }
 
     @Test
@@ -145,9 +146,13 @@ public class ShellCommandTest {
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
         builder.setStderrLineSelector(NON_EMPTY_LINES_SELECTOR).setStdoutLineSelector(NON_EMPTY_LINES_SELECTOR);
         Command cmd = builder.build();
-        assertThat(cmd.run()).isEqualTo(0);
-        assertThat(cmd.getSelectedErrorLines()).containsExactly("a", "b");
-        assertThat(cmd.getSelectedOutputLines()).containsExactly("a", "b");
+        assertEquals(0, cmd.run());
+        assertEquals(2, cmd.getSelectedErrorLines().size());
+        assertTrue(cmd.getSelectedErrorLines().contains("a"));
+        assertTrue(cmd.getSelectedErrorLines().contains("b"));
+        assertEquals(2, cmd.getSelectedOutputLines().size());
+        assertTrue(cmd.getSelectedOutputLines().contains("a"));
+        assertTrue(cmd.getSelectedOutputLines().contains("b"));
     }
 
     @Test
@@ -156,15 +161,15 @@ public class ShellCommandTest {
                 ShellCommand.builder(mockConsoleFactory).setConsoleName("test").setDirectory(folder.getRoot());
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
         Command cmd = builder.build();
-        assertThat(cmd.run()).isEqualTo(0);
+        assertEquals(0, cmd.run());
         MockCommandConsole console = mockConsoleFactory.consoles.get(0);
-        assertThat(console.name).isEqualTo("test");
-        assertThat(console.title)
-                .isEqualTo("Running bash -c echo a; echo b; echo a >&2; echo b >&2 " + "from " + folder.getRoot());
+        assertEquals("test", console.name);
+        assertEquals("Running bash -c echo a; echo b; echo a >&2; echo b >&2 " + "from " + folder.getRoot(),
+            console.title);
         String stdoutStr = new String(console.stdout.toByteArray(), StandardCharsets.UTF_8).trim();
         String stderrStr = new String(console.stderr.toByteArray(), StandardCharsets.UTF_8).trim();
-        assertThat(stdoutStr).isEqualTo("a\nb");
-        assertThat(stderrStr).isEqualTo("a\nb");
+        assertEquals("a\nb", stdoutStr);
+        assertEquals("a\nb", stderrStr);
     }
 
     @Test
@@ -174,8 +179,9 @@ public class ShellCommandTest {
         builder.setStderrLineSelector(NON_EMPTY_LINES_SELECTOR).setStdoutLineSelector(NON_EMPTY_LINES_SELECTOR);
         builder.addArguments("pwd");
         Command cmd = builder.build();
-        assertThat(cmd.run()).isEqualTo(0);
-        assertThat(cmd.getSelectedErrorLines()).isEmpty();
-        assertThat(cmd.getSelectedOutputLines()).containsExactly(folder.getRoot().getCanonicalPath());
+        assertEquals(0, cmd.run());
+        assertTrue(cmd.getSelectedErrorLines().isEmpty());
+        assertEquals(1, cmd.getSelectedOutputLines().size());
+        assertEquals(folder.getRoot().getCanonicalPath(), cmd.getSelectedOutputLines().get(0));
     }
 }
