@@ -1,4 +1,5 @@
 Manifest-Version: 1.0
+Eclipse-BundleShape: dir
 Bundle-ManifestVersion: 2
 Bundle-Name: Bazel Eclipse Core Plugin
 Automatic-Module-Name: com.salesforce.bazel.eclipse.core
