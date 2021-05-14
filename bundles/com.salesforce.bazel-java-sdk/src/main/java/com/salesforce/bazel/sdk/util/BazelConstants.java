@@ -43,22 +43,23 @@ public interface BazelConstants {
     /**
      * The Bazel BUILD files BEF looks for.
      */
+    Collection<String> WORKSPACE_FILE_NAMES =
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList("WORKSPACE", "WORKSPACE.bazel")));
+
+    /**
+     * The Bazel BUILD files BEF looks for.
+     */
     Collection<String> BUILD_FILE_NAMES =
-        Collections.unmodifiableSet(
-            new HashSet<>(
-                Arrays.asList(
-                    new String[]{"BUILD", "BUILD.bazel"})));
+            Collections.unmodifiableSet(
+                new HashSet<>(
+                        Arrays.asList("BUILD", "BUILD.bazel")));
 
     /**
      * The targets configured by default for each imported Bazel package.
      */
     Collection<String> DEFAULT_PACKAGE_TARGETS =
-        Collections.unmodifiableSet(
-            new HashSet<>(
-                Arrays.asList(
-                    // "*" includes test _deploy jars, which we currently need for our Eclipse JUnit
-                    // integration to work - unfortunately building those jars can be slow if there
-                    // are many test targets
-                    new String[]{"*"})));
+            Collections.unmodifiableSet(
+                new HashSet<>(
+                        Arrays.asList("*")));
 
 }

@@ -38,7 +38,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.util.BazelConstants;
+import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
 /**
  * Creates an Eclipse Project for each imported Bazel Package.
@@ -85,14 +85,11 @@ public class CreateProjectsFlow implements ImportFlow {
                 String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
                 List<BazelLabel> targets = Objects.requireNonNull(ctx.getPackageLocationToTargets().get(packageLocation));
                 IProject project = projectCreator.createProject(projectName, packageFSPath, inspector.getPackageSourceCodeFSPaths(), targets);
-                boolean foundBuildFile = false;
-                for (String buildFileName : BazelConstants.BUILD_FILE_NAMES) {
-                    foundBuildFile = fileLinker.link(packageFSPath, project, buildFileName);
-                    if (foundBuildFile) {
-                        break;
-                    }
-                }
-                if (foundBuildFile) {
+
+                if (BazelDirectoryStructureUtil.isBazelPackage(bazelWorkspaceRootDirectory, packageFSPath)) {
+                    // link all files in the package root into the Eclipse project
+                    ctx.getEclipseProjectCreator().linkFilesInPackageDirectory(fileLinker, project, packageFSPath,
+                        new File(bazelWorkspaceRootDirectory, packageFSPath), null);
                     ctx.addImportedProject(project, packageLocation);
                 } else {
                     LOG.error("Could not find BUILD file for package {}", packageLocation.getBazelPackageFSRelativePath());
