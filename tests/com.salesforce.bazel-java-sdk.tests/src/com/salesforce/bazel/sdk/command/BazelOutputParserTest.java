@@ -35,11 +35,11 @@ package com.salesforce.bazel.sdk.command;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 
 public class BazelOutputParserTest {
@@ -47,10 +47,10 @@ public class BazelOutputParserTest {
     @Test
     public void testSingleJavaError() {
         BazelOutputParser p = new BazelOutputParser();
-        List<String> lines = ImmutableList.of(
+        List<String> lines = Arrays.asList(
             "ERROR: /Users/stoens/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building libbanana-api.jar (2 source files) failed (Exit 1)",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:50: error: cannot find symbol",
-            "    this.numSeeds = numSeeds;");
+                "    this.numSeeds = numSeeds;");
 
         List<BazelProblem> errors = p.getErrors(lines);
 
@@ -64,13 +64,13 @@ public class BazelOutputParserTest {
     @Test
     public void testMultipleJavaErrors() {
         BazelOutputParser p = new BazelOutputParser();
-        List<String> lines = ImmutableList.of(
+        List<String> lines = Arrays.asList(
             "ERROR: /Users/stoens/bazel-build-example-for-eclipse/sayhello/BUILD:1:1: Building sayhello/libsayhello.jar (2 source files) failed (Exit 1)",
             "sayhello/src/main/java/com/blah/foo/hello/Main.java:16: error: cannot find symbol", "    blah 1 2 3",
             "             ^",
             "ERROR: /Users/stoens/bazel-build-example-for-eclipse/sayhello/BUILD:1:1: Building sayhello/libsayhello.jar (2 source files) failed (Exit 1)",
             "sayhello/src/main/java/com/blah/foo/hello/Main.java:17: error: cannot find symbols",
-            "INFO: Elapsed time: 0.196s, Critical Path: 0.03s");
+                "INFO: Elapsed time: 0.196s, Critical Path: 0.03s");
 
         List<BazelProblem> errors = p.getErrors(lines);
 
@@ -87,7 +87,7 @@ public class BazelOutputParserTest {
     @Test
     public void testMultipleJavaErrorsWithSameStatus() {
         BazelOutputParser p = new BazelOutputParser();
-        List<String> lines = ImmutableList.of(
+        List<String> lines = Arrays.asList(
             "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:41: error: ';' expected\n",
             "  public int numSeeds\n", "                     ^\n",
@@ -111,7 +111,7 @@ public class BazelOutputParserTest {
     @Test
     public void testMultipleErrorSourceLines() {
         BazelOutputParser p = new BazelOutputParser();
-        List<String> lines = ImmutableList.of(
+        List<String> lines = Arrays.asList(
             "ERROR: /Users/d.sang/workplace/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building projects/libs/banana/banana-api/libbanana-api.jar (2 source files) failed (Exit 1)\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:41: error: ';' expected\n",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n",
@@ -139,7 +139,7 @@ public class BazelOutputParserTest {
     public void testUnformattedError() {
         BazelOutputParser p = new BazelOutputParser();
         List<String> lines =
-                ImmutableList.of("ERROR: this is just a string that we should probably handle but we don't right now");
+                Arrays.asList("ERROR: this is just a string that we should probably handle but we don't right now");
 
         List<BazelProblem> errors = p.getErrors(lines);
 

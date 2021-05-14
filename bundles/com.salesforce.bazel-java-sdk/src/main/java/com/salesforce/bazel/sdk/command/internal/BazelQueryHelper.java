@@ -25,6 +25,7 @@ package com.salesforce.bazel.sdk.command.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,7 +36,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
@@ -72,15 +72,15 @@ public class BazelQueryHelper {
     @Deprecated
     public synchronized List<String> listBazelTargetsInBuildFiles(File bazelWorkspaceRootDirectory,
             WorkProgressMonitor progressMonitor, File... directories)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+        List<String> argBuilder = new ArrayList<>();
         argBuilder.add("query");
         for (File f : directories) {
             String directoryPath = f.toURI().relativize(bazelWorkspaceRootDirectory.toURI()).getPath();
             argBuilder.add(directoryPath + "/...");
         }
         return bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor,
-            argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
+            argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
     }
 
     /**
@@ -125,13 +125,13 @@ public class BazelQueryHelper {
 
         // bazel query 'kind(rule, [label]:*)' --output label_kind
 
-        ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
+        List<String> argBuilder = new ArrayList<>();
         argBuilder.add("query");
         argBuilder.add("kind(rule, set(" + labels + "))");
         argBuilder.add("--output");
         argBuilder.add("label_kind");
         List<String> resultLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory,
-            null, argBuilder.build(), (t) -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
+            null, argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
 
         // Sample Output:  (format: rule_type 'rule' label)
         // java_binary rule //projects/libs/apple/apple-api:apple-main

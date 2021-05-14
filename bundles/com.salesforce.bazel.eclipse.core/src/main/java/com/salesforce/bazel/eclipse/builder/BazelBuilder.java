@@ -35,8 +35,6 @@
  */
 package com.salesforce.bazel.eclipse.builder;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +56,6 @@ import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
-import com.google.common.collect.Lists;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
@@ -132,8 +129,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             if (buildSuccessful) {
                 IJavaProject[] allImportedProjects = javaCoreHelper.getAllBazelJavaProjects(true);
                 IProject rootWorkspaceProject = Arrays.stream(allImportedProjects)
-                        .filter(p -> resourceHelper.isBazelRootProject(p.getProject())).collect(onlyElement())
-                        .getProject();
+                        .filter(p -> resourceHelper.isBazelRootProject(p.getProject())).findFirst().get().getProject();
                 Set<IProject> downstreamProjects = EclipseClasspathUtil.getDownstreamProjectsOf(project, allImportedProjects);
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject,
                     monitor);
@@ -193,7 +189,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects,
             WorkProgressMonitor progressMonitor, IProject rootProject, IProgressMonitor monitor)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         Set<String> bazelTargets = new TreeSet<>();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         List<BazelProject> bazelProjects = new ArrayList<>();
@@ -223,7 +219,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     }
 
     private static List<String> getAllBazelBuildFlags(Collection<IProject> projects) {
-        List<String> buildFlags = Lists.newArrayList();
+        List<String> buildFlags = new ArrayList<>();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
         for (IProject project : projects) {

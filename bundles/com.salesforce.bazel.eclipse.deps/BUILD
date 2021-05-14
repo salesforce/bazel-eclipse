@@ -5,15 +5,6 @@ load(
 load("//tools:feature_version_def.bzl", "VERSION")
 
 
-java_import(
-    name = "com_google_guava",
-    jars = [
-        "lib/guava-28.2.jar",
-    ],
-    visibility = [
-        "//visibility:public",
-    ],
-)
 
 java_import(
     name = "org_json_json",
@@ -64,7 +55,6 @@ eclipse_plugin(
     exports = "org.json,org.slf4j,com.google.common.base,com.google.common.collect",
     visibility = ["//visibility:public"],
     deps = [
-      ":com_google_guava",
       ":org_json_json",
     ],
 )

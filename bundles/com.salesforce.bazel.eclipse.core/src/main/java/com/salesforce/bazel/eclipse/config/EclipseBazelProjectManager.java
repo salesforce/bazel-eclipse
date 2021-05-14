@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +22,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
-import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -58,23 +58,23 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
      */
     private static final String BUILDFLAG_PROPERTY_PREFIX = "bazel.build.flag";
 
-    private ResourceHelper resourceHelper;
-    private JavaCoreHelper javaCoreHelper;
-    private LogHelper logger;
+    private final ResourceHelper resourceHelper;
+    private final JavaCoreHelper javaCoreHelper;
+    private final LogHelper logger;
 
     public EclipseBazelProjectManager(ResourceHelper resourceHelper, JavaCoreHelper javaCoreHelper) {
         this.resourceHelper = resourceHelper;
         this.javaCoreHelper = javaCoreHelper;
-        this.logger = LogHelper.log(this.getClass());
+        logger = LogHelper.log(this.getClass());
     }
 
     @Override
     public BazelProject getSourceProjectForSourcePath(BazelWorkspace bazelWorkspace, String sourcePath) {
-        Collection<BazelProject> bazelProjects = this.getAllProjects();
+        Collection<BazelProject> bazelProjects = getAllProjects();
 
         String canonicalSourcePathString =
                 BazelPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory())
-                        + File.separator + sourcePath;
+                + File.separator + sourcePath;
         Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
         for (BazelProject candidateProject : bazelProjects) {
@@ -89,19 +89,19 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
                 if (entry.getEntryKind() != IClasspathEntry.CPE_SOURCE) {
                     continue;
                 }
-                IResource res = this.resourceHelper.findMemberInWorkspace(entry.getPath());
+                IResource res = resourceHelper.findMemberInWorkspace(entry.getPath());
                 if (res == null) {
                     continue;
                 }
                 IPath projectLocation = res.getLocation();
-                if (projectLocation != null && !projectLocation.isEmpty()) {
+                if ((projectLocation != null) && !projectLocation.isEmpty()) {
                     String canonicalProjectRoot =
                             BazelPathHelper.getCanonicalPathStringSafely(projectLocation.toOSString());
                     if (canonicalSourcePathString.startsWith(canonicalProjectRoot)) {
                         IPath[] inclusionPatterns = entry.getInclusionPatterns();
                         IPath[] exclusionPatterns = entry.getExclusionPatterns();
                         if (!matchPatterns(canonicalSourcePath, exclusionPatterns)) {
-                            if (inclusionPatterns == null || inclusionPatterns.length == 0
+                            if ((inclusionPatterns == null) || (inclusionPatterns.length == 0)
                                     || matchPatterns(canonicalSourcePath, inclusionPatterns)) {
                                 return candidateProject;
                             }
@@ -132,7 +132,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     @Override
     public void setProjectReferences(BazelProject thisProject, List<BazelProject> updatedRefList) {
         IProject thisEclipseProject = (IProject) thisProject.getProjectImpl();
-        IProjectDescription projectDescription = this.resourceHelper.getProjectDescription(thisEclipseProject);
+        IProjectDescription projectDescription = resourceHelper.getProjectDescription(thisEclipseProject);
 
         IProject[] existingEclipseRefList = projectDescription.getReferencedProjects();
         IProject[] updatedEclipseRefList = new IProject[updatedRefList.size()];
@@ -181,7 +181,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     @Override
     public String getBazelLabelForProject(BazelProject bazelProject) {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
-        Preferences eclipseProjectBazelPrefs = this.resourceHelper.getProjectBazelPreferences(eclipseProject);
+        Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
         return eclipseProjectBazelPrefs.get(PROJECT_PACKAGE_LABEL, null);
     }
 
@@ -193,7 +193,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
         Map<BazelLabel, BazelProject> labelToProject = new HashMap<>();
         for (BazelProject bazelProject : bazelProjects) {
             BazelProjectTargets activatedTargets = getConfiguredBazelTargets(bazelProject, false);
-            List<BazelLabel> labels = activatedTargets.getConfiguredTargets().stream().map(t -> new BazelLabel(t))
+            List<BazelLabel> labels = activatedTargets.getConfiguredTargets().stream().map(BazelLabel::new)
                     .collect(Collectors.toList());
             for (BazelLabel label : labels) {
                 labelToProject.merge(label, bazelProject, (k1, k2) -> {
@@ -217,7 +217,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     @Override
     public BazelProjectTargets getConfiguredBazelTargets(BazelProject bazelProject, boolean addWildcardIfNoTargets) {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
-        Preferences eclipseProjectBazelPrefs = this.resourceHelper.getProjectBazelPreferences(eclipseProject);
+        Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
         String projectLabel = eclipseProjectBazelPrefs.get(PROJECT_PACKAGE_LABEL, null);
 
         BazelProjectTargets activatedTargets = new BazelProjectTargets(bazelProject, projectLabel);
@@ -259,15 +259,15 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     @Override
     public List<String> getBazelBuildFlagsForProject(BazelProject bazelProject) {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
-        Preferences eclipseProjectBazelPrefs = this.resourceHelper.getProjectBazelPreferences(eclipseProject);
+        Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
 
-        ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
+        List<String> listBuilder = new ArrayList<>();
         for (String property : getKeys(eclipseProjectBazelPrefs)) {
             if (property.startsWith(BUILDFLAG_PROPERTY_PREFIX)) {
                 listBuilder.add(eclipseProjectBazelPrefs.get(property, ""));
             }
         }
-        return listBuilder.build();
+        return listBuilder;
     }
 
     @Override
@@ -275,7 +275,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
             List<BazelLabel> bazelTargets, List<String> bazelBuildFlags) {
 
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
-        Preferences eclipseProjectBazelPrefs = this.resourceHelper.getProjectBazelPreferences(eclipseProject);
+        Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
 
         eclipseProjectBazelPrefs.put(BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspaceRoot);
 

@@ -18,8 +18,6 @@ eclipse_plugin(
     classpath_resources = ['plugin.xml'],
     deps = [
         "//bzl-java-sdk",
-
-        "//plugin-libs/plugin-deps:com_google_guava",
     ],
 )
 
@@ -37,7 +35,6 @@ mock_deps = [
         "//bzl-java-sdk:test-workspace-support",
         "//bzl-java-sdk:test-command-mocks",
 
-        "//plugin-libs/plugin-deps:com_google_guava",
         "//plugin-libs/plugin-testdeps:org_mockito_mockito_core",
 
         "//tools/eclipse_jars:org_eclipse_core_contenttype",

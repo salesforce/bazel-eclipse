@@ -41,7 +41,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class BazelBuildFileHelper {
@@ -102,7 +101,6 @@ public class BazelBuildFileHelper {
         return false;
     }
 
-    @VisibleForTesting
     static boolean hasJavaRulesInLine(String buildFileLine) {
         buildFileLine = buildFileLine.trim();
         if (Arrays.stream(JAVA_PROJECT_INDICATORS).parallel().anyMatch(buildFileLine::startsWith)) {

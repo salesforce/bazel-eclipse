@@ -25,8 +25,6 @@ package com.salesforce.bazel.sdk.command.shell;
 
 import java.io.IOException;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsole;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
@@ -46,14 +44,16 @@ public class ShellCommandBuilder extends CommandBuilder {
     /**
      * Build a Command object.
      */
+    @Override
     public ShellCommand build_impl() throws IOException {
-        Preconditions.checkNotNull(directory);
-        ImmutableList<String> iargs = ImmutableList.copyOf(this.args);
+        if (directory == null) {
+            throw new IllegalStateException("Parameter directory is null");
+        }
         CommandConsole console = consoleName == null ? null : consoleFactory.get(consoleName,
             "Running " + String.join(" ", args) + " from " + directory.toString());
 
-        ShellCommand command = new ShellCommand(console, directory, iargs, stdoutSelector, stderrSelector, stdout,
-                stderr, progressMonitor, timeoutMS);
+        ShellCommand command = new ShellCommand(console, directory, args, stdoutSelector, stderrSelector, stdout,
+            stderr, progressMonitor, timeoutMS);
 
         return command;
     }

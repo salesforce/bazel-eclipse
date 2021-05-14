@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -45,21 +45,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-
 /**
  * A wrapper output stream to output part of the result to a given output and extracting the other part with a selector
  * function. The other part is return as a list of string.
  */
 public class SelectOutputStream extends OutputStream {
 
-    private OutputStream output;
-    private Function<String, String> selector;
+    private final OutputStream output;
+    private final Function<String, String> selector;
     private boolean closed = false;
-    private List<String> lines = new LinkedList<>();
-    private List<String> outputLines = new LinkedList<>();
-    private ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    private final List<String> lines = new LinkedList<>();
+    private final List<String> outputLines = new LinkedList<>();
+    private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
     /**
      * Create a SelectOutputStream. <code>output<code> is the output stream where non-selected lines
@@ -80,7 +77,9 @@ public class SelectOutputStream extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        Preconditions.checkState(!closed, "Attempted to write on a closed stream");
+        if (closed) {
+            throw new IllegalStateException("Attempted to write on a closed stream");
+        }
         byte b0 = (byte) b;
         if (b0 == '\n') {
             select(true);
@@ -91,7 +90,7 @@ public class SelectOutputStream extends OutputStream {
 
     private void select(boolean appendNewLine) throws UnsupportedEncodingException, IOException {
         String line = null;
-        if (this.selector != null) {
+        if (selector != null) {
             line = selector.apply(stream.toString(StandardCharsets.UTF_8.name()));
         }
 
@@ -109,7 +108,9 @@ public class SelectOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        Preconditions.checkState(!closed);
+        if (closed) {
+            throw new IllegalStateException("Attempted to close a closed stream");
+        }
         super.close();
         select(false);
         closed = true;
@@ -118,14 +119,14 @@ public class SelectOutputStream extends OutputStream {
     /**
      * Returns the list of selected lines.
      */
-    ImmutableList<String> getLines() {
-        return ImmutableList.copyOf(lines);
+    List<String> getLines() {
+        return lines;
     }
 
     /**
      * Returns the list of output lines.
      */
-    ImmutableList<String> getOutputLines() {
-        return ImmutableList.copyOf(outputLines);
+    List<String> getOutputLines() {
+        return outputLines;
     }
 }

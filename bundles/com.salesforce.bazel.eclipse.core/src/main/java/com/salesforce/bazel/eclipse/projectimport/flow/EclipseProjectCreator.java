@@ -25,6 +25,7 @@ package com.salesforce.bazel.eclipse.projectimport.flow;
 
 import java.io.File;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +37,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
 
-import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterUtils;
@@ -81,7 +81,7 @@ class EclipseProjectCreator {
             ProjectImporterUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID);
             BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
             projMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), packageFSPath,
-                bazelTargets, ImmutableList.of()); // TODO pass buildFlags
+                bazelTargets, new ArrayList<>()); // TODO pass buildFlags
         } catch (CoreException e) {
             LOG.error(e.getMessage(), e);
         }
@@ -106,7 +106,7 @@ class EclipseProjectCreator {
             // 1. the given project name 2. no references to other projects 3. an empty build spec 4. an empty comment
             // to which we add the location uri
             IProjectDescription eclipseProjectDescription = resourceHelper.createProjectDescription(newEclipseProject);
-            if (location != null && workspaceRoot.getLocationURI().equals(location)) {
+            if ((location != null) && workspaceRoot.getLocationURI().equals(location)) {
                 eclipseProjectLocation = null;
             }
             eclipseProjectDescription.setLocationURI(eclipseProjectLocation);
@@ -123,7 +123,7 @@ class EclipseProjectCreator {
             }
         } else {
             BazelPluginActivator.error("Project [" + eclipseProjectName
-                    + "] already exists, which is unexpected. Project initialization will not occur.");
+                + "] already exists, which is unexpected. Project initialization will not occur.");
             createdEclipseProject = newEclipseProject;
         }
         BazelPluginActivator.getBazelProjectManager().addProject(new BazelProject(eclipseProjectName, createdEclipseProject));

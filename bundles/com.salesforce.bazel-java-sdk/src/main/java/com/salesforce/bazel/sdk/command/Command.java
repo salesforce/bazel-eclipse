@@ -24,9 +24,8 @@
 package com.salesforce.bazel.sdk.command;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.function.Function;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * A built command that can be run via the run() method.
@@ -47,7 +46,7 @@ public interface Command {
      *
      * @see {@link CommandBuilder#setStderrLineSelector(Function)}
      */
-    ImmutableList<String> getSelectedErrorLines();
+    List<String> getSelectedErrorLines();
 
     /**
      * Returns the list of lines selected from the standard output stream. Lines printed to the standard output stream
@@ -55,7 +54,7 @@ public interface Command {
      *
      * @see {@link CommandBuilder#setStdoutLineSelector(Function)}
      */
-    ImmutableList<String> getSelectedOutputLines();
+    List<String> getSelectedOutputLines();
 
     /**
      * Returns a BazelProcessBuilder configured to run this Command instance.

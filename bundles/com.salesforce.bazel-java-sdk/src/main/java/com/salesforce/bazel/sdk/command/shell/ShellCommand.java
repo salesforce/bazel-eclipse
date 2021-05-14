@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -41,11 +41,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
@@ -63,19 +62,19 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 public final class ShellCommand implements Command {
 
     private final File directory;
-    private final ImmutableList<String> args;
+    private final List<String> args;
     private final SelectOutputStream stdout;
     private final SelectOutputStream stderr;
     private final WorkProgressMonitor progressMonitor;
-    
+
     // TODO ShellCommand timeouts are not usable; if a command times out subsequent commands hang, etc. https://github.com/salesforce/bazel-eclipse/issues/191
     private long timeoutMS = 0;
 
     private boolean executed = false;
 
-    ShellCommand(CommandConsole console, File directory, ImmutableList<String> args,
-            Function<String, String> stdoutSelector, Function<String, String> stderrSelector, OutputStream stdout,
-            OutputStream stderr, WorkProgressMonitor progressMonitor, long timeoutMS) {
+    ShellCommand(CommandConsole console, File directory, List<String> args,
+        Function<String, String> stdoutSelector, Function<String, String> stderrSelector, OutputStream stdout,
+        OutputStream stderr, WorkProgressMonitor progressMonitor, long timeoutMS) {
         this.directory = directory;
         this.args = args;
         if (console != null) {
@@ -90,17 +89,18 @@ public final class ShellCommand implements Command {
         this.stdout = new SelectOutputStream(stdout, stdoutSelector);
         this.progressMonitor = progressMonitor;
         this.timeoutMS = timeoutMS;
-        
+
     }
 
     /**
      * Returns a ProcessBuilder configured to run this Command instance.
      */
+    @Override
     public BazelProcessBuilder getProcessBuilder() {
         // TODO make env variables sent to ShellCommand configurable https://github.com/salesforce/bazel-eclipse/issues/190
         Map<String, String> bazelEnvironmentVariables = new HashMap<>();
         bazelEnvironmentVariables.put("PULLER_TIMEOUT", "3000"); // increases default timeout from 600 to 3000 seconds for rules_docker downloads
-        
+
         BazelProcessBuilder builder = new BazelProcessBuilder(args, bazelEnvironmentVariables);
         builder.directory(directory);
         return builder;
@@ -114,15 +114,17 @@ public final class ShellCommand implements Command {
      */
     @Override
     public int run() throws IOException, InterruptedException {
-        Preconditions.checkState(!executed);
+        if (executed) {
+            throw new IllegalStateException("This command has already been run.");
+        }
         executed = true;
         BazelProcessBuilder builder = getProcessBuilder();
         builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
         builder.redirectError(ProcessBuilder.Redirect.PIPE);
         Process process = builder.start();
         // TODO implement the progress monitor for command line invocations
-        if (this.progressMonitor != null) {
-            this.progressMonitor.worked(1);
+        if (progressMonitor != null) {
+            progressMonitor.worked(1);
         }
         String command = "";
         for (String arg : args) {
@@ -132,7 +134,7 @@ public final class ShellCommand implements Command {
         System.out.println("Executing command (timeout = " + timeoutMS + "): " + command);
         long startTimeMS = System.currentTimeMillis();
         boolean success = false;
-        
+
         try {
             Thread err = copyStream(process.getErrorStream(), stderr);
             Thread out = copyStream(process.getInputStream(), stdout);
@@ -156,7 +158,7 @@ public final class ShellCommand implements Command {
             } else {
                 SimplePerfRecorder.addTime("commmand_" + args.get(0), startTimeMS);
             }
-            
+
             // report results to console
             long elapsedTimeMS = System.currentTimeMillis() - startTimeMS;
             System.out.println("Finished command ("+elapsedTimeMS+" millis) (success="+success+"): " + command);
@@ -183,8 +185,8 @@ public final class ShellCommand implements Command {
     }
 
     private static class CopyStreamRunnable implements Runnable {
-        private InputStream inputStream;
-        private OutputStream outputStream;
+        private final InputStream inputStream;
+        private final OutputStream outputStream;
 
         CopyStreamRunnable(InputStream inputStream, OutputStream outputStream) {
             this.inputStream = inputStream;
@@ -223,7 +225,7 @@ public final class ShellCommand implements Command {
      * @see {@link CommandBuilder#setStderrLineSelector(Function)}
      */
     @Override
-    public ImmutableList<String> getSelectedErrorLines() {
+    public List<String> getSelectedErrorLines() {
         return stderr.getLines();
     }
 
@@ -234,7 +236,7 @@ public final class ShellCommand implements Command {
      * @see {@link CommandBuilder#setStdoutLineSelector(Function)}
      */
     @Override
-    public ImmutableList<String> getSelectedOutputLines() {
+    public List<String> getSelectedOutputLines() {
         return stdout.getLines();
     }
 

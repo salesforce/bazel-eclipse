@@ -38,9 +38,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
@@ -68,7 +65,6 @@ public class BazelWorkspaceAspectHelper {
      *
      * This cache includes wildcard (//a/b/c:*) targets and concrete targets.
      */
-    @VisibleForTesting
     final Map<BazelLabel, Set<AspectTargetInfo>> aspectInfoCache_current = new HashMap<>();
 
     /**
@@ -76,13 +72,11 @@ public class BazelWorkspaceAspectHelper {
      * running the aspect. This cache is never cleared and is used for cases in which the developer introduces a compile
      * error into the package, such that the Aspect will fail to run.
      */
-    @VisibleForTesting
     final Map<BazelLabel, Set<AspectTargetInfo>> aspectInfoCache_lastgood = new HashMap<>();
 
     /**
      * Tracks the number of cache hits for getAspectTargetInfos() invocations.
      */
-    @VisibleForTesting
     int numberCacheHits = 0;
 
     // CTORS
@@ -92,13 +86,14 @@ public class BazelWorkspaceAspectHelper {
         this.bazelWorkspaceCommandRunner = bazelWorkspaceCommandRunner;
         this.bazelCommandExecutor = bazelCommandExecutor;
 
-        this.aspectOptions = null;
+        aspectOptions = null;
         if (aspectLocation != null) {
-            this.aspectOptions = ImmutableList.<String> builder()
-                    .add("--override_repository=local_eclipse_aspect=" + aspectLocation.getAspectDirectory(),
-                        "--aspects=@local_eclipse_aspect" + aspectLocation.getAspectLabel(), "-k",
-                        "--output_groups=json-files,classpath-jars,-_,-defaults", "--experimental_show_artifacts")
-                    .build();
+            aspectOptions = new ArrayList<String>();
+            aspectOptions.add("--override_repository=local_eclipse_aspect=" + aspectLocation.getAspectDirectory());
+            aspectOptions.add("--aspects=@local_eclipse_aspect" + aspectLocation.getAspectLabel());
+            aspectOptions.add("-k");
+            aspectOptions.add("--output_groups=json-files,classpath-jars,-_,-defaults");
+            aspectOptions.add("--experimental_show_artifacts");
         }
     }
 
@@ -117,7 +112,7 @@ public class BazelWorkspaceAspectHelper {
      */
     public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<BazelLabel> targets,
             String caller)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         Map<BazelLabel, Set<AspectTargetInfo>> resultMap = new LinkedHashMap<>();
         Collection<BazelLabel> cacheMisses = populateFromCache(targets, resultMap, caller);
@@ -131,7 +126,7 @@ public class BazelWorkspaceAspectHelper {
      * Clear the entire AspectTargetInfo cache. This flushes the dependency graph for the workspace.
      */
     public synchronized void flushAspectInfoCache() {
-        this.aspectInfoCache_current.clear();
+        aspectInfoCache_current.clear();
     }
 
     /**
@@ -140,7 +135,7 @@ public class BazelWorkspaceAspectHelper {
     public synchronized void flushAspectInfoCache(BazelLabel target) {
         // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
         // if the target exists in either it will get flushed
-        this.aspectInfoCache_current.remove(target);
+        aspectInfoCache_current.remove(target);
     }
 
     /**
@@ -150,7 +145,7 @@ public class BazelWorkspaceAspectHelper {
         for (BazelLabel target : targets) {
             // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
             // if the target exists in either it will get flushed
-            this.aspectInfoCache_current.remove(target);
+            aspectInfoCache_current.remove(target);
         }
     }
 
@@ -163,7 +158,7 @@ public class BazelWorkspaceAspectHelper {
 
         // the target may not even be in cache, that is ok, just try to remove it from both current and wildcard caches
         // if the target exists in either it will get flushed
-        Iterator<BazelLabel> iter = this.aspectInfoCache_current.keySet().iterator();
+        Iterator<BazelLabel> iter = aspectInfoCache_current.keySet().iterator();
         while (iter.hasNext()) {
             BazelLabel key = iter.next();
             if (key.getPackagePath().equals(bazelPackage.getPackagePath())) {
@@ -191,7 +186,7 @@ public class BazelWorkspaceAspectHelper {
             } else {
                 LOG.info("ASPECT CACHE GET target: " + target + logstr);
                 resultMap.put(target, aspectInfos);
-                this.numberCacheHits++;
+                numberCacheHits++;
             }
         }
         return cacheMisses;
@@ -302,19 +297,19 @@ public class BazelWorkspaceAspectHelper {
         List<AspectTargetInfo> queue = new ArrayList<>();
         queue.add(aspectTargetInfo);
         while (!queue.isEmpty()) {
-           AspectTargetInfo ati = queue.remove(0);
-           if (ati != aspectTargetInfo) {
-               allDeps.add(ati);
-           }
-           List<String> depLabels = ati.getDeps();
-           for (String label : depLabels) {
-               BazelLabel depLabel = new BazelLabel(label);
-               AspectTargetInfo dep = depNameToTargetInfo.get(depLabel);
-               if (dep == null) {
-                   throw new RuntimeException("No AspectTargetInstance exists for " + depLabel + " - this is a bug");
-               } else {
-                   queue.add(dep);
-               }
+            AspectTargetInfo ati = queue.remove(0);
+            if (ati != aspectTargetInfo) {
+                allDeps.add(ati);
+            }
+            List<String> depLabels = ati.getDeps();
+            for (String label : depLabels) {
+                BazelLabel depLabel = new BazelLabel(label);
+                AspectTargetInfo dep = depNameToTargetInfo.get(depLabel);
+                if (dep == null) {
+                    throw new RuntimeException("No AspectTargetInstance exists for " + depLabel + " - this is a bug");
+                } else {
+                    queue.add(dep);
+                }
             }
         }
         return Collections.unmodifiableSet(allDeps);
@@ -329,11 +324,13 @@ public class BazelWorkspaceAspectHelper {
     private synchronized List<String> generateAspectTargetInfoFiles(Collection<BazelLabel> targets)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException
     {
-        Preconditions.checkArgument(!targets.isEmpty(), "Do not call without targets");
+        if (targets.isEmpty()) {
+            throw new IllegalArgumentException("Parameter targets cannot be empty.");
+        }
 
         List<String> args = new ArrayList<>();
         args.add("build");
-        args.addAll(this.aspectOptions);
+        args.addAll(aspectOptions);
         args.addAll(targets.stream().map(BazelLabel::toString).collect(Collectors.toList()));
 
         // Strip out the artifact list, keeping the xyz.bzleclipse-build.json files (located in subdirs in the bazel-out path)
@@ -341,11 +338,11 @@ public class BazelWorkspaceAspectHelper {
         Function<String, String> filter = t -> t.startsWith(">>>")
                 ? (t.endsWith(AspectTargetInfo.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
 
-        List<String> listOfGeneratedFilePaths = this.bazelCommandExecutor.runBazelAndGetErrorLines(
-            ConsoleType.WORKSPACE, this.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), null,
-            args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
+                List<String> listOfGeneratedFilePaths = bazelCommandExecutor.runBazelAndGetErrorLines(
+                    ConsoleType.WORKSPACE, bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), null,
+                    args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
 
-        return listOfGeneratedFilePaths;
+                return listOfGeneratedFilePaths;
     }
 
     private static String getLogStr(BazelLabel target, String caller) {
