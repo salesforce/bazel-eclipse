@@ -40,3 +40,6 @@ pom.tycho
 
 # other
 *.patch
+
+# GitHub Action Workflows
+update-site
