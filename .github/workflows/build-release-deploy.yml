@@ -45,14 +45,10 @@ jobs:
           BUILD_LABEL: "CI ${{ steps.time.outputs.time }} (${{ steps.branch_name.outputs.branch }})"
         run: mvn --batch-mode clean verify
 
-      - name: Copy built BEF zip file into the update site location
+      - name: Create the update-site layout on the filesystem
         id: create_layout
         shell: bash
-        run:
-          mkdir update-site
-          echo "This is the Bazel Eclipse update site." > update-site/index.html
-          cp releng/p2repository/target/*.zip update-site
-          cp -R releng/p2repository/target/repository update-site/update-site
+        run: .github/create-update-site.sh
 
       - name: Deploy Update Site 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.1
@@ -61,4 +57,3 @@ jobs:
           folder: update-site
           single-commit: true
           ssh-key: ${{ secrets.DEPLOY_KEY }}
-          target-folder: update-site
