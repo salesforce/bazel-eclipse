@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- This file is only used by the Eclipse SDK build.
- The metadata here should mirror what is defined in the BUILD file.
+  Main configuration file for BEF.
+
+  Normally you do not need to update anything in here except for the version. It
+  is the critical piece of information in a release as the version is encoded in
+  the built feature and assigned to each of the plugins. The version in the pom.xml
+  file should be kept in sync with this version, but this version is really the one
+  that matters.
 -->
 <feature
       id="com.salesforce.bazel.eclipse.feature"
       label="Bazel Eclipse Feature"
-      version="1.4.0.qualifier"
+      version="1.3.1.qualifier"
       provider-name="Salesforce">
 
    <description url="https://github.com/salesforce/bazel-eclipse">
@@ -14,7 +19,7 @@
    </description>
 
    <copyright url="https://github.com/salesforce/bazel-eclipse">
-      Copyright 2018-9 Salesforce. All rights reserved.
+      Copyright 2018-2021 Salesforce. All rights reserved.
       Copyright 2016 The Bazel Authors. All rights reserved.
    </copyright>
 
