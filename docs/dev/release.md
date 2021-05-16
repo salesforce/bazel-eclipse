@@ -7,6 +7,11 @@ This is the set of steps for releasing a new version of BEF.
 
 ### Setting the Version
 
+We follow SemVer.
+Determine what type of release this must be (major, minor, patch) given the changes
+  that are in master.
+That will dictate what version number to use for the new release.
+
 The version is set in a number of files, both for Maven and for OSGi (Eclipse).
 For Maven pom.xml files, keep the *SNAPSHOT* suffix (e.g. *1.3.1-SNAPSHOT*).
 For OSGi meta files, keep the *qualifier* suffix (e.g. *1.3.1.qualifier*).
@@ -29,15 +34,14 @@ mvn clean verify
 
 ### Local Build and Testing
 
-Prior to releasing BEF, please test it from an install.
+Prior to releasing BEF, please test it from a fresh install of standard Eclipse (not an SDK version).
 Launching BEF (as inner eclipse) from the Eclipse SDK (outer eclipse) is not a sufficient test.
 Certain packaging problems will not appear when launched from Eclipse SDK.
 Instead, please download the latest JEE Eclipse to test with.
 
-It will build BEF and write it into the _releng/p2repository/target/_ directory.
-You can install the .zip or from the _repository_ directory in that location.
-Use the standard Help -> Install New Software... menu.
-Our [update site](https://opensource.salesforce.com/bazel-eclipse/) has instructions.
+The build will write the built feature into the _releng/p2repository/target/_ directory.
+You can install from the archive zip in that location.
+Use the standard Eclipse _Help -> Install New Software..._ menu and choose to _Add_ an _Archive_.
 
 Make sure to run through an import of a decently complex Bazel workspace.
 Things to look for:
@@ -45,14 +49,18 @@ Things to look for:
 - There are no build errors in the Problems View
 - Open a .java file in an editor an make sure there aren't any red squigglies
 
-### Releasing from GitHub
+### Releasing from GitHub to the Update Site
+
+Our [update site](https://opensource.salesforce.com/bazel-eclipse/) is the official location
+  of our releases.
 
 :fire: The update site is our live installation location for our users. If you are doing
 experimental work with the release process, please do not release directly to _gh-pages_
-branch. Update the _github-pages-deploy-action_ stage in the workflow to a test branch
-if you have **any** doubts about what you are releasing. Be prepared to rollback the
-[gh-pages branch](https://github.com/salesforce/bazel-eclipse/tree/gh-pages) branch at
-the first sign of trouble.
+branch. Update the _github-pages-deploy-action_ stage in
+[the workflow](../../.github/workflows/build-release-deploy.yml) to deploy to a test
+branch if you have **any** doubts about what you are releasing. Also, be prepared
+to rollback the [gh-pages branch](https://github.com/salesforce/bazel-eclipse/tree/gh-pages)
+at the first sign of trouble (see steps on how to do this in next section).
 
 Our GitHub repo has our release process implemented as a GitHub Actions workflow.
 To build the release, make sure you have your versions set and committed to master (see above).
@@ -80,7 +88,7 @@ It is the live update site for all of our users.
 ```
 # assume release 1.3.2 has a problem, revert gh-pages back to 1.3.1
 git checkout gh-pages
-git reset --hard v1.3.1.updatesite
+git reset --hard 1.3.1.updatesite
 git push --force origin gh-pages
 ```
 
@@ -109,7 +117,6 @@ git pull
 git tag 1.3.1.updatesite
 git push origin 1.3.1.updatesite
 ```
-
 
 ## Release Implementation
 
