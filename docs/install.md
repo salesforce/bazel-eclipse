@@ -48,8 +48,7 @@ Choose a version of Bazel that is at least as high as that check.
 
 ### Installing the Bazel Eclipse feature into Eclipse
 
-You will first need to obtain an update site archive (.zip file) of the Bazel Eclipse feature,
-  which is [covered on this page](releases.md).
+First, understand what releases of BEF are available, which is [covered on this page](releases.md).
 Next, follow these steps to install it in your Eclipse IDE.
 
 **Install the Bazel Eclipse feature into Eclipse:**
@@ -58,7 +57,7 @@ Next, follow these steps to install it in your Eclipse IDE.
 - Click the *Add* button
 - For the location, enter: **https://opensource.salesforce.com/bazel-eclipse/update-site**
 - Give the location a name, like *Bazel-Eclipse updatesite*
-- Check the box next to the *Bazel Eclipse Feature* item, then hit *Next*
+- Check the box next to the *Bazel Eclipse* item, then hit *Next*
 - Click *Next/Agree/Finish* until it completes.
 - Restart Eclipse
 
@@ -70,7 +69,7 @@ Next, follow these steps to install it in your Eclipse IDE.
 ### Updating your Bazel Eclipse feature
 
 If you would like a newer build of the Bazel Eclipse feature, you will need to re-install it.
-Repeat the above steps using an archive with a newer version.
+Repeat the above steps using with a newer version.
 
 ### Using the Bazel Eclipse Feature
 
