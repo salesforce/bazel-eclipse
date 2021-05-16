@@ -10,9 +10,17 @@ Eclipse features and plugins are packaged as an *update site*, which is either:
 
 ## Available Releases
 
-We do not currently host an Eclipse Update Site for this feature, but we do offer pre-built binaries:
+Our list of releases is here:
 
 - [Bazel Eclipse Feature releases](https://github.com/salesforce/bazel-eclipse/releases)
+
+We maintain our latest release on our public update site. The update site is available here:
+
+- [Bazel Eclipse Update Site Instructions](https://opensource.salesforce.com/bazel-eclipse/)
+- Bazel Eclipse Update Site: https://opensource.salesforce.com/bazel-eclipse/update-site
+
+If you prefer, we also attach a built binary archive of each release that you can install.
+Find them in our [releases list](https://github.com/salesforce/bazel-eclipse/releases).
 
 ## Build the Bazel Eclipse Feature yourself
 
@@ -20,4 +28,4 @@ These steps assume you have already setup your toolchain (JDK, Bazel) which is c
   [here](install.md).
 
 Note that the way to build the update site zip archive is an evolving story.
-Read the documentation on the [build documentation page](dev/threebuilds.md) which will have instructions on how best to do it.
+Read the documentation on the [build documentation page](dev/thebuild.md) which will have instructions on how best to do it.

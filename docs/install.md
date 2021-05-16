@@ -16,13 +16,13 @@ We will support you on:
 - Linux - reasonably recent OS version of a major distro (Ubuntu, Mint, etc)
 
 Windows support is tracked as [Issue 36](https://github.com/salesforce/bazel-eclipse/issues/36), see that work item for current status.
-Other platforms may also work, but you may need to contribute patches if there are issues.
+Other platforms (yo, OS/2 user!) may also work, but you may need to contribute patches if there are issues.
 
 ### Installing a JDK
 
 At this time, we don't have specific guidance on what JDK version you should be using.
-Any JDK 8 or above should work.
-We support old and new versions of Java, so whatever you pick should just work.
+Any JDK11 or above should work.
+We support modern versions of Java, so whatever you pick should just work.
 If you find one that does NOT work, let us know.
 More details of our JDK support strategy can be [found here](dev/jdk.md).
 
@@ -56,8 +56,7 @@ Next, follow these steps to install it in your Eclipse IDE.
 - Start Eclipse.
 - In Eclipse, go to *Help* -> *Install New Software*
 - Click the *Add* button
-- Click the *Archive* button
-- Locate the file *bazel-eclipse-feature.zip* and click *Open*
+- For the location, enter: **https://opensource.salesforce.com/bazel-eclipse/update-site**
 - Give the location a name, like *Bazel-Eclipse updatesite*
 - Check the box next to the *Bazel Eclipse Feature* item, then hit *Next*
 - Click *Next/Agree/Finish* until it completes.
