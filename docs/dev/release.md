@@ -84,25 +84,32 @@ git reset --hard v1.3.1.updatesite
 git push --force origin gh-pages
 ```
 
-### Tag the Release
+### Creating the Official Release Record
 
-After verifying the release, please tag both the _master_ and _gh-pages_ branches.
-
-```
-git fetch
-git checkout master
-git tag v1.3.1
-git push origin v1.3.1
-git checkout gh-pages
-git tag v1.3.1.updatesite
-git push origin v1.3.1.updatesite
-```
-
-### Announcing the Release
-
-After the release has been confirmed, please create a new release in our
+After the release build has been confirmed, please create a new release in our
   [Releases](https://github.com/salesforce/bazel-eclipse/releases) list.
+Click the _Draft a new release_ button to get started.
+
 Please follow the pattern of previous releases.
+Be sure to list the changes and give credit to outside contributors.
+Especially look at the naming convention of the archive file, as in _bazel-eclipse-feature-1.3.1-release.zip_.
+
+As part of the release, you will create a tag.
+Follow our convention of using the bare SemVer, like _1.3.1_.
+
+### Tag the Update Site
+
+In the previous step, you tagged the _master_ branch as a side effect of creating the release record.
+We also want to tag the update site, as we may need to rollback if the next release fails.
+This is done by tagging the _gh-pages_ branch.
+
+```
+git checkout gh-pages
+git pull
+git tag 1.3.1.updatesite
+git push origin 1.3.1.updatesite
+```
+
 
 ## Release Implementation
 
