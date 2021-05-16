@@ -40,7 +40,7 @@ public class ImplicitClasspathHelper {
         BazelWorkspaceCommandOptions commandOptions = bazelWorkspace.getBazelWorkspaceCommandOptions();
         String explicitDepsOption = commandOptions.getOption("explicit_java_test_deps");
         if ("true".equals(explicitDepsOption)) {
-            // the workspace is configured to disallow implicit deps (hooray) so we can bail now 
+            // the workspace is configured to disallow implicit deps (hooray) so we can bail now
             return deps;
         }
 
@@ -49,7 +49,7 @@ public class ImplicitClasspathHelper {
         // To faithfully declare the classpath for Eclipse JDT, we ultimately we need to get this jar onto the JDT classpath:
         //     bazel-bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_darwin/java_tools/Runner_deploy-ijar.jar
         // which comes in from the transitive graph (not sure how the toolchain points to the TestRunner though):
-        // java_test => @bazel_tools//tools/jdk:current_java_toolchain => @remote_java_tools_darwin//:toolchain  ?=> TestRunner 
+        // java_test => @bazel_tools//tools/jdk:current_java_toolchain => @remote_java_tools_darwin//:toolchain  ?=> TestRunner
         String filePathForRunnerJar = computeFilePathForRunnerJar(bazelWorkspace, targetInfo);
         if (filePathForRunnerJar != null) {
             // now manufacture the classpath entry
@@ -67,7 +67,8 @@ public class ImplicitClasspathHelper {
         // Just write the path to the file directly.
 
         File bazelBinDir = bazelWorkspace.getBazelBinDirectory();
-        File testRunnerDir = new File(bazelBinDir, "external/bazel_tools/tools/jdk/_ijar/TestRunner");
+        File testRunnerDir =
+                new File(bazelBinDir, BazelPathHelper.osSeps("external/bazel_tools/tools/jdk/_ijar/TestRunner")); // $SLASH_OK
 
         LogHelper logger = LogHelper.log(this.getClass());
         if (!testRunnerDir.exists()) {
@@ -75,8 +76,9 @@ public class ImplicitClasspathHelper {
                     + BazelPathHelper.getCanonicalPathStringSafely(testRunnerDir) + "] does not exist.");
             return null;
         }
-        File javaToolsDir = new File(testRunnerDir,
-                "external/remote_java_tools_" + bazelWorkspace.getOperatingSystemFoldername() + "/java_tools");
+        String javaToolsPath = BazelPathHelper
+                .osSeps("external/remote_java_tools_" + bazelWorkspace.getOperatingSystemFoldername() + "/java_tools"); // $SLASH_OK
+        File javaToolsDir = new File(testRunnerDir, javaToolsPath);
         if (!javaToolsDir.exists()) {
             logger.error("Could not add implicit test deps to target [" + targetInfo.getLabel() + "], directory ["
                     + BazelPathHelper.getCanonicalPathStringSafely(javaToolsDir) + "] does not exist.");

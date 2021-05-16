@@ -58,7 +58,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * need to know to append the implicit dependencies to the explicit ones identified by the Aspect.
  * <p>
  * This is a helper class for computing implicit dependencies. See https://github.com/salesforce/bazel-eclipse/issues/43
- * for details and design considerations for this class.
+ * for details and design considerations for this class. $SLASH_OK url
  * <p>
  * This code is isolated from the classpath container code because this is somewhat of a hack and it is nice to have it
  * isolated.

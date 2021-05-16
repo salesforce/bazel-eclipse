@@ -42,6 +42,7 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 
 /**
@@ -78,7 +79,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
             String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
             IJavaProject javaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
             createClasspath(bazelWorkspaceRootDirectory, packageFSPath, inspector.getPackageSourceCodeFSPaths(),
-                    javaProject, ctx.getJavaLanguageLevel());
+                javaProject, ctx.getJavaLanguageLevel());
             progressSubMonitor.worked(1);
         }
     }
@@ -88,7 +89,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
     // where the Java Package structure starts
     private static void createClasspath(IPath bazelWorkspacePath, String bazelPackageFSPath,
             List<String> packageSourceCodeFSRelativePaths, IJavaProject eclipseProject, int javaLanguageLevel)
-            throws CoreException {
+                    throws CoreException {
         List<IClasspathEntry> classpathEntries = new LinkedList<>();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
 
@@ -107,21 +108,21 @@ public class SetupClasspathContainersFlow implements ImportFlow {
 
             IPath outputDir = null; // null is a legal value, it means use the default
             boolean isTestSource = false;
-            if (path.endsWith("src/test/java")) { // NON_CONFORMING PROJECT SUPPORT
+            if (path.endsWith(BazelPathHelper.osSeps("src/test/java"))) { // NON_CONFORMING PROJECT SUPPORT, $SLASH_OK
                 isTestSource = true;
-                outputDir = new Path(eclipseProject.getPath().toOSString() + "/testbin");
+                outputDir = new Path(eclipseProject.getPath().toOSString() + File.separatorChar + "testbin");
             }
 
             IPath sourceDir = projectSourceFolder.getFullPath();
             IClasspathEntry sourceClasspathEntry =
-                BazelPluginActivator.getJavaCoreHelper().newSourceEntry(sourceDir, outputDir, isTestSource);
+                    BazelPluginActivator.getJavaCoreHelper().newSourceEntry(sourceDir, outputDir, isTestSource);
             classpathEntries.add(sourceClasspathEntry);
         }
         SimplePerfRecorder.addTime("import_createprojects_cp_1", startTimeMS);
 
         startTimeMS = System.currentTimeMillis();
         IClasspathEntry bazelClasspathContainerEntry = BazelPluginActivator.getJavaCoreHelper()
-            .newContainerEntry(new Path(BazelClasspathContainer.CONTAINER_NAME));
+                .newContainerEntry(new Path(BazelClasspathContainer.CONTAINER_NAME));
         classpathEntries.add(bazelClasspathContainerEntry);
         SimplePerfRecorder.addTime("import_createprojects_cp_2", startTimeMS);
 
@@ -145,7 +146,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
 
         if (!packageSourceCodeFSRelativePath.startsWith(bazelPackageFSPath)) {
             throw new IllegalStateException("src code path " + packageSourceCodeFSRelativePath
-                    + " expected to be under bazel package path " + bazelPackageFSPath);
+                + " expected to be under bazel package path " + bazelPackageFSPath);
         }
 
         IFolder currentFolder = null;

@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.model.test.MockBazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.model.test.MockOperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 public class BazelWorkspaceTest {
 
@@ -21,10 +22,11 @@ public class BazelWorkspaceTest {
         String wsDir = ws.getBazelWorkspaceRootDirectory().getAbsolutePath();
         assertTrue(wsDir.contains("bazel-eclipse-feature-" + wsName + "-workspace"));
         assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath()
-                .contains("bazel-eclipse-feature-" + wsName + "-outputdir"));
-        assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot/" + wsName));
-        String binDir = ws.getBazelBinDirectory().getAbsolutePath();
-        assertTrue(binDir.contains("execroot/" + wsName + "/bazel-out/darwin-fastbuild/bin"));
+            .contains("bazel-eclipse-feature-" + wsName + "-outputdir"));
+        assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot" +File.separatorChar + wsName));
+        String binDir = BazelPathHelper.osSeps(ws.getBazelBinDirectory().getAbsolutePath()); // $SLASH_OK
+        String binDirExpect = BazelPathHelper.osSeps("execroot/" + wsName + "/bazel-out/darwin-fastbuild/bin"); // $SLASH_OK
+        assertTrue(binDir.contains(binDirExpect));
     }
 
     @Test
@@ -36,10 +38,11 @@ public class BazelWorkspaceTest {
         String wsDir = ws.getBazelWorkspaceRootDirectory().getAbsolutePath();
         assertTrue(wsDir.contains("bazel-eclipse-feature-" + wsName + "-workspace"));
         assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath()
-                .contains("bazel-eclipse-feature-" + wsName + "-outputdir"));
+            .contains("bazel-eclipse-feature-" + wsName + "-outputdir"));
         assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot/" + wsName));
-        String binDir = ws.getBazelBinDirectory().getAbsolutePath();
-        assertTrue(binDir.contains("execroot/" + wsName + "/bazel-out/linux-fastbuild/bin"));
+        String binDir = BazelPathHelper.osSeps(ws.getBazelBinDirectory().getAbsolutePath()); // $SLASH_OK
+        String binDirExpect = BazelPathHelper.osSeps("execroot/" + wsName + "/bazel-out/linux-fastbuild/bin"); // $SLASH_OK
+        assertTrue(binDir.contains(binDirExpect));
     }
 
     @Test
@@ -51,10 +54,11 @@ public class BazelWorkspaceTest {
         String wsDir = ws.getBazelWorkspaceRootDirectory().getAbsolutePath();
         assertTrue(wsDir.contains("bazel-eclipse-feature-" + wsName + "-workspace"));
         assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath()
-                .contains("bazel-eclipse-feature-" + wsName + "-outputdir"));
+            .contains("bazel-eclipse-feature-" + wsName + "-outputdir"));
         assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot/" + wsName));
-        String binDir = ws.getBazelBinDirectory().getAbsolutePath();
-        assertTrue(binDir.contains("execroot/" + wsName + "/bazel-out/windows-fastbuild/bin"));
+        String binDir = BazelPathHelper.osSeps(ws.getBazelBinDirectory().getAbsolutePath()); // $SLASH_OK
+        String binDirExpect = BazelPathHelper.osSeps("execroot/" + wsName + "/bazel-out/windows-fastbuild/bin"); // $SLASH_OK
+        assertTrue(binDir.contains(binDirExpect));
     }
 
     @Test

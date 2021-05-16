@@ -27,12 +27,12 @@ public class BazelWorkspaceCommandOptionsTest {
         List<String> optionLines = new ArrayList<>();
         optionLines.add("INFO: Options provided by the client:");
         optionLines.add("  Inherited 'common' options: --isatty=1 --terminal_columns=260");
-        optionLines.add("INFO: Reading rc options for 'test' from /Users/darth/dev/deathstar/.base-bazelrc:");
+        optionLines.add("INFO: Reading rc options for 'test' from " + "/Users/darth/dev/deathstar/.base-bazelrc:"); // $SLASH_OK test code
         optionLines.add(
-            "  Inherited 'build' options: --javacopt=-source 8 -target 8 --host_javabase=//tools/jdk:my-linux-jdk11 --javabase=//tools/jdk:my-linux-jdk8 --stamp");
+            "  Inherited 'build' options: --javacopt=-source 8 -target 8 --host_javabase=//tools/jdk:my-linux-jdk11 --javabase=//tools/jdk:my-linux-jdk8 --stamp"); // $SLASH_OK bazel path
         optionLines.add("INFO: Reading rc options for 'test' from /Users/darth/dev/deathstar/.user-bazelrc:");
         optionLines.add(
-            "  'test' options: --explicit_java_test_deps=true --test_timeout=45,180,300,360 --test_tag_filters=-flaky");
+                "  'test' options: --explicit_java_test_deps=true --test_timeout=45,180,300,360 --test_tag_filters=-flaky");
         optionLines.add("INFO: Analyzed 0 targets (0 packages loaded, 0 targets configured).");
         optionLines.add("INFO: Found 0 test targets...");
 
@@ -44,8 +44,8 @@ public class BazelWorkspaceCommandOptionsTest {
         assertEquals("1", options.getContextualOption("common", "isatty"));
         assertNull(options.getContextualOption("build", "isatty"));
 
-        assertEquals("//tools/jdk:my-linux-jdk11", options.getOption("host_javabase"));
-        assertEquals("//tools/jdk:my-linux-jdk11", options.getContextualOption("build", "host_javabase"));
+        assertEquals("//tools/jdk:my-linux-jdk11", options.getOption("host_javabase")); // $SLASH_OK bazel path
+        assertEquals("//tools/jdk:my-linux-jdk11", options.getContextualOption("build", "host_javabase")); // $SLASH_OK bazel path
         assertNull(options.getContextualOption("test", "host_javabase"));
 
         assertEquals("true", options.getOption("explicit_java_test_deps"));

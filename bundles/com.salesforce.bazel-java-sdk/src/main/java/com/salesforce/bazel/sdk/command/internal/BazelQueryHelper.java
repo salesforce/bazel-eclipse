@@ -77,7 +77,7 @@ public class BazelQueryHelper {
         argBuilder.add("query");
         for (File f : directories) {
             String directoryPath = f.toURI().relativize(bazelWorkspaceRootDirectory.toURI()).getPath();
-            argBuilder.add(directoryPath + "/...");
+            argBuilder.add(directoryPath + "/..."); // $SLASH_OK bazel path, not fs path
         }
         return bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor,
             argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
@@ -94,7 +94,7 @@ public class BazelQueryHelper {
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if (bazelLabels.isEmpty()) {
-            return Collections.singletonList(new BazelBuildFile("//..."));
+            return Collections.singletonList(new BazelBuildFile("//...")); // $SLASH_OK bazel path
         }
 
         Collection<BazelLabel> cacheMisses = new HashSet<>();

@@ -46,6 +46,7 @@ import com.salesforce.bazel.eclipse.mock.MockResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutputMatcher;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 public class BazelLaunchConfigurationDelegateFTest {
     @Rule
@@ -59,7 +60,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
         addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 0,
-            "bazel-bin/projects/libs/javalib0/javalib0", "bazel run result");
+            BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"), "bazel run result"); // $SLASH_OK
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
 
         // method under test
@@ -68,7 +69,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         // verify
         MockResourceHelper mockResourceHelper = mockEclipse.getMockResourceHelper();
         String[] cmdLine = mockResourceHelper.lastExecCommandLine;
-        assertEquals("bazel-bin/projects/libs/javalib0/javalib0", cmdLine[0]);
+        assertEquals(BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"), cmdLine[0]); // $SLASH_OK
         assertTrue(cmdLine[1].contains("debug"));
         assertTrue(cmdLine[2].contains("testvalue1"));
         assertTrue(cmdLine[3].contains("testvalue2"));
@@ -99,7 +100,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         assertTrue(cmdLine[9].contains("testvalue2"));
         assertTrue(cmdLine[10].contains("testvalue3"));
         assertEquals("--", cmdLine[11]);
-        assertEquals("//projects/libs/javalib0", cmdLine[12]);
+        assertEquals("//projects/libs/javalib0", cmdLine[12]); // $SLASH_OK: bazel path
     }
 
     @Test
@@ -126,7 +127,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         assertTrue(cmdLine[9].contains("testvalue2"));
         assertTrue(cmdLine[10].contains("testvalue3"));
         assertEquals("--", cmdLine[11]);
-        assertEquals("//projects/libs/javalib0", cmdLine[12]);
+        assertEquals("//projects/libs/javalib0", cmdLine[12]); // $SLASH_OK: bazel path
     }
 
     // HELPERS
@@ -135,7 +136,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         File testTempDir = tmpFolder.newFolder();
 
         // during test development, it can be useful to have a stable location on disk for the Bazel workspace contents
-        //testTempDir = new File("/tmp/bef/bazelws");
+        //testTempDir = new File("/tmp/bef/bazelws"); // $SLASH_OK: sample code
         //testTempDir.mkdirs();
 
         // create the mock Eclipse runtime in the correct state
@@ -151,14 +152,14 @@ public class BazelLaunchConfigurationDelegateFTest {
     private MockILaunchConfiguration createLaunchConfiguration(String verb) {
         MockILaunchConfiguration testConfig = new MockILaunchConfiguration();
         testConfig.attributes.put(BazelLaunchConfigAttributes.PROJECT.getAttributeName(), "javalib0");
-        testConfig.attributes.put(BazelLaunchConfigAttributes.LABEL.getAttributeName(), "//projects/libs/javalib0");
+        testConfig.attributes.put(BazelLaunchConfigAttributes.LABEL.getAttributeName(), "//projects/libs/javalib0"); // $SLASH_OK: bazel path
         if ("test".equals(verb)) {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_test");
         } else if ("run".equals(verb)) {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_binary");
         } else if ("selenium".equals(verb)) {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(),
-                "java_web_test_suite");
+                    "java_web_test_suite");
         }
 
         List<String> args = new ArrayList<>();

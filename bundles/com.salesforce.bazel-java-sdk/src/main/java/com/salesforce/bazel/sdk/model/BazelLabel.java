@@ -140,7 +140,7 @@ public class BazelLabel {
         int i = packagePath.lastIndexOf("...");
         if (i != -1) {
             packagePath = packagePath.substring(0, i);
-            if (packagePath.endsWith("/")) {
+            if (packagePath.endsWith("/")) { // $SLASH_OK: bazel path
                 packagePath = packagePath.substring(0, packagePath.length() - 1);
             }
         } else {
@@ -175,7 +175,7 @@ public class BazelLabel {
      */
     public String getPackageName() {
         String packagePath = getPackagePath();
-        int i = packagePath.lastIndexOf("/");
+        int i = packagePath.lastIndexOf("/"); // $SLASH_OK: bazel path
         return i == -1 ? packagePath : packagePath.substring(i + 1);
     }
 
@@ -211,9 +211,9 @@ public class BazelLabel {
         if (targetName == null) {
             return null;
         }
-        int i = targetName.lastIndexOf("/");
+        int i = targetName.lastIndexOf("/"); // $SLASH_OK: bazel path
         if (i != -1) {
-            return targetName.substring(i + 1); // ok because target name cannot end with '/'
+            return targetName.substring(i + 1); // ok because target name cannot end with slash
         }
         return targetName;
     }
@@ -267,7 +267,7 @@ public class BazelLabel {
             throw new IllegalAccessError(path);
         }
         path = path.trim();
-        if (path.endsWith("/")) {
+        if (path.endsWith("/")) { // $SLASH_OK: bazel path
             path = path.substring(0, path.length() - 1);
         }
         return path;
@@ -295,7 +295,7 @@ public class BazelLabel {
         if (label.endsWith(":")) {
             throw new IllegalArgumentException(label);
         }
-        if (label.endsWith("/")) {
+        if (label.endsWith("/")) { // $SLASH_OK: bazel path
             throw new IllegalArgumentException(label);
         }
         if (label.equals("//")) {
@@ -304,7 +304,7 @@ public class BazelLabel {
         if (label.startsWith("//")) {
             label = label.substring(2);
         }
-        if (label.startsWith("/")) {
+        if (label.startsWith("/")) { // $SLASH_OK: bazel path
             label = label.substring(1);
         }
         return label;

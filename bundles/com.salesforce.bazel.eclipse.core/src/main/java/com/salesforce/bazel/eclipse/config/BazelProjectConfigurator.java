@@ -114,7 +114,7 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
                 break;
             }
         }
-        if (buildFile == null || !buildFile.exists()) {
+        if ((buildFile == null) || !buildFile.exists()) {
             return false;
         }
 
@@ -139,7 +139,7 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
      *            the project to check for potential configuration
      * @param ignoredPaths
      *            paths that have to be ignored when checking whether this configurator applies. Those will typically be
-     *            nested projects (handled separately), or output directories (bin/, target/, ...).
+     *            nested projects (handled separately), or output directories (bin, target, ...).
      * @param monitor
      *            the progress monitor
      * @return <code>true</code> iff this configurator can configure the given project
@@ -161,7 +161,7 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
      *            the project to configure
      * @param ignoredPaths
      *            paths that have to be ignored when configuring the project. Those will typically be nested projects,
-     *            output directories (bin/, target/, ...)
+     *            output directories (bin, target, ...)
      * @param monitor
      *            the progress monitor
      */

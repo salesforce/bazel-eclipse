@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -80,7 +80,7 @@ public class BazelCommandManager {
         this.consoleFactory = consoleFactory;
 
         BazelWorkspaceCommandRunner.setBazelExecutablePath(bazelExecutablePath.getAbsolutePath());
-        this.genericCommandRunner = new BazelWorkspaceCommandRunner(bazelExecutablePath, commandBuilder);
+        genericCommandRunner = new BazelWorkspaceCommandRunner(bazelExecutablePath, commandBuilder);
     }
 
     // COMMAND RUNNERS
@@ -106,14 +106,14 @@ public class BazelCommandManager {
         if (workspaceCommandRunner == null) {
             File bazelExecutable = null;
             try {
-                bazelExecutable = new File(this.getBazelExecutablePath());
+                bazelExecutable = new File(getBazelExecutablePath());
             } catch (BazelCommandLineToolConfigurationException ex) {
                 ex.printStackTrace();
                 return null;
             }
 
-            workspaceCommandRunner = new BazelWorkspaceCommandRunner(bazelExecutable, this.aspectLocation,
-                    this.commandBuilder, this.consoleFactory, bazelWorkspaceRootDirectory);
+            workspaceCommandRunner = new BazelWorkspaceCommandRunner(bazelExecutable, aspectLocation,
+                commandBuilder, consoleFactory, bazelWorkspaceRootDirectory);
             workspaceCommandRunners.put(bazelWorkspaceRootDirectory, workspaceCommandRunner);
         }
         return workspaceCommandRunner;
@@ -129,14 +129,27 @@ public class BazelCommandManager {
     }
 
     /**
-     * Get the file system path to the Bazel executable. Set by the Preferences page, defaults to /usr/local/bin/bazel
-     * but see BazelPreferenceInitializer for the details of how it gets set initially.
+     * Get the file system path to the Bazel executable. Might be the hard coded default for the platform (see
+     * getDefaultBazelExecutablePath) but this method may apply a user specified override and is thus the preferred
+     * method to call.
      *
      * @return the file system path to the Bazel executable
      * @throws BazelCommandLineToolConfigurationException
      */
     public String getBazelExecutablePath() throws BazelCommandLineToolConfigurationException {
         return BazelWorkspaceCommandRunner.getBazelExecutablePath();
+    }
+
+    /**
+     * Returns the default path for Bazel for the runtime platform. This is a hard coded default, which is not as good
+     * as getBazelExecutablePath() which may return a better answer.
+     */
+    public static String getDefaultBazelExecutablePath() {
+        String path = "/usr/local/bin/bazel"; // $SLASH_OK
+        if (System.getProperty("os.name").contains("Windows")) {
+            path = "C:\\msys64\\usr\\bin";
+        }
+        return path;
     }
 
 }

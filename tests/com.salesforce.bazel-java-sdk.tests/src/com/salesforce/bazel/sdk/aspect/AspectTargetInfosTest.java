@@ -48,16 +48,23 @@ import java.util.List;
 import org.junit.Test;
 
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 public class AspectTargetInfosTest {
 
+    private final String libPath = BazelPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
+    private final String testPath = BazelPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
+    private final String binPath = BazelPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
+    private final String selPath = BazelPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
+
     @Test
     public void testLookupByLabel() {
-        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
-        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
-        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
+
+        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, libPath);
+        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, testPath);
+        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, binPath);
         AspectTargetInfo seleniumTest =
-                getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+                getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, selPath);
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
@@ -70,11 +77,10 @@ public class AspectTargetInfosTest {
 
     @Test
     public void testLookupByTargetKind__singleTargetKind() {
-        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
-        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
-        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectTargetInfo seleniumTest =
-                getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, libPath);
+        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, testPath);
+        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, binPath);
+        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, selPath);
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
@@ -89,11 +95,10 @@ public class AspectTargetInfosTest {
 
     @Test
     public void testLookupByTargetKind__multipleTargetKinds() {
-        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, "a/b/c/d/Foo.java");
-        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, "a/b/c/d/Foo.java");
-        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, "a/b/c/d/Foo.java");
-        AspectTargetInfo seleniumTest =
-                getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, "a/b/c/d/Foo.java");
+        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, libPath);
+        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, testPath);
+        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, binPath);
+        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, selPath);
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
@@ -107,76 +112,81 @@ public class AspectTargetInfosTest {
 
     @Test
     public void testLookupByRootSourcePath() {
-        AspectTargetInfo api = getAspectTargetInfo("foo", "a/b/c/d/Foo.java");
+        AspectTargetInfo api = getAspectTargetInfo("foo", libPath);
 
         AspectTargetInfos infos = new AspectTargetInfos(api);
 
-        assertSame(api, infos.lookupByRootSourcePath("a/b/c/d/Foo.java").iterator().next());
-        assertSame(api, infos.lookupByRootSourcePath("a/b/c/d").iterator().next());
-        assertSame(api, infos.lookupByRootSourcePath("a/b/c/").iterator().next());
-        assertSame(api, infos.lookupByRootSourcePath("a/b").iterator().next());
-        assertSame(api, infos.lookupByRootSourcePath("a/").iterator().next());
+        assertSame(api, infos.lookupByRootSourcePath(BazelPathHelper.osSeps("a/b/c/d/Foo.java")).iterator().next());
+        assertSame(api, infos.lookupByRootSourcePath(BazelPathHelper.osSeps("a/b/c/d")).iterator().next());
+        assertSame(api, infos.lookupByRootSourcePath(BazelPathHelper.osSeps("a/b/c/")).iterator().next());
+        assertSame(api, infos.lookupByRootSourcePath(BazelPathHelper.osSeps("a/b")).iterator().next());
+        assertSame(api, infos.lookupByRootSourcePath(BazelPathHelper.osSeps("a/")).iterator().next());
         assertSame(api, infos.lookupByRootSourcePath("a").iterator().next());
         assertEquals(0, infos.lookupByRootSourcePath("f").size());
     }
 
     @Test
     public void testLookupByRootSourcePath__noSubstringMatch() {
-        AspectTargetInfo api = getAspectTargetInfo("myclass", "projects/services/scone/MyClass.java");
+        AspectTargetInfo api =
+                getAspectTargetInfo("myclass", BazelPathHelper.osSeps("projects/services/scone/MyClass.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(api);
-        Collection<AspectTargetInfo> infos = apis.lookupByRootSourcePath("projects/services/scone");
+        Collection<AspectTargetInfo> infos =
+                apis.lookupByRootSourcePath(BazelPathHelper.osSeps("projects/services/scone")); // $SLASH_OK
 
         assertEquals(1, infos.size());
         assertSame(api, infos.iterator().next());
-        assertEquals(0, apis.lookupByRootSourcePath("projects/services/scon").size());
+        assertEquals(0, apis.lookupByRootSourcePath(BazelPathHelper.osSeps("projects/services/scon")).size()); // $SLASH_OK
     }
 
     @Test
     public void testLookupByRootSourcePath__multipleMatching() {
-        AspectTargetInfo foo = getAspectTargetInfo("foo", "a/b/c/aaa/Foo.java");
-        AspectTargetInfo blah = getAspectTargetInfo("blah", "a/b/c/zzz/Blah.java");
+        AspectTargetInfo foo = getAspectTargetInfo("foo", BazelPathHelper.osSeps("a/b/c/aaa/Foo.java")); // $SLASH_OK
+        AspectTargetInfo blah = getAspectTargetInfo("blah", BazelPathHelper.osSeps("a/b/c/zzz/Blah.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(foo, blah);
 
-        Collection<AspectTargetInfo> infos = apis.lookupByRootSourcePath("a/b/c");
+        Collection<AspectTargetInfo> infos = apis.lookupByRootSourcePath(BazelPathHelper.osSeps("a/b/c")); // $SLASH_OK
         assertEquals(2, infos.size());
         assertTrue(infos.contains(foo));
         assertTrue(infos.contains(blah));
-        infos = apis.lookupByRootSourcePath("a/b/c/aaa");
+        infos = apis.lookupByRootSourcePath(BazelPathHelper.osSeps("a/b/c/aaa")); // $SLASH_OK
         assertEquals(1, infos.size());
         assertTrue(infos.contains(foo));
     }
 
     @Test
     public void testLookupByRootSourcePath__sourcesWithCommonRootPathValidation() {
-        AspectTargetInfo foo = getAspectTargetInfo("foo", "a/b/c/aaa/ccc/Foo.java", "a/b/c/aaa/ddd/Blah.java");
+        AspectTargetInfo foo = getAspectTargetInfo("foo", BazelPathHelper.osSeps("a/b/c/aaa/ccc/Foo.java"), // $SLASH_OK
+            BazelPathHelper.osSeps("a/b/c/aaa/ddd/Blah.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(foo);
 
-        Collection<AspectTargetInfo> infos = apis.lookupByRootSourcePath("a/b/c");
+        Collection<AspectTargetInfo> infos = apis.lookupByRootSourcePath(BazelPathHelper.osSeps("a/b/c")); // $SLASH_OK
         assertEquals(1, infos.size());
 
-        infos = apis.lookupByRootSourcePath("a/b/c/aaa");
+        infos = apis.lookupByRootSourcePath(BazelPathHelper.osSeps("a/b/c/aaa")); // $SLASH_OK
         assertEquals(1, infos.size());
     }
 
     @Test(expected = IllegalStateException.class)
     public void testLookupByRootSourcePath__sourcesWithoutCommonRootPathValidation_partialPath() {
-        AspectTargetInfo foo = getAspectTargetInfo("foo", "a/b/c/aaa/Foo.java", "a/b/c/zzz/Blah.java");
+        AspectTargetInfo foo = getAspectTargetInfo("foo", BazelPathHelper.osSeps("a/b/c/aaa/Foo.java"), // $SLASH_OK
+            BazelPathHelper.osSeps("a/b/c/zzz/Blah.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(foo);
 
-        apis.lookupByRootSourcePath("a/b/c/aaa");
+        apis.lookupByRootSourcePath(BazelPathHelper.osSeps("a/b/c/aaa")); // $SLASH_OK
     }
 
     @Test(expected = IllegalStateException.class)
     public void testLookupByRootSourcePath__sourcesWithoutCommonRootPathValidation_fullPath() {
-        AspectTargetInfo foo = getAspectTargetInfo("foo", "a/b/c/aaa/Foo.java", "x/y/z/aaa/Blah.java");
+        AspectTargetInfo foo = getAspectTargetInfo("foo", BazelPathHelper.osSeps("a/b/c/aaa/Foo.java"),// $SLASH_OK
+            BazelPathHelper.osSeps("x/y/z/aaa/Blah.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(foo);
 
-        apis.lookupByRootSourcePath("a/b/c");
+        apis.lookupByRootSourcePath(BazelPathHelper.osSeps("a/b/c")); // $SLASH_OK
     }
 
     private static AspectTargetInfo getAspectTargetInfo(String label, String... sourcePaths) {
@@ -187,8 +197,9 @@ public class AspectTargetInfosTest {
             String... sourcePaths) {
         List<String> sourcePathList = Arrays.asList(sourcePaths);
 
-        return new AspectTargetInfo(new File(""), new ArrayList<>(), new ArrayList<>(), "some/path",
-                targetKind.toString().toLowerCase(), label, new ArrayList<>(), sourcePathList,
+        String workspaceRelativePath = "some" + File.separatorChar + "path";
+        return new AspectTargetInfo(new File(""), new ArrayList<>(), new ArrayList<>(), workspaceRelativePath,
+            targetKind.toString().toLowerCase(), label, new ArrayList<>(), sourcePathList,
                 "main-class");
     }
 

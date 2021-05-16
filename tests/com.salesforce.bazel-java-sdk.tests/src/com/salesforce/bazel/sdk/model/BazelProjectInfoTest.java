@@ -71,7 +71,7 @@ public class BazelProjectInfoTest {
 
     @BeforeClass
     public static void setup() throws Exception {
-        String tmpdirpath = System.getProperty("java.io.tmpdir", "/tmp");
+        String tmpdirpath = System.getProperty("java.io.tmpdir", "/tmp"); // $SLASH_OK test code
         WSDIR = new File(tmpdirpath, "BazelProjectInfoTest");
         WSDIR.mkdir();
         WSDIR.deleteOnExit();
@@ -114,7 +114,7 @@ public class BazelProjectInfoTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testCtorValidation_Root_NotExists() throws Exception {
-        new BazelPackageInfo(new File("/tmp/somebogusdirectory"));
+        new BazelPackageInfo(new File("/tmp/somebogusdirectory")); // TODO windows
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -138,7 +138,7 @@ public class BazelProjectInfoTest {
 
         assertEquals(APPLE_PROJECT_FS_PATH, subNode.getBazelPackageFSRelativePath());
         assertEquals(APPLE_PROJECT_FS_PATH, subNode.getBazelPackageFSRelativePathForUI());
-        assertEquals("//projects/libs/apple", subNode.getBazelPackageName());
+        assertEquals("//projects/libs/apple", subNode.getBazelPackageName()); // $SLASH_OK bazel path
         assertEquals("apple", subNode.getBazelPackageNameLastSegment());
 
         assertFalse(rootNode.getChildPackageInfos().isEmpty());
@@ -164,7 +164,7 @@ public class BazelProjectInfoTest {
 
         assertEquals(APPLE_PROJECT_FS_PATH, subNode.getBazelPackageFSRelativePath());
         assertEquals(APPLE_PROJECT_FS_PATH, subNode.getBazelPackageFSRelativePathForUI());
-        assertEquals("//projects/libs/apple", subNode.getBazelPackageName());
+        assertEquals("//projects/libs/apple", subNode.getBazelPackageName()); // $SLASH_OK bazel path
         assertEquals("apple", subNode.getBazelPackageNameLastSegment());
 
         assertFalse(rootNode.getChildPackageInfos().isEmpty());
@@ -239,7 +239,7 @@ public class BazelProjectInfoTest {
         BazelPackageInfo apple_web = new BazelPackageInfo(apple, APPLE_PROJECT_FS_PATH + File.separator + "web");
         BazelPackageInfo banana = new BazelPackageInfo(apple_web, BANANA_PROJECT_FS_PATH);
 
-        assertEquals(apple_web, banana.findByPackage("//projects/libs/apple/web"));
+        assertEquals(apple_web, banana.findByPackage("//projects/libs/apple/web")); // $SLASH_OK bazel path
         assertEquals(rootNode, apple.findByPackage("//..."));
     }
 

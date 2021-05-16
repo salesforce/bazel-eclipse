@@ -78,23 +78,23 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     protected IClasspathEntry[] lastComputedClasspath = null;
 
     public BaseBazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
 
     BaseBazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
-        this.bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        this.bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
-        this.eclipseProjectPath = eclipseProject.getLocation();
-        this.eclipseProjectIsRoot = resourceHelper.isBazelRootProject(eclipseProject);
-        this.osDetector = BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy();
+        bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+        eclipseProjectPath = eclipseProject.getLocation();
+        eclipseProjectIsRoot = resourceHelper.isBazelRootProject(eclipseProject);
+        osDetector = BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy();
 
-        this.bazelProject = this.bazelProjectManager.getProject(eclipseProject.getName());
-        if (this.bazelProject == null) {
-            this.bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
-            this.bazelProjectManager.addProject(bazelProject);
+        bazelProject = bazelProjectManager.getProject(eclipseProject.getName());
+        if (bazelProject == null) {
+            bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
+            bazelProjectManager.addProject(bazelProject);
         }
 
         javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
@@ -195,7 +195,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
         Path path = null;
         if (file.startsWith("external")) {
             path = Paths.get(bazelOutputBase.toString(), file);
-        } else if (file.startsWith("/")) {
+        } else if (file.startsWith(File.separator)) {
             path = Paths.get(file);
         } else {
             path = Paths.get(bazelExecRoot.toString(), file);
@@ -209,18 +209,18 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
                 path = Files.readSymbolicLink(path);
             } catch (IOException ex) {
                 // TODO this can happen if someone does a 'bazel clean' using the command line #113
-                // https://github.com/salesforce/bazel-eclipse/issues/113
+                // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
                 logger.error("Problem adding jar to project [" + bazelProject.name
-                        + "] because it does not exist on the filesystem: " + path);
+                    + "] because it does not exist on the filesystem: " + path);
                 continueOrThrow(ex);
             }
         } else {
             // it is a normal path, check for existence
             if (!Files.exists(path)) {
                 // TODO this can happen if someone does a 'bazel clean' using the command line #113
-                // https://github.com/salesforce/bazel-eclipse/issues/113
+                // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
                 logger.error("Problem adding jar to project [" + bazelProject.name
-                        + "] because it does not exist on the filesystem: " + path);
+                    + "] because it does not exist on the filesystem: " + path);
             }
         }
         return org.eclipse.core.runtime.Path.fromOSString(path.toString());

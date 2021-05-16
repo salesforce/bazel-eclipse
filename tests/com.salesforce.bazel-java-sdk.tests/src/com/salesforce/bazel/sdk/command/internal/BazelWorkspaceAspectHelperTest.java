@@ -56,7 +56,7 @@ public class BazelWorkspaceAspectHelperTest {
     public void testAspectLoading() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
-        BazelLabel label = new BazelLabel("//projects/libs/javalib0:*");
+        BazelLabel label = new BazelLabel("//projects/libs/javalib0:*"); // $SLASH_OK bazel path
 
         // retrieve the aspects for the target
         List<BazelLabel> targets = Collections.singletonList(label);
@@ -75,7 +75,7 @@ public class BazelWorkspaceAspectHelperTest {
     public void testAspectLoadingSpecificTarget() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
-        BazelLabel label = new BazelLabel("//projects/libs/javalib0:javalib0");
+        BazelLabel label = new BazelLabel("//projects/libs/javalib0:javalib0"); // $SLASH_OK bazel path
 
         // retrieve the aspects for the target
         List<BazelLabel> targets = Collections.singletonList(label);
@@ -93,7 +93,7 @@ public class BazelWorkspaceAspectHelperTest {
     public void testAspectLoadingAndCaching() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
-        BazelLabel label = new BazelLabel("//projects/libs/javalib0:*");
+        BazelLabel label = new BazelLabel("//projects/libs/javalib0:*"); // $SLASH_OK bazel path
 
         // retrieve the aspects for the target
         List<BazelLabel> targets = Collections.singletonList(label);
@@ -114,7 +114,7 @@ public class BazelWorkspaceAspectHelperTest {
     public void testAspectCacheFlush() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
         BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
-        BazelLabel label = new BazelLabel("//projects/libs/javalib0:*");
+        BazelLabel label = new BazelLabel("//projects/libs/javalib0:*"); // $SLASH_OK bazel path
 
         // retrieve the aspects for the target
         List<BazelLabel> targets = Collections.singletonList(label);

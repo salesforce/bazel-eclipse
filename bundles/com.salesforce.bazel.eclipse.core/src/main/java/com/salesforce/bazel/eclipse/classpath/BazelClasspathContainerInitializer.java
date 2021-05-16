@@ -105,29 +105,29 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
             }
 
             // We need more solid import/classpath container error handling
-            // https://github.com/salesforce/bazel-eclipse/issues/193
-//            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-//            BazelCommandManager commandManager = BazelPluginActivator.getBazelCommandManager();
-//
-//
-//            if (bazelProjectManager.isValid(bazelWorkspace, commandManager, bazelProject)) {
-//                setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
-//                importedProjects.add(eclipseJavaProject.getProject());
-//            } else if (isRootProject) {
-//                setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
-//            } else {
-//                // this is not exactly the package path, it is just the leaf node name
-//                corruptPackage = eclipseJavaProject.getPath().toString();
-//                String errorMsg = generateImportErrorMessage();
-//                BazelPluginActivator.error(errorMsg);
-//                LOG.error(errorMsg);
-//
-//                if (!isCorrupt.get()) {
-//                    isCorrupt.set(true);
-//                    importedProjects.add(eclipseProject);
-//                }
-//                undo();
-//            }
+            // https://github.com/salesforce/bazel-eclipse/issues/193 $SLASH_OK url
+            //            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+            //            BazelCommandManager commandManager = BazelPluginActivator.getBazelCommandManager();
+            //
+            //
+            //            if (bazelProjectManager.isValid(bazelWorkspace, commandManager, bazelProject)) {
+            //                setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
+            //                importedProjects.add(eclipseJavaProject.getProject());
+            //            } else if (isRootProject) {
+            //                setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
+            //            } else {
+            //                // this is not exactly the package path, it is just the leaf node name
+            //                corruptPackage = eclipseJavaProject.getPath().toString();
+            //                String errorMsg = generateImportErrorMessage();
+            //                BazelPluginActivator.error(errorMsg);
+            //                LOG.error(errorMsg);
+            //
+            //                if (!isCorrupt.get()) {
+            //                    isCorrupt.set(true);
+            //                    importedProjects.add(eclipseProject);
+            //                }
+            //                undo();
+            //            }
 
         } catch (IOException | InterruptedException | BackingStoreException e) {
             BazelPluginActivator.error("Error while creating Bazel classpath container.", e);
@@ -226,7 +226,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     private static IClasspathContainer getClasspathContainer(IProject project, boolean isRootProject) throws JavaModelException, IOException, InterruptedException, BackingStoreException, BazelCommandLineToolConfigurationException {
         return isRootProject ?
                 new BazelGlobalSearchClasspathContainer(project) :
-                new BazelClasspathContainer(project);
+                    new BazelClasspathContainer(project);
     }
 
     private static void setClasspathContainerForProject(IPath projectPath, IJavaProject project, IClasspathContainer container) throws JavaModelException {
@@ -236,9 +236,9 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     private static void setClasspathContainerForProject(IPath projectPath, IJavaProject project, IClasspathContainer container, IProgressMonitor monitor) throws JavaModelException {
         JavaCoreHelper ch = BazelPluginActivator.getJavaCoreHelper();
         ch.setClasspathContainer(
-                projectPath,
-                new IJavaProject[]{project},
-                new IClasspathContainer[]{container},
-                monitor);
+            projectPath,
+            new IJavaProject[]{project},
+            new IClasspathContainer[]{container},
+            monitor);
     }
 }

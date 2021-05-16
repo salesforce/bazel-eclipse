@@ -28,16 +28,16 @@ import java.util.zip.ZipFile;
 
 /**
  * Resolver that decides if the passed File is an interesting jar file, and if so it will deduce
- * GAV information from the path. 
+ * GAV information from the path.
  */
 public class JarIdentiferResolver {
-    
+
     public JarIdentiferResolver() {
     }
 
     public JarIdentifier resolveJarIdentifier(File gavRoot, File pathFile, ZipFile zipFile) {
         String path = pathFile.getAbsolutePath();
-        
+
         // do some quick Bazel exclusions (TODO how best to identify the interesting jars in the Bazel output dirs?)
         if (path.contains("-hjar.jar")) {
             return null; // perf optimization jar, not intended for non-Bazel consumption
@@ -66,12 +66,12 @@ public class JarIdentiferResolver {
         if (path.contains("IT.jar")) {
             return null; // by convention, a jar that contains a test to run in bazel
         }
-        
-        // Maven compatible: com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8.jar
-        // Bazel internal:   com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8-ijar.jar
 
-        String gavPart = path.substring(gavRoot.getAbsolutePath().length()); 
-        String[] gavParts = gavPart.split("/");
+        // Maven compatible: com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8.jar  $SLASH_OK comment
+        // Bazel internal:   com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8-ijar.jar  $SLASH_OK comment
+
+        String gavPart = path.substring(gavRoot.getAbsolutePath().length());
+        String[] gavParts = gavPart.split(File.separator);
 
         // open-context-impl-0.1.8.jar => open-context-impl
         String artifact = gavParts[gavParts.length-1];
@@ -93,7 +93,7 @@ public class JarIdentiferResolver {
 
         String group = "";
         boolean firstToken = true;
-        for (int i = 0; i<gavParts.length-groupOffset; i++) {
+        for (int i = 0; i<(gavParts.length-groupOffset); i++) {
             if (!firstToken) {
                 group = group + "." + gavParts[i];
             } else if (!gavParts[i].isEmpty()) {
@@ -110,8 +110,9 @@ public class JarIdentiferResolver {
 
         // Maven build system
         JarIdentiferResolver resolver = new JarIdentiferResolver();
-        File gavRoot = new File("/Users/mbenioff/.m2/repository");
-        File pathFile = new File("/Users/mbenioff/.m2/repository/com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8.jar");
+        File gavRoot = new File("/Users/mbenioff/.m2/repository"); // $SLASH_OK sample code
+        File pathFile =
+                new File("/Users/mbenioff/.m2/repository/com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8.jar"); // $SLASH_OK sample code
         JarIdentifier id = resolver.resolveJarIdentifier(gavRoot, pathFile, null);
         System.out.println(id.locationIdentifier);
         if (!id.locationIdentifier.equals("com.acme.libs:my-blue-impl:0.1.8")) {
@@ -119,8 +120,10 @@ public class JarIdentiferResolver {
         }
 
         // Bazel build system
-        gavRoot = new File("/tmp/_bazel_benioff/dsf87dsfsl/execroot/__main__/bazel-out/darwin-fastbuild/bin/external/maven/v1/https/benioff%40nexus.acme.com/nexus/content/groups/public");
-        pathFile = new File("/tmp/_bazel_benioff/dsf87dsfsl/execroot/__main__/bazel-out/darwin-fastbuild/bin/external/maven/v1/https/benioff%40nexus.acme.com/nexus/content/groups/public/com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8-ijar.jar");
+        gavRoot = new File(
+                "/tmp/_bazel_benioff/dsf87dsfsl/execroot/__main__/bazel-out/darwin-fastbuild/bin/external/maven/v1/https/benioff%40nexus.acme.com/nexus/content/groups/public"); // $SLASH_OK sample code
+        pathFile = new File(
+                "/tmp/_bazel_benioff/dsf87dsfsl/execroot/__main__/bazel-out/darwin-fastbuild/bin/external/maven/v1/https/benioff%40nexus.acme.com/nexus/content/groups/public/com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8-ijar.jar"); // $SLASH_OK sample code
         id = resolver.resolveJarIdentifier(gavRoot, pathFile, null);
         System.out.println(id.locationIdentifier);
         if (!id.locationIdentifier.equals("com.acme.libs:my-blue-impl:0.1.8")) {

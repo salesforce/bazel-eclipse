@@ -3,8 +3,10 @@ package com.salesforce.bazel.eclipse.preferences;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+
 /**
- * Names of the preference keys. Preferences 
+ * Names of the preference keys. Preferences
  */
 public class BazelPreferenceKeys {
     public static Map<String, String> defaultValues = new HashMap<>();
@@ -20,11 +22,12 @@ public class BazelPreferenceKeys {
     // path the the bazel executable
     public static final String BAZEL_PATH_PREF_NAME = "BAZEL_PATH";
     {
-        defaultValues.put(BAZEL_PATH_PREF_NAME, "/usr/local/bin/bazel");
+        String defaultExecutablePath = BazelCommandManager.getDefaultBazelExecutablePath();
+        defaultValues.put(BAZEL_PATH_PREF_NAME, defaultExecutablePath);
     }
 
     // Global classpath search allows BEF to index all jars associated with a Bazel Workspace which makes them
-    // available for Open Type searches. These prefs enabled it, and override the default location(s) of where 
+    // available for Open Type searches. These prefs enabled it, and override the default location(s) of where
     // to look for the local cache of downloaded jars.
     public static final String GLOBALCLASSPATH_SEARCH_PREF_NAME = "GLOBALCLASSPATH_SEARCH_ENABLED";
     public static final String EXTERNAL_JAR_CACHE_PATH_PREF_NAME = "EXTERNAL_JAR_CACHE_PATH";
@@ -38,7 +41,7 @@ public class BazelPreferenceKeys {
 
     // We support Bazel workspaces in which the WORKSPACE file in the root is actually a soft link to the actual
     // file in a subdirectory. Due to the way the system Open dialog works, we have to do some sad logic to figure
-    // out this is the case. This flag disables this feature, in case that logic causes problems for some users. 
+    // out this is the case. This flag disables this feature, in case that logic causes problems for some users.
     // https://github.com/salesforce/bazel-eclipse/issues/164
     public static final String DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK = "DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK";
     {
@@ -56,16 +59,16 @@ public class BazelPreferenceKeys {
     // Be sure to add your new pref name here, as that is how the global pref file gets loaded into Eclipse prefs
 
     // prefs that have string values
-    public static final String[] ALL_STRING_PREFS = new String[] { 
+    public static final String[] ALL_STRING_PREFS = new String[] {
             BAZEL_PATH_PREF_NAME,
-            EXTERNAL_JAR_CACHE_PATH_PREF_NAME, 
-            BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME 
+            EXTERNAL_JAR_CACHE_PATH_PREF_NAME,
+            BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME
     };
 
     // prefs that have boolean values
-    public static final String[] ALL_BOOLEAN_PREFS = new String[] { 
-            GLOBALCLASSPATH_SEARCH_PREF_NAME, 
-            DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK 
+    public static final String[] ALL_BOOLEAN_PREFS = new String[] {
+            GLOBALCLASSPATH_SEARCH_PREF_NAME,
+            DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK
     };
 
 }

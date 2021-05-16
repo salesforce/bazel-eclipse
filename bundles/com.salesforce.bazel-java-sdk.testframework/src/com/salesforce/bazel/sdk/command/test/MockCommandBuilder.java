@@ -23,6 +23,7 @@
  */
 package com.salesforce.bazel.sdk.command.test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,12 +61,12 @@ import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
  */
 public class MockCommandBuilder extends CommandBuilder {
     // Workspace under test
-    private TestBazelWorkspaceFactory testWorkspaceFactory;
+    private final TestBazelWorkspaceFactory testWorkspaceFactory;
 
     // arbitrary option map provided by the test, can be interpreted by the Commands in a specific way
-    // see the Mock*Command classes for details on what is available 
+    // see the Mock*Command classes for details on what is available
     // for example, you may wish for a certain package to fail to build, that is an option in MockBuildCommand
-    private Map<String, String> testOptions;
+    private final Map<String, String> testOptions;
 
     /**
      * This is an ordered list of output/error lines that will be returned from the Mock commands. Tests need to
@@ -104,7 +105,7 @@ public class MockCommandBuilder extends CommandBuilder {
     /**
      * Simplest way to simulate a single custom command. When you use this method, the command builder will use this
      * output as the output for the next run command that doesn't match a preconfigured rule.
-     * 
+     *
      * @param nameForLog
      *            when debugging a test, it is helpful to have a readable name for each configured output
      * @param outputLines
@@ -120,7 +121,7 @@ public class MockCommandBuilder extends CommandBuilder {
     /**
      * Precise way to simulate a single custom command. When you use this method, the command builder will use this
      * output as the output for the next run command that matches the 'matchers' list.
-     * 
+     *
      * @param nameForLog
      *            when debugging a test, it is helpful to have a readable name for each configured output
      * @param outputLines
@@ -143,33 +144,33 @@ public class MockCommandBuilder extends CommandBuilder {
         MockCommand mockCommand = null;
 
         // check if this is from a catalog of standard commands with stock responses
-        if (args.get(0).endsWith("/bazel")) {
+        if (args.get(0).endsWith(File.separatorChar + "bazel")) {
             if ("info".equals(args.get(1))) {
                 // command is of the form 'bazel info' with an optional third param
-                mockCommand = new MockInfoCommand(args, testOptions, this.testWorkspaceFactory);
+                mockCommand = new MockInfoCommand(args, testOptions, testWorkspaceFactory);
             } else if ("clean".equals(args.get(1))) {
                 // "bazel clean"
-                mockCommand = new MockCleanCommand(args, testOptions, this.testWorkspaceFactory);
+                mockCommand = new MockCleanCommand(args, testOptions, testWorkspaceFactory);
             } else if ("version".equals(args.get(1))) {
                 // "bazel version"
-                mockCommand = new MockVersionCommand(args, testOptions, this.testWorkspaceFactory);
+                mockCommand = new MockVersionCommand(args, testOptions, testWorkspaceFactory);
             } else if ("build".equals(args.get(1))) {
                 // bazel build xyz
-                mockCommand = new MockBuildCommand(args, testOptions, this.testWorkspaceFactory);
+                mockCommand = new MockBuildCommand(args, testOptions, testWorkspaceFactory);
             } else if ("test".equals(args.get(1))) {
                 // bazel test xyz
-                mockCommand = new MockTestCommand(args, testOptions, this.testWorkspaceFactory);
+                mockCommand = new MockTestCommand(args, testOptions, testWorkspaceFactory);
             } else if ("query".equals(args.get(1))) {
-                mockCommand = new MockQueryCommand(args, testOptions, this.testWorkspaceFactory);
+                mockCommand = new MockQueryCommand(args, testOptions, testWorkspaceFactory);
             }
         } else if (args.get(0).startsWith("bazel-bin")) {
             // launcher script (test must provide the desired output lines)
-            mockCommand = new MockLauncherCommand(args, testOptions, this.testWorkspaceFactory, simulatedOutputLines);
+            mockCommand = new MockLauncherCommand(args, testOptions, testWorkspaceFactory, simulatedOutputLines);
         }
 
         // if it wasn't a standard command, setup a custom command responder (test must provide the desired output lines)
         if (mockCommand == null) {
-            mockCommand = new MockCustomCommand(args, testOptions, this.testWorkspaceFactory, simulatedOutputLines);
+            mockCommand = new MockCustomCommand(args, testOptions, testWorkspaceFactory, simulatedOutputLines);
         }
 
         return mockCommand;

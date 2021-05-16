@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
@@ -27,7 +28,7 @@ public class BazelBuildyApp {
     private static File bazelWorkspaceDir;
 
     // update this to your local environment
-    private static final String BAZEL_EXECUTABLE = "/usr/local/bin/bazel";
+    private static final String BAZEL_EXECUTABLE = BazelCommandManager.getDefaultBazelExecutablePath();
 
     public static void main(String[] args) throws Exception {
         parseArgs(args);
@@ -37,7 +38,7 @@ public class BazelBuildyApp {
         CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
         CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = new BazelWorkspaceCommandRunner(bazelExecutable, null,
-                commandBuilder, consoleFactory, bazelWorkspaceDir);
+            commandBuilder, consoleFactory, bazelWorkspaceDir);
 
         // build all
         Set<String> targets = new HashSet<>();

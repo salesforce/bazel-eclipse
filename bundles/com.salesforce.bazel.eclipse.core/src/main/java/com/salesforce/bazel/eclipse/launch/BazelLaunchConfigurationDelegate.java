@@ -166,7 +166,7 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
     private static void connectDebugger(ILaunchConfiguration configuration, IProject project, IProgressMonitor monitor,
             ILaunch launch) {
         // logic below copied and adapted from
-        // https://github.com/eclipse/eclipse.jdt.debug/blob/master/org.eclipse.jdt.launching/launching/org/eclipse/jdt/internal/launching/JavaRemoteApplicationLaunchConfigurationDelegate.java
+        // https://github.com/eclipse/eclipse.jdt.debug/blob/master/org.eclipse.jdt.launching/launching/org/eclipse/jdt/internal/launching/JavaRemoteApplicationLaunchConfigurationDelegate.java ($SLASH_OK url)
 
         IJavaProject mainProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
         List<IJavaProject> otherProjects = getOtherJavaProjects(mainProject);

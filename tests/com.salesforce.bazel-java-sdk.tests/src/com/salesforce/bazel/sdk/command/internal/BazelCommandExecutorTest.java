@@ -54,7 +54,7 @@ public class BazelCommandExecutorTest {
 
         List<String> args = new ArrayList<>();
         args.add("fake"); // instead of passing a real command like build or test, pass a fake one since we are just testing invocation
-        args.add("//projects/libs/javalib0");
+        args.add("//projects/libs/javalib0"); // $SLASH_OK bazel path
 
         BazelCommandExecutor executor =
                 new BazelCommandExecutor(env.bazelExecutable.bazelExecutableFile, env.commandBuilder);
@@ -79,7 +79,7 @@ public class BazelCommandExecutorTest {
 
         List<String> args = new ArrayList<>();
         args.add("fake"); // instead of passing a real command like build or test, pass a fake one since we are just testing invocation
-        args.add("//projects/libs/javalib0");
+        args.add("//projects/libs/javalib0"); // $SLASH_OK bazel path
 
         BazelCommandExecutor executor =
                 new BazelCommandExecutor(env.bazelExecutable.bazelExecutableFile, env.commandBuilder);

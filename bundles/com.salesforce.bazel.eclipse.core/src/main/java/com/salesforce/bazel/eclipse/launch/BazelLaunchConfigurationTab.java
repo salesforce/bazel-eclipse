@@ -96,7 +96,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
     @Override
     public void initializeFrom(ILaunchConfiguration configuration) {
         loadedProjectName = BazelLaunchConfigAttributes.PROJECT.getStringValue(configuration);
-        if (loadedProjectName != null && getSelectedProject() != null) {
+        if ((loadedProjectName != null) && (getSelectedProject() != null)) {
             projectTextInput.setText(loadedProjectName);
             initializeLabelsForSelectedProject(getSelectedProject().getProject());
         }
@@ -121,7 +121,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         BazelLabel label =
                 targetTextInput.getText().trim().isEmpty() ? null : new BazelLabel(targetTextInput.getText());
         BazelTargetKind targetKind = label == null ? null : lookupLabelKind(label);
-        if (targetKind == null && loadedTargetKind != null) {
+        if ((targetKind == null) && (loadedTargetKind != null)) {
             targetKind = BazelTargetKind.valueOfIgnoresCase(loadedTargetKind);
         }
 
@@ -131,8 +131,8 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
     @Override
     public void createControl(Composite parent) {
         // the code here has been copied and adapted from
-        // https://github.com/eclipse/eclipse.jdt.debug/blob/master/org.eclipse.jdt.debug.ui/ui/org/eclipse/jdt/debug/ui/launchConfigurations/JavaMainTab.java
-        // https://github.com/eclipse/eclipse.jdt.debug/blob/master/org.eclipse.jdt.debug.ui/ui/org/eclipse/jdt/internal/debug/ui/launcher/SharedJavaMainTab.java
+        // https://github.com/eclipse/eclipse.jdt.debug/blob/master/org.eclipse.jdt.debug.ui/ui/org/eclipse/jdt/debug/ui/launchConfigurations/JavaMainTab.java ($SLASH_OK url)
+        // https://github.com/eclipse/eclipse.jdt.debug/blob/master/org.eclipse.jdt.debug.ui/ui/org/eclipse/jdt/internal/debug/ui/launcher/SharedJavaMainTab.java ($SLASH_OK url)
         Composite comp = BazelSWTFactory.createComposite(parent, parent.getFont(), 1, 1, GridData.FILL_BOTH);
         ((GridLayout) comp.getLayout()).verticalSpacing = 0;
         createProjectEditor(comp);
@@ -177,12 +177,12 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         dialog.setTitle("Select Target");
         dialog.setMessage("Select Target");
         initializeLabelsForSelectedProject(project);
-        dialog.setElements(labelsForSelectedProject.stream().map(typedBazelLabel -> typedBazelLabel.getBazelLabel())
-                .toArray(BazelLabel[]::new));
+        dialog.setElements(labelsForSelectedProject.stream().map(TypedBazelLabel::getBazelLabel)
+            .toArray(BazelLabel[]::new));
 
         BazelLabel target = getSelectedTarget();
         if (target != null) {
-            dialog.setInitialSelections(new Object[] { target });
+            dialog.setInitialSelections(target);
         }
         if (dialog.open() == Window.OK) {
             return (BazelLabel) dialog.getFirstResult();
@@ -193,9 +193,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
     private synchronized void initializeLabelsForSelectedProject(IProject project) {
         if (labelsForSelectedProject == null) {
             labelsForSelectedProject = support.getLaunchableBazelTargetsForProject(project);
-            labelsForSelectedProject.sort((t1, t2) -> {
-                return t1.getBazelLabel().getLabel().compareTo(t2.getBazelLabel().getLabel());
-            });
+            labelsForSelectedProject.sort((t1, t2) -> t1.getBazelLabel().getLabel().compareTo(t2.getBazelLabel().getLabel()));
         }
     }
 
@@ -236,7 +234,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
 
         IJavaProject javaProject = getSelectedProject();
         if (javaProject != null) {
-            dialog.setInitialSelections(new Object[] { javaProject });
+            dialog.setInitialSelections(javaProject);
         }
         if (dialog.open() == Window.OK) {
             return (IJavaProject) dialog.getFirstResult();
@@ -311,7 +309,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         }
     };
 
-    private ILabelProvider BAZEL_LABEL_LABEL_PROVIDER = new DefaultLabelProvider() {
+    private final ILabelProvider BAZEL_LABEL_LABEL_PROVIDER = new DefaultLabelProvider() {
         @Override
         public String getText(Object element) {
             BazelLabel label = ((BazelLabel) element);
@@ -322,7 +320,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
 
     private static String toFriendlyLabelRepresentation(BazelLabel label, BazelTargetKind targetKind) {
         // if the target name uses a path-like syntax: my/target/name, then return
-        // "name (my/target/name)"
+        // "name (my/target/name)" ($SLASH_OK bazel path)
         // otherwise just return the target name
         if (label.getLastComponentOfTargetName().equals(label.getTargetName())) {
             return label.getTargetName();

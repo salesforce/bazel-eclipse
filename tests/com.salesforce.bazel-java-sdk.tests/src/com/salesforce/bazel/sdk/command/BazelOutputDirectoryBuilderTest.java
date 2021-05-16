@@ -38,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 public class BazelOutputDirectoryBuilderTest {
 
@@ -45,12 +46,14 @@ public class BazelOutputDirectoryBuilderTest {
 
     @Test
     public void testGetRunScriptPath() {
-        BazelLabel label = new BazelLabel("//projects/services/apple:projects/services/apple_apprun");
+        BazelLabel label = new BazelLabel("//projects/services/apple:projects/services/apple_apprun"); // $SLASH_OK bazel path
         String path = builder.getRunScriptPath(label);
-        assertEquals("bazel-bin/projects/services/apple/projects/services/apple_apprun", path);
+        String osPath = BazelPathHelper.osSeps("bazel-bin/projects/services/apple/projects/services/apple_apprun"); // $SLASH_OK
+        assertEquals(osPath, path);
 
-        label = new BazelLabel("//projects/services/apple:test");
+        label = new BazelLabel("//projects/services/apple:test"); // $SLASH_OK bazel path
         path = builder.getRunScriptPath(label);
-        assertEquals("bazel-bin/projects/services/apple/test", path);
+        osPath = BazelPathHelper.osSeps("bazel-bin/projects/services/apple/test"); // $SLASH_OK
+        assertEquals(osPath, path);
     }
 }

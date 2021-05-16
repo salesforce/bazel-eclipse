@@ -8,6 +8,14 @@ import java.io.IOException;
  */
 public class BazelPathHelper {
 
+    public static boolean isUnix = true;
+
+    static {
+        if (System.getProperty("os.name").contains("Windows")) {
+            isUnix = false;
+        }
+    }
+
     /**
      * Resolve softlinks and other abstractions in the workspace paths.
      */
@@ -54,6 +62,17 @@ public class BazelPathHelper {
             path = new File(path).getCanonicalPath();
         } catch (IOException ioe) {
             ioe.printStackTrace();
+        }
+        return path;
+    }
+
+    /**
+     * Convert a slash style relative path to Windows backslash, if running on Windows
+     */
+    public static String osSeps(String unixStylePath) {
+        String path = unixStylePath;
+        if (!isUnix) {
+            path = unixStylePath.replace("/", "\\");
         }
         return path;
     }

@@ -80,8 +80,8 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Project builder that calls out to Bazel to run a workspace build.
  * <p>
  * Registered in plugin.xml to the builders extension point. <br/>
- * id="com.salesforce.bazel.eclipse.builder"<br/>
- * point="org.eclipse.core.resources.builders"
+ * $SLASH_OK xml id="com.salesforce.bazel.eclipse.builder"<br/>
+ * $SLASH_OK xml point="org.eclipse.core.resources.builders"
  */
 public class BazelBuilder extends IncrementalProjectBuilder {
 
@@ -95,7 +95,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     public BazelBuilder() {
         if (!REGISTERED_EL_CHANGE_LISTENER.getAndSet(true)) {
-            // is there a better way/place to register a singleton?
+            // is there a better way or place to register a singleton?
             JavaCore.addElementChangedListener(warningPublisher);
         }
     }
@@ -154,7 +154,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         } else {
             if (ResourceDeltaInspector.deltaHasChangedBuildFiles(delta)) {
                 // we request a classpath container update only if detect a BUILD file change
-                // this should also consider added/removed BUILD files (?)
+                // this should also consider added or removed BUILD files (?)
                 IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
                 ClasspathContainerInitializer cpInit = JavaCore.getClasspathContainerInitializer(BazelClasspathContainer.CONTAINER_NAME);
                 cpInit.requestClasspathContainerUpdate(Path.fromPortableString(BazelClasspathContainer.CONTAINER_NAME), javaProject, null);
@@ -179,7 +179,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             bazelWorkspaceCmdRunner.flushAspectInfoCache();
 
             // TODO make a pref to enable a bazel clean, but in almost any circumstance 'bazel clean' is not correct
-            // https://github.com/salesforce/bazel-eclipse/issues/185
+            // https://github.com/salesforce/bazel-eclipse/issues/185 // $SLASH_OK url
             // bazelWorkspaceCmdRunner.runBazelClean(null);
         }
 

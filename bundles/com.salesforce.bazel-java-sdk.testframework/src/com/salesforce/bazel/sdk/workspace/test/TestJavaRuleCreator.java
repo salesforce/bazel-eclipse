@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.Map;
 
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
+
 public class TestJavaRuleCreator {
     public static void createJavaBuildFile(TestBazelWorkspaceDescriptor workspaceDescriptor, File buildFile,
             TestBazelPackageDescriptor packageDescriptor) throws Exception {
@@ -22,42 +24,48 @@ public class TestJavaRuleCreator {
 
     @SuppressWarnings("unused")
     private static String createJavaBinaryRule(String packageName, int packageIndex) {
+        String main = BazelPathHelper.osSeps("src/main/java/**/*.java"); // $SLASH_OK
+        String mainProps = BazelPathHelper.osSeps("src/main/resources/main.properties"); // $SLASH_OK
+
         StringBuffer sb = new StringBuffer();
-        sb.append("java_binary(\n   name=\"");
+        sb.append("java_binary(\n   name=\""); // $SLASH_OK: escape char
         sb.append(packageName);
-        sb.append("\",\n");
-        sb.append("   srcs = glob([\"src/main/java/**/*.java\"]),\n");
-        sb.append("   resources = [\"src/main/resources/main.properties\"],\n"); // don't glob, to make sure the file exists in the right location
+        sb.append("\",\n"); // $SLASH_OK: line continue
+        sb.append("   srcs = glob([\"" + main + "\"]),\n");
+        sb.append("   resources = [\"" + mainProps + "\"],\n"); // don't glob, to make sure the file exists in the right location
         sb.append("   create_executable = True,\n");
-        sb.append("   main_class = \"com.salesforce.fruit" + packageIndex + ".Apple\",\n");
+        sb.append("   main_class = \"com.salesforce.fruit" + packageIndex + ".Apple\",\n"); // $SLASH_OK: escape char
         sb.append(")");
         return sb.toString();
     }
 
     private static String createJavaLibraryRule(String packageName) {
+        String main = BazelPathHelper.osSeps("src/main/java/**/*.java"); // $SLASH_OK
         StringBuffer sb = new StringBuffer();
-        sb.append("java_library(\n   name=\"");
+        sb.append("java_library(\n   name=\""); // $SLASH_OK: escape char
         sb.append(packageName);
-        sb.append("\",\n");
-        sb.append("   srcs = glob([\"src/main/java/**/*.java\"]),\n");
-        sb.append("   visibility = [\"//visibility:public\"],\n");
+        sb.append("\",\n"); // $SLASH_OK: line continue
+        sb.append("   srcs = glob([\"" + main + "\"]),\n");
+        sb.append("   visibility = [\"//visibility:public\"],\n"); // $SLASH_OK: escape char
         sb.append(")");
         return sb.toString();
     }
 
     private static String createJavaTestRule(String packageName, Map<String, String> commandOptions) {
         boolean explicitJavaTestDeps = "true".equals(commandOptions.get("explicit_java_test_deps"));
+        String test = BazelPathHelper.osSeps("src/test/java/**/*.java"); // $SLASH_OK
+        String testProps = BazelPathHelper.osSeps("src/test/resources/test.properties"); // $SLASH_OK
 
         StringBuffer sb = new StringBuffer();
-        sb.append("java_test(\n   name=\"");
+        sb.append("java_test(\n   name=\""); // $SLASH_OK: escape char
         sb.append(packageName);
-        sb.append("Test\",\n");
-        sb.append("   srcs = glob([\"src/test/java/**/*.java\"]),\n");
-        sb.append("   resources = [\"src/test/resources/test.properties\"],\n"); // don't glob, to make sure the file exists in the right location
-        sb.append("   visibility = [\"//visibility:public\"],\n");
+        sb.append("Test\",\n"); // $SLASH_OK: escape char
+        sb.append("   srcs = glob([\"" + test + "\"]),\n");
+        sb.append("   resources = [\"" + testProps + "\"],\n"); // don't glob, to make sure the file exists in the right location
+        sb.append("   visibility = [\"//visibility:public\"],\n"); // $SLASH_OK: escape char
         if (explicitJavaTestDeps) {
             // see ImplicitDependencyHelper.java for more details about this block
-            sb.append("   deps = [ \"@junit_junit//jar\", \"@org_hamcrest_hamcrest_core//jar\", ],\n");
+            sb.append("   deps = [ \"@junit_junit//jar\", \"@org_hamcrest_hamcrest_core//jar\", ],\n"); // $SLASH_OK: escape char
         }
         sb.append(")");
         return sb.toString();
@@ -66,23 +74,25 @@ public class TestJavaRuleCreator {
     @SuppressWarnings("unused")
     private static String createSpringBootRule(String packageName, int projectIndex) {
         StringBuffer sb = new StringBuffer();
-        sb.append("springboot(\n   name=\"");
+        sb.append("springboot(\n   name=\""); // $SLASH_OK: escape char
         sb.append(packageName);
-        sb.append("\",\n");
-        sb.append("   java_library = \":base_lib\",\n");
-        sb.append("   boot_app_class = \"com.salesforce.fruit" + projectIndex + ".Apple\",\n");
+        sb.append("\",\n"); // $SLASH_OK: line continue
+        sb.append("   java_library = \":base_lib\",\n"); // $SLASH_OK: escape char
+        sb.append("   boot_app_class = \"com.salesforce.fruit" + projectIndex + ".Apple\",\n"); // $SLASH_OK: escape char
         sb.append(")");
         return sb.toString();
     }
 
     @SuppressWarnings("unused")
     private static String createSpringBootTestRule(String packageName) {
+        String src = BazelPathHelper.osSeps("src/**/*.java"); // $SLASH_OK
+
         StringBuffer sb = new StringBuffer();
-        sb.append("springboot_test(\n   name=\"");
+        sb.append("springboot_test(\n   name=\""); // $SLASH_OK: escape char
         sb.append(packageName);
-        sb.append("\",\n");
+        sb.append("\",\n"); // $SLASH_OK: line continue
         sb.append("   deps = [],\n");
-        sb.append("   srcs = glob([\"src/**/*.java\"]),\n");
+        sb.append("   srcs = glob([\"" + src + "\"]),\n");
         sb.append(")");
         return sb.toString();
     }

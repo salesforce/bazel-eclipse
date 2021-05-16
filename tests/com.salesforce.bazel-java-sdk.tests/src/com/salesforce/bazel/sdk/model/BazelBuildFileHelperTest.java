@@ -66,7 +66,7 @@ public class BazelBuildFileHelperTest {
         assertFalse(BazelBuildFileHelper.hasJavaRulesInLine("javatest("));
         assertFalse(BazelBuildFileHelper.hasJavaRulesInLine("spring boot("));
         assertFalse(
-            BazelBuildFileHelper.hasJavaRulesInLine("load(\"//tools/springboot:springboot.bzl\", \"springboot\")"));
+            BazelBuildFileHelper.hasJavaRulesInLine("load(\"//tools/springboot:springboot.bzl\", \"springboot\")")); // $SLASH_OK bazel path
 
         assertFalse(BazelBuildFileHelper.hasJavaRulesInLine("\n"));
         assertFalse(BazelBuildFileHelper.hasJavaRulesInLine(" "));
@@ -77,11 +77,11 @@ public class BazelBuildFileHelperTest {
     public void testJavaRules_InputStream_positive() throws Exception {
         StringBuffer sb = new StringBuffer();
 
-        sb.append("load(\"//tools/springboot:springboot.bzl\", \"springboot\", \"springboot_test\")\n");
+        sb.append("load(\"//tools/springboot:springboot.bzl\", \"springboot\", \"springboot_test\")\n"); // $SLASH_OK bazel path
         sb.append("# some comment \n");
         sb.append("springboot(\n");
-        sb.append("  name = \"basic-rest-service\",\n");
-        sb.append("  boot_app_class = \"com.salesforce.basicrestservice.BasicRestService\",\n");
+        sb.append("  name = \"basic-rest-service\",\n"); // $SLASH_OK escape char
+        sb.append("  boot_app_class = \"com.salesforce.basicrestservice.BasicRestService\",\n"); // $SLASH_OK escape char
         sb.append("  deps = deps,\n");
         sb.append(")\n");
         sb.append("\n");
@@ -97,8 +97,8 @@ public class BazelBuildFileHelperTest {
         sb.append("load(\"//tools/springboot:springboot.bzl\", \"springboot\", \"springboot_test\")\n");
         sb.append("# some comment \n");
         sb.append("not_springboot(\n");
-        sb.append("  name = \"basic-rest-service\",\n");
-        sb.append("  boot_app_class = \"com.salesforce.basicrestservice.BasicRestService\",\n");
+        sb.append("  name = \"basic-rest-service\",\n"); // $SLASH_OK escape char
+        sb.append("  boot_app_class = \"com.salesforce.basicrestservice.BasicRestService\",\n"); // $SLASH_OK escape char
         sb.append("  deps = deps,\n");
         sb.append(")\n");
         sb.append("\n");

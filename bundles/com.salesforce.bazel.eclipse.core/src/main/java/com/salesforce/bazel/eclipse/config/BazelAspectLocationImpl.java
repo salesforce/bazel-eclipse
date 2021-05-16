@@ -62,8 +62,8 @@ public class BazelAspectLocationImpl implements BazelAspectLocation {
      * <p>
      * This is easily broken by changes in Eclipse packaging, so be careful and validate the location. This
      * implementation assumes this plugin was been installed 'unpacked' in the p2 cache. This takes some effort. See
-     * https://stackoverflow.com/questions/922230/how-do-i-force-an-eclipse-plug-in-to-be-unpacked for some hints if
-     * this breaks.
+     * https://stackoverflow.com/questions/922230/how-do-i-force-an-eclipse-plug-in-to-be-unpacked ($SLASH_OK url) for
+     * some hints if this breaks.
      * <p>
      * Throws an exception if the Aspect cannot be located on the filesystem, which will prevent the plugin from
      * loading. Make sure to log the reason(s) before throwing otherwise the user won't be able to troubleshoot the

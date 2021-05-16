@@ -107,8 +107,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     // GLOBAL CONFIG
 
     /**
-     * Location of the Bazel command line executable. This is configured by the Preferences, and usually defaults to
-     * /usr/local/bin/bazel but see BazelPreferenceInitializer for more details.
+     * Location of the Bazel command line executable.
      */
     private static File bazelExecutable = null;
 
@@ -338,14 +337,14 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     }
 
     /**
-     * Get the file system path to the Bazel executable. Set by the Preferences page, defaults to /usr/local/bin/bazel
-     * but see BazelPreferenceInitializer for the details of how it gets set initially.
+     * Get the file system path to the Bazel executable. 
      *
      * @return the file system path to the Bazel executable
      * @throws BazelCommandLineToolConfigurationException
      */
     public static String getBazelExecutablePath() throws BazelCommandLineToolConfigurationException {
         if ((bazelExecutable == null) || !bazelExecutable.exists() || !bazelExecutable.canExecute()) {
+            // TODO move this to the setter paths
             throw new BazelCommandLineToolConfigurationException.BazelNotSetException();
         }
         return bazelExecutable.toString();

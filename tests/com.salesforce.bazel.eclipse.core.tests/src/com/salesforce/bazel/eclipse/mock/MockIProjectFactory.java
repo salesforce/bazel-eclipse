@@ -33,14 +33,16 @@ import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Convenience factory for create Mockito mock iProjects.
- * 
+ *
  * @author plaird
  */
 public class MockIProjectFactory {
@@ -55,7 +57,7 @@ public class MockIProjectFactory {
         IPath absolutePath = new Path(bom.absolutePathToEclipseProjectDirectory);
         Mockito.when(mockProject.getLocation()).thenReturn(absolutePath);
         Mockito.when(mockProject.getWorkspace())
-                .thenReturn(BazelPluginActivator.getResourceHelper().getEclipseWorkspace());
+        .thenReturn(BazelPluginActivator.getResourceHelper().getEclipseWorkspace());
         try {
             Mockito.when(mockProject.getReferencedProjects()).thenReturn(new IProject[] {});
         } catch (Exception anyE) {}
@@ -81,17 +83,17 @@ public class MockIProjectFactory {
         }
         for (String natureId : bom.customNatures.keySet()) {
             try {
-                Mockito.when(mockProject.getNature(Mockito.eq(natureId))).thenReturn(bom.customNatures.get(natureId));
+                Mockito.when(mockProject.getNature(ArgumentMatchers.eq(natureId))).thenReturn(bom.customNatures.get(natureId));
             } catch (Exception anyE) {}
         }
         description.setNatureIds(bom.customNatures.keySet().toArray(new String[] {}));
 
         // files and folders
         MockIFolder projectFolder = new MockIFolder(mockProject);
-        Mockito.when(mockProject.getFolder(Mockito.anyString())).thenReturn(projectFolder);
+        Mockito.when(mockProject.getFolder(ArgumentMatchers.anyString())).thenReturn(projectFolder);
         IFile mockFile = Mockito.mock(IFile.class);
         Mockito.when(mockFile.exists()).thenReturn(false);
-        Mockito.when(mockProject.getFile(Mockito.anyString())).thenReturn(mockFile);
+        Mockito.when(mockProject.getFile(ArgumentMatchers.anyString())).thenReturn(mockFile);
 
         return mockProject;
     }
@@ -101,7 +103,8 @@ public class MockIProjectFactory {
         MockIProjectDescriptor bom = new MockIProjectDescriptor(projectName);
 
         // normally the apple-api Eclipse project will be located as a top level directory in the Eclipse workspace directory
-        bom.absolutePathToEclipseProjectDirectory = absolutePathToEclipseWorkspace + "/" + projectName;
+        bom.absolutePathToEclipseProjectDirectory =
+                BazelPathHelper.osSeps(absolutePathToEclipseWorkspace + "/" + projectName); // $SLASH_OK
         bom.hasBazelNature = false;
         bom.hasJavaNature = false;
 
@@ -113,7 +116,8 @@ public class MockIProjectFactory {
         MockIProjectDescriptor bom = new MockIProjectDescriptor(projectName);
 
         // normally the apple-api Eclipse project will be located as a top level directory in the Eclipse workspace directory
-        bom.absolutePathToEclipseProjectDirectory = absolutePathToEclipseWorkspace + "/" + projectName;
+        bom.absolutePathToEclipseProjectDirectory =
+                BazelPathHelper.osSeps(absolutePathToEclipseWorkspace + "/" + projectName); // $SLASH_OK
 
         bom.absolutePathToBazelPackageDirectory = absolutePathToBazelPackage;
 
@@ -125,7 +129,7 @@ public class MockIProjectFactory {
 
     /**
      * Fill out your BOM here. I decided not to do a fluent API since I think the BOMs will be highly standardized.
-     * 
+     *
      * @author plaird
      *
      */
@@ -135,10 +139,10 @@ public class MockIProjectFactory {
         // relative path from the Eclipse workspace root directory to the eclipse project directory (typically "")
         public String relativePathToEclipseProjectDirectoryFromWorkspaceRoot = "";
 
-        // absolute file system path to the Eclipse project directory (/home/joe/dev/MyEclipseWorkspace/fooProject) 
+        // absolute file system path to the Eclipse project directory (/home/joe/dev/MyEclipseWorkspace/fooProject)
         public String absolutePathToEclipseProjectDirectory = "";
 
-        // absolute file system path to the Bazel package directory (/home/joe/dev/MyBazelWorkspace/projects/lib/apple-api) 
+        // absolute file system path to the Bazel package directory (/home/joe/dev/MyBazelWorkspace/projects/lib/apple-api)
         public String absolutePathToBazelPackageDirectory = "";
 
         // lifecycle
@@ -152,11 +156,11 @@ public class MockIProjectFactory {
 
         /**
          * Creates a standard Bazel project with Java nature.
-         * 
+         *
          * @param projectName
          */
         public MockIProjectDescriptor(String projectName) {
-            this.name = projectName;
+            name = projectName;
         }
     }
 }

@@ -33,6 +33,7 @@ import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.aspect.LocalBazelAspectLocation;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
@@ -62,8 +63,8 @@ public class BazelAnalyzyApp {
     private static File bazelWorkspaceDir;
 
     // update this to your local environment
-    private static final String BAZEL_EXECUTABLE = "/usr/local/bin/bazel";
-    private static final String ASPECT_LOCATION = "/Users/plaird/dev/bazel-eclipse/bzl-java-sdk/aspect";
+    private static final String BAZEL_EXECUTABLE = BazelCommandManager.getDefaultBazelExecutablePath();
+    private static final String ASPECT_LOCATION = "REPLACE_ME/bzl-java-sdk/aspect"; // $SLASH_OK sample code
 
     private static BazelWorkspaceScanner workspaceScanner = new BazelWorkspaceScanner();
 
@@ -77,7 +78,7 @@ public class BazelAnalyzyApp {
         CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
         CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = new BazelWorkspaceCommandRunner(bazelExecutable,
-                aspectLocation, commandBuilder, consoleFactory, bazelWorkspaceDir);
+            aspectLocation, commandBuilder, consoleFactory, bazelWorkspaceDir);
 
         // create the Bazel workspace SDK objects
         String workspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspacePath); // TODO use a File arg

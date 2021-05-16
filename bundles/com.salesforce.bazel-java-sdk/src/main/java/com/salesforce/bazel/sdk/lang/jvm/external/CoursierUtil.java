@@ -12,10 +12,13 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * This class encapsulates the behaviors of coursier.
  */
 public class CoursierUtil {
+
+    // TODO windows
+
     private static final String COURSIER_CACHE_LOCATION_LINUX = "/.cache/coursier/v1";
     private static final String COURSIER_CACHE_LOCATION_MACOS = "/Library/Caches/Coursier/v1";
     private static final String COURSIER_CACHE_LOCATION_WINDOWS = "/Coursier/cache/v1";
-    private Map<String, File> coursierCacheLocations = new HashMap<>();
+    private final Map<String, File> coursierCacheLocations = new HashMap<>();
 
 
     /**
@@ -25,7 +28,7 @@ public class CoursierUtil {
      * this cache location will have the union of all jars used by the workspaces.
      */
     public File addCoursierCacheLocation(BazelWorkspace bazelWorkspace, OperatingEnvironmentDetectionStrategy os) {
-        
+
         // workspace name is the key to our cached data
         String workspaceName = bazelWorkspace.getName();
         File coursierCacheLocation = coursierCacheLocations.get(workspaceName);
@@ -33,7 +36,7 @@ public class CoursierUtil {
             // TODO we are just computing the default cache location, but there are ways to force coursier to use alternate locations.
             // we should also factor that in, but that will be HARD. Details:
             //     https://get-coursier.io/docs/2.0.0-RC5-3/cache.html#default-location
-            
+
             String defaultLocation = null;
             String homedir = System.getProperty("user.home");
             String osName = os.getOperatingSystemName();
@@ -47,7 +50,7 @@ public class CoursierUtil {
                 // or is there a better default?
                 defaultLocation = homedir + COURSIER_CACHE_LOCATION_LINUX;
             }
-    
+
             coursierCacheLocation = new File(defaultLocation);
             coursierCacheLocations.put(workspaceName, coursierCacheLocation);
         }

@@ -43,6 +43,7 @@ import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.util.BazelExecutableUtil;
 
 /**
@@ -76,7 +77,8 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
         
         // SPECIAL CASES
 
-        String bazelExecLocationFromEnv = BazelExecutableUtil.which("bazel", "/usr/local/bin/bazel");
+        String defaultBazelExecutablePath = BazelCommandManager.getDefaultBazelExecutablePath();
+        String bazelExecLocationFromEnv = BazelExecutableUtil.which("bazel", defaultBazelExecutablePath);
         String value = userDefaults.getProperty(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
         store.setDefault(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, value);
         

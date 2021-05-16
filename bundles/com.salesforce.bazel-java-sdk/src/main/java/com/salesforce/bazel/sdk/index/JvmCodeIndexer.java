@@ -28,6 +28,7 @@ import java.io.File;
 import com.salesforce.bazel.sdk.index.jar.JarIdentiferResolver;
 import com.salesforce.bazel.sdk.index.jar.JavaJarCrawler;
 import com.salesforce.bazel.sdk.index.source.JavaSourceCrawler;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Indexer for building a JVM type index from nested sets of directories.
@@ -37,29 +38,29 @@ import com.salesforce.bazel.sdk.index.source.JavaSourceCrawler;
 public class JvmCodeIndexer {
     protected String sourceRoot;
     protected String externalJarRoot;
-    
+
     // COMMAND LINE LAUNCHER
-    
+
     // This is the best way to learn how to use the indexer.
-    
+
     // USE CASE 1: Bazel Workspace
-    // Bazel workspace location on file system: /home/mbenioff/dev/myrepo 
+    // Bazel workspace location on file system: /home/mbenioff/dev/myrepo
     //
     // java -jar bazel-java-sdk.jar com.salesforce.bazel.sdk.index.FileSystemCodeIndexer \
-    //      /home/mbenioff/dev/myrepo/bazel-bin/external /home/mbenioff/dev/myrepo 
+    //      /home/mbenioff/dev/myrepo/bazel-bin/external /home/mbenioff/dev/myrepo
 
     // USE CASE 2: Maven repository
-    // Maven repository location on file system: /home/mbenioff/.m2/repository 
+    // Maven repository location on file system: /home/mbenioff/.m2/repository
     //
     // java -jar bazel-java-sdk.jar com.salesforce.bazel.sdk.index.FileSystemCodeIndexer \
-    //      /home/mbenioff/.m2/repository 
+    //      /home/mbenioff/.m2/repository
 
     public static void main(String[] args) {
         if (args.length < 1) {
             System.err.println("Usage: CodeIndexer [full path to external java jars directory] [optional full path to source root directory]");
             return;
         }
-        
+
         // build the indexer
         String externalJarRoot = args[0];
         String sourceRoot = null;
@@ -76,11 +77,11 @@ public class JvmCodeIndexer {
         // print the results
         index.printIndex();
         System.out.println("\nTotal processing time (milliseconds): "+(endTime-startTime));
-        
+
     }
-    
+
     // INDEXER
-    
+
     public JvmCodeIndexer(String externalJarRoot, String sourceRoot) {
         this.sourceRoot = sourceRoot;
         this.externalJarRoot = externalJarRoot;
@@ -91,7 +92,7 @@ public class JvmCodeIndexer {
 
         if (externalJarRoot.contains("bazel-out")) {
             if (externalJarRoot.endsWith("bin")) {
-                externalJarRoot = externalJarRoot + "/external";
+                externalJarRoot = BazelPathHelper.osSeps(externalJarRoot + "/" + "external"); // $SLASH_OK
             }
         }
         File externalJarRootFile = new File(externalJarRoot);
@@ -129,14 +130,14 @@ public class JvmCodeIndexer {
     }
 
     private static String pickJavaSourceArtifactMarker(String jarRepoPath) {
-        if (jarRepoPath.contains(".m2/repository")) {
+        if (jarRepoPath.contains(BazelPathHelper.osSeps(".m2/repository"))) { // $SLASH_OK
             return "pom.xml";
         } else if (jarRepoPath.contains("bazel-out") || jarRepoPath.contains("bazel-bin")) {
             return "BUILD";
         }
         return null;
     }
-    
+
     // override class to redirect this to a real logger
     protected void logInfo(String msg) {
         System.out.println(msg);

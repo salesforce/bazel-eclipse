@@ -30,14 +30,15 @@ import com.salesforce.bazel.sdk.index.JvmCodeIndex;
 import com.salesforce.bazel.sdk.index.model.ClassIdentifier;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.index.model.CodeLocationIdentifier;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Crawler that descends into nested directories of source files and adds found files
  * to the index.
  */
 public class JavaSourceCrawler {
-    private JvmCodeIndex index;
-    private String artifactMarkerFileName;
+    private final JvmCodeIndex index;
+    private final String artifactMarkerFileName;
 
     public JavaSourceCrawler(JvmCodeIndex index, String artifactMarkerFileName) {
         this.index = index;
@@ -47,8 +48,8 @@ public class JavaSourceCrawler {
     public void index(File basePath) {
         indexRecur(basePath, "", null, true);
     }
-    
-    protected void indexRecur(File path, String relativePathToClosestArtifact, CodeLocationDescriptor closestArtifactLocationDescriptor, 
+
+    protected void indexRecur(File path, String relativePathToClosestArtifact, CodeLocationDescriptor closestArtifactLocationDescriptor,
             boolean isRootDir) {
         if (path.isDirectory()) {
             // have we descended into a new artifact? (i.e. directory contains pom.xml for Maven, or BUILD for Bazel)
@@ -60,7 +61,7 @@ public class JavaSourceCrawler {
             if (artifactMarkerSearch.length > 0) {
                 String parentId = "";
                 if (closestArtifactLocationDescriptor != null) {
-                    parentId = closestArtifactLocationDescriptor.id.locationIdentifier+"/";
+                    parentId = closestArtifactLocationDescriptor.id.locationIdentifier + File.separatorChar;
                 }
                 CodeLocationIdentifier myId = new CodeLocationIdentifier(parentId+relativePathToClosestArtifact);
                 closestArtifactLocationDescriptor = new CodeLocationDescriptor(path, myId);
@@ -85,7 +86,8 @@ public class JavaSourceCrawler {
                     }
                     String childRelative = candidateFile.getName();
                     if (!relativePathToClosestArtifact.isEmpty()) {
-                        childRelative = relativePathToClosestArtifact+"/"+candidateFile.getName();
+                        childRelative =
+                                BazelPathHelper.osSeps(relativePathToClosestArtifact + "/" + candidateFile.getName()); // $SLASH_OK
                     }
                     indexRecur(candidateFile, childRelative, closestArtifactLocationDescriptor, false);
                 } else if (candidateFile.canRead()) {
@@ -107,7 +109,7 @@ public class JavaSourceCrawler {
         fqClassName = fqClassName.substring(0, fqClassName.length()-5);
         int javaIndex = fqClassName.indexOf("java"); // TODO this only works for projects that follow Maven conventions
         fqClassName = fqClassName.substring(javaIndex+5);
-        fqClassName = fqClassName.replace("/", ".");
+        fqClassName = fqClassName.replace(File.pathSeparator, ".");
 
         ClassIdentifier classId = new ClassIdentifier(fqClassName);
         SourceFileIdentifier sourceFileId = new SourceFileIdentifier(artifactLocationDescriptor, classId);

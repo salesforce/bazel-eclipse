@@ -26,6 +26,8 @@ package com.salesforce.bazel.eclipse.util;
 import org.eclipse.core.expressions.PropertyTester;
 import org.eclipse.jdt.core.IJavaElement;
 
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
+
 public class JavaElementPropertyTester extends PropertyTester {
 
     private static final String PROPERTY_IS_TEST_JAVA_ELEMENT = "isTestJavaElement"; //$NON-NLS-1$
@@ -35,7 +37,7 @@ public class JavaElementPropertyTester extends PropertyTester {
         IJavaElement resource = (IJavaElement) receiver;
         if (PROPERTY_IS_TEST_JAVA_ELEMENT.equals(property)) {
             String path = resource.getPath().toString();
-            return path.contains("/src/test/java");
+            return path.contains(BazelPathHelper.osSeps("/src/test/java")); // $SLASH_OK
         }
         return false;
     }

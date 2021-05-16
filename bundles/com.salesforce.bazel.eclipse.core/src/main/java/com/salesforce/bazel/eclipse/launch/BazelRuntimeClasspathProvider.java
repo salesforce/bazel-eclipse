@@ -47,6 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -71,7 +72,7 @@ import com.salesforce.bazel.sdk.util.BazelPathHelper;
 /**
  * Provide the runtime classpath for JUnit tests. These are obtained from the test rule's generated param files that
  * list the exact order of jars that the bazel test runner uses.
- * 
+ *
  * @author Blaine Buxton
  *
  */
@@ -85,7 +86,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
 
     private static final Bundle BUNDLE = FrameworkUtil.getBundle(BazelRuntimeClasspathProvider.class);
 
-    // computeUnresolvedClassPathEntries() is called multiple times while trying to run a single test, 
+    // computeUnresolvedClassPathEntries() is called multiple times while trying to run a single test,
     // we need this variable to keep track of when to open the error dialog
     public static AtomicBoolean canOpenErrorDialog = new AtomicBoolean(true);
 
@@ -123,7 +124,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
 
     /**
      * Return the classpath entries needed to run the test
-     * 
+     *
      * @param configuration
      * @param isSource
      *            - calculate binary or source entries
@@ -151,7 +152,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
 
         for (String eachTarget : targets.getConfiguredTargets()) {
 
-            if (testClassName == null || testClassName.equals("")) {
+            if ((testClassName == null) || testClassName.equals("")) {
                 String query = "tests(" + eachTarget + ")";
                 List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
                 File bazelBinDir = BazelPluginActivator.getBazelWorkspace().getBazelBinDirectory();
@@ -168,10 +169,11 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                                 if (canOpenErrorDialog.get()) {
                                     canOpenErrorDialog.set(false);
                                     Display.getDefault().syncExec(new Runnable() {
+                                        @Override
                                         public void run() {
                                             MessageDialog.openError(Display.getDefault().getActiveShell(),
                                                 "Unknown Target",
-                                                "One or all of the tests trying to be executed are not part of a Bazel java_test target");
+                                                    "One or all of the tests trying to be executed are not part of a Bazel java_test target");
                                         }
                                     });
                                 }
@@ -191,8 +193,8 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
             try {
                 jarPaths = getPathsToJars(paramsFile);
             } catch (IOException e) {
-                throw new CoreException(new Status(Status.ERROR, BUNDLE.getSymbolicName(),
-                        "Error parsing " + paramsFile.getAbsolutePath(), e));
+                throw new CoreException(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(),
+                    "Error parsing " + paramsFile.getAbsolutePath(), e));
             }
             for (String rawPath : jarPaths) {
                 String canonicalPath = BazelPathHelper.getCanonicalPathStringSafely(new File(base, rawPath));
@@ -218,7 +220,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
     /**
      * This needs to be re-implemented - the path is hardcoded. It should be path of the test rule TODO - Remove
      * hardcoded src/test/java
-     * 
+     *
      * @param project
      * @param paramsName
      * @param target
@@ -230,20 +232,22 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
         String targetPath = target.split(":")[0];
         // testJar for bazel's iterative test rules
         File bazelBinDir = BazelPluginActivator.getBazelWorkspace().getBazelBinDirectory();
-        String paramsName = className.replace('.', '/') + suffix;
+        String paramsName = className.replace('.', File.separatorChar) + suffix;
 
-        File paramFile = new File(new File(new File(bazelBinDir, targetPath), "src/test/java"), paramsName);
+        File paramFile =
+                new File(new File(new File(bazelBinDir, targetPath), BazelPathHelper.osSeps("src/test/java")), // $SLASH_OK
+                    paramsName);
         if (paramFile.exists()) {
             paramFiles.add(paramFile);
         } else {
             // testJar for single test rule
-            // test rules where testName is not the same as testClass 
+            // test rules where testName is not the same as testClass
             String query = "attr(test_class, " + className + "$, " + target + ")";
             BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
             List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
             for (String label : labels) {
                 paramFile = new File(new File(bazelBinDir, targetPath),
-                        label.substring(label.lastIndexOf(":") + 1) + suffix);
+                    label.substring(label.lastIndexOf(":") + 1) + suffix);
                 paramFiles.add(paramFile);
             }
         }
@@ -252,7 +256,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
 
     /**
      * Parse the jars from the given params file
-     * 
+     *
      * @param paramsFile
      * @return
      * @throws IOException
@@ -265,7 +269,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
 
     /**
      * Gets the paths from lines from scanner
-     * 
+     *
      * @param scanner
      * @return
      */
@@ -296,7 +300,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
 
     /**
      * Add the classpath providers to the configuration
-     * 
+     *
      * @param wc
      */
     public static void enable(ILaunchConfigurationWorkingCopy wc) {
@@ -306,7 +310,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
 
     /**
      * Add the classpath providers to the configuration
-     * 
+     *
      * @param config
      * @throws CoreException
      */

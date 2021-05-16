@@ -177,7 +177,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         configurationManager = configMgr;
         externalJarRuleManager = externalJarRuleMgr;
 
-        // Get the bazel executable path from the settings, defaults to /usr/local/bin/bazel
+        // Get the bazel executable path from the settings
         String bazelPath = configurationManager.getBazelExecutablePath();
         File bazelPathFile = new File(bazelPath);
 

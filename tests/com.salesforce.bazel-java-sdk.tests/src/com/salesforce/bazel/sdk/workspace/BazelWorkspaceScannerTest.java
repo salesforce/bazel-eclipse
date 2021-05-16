@@ -44,8 +44,8 @@ public class BazelWorkspaceScannerTest {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
         File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
 
-        //        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws");
-        //        File tmpOutputBase = new File("/tmp/bazeltest/bin");
+        //        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws"); // $SLASH_OK sample code
+        //        File tmpOutputBase = new File("/tmp/bazeltest/bin"); // $SLASH_OK sample code
 
         TestBazelWorkspaceDescriptor descriptor =
                 new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(5).genrulePackages(2);

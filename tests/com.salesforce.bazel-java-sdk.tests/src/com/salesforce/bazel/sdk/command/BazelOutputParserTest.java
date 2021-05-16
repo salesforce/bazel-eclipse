@@ -44,6 +44,8 @@ import com.salesforce.bazel.sdk.model.BazelProblem;
 
 public class BazelOutputParserTest {
 
+    // TODO windows
+
     @Test
     public void testSingleJavaError() {
         BazelOutputParser p = new BazelOutputParser();

@@ -48,7 +48,7 @@ public class MockTestCommand extends MockCommand {
             // by default, isValidBazelTarget() will throw an exception if the package is missing, but the test may configure it to return false instead
             errorLines = Arrays.asList(new String[] { "ERROR: no such package '" + target
                     + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.",
-                    "- /fake/path/" + target });
+                    "- /fake/path/" + target }); // $SLASH_OK: bazel path
             return;
         }
 

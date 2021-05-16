@@ -318,12 +318,12 @@ public class BazelPackageInfo implements BazelPackageLocation {
         String[] pathElements = relativeWorkspacePath.split(File.separator);
 
         // assemble the path elements into a proper Bazel package name
-        String name = "/";
+        String name = "/"; // $SLASH_OK: bazel path
         for (String e : pathElements) {
             if (e.isEmpty()) {
                 continue;
             }
-            name = name + "/" + e;
+            name = name + "/" + e; // $SLASH_OK: bazel path
         }
 
         // set computedPackageName only when done computing it, to avoid threading issues
@@ -344,7 +344,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
         if (computedPackageNameLastSegment != null) {
             return computedPackageNameLastSegment;
         }
-        int lastSlash = computedPackageName.lastIndexOf("/");
+        int lastSlash = computedPackageName.lastIndexOf("/"); // $SLASH_OK: bazel path
         if (lastSlash == -1) {
             computedPackageNameLastSegment = "";
             return computedPackageNameLastSegment;
