@@ -116,7 +116,7 @@ You can set breakpoints in the plugin code as needed.
 The Bazel Eclipse Feature uses Maven as its command line build system.
 
 ```
-mvn clean package
+mvn clean verify
 ```
 
 If you see any errors or warnings, check the [dev issues page](dev_issues.md) for help.
@@ -127,10 +127,10 @@ Logging has been simplified for plugin development and [instructions](logging.md
 ### Precheckin Procedure
 
 
-1. Run the tests via the Bazel build before submitting a PR, as there is no CI system to catch a mistake. ```mvn clean package```
+1. Run the tests via the Bazel build before submitting a PR, as there is no CI system to catch a mistake. ```mvn clean verify```
 2. Make sure the feature builds correctly from the Eclipse SDK
 3. Run the feature from the Eclipse SDK (*Run* -> *Run As* -> *Inner Eclipse*). Import a Bazel workspace to test it.
-4. If you are making big changes, try also to run the feature from a non-SDK install. You will do this by installing the feature updatesite zip file. See the *Testing with a Plain Eclipse Install* section below. Import a Bazel workspace to test it.
+4. If you are making big changes, please also test the feature from a non-SDK install. You will do this by installing the feature updatesite zip file. See the [Releasing Bazel Eclipse](release.md) document for more details.
 
 ### CI
 
@@ -138,11 +138,5 @@ We use [GitHub Actions](https://github.com/salesforce/bazel-eclipse/actions) for
 
 ### Releasing the Feature
 
-You will do most of your development and testing from the Eclipse SDK.
-But you will want to test the feature from a regular Eclipse from time to time.
-Some issues only appear when the feature is installed from the update site.
-
-Eclipse features are released to the public via *update sites*.
-Normally these are hosted on a web server somewhere.
-But for convenience you can also build and install an update site zip file (aka an Eclipse feature archive).
-This can be found locally in this location: *releng/p2repository/target/p2repository.eclipse-repository-VERSION.zip*
+We have a dedicated document that explains the release process:
+- [Releasing Bazel Eclipse](release.md)
