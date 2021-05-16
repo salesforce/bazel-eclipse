@@ -24,7 +24,7 @@ It's maintained in the [releng/target-platform](../../releng/target-platform) pr
 You need to open the *target-platform.target* file and set it as the *Active Target Platform* (link in upper right).
 Once this is done, the development environment is ready.
 
-Note, there are two targewt-platform files: *target-platforms.target* and *target-platforms.tpd*.
+Note, there are two target-platform files: *target-platforms.target* and *target-platforms.tpd*.
 The *target-platforms.target* file is the XML file used by Eclipse PDE and Tycho.
 The *target-platforms.tpd* file is a convenience file with its own DSL (domain specific language) that saves us from writing XML and provides a content assist.
 Only the *target-platforms.tpd* file should ever be modified.
@@ -77,3 +77,8 @@ Our rule of thumb is:
  Because we do not use *Import-Package* between our plug-ins we do not set versions on exported packages.
  If you believe we should, please raise an issue.
  However, we do not expect anyone to provide alternate implementations of our packages.
+
+### Release the Feature
+
+We have a dedicated document that explains the release process:
+- [Releasing Bazel Eclipse](release.md)
