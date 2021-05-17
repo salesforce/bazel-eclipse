@@ -28,7 +28,18 @@ The **2.x** release line will work towards adding Bazel specific features to Ecl
 
 ## Using the Feature
 
-For detailed installation and setup instructions, see this page:
+**Quick Installation**
+
+Drag the _Install_ button and drop on your running Eclipse IDE and search for _Bazel_.
+It is that easy!
+
+<a href="http://marketplace.eclipse.org/marketplace-client-intro?mpc_install=5403450" class="drag" title="Drag to your running Eclipse workspace.">
+  <img style="width:80px;" typeof="foaf:Image" class="img-responsive" src="https://marketplace.eclipse.org/sites/all/themes/solstice/public/images/marketplace/btn-install.svg" alt="Drag to your running Eclipse workspace." />
+</a>
+
+**Detailed Installation and User's Guides**
+
+For detailed manual installation and setup instructions, and the User's Guide, see these pages:
 
 - [Installing Eclipse and the Bazel Eclipse Feature](docs/install.md)
 - [Bazel Eclipse Feature User's Guide](docs/using_the_feature.md)
