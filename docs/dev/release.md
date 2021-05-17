@@ -118,6 +118,13 @@ git tag 1.3.1.updatesite
 git push origin 1.3.1.updatesite
 ```
 
+### Update the Eclipse Marketplace Record
+
+For each release, we need to add an entry to our Marketplace record.
+The BEF record is here, which will have an _Edit_ button if you are entitled:
+
+- [BEF in the Eclipse Marketplace](https://marketplace.eclipse.org/content/bazel-eclipse-feature)
+
 ## Release Implementation
 
 The release workflow is defined using GitHub Actions.
