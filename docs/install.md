@@ -48,10 +48,20 @@ Choose a version of Bazel that is at least as high as that check.
 
 ### Installing the Bazel Eclipse feature into Eclipse
 
-First, understand what releases of BEF are available, which is [covered on this page](releases.md).
-Next, follow these steps to install it in your Eclipse IDE.
+**Quick Installation**
 
-**Install the Bazel Eclipse feature into Eclipse:**
+Drag the _Install_ button and drop on your running Eclipse IDE, and search for _Bazel_.
+It is that easy!
+
+<a href="http://marketplace.eclipse.org/marketplace-client-intro?mpc_install=5403450" class="drag" title="Drag to your running Eclipse workspace.">
+  <img style="width:80px;" typeof="foaf:Image" class="img-responsive" src="https://marketplace.eclipse.org/sites/all/themes/solstice/public/images/marketplace/btn-install.svg" alt="Drag to your running Eclipse workspace." />
+</a>
+
+**Manually Install the Bazel Eclipse feature into Eclipse:**
+
+First, understand what releases of BEF are available, which is [covered on the Releases page](releases.md).
+If you want to install the latest version of BEF, follow these steps to install it in your Eclipse IDE using the update site:
+
 - Start Eclipse.
 - In Eclipse, go to *Help* -> *Install New Software*
 - Click the *Add* button
@@ -60,6 +70,8 @@ Next, follow these steps to install it in your Eclipse IDE.
 - Check the box next to the *Bazel Eclipse* item, then hit *Next*
 - Click *Next/Agree/Finish* until it completes.
 - Restart Eclipse
+
+Otherwise, you can install older versions of BEF using the archive zip files that are listed [on the Releases page](releases.md).
 
 **To verify that it is installed:**
 - Start Eclipse
