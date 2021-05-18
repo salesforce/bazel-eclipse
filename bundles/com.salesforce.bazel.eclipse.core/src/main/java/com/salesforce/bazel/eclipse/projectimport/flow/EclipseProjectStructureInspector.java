@@ -71,7 +71,7 @@ class EclipseProjectStructureInspector {
                 + "main" + File.separator + "java";
         File mainSrcDir = new File(bazelPackageRootDirectory + File.separator + mainSrcRelPath);
         if (mainSrcDir.exists()) {
-            this.packageSourceCodeFSPaths.add(mainSrcRelPath);
+            packageSourceCodeFSPaths.add(mainSrcRelPath);
             foundSourceCodePaths = true;
         }
         // MAIN RESOURCES
@@ -79,7 +79,7 @@ class EclipseProjectStructureInspector {
                 + File.separator + "main" + File.separator + "resources";
         File mainResourcesDir = new File(bazelPackageRootDirectory + File.separator + mainResourcesRelPath);
         if (mainResourcesDir.exists()) {
-            this.packageSourceCodeFSPaths.add(mainResourcesRelPath);
+            packageSourceCodeFSPaths.add(mainResourcesRelPath);
             foundSourceCodePaths = true;
         }
 
@@ -88,7 +88,7 @@ class EclipseProjectStructureInspector {
                 + "test" + File.separator + "java";
         File testSrcDir = new File(bazelPackageRootDirectory + File.separator + testSrcRelPath);
         if (testSrcDir.exists()) {
-            this.packageSourceCodeFSPaths.add(testSrcRelPath);
+            packageSourceCodeFSPaths.add(testSrcRelPath);
             foundSourceCodePaths = true;
         }
         // TEST RESOURCES
@@ -96,19 +96,20 @@ class EclipseProjectStructureInspector {
                 + File.separator + "test" + File.separator + "resources";
         File testResourcesDir = new File(bazelPackageRootDirectory + File.separator + testResourcesRelPath);
         if (testResourcesDir.exists()) {
-            this.packageSourceCodeFSPaths.add(testResourcesRelPath);
+            packageSourceCodeFSPaths.add(testResourcesRelPath);
             foundSourceCodePaths = true;
         }
 
         // proto files are generally in the toplevel folder, lets check for those now
         if (packageDirectory.list(new BEFSourceCodeFilter()).length > 0) {
-            this.packageSourceCodeFSPaths.add(packageNode.getBazelPackageFSRelativePath());
+            packageSourceCodeFSPaths.add(packageNode.getBazelPackageFSRelativePath());
         }
 
         if (foundSourceCodePaths) {
             String packagePath = packageNode.getBazelPackageFSRelativePath();
+            String labelPath = packagePath.replace("\\", "/"); // convert Windows style paths to Bazel label paths
             for (String target : BazelConstants.DEFAULT_PACKAGE_TARGETS) {
-                this.bazelTargets.add(new BazelLabel(packagePath, target));
+                bazelTargets.add(new BazelLabel(labelPath, target));
             }
         }
     }

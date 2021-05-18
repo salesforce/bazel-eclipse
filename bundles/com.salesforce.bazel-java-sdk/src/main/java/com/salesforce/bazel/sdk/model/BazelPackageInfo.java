@@ -90,24 +90,24 @@ public class BazelPackageInfo implements BazelPackageLocation {
         }
         if (!rootDirectory.exists()) {
             throw new IllegalArgumentException("A non-existent path [" + rootDirectory.getAbsolutePath()
-                    + "] was used to construct a BazelPackageInfo.");
+            + "] was used to construct a BazelPackageInfo.");
         }
 
-        this.workspaceRoot = rootDirectory;
-        File workspaceFile = new File(this.workspaceRoot, WORKSPACE_FILENAME);
+        workspaceRoot = rootDirectory;
+        File workspaceFile = new File(workspaceRoot, WORKSPACE_FILENAME);
         if (!workspaceFile.exists()) {
-            workspaceFile = new File(this.workspaceRoot, WORKSPACE_FILENAME_ALT);
+            workspaceFile = new File(workspaceRoot, WORKSPACE_FILENAME_ALT);
             if (!workspaceFile.exists()) {
                 throw new IllegalArgumentException("The path [" + rootDirectory.getAbsolutePath()
-                        + "] does not contain a " + WORKSPACE_FILENAME + " file.");
+                + "] does not contain a " + WORKSPACE_FILENAME + " file.");
             }
         }
 
-        this.parent = null;
-        this.isWorkspaceRoot = true;
-        this.workspaceRootNode = this;
-        this.relativeWorkspacePath = "";
-        this.directory = rootDirectory;
+        parent = null;
+        isWorkspaceRoot = true;
+        workspaceRootNode = this;
+        relativeWorkspacePath = "";
+        directory = rootDirectory;
 
         // compute and cache the package name
         getBazelPackageName();
@@ -125,12 +125,12 @@ public class BazelPackageInfo implements BazelPackageLocation {
      *            separator.
      */
     public BazelPackageInfo(BazelPackageInfo anotherNode, String relativeWorkspacePath) {
-        if (relativeWorkspacePath == null || relativeWorkspacePath.isEmpty()) {
+        if ((relativeWorkspacePath == null) || relativeWorkspacePath.isEmpty()) {
             throw new IllegalArgumentException("An empty path was used to construct a BazelPackageInfo.");
         }
         if (relativeWorkspacePath.startsWith(File.separator)) {
             throw new IllegalArgumentException(
-                    "BazelPackageInfo constructor requires a relative path, got [" + relativeWorkspacePath + "]");
+                "BazelPackageInfo constructor requires a relative path, got [" + relativeWorkspacePath + "]");
         }
         if (relativeWorkspacePath.endsWith(File.separator)) {
             relativeWorkspacePath = relativeWorkspacePath.substring(0, relativeWorkspacePath.length() - 1);
@@ -142,27 +142,27 @@ public class BazelPackageInfo implements BazelPackageLocation {
                     "You must pass a non-null anotherNode to the BazelPackageInfo constructor.");
         }
 
-        this.isWorkspaceRoot = false;
-        this.workspaceRoot = anotherNode.workspaceRoot;
-        this.workspaceRootNode = anotherNode.workspaceRootNode;
+        isWorkspaceRoot = false;
+        workspaceRoot = anotherNode.workspaceRoot;
+        workspaceRootNode = anotherNode.workspaceRootNode;
 
-        this.directory = new File(this.workspaceRoot, this.relativeWorkspacePath);
-        if (!this.directory.exists()) {
-            throw new IllegalArgumentException("A non-existent path [" + this.directory.getAbsolutePath()
-                    + "] was used to construct a BazelPackageInfo.");
+        directory = new File(workspaceRoot, this.relativeWorkspacePath);
+        if (!directory.exists()) {
+            throw new IllegalArgumentException("A non-existent path [" + directory.getAbsolutePath()
+            + "] was used to construct a BazelPackageInfo.");
         }
 
-        File workspaceFile = new File(this.directory, WORKSPACE_FILENAME);
+        File workspaceFile = new File(directory, WORKSPACE_FILENAME);
         if (workspaceFile.exists()) {
             throw new IllegalArgumentException(
-                    "The path [" + this.directory.getAbsolutePath() + "] contains a " + WORKSPACE_FILENAME
-                            + " file. Nested workspaces are not supported by BazelPackageInfo at this time");
+                "The path [" + directory.getAbsolutePath() + "] contains a " + WORKSPACE_FILENAME
+                + " file. Nested workspaces are not supported by BazelPackageInfo at this time");
         }
-        workspaceFile = new File(this.directory, WORKSPACE_FILENAME_ALT);
+        workspaceFile = new File(directory, WORKSPACE_FILENAME_ALT);
         if (workspaceFile.exists()) {
             throw new IllegalArgumentException(
-                    "The path [" + this.directory.getAbsolutePath() + "] contains a " + WORKSPACE_FILENAME_ALT
-                            + " file. Nested workspaces are not supported by BazelPackageInfo at this time");
+                "The path [" + directory.getAbsolutePath() + "] contains a " + WORKSPACE_FILENAME_ALT
+                + " file. Nested workspaces are not supported by BazelPackageInfo at this time");
         }
 
         // compute and cache the package name
@@ -171,17 +171,17 @@ public class BazelPackageInfo implements BazelPackageLocation {
         // check if this is a dupe node
         if (findByPackage(packageName) != null) {
             throw new IllegalArgumentException(
-                    "The package [" + packageName + "] already exists in the BazelPackageInfo tree.");
+                "The package [" + packageName + "] already exists in the BazelPackageInfo tree.");
 
         }
 
         // we passed all validation, find and hook us up to the right parent
         // find the parent, if one exists that is more narrow than the root
-        this.parent = findBestParent(this.workspaceRootNode);
-        if (this.parent == null) {
-            this.parent = this.workspaceRootNode;
+        parent = findBestParent(workspaceRootNode);
+        if (parent == null) {
+            parent = workspaceRootNode;
         }
-        this.parent.childPackages.put(this.relativeWorkspacePath, this);
+        parent.childPackages.put(this.relativeWorkspacePath, this);
     }
 
     /**
@@ -195,7 +195,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
      * Get the child packages (if any)
      */
     public Collection<BazelPackageInfo> getChildPackageInfos() {
-        return this.childPackages.values();
+        return childPackages.values();
     }
 
     /**
@@ -205,7 +205,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
      */
     @Override
     public boolean isWorkspaceRoot() {
-        return this.isWorkspaceRoot;
+        return isWorkspaceRoot;
     }
 
     /**
@@ -216,12 +216,12 @@ public class BazelPackageInfo implements BazelPackageLocation {
     @Override
     public File getWorkspaceRootDirectory() {
         // now is a good time to check that the root directory is still there
-        if (!this.workspaceRoot.exists()) {
-            throw new IllegalStateException("The workspace root directory [" + this.workspaceRoot.getAbsolutePath()
-                    + "] has been deleted or moved.");
+        if (!workspaceRoot.exists()) {
+            throw new IllegalStateException("The workspace root directory [" + workspaceRoot.getAbsolutePath()
+            + "] has been deleted or moved.");
         }
 
-        return this.workspaceRoot;
+        return workspaceRoot;
     }
 
     /**
@@ -231,15 +231,15 @@ public class BazelPackageInfo implements BazelPackageLocation {
      */
     public File getWorkspaceFile() {
         // now is a good time to check that the root directory is still there
-        if (!this.workspaceRoot.exists()) {
-            throw new IllegalStateException("The workspace root directory [" + this.workspaceRoot.getAbsolutePath()
-                    + "] has been deleted or moved.");
+        if (!workspaceRoot.exists()) {
+            throw new IllegalStateException("The workspace root directory [" + workspaceRoot.getAbsolutePath()
+            + "] has been deleted or moved.");
         }
-        File workspaceFile = new File(this.workspaceRoot, WORKSPACE_FILENAME);
+        File workspaceFile = new File(workspaceRoot, WORKSPACE_FILENAME);
         // and that the WORKSPACE file is still there
         if (!workspaceFile.exists()) {
             throw new IllegalStateException(
-                    "The WORKSPACE file [" + workspaceFile.getAbsolutePath() + "] has been deleted or moved.");
+                "The WORKSPACE file [" + workspaceFile.getAbsolutePath() + "] has been deleted or moved.");
         }
 
         return workspaceFile;
@@ -315,7 +315,11 @@ public class BazelPackageInfo implements BazelPackageLocation {
         }
 
         // split the file system path by OS path separator
-        String[] pathElements = relativeWorkspacePath.split(File.separator);
+        String regex = "/";
+        if (File.separator.equals("\\")) {
+            regex = "\\\\";
+        }
+        String[] pathElements = relativeWorkspacePath.split(regex);
 
         // assemble the path elements into a proper Bazel package name
         String name = "/"; // $SLASH_OK: bazel path
@@ -372,15 +376,15 @@ public class BazelPackageInfo implements BazelPackageLocation {
         }
         if (!bazelPackagePath.startsWith("//")) {
             throw new IllegalArgumentException(
-                    "You must pass a Bazel path (e.g. //projects/libs/apple) to BazelPackageInfo.findByPackage(), got ["
-                            + bazelPackagePath + "]");
+                "You must pass a Bazel path (e.g. //projects/libs/apple) to BazelPackageInfo.findByPackage(), got ["
+                        + bazelPackagePath + "]");
         }
 
         if ("//...".equals(bazelPackagePath)) {
             // special case
-            return this.workspaceRootNode;
+            return workspaceRootNode;
         }
-        return findByPackageRecur(this.workspaceRootNode, bazelPackagePath);
+        return findByPackageRecur(workspaceRootNode, bazelPackagePath);
     }
 
     private BazelPackageInfo findByPackageRecur(BazelPackageInfo currentNode, String bazelPackagePath) {
@@ -417,10 +421,10 @@ public class BazelPackageInfo implements BazelPackageLocation {
     }
 
     public void gatherChildrenRecur(List<BazelPackageLocation> gatherList) {
-        if (!this.isWorkspaceRoot()) {
+        if (!isWorkspaceRoot()) {
             gatherList.add(this);
         }
-        for (BazelPackageLocation child : this.childPackages.values()) {
+        for (BazelPackageLocation child : childPackages.values()) {
             BazelPackageInfo childInfo = (BazelPackageInfo) child;
             childInfo.gatherChildrenRecur(gatherList);
         }
@@ -430,24 +434,29 @@ public class BazelPackageInfo implements BazelPackageLocation {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((computedPackageName == null) ? 0 : computedPackageName.hashCode());
+        result = (prime * result) + ((computedPackageName == null) ? 0 : computedPackageName.hashCode());
         return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         BazelPackageInfo other = (BazelPackageInfo) obj;
         if (computedPackageName == null) {
-            if (other.computedPackageName != null)
+            if (other.computedPackageName != null) {
                 return false;
-        } else if (!computedPackageName.equals(other.computedPackageName))
+            }
+        } else if (!computedPackageName.equals(other.computedPackageName)) {
             return false;
+        }
         return true;
     }
 

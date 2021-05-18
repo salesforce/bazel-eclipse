@@ -64,8 +64,10 @@ public class LoadAspectsFlow implements ImportFlow {
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
         List<String> labels = new ArrayList<>();
+        Map<BazelPackageLocation, List<BazelLabel>> map = ctx.getPackageLocationToTargets();
         for (BazelPackageLocation packageLocation : ctx.getSelectedBazelPackages()) {
-            List<BazelLabel> targets = Objects.requireNonNull(ctx.getPackageLocationToTargets().get(packageLocation));
+            List<BazelLabel> targets = map.get(packageLocation);
+            targets = Objects.requireNonNull(targets);
             for (BazelLabel target : targets) {
                 labels.add(target.getLabel());
             }

@@ -39,7 +39,7 @@ import com.salesforce.bazel.sdk.workspace.test.TestOptions;
  * Factory for creating test environments for Bazel Command functional tests. Produces a real
  * BazelWorkspaceCommandRunner with collaborators, with mock command execution underneath it all. Logically, this layer
  * replaces the real Bazel executable with command simulations.
- * 
+ *
  * @author plaird
  */
 public class TestBazelCommandEnvironmentFactory {
@@ -84,27 +84,27 @@ public class TestBazelCommandEnvironmentFactory {
 
         File execDir = new File(tempDir, "executable");
         execDir.mkdir();
-        this.bazelExecutable = new MockBazelExecutable(execDir);
+        bazelExecutable = new MockBazelExecutable(execDir);
 
         if (testOptions == null) {
             testOptions = new TestOptions();
         }
 
-        this.bazelAspectLocation = new MockBazelAspectLocation(tempDir, "test-aspect-label");
-        this.commandConsole = new MockCommandConsole();
-        this.commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace, testOptions);
+        bazelAspectLocation = new MockBazelAspectLocation(tempDir, "test-aspect-label");
+        commandConsole = new MockCommandConsole();
+        commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace, testOptions);
 
         BazelCommandManager bazelCommandManager = new BazelCommandManager(bazelAspectLocation, commandBuilder,
-                commandConsole, bazelExecutable.bazelExecutableFile);
+            commandConsole, bazelExecutable.bazelExecutableFile);
         bazelCommandManager.setBazelExecutablePath(bazelExecutable.bazelExecutableFile.getAbsolutePath());
 
+        OperatingEnvironmentDetectionStrategy osStrategy = Mockito.mock(OperatingEnvironmentDetectionStrategy.class);
         BazelWorkspace bazelWorkspace =
-                new BazelWorkspace("test", testWorkspace.workspaceDescriptor.workspaceRootDirectory,
-                        Mockito.mock(OperatingEnvironmentDetectionStrategy.class));
+                new BazelWorkspace("test", testWorkspace.workspaceDescriptor.workspaceRootDirectory, osStrategy);
         bazelWorkspace.setBazelWorkspaceMetadataStrategy(bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace));
 
-        this.globalCommandRunner = bazelCommandManager.getGlobalCommandRunner();
-        this.bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
+        globalCommandRunner = bazelCommandManager.getGlobalCommandRunner();
+        bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
     }
 
 }

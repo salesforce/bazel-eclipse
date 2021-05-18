@@ -41,11 +41,13 @@ public class BazelWorkspaceScannerTest {
 
     @Test
     public void testHappyPath() throws Exception {
-        File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
-        File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
+        //File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
+        //File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
 
         //        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws"); // $SLASH_OK sample code
         //        File tmpOutputBase = new File("/tmp/bazeltest/bin"); // $SLASH_OK sample code
+        File tmpWorkspaceDir = new File("C:\\Users\\coloradolaird\\Desktop\\dev\\tools\\temp\\ws"); // $SLASH_OK sample code
+        File tmpOutputBase = new File("C:\\Users\\coloradolaird\\Desktop\\dev\\tools\\temp\\bin"); // $SLASH_OK sample code
 
         TestBazelWorkspaceDescriptor descriptor =
                 new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(5).genrulePackages(2);

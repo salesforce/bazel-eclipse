@@ -51,8 +51,14 @@ public class MockCommandSimulatedOutput {
             }
             String pattern = matcher.matchArgRegex;
             String arg = commandArgs.get(matcher.matchArgIndex);
-            if (!arg.matches(pattern)) {
-                return false;
+            try {
+                if (!arg.matches(pattern)) {
+                    return false;
+                }
+            } catch (Exception anyE) {
+                // bug in the test framework
+                anyE.printStackTrace();
+                throw anyE;
             }
         }
         matchesRemaining--;
