@@ -63,16 +63,22 @@ public class BazelLabel {
         if (label == null) {
             throw new IllegalArgumentException("label cannot be null");
         }
+        if (label.contains("\\")) {
+            // the caller is passing us a label with \ as separators, probably a bug due to Windows paths
+            throw new IllegalArgumentException(
+                    "Label [" + label + "] has Windows style path delimeters. Bazel paths always have / delimiters");
+        }
+
         if (label.startsWith("@")) {
             int i = label.indexOf("//");
-            this.repositoryName = label.substring(1, i);
+            repositoryName = label.substring(1, i);
             label = label.substring(i);
         } else {
-            this.repositoryName = null;
+            repositoryName = null;
         }
         label = sanitizeLabel(label);
-        this.localLabelPart = label;
-        this.fullLabel = getFullLabel(this.repositoryName, this.localLabelPart);
+        localLabelPart = label;
+        fullLabel = getFullLabel(repositoryName, localLabelPart);
     }
 
     /**
@@ -111,7 +117,7 @@ public class BazelLabel {
         if (!isConcrete()) {
             return false;
         }
-        int i = this.localLabelPart.lastIndexOf(":");
+        int i = localLabelPart.lastIndexOf(":");
         return i == -1;
     }
 
@@ -134,7 +140,7 @@ public class BazelLabel {
      * @return the package path of this label
      */
     public String getPackagePath() {
-        String packagePath = this.localLabelPart;
+        String packagePath = localLabelPart;
         int i = packagePath.lastIndexOf("...");
         if (i != -1) {
             packagePath = packagePath.substring(0, i);
@@ -142,7 +148,7 @@ public class BazelLabel {
                 packagePath = packagePath.substring(0, packagePath.length() - 1);
             }
         } else {
-            i = this.localLabelPart.lastIndexOf(":");
+            i = localLabelPart.lastIndexOf(":");
             if (i != -1) {
                 packagePath = packagePath.substring(0, i);
             }
@@ -227,7 +233,7 @@ public class BazelLabel {
      */
     public BazelLabel toPackageWildcardLabel() {
         if (!isPackageDefault()) {
-            throw new IllegalStateException("label " + this.localLabelPart + " is not package default");
+            throw new IllegalStateException("label " + localLabelPart + " is not package default");
         }
         return withRepositoryNameAndLocalLabelPart(repositoryName, getPackagePath() + ":*");
     }
@@ -251,7 +257,7 @@ public class BazelLabel {
 
     @Override
     public String toString() {
-        return this.fullLabel;
+        return fullLabel;
     }
 
     private static BazelLabel withRepositoryNameAndLocalLabelPart(String repositoryName, String localLabelPart) {
