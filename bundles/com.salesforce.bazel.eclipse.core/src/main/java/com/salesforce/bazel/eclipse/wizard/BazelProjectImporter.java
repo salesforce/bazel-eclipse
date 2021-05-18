@@ -24,7 +24,8 @@ public class BazelProjectImporter {
         IRunnableWithProgress op = new IRunnableWithProgress() {
             @Override
             public void run(IProgressMonitor monitor) {
-                ProjectImporterFactory importerFactory = new ProjectImporterFactory(workspaceRootProject, bazelPackagesToImport);
+                ProjectImporterFactory importerFactory =
+                        new ProjectImporterFactory(workspaceRootProject, bazelPackagesToImport);
                 ProjectImporter projectImporter = importerFactory.build();
                 try {
                     projectImporter.run(monitor);
@@ -51,9 +52,9 @@ public class BazelProjectImporter {
                 String exceptionMessage = ex.getMessage();
                 if (exceptionMessage == null || exceptionMessage.isEmpty()) {
                     // Exception does not have a message, which usually means it is an NPE.
-                    exceptionMessage = "An exception of type ["+ex.getClass().getName()+
-                            "] was thrown, but no additional message details are available. "+
-                            "Check the console window where you launched Eclipse, or Eclipse log for the full stack trace.";
+                    exceptionMessage = "An exception of type [" + ex.getClass().getName()
+                            + "] was thrown, but no additional message details are available. "
+                            + "Check the console window where you launched Eclipse, or Eclipse log for the full stack trace.";
                 }
                 MessageDialog.openError(new Shell(), title, exceptionMessage);
             }

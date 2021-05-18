@@ -30,5 +30,4 @@ public final class BazelLabelUtil {
         throw new IllegalArgumentException("Not meant to be instantiated");
     }
 
-
 }

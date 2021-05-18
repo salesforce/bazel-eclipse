@@ -218,9 +218,9 @@ public class BazelDependencyGraph {
 
     /**
      * Depth first search to determine if the passed <i>possibleDependency</i> is a direct or transitive dependency of
-     * the passed <i>label</i>. This version of the method allows the caller to pass a cache object (opaque). If you will
-     * call isDependency many times, with repetitive crawls of the dependency graph, the cache will be used so we only
-     * compute areas of the graph once.
+     * the passed <i>label</i>. This version of the method allows the caller to pass a cache object (opaque). If you
+     * will call isDependency many times, with repetitive crawls of the dependency graph, the cache will be used so we
+     * only compute areas of the graph once.
      *
      * @param label
      * @param possibleDependency
@@ -231,7 +231,8 @@ public class BazelDependencyGraph {
         return isDep;
     }
 
-    private boolean isDependencyRecur(String label, String possibleDependency, Map<String, Boolean> depCache, Set<String> processedLabels) {
+    private boolean isDependencyRecur(String label, String possibleDependency, Map<String, Boolean> depCache,
+            Set<String> processedLabels) {
         String cacheKey = null;
         if (depCache != null) {
             cacheKey = label + "~" + possibleDependency;
@@ -242,11 +243,11 @@ public class BazelDependencyGraph {
         }
 
         if (processedLabels.contains(label)) {
-            LOG.error("Breaking out of infinite loop while computing project import order for label " + label + "(issue #197)");
+            LOG.error("Breaking out of infinite loop while computing project import order for label " + label
+                    + "(issue #197)");
             return dependencyResponse(false, depCache, cacheKey);
         }
         processedLabels.add(label);
-
 
         Set<String> dependencies = this.dependsOnMap.get(label);
 
@@ -254,7 +255,6 @@ public class BazelDependencyGraph {
             // this could be an external label, like @somejar, in which case we will not have any dep information
             return dependencyResponse(false, depCache, cacheKey);
         }
-
 
         for (String dependency : dependencies) {
             if (dependency.equals(possibleDependency)) {

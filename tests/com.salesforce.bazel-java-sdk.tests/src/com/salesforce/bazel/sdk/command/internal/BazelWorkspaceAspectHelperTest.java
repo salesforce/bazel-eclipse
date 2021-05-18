@@ -60,7 +60,8 @@ public class BazelWorkspaceAspectHelperTest {
 
         // retrieve the aspects for the target
         List<BazelLabel> targets = Collections.singletonList(label);
-        Map<BazelLabel, Set<AspectTargetInfo>> aspectMap = aspectHelper.getAspectTargetInfos(targets, "testAspectLoading");
+        Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
+                aspectHelper.getAspectTargetInfos(targets, "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
         assertEquals(4, aspectMap.get(label).size());
 

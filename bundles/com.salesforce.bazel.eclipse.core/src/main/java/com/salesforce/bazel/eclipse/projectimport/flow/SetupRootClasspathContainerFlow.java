@@ -53,9 +53,9 @@ public class SetupRootClasspathContainerFlow implements ImportFlow {
     @Override
     public void run(ImportContext ctx, SubMonitor progressSubMonitor) throws CoreException {
         IClasspathEntry cpe = BazelPluginActivator.getJavaCoreHelper()
-            .newContainerEntry(new Path(BazelGlobalSearchClasspathContainer.CONTAINER_NAME));
+                .newContainerEntry(new Path(BazelGlobalSearchClasspathContainer.CONTAINER_NAME));
         IProject rootProject = ctx.getRootProject();
         IJavaProject javaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(rootProject);
-        javaProject.setRawClasspath(new IClasspathEntry[]{cpe}, null);
+        javaProject.setRawClasspath(new IClasspathEntry[] { cpe }, null);
     }
 }

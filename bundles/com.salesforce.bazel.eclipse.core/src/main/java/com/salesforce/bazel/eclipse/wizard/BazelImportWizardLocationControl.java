@@ -1,17 +1,13 @@
 /*******************************************************************************
  * Copyright (c) 2008-2018 Sonatype, Inc. and others.
  *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License 2.0
- * which accompanies this distribution, and is available at
- * https://www.eclipse.org/legal/epl-2.0/
+ * All rights reserved. This program and the accompanying materials are made available under the terms of the Eclipse
+ * Public License 2.0 which accompanies this distribution, and is available at https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
  *
- * Contributors:
- *      Sonatype, Inc. - initial API and implementation
- *      Red Hat, Inc. - refactored lifecycle mapping discovery
- *      Salesforce - Adapted for Bazel Eclipse
+ * Contributors: Sonatype, Inc. - initial API and implementation Red Hat, Inc. - refactored lifecycle mapping discovery
+ * Salesforce - Adapted for Bazel Eclipse
  *******************************************************************************/
 
 // adapted from M2Eclipse org.eclipse.m2e.core.ui.internal.wizards.MavenImportWizardPage
@@ -49,8 +45,8 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 
 /**
- * This class encapsulates the two controls above the tree control on the first page of the import wizard.
- * The combo box which holds the chosen file system path, and the Browse button.
+ * This class encapsulates the two controls above the tree control on the first page of the import wizard. The combo box
+ * which holds the chosen file system path, and the Browse button.
  */
 public class BazelImportWizardLocationControl {
 
@@ -81,7 +77,8 @@ public class BazelImportWizardLocationControl {
 
         if (prefs != null) {
             // default response is false if the pref is not set
-            doUnresolveWorkspaceFileSoftLink = !prefs.getBoolean(BazelPreferenceKeys.DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK);
+            doUnresolveWorkspaceFileSoftLink =
+                    !prefs.getBoolean(BazelPreferenceKeys.DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK);
         }
     }
 
@@ -225,7 +222,7 @@ public class BazelImportWizardLocationControl {
             // traverse up in the directory hierarchy, looking for a WORKSPACE file that is a soft link
             // to the one returned by the system Open dialog. We max it out at 5 since it seems unreasonable
             // to go further
-            for (int i=0; i<5; i++) {
+            for (int i = 0; i < 5; i++) {
                 if (!directory.exists() || !directory.canRead()) {
                     return resolvedWorkspaceFile;
                 }
@@ -244,8 +241,9 @@ public class BazelImportWizardLocationControl {
                             // The candidateFile is a soft link to the real WORKSPACE file returned by the Open dialog
                             // This means the candidateFile is probably in the real root directory of the Bazel workspace.
 
-                            System.out.println("WORKSPACE file ["+absPath+"] is a soft link to ["+canonPath+
-                                "]. Setting workspace root as ["+candidateFile.getParentFile().getAbsolutePath()+"]");
+                            System.out.println("WORKSPACE file [" + absPath + "] is a soft link to [" + canonPath
+                                    + "]. Setting workspace root as [" + candidateFile.getParentFile().getAbsolutePath()
+                                    + "]");
                             return candidateFile;
                         }
                     }

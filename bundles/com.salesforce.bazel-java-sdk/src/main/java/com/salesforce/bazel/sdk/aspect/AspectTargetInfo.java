@@ -48,11 +48,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-
-
 /**
- * A parsed version of the JSON file produced by the application of the Bazel aspect.
- * Each target in each package will have such a file.
+ * A parsed version of the JSON file produced by the application of the Bazel aspect. Each target in each package will
+ * have such a file.
  * <p>
  * The JSON document format is like this:
  *
@@ -238,8 +236,8 @@ public final class AspectTargetInfo {
             List<String> sources = jsonToStringArray(object.getJSONArray("sources"));
             String mainClass = object.has("main_class") ? object.getString("main_class") : null;
 
-            info = new AspectTargetInfo(aspectDataFile, jars, generated_jars, build_file_artifact_location, kind,
-                label, deps, sources, mainClass);
+            info = new AspectTargetInfo(aspectDataFile, jars, generated_jars, build_file_artifact_location, kind, label,
+                    deps, sources, mainClass);
         } catch (Exception anyE) {
             //System.err.println("Error parsing Bazel aspect info from file "+aspectDataFile.getAbsolutePath()+". Error: "+anyE.getMessage());
             throw anyE;
@@ -248,8 +246,8 @@ public final class AspectTargetInfo {
     }
 
     AspectTargetInfo(File aspectDataFile, List<AspectOutputJarSet> jars, List<AspectOutputJarSet> generatedJars,
-        String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources,
-        String mainClass) {
+            String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources,
+            String mainClass) {
         this.aspectDataFile = aspectDataFile;
         this.jars = jars;
         this.generatedJars = generatedJars;

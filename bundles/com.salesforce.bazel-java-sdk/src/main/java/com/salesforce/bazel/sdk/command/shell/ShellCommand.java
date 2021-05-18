@@ -72,9 +72,9 @@ public final class ShellCommand implements Command {
 
     private boolean executed = false;
 
-    ShellCommand(CommandConsole console, File directory, List<String> args,
-        Function<String, String> stdoutSelector, Function<String, String> stderrSelector, OutputStream stdout,
-        OutputStream stderr, WorkProgressMonitor progressMonitor, long timeoutMS) {
+    ShellCommand(CommandConsole console, File directory, List<String> args, Function<String, String> stdoutSelector,
+            Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
+            WorkProgressMonitor progressMonitor, long timeoutMS) {
         this.directory = directory;
         this.args = args;
         if (console != null) {
@@ -161,17 +161,17 @@ public final class ShellCommand implements Command {
 
             // report results to console
             long elapsedTimeMS = System.currentTimeMillis() - startTimeMS;
-            System.out.println("Finished command ("+elapsedTimeMS+" millis) (success="+success+"): " + command);
+            System.out.println("Finished command (" + elapsedTimeMS + " millis) (success=" + success + "): " + command);
             System.out.println("  >> stdout:");
             for (String line : stdout.getLines()) {
                 if (!line.trim().isEmpty()) {
-                    System.out.println("  >> "+line);
+                    System.out.println("  >> " + line);
                 }
             }
             System.out.println("  >> stderr:");
             for (String line : stderr.getLines()) {
                 if (!line.trim().isEmpty()) {
-                    System.out.println("  >> "+line);
+                    System.out.println("  >> " + line);
                 }
             }
             System.out.println("");

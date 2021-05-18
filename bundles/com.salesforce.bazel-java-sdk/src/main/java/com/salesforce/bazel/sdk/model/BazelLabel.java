@@ -76,8 +76,8 @@ public class BazelLabel {
     }
 
     /**
-     * Instantiates a BazelLabel instance with the Bazel package path and the label
-     * name specified separately. For example: "a/b/c" and "my-target-name".
+     * Instantiates a BazelLabel instance with the Bazel package path and the label name specified separately. For
+     * example: "a/b/c" and "my-target-name".
      */
     public BazelLabel(String packagePath, String targetName) {
         this(sanitizePackagePath(packagePath) + ":" + sanitizeTargetName(targetName));
@@ -101,7 +101,6 @@ public class BazelLabel {
         return repositoryName;
     }
 
-
     /**
      * If a label omits the target name it refers to and it doesn't use wildcard syntax, it refers to the
      * package-default target. This is that target that has the same name as the Bazel Package it lives in.
@@ -122,9 +121,8 @@ public class BazelLabel {
      * @return true if this instance represents a concrete label, false otherwise
      */
     public boolean isConcrete() {
-        return !(this.localLabelPart.endsWith("*") ||
-               this.localLabelPart.endsWith("...") ||
-               this.localLabelPart.endsWith("all"));
+        return !(this.localLabelPart.endsWith("*") || this.localLabelPart.endsWith("...")
+                || this.localLabelPart.endsWith("all"));
     }
 
     /**
@@ -257,9 +255,8 @@ public class BazelLabel {
     }
 
     private static BazelLabel withRepositoryNameAndLocalLabelPart(String repositoryName, String localLabelPart) {
-        return repositoryName == null ?
-            new BazelLabel(localLabelPart) :
-            new BazelLabel("@" + repositoryName + "//" + localLabelPart);
+        return repositoryName == null ? new BazelLabel(localLabelPart)
+                : new BazelLabel("@" + repositoryName + "//" + localLabelPart);
     }
 
     private static String sanitizePackagePath(String path) {
@@ -311,6 +308,6 @@ public class BazelLabel {
     }
 
     private static String getFullLabel(String repositoryName, String localLabelPart) {
-        return (repositoryName == null ? "" : "@" + repositoryName) +  "//" + localLabelPart;
+        return (repositoryName == null ? "" : "@" + repositoryName) + "//" + localLabelPart;
     }
 }

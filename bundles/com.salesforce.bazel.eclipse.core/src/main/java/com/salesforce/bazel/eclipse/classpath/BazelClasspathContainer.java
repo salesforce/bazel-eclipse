@@ -68,7 +68,7 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
         super(eclipseProject, resourceHelper);
 
         bazelClasspath = new BazelJvmClasspath(this.bazelWorkspace, bazelProjectManager, bazelProject,
-            new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
+                new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
         instances.add(bazelClasspath);
     }
 

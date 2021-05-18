@@ -114,7 +114,6 @@ public class MockResourceHelper implements ResourceHelper {
         return mockProjects.values().toArray(new IProject[] {});
     }
 
-
     @Override
     public boolean isBazelRootProject(IProject project) {
         return false;

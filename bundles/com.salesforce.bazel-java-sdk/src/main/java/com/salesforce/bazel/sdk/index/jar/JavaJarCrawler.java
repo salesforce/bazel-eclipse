@@ -34,8 +34,7 @@ import com.salesforce.bazel.sdk.index.model.ClassIdentifier;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 
 /**
- * Crawler that descends into nested directories of jar files and adds found files
- * to the index.
+ * Crawler that descends into nested directories of jar files and adds found files to the index.
  */
 public class JavaJarCrawler {
 
@@ -56,7 +55,7 @@ public class JavaJarCrawler {
         if (children == null) {
             return;
         }
-        
+
         // some file system layouts put gav information in the path, e.g.
         // ~/.m2/repository/com/acme/blue/1.0.0/blue.jar
         // we want to track the start of the gav info in the path if possible
@@ -72,7 +71,7 @@ public class JavaJarCrawler {
                 gavRoot = path;
             }
         }
-        
+
         for (File child : children) {
             ZipFile zipFile = null;
             try {
@@ -88,8 +87,7 @@ public class JavaJarCrawler {
                         foundJar(gavRoot, child, zipFile, doIndexClasses);
                     }
                 }
-            }
-            catch (Exception anyE) {
+            } catch (Exception anyE) {
                 log("Reading jar file lead to unexpected error", anyE.getMessage(), child.getPath());
                 anyE.printStackTrace();
             } finally {
@@ -104,7 +102,7 @@ public class JavaJarCrawler {
 
     protected void foundJar(File gavRoot, File jarFile, ZipFile zipFile, boolean doIndexClasses) {
         // precisely identify the jar file
-        log("jar:" , jarFile.getName(), null);
+        log("jar:", jarFile.getName(), null);
         JarIdentifier jarId = resolver.resolveJarIdentifier(gavRoot, jarFile, zipFile);
         if (jarId == null) {
             // this jar is not part of the typical dependencies (e.g. it is a jar used in the build toolchain); ignore
@@ -119,7 +117,7 @@ public class JavaJarCrawler {
         if (!doIndexClasses) {
             return;
         }
-        
+
         // add to our index by the enclosed classnames
         Enumeration<? extends ZipEntry> entries = null;
         try {
@@ -146,7 +144,7 @@ public class JavaJarCrawler {
             }
             // convert path / into . to form the legal package name, and trim the .class off the end
             fqClassname = fqClassname.replace("/", ".");
-            fqClassname = fqClassname.substring(0, fqClassname.length()-6);
+            fqClassname = fqClassname.substring(0, fqClassname.length() - 6);
             //System.out.println("Classname: "+fqClassname+" from jar "+jarId.locationIdentifier);
 
             ClassIdentifier classId = new ClassIdentifier(fqClassname);
@@ -159,9 +157,9 @@ public class JavaJarCrawler {
         if (param1 == null) {
             System.err.println(msg);
         } else if (param2 == null) {
-            System.err.println(msg+" ["+param1+"] ");
+            System.err.println(msg + " [" + param1 + "] ");
         } else {
-            System.err.println(msg+" ["+param1+"] ["+param2+"]");
+            System.err.println(msg + " [" + param1 + "] [" + param2 + "]");
         }
     }
 

@@ -33,8 +33,7 @@ import com.salesforce.bazel.sdk.index.model.CodeLocationIdentifier;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
- * Crawler that descends into nested directories of source files and adds found files
- * to the index.
+ * Crawler that descends into nested directories of source files and adds found files to the index.
  */
 public class JavaSourceCrawler {
     private final JvmCodeIndex index;
@@ -49,21 +48,22 @@ public class JavaSourceCrawler {
         indexRecur(basePath, "", null, true);
     }
 
-    protected void indexRecur(File path, String relativePathToClosestArtifact, CodeLocationDescriptor closestArtifactLocationDescriptor,
-            boolean isRootDir) {
+    protected void indexRecur(File path, String relativePathToClosestArtifact,
+            CodeLocationDescriptor closestArtifactLocationDescriptor, boolean isRootDir) {
         if (path.isDirectory()) {
             // have we descended into a new artifact? (i.e. directory contains pom.xml for Maven, or BUILD for Bazel)
             String[] artifactMarkerSearch = path.list(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
                     return artifactMarkerFileName.equals(name);
-                }});
+                }
+            });
             if (artifactMarkerSearch.length > 0) {
                 String parentId = "";
                 if (closestArtifactLocationDescriptor != null) {
                     parentId = closestArtifactLocationDescriptor.id.locationIdentifier + File.separatorChar;
                 }
-                CodeLocationIdentifier myId = new CodeLocationIdentifier(parentId+relativePathToClosestArtifact);
+                CodeLocationIdentifier myId = new CodeLocationIdentifier(parentId + relativePathToClosestArtifact);
                 closestArtifactLocationDescriptor = new CodeLocationDescriptor(path, myId);
 
                 index.addArtifactLocation(path.getName(), closestArtifactLocationDescriptor);
@@ -95,20 +95,20 @@ public class JavaSourceCrawler {
                         packageName = foundSourceFile(candidateFile, closestArtifactLocationDescriptor, packageName);
                     }
                 }
-            }
-            catch (Exception anyE) {
+            } catch (Exception anyE) {
                 log("Reading java source file lead to unexpected error", anyE.getMessage(), candidateFile.getPath());
                 anyE.printStackTrace();
             }
         }
     }
 
-    protected String foundSourceFile(File javaSourceFile, CodeLocationDescriptor artifactLocationDescriptor, String packageName) {
+    protected String foundSourceFile(File javaSourceFile, CodeLocationDescriptor artifactLocationDescriptor,
+            String packageName) {
         // isolate the classname by stripping off the .java and the prefix
         String fqClassName = javaSourceFile.getPath();
-        fqClassName = fqClassName.substring(0, fqClassName.length()-5);
+        fqClassName = fqClassName.substring(0, fqClassName.length() - 5);
         int javaIndex = fqClassName.indexOf("java"); // TODO this only works for projects that follow Maven conventions
-        fqClassName = fqClassName.substring(javaIndex+5);
+        fqClassName = fqClassName.substring(javaIndex + 5);
         fqClassName = fqClassName.replace(File.pathSeparator, ".");
 
         ClassIdentifier classId = new ClassIdentifier(fqClassName);
@@ -125,9 +125,9 @@ public class JavaSourceCrawler {
         if (param1 == null) {
             System.err.println(msg);
         } else if (param2 == null) {
-            System.err.println(msg+" ["+param1+"] ");
+            System.err.println(msg + " [" + param1 + "] ");
         } else {
-            System.err.println(msg+" ["+param1+"] ["+param2+"]");
+            System.err.println(msg + " [" + param1 + "] [" + param2 + "]");
         }
     }
 

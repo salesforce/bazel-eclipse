@@ -242,8 +242,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             argBuilder.add("query");
             argBuilder.add(query);
 
-            results = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null,
-                argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
+            results = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null, argBuilder,
+                t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
 
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException e) {
             throw new IllegalStateException(e);
@@ -337,7 +337,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     }
 
     /**
-     * Get the file system path to the Bazel executable. 
+     * Get the file system path to the Bazel executable.
      *
      * @return the file system path to the Bazel executable
      * @throws BazelCommandLineToolConfigurationException
@@ -386,8 +386,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     @Deprecated
     public synchronized List<String> listBazelTargetsInBuildFiles(WorkProgressMonitor progressMonitor,
             File... directories) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        return bazelQueryHelper.listBazelTargetsInBuildFiles(bazelWorkspaceRootDirectory, progressMonitor,
-            directories);
+        return bazelQueryHelper.listBazelTargetsInBuildFiles(bazelWorkspaceRootDirectory, progressMonitor, directories);
     }
 
     /**
@@ -407,7 +406,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized List<BazelProblem> runBazelBuild(Set<String> bazelTargets, List<String> extraArgs,
             WorkProgressMonitor progressMonitor)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> extraArgsList = new ArrayList<String>();
         extraArgsList.add("build");
         extraArgsList.addAll(buildOptions);
@@ -449,7 +448,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfoForPackages(
             Collection<BazelPackageLocation> targetPackages, String caller)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<BazelLabel> targetLabels = new ArrayList<>();
         for (BazelPackageLocation pkg : targetPackages) {
             String target = pkg.getBazelPackageFSRelativePath() + ":*";
@@ -473,8 +472,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * @return Mapping of the requested label to its AspectTargetInfo instances
      * @throws BazelCommandLineToolConfigurationException
      */
-    public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<String> targetLabels, String caller)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+    public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<String> targetLabels,
+            String caller) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         Collection<BazelLabel> labels = targetLabels.stream().map(BazelLabel::new).collect(Collectors.toList());
         return aspectHelper.getAspectTargetInfos(labels, caller);
@@ -551,8 +550,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             List<String> argBuilder = new ArrayList<>();
             argBuilder.add("clean");
 
-            bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor,
-                argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
+            bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, argBuilder,
+                t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException e) {
             e.printStackTrace();
         }

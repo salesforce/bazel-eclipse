@@ -86,9 +86,8 @@ public class ImplicitClasspathHelper {
         }
         File runnerJar = new File(javaToolsDir, "Runner_deploy-ijar.jar");
         if (!runnerJar.exists()) {
-            logger.error(
-                "Could not add implicit test deps to target [" + targetInfo.getLabel() + "], test runner jar ["
-                        + BazelPathHelper.getCanonicalPathStringSafely(runnerJar) + "] does not exist.");
+            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabel() + "], test runner jar ["
+                    + BazelPathHelper.getCanonicalPathStringSafely(runnerJar) + "] does not exist.");
             return null;
         }
         return BazelPathHelper.getCanonicalPathStringSafely(runnerJar);

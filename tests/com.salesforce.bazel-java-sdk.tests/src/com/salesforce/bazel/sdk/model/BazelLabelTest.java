@@ -58,7 +58,7 @@ public class BazelLabelTest {
         assertFalse(new BazelLabel("blah:t").isPackageDefault());
         assertFalse(new BazelLabel("//:query").isPackageDefault());
         assertFalse(new BazelLabel("//...").isPackageDefault());
-        assertFalse(new BazelLabel("//:*").isPackageDefault()); 
+        assertFalse(new BazelLabel("//:*").isPackageDefault());
         assertTrue(new BazelLabel("@foo//foo/blah").isPackageDefault()); // $SLASH_OK bazel path
     }
 

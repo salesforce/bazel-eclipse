@@ -106,25 +106,26 @@ public interface ResourceHelper {
             throws CoreException;
 
     /**
-     * Deletes this project from the workspace AND flushes relevant caches.
-     * No action is taken if this project does not exist.
+     * Deletes this project from the workspace AND flushes relevant caches. No action is taken if this project does not
+     * exist.
      *
-     * This method is long-running; progress and cancellation are provided
-     * by the given progress monitor.
+     * This method is long-running; progress and cancellation are provided by the given progress monitor.
      * </p>
      *
-     * @param project the project to delete
-     * @param monitor a progress monitor, or <code>null</code> if progress
-     *    reporting is not desired
-     * @exception CoreException if this method fails. Reasons include:
-     * <ul>
-     * <li> This project could not be deleted.</li>
-     * <li> This project's contents could not be deleted.</li>
-     * <li> Resource changes are disallowed during certain types of resource change
-     *       event notification. See <code>IResourceChangeEvent</code> for more details.</li>
-     * </ul>
-     * @exception OperationCanceledException if the operation is canceled.
-     * Cancelation can occur even if no progress monitor is provided.
+     * @param project
+     *            the project to delete
+     * @param monitor
+     *            a progress monitor, or <code>null</code> if progress reporting is not desired
+     * @exception CoreException
+     *                if this method fails. Reasons include:
+     *                <ul>
+     *                <li>This project could not be deleted.</li>
+     *                <li>This project's contents could not be deleted.</li>
+     *                <li>Resource changes are disallowed during certain types of resource change event notification.
+     *                See <code>IResourceChangeEvent</code> for more details.</li>
+     *                </ul>
+     * @exception OperationCanceledException
+     *                if the operation is canceled. Cancelation can occur even if no progress monitor is provided.
      */
     void deleteProject(IProject project, IProgressMonitor monitor) throws CoreException;
 

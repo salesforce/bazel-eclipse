@@ -31,9 +31,8 @@ import com.salesforce.bazel.sdk.index.source.JavaSourceCrawler;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
- * Indexer for building a JVM type index from nested sets of directories.
- * Supports indexing both source files, and compiled classes in jar files.
- * Includes a command line launcher.
+ * Indexer for building a JVM type index from nested sets of directories. Supports indexing both source files, and
+ * compiled classes in jar files. Includes a command line launcher.
  */
 public class JvmCodeIndexer {
     protected String sourceRoot;
@@ -57,7 +56,8 @@ public class JvmCodeIndexer {
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.err.println("Usage: CodeIndexer [full path to external java jars directory] [optional full path to source root directory]");
+            System.err.println(
+                "Usage: CodeIndexer [full path to external java jars directory] [optional full path to source root directory]");
             return;
         }
 
@@ -76,7 +76,7 @@ public class JvmCodeIndexer {
 
         // print the results
         index.printIndex();
-        System.out.println("\nTotal processing time (milliseconds): "+(endTime-startTime));
+        System.out.println("\nTotal processing time (milliseconds): " + (endTime - startTime));
 
     }
 
@@ -115,10 +115,10 @@ public class JvmCodeIndexer {
                 logInfo("The provided source code root directory does not exist. This is ok.");
                 return index;
             }
-            JavaSourceCrawler sourceCrawler = new JavaSourceCrawler(index, pickJavaSourceArtifactMarker(externalJarRoot));
+            JavaSourceCrawler sourceCrawler =
+                    new JavaSourceCrawler(index, pickJavaSourceArtifactMarker(externalJarRoot));
             sourceCrawler.index(sourceRootFile);
-        }
-        else {
+        } else {
             logInfo("The provided source code root directory does not exist. This is ok.");
         }
 

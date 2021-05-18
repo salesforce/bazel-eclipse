@@ -50,16 +50,11 @@ public interface BazelConstants {
      * The Bazel BUILD files BEF looks for.
      */
     Collection<String> BUILD_FILE_NAMES =
-            Collections.unmodifiableSet(
-                new HashSet<>(
-                        Arrays.asList("BUILD", "BUILD.bazel")));
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList("BUILD", "BUILD.bazel")));
 
     /**
      * The targets configured by default for each imported Bazel package.
      */
-    Collection<String> DEFAULT_PACKAGE_TARGETS =
-            Collections.unmodifiableSet(
-                new HashSet<>(
-                        Arrays.asList("*")));
+    Collection<String> DEFAULT_PACKAGE_TARGETS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("*")));
 
 }

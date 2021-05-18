@@ -30,9 +30,9 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.internal.launching.JREContainerInitializer;
 
 /**
- * This logic has to run once per Eclipse lifetime. It is indirectly triggered when we setup the VM
- * for the classpath container, which distorts our perf measurements.  Therefore, we run it in
- * isolation here. This should probably run when BEF is initialized instead.
+ * This logic has to run once per Eclipse lifetime. It is indirectly triggered when we setup the VM for the classpath
+ * container, which distorts our perf measurements. Therefore, we run it in isolation here. This should probably run
+ * when BEF is initialized instead.
  */
 @SuppressWarnings("restriction")
 public class InitJREFlow implements ImportFlow {
@@ -44,7 +44,8 @@ public class InitJREFlow implements ImportFlow {
 
     @Override
     public void run(ImportContext ctx, SubMonitor progressMonitor) throws CoreException {
-        IPath path = Path.fromOSString("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11");
+        IPath path = Path.fromOSString(
+            "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11");
         // on my machine, this takes ~2 seconds
         JREContainerInitializer.resolveVM(path);
     }

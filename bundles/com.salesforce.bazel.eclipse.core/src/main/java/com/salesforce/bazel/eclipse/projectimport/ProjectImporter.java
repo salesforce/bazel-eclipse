@@ -43,13 +43,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 public interface ProjectImporter {
 
     /**
-     * Imports a workspace. This could either be an initial import into a blank workspace, or an incremental import
-     * of additional projects into an existing workspace.
+     * Imports a workspace. This could either be an initial import into a blank workspace, or an incremental import of
+     * additional projects into an existing workspace.
      *
      * TODO test the return assumption below with incremental import
      *
-     * @return the list of Eclipse IProject objects created during this import; projects that were created during a previous
-     *    import for this Eclipse workspace will not be returned
+     * @return the list of Eclipse IProject objects created during this import; projects that were created during a
+     *         previous import for this Eclipse workspace will not be returned
      */
     List<IProject> run(IProgressMonitor monitor);
 }

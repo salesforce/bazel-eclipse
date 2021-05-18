@@ -44,8 +44,8 @@ import java.util.stream.Collectors;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
- * This class contains only static methods, that interact with the file system to
- * provide information about bazel artifacts.
+ * This class contains only static methods, that interact with the file system to provide information about bazel
+ * artifacts.
  */
 public final class BazelDirectoryStructureUtil {
 
@@ -77,13 +77,9 @@ public final class BazelDirectoryStructureUtil {
     public static List<String> findBazelPackages(File repositoryRoot, String relativeRepositoryPath) {
         Path rootPath = repositoryRoot.toPath();
         try {
-            return
-                    Files.walk(rootPath.resolve(relativeRepositoryPath))
-                    .filter(Files::isRegularFile)
+            return Files.walk(rootPath.resolve(relativeRepositoryPath)).filter(Files::isRegularFile)
                     .filter(p -> BazelConstants.BUILD_FILE_NAMES.contains(p.getFileName().toString()))
-                    .map(Path::getParent)
-                    .map(p -> rootPath.relativize(p).toString())
-                    .collect(Collectors.toList());
+                    .map(Path::getParent).map(p -> rootPath.relativize(p).toString()).collect(Collectors.toList());
         } catch (IOException ex) {
             LOG.error("Failed to look for BUILD files at " + relativeRepositoryPath + ": " + ex.getMessage(), ex);
             return Collections.emptyList();

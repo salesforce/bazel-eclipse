@@ -34,7 +34,7 @@ public class ClassIdentifier {
         this.packageName = packageName;
         this.classname = classname;
     }
-    
+
     public ClassIdentifier(String fqClassname) {
         int lastDot = fqClassname.lastIndexOf(".");
         if (lastDot == -1) {
@@ -43,16 +43,16 @@ public class ClassIdentifier {
             classname = fqClassname;
         } else {
             packageName = fqClassname.substring(0, lastDot);
-            classname = fqClassname.substring(lastDot+1);
+            classname = fqClassname.substring(lastDot + 1);
         }
     }
 
     public String toString() {
-        return packageName+"."+classname;
+        return packageName + "." + classname;
     }
 
     private void printId() {
-        System.out.println("p["+packageName+"] c["+classname+"]");
+        System.out.println("p[" + packageName + "] c[" + classname + "]");
     }
 
     public static void main(String[] args) {

@@ -177,8 +177,8 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         dialog.setTitle("Select Target");
         dialog.setMessage("Select Target");
         initializeLabelsForSelectedProject(project);
-        dialog.setElements(labelsForSelectedProject.stream().map(TypedBazelLabel::getBazelLabel)
-            .toArray(BazelLabel[]::new));
+        dialog.setElements(
+            labelsForSelectedProject.stream().map(TypedBazelLabel::getBazelLabel).toArray(BazelLabel[]::new));
 
         BazelLabel target = getSelectedTarget();
         if (target != null) {
@@ -193,7 +193,8 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
     private synchronized void initializeLabelsForSelectedProject(IProject project) {
         if (labelsForSelectedProject == null) {
             labelsForSelectedProject = support.getLaunchableBazelTargetsForProject(project);
-            labelsForSelectedProject.sort((t1, t2) -> t1.getBazelLabel().getLabel().compareTo(t2.getBazelLabel().getLabel()));
+            labelsForSelectedProject
+                    .sort((t1, t2) -> t1.getBazelLabel().getLabel().compareTo(t2.getBazelLabel().getLabel()));
         }
     }
 

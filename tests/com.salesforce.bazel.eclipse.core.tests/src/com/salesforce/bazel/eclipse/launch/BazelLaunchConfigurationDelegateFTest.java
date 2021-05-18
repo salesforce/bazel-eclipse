@@ -159,7 +159,7 @@ public class BazelLaunchConfigurationDelegateFTest {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_binary");
         } else if ("selenium".equals(verb)) {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(),
-                    "java_web_test_suite");
+                "java_web_test_suite");
         }
 
         List<String> args = new ArrayList<>();

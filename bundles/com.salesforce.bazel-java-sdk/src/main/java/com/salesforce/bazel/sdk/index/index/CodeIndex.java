@@ -41,7 +41,7 @@ public class CodeIndex {
         }
         indexEntry.addLocation(location);
         this.artifactDictionary.put(artifact, indexEntry);
-        System.out.println("ADD: "+location.locationOnDisk.getPath());
+        System.out.println("ADD: " + location.locationOnDisk.getPath());
     }
 
     public void addClassnameLocation(String classname, CodeLocationDescriptor location) {
@@ -55,13 +55,13 @@ public class CodeIndex {
 
     public void printIndex() {
         println("");
-        println("ARTIFACT INDEX ("+artifactDictionary.size()+" entries)");
+        println("ARTIFACT INDEX (" + artifactDictionary.size() + " entries)");
         println("----------------------------------------");
         for (String artifact : artifactDictionary.keySet()) {
             printArtifact(artifact, artifactDictionary.get(artifact));
         }
         println("");
-        println("CLASSNAME INDEX ("+classDictionary.size()+" entries)");
+        println("CLASSNAME INDEX (" + classDictionary.size() + " entries)");
         println("----------------------------------------");
         for (String classname : classDictionary.keySet()) {
             printArtifact(classname, classDictionary.get(classname));
@@ -70,12 +70,12 @@ public class CodeIndex {
     }
 
     private void printArtifact(String artifact, CodeIndexEntry entry) {
-        println("  "+artifact);
+        println("  " + artifact);
         if (entry.singleLocation != null) {
-            println("    "+entry.singleLocation.id.locationIdentifier);
+            println("    " + entry.singleLocation.id.locationIdentifier);
         } else {
             for (CodeLocationDescriptor loc : entry.multipleLocations) {
-                println("    "+loc.id.locationIdentifier);
+                println("    " + loc.id.locationIdentifier);
             }
         }
     }

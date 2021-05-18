@@ -89,13 +89,13 @@ public class EclipseBazelConfigurationManager implements BazelConfigurationManag
     }
 
     /**
-     * Global search is the feature for doing type (e.g. Java class) searches across all dependencies in the 
-     * Bazel workspace, not just the dependencies of the imported packages.
+     * Global search is the feature for doing type (e.g. Java class) searches across all dependencies in the Bazel
+     * workspace, not just the dependencies of the imported packages.
      */
     @Override
     public boolean isGlobalClasspathSearchEnabled() {
         IPreferenceStore prefsStore = this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
         return prefsStore.getBoolean(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME);
     }
-    
+
 }

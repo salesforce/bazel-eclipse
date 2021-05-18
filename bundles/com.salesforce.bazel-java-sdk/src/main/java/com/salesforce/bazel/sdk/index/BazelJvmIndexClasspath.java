@@ -39,28 +39,28 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
- * Creates a classpath containing all downloaded jars (binary and source) and all workspace built jars 
- * in the Bazel workspace. This is typically used to support a search function for IDE type search
- * features to help users discover types that they could use. It could also be used for build tooling 
- * that needs to enumerate all available types in a workspace. 
+ * Creates a classpath containing all downloaded jars (binary and source) and all workspace built jars in the Bazel
+ * workspace. This is typically used to support a search function for IDE type search features to help users discover
+ * types that they could use. It could also be used for build tooling that needs to enumerate all available types in a
+ * workspace.
  */
 public class BazelJvmIndexClasspath {
     /**
      * Associated workspace.
      */
-    protected  BazelWorkspace bazelWorkspace;
-    
+    protected BazelWorkspace bazelWorkspace;
+
     // collaborators
     protected OperatingEnvironmentDetectionStrategy os;
     protected BazelExternalJarRuleManager externalJarRuleManager;
-    
+
     /**
      * User provided locations to search.
      */
     protected List<File> additionalJarLocations;
 
     protected BazelJvmClasspathResponse cacheResponse;
-    
+
     /**
      * Ctor with workspace.
      */
@@ -71,7 +71,6 @@ public class BazelJvmIndexClasspath {
         this.externalJarRuleManager = externalJarRuleManager;
         this.additionalJarLocations = additionalJarLocations;
     }
-    
 
     /**
      * Computes the JVM classpath for the associated Bazel workspace
@@ -82,45 +81,46 @@ public class BazelJvmIndexClasspath {
         }
         JvmCodeIndex index = new JvmCodeIndex();
         List<File> locations = new ArrayList<>();
-        
+
         // for each jar downloading rule type in the workspace, add the appropriate local directories of the downloaded jars
-        List<BazelExternalJarRuleType> ruleTypes = externalJarRuleManager.findInUseExternalJarRuleTypes(this.bazelWorkspace);
+        List<BazelExternalJarRuleType> ruleTypes =
+                externalJarRuleManager.findInUseExternalJarRuleTypes(this.bazelWorkspace);
         for (BazelExternalJarRuleType ruleType : ruleTypes) {
             System.out.println("");
             List<File> ruleSpecificLocations = ruleType.getDownloadedJarLocations(bazelWorkspace);
             locations.addAll(ruleSpecificLocations);
         }
-        
+
         // add internal location (jars built by the bazel workspace
         addInternalLocations(locations);
-        
+
         // add the additional directories the user wants to search
         if (additionalJarLocations != null) {
             locations.addAll(additionalJarLocations);
         }
-        
+
         // now do the searching
         for (File location : locations) {
             getClasspathEntriesInternal(location, index, progressMonitor);
         }
-        
+
         cacheResponse = convertIndexIntoResponse(index);
         return cacheResponse;
     }
-    
+
     public void clearCache() {
         cacheResponse = null;
     }
-    
+
     /* visible for testing */
-    void getClasspathEntriesInternal(File location, JvmCodeIndex index, WorkProgressMonitor progressMonitor) {        
+    void getClasspathEntriesInternal(File location, JvmCodeIndex index, WorkProgressMonitor progressMonitor) {
         if (location != null && location.exists()) {
             JarIdentiferResolver jarResolver = new JarIdentiferResolver();
             JavaJarCrawler jarCrawler = new JavaJarCrawler(index, jarResolver);
             jarCrawler.index(location, false);
         }
     }
-    
+
     protected BazelJvmClasspathResponse convertIndexIntoResponse(JvmCodeIndex index) {
         BazelJvmClasspathResponse response = new BazelJvmClasspathResponse();
         List<JvmClasspathEntry> entries = new ArrayList<>();
@@ -137,24 +137,24 @@ public class BazelJvmIndexClasspath {
                 addJarEntry(entries, entry.singleLocation);
             }
         }
-        
+
         response.jvmClasspathEntries = entries.toArray(new JvmClasspathEntry[] {});
-        
+
         return response;
     }
-    
+
     protected void addJarEntry(List<JvmClasspathEntry> entries, CodeLocationDescriptor location) {
         // try to find the source jar
         String path = location.locationOnDisk.getPath();
-        String pathWithoutJarExtension = path.substring(0, path.length()-4);
-        
+        String pathWithoutJarExtension = path.substring(0, path.length() - 4);
+
         // if this is a Bazel output dir jar, we should find it at xyz-src.jar
-        File candidateSourcePath = new File(pathWithoutJarExtension+"-src.jar");
+        File candidateSourcePath = new File(pathWithoutJarExtension + "-src.jar");
         if (!candidateSourcePath.exists()) {
             // external Maven artifacts
-            candidateSourcePath = new File(pathWithoutJarExtension+"-sources.jar");
+            candidateSourcePath = new File(pathWithoutJarExtension + "-sources.jar");
         }
-        
+
         JvmClasspathEntry cpEntry = null;
         if (!candidateSourcePath.exists()) {
             cpEntry = new JvmClasspathEntry(location.locationOnDisk.getPath(), false);
@@ -163,7 +163,7 @@ public class BazelJvmIndexClasspath {
         }
         entries.add(cpEntry);
     }
-    
+
     protected void addInternalLocations(List<File> locations) {
         // TODO INTERNAL (jars produced by Bazel)
     }

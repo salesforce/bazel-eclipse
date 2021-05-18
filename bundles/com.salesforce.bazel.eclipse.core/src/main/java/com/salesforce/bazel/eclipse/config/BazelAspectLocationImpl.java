@@ -99,7 +99,7 @@ public class BazelAspectLocationImpl implements BazelAspectLocation {
                     logger.error(
                         "The BEF Aspect file is not found on disk: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
                     throw new IllegalStateException(
-                        "Could not load the BEF Aspect on disk [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
+                            "Could not load the BEF Aspect on disk [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
                 }
             }
             logger.info("BEF Aspect location: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");

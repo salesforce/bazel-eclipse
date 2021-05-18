@@ -88,7 +88,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public IProject[] getProjectsForBazelWorkspace(BazelWorkspace bazelWorkspace) {
         // todo once we support multiple Bazel workspaces, this will need to figure that out
-        return  getEclipseWorkspaceRoot().getProjects();
+        return getEclipseWorkspaceRoot().getProjects();
     }
 
     /**

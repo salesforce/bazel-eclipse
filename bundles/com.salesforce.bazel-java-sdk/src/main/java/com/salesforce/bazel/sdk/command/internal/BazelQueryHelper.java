@@ -72,15 +72,15 @@ public class BazelQueryHelper {
     @Deprecated
     public synchronized List<String> listBazelTargetsInBuildFiles(File bazelWorkspaceRootDirectory,
             WorkProgressMonitor progressMonitor, File... directories)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> argBuilder = new ArrayList<>();
         argBuilder.add("query");
         for (File f : directories) {
             String directoryPath = f.toURI().relativize(bazelWorkspaceRootDirectory.toURI()).getPath();
             argBuilder.add(directoryPath + "/..."); // $SLASH_OK bazel path, not fs path
         }
-        return bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor,
-            argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
+        return bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, argBuilder,
+            t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
     }
 
     /**
@@ -90,7 +90,8 @@ public class BazelQueryHelper {
      * @param bazelPackageName
      *            the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
      */
-    public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory, Collection<BazelLabel> bazelLabels)
+    public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory,
+            Collection<BazelLabel> bazelLabels)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if (bazelLabels.isEmpty()) {
@@ -120,7 +121,8 @@ public class BazelQueryHelper {
     }
 
     // runs query and populates cache, returns loaded BazelBuildFile instances
-    private Collection<BazelBuildFile> runQuery(Collection<BazelLabel> bazelLabels, File bazelWorkspaceRootDirectory) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+    private Collection<BazelBuildFile> runQuery(Collection<BazelLabel> bazelLabels, File bazelWorkspaceRootDirectory)
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         String labels = bazelLabels.stream().map(BazelLabel::getLabel).collect(Collectors.joining(" "));
 
         // bazel query 'kind(rule, [label]:*)' --output label_kind
@@ -130,8 +132,8 @@ public class BazelQueryHelper {
         argBuilder.add("kind(rule, set(" + labels + "))");
         argBuilder.add("--output");
         argBuilder.add("label_kind");
-        List<String> resultLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory,
-            null, argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
+        List<String> resultLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null,
+            argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
 
         // Sample Output:  (format: rule_type 'rule' label)
         // java_binary rule //projects/libs/apple/apple-api:apple-main
@@ -151,7 +153,8 @@ public class BazelQueryHelper {
 
         Set<BazelLabel> unprocessed = new HashSet<>(BazelLabelUtil.groupByPackage(bazelLabels).keySet());
 
-        Map<BazelLabel, Collection<BazelLabel>> packageToLabel = BazelLabelUtil.groupByPackage(labelToRuleType.keySet());
+        Map<BazelLabel, Collection<BazelLabel>> packageToLabel =
+                BazelLabelUtil.groupByPackage(labelToRuleType.keySet());
 
         Collection<BazelBuildFile> buildFiles = new HashSet<>();
         for (BazelLabel pack : packageToLabel.keySet()) {

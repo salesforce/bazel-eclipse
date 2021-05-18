@@ -88,9 +88,10 @@ public class CreateRootProjectFlow implements ImportFlow {
         ctx.setRootProject(rootProject);
     }
 
-
-    private static void writeProjectViewFile(File bazelWorkspaceRootDirectory, IProject project, List<BazelPackageLocation> importedBazelPackages) {
-        ProjectView projectView = new ProjectView(bazelWorkspaceRootDirectory, importedBazelPackages, Collections.emptyList());
+    private static void writeProjectViewFile(File bazelWorkspaceRootDirectory, IProject project,
+            List<BazelPackageLocation> importedBazelPackages) {
+        ProjectView projectView =
+                new ProjectView(bazelWorkspaceRootDirectory, importedBazelPackages, Collections.emptyList());
         IFile f = BazelPluginActivator.getResourceHelper().getProjectFile(project,
             ProjectViewConstants.PROJECT_VIEW_FILE_NAME);
         try {

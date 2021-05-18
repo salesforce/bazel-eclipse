@@ -96,7 +96,7 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
             // however bazel does not like the common "src/main/java" root:
             // error: "main_class was not provided and cannot be inferred: source path doesn't include a known root (java, javatests, src, testsrc)"
             throw new IllegalStateException(
-                "Unable to find a java_binary target that has a main_class of " + fqClassName);
+                    "Unable to find a java_binary target that has a main_class of " + fqClassName);
         } else if (matchingInfos.size() > 1) {
             // surface correctly
             throw new IllegalStateException("Found multiple java_binary targets that have a main_class of "

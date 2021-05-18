@@ -63,8 +63,7 @@ public class AspectTargetInfos {
 
     public AspectTargetInfos(Collection<AspectTargetInfo> aspectTargetInfos) {
         for (AspectTargetInfo aspectTargetInfo : aspectTargetInfos) {
-            AspectTargetInfo previousValue =
-                    labelToAspectTargetInfo.put(aspectTargetInfo.getLabel(), aspectTargetInfo);
+            AspectTargetInfo previousValue = labelToAspectTargetInfo.put(aspectTargetInfo.getLabel(), aspectTargetInfo);
             if (previousValue != null) {
                 if (!previousValue.toString().equals(aspectTargetInfo.toString())) {
                     throw new IllegalStateException(

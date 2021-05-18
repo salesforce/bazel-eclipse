@@ -73,8 +73,8 @@ public class LoadAspectsFlow implements ImportFlow {
 
         // run the aspect for specified targets and get an AspectTargetInfo for each
         try {
-            Map<BazelLabel, Set<AspectTargetInfo>> targetInfos = bazelWorkspaceCmdRunner
-                    .getAspectTargetInfos(labels, "importWorkspace");
+            Map<BazelLabel, Set<AspectTargetInfo>> targetInfos =
+                    bazelWorkspaceCmdRunner.getAspectTargetInfos(labels, "importWorkspace");
             List<AspectTargetInfo> allTargetInfos = new ArrayList<>();
             for (Set<AspectTargetInfo> targetTargetInfos : targetInfos.values()) {
                 allTargetInfos.addAll(targetTargetInfos);

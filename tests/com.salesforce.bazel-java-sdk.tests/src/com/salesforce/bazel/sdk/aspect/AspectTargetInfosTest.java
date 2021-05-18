@@ -63,8 +63,7 @@ public class AspectTargetInfosTest {
         AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, libPath);
         AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, testPath);
         AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, binPath);
-        AspectTargetInfo seleniumTest =
-                getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, selPath);
+        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, selPath);
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
@@ -181,7 +180,7 @@ public class AspectTargetInfosTest {
 
     @Test(expected = IllegalStateException.class)
     public void testLookupByRootSourcePath__sourcesWithoutCommonRootPathValidation_fullPath() {
-        AspectTargetInfo foo = getAspectTargetInfo("foo", BazelPathHelper.osSeps("a/b/c/aaa/Foo.java"),// $SLASH_OK
+        AspectTargetInfo foo = getAspectTargetInfo("foo", BazelPathHelper.osSeps("a/b/c/aaa/Foo.java"), // $SLASH_OK
             BazelPathHelper.osSeps("x/y/z/aaa/Blah.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(foo);
@@ -199,8 +198,7 @@ public class AspectTargetInfosTest {
 
         String workspaceRelativePath = "some" + File.separatorChar + "path";
         return new AspectTargetInfo(new File(""), new ArrayList<>(), new ArrayList<>(), workspaceRelativePath,
-            targetKind.toString().toLowerCase(), label, new ArrayList<>(), sourcePathList,
-                "main-class");
+                targetKind.toString().toLowerCase(), label, new ArrayList<>(), sourcePathList, "main-class");
     }
 
 }

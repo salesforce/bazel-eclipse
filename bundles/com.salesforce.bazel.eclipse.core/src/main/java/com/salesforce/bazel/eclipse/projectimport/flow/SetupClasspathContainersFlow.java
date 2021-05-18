@@ -89,7 +89,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
     // where the Java Package structure starts
     private static void createClasspath(IPath bazelWorkspacePath, String bazelPackageFSPath,
             List<String> packageSourceCodeFSRelativePaths, IJavaProject eclipseProject, int javaLanguageLevel)
-                    throws CoreException {
+            throws CoreException {
         List<IClasspathEntry> classpathEntries = new LinkedList<>();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
 
@@ -146,7 +146,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
 
         if (!packageSourceCodeFSRelativePath.startsWith(bazelPackageFSPath)) {
             throw new IllegalStateException("src code path " + packageSourceCodeFSRelativePath
-                + " expected to be under bazel package path " + bazelPackageFSPath);
+                    + " expected to be under bazel package path " + bazelPackageFSPath);
         }
 
         IFolder currentFolder = null;

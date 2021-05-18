@@ -70,7 +70,7 @@ public class SetupProjectBuildersFlow implements ImportFlow {
         IProjectDescription projectDescription = project.getDescription();
         ICommand buildCommand = projectDescription.newCommand();
         buildCommand.setBuilderName(BazelBuilder.BUILDER_NAME);
-        projectDescription.setBuildSpec(new ICommand[] {buildCommand});
+        projectDescription.setBuildSpec(new ICommand[] { buildCommand });
         project.setDescription(projectDescription, null);
     }
 

@@ -105,7 +105,8 @@ public class InitImportFlow implements ImportFlow {
 
             // Many collaborators need the Bazel workspace directory location, so we stash it in an accessible global location
             // currently we only support one Bazel workspace in an Eclipse workspace
-            BazelPluginActivator.getInstance().setBazelWorkspaceRootDirectory(bazelWorkspaceName, bazelWorkspaceRootDirectory);
+            BazelPluginActivator.getInstance().setBazelWorkspaceRootDirectory(bazelWorkspaceName,
+                bazelWorkspaceRootDirectory);
         } else {
             bazelWorkspaceName = bazelWorkspace.getName();
         }

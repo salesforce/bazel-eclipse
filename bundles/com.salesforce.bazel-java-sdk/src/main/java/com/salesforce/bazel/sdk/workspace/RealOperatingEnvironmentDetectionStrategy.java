@@ -14,7 +14,7 @@ public class RealOperatingEnvironmentDetectionStrategy implements OperatingEnvir
             osName = System.getProperty("os.name", "unknown");
         }
         osName = osName.toLowerCase();
-        
+
         if ("mac os x".equals(osName)) {
             osName = "darwin";
         }

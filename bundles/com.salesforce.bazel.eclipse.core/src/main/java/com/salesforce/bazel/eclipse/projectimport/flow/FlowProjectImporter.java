@@ -51,11 +51,8 @@ public class FlowProjectImporter implements ProjectImporter {
     private final ProjectOrderResolver projectOrderResolver;
     private final ImportFlow[] flows;
 
-    public FlowProjectImporter(ImportFlow[] flows,
-                            BazelPackageLocation bazelWorkspaceRootPackageInfo,
-                            List<BazelPackageLocation> selectedBazelPackages,
-                            ProjectOrderResolver projectOrderResolver)
-    {
+    public FlowProjectImporter(ImportFlow[] flows, BazelPackageLocation bazelWorkspaceRootPackageInfo,
+            List<BazelPackageLocation> selectedBazelPackages, ProjectOrderResolver projectOrderResolver) {
         this.flows = Objects.requireNonNull(flows);
         this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
         this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
@@ -64,7 +61,8 @@ public class FlowProjectImporter implements ProjectImporter {
 
     @Override
     public List<IProject> run(IProgressMonitor progressMonitor) {
-        ImportContext ctx = new ImportContext(bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver);
+        ImportContext ctx =
+                new ImportContext(bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver);
         SimplePerfRecorder.reset();
         long startTimeMillis = System.currentTimeMillis();
         runFlows(ctx, progressMonitor);

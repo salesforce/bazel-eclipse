@@ -8,8 +8,8 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
- * coursier is a Maven repo integration tool that is used in some cases by maven_install.
- * This class encapsulates the behaviors of coursier.
+ * coursier is a Maven repo integration tool that is used in some cases by maven_install. This class encapsulates the
+ * behaviors of coursier.
  */
 public class CoursierUtil {
 
@@ -20,12 +20,10 @@ public class CoursierUtil {
     private static final String COURSIER_CACHE_LOCATION_WINDOWS = "/Coursier/cache/v1";
     private final Map<String, File> coursierCacheLocations = new HashMap<>();
 
-
     /**
-     * If the user ran this:  bazel run @unpinned_maven//:pin
-     * This invoked Coursier (a jar downloader) which populated the Coursier cache on the machine.
-     * The cache location is platform dependent, and global per user. So if you have multiple Bazel workspaces
-     * this cache location will have the union of all jars used by the workspaces.
+     * If the user ran this: bazel run @unpinned_maven//:pin This invoked Coursier (a jar downloader) which populated
+     * the Coursier cache on the machine. The cache location is platform dependent, and global per user. So if you have
+     * multiple Bazel workspaces this cache location will have the union of all jars used by the workspaces.
      */
     public File addCoursierCacheLocation(BazelWorkspace bazelWorkspace, OperatingEnvironmentDetectionStrategy os) {
 

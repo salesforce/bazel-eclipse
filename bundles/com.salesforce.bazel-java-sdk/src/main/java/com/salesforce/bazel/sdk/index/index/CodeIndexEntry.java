@@ -31,7 +31,7 @@ import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 public class CodeIndexEntry {
     public CodeLocationDescriptor singleLocation = null;
     public List<CodeLocationDescriptor> multipleLocations = null;
-    
+
     public void addLocation(CodeLocationDescriptor newLocation) {
         if (multipleLocations != null) {
             for (CodeLocationDescriptor existing : multipleLocations) {

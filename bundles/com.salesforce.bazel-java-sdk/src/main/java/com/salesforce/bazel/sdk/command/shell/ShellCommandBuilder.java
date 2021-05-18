@@ -53,7 +53,7 @@ public class ShellCommandBuilder extends CommandBuilder {
             "Running " + String.join(" ", args) + " from " + directory.toString());
 
         ShellCommand command = new ShellCommand(console, directory, args, stdoutSelector, stderrSelector, stdout,
-            stderr, progressMonitor, timeoutMS);
+                stderr, progressMonitor, timeoutMS);
 
         return command;
     }

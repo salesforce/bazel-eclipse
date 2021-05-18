@@ -76,7 +76,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
         String canonicalSourcePathString =
                 BazelPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory())
-                + File.separator + sourcePath;
+                        + File.separator + sourcePath;
         Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
         for (BazelProject candidateProject : bazelProjects) {
@@ -195,8 +195,8 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
         Map<BazelLabel, BazelProject> labelToProject = new HashMap<>();
         for (BazelProject bazelProject : bazelProjects) {
             BazelProjectTargets activatedTargets = getConfiguredBazelTargets(bazelProject, false);
-            List<BazelLabel> labels = activatedTargets.getConfiguredTargets().stream().map(BazelLabel::new)
-                    .collect(Collectors.toList());
+            List<BazelLabel> labels =
+                    activatedTargets.getConfiguredTargets().stream().map(BazelLabel::new).collect(Collectors.toList());
             for (BazelLabel label : labels) {
                 labelToProject.merge(label, bazelProject, (k1, k2) -> {
                     throw new IllegalStateException("Duplicate label: " + label + " - this is bug");

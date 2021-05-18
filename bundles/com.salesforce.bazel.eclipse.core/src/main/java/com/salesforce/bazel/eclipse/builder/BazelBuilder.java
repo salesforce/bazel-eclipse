@@ -130,7 +130,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 IJavaProject[] allImportedProjects = javaCoreHelper.getAllBazelJavaProjects(true);
                 IProject rootWorkspaceProject = Arrays.stream(allImportedProjects)
                         .filter(p -> resourceHelper.isBazelRootProject(p.getProject())).findFirst().get().getProject();
-                Set<IProject> downstreamProjects = EclipseClasspathUtil.getDownstreamProjectsOf(project, allImportedProjects);
+                Set<IProject> downstreamProjects =
+                        EclipseClasspathUtil.getDownstreamProjectsOf(project, allImportedProjects);
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject,
                     monitor);
 
@@ -156,8 +157,10 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 // we request a classpath container update only if detect a BUILD file change
                 // this should also consider added or removed BUILD files (?)
                 IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
-                ClasspathContainerInitializer cpInit = JavaCore.getClasspathContainerInitializer(BazelClasspathContainer.CONTAINER_NAME);
-                cpInit.requestClasspathContainerUpdate(Path.fromPortableString(BazelClasspathContainer.CONTAINER_NAME), javaProject, null);
+                ClasspathContainerInitializer cpInit =
+                        JavaCore.getClasspathContainerInitializer(BazelClasspathContainer.CONTAINER_NAME);
+                cpInit.requestClasspathContainerUpdate(Path.fromPortableString(BazelClasspathContainer.CONTAINER_NAME),
+                    javaProject, null);
             }
         }
     }
@@ -189,7 +192,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects,
             WorkProgressMonitor progressMonitor, IProject rootProject, IProgressMonitor monitor)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         Set<String> bazelTargets = new TreeSet<>();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         List<BazelProject> bazelProjects = new ArrayList<>();

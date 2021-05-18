@@ -59,11 +59,8 @@ public class ImportContext {
     private EclipseProjectCreator eclipseProjectCreator;
     private EclipseFileLinker eclipseFileLinker;
 
-    ImportContext(
-            BazelPackageLocation bazelWorkspaceRootPackageInfo,
-            List<BazelPackageLocation> selectedBazelPackages,
-            ProjectOrderResolver projectOrderResolver)
-    {
+    ImportContext(BazelPackageLocation bazelWorkspaceRootPackageInfo, List<BazelPackageLocation> selectedBazelPackages,
+            ProjectOrderResolver projectOrderResolver) {
         this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
         this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
         this.projectOrderResolver = Objects.requireNonNull(projectOrderResolver);

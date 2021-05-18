@@ -110,7 +110,8 @@ public class EclipseFunctionalTestEnvironmentFactory {
         bazelPackagesToImport.add(workspaceRootProject);
         addBazelPackageInfosToSelectedList(workspaceRootProject, bazelPackagesToImport);
 
-        ProjectImporterFactory projectImporterFactory = new ProjectImporterFactory(workspaceRootProject, bazelPackagesToImport);
+        ProjectImporterFactory projectImporterFactory =
+                new ProjectImporterFactory(workspaceRootProject, bazelPackagesToImport);
         projectImporterFactory.setImportOrderResolver(new MockImportOrderResolver());
         projectImporterFactory.skipJREWarmup();
         projectImporterFactory.skipQueryCacheWarmup();
@@ -140,13 +141,30 @@ public class EclipseFunctionalTestEnvironmentFactory {
     }
 
     private static class MockProgressMonitor implements IProgressMonitor {
-        @Override public void beginTask(String name, int totalWork) {}
-        @Override public void done() {}
-        @Override public void internalWorked(double work) {}
-        @Override public boolean isCanceled() { return false; }
-        @Override public void setCanceled(boolean value) {}
-        @Override public void setTaskName(String name) {}
-        @Override public void subTask(String name) {}
-        @Override public void worked(int work) {}
+        @Override
+        public void beginTask(String name, int totalWork) {}
+
+        @Override
+        public void done() {}
+
+        @Override
+        public void internalWorked(double work) {}
+
+        @Override
+        public boolean isCanceled() {
+            return false;
+        }
+
+        @Override
+        public void setCanceled(boolean value) {}
+
+        @Override
+        public void setTaskName(String name) {}
+
+        @Override
+        public void subTask(String name) {}
+
+        @Override
+        public void worked(int work) {}
     }
 }

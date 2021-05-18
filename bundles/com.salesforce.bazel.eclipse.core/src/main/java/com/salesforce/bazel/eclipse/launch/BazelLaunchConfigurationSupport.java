@@ -248,8 +248,8 @@ class BazelLaunchConfigurationSupport {
             String projectName = project.getName();
             BazelProject bazelProject = bazelProjectManager.getProject(projectName);
             BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
-            Map<BazelLabel, Set<AspectTargetInfo>> targetInfos = bazelRunner.getAspectTargetInfos(
-                targets.getConfiguredTargets(), "launcher:computeAspectTargetInfos");
+            Map<BazelLabel, Set<AspectTargetInfo>> targetInfos = bazelRunner
+                    .getAspectTargetInfos(targets.getConfiguredTargets(), "launcher:computeAspectTargetInfos");
             return AspectTargetInfos.fromSets(targetInfos.values());
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException ex) {
             throw new IllegalStateException(ex);

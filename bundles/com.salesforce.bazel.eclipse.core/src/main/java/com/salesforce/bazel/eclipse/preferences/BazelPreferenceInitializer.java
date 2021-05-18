@@ -47,8 +47,7 @@ import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.util.BazelExecutableUtil;
 
 /**
- * Initialize the preferences of Bazel plugins. See the BazelPreferenceKeys class for the 
- * supported preferences.
+ * Initialize the preferences of Bazel plugins. See the BazelPreferenceKeys class for the supported preferences.
  */
 public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
 
@@ -56,9 +55,9 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
     public void initializeDefaultPreferences() {
         IPreferenceStore store = BazelPluginActivator.getInstance().getPreferenceStore();
         Properties userDefaults = loadUserDefaultPreferencesFile();
-        
+
         // STRING PREFS
-        
+
         for (String prefName : BazelPreferenceKeys.ALL_STRING_PREFS) {
             String befDefaultValue = BazelPreferenceKeys.defaultValues.get(prefName);
             String value = userDefaults.getProperty(prefName, befDefaultValue);
@@ -68,38 +67,38 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
         }
 
         // BOOLEAN PREFS
-        
+
         for (String prefName : BazelPreferenceKeys.ALL_BOOLEAN_PREFS) {
             String befDefaultValue = BazelPreferenceKeys.defaultValues.get(prefName);
             String value = userDefaults.getProperty(prefName, befDefaultValue);
             store.setDefault(prefName, "true".equals(value));
         }
-        
+
         // SPECIAL CASES
 
         String defaultBazelExecutablePath = BazelCommandManager.getDefaultBazelExecutablePath();
         String bazelExecLocationFromEnv = BazelExecutableUtil.which("bazel", defaultBazelExecutablePath);
         String value = userDefaults.getProperty(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
         store.setDefault(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, value);
-        
+
     }
 
     /**
-     * A user may place an eclipse.properties file in their ~/.bazel directory which will persist
-     * preferences to be used for any new Eclipse workspace. This is a savior for those of us who 
-     * work on BEF and create new Elipse workspaces all the time. Might be useful for regular users too.
+     * A user may place an eclipse.properties file in their ~/.bazel directory which will persist preferences to be used
+     * for any new Eclipse workspace. This is a savior for those of us who work on BEF and create new Elipse workspaces
+     * all the time. Might be useful for regular users too.
      */
     private Properties loadUserDefaultPreferencesFile() {
         Properties masterProperties = new Properties();
         String userHome = System.getProperty("user.home");
-        File masterPropertiesFile = new File(userHome+File.separator+".bazel", "eclipse.properties");
+        File masterPropertiesFile = new File(userHome + File.separator + ".bazel", "eclipse.properties");
         if (masterPropertiesFile.exists()) {
             try (FileReader fileReader = new FileReader(masterPropertiesFile)) {
                 masterProperties.load(fileReader);
             } catch (Exception anyE) {}
         }
-        
+
         return masterProperties;
     }
-    
+
 }

@@ -29,14 +29,13 @@ import java.util.List;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 
 /**
- * A entry that is the value for each map in the JvmCodeIndex.
- * This class strives to be light on memory since there can be tens of thousands, 
- * so we don't create a List for single length entries. 
+ * A entry that is the value for each map in the JvmCodeIndex. This class strives to be light on memory since there can
+ * be tens of thousands, so we don't create a List for single length entries.
  */
 public class JvmCodeIndexEntry {
     public CodeLocationDescriptor singleLocation = null;
     public List<CodeLocationDescriptor> multipleLocations = null;
-    
+
     public void addLocation(CodeLocationDescriptor newLocation) {
         if (multipleLocations != null) {
             for (CodeLocationDescriptor existing : multipleLocations) {

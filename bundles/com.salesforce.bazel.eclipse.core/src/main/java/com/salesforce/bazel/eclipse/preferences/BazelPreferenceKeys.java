@@ -59,16 +59,11 @@ public class BazelPreferenceKeys {
     // Be sure to add your new pref name here, as that is how the global pref file gets loaded into Eclipse prefs
 
     // prefs that have string values
-    public static final String[] ALL_STRING_PREFS = new String[] {
-            BAZEL_PATH_PREF_NAME,
-            EXTERNAL_JAR_CACHE_PATH_PREF_NAME,
-            BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME
-    };
+    public static final String[] ALL_STRING_PREFS = new String[] { BAZEL_PATH_PREF_NAME,
+            EXTERNAL_JAR_CACHE_PATH_PREF_NAME, BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME };
 
     // prefs that have boolean values
-    public static final String[] ALL_BOOLEAN_PREFS = new String[] {
-            GLOBALCLASSPATH_SEARCH_PREF_NAME,
-            DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK
-    };
+    public static final String[] ALL_BOOLEAN_PREFS =
+            new String[] { GLOBALCLASSPATH_SEARCH_PREF_NAME, DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK };
 
 }

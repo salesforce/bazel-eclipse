@@ -111,8 +111,7 @@ public class BazelWorkspaceAspectHelper {
      * @throws BazelCommandLineToolConfigurationException
      */
     public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfos(Collection<BazelLabel> targets,
-            String caller)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            String caller) throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         Map<BazelLabel, Set<AspectTargetInfo>> resultMap = new LinkedHashMap<>();
         Collection<BazelLabel> cacheMisses = populateFromCache(targets, resultMap, caller);
@@ -169,13 +168,13 @@ public class BazelWorkspaceAspectHelper {
         return flushedTargets;
     }
 
-
     // INTERNALS
 
     /**
-     * Populates the specified resultMap from cache.  Returns the cache misses.
+     * Populates the specified resultMap from cache. Returns the cache misses.
      */
-    private synchronized Collection<BazelLabel> populateFromCache(Collection<BazelLabel> labels, Map<BazelLabel, Set<AspectTargetInfo>> resultMap, String caller) {
+    private synchronized Collection<BazelLabel> populateFromCache(Collection<BazelLabel> labels,
+            Map<BazelLabel, Set<AspectTargetInfo>> resultMap, String caller) {
         List<BazelLabel> cacheMisses = new ArrayList<>();
         for (BazelLabel target : labels) {
             String logstr = getLogStr(target, caller);
@@ -192,7 +191,8 @@ public class BazelWorkspaceAspectHelper {
         return cacheMisses;
     }
 
-    private synchronized void loadTargetInfos(Collection<BazelLabel> cacheMisses, Map<BazelLabel, Set<AspectTargetInfo>> resultMap, String caller)
+    private synchronized void loadTargetInfos(Collection<BazelLabel> cacheMisses,
+            Map<BazelLabel, Set<AspectTargetInfo>> resultMap, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> discoveredAspectFilePaths = generateAspectTargetInfoFiles(cacheMisses);
         Map<BazelLabel, AspectTargetInfo> aspectInfos = loadAspectFilePaths(discoveredAspectFilePaths);
@@ -237,30 +237,27 @@ public class BazelWorkspaceAspectHelper {
     }
 
     /**
-     * This method creates and returns a mapping of a Label to the AspectTargetInfo (ATI)
-     * instances belonging to that Label. These ATI instances are the transitive closure of
-     * ATIs referenced by the mapped Label.
+     * This method creates and returns a mapping of a Label to the AspectTargetInfo (ATI) instances belonging to that
+     * Label. These ATI instances are the transitive closure of ATIs referenced by the mapped Label.
      *
-     * This method behaves differently based on whatever the specified requestingLabel is a wildcard
-     * label or a concrete Label:
+     * This method behaves differently based on whatever the specified requestingLabel is a wildcard label or a concrete
+     * Label:
      *
-     * If the specified requestedLabel is concrete (//a/b/c), this method returns a single mapping:
-     * BazelLabel(//a/b/c) -> Set of all ATI instances (transitive closure) owned by that label.
+     * If the specified requestedLabel is concrete (//a/b/c), this method returns a single mapping: BazelLabel(//a/b/c)
+     * -> Set of all ATI instances (transitive closure) owned by that label.
      *
-     * If the specified requestingLabel is a wildcard label (//a/b/c:*), this method looks at all
-     * ATIs passed into this method and returns a mapping for each that has the same Bazel Package
-     * as the specified owningLabel, in additional to the mapping for the wildcard target.
+     * If the specified requestingLabel is a wildcard label (//a/b/c:*), this method looks at all ATIs passed into this
+     * method and returns a mapping for each that has the same Bazel Package as the specified owningLabel, in additional
+     * to the mapping for the wildcard target.
      *
-     * For example, with ATIs for these targets: //a/b/c:t1 and //a/b/c:t2 and a requestingLabel of
-     * //a/b/c:*, this method returns:
+     * For example, with ATIs for these targets: //a/b/c:t1 and //a/b/c:t2 and a requestingLabel of //a/b/c:*, this
+     * method returns:
      *
-     * //a/b/c:* -> all specified ATIs
-     * //a/b/c:t1 -> transitive closure of ATIs for t1
-     * //a/b/c:t2 -> transitive closure of ATIs for t2
+     * //a/b/c:* -> all specified ATIs //a/b/c:t1 -> transitive closure of ATIs for t1 //a/b/c:t2 -> transitive closure
+     * of ATIs for t2
      */
     private static Map<BazelLabel, Set<AspectTargetInfo>> assignAspectsToOwningLabel(BazelLabel requestingLabel,
-            Map<BazelLabel, AspectTargetInfo> depNameToTargetInfo)
-    {
+            Map<BazelLabel, AspectTargetInfo> depNameToTargetInfo) {
         Map<BazelLabel, Set<AspectTargetInfo>> transitivesClosures = new HashMap<>();
 
         // find starting point, based on target - this is trivial, but we also support wildcard
@@ -291,8 +288,7 @@ public class BazelWorkspaceAspectHelper {
     }
 
     private static Set<AspectTargetInfo> getTransitiveClosure(AspectTargetInfo aspectTargetInfo,
-            Map<BazelLabel, AspectTargetInfo> depNameToTargetInfo)
-    {
+            Map<BazelLabel, AspectTargetInfo> depNameToTargetInfo) {
         Set<AspectTargetInfo> allDeps = new HashSet<>();
         List<AspectTargetInfo> queue = new ArrayList<>();
         queue.add(aspectTargetInfo);
@@ -322,8 +318,7 @@ public class BazelWorkspaceAspectHelper {
      * @throws BazelCommandLineToolConfigurationException
      */
     private synchronized List<String> generateAspectTargetInfoFiles(Collection<BazelLabel> targets)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException
-    {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         if (targets.isEmpty()) {
             throw new IllegalArgumentException("Parameter targets cannot be empty.");
         }
@@ -338,11 +333,11 @@ public class BazelWorkspaceAspectHelper {
         Function<String, String> filter = t -> t.startsWith(">>>")
                 ? (t.endsWith(AspectTargetInfo.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
 
-                List<String> listOfGeneratedFilePaths = bazelCommandExecutor.runBazelAndGetErrorLines(
-                    ConsoleType.WORKSPACE, bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), null,
-                    args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
+        List<String> listOfGeneratedFilePaths = bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE,
+            bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), null, args, filter,
+            BazelCommandExecutor.TIMEOUT_INFINITE);
 
-                return listOfGeneratedFilePaths;
+        return listOfGeneratedFilePaths;
     }
 
     private static String getLogStr(BazelLabel target, String caller) {

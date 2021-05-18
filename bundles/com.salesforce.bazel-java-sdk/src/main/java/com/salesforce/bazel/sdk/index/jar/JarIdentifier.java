@@ -35,7 +35,7 @@ public class JarIdentifier extends CodeLocationIdentifier {
     public String version;
 
     public JarIdentifier(String g, String a, String v) {
-        super(g+":"+a+":"+v);
+        super(g + ":" + a + ":" + v);
         this.group = g;
         this.artifact = a;
         this.version = v;

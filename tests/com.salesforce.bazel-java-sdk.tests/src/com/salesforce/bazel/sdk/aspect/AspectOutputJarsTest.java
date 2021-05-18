@@ -16,9 +16,8 @@ public class AspectOutputJarsTest {
     //   "source_jar":"external/com_google_guava_guava/jar/guava-20.0-sources.jar" $SLASH_OK: sample code
     //  }
     private final String GUAVA_JAR = BazelPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0.jar"); // $SLASH_OK
-    private final String GUAVA_IJAR =
-            BazelPathHelper.osSeps(
-                    "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar"); // $SLASH_OK
+    private final String GUAVA_IJAR = BazelPathHelper.osSeps(
+        "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar"); // $SLASH_OK
     private final String GUAVA_SJAR =
             BazelPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0-sources.jar"); // $SLASH_OK
 

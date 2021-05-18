@@ -76,7 +76,6 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     public static AtomicBoolean isCorrupt = new AtomicBoolean(false);
     private static String corruptPackage = null;
 
-
     @Override
     public void initialize(IPath eclipseProjectPath, IJavaProject eclipseJavaProject) throws CoreException {
         IProject eclipseProject = eclipseJavaProject.getProject();
@@ -142,7 +141,8 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     }
 
     @Override
-    public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject javaProject, IClasspathContainer containerSuggestion) throws CoreException {
+    public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject javaProject,
+            IClasspathContainer containerSuggestion) throws CoreException {
         final boolean isRootProject = false; // this is wrong if the root project has a BUILD file ...
         IProject project = javaProject.getProject();
         flushProjectCaches(project);
@@ -223,22 +223,21 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
         }
     }
 
-    private static IClasspathContainer getClasspathContainer(IProject project, boolean isRootProject) throws JavaModelException, IOException, InterruptedException, BackingStoreException, BazelCommandLineToolConfigurationException {
-        return isRootProject ?
-                new BazelGlobalSearchClasspathContainer(project) :
-                    new BazelClasspathContainer(project);
+    private static IClasspathContainer getClasspathContainer(IProject project, boolean isRootProject)
+            throws JavaModelException, IOException, InterruptedException, BackingStoreException,
+            BazelCommandLineToolConfigurationException {
+        return isRootProject ? new BazelGlobalSearchClasspathContainer(project) : new BazelClasspathContainer(project);
     }
 
-    private static void setClasspathContainerForProject(IPath projectPath, IJavaProject project, IClasspathContainer container) throws JavaModelException {
+    private static void setClasspathContainerForProject(IPath projectPath, IJavaProject project,
+            IClasspathContainer container) throws JavaModelException {
         setClasspathContainerForProject(projectPath, project, container, null);
     }
 
-    private static void setClasspathContainerForProject(IPath projectPath, IJavaProject project, IClasspathContainer container, IProgressMonitor monitor) throws JavaModelException {
+    private static void setClasspathContainerForProject(IPath projectPath, IJavaProject project,
+            IClasspathContainer container, IProgressMonitor monitor) throws JavaModelException {
         JavaCoreHelper ch = BazelPluginActivator.getJavaCoreHelper();
-        ch.setClasspathContainer(
-            projectPath,
-            new IJavaProject[]{project},
-            new IClasspathContainer[]{container},
+        ch.setClasspathContainer(projectPath, new IJavaProject[] { project }, new IClasspathContainer[] { container },
             monitor);
     }
 }

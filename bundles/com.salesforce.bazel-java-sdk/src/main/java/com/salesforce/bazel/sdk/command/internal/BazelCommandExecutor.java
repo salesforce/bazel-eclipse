@@ -64,7 +64,7 @@ public class BazelCommandExecutor {
 
     public synchronized List<String> runBazelAndGetOutputLines(File workingDirectory,
             WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector, long timeoutMS)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         CommandBuilder builder =
                 getConfiguredCommandBuilder(ConsoleType.WORKSPACE, workingDirectory, progressMonitor, args, timeoutMS);
@@ -76,7 +76,7 @@ public class BazelCommandExecutor {
 
     public synchronized List<String> runBazelAndGetOuputLines(ConsoleType consoleType, File workingDirectory,
             WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector, long timeoutMS)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         CommandBuilder builder =
                 getConfiguredCommandBuilder(consoleType, workingDirectory, progressMonitor, args, timeoutMS);
@@ -92,7 +92,7 @@ public class BazelCommandExecutor {
 
     public synchronized List<String> runBazelAndGetErrorLines(File directory, WorkProgressMonitor progressMonitor,
             List<String> args, Function<String, String> selector, long timeoutMS)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         CommandBuilder builder =
                 getConfiguredCommandBuilder(ConsoleType.WORKSPACE, directory, progressMonitor, args, timeoutMS);
@@ -104,7 +104,7 @@ public class BazelCommandExecutor {
 
     public synchronized List<String> runBazelAndGetErrorLines(ConsoleType consoleType, File directory,
             WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector, long timeoutMS)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         CommandBuilder builder = getConfiguredCommandBuilder(consoleType, directory, progressMonitor, args, timeoutMS);
         Command command = builder.setStderrLineSelector(selector).build();
@@ -135,13 +135,12 @@ public class BazelCommandExecutor {
 
     private CommandBuilder getConfiguredCommandBuilder(ConsoleType type, File directory,
             WorkProgressMonitor progressMonitor, List<String> args, long timeoutMS)
-                    throws BazelCommandLineToolConfigurationException {
+            throws BazelCommandLineToolConfigurationException {
 
         String consoleName = type.getConsoleName(directory);
 
         return commandBuilder.setConsoleName(consoleName).setDirectory(directory).setTimeout(timeoutMS)
-                .addArguments(bazelExecutable.getAbsolutePath()).addArguments(args)
-                .setProgressMonitor(progressMonitor);
+                .addArguments(bazelExecutable.getAbsolutePath()).addArguments(args).setProgressMonitor(progressMonitor);
     }
 
 }

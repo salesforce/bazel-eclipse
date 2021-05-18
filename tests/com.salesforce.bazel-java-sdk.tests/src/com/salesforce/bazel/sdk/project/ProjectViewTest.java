@@ -105,7 +105,7 @@ public class ProjectViewTest {
         assertNotEquals(p1, p2);
     }
 
-    @Test(expected=UnsupportedOperationException.class)
+    @Test(expected = UnsupportedOperationException.class)
     public void testUnmodifiableDirectories() {
         File root = new File(".");
         ProjectView projectView = new ProjectView(root, "");

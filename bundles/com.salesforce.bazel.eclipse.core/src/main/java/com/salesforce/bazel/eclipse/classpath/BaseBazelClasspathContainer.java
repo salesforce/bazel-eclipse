@@ -78,7 +78,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     protected IClasspathEntry[] lastComputedClasspath = null;
 
     public BaseBazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
 
@@ -111,7 +111,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
         // Also, if the user is shutting down the IDE don't waste cycles computing classpaths.
         if (lastComputedClasspath != null) {
             StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-            for (int i = 0; i<stackTraceElements.length; i++) {
+            for (int i = 0; i < stackTraceElements.length; i++) {
                 StackTraceElement caller = stackTraceElements[i];
                 if (caller.getMethodName().equals("saveContainers")) {
                     // fullname: JavaModelManager@VariablesAndContainersSaveHelper.saveContainers()
@@ -211,7 +211,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
                 // TODO this can happen if someone does a 'bazel clean' using the command line #113
                 // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
                 logger.error("Problem adding jar to project [" + bazelProject.name
-                    + "] because it does not exist on the filesystem: " + path);
+                        + "] because it does not exist on the filesystem: " + path);
                 continueOrThrow(ex);
             }
         } else {
@@ -220,7 +220,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
                 // TODO this can happen if someone does a 'bazel clean' using the command line #113
                 // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
                 logger.error("Problem adding jar to project [" + bazelProject.name
-                    + "] because it does not exist on the filesystem: " + path);
+                        + "] because it does not exist on the filesystem: " + path);
             }
         }
         return org.eclipse.core.runtime.Path.fromOSString(path.toString());

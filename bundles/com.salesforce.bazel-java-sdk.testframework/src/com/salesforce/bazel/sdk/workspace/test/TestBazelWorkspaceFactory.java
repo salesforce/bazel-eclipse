@@ -78,8 +78,7 @@ public class TestBazelWorkspaceFactory {
             anyE.printStackTrace();
             throw anyE;
         }
-        boolean explicitJavaTestDeps =
-                "true".equals(workspaceDescriptor.testOptions.get("EXPLICIT_JAVA_TEST_DEPS"));
+        boolean explicitJavaTestDeps = "true".equals(workspaceDescriptor.testOptions.get("EXPLICIT_JAVA_TEST_DEPS"));
 
         String previousJavaLibTarget = null;
         String previousAspectFilePath = null;
@@ -91,7 +90,7 @@ public class TestBazelWorkspaceFactory {
 
             // create the catalog entries
             TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(workspaceDescriptor,
-                packageRelativePath, packageName, javaPackageDir);
+                    packageRelativePath, packageName, javaPackageDir);
 
             // we will be collecting locations of Aspect json files for this package
             Set<String> packageAspectFiles = new TreeSet<>();
@@ -136,13 +135,11 @@ public class TestBazelWorkspaceFactory {
             String aspectFilePath_slf4j = TestAspectFileCreator.createJavaAspectFileForMavenJar(
                 workspaceDescriptor.outputBaseDirectory, "org_slf4j_slf4j_api", "slf4j-api-1.7.25");
             packageAspectFiles.add(aspectFilePath_slf4j);
-            createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "org_slf4j_slf4j_api",
-                    "slf4j-api-1.7.25");
+            createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "org_slf4j_slf4j_api", "slf4j-api-1.7.25");
             String aspectFilePath_guava = TestAspectFileCreator.createJavaAspectFileForMavenJar(
                 workspaceDescriptor.outputBaseDirectory, "com_google_guava_guava", "guava-20.0");
             packageAspectFiles.add(aspectFilePath_guava);
-            createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "com_google_guava_guava",
-                    "guava-20.0");
+            createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "com_google_guava_guava", "guava-20.0");
 
             // test source
             List<String> testSourceFiles = new ArrayList<>();
@@ -183,7 +180,7 @@ public class TestBazelWorkspaceFactory {
                     workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core", "hamcrest-core-1.3");
                 packageAspectFiles.add(aspectFilePath_hamcrest);
                 createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core",
-                        "hamcrest-core-1.3");
+                    "hamcrest-core-1.3");
             }
 
             // we chain the libs together to test inter project deps
@@ -209,8 +206,8 @@ public class TestBazelWorkspaceFactory {
             genruleLib.mkdir();
 
             // create the catalog entries
-            TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(workspaceDescriptor,
-                packageRelativePath, packageName, genruleLib);
+            TestBazelPackageDescriptor packageDescriptor =
+                    new TestBazelPackageDescriptor(workspaceDescriptor, packageRelativePath, packageName, genruleLib);
 
             File buildFile = new File(genruleLib, workspaceDescriptor.buildFilename);
             buildFile.createNewFile();
@@ -233,8 +230,7 @@ public class TestBazelWorkspaceFactory {
      * This method creates this structure of directories.
      */
     public void createOutputBaseStructure() {
-        workspaceDescriptor.dirOutputBaseExternal =
-                new File(workspaceDescriptor.outputBaseDirectory, "external");
+        workspaceDescriptor.dirOutputBaseExternal = new File(workspaceDescriptor.outputBaseDirectory, "external");
         workspaceDescriptor.dirOutputBaseExternal.mkdirs();
         workspaceDescriptor.dirExecRootParent = new File(workspaceDescriptor.outputBaseDirectory, "execroot"); // [outputbase]/execroot
         workspaceDescriptor.dirExecRootParent.mkdirs();
@@ -243,14 +239,12 @@ public class TestBazelWorkspaceFactory {
         workspaceDescriptor.dirExecRoot.mkdirs();
         workspaceDescriptor.dirOutputPath = new File(workspaceDescriptor.dirExecRoot, "bazel-out"); // [outputbase]/execroot/test_workspace/bazel-out
         workspaceDescriptor.dirOutputPath.mkdirs();
-        workspaceDescriptor.dirOutputPathPlatform =
-                new File(workspaceDescriptor.dirOutputPath, "darwin-fastbuild"); // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild
+        workspaceDescriptor.dirOutputPathPlatform = new File(workspaceDescriptor.dirOutputPath, "darwin-fastbuild"); // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild
         workspaceDescriptor.dirOutputPathPlatform.mkdirs();
 
         workspaceDescriptor.dirBazelBin = new File(workspaceDescriptor.dirOutputPathPlatform, "bin"); // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild/bin
         workspaceDescriptor.dirBazelBin.mkdirs();
-        workspaceDescriptor.dirBazelTestLogs =
-                new File(workspaceDescriptor.dirOutputPathPlatform, "testlogs"); // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild/testlogs
+        workspaceDescriptor.dirBazelTestLogs = new File(workspaceDescriptor.dirOutputPathPlatform, "testlogs"); // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild/testlogs
         workspaceDescriptor.dirBazelTestLogs.mkdirs();
 
     }

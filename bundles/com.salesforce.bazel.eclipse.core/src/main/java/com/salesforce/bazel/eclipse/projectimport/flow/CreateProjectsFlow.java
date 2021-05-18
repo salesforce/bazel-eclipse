@@ -77,14 +77,18 @@ public class CreateProjectsFlow implements ImportFlow {
 
         EclipseProjectCreator projectCreator = new EclipseProjectCreator(bazelWorkspaceRootDirectory);
 
-        List<IProject> previouslyImportedProjects = Arrays.asList(resourceHelper.getProjectsForBazelWorkspace(bazelWorkspace));
+        List<IProject> previouslyImportedProjects =
+                Arrays.asList(resourceHelper.getProjectsForBazelWorkspace(bazelWorkspace));
         for (BazelPackageLocation packageLocation : orderedModules) {
             if (!packageLocation.isWorkspaceRoot()) {
-                String projectName = computeEclipseProjectNameForBazelPackage(packageLocation, previouslyImportedProjects, ctx.getImportedProjects());
+                String projectName = computeEclipseProjectNameForBazelPackage(packageLocation,
+                    previouslyImportedProjects, ctx.getImportedProjects());
                 EclipseProjectStructureInspector inspector = new EclipseProjectStructureInspector(packageLocation);
                 String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
-                List<BazelLabel> targets = Objects.requireNonNull(ctx.getPackageLocationToTargets().get(packageLocation));
-                IProject project = projectCreator.createProject(projectName, packageFSPath, inspector.getPackageSourceCodeFSPaths(), targets);
+                List<BazelLabel> targets =
+                        Objects.requireNonNull(ctx.getPackageLocationToTargets().get(packageLocation));
+                IProject project = projectCreator.createProject(projectName, packageFSPath,
+                    inspector.getPackageSourceCodeFSPaths(), targets);
 
                 if (BazelDirectoryStructureUtil.isBazelPackage(bazelWorkspaceRootDirectory, packageFSPath)) {
                     // link all files in the package root into the Eclipse project
@@ -92,7 +96,8 @@ public class CreateProjectsFlow implements ImportFlow {
                         new File(bazelWorkspaceRootDirectory, packageFSPath), null);
                     ctx.addImportedProject(project, packageLocation);
                 } else {
-                    LOG.error("Could not find BUILD file for package {}", packageLocation.getBazelPackageFSRelativePath());
+                    LOG.error("Could not find BUILD file for package {}",
+                        packageLocation.getBazelPackageFSRelativePath());
                 }
                 progressMonitor.worked(1);
             }
@@ -100,11 +105,12 @@ public class CreateProjectsFlow implements ImportFlow {
     }
 
     /**
-     * Uses the last token in the Bazel package token (e.g. apple-api for //projects/libs/apple-api) for the name. But if another project
-     * has already been imported with the same name, start appending a number to the name until it becomes unique.
+     * Uses the last token in the Bazel package token (e.g. apple-api for //projects/libs/apple-api) for the name. But
+     * if another project has already been imported with the same name, start appending a number to the name until it
+     * becomes unique.
      */
-    private static String computeEclipseProjectNameForBazelPackage(BazelPackageLocation packageInfo, List<IProject> previouslyImportedProjects,
-            List<IProject> currentlyImportedProjectsList) {
+    private static String computeEclipseProjectNameForBazelPackage(BazelPackageLocation packageInfo,
+            List<IProject> previouslyImportedProjects, List<IProject> currentlyImportedProjectsList) {
         String packageName = packageInfo.getBazelPackageNameLastSegment();
         String finalPackageName = packageName;
         int index = 2;
@@ -112,8 +118,9 @@ public class CreateProjectsFlow implements ImportFlow {
         boolean foundUniqueName = false;
         while (!foundUniqueName) {
             foundUniqueName = true;
-            if (doesProjectNameConflict(previouslyImportedProjects, finalPackageName) || doesProjectNameConflict(currentlyImportedProjectsList, finalPackageName)) {
-                finalPackageName = packageName+index;
+            if (doesProjectNameConflict(previouslyImportedProjects, finalPackageName)
+                    || doesProjectNameConflict(currentlyImportedProjectsList, finalPackageName)) {
+                finalPackageName = packageName + index;
                 index++;
                 foundUniqueName = false;
             }

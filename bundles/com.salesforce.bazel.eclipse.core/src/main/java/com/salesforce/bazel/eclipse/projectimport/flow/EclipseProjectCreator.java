@@ -143,10 +143,11 @@ class EclipseProjectCreator {
             }
         } else {
             BazelPluginActivator.error("Project [" + eclipseProjectName
-                + "] already exists, which is unexpected. Project initialization will not occur.");
+                    + "] already exists, which is unexpected. Project initialization will not occur.");
             createdEclipseProject = newEclipseProject;
         }
-        BazelPluginActivator.getBazelProjectManager().addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
+        BazelPluginActivator.getBazelProjectManager()
+                .addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
         return createdEclipseProject;
     }
 }

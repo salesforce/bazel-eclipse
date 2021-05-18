@@ -38,7 +38,7 @@ public class BazelBuildyApp {
         CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
         CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = new BazelWorkspaceCommandRunner(bazelExecutable, null,
-            commandBuilder, consoleFactory, bazelWorkspaceDir);
+                commandBuilder, consoleFactory, bazelWorkspaceDir);
 
         // build all
         Set<String> targets = new HashSet<>();

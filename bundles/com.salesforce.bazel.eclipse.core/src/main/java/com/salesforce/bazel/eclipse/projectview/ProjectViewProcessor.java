@@ -72,18 +72,15 @@ final class ProjectViewProcessor {
                 if (additionalPackages.isEmpty()) {
                     invalidDirectories.add(packageLocation);
                 } else {
-                    additionalDirectories.addAll(
-                        additionalPackages.stream()
-                            .map(p -> new ProjectViewPackageLocation(rootDir, p))
-                            .collect(Collectors.toList()));
+                    additionalDirectories.addAll(additionalPackages.stream()
+                            .map(p -> new ProjectViewPackageLocation(rootDir, p)).collect(Collectors.toList()));
                 }
             }
         }
         directories.addAll(additionalDirectories);
 
-        return invalidDirectories.isEmpty() ?
-            new ProjectView(rootDir, directories, projectView.getTargets()) :
-            projectView;
+        return invalidDirectories.isEmpty() ? new ProjectView(rootDir, directories, projectView.getTargets())
+                : projectView;
     }
 
 }

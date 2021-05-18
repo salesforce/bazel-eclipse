@@ -68,21 +68,17 @@ public class ProjectImporterFactory {
     private List<ImportFlow> flows;
     private ProjectOrderResolver projectOrderResolver = new ProjectOrderResolverImpl();
 
-    public ProjectImporterFactory(
-            BazelPackageLocation bazelWorkspaceRootPackageInfo,
+    public ProjectImporterFactory(BazelPackageLocation bazelWorkspaceRootPackageInfo,
             List<BazelPackageLocation> selectedBazelPackages) {
         this(bazelWorkspaceRootPackageInfo, selectedBazelPackages, createFlows());
     }
 
-    ProjectImporterFactory(
-            BazelPackageLocation bazelWorkspaceRootPackageInfo,
-            List<BazelPackageLocation> selectedBazelPackages,
-            List<ImportFlow> flows) {
+    ProjectImporterFactory(BazelPackageLocation bazelWorkspaceRootPackageInfo,
+            List<BazelPackageLocation> selectedBazelPackages, List<ImportFlow> flows) {
         this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
         this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
         this.flows = Objects.requireNonNull(flows);
     }
-
 
     public void setImportOrderResolver(ProjectOrderResolver projectOrderResolver) {
         this.projectOrderResolver = projectOrderResolver;
@@ -97,26 +93,16 @@ public class ProjectImporterFactory {
     }
 
     public ProjectImporter build() {
-        return new FlowProjectImporter(flows.toArray(new ImportFlow[flows.size()]), bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver);
+        return new FlowProjectImporter(flows.toArray(new ImportFlow[flows.size()]), bazelWorkspaceRootPackageInfo,
+                selectedBazelPackages, projectOrderResolver);
     }
 
     private static List<ImportFlow> createFlows() {
         // each project import uses a new list of flow instances so that flows can have state
         // the List returned here needs to be modifiable
-        return new ArrayList<>(
-            Arrays.asList(
-                new ImportFlow[] {
-                    new InitJREFlow(),
-                    new InitImportFlow(),
-                    new DetermineTargetsFlow(),
-                    new LoadAspectsFlow(),
-                    new LoadTargetsFlow(),
-                    new CreateRootProjectFlow(),
-                    new OrderProjectsFlow(),
-                    new CreateProjectsFlow(),
-                    new SetupProjectBuildersFlow(),
-                    new SetupClasspathContainersFlow(),
-                    new SetupRootClasspathContainerFlow(),
-            }));
+        return new ArrayList<>(Arrays.asList(new ImportFlow[] { new InitJREFlow(), new InitImportFlow(),
+                new DetermineTargetsFlow(), new LoadAspectsFlow(), new LoadTargetsFlow(), new CreateRootProjectFlow(),
+                new OrderProjectsFlow(), new CreateProjectsFlow(), new SetupProjectBuildersFlow(),
+                new SetupClasspathContainersFlow(), new SetupRootClasspathContainerFlow(), }));
     }
 }

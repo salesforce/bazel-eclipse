@@ -34,7 +34,7 @@ public class SourceFileIdentifier extends CodeLocationIdentifier {
     public ClassIdentifier classId;
 
     public SourceFileIdentifier(CodeLocationDescriptor artifact, ClassIdentifier classId) {
-        super(artifact.id.locationIdentifier+":"+classId.toString());
+        super(artifact.id.locationIdentifier + ":" + classId.toString());
         this.classId = classId;
     }
 }

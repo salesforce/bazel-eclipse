@@ -29,8 +29,8 @@ public class EclipseClasspathUtilTest {
         IJavaProject D = getMockedProject("D", new String[] {});
         IJavaProject unrelated = getMockedProject("unrelated", new String[] { "Z" });
 
-        Set<IProject> downstreams =
-                EclipseClasspathUtil.getDownstreamProjectsOf(D.getProject(), new IJavaProject[] { A, B, C, D, unrelated });
+        Set<IProject> downstreams = EclipseClasspathUtil.getDownstreamProjectsOf(D.getProject(),
+            new IJavaProject[] { A, B, C, D, unrelated });
 
         assertEquals(3, downstreams.size());
         assertTrue(downstreams.contains(A.getProject()));

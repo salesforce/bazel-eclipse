@@ -86,6 +86,4 @@ public class LoadTargetsFlow implements ImportFlow {
         cmdRunner.queryBazelTargetsInBuildFile(allTargets);
     }
 
-
-
 }

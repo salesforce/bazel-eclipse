@@ -72,7 +72,6 @@ public final class EclipseClasspathUtil {
         }
     }
 
-
     private EclipseClasspathUtil() {
         throw new IllegalArgumentException("Not meant to be instantiated");
     }

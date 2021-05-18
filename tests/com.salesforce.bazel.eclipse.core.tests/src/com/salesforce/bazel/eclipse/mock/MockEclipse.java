@@ -66,7 +66,8 @@ public class MockEclipse {
     private MockIPreferenceStore mockPrefsStore;
     private MockResourceHelper mockResourceHelper;
     private MockJavaCoreHelper mockJavaCoreHelper;
-    private final OperatingEnvironmentDetectionStrategy mockOsEnvStrategy = new MockOperatingEnvironmentDetectionStrategy();
+    private final OperatingEnvironmentDetectionStrategy mockOsEnvStrategy =
+            new MockOperatingEnvironmentDetectionStrategy();
     private MockIEclipsePreferences mockPrefs;
 
     // Feature collaborators
@@ -129,9 +130,8 @@ public class MockEclipse {
         // initialize our plugins/feature with all the mock infrastructure
         // this simulates how our feature starts up when run inside of Eclipse
         pluginActivator.startInternal(bazelCommandEnvironment.bazelAspectLocation,
-            bazelCommandEnvironment.commandBuilder, bazelCommandEnvironment.commandConsole,
-            projectManager, mockResourceHelper, mockJavaCoreHelper, mockOsEnvStrategy,
-            configManager, externalJarRuleManager);
+            bazelCommandEnvironment.commandBuilder, bazelCommandEnvironment.commandConsole, projectManager,
+            mockResourceHelper, mockJavaCoreHelper, mockOsEnvStrategy, configManager, externalJarRuleManager);
 
         // At this point our plugins are wired up, the Bazel workspace is created, but the user
         // has not run a Bazel Import... wizard yet. See EclipseFunctionalTestEnvironmentFactory

@@ -58,40 +58,39 @@ import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
- * The global search feature enables the user to search for types (e.g. Java classes) using the Open Type dialog,
- * and find results that are in the Bazel Workspace even if none of the currently imported packages
- * has that type in the transitive closure of dependencies. 
- * <p> 
- * Internally, this means we take the union of all dependencies (currently, jar and source files) found in the 
- * Bazel Workspace, plus all of the types built within the workspace, and adding them to this synthetic 
- * classpath container attached to the 'Bazel Workspace' project in Eclipse. If the Bazel Workspace has 
- * an enormous set of dependencies, this may make type search  slow so we allow the user to disable it 
- * in the Bazel preferences. 
+ * The global search feature enables the user to search for types (e.g. Java classes) using the Open Type dialog, and
+ * find results that are in the Bazel Workspace even if none of the currently imported packages has that type in the
+ * transitive closure of dependencies.
+ * <p>
+ * Internally, this means we take the union of all dependencies (currently, jar and source files) found in the Bazel
+ * Workspace, plus all of the types built within the workspace, and adding them to this synthetic classpath container
+ * attached to the 'Bazel Workspace' project in Eclipse. If the Bazel Workspace has an enormous set of dependencies,
+ * this may make type search slow so we allow the user to disable it in the Bazel preferences.
  */
 public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER";
 
     protected final BazelConfigurationManager config;
     protected final BazelJvmIndexClasspath bazelJvmIndexClasspath;
-    
+
     private static List<BazelJvmIndexClasspath> instances = new ArrayList<>();
 
     public BazelGlobalSearchClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException { 
+            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
-    
-    public BazelGlobalSearchClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper) 
+
+    public BazelGlobalSearchClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper);
-        
+
         BazelPluginActivator activator = BazelPluginActivator.getInstance();
         config = activator.getConfigurationManager();
-        
+
         OperatingEnvironmentDetectionStrategy os = activator.getOperatingEnvironmentDetectionStrategy();
         BazelExternalJarRuleManager externalJarManager = activator.getBazelExternalJarRuleManager();
-        
+
         // check if the user has provided an additional location to look for jars
         List<File> additionalJarLocations = null;
         IPreferenceStore prefs = activator.getPreferenceStore();
@@ -104,11 +103,12 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
                 additionalJarLocations.add(jarCacheDirFile);
             }
         }
-        
-        bazelJvmIndexClasspath = new BazelJvmIndexClasspath(this.bazelWorkspace, os, externalJarManager, additionalJarLocations); 
+
+        bazelJvmIndexClasspath =
+                new BazelJvmIndexClasspath(this.bazelWorkspace, os, externalJarManager, additionalJarLocations);
         instances.add(bazelJvmIndexClasspath);
     }
-    
+
     @Override
     public String getDescription() {
         return "Bazel Global Search Classpath";
@@ -119,21 +119,23 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
         // this method is overridden just for a breakpoint opportunity
         return super.getClasspathEntries();
     }
-    
+
     @Override
     protected BazelJvmClasspathResponse computeClasspath() {
         if (!config.isGlobalClasspathSearchEnabled()) {
             // user has disabled the global search feature
             return new BazelJvmClasspathResponse();
         }
-        
+
         // the Java SDK will produce a list of logical classpath entries
         long startTime = System.currentTimeMillis();
-        BazelJvmClasspathResponse computedClasspath = bazelJvmIndexClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
+        BazelJvmClasspathResponse computedClasspath =
+                bazelJvmIndexClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
         long endTime = System.currentTimeMillis();
-        
-        BazelPluginActivator.info("BazelGlobalSearchClasspathContainer completed indexing in "+(endTime-startTime)+" milliseconds.");
-        
+
+        BazelPluginActivator.info(
+            "BazelGlobalSearchClasspathContainer completed indexing in " + (endTime - startTime) + " milliseconds.");
+
         return computedClasspath;
     }
 

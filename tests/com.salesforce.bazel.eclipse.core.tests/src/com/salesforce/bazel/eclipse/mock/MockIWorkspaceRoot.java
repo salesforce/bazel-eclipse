@@ -62,9 +62,8 @@ public class MockIWorkspaceRoot implements IWorkspaceRoot {
     /**
      * This is where we stored the linked folder bookkeeping.
      * <p>
-     * The key is the virtual path in the workspace: 
-     * /Users/plaird/dev/runtime-InnerEclipse-413/apple-api/src/main/java $SLASH_OK: sample code
-     * The value is the actual path in the Bazel workspace:
+     * The key is the virtual path in the workspace: /Users/plaird/dev/runtime-InnerEclipse-413/apple-api/src/main/java
+     * $SLASH_OK: sample code The value is the actual path in the Bazel workspace:
      * /Users/plaird/dev/simplejava/projects/libs/apple/apple-api/src/main/java $SLASH_OK: sample code
      * <p>
      * Note that the path keys are made absolute before storing in the map, and you must do the same prior to lookups:
@@ -75,9 +74,8 @@ public class MockIWorkspaceRoot implements IWorkspaceRoot {
     /**
      * This is where we stored the linked file bookkeeping.
      * <p>
-     * The key is the virtual path in the workspace: 
-     * /Users/plaird/dev/runtime-InnerEclipse-413/apple-api/src/main/java $SLASH_OK: sample code
-     * The value is the actual path in the Bazel workspace:
+     * The key is the virtual path in the workspace: /Users/plaird/dev/runtime-InnerEclipse-413/apple-api/src/main/java
+     * $SLASH_OK: sample code The value is the actual path in the Bazel workspace:
      * /Users/plaird/dev/simplejava/projects/libs/apple/apple-api/src/main/java $SLASH_OK: sample code
      * <p>
      * Note that the path keys are made absolute before storing in the map, and you must do the same prior to lookups:

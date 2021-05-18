@@ -96,8 +96,8 @@ public class BazelJvmClasspath {
     /**
      * Computes the JVM classpath for the associated BazelProject
      * <p>
-     * TODO provide different classpath strategies. This one the Maven-like/Eclipse JDT style, where the
-     * classpath is the union of the classpaths of all java rules in the package.
+     * TODO provide different classpath strategies. This one the Maven-like/Eclipse JDT style, where the classpath is
+     * the union of the classpaths of all java rules in the package.
      */
     public BazelJvmClasspathResponse getClasspathEntries() {
         // sanity check
@@ -143,7 +143,8 @@ public class BazelJvmClasspath {
                 // we pass the targets that are configured for the current project to bazel query
                 // typically, this is a single wildcard target, but the user may
                 // also have specified explicit targets to use
-                List<BazelLabel> labels = configuredTargetsForProject.getConfiguredTargets().stream().map(BazelLabel::new).collect(Collectors.toList());
+                List<BazelLabel> labels = configuredTargetsForProject.getConfiguredTargets().stream()
+                        .map(BazelLabel::new).collect(Collectors.toList());
                 Collection<BazelBuildFile> buildFiles = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(labels);
                 // since we only call query with labels for the same package, we expect to get a single BazelBuildFile instance back
                 if (buildFiles.isEmpty()) {
@@ -186,7 +187,8 @@ public class BazelJvmClasspath {
                         //   java_import(name = "zip4j", jars = ["lib/zip4j-2.6.4.jar"])
                         if (!"java_import".equals(targetInfo.getKind())) {
                             // some other case that we didn't expect, proceed but log a warn
-                            logger.warn("Unexpected local target type as dependency: " + targetInfo.getKind() + "; expected either java_library or java_import.");
+                            logger.warn("Unexpected local target type as dependency: " + targetInfo.getKind()
+                                    + "; expected either java_library or java_import.");
                         }
                     }
 

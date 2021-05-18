@@ -120,7 +120,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * Iteracts with preferences
      */
     private static BazelConfigurationManager configurationManager;
-    
+
     /**
      * Manager for working with external jars
      */
@@ -162,8 +162,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     public void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
             CommandConsoleFactory consoleFactory, BazelProjectManager projectMgr, ResourceHelper rh,
             JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, BazelConfigurationManager configMgr,
-            BazelExternalJarRuleManager externalJarRuleMgr)
-            throws Exception {
+            BazelExternalJarRuleManager externalJarRuleMgr) throws Exception {
         // reset internal state (this is so tests run in a clean env)
         bazelWorkspace = null;
         bazelWorkspaceCommandRunner = null;
@@ -327,7 +326,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     public BazelExternalJarRuleManager getBazelExternalJarRuleManager() {
         return externalJarRuleManager;
     }
-    
+
     // LOGGING
 
     /**

@@ -1,17 +1,13 @@
 /*******************************************************************************
  * Copyright (c) 2008-2018 Sonatype, Inc. and others.
  *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License 2.0
- * which accompanies this distribution, and is available at
- * https://www.eclipse.org/legal/epl-2.0/
+ * All rights reserved. This program and the accompanying materials are made available under the terms of the Eclipse
+ * Public License 2.0 which accompanies this distribution, and is available at https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
  *
- * Contributors:
- *      Sonatype, Inc. - initial API and implementation
- *      Red Hat, Inc. - refactored lifecycle mapping discovery
- *      Salesforce - Adapted for Bazel Eclipse
+ * Contributors: Sonatype, Inc. - initial API and implementation Red Hat, Inc. - refactored lifecycle mapping discovery
+ * Salesforce - Adapted for Bazel Eclipse
  *******************************************************************************/
 
 // adapted from M2Eclipse org.eclipse.m2e.core.ui.internal.wizards.MavenImportWizardPage::ProjectLabelProvider

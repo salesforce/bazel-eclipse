@@ -57,10 +57,8 @@ public class OrderProjectsFlow implements ImportFlow {
         List<BazelPackageLocation> selectedBazelPackages = ctx.getSelectedBazelPackages();
         AspectTargetInfos aspectTargetInfos = ctx.getAspectTargetInfos();
 
-        Iterable<BazelPackageLocation> postOrderedModules = projectOrderResolver.computePackageOrder(
-                bazelWorkspaceRootPackageInfo,
-                selectedBazelPackages,
-                aspectTargetInfos);
+        Iterable<BazelPackageLocation> postOrderedModules = projectOrderResolver
+                .computePackageOrder(bazelWorkspaceRootPackageInfo, selectedBazelPackages, aspectTargetInfos);
 
         ctx.setOrderedModules(postOrderedModules);
     }

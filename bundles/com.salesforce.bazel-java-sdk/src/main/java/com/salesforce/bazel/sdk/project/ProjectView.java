@@ -128,8 +128,7 @@ public class ProjectView {
     }
 
     /**
-     * Adds the default targets for each directory that does not have one (or more) entries
-     * in the "targets:" section.
+     * Adds the default targets for each directory that does not have one (or more) entries in the "targets:" section.
      */
     public void addDefaultTargets() {
         List<BazelLabel> defaultLabels = new ArrayList<>();
@@ -172,9 +171,9 @@ public class ProjectView {
         if (!(other instanceof ProjectView)) {
             return false;
         }
-        ProjectView o = (ProjectView)other;
-        return packageToLineNumber.keySet().equals(o.packageToLineNumber.keySet()) &&
-                targetToLineNumber.keySet().equals(o.targetToLineNumber.keySet());
+        ProjectView o = (ProjectView) other;
+        return packageToLineNumber.keySet().equals(o.packageToLineNumber.keySet())
+                && targetToLineNumber.keySet().equals(o.targetToLineNumber.keySet());
     }
 
     private List<BazelLabel> getTargetsForDirectory(String directory) {
@@ -192,9 +191,7 @@ public class ProjectView {
     }
 
     private static void initSections(List<BazelPackageLocation> packages, List<BazelLabel> targets,
-            Map<BazelPackageLocation, Integer> packageToLineNumber,
-            Map<BazelLabel, Integer> targetToLineNumber)
-    {
+            Map<BazelPackageLocation, Integer> packageToLineNumber, Map<BazelLabel, Integer> targetToLineNumber) {
         // directories:
         //   # comment
         // therefore:
@@ -212,9 +209,7 @@ public class ProjectView {
     }
 
     private static void parseSections(String content, File rootWorkspaceDirectory,
-            Map<BazelPackageLocation, Integer> packageToLineNumber,
-            Map<BazelLabel, Integer> targetToLineNumber)
-    {
+            Map<BazelPackageLocation, Integer> packageToLineNumber, Map<BazelLabel, Integer> targetToLineNumber) {
         boolean withinDirectoriesSection = false;
         boolean withinTargetsSection = false;
         int lineNumber = 0;
@@ -248,6 +243,5 @@ public class ProjectView {
             }
         }
     }
-
 
 }

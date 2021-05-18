@@ -27,13 +27,12 @@ import java.io.File;
 import java.util.zip.ZipFile;
 
 /**
- * Resolver that decides if the passed File is an interesting jar file, and if so it will deduce
- * GAV information from the path.
+ * Resolver that decides if the passed File is an interesting jar file, and if so it will deduce GAV information from
+ * the path.
  */
 public class JarIdentiferResolver {
 
-    public JarIdentiferResolver() {
-    }
+    public JarIdentiferResolver() {}
 
     public JarIdentifier resolveJarIdentifier(File gavRoot, File pathFile, ZipFile zipFile) {
         String path = pathFile.getAbsolutePath();
@@ -74,26 +73,26 @@ public class JarIdentiferResolver {
         String[] gavParts = gavPart.split(File.separator);
 
         // open-context-impl-0.1.8.jar => open-context-impl
-        String artifact = gavParts[gavParts.length-1];
+        String artifact = gavParts[gavParts.length - 1];
         if (artifact.endsWith("-ijar.jar")) {
             // Bazel convention, need to customize it here because the extra hyphen confuses the logic below
-            artifact = artifact.substring(0, artifact.length()-9);
+            artifact = artifact.substring(0, artifact.length() - 9);
         } else if (artifact.endsWith(".jar")) {
             // standard jars
-            artifact = artifact.substring(0, artifact.length()-4);
+            artifact = artifact.substring(0, artifact.length() - 4);
         }
         int artifactVersionIndex = artifact.lastIndexOf("-");
         String version = "none";
         int groupOffset = 1;
         if (artifactVersionIndex != -1) {
             artifact = artifact.substring(0, artifactVersionIndex); // remove the embedded version
-            version = gavParts[gavParts.length-2];
+            version = gavParts[gavParts.length - 2];
             groupOffset = 3;
         }
 
         String group = "";
         boolean firstToken = true;
-        for (int i = 0; i<(gavParts.length-groupOffset); i++) {
+        for (int i = 0; i < (gavParts.length - groupOffset); i++) {
             if (!firstToken) {
                 group = group + "." + gavParts[i];
             } else if (!gavParts[i].isEmpty()) {

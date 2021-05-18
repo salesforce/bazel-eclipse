@@ -13,9 +13,9 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 /**
  * Specialization of BazelExternalJarRuleType for the maven_install rule.
  * <p>
- * The maven_install rule is a bit tricky, in that it is not reliable in where to find the 
- * downloaded jars. Also, the source jars may not be there. This will be an evolving solution
- * as we better understand how to make this more reliable.
+ * The maven_install rule is a bit tricky, in that it is not reliable in where to find the downloaded jars. Also, the
+ * source jars may not be there. This will be an evolving solution as we better understand how to make this more
+ * reliable.
  */
 public class MavenInstallExternalJarRuleType extends BazelExternalJarRuleType {
     // these options are expected to be driven by tool preferences
@@ -25,7 +25,7 @@ public class MavenInstallExternalJarRuleType extends BazelExternalJarRuleType {
     // derived from the WORKSPACE file (or .bzl files included from the WORKSPACE)
     // each maven_install rule invocation must have a unique namespace, the default value is "maven"
     private static Map<String, List<String>> mavenInstallNamespaces;
-    
+
     // maven_install can sometimes use coursier to download jars
     // delegate to a dedicated util to worry about that
     private CoursierUtil coursierUtil = new CoursierUtil();
@@ -34,14 +34,14 @@ public class MavenInstallExternalJarRuleType extends BazelExternalJarRuleType {
         super(BazelExternalJarRuleManager.MAVEN_INSTALL, os);
         init();
     }
-    
+
     private void init() {
         mavenInstallNamespaces = new HashMap<>();
     }
 
     /**
-     * This rule type is known to the Bazel SDK, but is it being used by the workspace? Specialized implementations of this
-     * method will likely look into the WORKSPACE file to determine this.
+     * This rule type is known to the Bazel SDK, but is it being used by the workspace? Specialized implementations of
+     * this method will likely look into the WORKSPACE file to determine this.
      */
     public boolean isUsedInWorkspace(BazelWorkspace bazelWorkspace) {
         // TODO BazelWorkspace should have some parsing functions for retrieving rule data.
@@ -56,13 +56,13 @@ public class MavenInstallExternalJarRuleType extends BazelExternalJarRuleType {
             });
             isUsedInWorkspace = markerFiles.length > 0;
         }
-        
+
         return isUsedInWorkspace;
     }
-    
+
     /**
-     * Get the locations of the local jars downloaded from the remote repo. These are the root directories,
-     * and the jars can be nested at arbitrary depths below each of these locations.
+     * Get the locations of the local jars downloaded from the remote repo. These are the root directories, and the jars
+     * can be nested at arbitrary depths below each of these locations.
      */
     @Override
     public List<File> getDownloadedJarLocations(BazelWorkspace bazelWorkspace) {
@@ -92,10 +92,10 @@ public class MavenInstallExternalJarRuleType extends BazelExternalJarRuleType {
         downloadedJarLocations = localJarLocationsNew;
         return downloadedJarLocations;
     }
-    
+
     /**
-     * Something about the workspace changed. Discard computed work for the passed workspace.
-     * If the parameter is null, discard the work for all workspaces.
+     * Something about the workspace changed. Discard computed work for the passed workspace. If the parameter is null,
+     * discard the work for all workspaces.
      */
     public void discardComputedWork(BazelWorkspace bazelWorkspace) {
         if (bazelWorkspace == null) {
@@ -104,13 +104,13 @@ public class MavenInstallExternalJarRuleType extends BazelExternalJarRuleType {
         }
         String workspaceName = bazelWorkspace.getName();
         mavenInstallNamespaces.remove(workspaceName);
-        
+
         coursierUtil.discardComputedWork(bazelWorkspace);
     }
 
     protected List<String> loadNamespaces(BazelWorkspace bazelWorkspace) {
         List<String> namespaces = new ArrayList<>();
-        
+
         // TODO 'maven' is the default namespace, but there may be others.
         // for each invocation of maven_install rule, there is a distinct namespace identified by the name attribute:
         //        maven_install(name = "deprecated", ...
@@ -119,17 +119,17 @@ public class MavenInstallExternalJarRuleType extends BazelExternalJarRuleType {
         // for our primary repo, this is complicated by the fact that the maven_install rules are actually in
         // .bzl files brought in by load() statements in the WORKSPACE
         namespaces.add("maven");
-        
+
         return namespaces;
     }
 
     /**
      * maven_install will download jars (and sometimes source jars) into directories such as:
-     *    ROOT/bazel-bin/external/maven
-     *    ROOT/bazel-bin/external/webtest
-     * if you have two maven_install rules with names 'maven' and 'webtest'
+     * ROOT/bazel-bin/external/maven ROOT/bazel-bin/external/webtest if you have two maven_install rules with names
+     * 'maven' and 'webtest'
      */
-    protected void addBazelBinLocations(BazelWorkspace bazelWorkspace, List<String> namespaces, List<File> localJarLocationsNew) {
+    protected void addBazelBinLocations(BazelWorkspace bazelWorkspace, List<String> namespaces,
+            List<File> localJarLocationsNew) {
         File bazelbinDir = bazelWorkspace.getBazelBinDirectory();
         File externalDir = new File(bazelbinDir, "external");
 

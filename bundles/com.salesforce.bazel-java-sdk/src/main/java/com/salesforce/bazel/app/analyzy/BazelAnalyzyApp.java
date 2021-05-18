@@ -78,7 +78,7 @@ public class BazelAnalyzyApp {
         CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
         CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = new BazelWorkspaceCommandRunner(bazelExecutable,
-            aspectLocation, commandBuilder, consoleFactory, bazelWorkspaceDir);
+                aspectLocation, commandBuilder, consoleFactory, bazelWorkspaceDir);
 
         // create the Bazel workspace SDK objects
         String workspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspacePath); // TODO use a File arg

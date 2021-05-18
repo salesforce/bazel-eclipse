@@ -43,7 +43,7 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
 public final class ProjectImporterUtils {
-    
+
     // TODO this code also exists in BazelProjectConfigurator, dedupe
     public static void addNatureToEclipseProject(IProject eclipseProject, String nature) throws CoreException {
         if (!eclipseProject.hasNature(nature)) {
