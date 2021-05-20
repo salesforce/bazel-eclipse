@@ -76,4 +76,16 @@ public class BazelPathHelper {
         }
         return path;
     }
+
+    /**
+     * Convert a slash style relative path to Windows backslash, if running on Windows. Replace with two back slashes if
+     * so, as the consumer needs escaped backslashes.
+     */
+    public static String osSepsEscaped(String unixStylePath) {
+        String path = unixStylePath;
+        if (!isUnix) {
+            path = unixStylePath.replace("/", "\\\\");
+        }
+        return path;
+    }
 }

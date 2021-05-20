@@ -37,6 +37,8 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Objects;
 
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
+
 /**
  * A wrapper for a Bazel logical "problem" (error/warning).
  *
@@ -84,8 +86,8 @@ public class BazelProblem {
         for (BazelLabel label : labels) {
             String relativeResourcePath = getRelativeResourcePath(label);
             if (relativeResourcePath != null) {
-                if (shortestRelativeResourcePath == null
-                        || relativeResourcePath.length() < shortestRelativeResourcePath.length()) {
+                if ((shortestRelativeResourcePath == null)
+                        || (relativeResourcePath.length() < shortestRelativeResourcePath.length())) {
                     bestMatch = label;
                     shortestRelativeResourcePath = relativeResourcePath;
                 }
@@ -114,14 +116,14 @@ public class BazelProblem {
         String rel = getRelativeResourcePath(label);
         if (rel == null) {
             throw new IllegalArgumentException(
-                    "Unable to build a relative path for " + resourcePath + " based on label " + label);
+                "Unable to build a relative path for " + resourcePath + " based on label " + label);
         }
         return new BazelProblem(rel, lineNumber, description, isError);
     }
 
     public BazelProblem toGenericWorkspaceLevelError(String descriptionPrefix) {
         return new BazelProblem(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description,
-                isError);
+            isError);
     }
 
     @Override
@@ -135,7 +137,7 @@ public class BazelProblem {
             return false;
         }
         BazelProblem o = (BazelProblem) other;
-        return resourcePath.equals(o.resourcePath) && description.equals(o.description) && lineNumber == o.lineNumber;
+        return resourcePath.equals(o.resourcePath) && description.equals(o.description) && (lineNumber == o.lineNumber);
     }
 
     @Override
@@ -144,9 +146,10 @@ public class BazelProblem {
     }
 
     private String getRelativeResourcePath(BazelLabel label) {
-        String packagePath = label.getPackagePath();
-        if (resourcePath.startsWith(packagePath + File.separator) && resourcePath.length() > packagePath.length() + 1) {
-            return resourcePath.substring(packagePath.length());
+        String bazelPackagePath = label.getPackagePath();
+        String relativeFilePath = BazelPathHelper.osSeps(bazelPackagePath + "/");
+        if (resourcePath.startsWith(relativeFilePath) && (resourcePath.length() > (relativeFilePath.length() + 1))) {
+            return resourcePath.substring(relativeFilePath.length());
         }
         return null;
     }

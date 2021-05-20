@@ -62,10 +62,11 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setArgs(Collections.emptyList());
 
         addBazelCommandOutput(env, 0, BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"), // $SLASH_OK
-            "fake bazel launcher script result");
+                "fake bazel launcher script result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
-        assertEquals("bazel-bin/projects/libs/javalib0/javalib0", cmdTokens.get(0)); // $SLASH_OK bazel path
+        String filesystemPath = BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
+        assertEquals(filesystemPath, cmdTokens.get(0));
         assertFalse(cmdTokens.contains("debug"));
     }
 
@@ -82,7 +83,7 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setDebugMode(true, "localhost", DEBUG_PORT);
 
         addBazelCommandOutput(env, 0, BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"), // $SLASH_OK
-            "fake bazel launcher script result");
+                "fake bazel launcher script result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
