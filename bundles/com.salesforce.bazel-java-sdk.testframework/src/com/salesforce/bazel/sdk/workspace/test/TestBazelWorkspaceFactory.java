@@ -191,7 +191,7 @@ public class TestBazelWorkspaceFactory {
                 packageAspectFiles.add(previousAspectFilePath);
             }
             // now save off our current lib target to add to the next
-            previousJavaLibTarget = packageRelativeFilePath + ":" + packageName;
+            previousJavaLibTarget = packageRelativeBazelPath + ":" + packageName;
             previousAspectFilePath = aspectFilePath_mainsource;
 
             // write fake jar files to the filesystem for this project

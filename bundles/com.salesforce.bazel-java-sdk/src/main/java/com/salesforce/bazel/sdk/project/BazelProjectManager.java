@@ -19,8 +19,8 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  */
 public abstract class BazelProjectManager {
 
-    private Map<String, BazelProject> projectMap = new TreeMap<>();
-    private LogHelper logger;
+    private final Map<String, BazelProject> projectMap = new TreeMap<>();
+    private final LogHelper logger;
 
     public BazelProjectManager() {
         logger = LogHelper.log(this.getClass());
@@ -126,7 +126,7 @@ public abstract class BazelProjectManager {
         BazelProject bazelProject = getProject(projectName);
         String packageLabel = getBazelLabelForProject(bazelProject);
         cmdRunner.flushAspectInfoCacheForPackage(packageLabel);
-        cmdRunner.flushQueryCache(packageLabel);
+        cmdRunner.flushQueryCache(new BazelLabel(packageLabel));
     }
 
 }

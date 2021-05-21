@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -150,7 +151,13 @@ public final class AspectTargetInfo {
     public static AspectTargetInfo loadAspectFile(File aspectFile) throws IOException, InterruptedException {
         AspectTargetInfo buildInfo = null;
         if (aspectFile.exists()) {
-            JSONObject json = new JSONObject(new JSONTokener(new FileInputStream(aspectFile)));
+            JSONObject json = null;
+            try {
+                json = new JSONObject(new JSONTokener(new FileInputStream(aspectFile)));
+            } catch (JSONException je) {
+                System.err.println("JSON file has illegal characters: " + aspectFile.getAbsolutePath()); // TODO log
+                throw je;
+            }
             buildInfo = AspectTargetInfo.loadAspectFromJson(aspectFile, json);
         }
         return buildInfo;
@@ -237,7 +244,7 @@ public final class AspectTargetInfo {
             String mainClass = object.has("main_class") ? object.getString("main_class") : null;
 
             info = new AspectTargetInfo(aspectDataFile, jars, generated_jars, build_file_artifact_location, kind, label,
-                    deps, sources, mainClass);
+                deps, sources, mainClass);
         } catch (Exception anyE) {
             //System.err.println("Error parsing Bazel aspect info from file "+aspectDataFile.getAbsolutePath()+". Error: "+anyE.getMessage());
             throw anyE;
@@ -246,8 +253,8 @@ public final class AspectTargetInfo {
     }
 
     AspectTargetInfo(File aspectDataFile, List<AspectOutputJarSet> jars, List<AspectOutputJarSet> generatedJars,
-            String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources,
-            String mainClass) {
+        String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources,
+        String mainClass) {
         this.aspectDataFile = aspectDataFile;
         this.jars = jars;
         this.generatedJars = generatedJars;

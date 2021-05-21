@@ -148,8 +148,8 @@ public class BazelProblem {
     private String getRelativeResourcePath(BazelLabel label) {
         String bazelPackagePath = label.getPackagePath();
         String relativeFilePath = BazelPathHelper.osSeps(bazelPackagePath + "/");
-        if (resourcePath.startsWith(relativeFilePath) && (resourcePath.length() > (relativeFilePath.length() + 1))) {
-            return resourcePath.substring(relativeFilePath.length());
+        if (resourcePath.startsWith(relativeFilePath) && (resourcePath.length() > (relativeFilePath.length()))) {
+            return File.separator + resourcePath.substring(relativeFilePath.length());
         }
         return null;
     }

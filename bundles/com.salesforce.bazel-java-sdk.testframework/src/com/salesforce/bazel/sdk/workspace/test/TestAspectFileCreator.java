@@ -235,7 +235,8 @@ public class TestAspectFileCreator {
 
     private static File createJavaAspectFileWithThisJson(File outputBase, String path, String aspectJsonFilename,
             String json) {
-        System.out.println(json);
+        //System.out.println(aspectJsonFilename);
+        //System.out.println(json);
         File packageBinDir = new File(outputBase, path);
         packageBinDir.mkdirs();
         File aspectJsonFile = new File(packageBinDir, aspectJsonFilename);
