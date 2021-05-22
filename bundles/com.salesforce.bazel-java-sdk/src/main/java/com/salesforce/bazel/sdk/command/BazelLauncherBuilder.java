@@ -61,20 +61,20 @@ public class BazelLauncherBuilder {
     }
 
     BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder,
-            BazelOutputDirectoryBuilder outputDirectoryBuilder) {
-        this.bazelCommandRunner = Objects.requireNonNull(bazelRunner);
+        BazelOutputDirectoryBuilder outputDirectoryBuilder) {
+        bazelCommandRunner = Objects.requireNonNull(bazelRunner);
         this.commandBuilder = Objects.requireNonNull(commandBuilder);
         this.outputDirectoryBuilder = Objects.requireNonNull(outputDirectoryBuilder);
     }
 
     BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder, BazelLabel bazelLabel,
-            BazelTargetKind targetKind, List<String> bazelArgs) {
+        BazelTargetKind targetKind, List<String> bazelArgs) {
         this(bazelRunner, commandBuilder, bazelLabel, targetKind, bazelArgs, new BazelOutputDirectoryBuilder());
     }
 
     BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder, BazelLabel bazelLabel,
-            BazelTargetKind targetKind, List<String> bazelArgs, BazelOutputDirectoryBuilder outputDirectoryBuilder) {
-        this.bazelCommandRunner = Objects.requireNonNull(bazelRunner);
+        BazelTargetKind targetKind, List<String> bazelArgs, BazelOutputDirectoryBuilder outputDirectoryBuilder) {
+        bazelCommandRunner = Objects.requireNonNull(bazelRunner);
         this.commandBuilder = Objects.requireNonNull(commandBuilder);
         this.bazelLabel = Objects.requireNonNull(bazelLabel);
         this.targetKind = Objects.requireNonNull(targetKind);
@@ -130,12 +130,27 @@ public class BazelLauncherBuilder {
     private Command getBazelRunCommand(BazelLabel bazelTarget, boolean isDebugMode, List<String> extraArgs)
             throws IOException, BazelCommandLineToolConfigurationException {
 
+        File workspaceDirectory = bazelCommandRunner.getBazelWorkspaceRootDirectory();
+
+        // Unixy Platforms:
         // Instead of calling bazel run, we directly call the shell script that bazel run
         // would call, thereby avoiding the problem of launching 2 processes (Bazel + the process we
         // actually care about - see https://github.com/salesforce/bazel-eclipse/issues/94)
+        // Windows Platforms:
+        // Bazel builds an .exe file to run.
+        String appPath = outputDirectoryBuilder.getRunScriptPath(bazelTarget);
+        if (System.getProperty("os.name").contains("Win")) {
+            appPath = appPath + ".exe";
+        }
+        File appFile = new File(workspaceDirectory, appPath);
+        if (!appFile.exists()) {
+            System.out.println("ERROR: Launch executable does not exist: " + appFile.getAbsolutePath());
+        } else {
+            System.out.println("Launch executable: " + appFile.getAbsolutePath());
+        }
 
         List<String> args = new ArrayList<>();
-        args.add(this.outputDirectoryBuilder.getRunScriptPath(bazelTarget));
+        args.add(appFile.getAbsolutePath());
 
         if (isDebugMode) {
             args.add("--debug=" + debugPort);
@@ -145,7 +160,6 @@ public class BazelLauncherBuilder {
 
         WorkProgressMonitor progressMonitor = null;
 
-        File workspaceDirectory = this.bazelCommandRunner.getBazelWorkspaceRootDirectory();
         String consoleName = ConsoleType.WORKSPACE.getConsoleName(workspaceDirectory);
 
         return commandBuilder.setConsoleName(consoleName).setDirectory(workspaceDirectory)
@@ -180,7 +194,7 @@ public class BazelLauncherBuilder {
 
         WorkProgressMonitor progressMonitor = null;
 
-        File workspaceDirectory = this.bazelCommandRunner.getBazelWorkspaceRootDirectory();
+        File workspaceDirectory = bazelCommandRunner.getBazelWorkspaceRootDirectory();
         String consoleName = ConsoleType.WORKSPACE.getConsoleName(workspaceDirectory);
 
         return commandBuilder.setConsoleName(consoleName).setDirectory(workspaceDirectory)
