@@ -163,7 +163,7 @@ public class MockCommandBuilder extends CommandBuilder {
             } else if ("query".equals(args.get(1))) {
                 mockCommand = new MockQueryCommand(args, testOptions, testWorkspaceFactory);
             }
-        } else if (args.get(0).startsWith("bazel-bin")) {
+        } else if (isLauncherInvocation(args.get(0))) {
             // launcher script (test must provide the desired output lines)
             mockCommand = new MockLauncherCommand(args, testOptions, testWorkspaceFactory, simulatedOutputLines);
         }
@@ -174,6 +174,21 @@ public class MockCommandBuilder extends CommandBuilder {
         }
 
         return mockCommand;
+    }
+
+    private boolean isLauncherInvocation(String firstArg) {
+        if (firstArg.startsWith("bazel-bin")) {
+            return true;
+        }
+        if (firstArg.startsWith("/private")) {
+            // Mac
+            return true;
+        }
+        if (firstArg.startsWith("C:")) {
+            // Windows
+            return true;
+        }
+        return false;
     }
 
 }

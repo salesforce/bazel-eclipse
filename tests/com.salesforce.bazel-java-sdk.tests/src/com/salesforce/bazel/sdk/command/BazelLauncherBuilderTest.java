@@ -61,12 +61,14 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setTargetKind(targetKind);
         launcherBuilder.setArgs(Collections.emptyList());
 
-        addBazelCommandOutput(env, 0, BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"), // $SLASH_OK
+        addBazelCommandOutput(env, 0, BazelPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0"), // $SLASH_OK
                 "fake bazel launcher script result");
 
-        List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
+        Command command = launcherBuilder.build();
+        BazelProcessBuilder processBuilder = command.getProcessBuilder();
+        List<String> cmdTokens = processBuilder.command();
         String filesystemPath = BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
-        assertEquals(filesystemPath, cmdTokens.get(0));
+        assertTrue(cmdTokens.get(0).endsWith(filesystemPath));
         assertFalse(cmdTokens.contains("debug"));
     }
 
@@ -82,12 +84,13 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setArgs(Collections.emptyList());
         launcherBuilder.setDebugMode(true, "localhost", DEBUG_PORT);
 
-        addBazelCommandOutput(env, 0, BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"), // $SLASH_OK
+        addBazelCommandOutput(env, 0, BazelPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0"), // $SLASH_OK
                 "fake bazel launcher script result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
-        assertEquals(BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"), cmdTokens.get(0)); // $SLASH_OK
+        String filesystemPath = BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
+        assertTrue(cmdTokens.get(0).endsWith(filesystemPath));
         assertFalse(cmdTokens.contains("debug=" + DEBUG_PORT));
     }
 
