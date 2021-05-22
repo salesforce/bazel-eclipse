@@ -49,7 +49,7 @@ public class TestBazelWorkspaceFactory {
         projectsDir.mkdir();
         File libsDir = new File(projectsDir, "libs");
         libsDir.mkdir();
-        String libsRelativePath = BazelPathHelper.osSeps("projects/libs"); // $SLASH_OK
+        String libsRelativeBazelPath = "projects/libs"; // $SLASH_OK bazel path
 
         // make the WORKSPACE file
         File workspaceFile =
@@ -84,13 +84,14 @@ public class TestBazelWorkspaceFactory {
         String previousAspectFilePath = null;
         for (int i = 0; i < workspaceDescriptor.numberJavaPackages; i++) {
             String packageName = "javalib" + i;
-            String packageRelativePath = BazelPathHelper.osSeps(libsRelativePath + "/" + packageName); // $SLASH_OK
+            String packageRelativeBazelPath = libsRelativeBazelPath + "/" + packageName; // $SLASH_OK bazel path
+            String packageRelativeFilePath = BazelPathHelper.osSeps(packageRelativeBazelPath);
             File javaPackageDir = new File(libsDir, packageName);
             javaPackageDir.mkdir();
 
             // create the catalog entries
             TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(workspaceDescriptor,
-                    packageRelativePath, packageName, javaPackageDir);
+                packageRelativeBazelPath, packageName, javaPackageDir);
 
             // we will be collecting locations of Aspect json files for this package
             Set<String> packageAspectFiles = new TreeSet<>();
@@ -108,13 +109,14 @@ public class TestBazelWorkspaceFactory {
             // Apple.java
             File javaFile1 = new File(javaSrcMainDir, "Apple" + i + ".java");
             javaFile1.createNewFile();
-            String appleSrc = BazelPathHelper.osSeps(packageRelativePath + "/" + srcMainPath + "/Apple" + i + ".java"); // $SLASH_OK
+            String appleSrc =
+                    BazelPathHelper.osSeps(packageRelativeBazelPath + "/" + srcMainPath + "/Apple" + i + ".java"); // $SLASH_OK
             sourceFiles.add(appleSrc);
             // Banana.java
             File javaFile2 = new File(javaSrcMainDir, "Banana" + i + ".java");
             javaFile2.createNewFile();
             String bananaSrc =
-                    BazelPathHelper.osSeps(packageRelativePath + "/" + srcMainPath + "/Banana" + i + ".java"); // $SLASH_OK
+                    BazelPathHelper.osSeps(packageRelativeBazelPath + "/" + srcMainPath + "/Banana" + i + ".java"); // $SLASH_OK
             sourceFiles.add(bananaSrc);
 
             // main resources
@@ -127,7 +129,7 @@ public class TestBazelWorkspaceFactory {
             // main fruit source aspect
             String extraDep = previousJavaLibTarget != null ? "    \"//" + previousJavaLibTarget + "\",\n" : null; // $SLASH_OK: bazel path
             String aspectFilePath_mainsource = TestAspectFileCreator.createJavaAspectFile(
-                workspaceDescriptor.outputBaseDirectory, packageRelativePath, packageName, packageName, extraDep,
+                workspaceDescriptor.outputBaseDirectory, packageRelativeBazelPath, packageName, packageName, extraDep,
                 sourceFiles, true, explicitJavaTestDeps);
             packageAspectFiles.add(aspectFilePath_mainsource);
 
@@ -149,17 +151,17 @@ public class TestBazelWorkspaceFactory {
             File javaTestFile1 = new File(javaSrcTestDir, "Apple" + i + "Test.java");
             javaTestFile1.createNewFile();
             String appleTestSrc =
-                    BazelPathHelper.osSeps(packageRelativePath + "/" + srcTestPath + "/Apple" + i + "Test.java"); // $SLASH_OK
+                    BazelPathHelper.osSeps(packageRelativeBazelPath + "/" + srcTestPath + "/Apple" + i + "Test.java"); // $SLASH_OK
             testSourceFiles.add(appleTestSrc);
             File javaTestFile2 = new File(javaSrcTestDir, "Banana" + i + "Test.java");
             javaTestFile2.createNewFile();
             String bananaTestSrc =
-                    BazelPathHelper.osSeps(packageRelativePath + "/" + srcTestPath + "/Banana" + i + "Test.java"); // $SLASH_OK
+                    BazelPathHelper.osSeps(packageRelativeBazelPath + "/" + srcTestPath + "/Banana" + i + "Test.java"); // $SLASH_OK
             testSourceFiles.add(bananaTestSrc);
 
             // test fruit source aspect
             String aspectFilePath_testsource = TestAspectFileCreator.createJavaAspectFile(
-                workspaceDescriptor.outputBaseDirectory, libsRelativePath + "/" + packageName, packageName, // $SLASH_OK: bazel path
+                workspaceDescriptor.outputBaseDirectory, libsRelativeBazelPath + "/" + packageName, packageName, // $SLASH_OK: bazel path
                 packageName, null, testSourceFiles, false, explicitJavaTestDeps);
             packageAspectFiles.add(aspectFilePath_testsource);
 
@@ -180,7 +182,7 @@ public class TestBazelWorkspaceFactory {
                     workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core", "hamcrest-core-1.3");
                 packageAspectFiles.add(aspectFilePath_hamcrest);
                 createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core",
-                    "hamcrest-core-1.3");
+                        "hamcrest-core-1.3");
             }
 
             // we chain the libs together to test inter project deps
@@ -189,25 +191,26 @@ public class TestBazelWorkspaceFactory {
                 packageAspectFiles.add(previousAspectFilePath);
             }
             // now save off our current lib target to add to the next
-            previousJavaLibTarget = packageRelativePath + ":" + packageName;
+            previousJavaLibTarget = packageRelativeBazelPath + ":" + packageName;
             previousAspectFilePath = aspectFilePath_mainsource;
 
             // write fake jar files to the filesystem for this project
-            createFakeProjectJars(packageRelativePath, packageName);
+            createFakeProjectJars(packageRelativeFilePath, packageName);
 
             // finish
-            workspaceDescriptor.aspectFileSets.put(packageRelativePath, packageAspectFiles);
+            workspaceDescriptor.aspectFileSets.put(packageRelativeBazelPath, packageAspectFiles);
         }
 
         for (int i = 0; i < workspaceDescriptor.numberGenrulePackages; i++) {
             String packageName = "genrulelib" + i;
-            String packageRelativePath = libsRelativePath + "/" + packageName; // $SLASH_OK: bazel path
+            String packageRelativeBazelPath = libsRelativeBazelPath + "/" + packageName; // $SLASH_OK bazel path
             File genruleLib = new File(libsDir, packageName);
             genruleLib.mkdir();
 
             // create the catalog entries
             TestBazelPackageDescriptor packageDescriptor =
-                    new TestBazelPackageDescriptor(workspaceDescriptor, packageRelativePath, packageName, genruleLib);
+                    new TestBazelPackageDescriptor(workspaceDescriptor, packageRelativeBazelPath, packageName,
+                        genruleLib);
 
             File buildFile = new File(genruleLib, workspaceDescriptor.buildFilename);
             buildFile.createNewFile();

@@ -9,7 +9,11 @@ public class MockCommandSimulatedOutputMatcher {
     public String matchArgRegex;
 
     public MockCommandSimulatedOutputMatcher(int index, String regex) {
-        this.matchArgIndex = index;
-        this.matchArgRegex = regex;
+        matchArgIndex = index;
+        matchArgRegex = regex;
+
+        if (matchArgRegex.contains("\\")) {
+            matchArgRegex = matchArgRegex.replace("\\", "\\\\");
+        }
     }
 }

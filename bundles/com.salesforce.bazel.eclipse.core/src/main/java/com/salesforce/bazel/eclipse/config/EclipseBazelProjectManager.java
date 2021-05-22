@@ -76,7 +76,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
         String canonicalSourcePathString =
                 BazelPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory())
-                        + File.separator + sourcePath;
+                + File.separator + sourcePath;
         Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
         for (BazelProject candidateProject : bazelProjects) {
@@ -273,7 +273,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     }
 
     @Override
-    public void addSettingsToProject(BazelProject bazelProject, String bazelWorkspaceRoot, String bazelProjectLabel,
+    public void addSettingsToProject(BazelProject bazelProject, String bazelWorkspaceRoot, String packageFSPath,
             List<BazelLabel> bazelTargets, List<String> bazelBuildFlags) {
 
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
@@ -281,10 +281,11 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
         eclipseProjectBazelPrefs.put(BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspaceRoot);
 
-        if (!bazelProjectLabel.startsWith("//")) {
-            bazelProjectLabel = "//" + bazelProjectLabel;
+        String bazelPackagePath = BazelPathHelper.bazelLabelSeps(packageFSPath);
+        if (!bazelPackagePath.startsWith("//")) {
+            bazelPackagePath = "//" + bazelPackagePath;
         }
-        eclipseProjectBazelPrefs.put(PROJECT_PACKAGE_LABEL, bazelProjectLabel);
+        eclipseProjectBazelPrefs.put(PROJECT_PACKAGE_LABEL, bazelPackagePath);
 
         int i = 0;
         for (BazelLabel bazelTarget : bazelTargets) {

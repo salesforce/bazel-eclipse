@@ -7,7 +7,7 @@ import java.util.TreeMap;
 
 /**
  * Descriptor that describes the workspace to be built by the TestBazelWorkspaceFactory.
- * 
+ *
  * @author plaird
  */
 public class TestBazelWorkspaceDescriptor {
@@ -57,7 +57,7 @@ public class TestBazelWorkspaceDescriptor {
     // map of target (projects/libs/javalib0:javalib0) to the package (projects/libs/javalib0)
     public Map<String, TestBazelTargetDescriptor> createdTargets = new TreeMap<>();
 
-    // map of package path (projects/libs/javalib0) to the set of absolute paths for the aspect files for the package and deps
+    // map of bazel package path (projects/libs/javalib0) to the set of absolute paths for the aspect files for the package and deps
     public Map<String, Set<String>> aspectFileSets = new TreeMap<>();
 
     // CTORS
@@ -65,7 +65,7 @@ public class TestBazelWorkspaceDescriptor {
     /**
      * Locations to write the assets for the simulated workspace. Both locations should be empty, and the directories
      * must exist.
-     * 
+     *
      * @param workspaceRootDirectory
      *            where the workspace files will be, this includes the WORKSPACE file and .java files
      * @param outputBaseDirectory
@@ -79,7 +79,7 @@ public class TestBazelWorkspaceDescriptor {
     /**
      * Locations to write the assets for the simulated workspace. Both locations should be empty, and the directories
      * must exist.
-     * 
+     *
      * @param workspaceRootDirectory
      *            where the workspace files will be, this includes the WORKSPACE file and .java files
      * @param outputBaseDirectory
@@ -93,7 +93,7 @@ public class TestBazelWorkspaceDescriptor {
         this.workspaceName = workspaceName;
     }
 
-    // CONFIGURATION 
+    // CONFIGURATION
 
     public TestBazelWorkspaceDescriptor useAltConfigFileNames(boolean useAltName) {
         if (useAltName) {
@@ -121,7 +121,7 @@ public class TestBazelWorkspaceDescriptor {
      * specific to each Mock*Command.
      */
     public TestBazelWorkspaceDescriptor testOptions(TestOptions options) {
-        this.testOptions = options;
+        testOptions = options;
         return this;
     }
 

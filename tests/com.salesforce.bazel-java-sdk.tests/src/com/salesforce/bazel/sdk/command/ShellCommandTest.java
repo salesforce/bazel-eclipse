@@ -65,8 +65,14 @@ public class ShellCommandTest {
 
     private static Function<String, String> NON_EMPTY_LINES_SELECTOR = x -> x.trim().isEmpty() ? null : x;
 
+    private static boolean isWindows = false;
+    static {
+        String osname = System.getProperty("os.name", "Linux");
+        isWindows = osname.contains("Windows");
+    }
+
     @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     private class MockCommandConsole implements CommandConsole {
         final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -109,14 +115,17 @@ public class ShellCommandTest {
     }
 
     @Test
-    public void testCommandWithStream() throws IOException, InterruptedException {
+    public void testBashCommandWithStream() throws IOException, InterruptedException {
+        if (isWindows) {
+            return; // no bash on Windows
+        }
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         Function<String, String> stdoutSelector = x -> (x.trim().isEmpty() || x.equals("a")) ? null : x;
         Function<String, String> stderrSelector = x -> (x.trim().isEmpty() || x.equals("b")) ? null : x;
 
         CommandBuilder builder = ShellCommand.builder(mockConsoleFactory).setConsoleName("test")
-                .setDirectory(folder.getRoot()).setStandardError(stderr).setStandardOutput(stdout)
+                .setDirectory(tempFolder.getRoot()).setStandardError(stderr).setStandardOutput(stdout)
                 .setStderrLineSelector(stderrSelector).setStdoutLineSelector(stdoutSelector);
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
         Command cmd = builder.build();
@@ -131,7 +140,7 @@ public class ShellCommandTest {
         assertEquals(1, mockConsoleFactory.consoles.size());
         MockCommandConsole console = mockConsoleFactory.consoles.get(0);
         assertEquals("test", console.name);
-        assertEquals("Running bash -c echo a; echo b; echo a >&2; echo b >&2 " + "from " + folder.getRoot(),
+        assertEquals("Running bash -c echo a; echo b; echo a >&2; echo b >&2 " + "from " + tempFolder.getRoot(),
             console.title);
         stdoutStr = new String(console.stdout.toByteArray(), StandardCharsets.UTF_8).trim();
         stderrStr = new String(console.stderr.toByteArray(), StandardCharsets.UTF_8).trim();
@@ -140,9 +149,12 @@ public class ShellCommandTest {
     }
 
     @Test
-    public void testCommandNoStream() throws IOException, InterruptedException {
+    public void testBashCommandNoStream() throws IOException, InterruptedException {
+        if (isWindows) {
+            return; // no bash on Windows
+        }
         CommandBuilder builder =
-                ShellCommand.builder(mockConsoleFactory).setConsoleName(null).setDirectory(folder.getRoot());
+                ShellCommand.builder(mockConsoleFactory).setConsoleName(null).setDirectory(tempFolder.getRoot());
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
         builder.setStderrLineSelector(NON_EMPTY_LINES_SELECTOR).setStdoutLineSelector(NON_EMPTY_LINES_SELECTOR);
         Command cmd = builder.build();
@@ -156,15 +168,18 @@ public class ShellCommandTest {
     }
 
     @Test
-    public void testCommandStreamAllToConsole() throws IOException, InterruptedException {
+    public void testBashCommandStreamAllToConsole() throws IOException, InterruptedException {
+        if (isWindows) {
+            return; // no bash on Windows
+        }
         CommandBuilder builder =
-                ShellCommand.builder(mockConsoleFactory).setConsoleName("test").setDirectory(folder.getRoot());
+                ShellCommand.builder(mockConsoleFactory).setConsoleName("test").setDirectory(tempFolder.getRoot());
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
         Command cmd = builder.build();
         assertEquals(0, cmd.run());
         MockCommandConsole console = mockConsoleFactory.consoles.get(0);
         assertEquals("test", console.name);
-        assertEquals("Running bash -c echo a; echo b; echo a >&2; echo b >&2 " + "from " + folder.getRoot(),
+        assertEquals("Running bash -c echo a; echo b; echo a >&2; echo b >&2 " + "from " + tempFolder.getRoot(),
             console.title);
         String stdoutStr = new String(console.stdout.toByteArray(), StandardCharsets.UTF_8).trim();
         String stderrStr = new String(console.stderr.toByteArray(), StandardCharsets.UTF_8).trim();
@@ -173,15 +188,18 @@ public class ShellCommandTest {
     }
 
     @Test
-    public void testCommandWorkDir() throws IOException, InterruptedException {
+    public void testBashCommandWorkDir() throws IOException, InterruptedException {
+        if (isWindows) {
+            return; // no pwd on Windows
+        }
         CommandBuilder builder =
-                ShellCommand.builder(mockConsoleFactory).setConsoleName(null).setDirectory(folder.getRoot());
+                ShellCommand.builder(mockConsoleFactory).setConsoleName(null).setDirectory(tempFolder.getRoot());
         builder.setStderrLineSelector(NON_EMPTY_LINES_SELECTOR).setStdoutLineSelector(NON_EMPTY_LINES_SELECTOR);
         builder.addArguments("pwd");
         Command cmd = builder.build();
         assertEquals(0, cmd.run());
         assertTrue(cmd.getSelectedErrorLines().isEmpty());
         assertEquals(1, cmd.getSelectedOutputLines().size());
-        assertEquals(folder.getRoot().getCanonicalPath(), cmd.getSelectedOutputLines().get(0));
+        assertEquals(tempFolder.getRoot().getCanonicalPath(), cmd.getSelectedOutputLines().get(0));
     }
 }

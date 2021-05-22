@@ -51,20 +51,21 @@ public class TestAspectFileCreator {
      * @return the absolute File path to the file
      */
     static String createJavaAspectFileForMavenJar(File outputBase, String mavenJarName, String actualJarNameNoSuffix) {
-        String externalName = "external" + File.separatorChar + mavenJarName;
+        String externalName = "external" + "/" + mavenJarName; // $SLASH_OK
         String dependencies = null;
         List<String> sources = null;
         String mainClass = null;
         String label = "@" + mavenJarName + "//jar:jar";
         String kind = "java_import";
-        String jar = BazelPathHelper.osSeps(externalName + "/jar/" + actualJarNameNoSuffix + ".jar"); // $SLASH_OK
+        String jar = BazelPathHelper.osSepsEscaped(externalName + "/jar/" + actualJarNameNoSuffix + ".jar"); // $SLASH_OK
         String interfacejar = null;
-        String sourcejar = BazelPathHelper.osSeps(externalName + "/jar/" + actualJarNameNoSuffix + "-sources.jar"); // $SLASH_OK
+        String sourcejar =
+                BazelPathHelper.osSepsEscaped(externalName + "/jar/" + actualJarNameNoSuffix + "-sources.jar"); // $SLASH_OK
 
-        String json = createAspectJsonForJavaArtifact(BazelPathHelper.osSeps(externalName + "/jar/BUILD.bazel"), // $SLASH_OK
+        String json = createAspectJsonForJavaArtifact(BazelPathHelper.osSepsEscaped(externalName + "/jar/BUILD.bazel"), // $SLASH_OK
             dependencies, sources, mainClass, label, kind, jar, interfacejar, sourcejar);
         File aspectJsonFile =
-                createJavaAspectFileWithThisJson(outputBase, BazelPathHelper.osSeps(externalName + "/jar"), // $SLASH_OK
+                createJavaAspectFileWithThisJson(outputBase, BazelPathHelper.osSepsEscaped(externalName + "/jar"), // $SLASH_OK
                     "jar.bzleclipse-build.json", json);
 
         return aspectJsonFile.getAbsolutePath();
@@ -95,12 +96,14 @@ public class TestAspectFileCreator {
         String mainClass = null;
         String label = packageRelativePath + ":" + targetName;
         String jar = BazelPathHelper
-                .osSeps("bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + ".jar");
+                .osSepsEscaped("bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + ".jar");
         String interfacejar = BazelPathHelper
-                .osSeps("bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + "-hjar.jar");
+                .osSepsEscaped(
+                    "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + "-hjar.jar");
         String sourcejar = BazelPathHelper
-                .osSeps("bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + "-src.jar");
-        String buildFile = BazelPathHelper.osSeps(packageRelativePath + "/BUILD");
+                .osSepsEscaped(
+                    "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + "-src.jar");
+        String buildFile = BazelPathHelper.osSepsEscaped(packageRelativePath + "/BUILD");
 
         return createAspectJsonForJavaArtifact(buildFile, dependencies, sources, mainClass, label, "java_library", jar,
             interfacejar, sourcejar);
@@ -137,11 +140,13 @@ public class TestAspectFileCreator {
         String mainClass = null;
         String label = packageRelativePath + ":" + testTargetName;
         String jar = BazelPathHelper
-                .osSeps("bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + testTargetName + ".jar");
+                .osSepsEscaped(
+                    "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + testTargetName + ".jar");
         String interfacejar = null;
         String sourcejar = BazelPathHelper
-                .osSeps("bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + testTargetName + "-src.jar");
-        String buildFile = BazelPathHelper.osSeps(packageRelativePath + "/BUILD");
+                .osSepsEscaped(
+                    "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + testTargetName + "-src.jar");
+        String buildFile = BazelPathHelper.osSepsEscaped(packageRelativePath + "/BUILD");
 
         return createAspectJsonForJavaArtifact(buildFile, dependencies, sources, mainClass, label, "java_test", jar,
             interfacejar, sourcejar);
@@ -217,6 +222,7 @@ public class TestAspectFileCreator {
         if (sources != null) {
             for (String source : sources) {
                 sb.append("    \""); // $SLASH_OK: escape char
+                source = source.replace("\\", "\\\\"); // hack because Windows paths need to be json escaped
                 sb.append(source);
                 sb.append("\",\n"); // $SLASH_OK: line continue
             }
@@ -229,6 +235,8 @@ public class TestAspectFileCreator {
 
     private static File createJavaAspectFileWithThisJson(File outputBase, String path, String aspectJsonFilename,
             String json) {
+        //System.out.println(aspectJsonFilename);
+        //System.out.println(json);
         File packageBinDir = new File(outputBase, path);
         packageBinDir.mkdirs();
         File aspectJsonFile = new File(packageBinDir, aspectJsonFilename);

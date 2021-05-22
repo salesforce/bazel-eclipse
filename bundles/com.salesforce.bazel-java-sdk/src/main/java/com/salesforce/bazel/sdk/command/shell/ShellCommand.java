@@ -73,8 +73,8 @@ public final class ShellCommand implements Command {
     private boolean executed = false;
 
     ShellCommand(CommandConsole console, File directory, List<String> args, Function<String, String> stdoutSelector,
-            Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
-            WorkProgressMonitor progressMonitor, long timeoutMS) {
+        Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
+        WorkProgressMonitor progressMonitor, long timeoutMS) {
         this.directory = directory;
         this.args = args;
         if (console != null) {
@@ -121,7 +121,14 @@ public final class ShellCommand implements Command {
         BazelProcessBuilder builder = getProcessBuilder();
         builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
         builder.redirectError(ProcessBuilder.Redirect.PIPE);
-        Process process = builder.start();
+        Process process = null;
+        try {
+            process = builder.start();
+        } catch (Exception anyE) {
+            // this can blow up on Windows with error 5 (Access Denied) if the msys64 bash is not on disk
+            throw anyE;
+        }
+
         // TODO implement the progress monitor for command line invocations
         if (progressMonitor != null) {
             progressMonitor.worked(1);

@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -33,9 +33,8 @@
  */
 package com.salesforce.bazel.sdk.command;
 
-import java.io.File;
-
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Knows how to build paths to various files under bazel output directories (bazel-bin etc)
@@ -49,15 +48,14 @@ public class BazelOutputDirectoryBuilder {
     /**
      * Runnable targets (usable with "bazel run") produce a shell script at build time (bazel build).
      *
-     * This method returns the path to that shell script, relative to the Bazel WORKSPACE root.
+     * This method returns the filesystem path to that shell script, relative to the Bazel WORKSPACE root.
      */
     public String getRunScriptPath(BazelLabel label) {
         StringBuilder sb = new StringBuilder();
-        sb.append("bazel-bin");
-        sb.append(File.separator);
+        sb.append("bazel-bin/");
         sb.append(label.getPackagePath());
-        sb.append(File.separator);
+        sb.append("/");
         sb.append(label.getTargetName());
-        return sb.toString();
+        return BazelPathHelper.osSeps(sb.toString());
     }
 }

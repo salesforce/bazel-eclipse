@@ -77,7 +77,7 @@ public class LoadTargetsFlow implements ImportFlow {
             if (!targets.isEmpty()) {
                 // flush the cache for each package because we don't know whether the previously loaded targets
                 // match or not (we could do better - actually check which targets were loaded?)
-                cmdRunner.flushQueryCache(packageLocation.getBazelPackageFSRelativePath());
+                cmdRunner.flushQueryCache(targets.get(0));
                 // collect the targets
                 allTargets.addAll(targets);
             }

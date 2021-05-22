@@ -25,11 +25,19 @@ public class TestBazelPackageDescriptor {
 
     public TestBazelPackageDescriptor(TestBazelWorkspaceDescriptor parentWorkspace, String packagePath,
             String packageName, File diskLocation) {
-        this.parentWorkspaceDescriptor = parentWorkspace;
+
+        if (packagePath.contains("\\")) {
+            // Windows bug, someone passed in a Windows path
+            throw new IllegalArgumentException(
+                    "Windows filesystem path passed to TestBazelPackageDescriptor instead of the Bazel package path: "
+                            + packagePath);
+        }
+
+        parentWorkspaceDescriptor = parentWorkspace;
         this.packagePath = packagePath;
         this.packageName = packageName;
         this.diskLocation = diskLocation;
 
-        this.parentWorkspaceDescriptor.createdPackages.put(packagePath, this);
+        parentWorkspaceDescriptor.createdPackages.put(packagePath, this);
     }
 }

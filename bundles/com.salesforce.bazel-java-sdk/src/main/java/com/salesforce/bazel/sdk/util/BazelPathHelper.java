@@ -66,6 +66,14 @@ public class BazelPathHelper {
         return path;
     }
 
+    public static String osSepRegex() {
+        if (isUnix) {
+            return "/";
+        }
+        // why 4? Java requires 2 backslashes to encode the String, and regex needs a double \ to escape backslash in the matcher
+        return "\\\\";
+    }
+
     /**
      * Convert a slash style relative path to Windows backslash, if running on Windows
      */
@@ -73,6 +81,29 @@ public class BazelPathHelper {
         String path = unixStylePath;
         if (!isUnix) {
             path = unixStylePath.replace("/", "\\");
+        }
+        return path;
+    }
+
+    /**
+     * Convert a slash style relative path to Windows backslash, if running on Windows. Replace with two back slashes if
+     * so, as the consumer needs escaped backslashes.
+     */
+    public static String osSepsEscaped(String unixStylePath) {
+        String path = unixStylePath;
+        if (!isUnix) {
+            path = unixStylePath.replace("/", "\\\\");
+        }
+        return path;
+    }
+
+    /**
+     * Convert a slash style relative path to Windows backslash, if running on Windows
+     */
+    public static String bazelLabelSeps(String fsPath) {
+        String path = fsPath;
+        if (!isUnix) {
+            path = fsPath.replace("\\", "/");
         }
         return path;
     }
