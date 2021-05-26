@@ -66,7 +66,7 @@
       <page
             class="com.salesforce.bazel.eclipse.preferences.BazelPreferencePage"
             id="com.salesforce.bazel.eclipse.preferences"
-            name="Bazel Preferences">
+            name="Bazel">
       </page>
    </extension>
    

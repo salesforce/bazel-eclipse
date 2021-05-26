@@ -232,8 +232,7 @@
          id="com.salesforce.bazel.eclipse.core"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.salesforce.bazel.eclipse.deps"

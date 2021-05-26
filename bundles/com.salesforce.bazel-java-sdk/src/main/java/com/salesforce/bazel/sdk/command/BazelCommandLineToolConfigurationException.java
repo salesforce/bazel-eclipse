@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2017 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -50,7 +50,7 @@ public class BazelCommandLineToolConfigurationException extends Exception {
         private static final long serialVersionUID = 1L;
 
         public BazelNotSetException() {
-            super("Path to Bazel binary is not set, please set it " + "(Preferences... > Bazel Plugins Preferences)");
+            super("Path to Bazel binary is not set, please set it " + "(Preferences... > Bazel)");
         }
     }
 
@@ -59,7 +59,7 @@ public class BazelCommandLineToolConfigurationException extends Exception {
 
         public BazelNotFoundException(String path) {
             super("Path to Bazel is wrong (" + path + " does not exist), please set it to a valid path"
-                    + "(Preferences... > Bazel Plugins Preferences)");
+                    + "(Preferences... > Bazel)");
         }
     }
 
@@ -68,7 +68,7 @@ public class BazelCommandLineToolConfigurationException extends Exception {
 
         public BazelNotExecutableException(String path) {
             super("Path to Bazel is wrong (" + path + " does not point to a executable file), please set it "
-                    + "(Preferences... > Bazel Plugins Preferences)");
+                    + "(Preferences... > Bazel)");
         }
     }
 
