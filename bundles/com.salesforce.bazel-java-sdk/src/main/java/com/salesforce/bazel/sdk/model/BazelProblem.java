@@ -116,14 +116,14 @@ public class BazelProblem {
         String rel = getRelativeResourcePath(label);
         if (rel == null) {
             throw new IllegalArgumentException(
-                "Unable to build a relative path for " + resourcePath + " based on label " + label);
+                    "Unable to build a relative path for " + resourcePath + " based on label " + label);
         }
         return new BazelProblem(rel, lineNumber, description, isError);
     }
 
     public BazelProblem toGenericWorkspaceLevelError(String descriptionPrefix) {
         return new BazelProblem(File.separator + "WORKSPACE", 0, descriptionPrefix + resourcePath + " " + description,
-            isError);
+                isError);
     }
 
     @Override

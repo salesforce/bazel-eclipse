@@ -23,6 +23,7 @@
  */
 package com.salesforce.bazel.sdk.command.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -180,10 +181,10 @@ public class BazelWorkspaceAspectHelper {
             String logstr = getLogStr(target, caller);
             Set<AspectTargetInfo> aspectInfos = aspectInfoCache_current.get(target);
             if (aspectInfos == null) {
-                LOG.info("ASPECT CACHE MISS target: " + target + logstr);
+                LOG.info("Aspect data not found in cache for: " + target + logstr);
                 cacheMisses.add(target);
             } else {
-                LOG.info("ASPECT CACHE GET target: " + target + logstr);
+                LOG.info("Aspect data found in cache for: " + target + logstr);
                 resultMap.put(target, aspectInfos);
                 numberCacheHits++;
             }
@@ -206,7 +207,7 @@ public class BazelWorkspaceAspectHelper {
             for (BazelLabel label : cacheMisses) {
                 Set<AspectTargetInfo> lastgood = aspectInfoCache_lastgood.get(label);
                 if (lastgood == null) {
-                    LOG.info("ASPECT CACHE FAIL target: " + label + getLogStr(label, caller));
+                    LOG.info("Aspect execution failed (all) for target: " + label + getLogStr(label, caller));
                 } else {
                     resultMap.put(label, lastgood);
                 }
@@ -221,14 +222,14 @@ public class BazelWorkspaceAspectHelper {
                 Set<AspectTargetInfo> infos = owningLabelToAspectInfos.get(label);
                 aspectInfoCache_current.put(label, infos);
                 aspectInfoCache_lastgood.put(label, infos);
-                LOG.info("ASPECT CACHE PUT target: " + label + getLogStr(label, caller));
+                LOG.info("Aspect data loaded for target: " + label + getLogStr(label, caller));
             }
             for (BazelLabel label : cacheMisses) {
                 // since we just populated the caches above, we should now find results
                 // this could be done in the loop above, but this is good sanity
                 Set<AspectTargetInfo> atis = aspectInfoCache_current.get(label);
                 if (atis == null) {
-                    LOG.error("ASPECT CACHE BUG target: " + label + getLogStr(label, caller));
+                    LOG.error("Aspect execution failed (single) for target: " + label + getLogStr(label, caller));
                     atis = Collections.emptySet();
                 }
                 resultMap.put(label, atis);
@@ -333,9 +334,9 @@ public class BazelWorkspaceAspectHelper {
         Function<String, String> filter = t -> t.startsWith(">>>")
                 ? (t.endsWith(AspectTargetInfo.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
 
+        File bazelWorkspaceRootDirectory = bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory();
         List<String> listOfGeneratedFilePaths = bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE,
-            bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(), null, args, filter,
-            BazelCommandExecutor.TIMEOUT_INFINITE);
+            bazelWorkspaceRootDirectory, null, args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
 
         return listOfGeneratedFilePaths;
     }

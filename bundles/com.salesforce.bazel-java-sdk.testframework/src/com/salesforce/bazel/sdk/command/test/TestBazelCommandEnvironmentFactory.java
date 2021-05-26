@@ -95,7 +95,7 @@ public class TestBazelCommandEnvironmentFactory {
         commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace, testOptions);
 
         BazelCommandManager bazelCommandManager = new BazelCommandManager(bazelAspectLocation, commandBuilder,
-            commandConsole, bazelExecutable.bazelExecutableFile);
+                commandConsole, bazelExecutable.bazelExecutableFile);
         bazelCommandManager.setBazelExecutablePath(bazelExecutable.bazelExecutableFile.getAbsolutePath());
 
         OperatingEnvironmentDetectionStrategy osStrategy = Mockito.mock(OperatingEnvironmentDetectionStrategy.class);

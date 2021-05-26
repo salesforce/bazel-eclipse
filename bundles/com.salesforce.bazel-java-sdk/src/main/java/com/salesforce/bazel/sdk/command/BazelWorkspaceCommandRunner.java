@@ -406,7 +406,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized List<BazelProblem> runBazelBuild(Set<String> bazelTargets, List<String> extraArgs,
             WorkProgressMonitor progressMonitor)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> extraArgsList = new ArrayList<String>();
         extraArgsList.add("build");
         extraArgsList.addAll(buildOptions);
@@ -448,7 +448,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfoForPackages(
             Collection<BazelPackageLocation> targetPackages, String caller)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<BazelLabel> targetLabels = new ArrayList<>();
         for (BazelPackageLocation pkg : targetPackages) {
             String target = pkg.getBazelPackageFSRelativePath() + ":*";

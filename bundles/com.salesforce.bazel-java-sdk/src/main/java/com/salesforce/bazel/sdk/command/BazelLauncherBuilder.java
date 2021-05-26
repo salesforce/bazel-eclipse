@@ -61,19 +61,19 @@ public class BazelLauncherBuilder {
     }
 
     BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder,
-        BazelOutputDirectoryBuilder outputDirectoryBuilder) {
+            BazelOutputDirectoryBuilder outputDirectoryBuilder) {
         bazelCommandRunner = Objects.requireNonNull(bazelRunner);
         this.commandBuilder = Objects.requireNonNull(commandBuilder);
         this.outputDirectoryBuilder = Objects.requireNonNull(outputDirectoryBuilder);
     }
 
     BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder, BazelLabel bazelLabel,
-        BazelTargetKind targetKind, List<String> bazelArgs) {
+            BazelTargetKind targetKind, List<String> bazelArgs) {
         this(bazelRunner, commandBuilder, bazelLabel, targetKind, bazelArgs, new BazelOutputDirectoryBuilder());
     }
 
     BazelLauncherBuilder(BazelWorkspaceCommandRunner bazelRunner, CommandBuilder commandBuilder, BazelLabel bazelLabel,
-        BazelTargetKind targetKind, List<String> bazelArgs, BazelOutputDirectoryBuilder outputDirectoryBuilder) {
+            BazelTargetKind targetKind, List<String> bazelArgs, BazelOutputDirectoryBuilder outputDirectoryBuilder) {
         bazelCommandRunner = Objects.requireNonNull(bazelRunner);
         this.commandBuilder = Objects.requireNonNull(commandBuilder);
         this.bazelLabel = Objects.requireNonNull(bazelLabel);

@@ -91,7 +91,7 @@ public class TestBazelWorkspaceFactory {
 
             // create the catalog entries
             TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(workspaceDescriptor,
-                packageRelativeBazelPath, packageName, javaPackageDir);
+                    packageRelativeBazelPath, packageName, javaPackageDir);
 
             // we will be collecting locations of Aspect json files for this package
             Set<String> packageAspectFiles = new TreeSet<>();
@@ -182,7 +182,7 @@ public class TestBazelWorkspaceFactory {
                     workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core", "hamcrest-core-1.3");
                 packageAspectFiles.add(aspectFilePath_hamcrest);
                 createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core",
-                        "hamcrest-core-1.3");
+                    "hamcrest-core-1.3");
             }
 
             // we chain the libs together to test inter project deps
@@ -208,9 +208,8 @@ public class TestBazelWorkspaceFactory {
             genruleLib.mkdir();
 
             // create the catalog entries
-            TestBazelPackageDescriptor packageDescriptor =
-                    new TestBazelPackageDescriptor(workspaceDescriptor, packageRelativeBazelPath, packageName,
-                        genruleLib);
+            TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(workspaceDescriptor,
+                    packageRelativeBazelPath, packageName, genruleLib);
 
             File buildFile = new File(genruleLib, workspaceDescriptor.buildFilename);
             buildFile.createNewFile();

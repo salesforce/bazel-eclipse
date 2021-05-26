@@ -73,8 +73,8 @@ public final class ShellCommand implements Command {
     private boolean executed = false;
 
     ShellCommand(CommandConsole console, File directory, List<String> args, Function<String, String> stdoutSelector,
-        Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
-        WorkProgressMonitor progressMonitor, long timeoutMS) {
+            Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
+            WorkProgressMonitor progressMonitor, long timeoutMS) {
         this.directory = directory;
         this.args = args;
         if (console != null) {

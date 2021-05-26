@@ -1,5 +1,5 @@
+# Copyright (c) 2019-2021, Salesforce.com, Inc.
 # Copyright 2016 The Bazel Authors. All rights reserved.
-# Copyright (c) 2019, Salesforce.com, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ def java_rule_ide_info(target, ctx):
   else:
     # proto-java library rules end up in here, no jars listed on the output object, so we resort to using transitive_runtime_deps
     #print("No output jars for "+target.label.name+", resorting to use transitive_runtime_deps")
-    
+
     if target[JavaInfo].transitive_runtime_deps != None:
       # transitive_runtime_deps is a depset of File objects
       #print("Adding class jars via transitive_runtime_deps for "+target.label.name)
@@ -168,7 +168,7 @@ def _aspect_impl(target, ctx):
   #print(json_files)
   #print("  CLASSPATH JARS")
   #print(classpath_jars)
-  
+
   return struct(
       output_groups = {
         "json-files" : depset(json_files),

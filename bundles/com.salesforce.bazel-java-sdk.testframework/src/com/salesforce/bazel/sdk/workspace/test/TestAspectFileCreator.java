@@ -97,12 +97,10 @@ public class TestAspectFileCreator {
         String label = packageRelativePath + ":" + targetName;
         String jar = BazelPathHelper
                 .osSepsEscaped("bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + ".jar");
-        String interfacejar = BazelPathHelper
-                .osSepsEscaped(
-                    "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + "-hjar.jar");
-        String sourcejar = BazelPathHelper
-                .osSepsEscaped(
-                    "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + "-src.jar");
+        String interfacejar = BazelPathHelper.osSepsEscaped(
+            "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + "-hjar.jar");
+        String sourcejar = BazelPathHelper.osSepsEscaped(
+            "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + "-src.jar");
         String buildFile = BazelPathHelper.osSepsEscaped(packageRelativePath + "/BUILD");
 
         return createAspectJsonForJavaArtifact(buildFile, dependencies, sources, mainClass, label, "java_library", jar,
@@ -139,13 +137,11 @@ public class TestAspectFileCreator {
         }
         String mainClass = null;
         String label = packageRelativePath + ":" + testTargetName;
-        String jar = BazelPathHelper
-                .osSepsEscaped(
-                    "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + testTargetName + ".jar");
+        String jar = BazelPathHelper.osSepsEscaped(
+            "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + testTargetName + ".jar");
         String interfacejar = null;
-        String sourcejar = BazelPathHelper
-                .osSepsEscaped(
-                    "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + testTargetName + "-src.jar");
+        String sourcejar = BazelPathHelper.osSepsEscaped(
+            "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + testTargetName + "-src.jar");
         String buildFile = BazelPathHelper.osSepsEscaped(packageRelativePath + "/BUILD");
 
         return createAspectJsonForJavaArtifact(buildFile, dependencies, sources, mainClass, label, "java_test", jar,
