@@ -3,7 +3,7 @@ package com.salesforce.bazel.sdk.aspect;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
 import org.junit.Test;
 
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
@@ -17,7 +17,7 @@ public class AspectOutputJarsTest {
     //  }
     private final String GUAVA_JAR = BazelPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0.jar"); // $SLASH_OK
     private final String GUAVA_IJAR = BazelPathHelper.osSeps(
-        "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar"); // $SLASH_OK
+            "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar"); // $SLASH_OK
     private final String GUAVA_SJAR =
             BazelPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0-sources.jar"); // $SLASH_OK
 
@@ -61,6 +61,7 @@ public class AspectOutputJarsTest {
         assertNull(parsedJars.getSrcJar());
     }
 
+    @SuppressWarnings("unchecked")
     private JSONObject createJarsArray(String jar, String ijar, String sourcejar) {
 
         JSONObject jarsObj = new JSONObject();

@@ -37,17 +37,16 @@
 package com.salesforce.bazel.sdk.aspect;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 /**
  * A parsed version of the JSON file produced by the application of the Bazel aspect. Each target in each package will
@@ -88,6 +87,7 @@ public final class AspectTargetInfo {
     private final List<AspectOutputJarSet> generatedJars;
     private final List<AspectOutputJarSet> jars;
     private final List<String> sources;
+
 
     @Override
     public String toString() {
@@ -134,8 +134,7 @@ public final class AspectTargetInfo {
      * Constructs a map of label -> {@link AspectTargetInfo} from a list of files, parsing each files into a
      * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
      */
-    public static Map<String, AspectTargetInfo> loadAspectFiles(List<File> aspectFiles)
-            throws IOException, InterruptedException {
+    public static Map<String, AspectTargetInfo> loadAspectFiles(List<File> aspectFiles) {
         Map<String, AspectTargetInfo> infos = new HashMap<>();
         for (File aspectFile : aspectFiles) {
             AspectTargetInfo buildInfo = loadAspectFile(aspectFile);
@@ -148,17 +147,19 @@ public final class AspectTargetInfo {
      * Constructs a map of label -> {@link AspectTargetInfo} from a list of files, parsing each files into a
      * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
      */
-    public static AspectTargetInfo loadAspectFile(File aspectFile) throws IOException, InterruptedException {
+    public static AspectTargetInfo loadAspectFile(File aspectFile) {
         AspectTargetInfo buildInfo = null;
+        JSONParser jsonParser = new JSONParser();
+
         if (aspectFile.exists()) {
-            JSONObject json = null;
+            JSONObject jsonObject = null;
             try {
-                json = new JSONObject(new JSONTokener(new FileInputStream(aspectFile)));
-            } catch (JSONException je) {
+                jsonObject = (JSONObject)jsonParser.parse(new FileReader(aspectFile));
+            } catch (Exception je) {
                 System.err.println("JSON file has illegal characters: " + aspectFile.getAbsolutePath()); // TODO log
-                throw je;
+                throw new IllegalArgumentException(je);
             }
-            buildInfo = AspectTargetInfo.loadAspectFromJson(aspectFile, json);
+            buildInfo = AspectTargetInfo.loadAspectFromJson(aspectFile, jsonObject, jsonParser);
         }
         return buildInfo;
     }
@@ -230,31 +231,34 @@ public final class AspectTargetInfo {
 
     // INTERNAL
 
-    static AspectTargetInfo loadAspectFromJson(File aspectDataFile, JSONObject object) {
+    static AspectTargetInfo loadAspectFromJson(File aspectDataFile, JSONObject jsonObject, JSONParser jsonParser) {
         AspectTargetInfo info = null;
 
         try {
-            List<AspectOutputJarSet> jars = jsonToJarArray(object.getJSONArray("jars"));
-            List<AspectOutputJarSet> generated_jars = jsonToJarArray(object.getJSONArray("generated_jars"));
-            String build_file_artifact_location = object.getString("build_file_artifact_location");
-            String kind = object.getString("kind");
-            String label = object.getString("label");
-            List<String> deps = jsonToStringArray(object.getJSONArray("dependencies"));
-            List<String> sources = jsonToStringArray(object.getJSONArray("sources"));
-            String mainClass = object.has("main_class") ? object.getString("main_class") : null;
+            List<AspectOutputJarSet> jars = jsonArrayToJarArray(jsonObject.get("jars"), jsonParser);
+            List<AspectOutputJarSet> generated_jars = jsonArrayToJarArray(jsonObject.get("generated_jars"), jsonParser);
+
+            List<String> deps = jsonArrayToStringArray(jsonObject.get("dependencies"));
+            List<String> sources = jsonArrayToStringArray(jsonObject.get("sources"));
+
+            String build_file_artifact_location = null; // object.getString("build_file_artifact_location");
+            String kind = (String)jsonObject.get("kind");
+            String label = (String)jsonObject.get("label");
+            String mainClass = (String)jsonObject.get("main_class");
+
 
             info = new AspectTargetInfo(aspectDataFile, jars, generated_jars, build_file_artifact_location, kind, label,
-                    deps, sources, mainClass);
+                deps, sources, mainClass);
         } catch (Exception anyE) {
             //System.err.println("Error parsing Bazel aspect info from file "+aspectDataFile.getAbsolutePath()+". Error: "+anyE.getMessage());
-            throw anyE;
+            throw new IllegalArgumentException(anyE);
         }
         return info;
     }
 
     AspectTargetInfo(File aspectDataFile, List<AspectOutputJarSet> jars, List<AspectOutputJarSet> generatedJars,
-            String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources,
-            String mainClass) {
+        String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources,
+        String mainClass) {
         this.aspectDataFile = aspectDataFile;
         this.jars = jars;
         this.generatedJars = generatedJars;
@@ -266,16 +270,36 @@ public final class AspectTargetInfo {
         this.mainClass = mainClass;
     }
 
-    private static List<AspectOutputJarSet> jsonToJarArray(JSONArray array) {
+    private static List<AspectOutputJarSet> jsonArrayToJarArray(Object arrayObject, JSONParser jsonParser) throws Exception {
         List<AspectOutputJarSet> jarList = new ArrayList<>();
-        for (Object o : array) {
-            jarList.add(new AspectOutputJarSet((JSONObject) o));
+        if (arrayObject == null) {
+            return jarList;
+        }
+        if (!(arrayObject instanceof JSONArray)) {
+            return jarList;
+        }
+
+        JSONArray array = (JSONArray)arrayObject;
+        for (Object jarSet : array) {
+            JSONObject jarSetObject = (JSONObject)jsonParser.parse(jarSet.toString());
+            jarList.add(new AspectOutputJarSet(jarSetObject));
         }
         return jarList;
     }
 
-    private static List<String> jsonToStringArray(JSONArray array) {
+    private static List<String> jsonArrayToStringArray(Object arrayAsObject) throws Exception {
         List<String> list = new ArrayList<>();
+        if (arrayAsObject == null) {
+            return list;
+        }
+
+        JSONArray array = null;
+        if (arrayAsObject instanceof JSONArray) {
+            array = (JSONArray) arrayAsObject;
+        } else {
+            return list;
+        }
+
         for (Object o : array) {
             list.add(o.toString());
         }
