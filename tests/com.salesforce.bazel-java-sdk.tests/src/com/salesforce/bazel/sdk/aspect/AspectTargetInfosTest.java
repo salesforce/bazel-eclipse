@@ -42,11 +42,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 
 import org.junit.Test;
 
+import com.salesforce.bazel.sdk.init.JVMRuleSupport;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
@@ -56,14 +56,13 @@ public class AspectTargetInfosTest {
     private final String testPath = BazelPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
     private final String binPath = BazelPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
     private final String selPath = BazelPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
-
+    
     @Test
     public void testLookupByLabel() {
-
-        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, libPath);
-        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, testPath);
-        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, binPath);
-        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, selPath);
+        AspectTargetInfo lib = getAspectTargetInfo("foo1", JVMRuleSupport.KIND_JAVA_LIBRARY, libPath);
+        AspectTargetInfo test = getAspectTargetInfo("foo2", JVMRuleSupport.KIND_JAVA_TEST, testPath);
+        AspectTargetInfo bin = getAspectTargetInfo("foo3", JVMRuleSupport.KIND_JAVA_BINARY, binPath);
+        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", JVMRuleSupport.KIND_SELENIUM_TEST, selPath);
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
@@ -76,33 +75,32 @@ public class AspectTargetInfosTest {
 
     @Test
     public void testLookupByTargetKind__singleTargetKind() {
-        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, libPath);
-        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, testPath);
-        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, binPath);
-        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, selPath);
+        AspectTargetInfo lib = getAspectTargetInfo("foo1", JVMRuleSupport.KIND_JAVA_LIBRARY, libPath);
+        AspectTargetInfo test = getAspectTargetInfo("foo2", JVMRuleSupport.KIND_JAVA_TEST, testPath);
+        AspectTargetInfo bin = getAspectTargetInfo("foo3", JVMRuleSupport.KIND_JAVA_BINARY, binPath);
+        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", JVMRuleSupport.KIND_SELENIUM_TEST, selPath);
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
-        Collection<AspectTargetInfo> infos = apis.lookupByTargetKind(EnumSet.of(BazelTargetKind.JAVA_TEST));
+        Collection<AspectTargetInfo> infos = apis.lookupByTargetKind(JVMRuleSupport.KIND_JAVA_TEST);
         assertEquals(1, infos.size());
         assertSame(test, infos.iterator().next());
 
-        infos = apis.lookupByTargetKind(EnumSet.of(BazelTargetKind.JAVA_WEB_TEST_SUITE));
+        infos = apis.lookupByTargetKind(JVMRuleSupport.KIND_SELENIUM_TEST);
         assertEquals(1, infos.size());
         assertSame(seleniumTest, infos.iterator().next());
     }
 
     @Test
     public void testLookupByTargetKind__multipleTargetKinds() {
-        AspectTargetInfo lib = getAspectTargetInfo("foo1", BazelTargetKind.JAVA_LIBRARY, libPath);
-        AspectTargetInfo test = getAspectTargetInfo("foo2", BazelTargetKind.JAVA_TEST, testPath);
-        AspectTargetInfo bin = getAspectTargetInfo("foo3", BazelTargetKind.JAVA_BINARY, binPath);
-        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", BazelTargetKind.JAVA_WEB_TEST_SUITE, selPath);
+        AspectTargetInfo lib = getAspectTargetInfo("foo1", JVMRuleSupport.KIND_JAVA_LIBRARY, libPath);
+        AspectTargetInfo test = getAspectTargetInfo("foo2", JVMRuleSupport.KIND_JAVA_TEST, testPath);
+        AspectTargetInfo bin = getAspectTargetInfo("foo3", JVMRuleSupport.KIND_JAVA_BINARY, binPath);
+        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", JVMRuleSupport.KIND_SELENIUM_TEST, selPath);
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
-        Collection<AspectTargetInfo> infos =
-                apis.lookupByTargetKind(EnumSet.of(BazelTargetKind.JAVA_TEST, BazelTargetKind.JAVA_BINARY));
+        Collection<AspectTargetInfo> infos = apis.lookupByTargetKind(JVMRuleSupport.KIND_JAVA_TEST, JVMRuleSupport.KIND_JAVA_BINARY);
 
         assertEquals(2, infos.size());
         assertTrue(infos.contains(test));
@@ -189,7 +187,7 @@ public class AspectTargetInfosTest {
     }
 
     private static AspectTargetInfo getAspectTargetInfo(String label, String... sourcePaths) {
-        return getAspectTargetInfo(label, BazelTargetKind.JAVA_LIBRARY, sourcePaths);
+        return getAspectTargetInfo(label, JVMRuleSupport.KIND_JAVA_LIBRARY, sourcePaths);
     }
 
     private static AspectTargetInfo getAspectTargetInfo(String label, BazelTargetKind targetKind,
@@ -197,8 +195,8 @@ public class AspectTargetInfosTest {
         List<String> sourcePathList = Arrays.asList(sourcePaths);
 
         String workspaceRelativePath = "some" + File.separatorChar + "path";
-        return new AspectTargetInfo(new File(""), new ArrayList<>(), new ArrayList<>(), workspaceRelativePath,
-                targetKind.toString().toLowerCase(), label, new ArrayList<>(), sourcePathList, "main-class");
+        return new AspectTargetInfo(new File(""), workspaceRelativePath,
+                targetKind.toString().toLowerCase(), label, new ArrayList<>(), sourcePathList);
     }
 
 }

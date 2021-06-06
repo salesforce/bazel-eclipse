@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +66,7 @@ public class AspectTargetInfos {
             if (previousValue != null) {
                 if (!previousValue.toString().equals(aspectTargetInfo.toString())) {
                     throw new IllegalStateException(
-                            "Did not expect a duplicate label with different contents: " + previousValue.getLabel());
+                        "Did not expect a duplicate label with different contents: " + previousValue.getLabel());
                 }
             }
         }
@@ -93,10 +92,29 @@ public class AspectTargetInfos {
         return labelToAspectTargetInfo.get(label);
     }
 
-    public Collection<AspectTargetInfo> lookupByTargetKind(EnumSet<BazelTargetKind> requestedTargetKinds) {
+    public Collection<AspectTargetInfo> lookupByTargetKind(Set<BazelTargetKind> requestedTargetKinds) {
+        List<AspectTargetInfo> matchedTargetInfos = new ArrayList<>();
+
+        for (AspectTargetInfo aspectTargetInfo : labelToAspectTargetInfo.values()) {
+            String aspectKindStr = aspectTargetInfo.getKind();
+            BazelTargetKind aspectKind = BazelTargetKind.valueOfIgnoresCase(aspectKindStr);
+            if (aspectKind != null) {
+                if (requestedTargetKinds.contains(aspectKind)) {
+                    matchedTargetInfos.add(aspectTargetInfo);
+                }
+            } else {
+                System.err.println("AspectTargetInfo " + aspectTargetInfo.getLabel() + " has an unknown kind: "
+                        + aspectTargetInfo.getKind());
+            }
+        }
+        return matchedTargetInfos;
+    }
+
+    public Collection<AspectTargetInfo> lookupByTargetKind(BazelTargetKind... requestedTargetKinds) {
+        List<BazelTargetKind> requestedTargetKindsList = Arrays.asList(requestedTargetKinds);
         List<AspectTargetInfo> aspectTargetInfos = new ArrayList<>();
         for (AspectTargetInfo aspectTargetInfo : labelToAspectTargetInfo.values()) {
-            if (requestedTargetKinds.contains(BazelTargetKind.valueOfIgnoresCase(aspectTargetInfo.getKind()))) {
+            if (requestedTargetKindsList.contains(BazelTargetKind.valueOfIgnoresCase(aspectTargetInfo.getKind()))) {
                 aspectTargetInfos.add(aspectTargetInfo);
             }
         }
@@ -122,14 +140,14 @@ public class AspectTargetInfos {
     }
 
     public Iterable<AspectTargetInfo> getTargetInfos() {
-        return this.labelToAspectTargetInfo.values();
+        return labelToAspectTargetInfo.values();
     }
 
     private static void assertAllSourcesHaveSameRootPath(Path rootSourcePath, AspectTargetInfo aspectTargetInfo) {
         for (String sourcePath : aspectTargetInfo.getSources()) {
             if (!Paths.get(sourcePath).startsWith(rootSourcePath)) {
                 throw new IllegalStateException("AspectTargetInfo " + aspectTargetInfo.getLabel()
-                        + " has sources that are not under " + rootSourcePath + ": " + aspectTargetInfo.getSources());
+                + " has sources that are not under " + rootSourcePath + ": " + aspectTargetInfo.getSources());
             }
         }
     }

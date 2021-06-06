@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -33,127 +33,48 @@
  */
 package com.salesforce.bazel.sdk.model;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 /**
- * The Bazel targets we support.
+ * A Bazel rule type (e.g. java_library) we support.
+ * <p>
+ * It is tempting to make this an Enum, but we want the set of supported kinds to be expandable.
  */
-public enum BazelTargetKind {
+public class BazelTargetKind {
 
-    JAVA_LIBRARY("java_library") {
+    protected final String targetKind;
+    protected boolean isRunnable = false;
+    protected boolean isTestable = false;
 
-        @Override
-        public boolean isRunnable() {
-            return false;
-        }
+    static Map<String, BazelTargetKind> knownInstances = new HashMap<>();
 
-        @Override
-        public boolean isTestable() {
-            return false;
-        }
-    },
-
-    JAVA_BINARY("java_binary") {
-
-        @Override
-        public boolean isRunnable() {
-            return true;
-        }
-
-        @Override
-        public boolean isTestable() {
-            return false;
-        }
-    },
-
-    JAVA_TEST("java_test") {
-
-        @Override
-        public boolean isRunnable() {
-            return false;
-        }
-
-        @Override
-        public boolean isTestable() {
-            return true;
-        }
-    },
-
-    // Selenium https://github.com/bazelbuild/rules_webtesting
-    JAVA_WEB_TEST_SUITE("java_web_test_suite") {
-
-        @Override
-        public boolean isRunnable() {
-            return false;
-        }
-
-        @Override
-        public boolean isTestable() {
-            return true;
-        }
-    },
-
-    JAVA_PROTO_LIBRARY("java_proto_library") {
-
-        @Override
-        public boolean isRunnable() {
-            return false;
-        }
-
-        @Override
-        public boolean isTestable() {
-            return false;
-        }
-    },
-
-    JAVA_LITE_PROTO_LIBRARY("java_lite_proto_library") {
-
-        @Override
-        public boolean isRunnable() {
-            return false;
-        }
-
-        @Override
-        public boolean isTestable() {
-            return false;
-        }
-    },
-
-    JAVA_GRPC_LIBRARY("java_grpc_library") {
-
-        @Override
-        public boolean isRunnable() {
-            return false;
-        }
-
-        @Override
-        public boolean isTestable() {
-            return false;
-        }
-    };
-
-    private final String targetKind;
-
-    private BazelTargetKind(String targetKind) {
+    public BazelTargetKind(String targetKind, boolean isRunnable, boolean isTestable) {
         this.targetKind = targetKind;
+        this.isRunnable = isRunnable;
+        this.isTestable = isTestable;
+
+        knownInstances.put(targetKind.toLowerCase(), this);
     }
 
     /**
      * Returns the corresponding TargetKind value based on the specified String value, ignoring the casing of the given
      * value. Returns null if no matching TargetKind value is found.
-     * 
+     *
      * @return matching TargetKind instance, null if no match
      */
     public static BazelTargetKind valueOfIgnoresCase(String value) {
-        try {
-            return BazelTargetKind.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            return null;
-        }
+        String valueLower = value.toLowerCase();
+        BazelTargetKind found = knownInstances.get(valueLower);
+
+        return found;
     }
 
     /**
      * Returns the corresponding TargetKind value based on the specified String value, ignoring the casing of the given
      * value. Throws an Exception if not matching TargetKind value is found.
-     * 
+     *
      * @return matching TargetKind instance
      * @throws IllegalStateException
      *             if no matching TargetKind is found for the specified value
@@ -167,21 +88,56 @@ public enum BazelTargetKind {
     }
 
     /**
+     * Gets the map (key is the kind string, value is the kind object) of registered target kinds.
+     */
+    public static Map<String, BazelTargetKind> getKnownKinds() {
+        // returning the live copy, if the SDK user thinks they know a good reason to modify this then
+        // give them the ability but hopefully they know what they are doing.
+        return knownInstances;
+    }
+
+    /**
      * Returns the target kind as a String.
      */
     public String getKind() {
-        return this.targetKind;
+        return targetKind;
     }
 
     /**
      * Returns true if this target kind is runnable using "bazel run".
      */
-    public abstract boolean isRunnable();
+    public boolean isRunnable() {
+        return isRunnable;
+    }
 
     /**
      * Returns true if this target kind is runnable using "bazel test".
      */
-    public abstract boolean isTestable();
+    public boolean isTestable() {
+        return isTestable;
+    }
+
+
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(targetKind);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        BazelTargetKind other = (BazelTargetKind) obj;
+        return Objects.equals(targetKind, other.targetKind);
+    }
 
     @Override
     public String toString() {

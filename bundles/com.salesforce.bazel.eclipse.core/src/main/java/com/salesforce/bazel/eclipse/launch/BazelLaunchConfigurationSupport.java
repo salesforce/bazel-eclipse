@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -105,7 +104,7 @@ class BazelLaunchConfigurationSupport {
             }
             if (other instanceof TypedBazelLabel) {
                 TypedBazelLabel o = (TypedBazelLabel) other;
-                return bazelLabel.equals(o.bazelLabel) && targetKind == o.targetKind;
+                return bazelLabel.equals(o.bazelLabel) && (targetKind == o.targetKind);
             }
             return false;
         }
@@ -212,7 +211,7 @@ class BazelLaunchConfigurationSupport {
      * Returns all AspectTargetInfo instances that represent targets of the specified type, for the specified project.
      */
     Collection<AspectTargetInfo> getAspectTargetInfosForProject(IProject project,
-            EnumSet<BazelTargetKind> targetTypes) {
+            Set<BazelTargetKind> targetTypes) {
         BazelWorkspaceCommandRunner bazelRunner = BazelPluginActivator.getInstance().getWorkspaceCommandRunner();
         AspectTargetInfos apis = computeAspectTargetInfos(project, bazelRunner);
         return apis.lookupByTargetKind(targetTypes);
@@ -230,7 +229,7 @@ class BazelLaunchConfigurationSupport {
     /**
      * Returns all Bazel targets of the specified type, for the specified project.
      */
-    List<TypedBazelLabel> getBazelTargetsForProject(IProject project, EnumSet<BazelTargetKind> targetTypes) {
+    List<TypedBazelLabel> getBazelTargetsForProject(IProject project, Set<BazelTargetKind> targetTypes) {
         List<TypedBazelLabel> typedBazelLabels = new ArrayList<>();
         for (AspectTargetInfo api : getAspectTargetInfosForProject(project, targetTypes)) {
             BazelLabel label = new BazelLabel(api.getLabel());
@@ -256,11 +255,11 @@ class BazelLaunchConfigurationSupport {
         }
     }
 
-    private static EnumSet<BazelTargetKind> LAUNCHABLE_TARGET_KINDS = null;
+    private static Set<BazelTargetKind> LAUNCHABLE_TARGET_KINDS = null;
 
     static {
         List<BazelTargetKind> targets = new ArrayList<>();
-        for (BazelTargetKind kind : BazelTargetKind.values()) {
+        for (BazelTargetKind kind : BazelTargetKind.getKnownKinds().values()) {
             // the expectation is that we'll only get java_binary targets
             // there's nothing wrong with getting other target kinds here,
             // but the target selection ui isn't that great, it should have
@@ -269,7 +268,7 @@ class BazelLaunchConfigurationSupport {
                 targets.add(kind);
             }
         }
-        LAUNCHABLE_TARGET_KINDS = EnumSet.copyOf(targets);
+        LAUNCHABLE_TARGET_KINDS = Set.copyOf(targets);
     }
 
 }

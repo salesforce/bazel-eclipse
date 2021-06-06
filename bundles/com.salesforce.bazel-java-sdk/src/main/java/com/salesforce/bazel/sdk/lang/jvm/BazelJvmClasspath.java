@@ -35,8 +35,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import com.salesforce.bazel.sdk.aspect.AspectOutputJarSet;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
+import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectOutputJarSet;
+import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -176,8 +177,14 @@ public class BazelJvmClasspath {
                 }
 
                 for (AspectTargetInfo targetInfo : targetInfos) {
-                    if (actualActivatedTargets.contains(targetInfo.getLabel())) {
-                        if ("java_library".equals(targetInfo.getKind())) {
+                    if (!(targetInfo instanceof JVMAspectTargetInfo)) {
+                        // this is not a aspect entry that can contribute to the JVM classpath
+                        continue;
+                    }
+                    JVMAspectTargetInfo jvmTargetInfo = (JVMAspectTargetInfo) targetInfo;
+                    
+                    if (actualActivatedTargets.contains(jvmTargetInfo.getLabel())) {
+                        if ("java_library".equals(jvmTargetInfo.getKind())) {
                             // this info describes a java_library target in the current package; don't add it to the classpath
                             // as all java_library targets in this package are assumed to be represented by source code entries
                             continue;
@@ -185,19 +192,19 @@ public class BazelJvmClasspath {
                         // else in some cases, the target is local, but we still want to proceed to process it below. the expected
                         // example here are java_import targets in the BUILD file that directly load jars from the file system
                         //   java_import(name = "zip4j", jars = ["lib/zip4j-2.6.4.jar"])
-                        if (!"java_import".equals(targetInfo.getKind())) {
+                        if (!"java_import".equals(jvmTargetInfo.getKind())) {
                             // some other case that we didn't expect, proceed but log a warn
-                            logger.warn("Unexpected local target type as dependency: " + targetInfo.getKind()
+                            logger.warn("Unexpected local target type as dependency: " + jvmTargetInfo.getKind()
                                     + "; expected either java_library or java_import.");
                         }
                     }
 
-                    BazelProject otherProject = getSourceProjectForSourcePaths(targetInfo.getSources());
+                    BazelProject otherProject = getSourceProjectForSourcePaths(jvmTargetInfo.getSources());
                     if (otherProject == null) {
                         // no project found that houses the sources of this bazel target, add the jars to the classpath
                         // this means that this is an external jar, or a jar produced by a bazel target that was not imported
 
-                        for (AspectOutputJarSet jarSet : targetInfo.getGeneratedJars()) {
+                        for (JVMAspectOutputJarSet jarSet : jvmTargetInfo.getGeneratedJars()) {
                             JvmClasspathEntry cpEntry = jarsToClasspathEntry(jarSet, isTestTarget);
                             if (cpEntry != null) {
                                 addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget,
@@ -208,7 +215,7 @@ public class BazelJvmClasspath {
                                         .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
                             }
                         }
-                        for (AspectOutputJarSet jarSet : targetInfo.getJars()) {
+                        for (JVMAspectOutputJarSet jarSet : jvmTargetInfo.getJars()) {
                             JvmClasspathEntry cpEntry = jarsToClasspathEntry(jarSet, isTestTarget);
                             if (cpEntry != null) {
                                 addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget,
@@ -227,7 +234,7 @@ public class BazelJvmClasspath {
                             // some rule types have hidden dependencies that we need to add
                             // if our project has any of those rules, we need to add in the dependencies to our classpath
                             Set<JvmClasspathEntry> implicitDeps =
-                                    implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, targetInfo);
+                                    implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, jvmTargetInfo);
                             for (JvmClasspathEntry implicitDep : implicitDeps) {
                                 addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, implicitDep,
                                     isTestTarget, mainClasspathEntryMap, testClasspathEntryMap);
@@ -329,7 +336,7 @@ public class BazelJvmClasspath {
         return null;
     }
 
-    private JvmClasspathEntry jarsToClasspathEntry(AspectOutputJarSet jarSet, boolean isTestLib) {
+    private JvmClasspathEntry jarsToClasspathEntry(JVMAspectOutputJarSet jarSet, boolean isTestLib) {
         JvmClasspathEntry cpEntry = null;
         cpEntry = new JvmClasspathEntry(jarSet.getJar(), jarSet.getSrcJar(), isTestLib);
         return cpEntry;
@@ -337,12 +344,12 @@ public class BazelJvmClasspath {
 
     @SuppressWarnings("unused")
     private JvmClasspathEntry[] jarsToClasspathEntries(BazelWorkspace bazelWorkspace,
-            WorkProgressMonitor progressMonitor, Set<AspectOutputJarSet> jars, boolean isTestLib) {
+            WorkProgressMonitor progressMonitor, Set<JVMAspectOutputJarSet> jars, boolean isTestLib) {
         JvmClasspathEntry[] entries = new JvmClasspathEntry[jars.size()];
         int i = 0;
         File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
         File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
-        for (AspectOutputJarSet jar : jars) {
+        for (JVMAspectOutputJarSet jar : jars) {
             entries[i] = jarsToClasspathEntry(jar, isTestLib);
             i++;
         }

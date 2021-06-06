@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -54,6 +54,7 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.init.JVMRuleSupport;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
@@ -150,6 +151,9 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         BazelConfigurationManager configManager = new EclipseBazelConfigurationManager(eclipseResourceHelper);
         BazelExternalJarRuleManager externalJarRuleManager = new BazelExternalJarRuleManager(osEnvStrategy);
 
+        // initialize the SDK, tell it to load the JVM rules support
+        JVMRuleSupport.initialize();
+
         startInternal(aspectLocation, commandBuilder, consoleFactory, projectMgr, eclipseResourceHelper,
             eclipseJavaCoreHelper, osEnvStrategy, configManager, externalJarRuleManager);
     }
@@ -186,15 +190,15 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         // setup a listener, if the user changes the path to Bazel executable notify the command manager
         configurationManager.setBazelExecutablePathListener(bazelCommandManager);
 
-        // Get the bazel workspace path from the settings: 
+        // Get the bazel workspace path from the settings:
         //   ECLIPSE_WS_ROOT/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.salesforce.bazel.eclipse.core.prefs
         String bazelWorkspacePathFromPrefs = configurationManager.getBazelWorkspacePath();
-        if (bazelWorkspacePathFromPrefs != null && !bazelWorkspacePathFromPrefs.isEmpty()) {
+        if ((bazelWorkspacePathFromPrefs != null) && !bazelWorkspacePathFromPrefs.isEmpty()) {
             String workspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
-            this.setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
+            setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
         } else {
             LOG.info(
-                "The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
+                    "The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
         }
     }
 
@@ -286,7 +290,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
 
     /**
      * Returns the manager for imported projects
-     * 
+     *
      * @return
      */
     public static BazelProjectManager getBazelProjectManager() {

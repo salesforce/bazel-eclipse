@@ -37,22 +37,13 @@
 package com.salesforce.bazel.sdk.aspect;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 /**
  * A parsed version of the JSON file produced by the application of the Bazel aspect. Each target in each package will
- * have such a file.
+ * have such a file. Look for subclasses of this class for extended information added for specific rule types.
  * <p>
- * The JSON document format is like this:
+ * For example, the JSON document format is like this for a java_library rule:
  *
  * <pre>
  {
@@ -73,21 +64,16 @@ import org.json.simple.parser.JSONParser;
  * <p>
  * See resources/bzleclipse_aspect.bzl for the code that creates the JSON files
  */
-public final class AspectTargetInfo {
+public class AspectTargetInfo {
 
     public static final String ASPECT_FILENAME_SUFFIX = ".bzleclipse-build.json";
 
-    private final File aspectDataFile; // full path to the file on the file system
-    private final String workspaceRelativePath; // relative path on the filesystem within the workspace
-    private final List<String> deps;
-    private final String kind;
-    private final String label;
-    private final String mainClass;
-
-    private final List<AspectOutputJarSet> generatedJars;
-    private final List<AspectOutputJarSet> jars;
-    private final List<String> sources;
-
+    protected final File aspectDataFile; // full path to the file on the file system
+    protected final String workspaceRelativePath; // relative path on the filesystem within the workspace
+    protected final List<String> deps;
+    protected final String kind;
+    protected final String label;
+    protected final List<String> sources;
 
     @Override
     public String toString() {
@@ -96,15 +82,11 @@ public final class AspectTargetInfo {
         builder.append("  label = ").append(label).append(",\n");
         builder.append("  build_file_artifact_location = ").append(workspaceRelativePath).append(",\n");
         builder.append("  kind = ").append(kind).append(",\n");
-        builder.append("  jars = [").append(commaJoiner(jars)).append("],\n");
-        builder.append("  generated_jars = [").append(commaJoiner(generatedJars)).append("],\n");
-        builder.append("  dependencies = [").append(commaJoiner(deps)).append("],\n");
-        builder.append("  sources = [").append(commaJoiner(sources)).append("]),\n");
-        builder.append("  main_class = ").append(mainClass).append("),\n");
+        builder.append("  sources = [").append(commaJoiner(sources)).append("])\n");
         return builder.toString();
     }
 
-    private String commaJoiner(List<?> things) {
+    protected String commaJoiner(List<?> things) {
         StringBuffer sb = new StringBuffer();
         for (Object thing : things) {
             sb.append(thing.toString());
@@ -113,56 +95,6 @@ public final class AspectTargetInfo {
         return sb.toString();
     }
 
-    /**
-     * Constructs a map of label -> @link AspectTargetInfo} from a list of file paths, parsing each files into a
-     * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
-     */
-    public static Map<String, AspectTargetInfo> loadAspectFilePaths(List<String> aspectFilePaths)
-            throws IOException, InterruptedException {
-
-        List<File> fileList = new ArrayList<>();
-        for (String aspectFilePath : aspectFilePaths) {
-            if (!aspectFilePath.isEmpty()) {
-                fileList.add(new File(aspectFilePath));
-            }
-        }
-
-        return loadAspectFiles(fileList);
-    }
-
-    /**
-     * Constructs a map of label -> {@link AspectTargetInfo} from a list of files, parsing each files into a
-     * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
-     */
-    public static Map<String, AspectTargetInfo> loadAspectFiles(List<File> aspectFiles) {
-        Map<String, AspectTargetInfo> infos = new HashMap<>();
-        for (File aspectFile : aspectFiles) {
-            AspectTargetInfo buildInfo = loadAspectFile(aspectFile);
-            infos.put(buildInfo.label, buildInfo);
-        }
-        return infos;
-    }
-
-    /**
-     * Constructs a map of label -> {@link AspectTargetInfo} from a list of files, parsing each files into a
-     * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
-     */
-    public static AspectTargetInfo loadAspectFile(File aspectFile) {
-        AspectTargetInfo buildInfo = null;
-        JSONParser jsonParser = new JSONParser();
-
-        if (aspectFile.exists()) {
-            JSONObject jsonObject = null;
-            try {
-                jsonObject = (JSONObject)jsonParser.parse(new FileReader(aspectFile));
-            } catch (Exception je) {
-                System.err.println("JSON file has illegal characters: " + aspectFile.getAbsolutePath()); // TODO log
-                throw new IllegalArgumentException(je);
-            }
-            buildInfo = AspectTargetInfo.loadAspectFromJson(aspectFile, jsonObject, jsonParser);
-        }
-        return buildInfo;
-    }
 
     /**
      * Location of the generated file that was used to build this instance.
@@ -202,108 +134,21 @@ public final class AspectTargetInfo {
     }
 
     /**
-     * List of jars generated by annotations processors when building this target.
-     */
-    public List<AspectOutputJarSet> getGeneratedJars() {
-        return generatedJars;
-    }
-
-    /**
-     * List of jars generated by building this target.
-     */
-    public List<AspectOutputJarSet> getJars() {
-        return jars;
-    }
-
-    /**
      * List of sources consumed by this target.
      */
     public List<String> getSources() {
         return sources;
     }
 
-    /**
-     * The value of the "main_class" attribute of this target, may be null if this target doesn't specify a main_class.
-     */
-    public String getMainClass() {
-        return mainClass;
-    }
 
-    // INTERNAL
-
-    static AspectTargetInfo loadAspectFromJson(File aspectDataFile, JSONObject jsonObject, JSONParser jsonParser) {
-        AspectTargetInfo info = null;
-
-        try {
-            List<AspectOutputJarSet> jars = jsonArrayToJarArray(jsonObject.get("jars"), jsonParser);
-            List<AspectOutputJarSet> generated_jars = jsonArrayToJarArray(jsonObject.get("generated_jars"), jsonParser);
-
-            List<String> deps = jsonArrayToStringArray(jsonObject.get("dependencies"));
-            List<String> sources = jsonArrayToStringArray(jsonObject.get("sources"));
-
-            String build_file_artifact_location = null; // object.getString("build_file_artifact_location");
-            String kind = (String)jsonObject.get("kind");
-            String label = (String)jsonObject.get("label");
-            String mainClass = (String)jsonObject.get("main_class");
-
-
-            info = new AspectTargetInfo(aspectDataFile, jars, generated_jars, build_file_artifact_location, kind, label,
-                deps, sources, mainClass);
-        } catch (Exception anyE) {
-            //System.err.println("Error parsing Bazel aspect info from file "+aspectDataFile.getAbsolutePath()+". Error: "+anyE.getMessage());
-            throw new IllegalArgumentException(anyE);
-        }
-        return info;
-    }
-
-    AspectTargetInfo(File aspectDataFile, List<AspectOutputJarSet> jars, List<AspectOutputJarSet> generatedJars,
-        String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources,
-        String mainClass) {
+    protected AspectTargetInfo(File aspectDataFile, 
+            String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources) {
         this.aspectDataFile = aspectDataFile;
-        this.jars = jars;
-        this.generatedJars = generatedJars;
         this.workspaceRelativePath = workspaceRelativePath;
         this.kind = kind;
         this.label = label;
         this.deps = deps;
         this.sources = sources;
-        this.mainClass = mainClass;
-    }
-
-    private static List<AspectOutputJarSet> jsonArrayToJarArray(Object arrayObject, JSONParser jsonParser) throws Exception {
-        List<AspectOutputJarSet> jarList = new ArrayList<>();
-        if (arrayObject == null) {
-            return jarList;
-        }
-        if (!(arrayObject instanceof JSONArray)) {
-            return jarList;
-        }
-
-        JSONArray array = (JSONArray)arrayObject;
-        for (Object jarSet : array) {
-            JSONObject jarSetObject = (JSONObject)jsonParser.parse(jarSet.toString());
-            jarList.add(new AspectOutputJarSet(jarSetObject));
-        }
-        return jarList;
-    }
-
-    private static List<String> jsonArrayToStringArray(Object arrayAsObject) throws Exception {
-        List<String> list = new ArrayList<>();
-        if (arrayAsObject == null) {
-            return list;
-        }
-
-        JSONArray array = null;
-        if (arrayAsObject instanceof JSONArray) {
-            array = (JSONArray) arrayAsObject;
-        } else {
-            return list;
-        }
-
-        for (Object o : array) {
-            list.add(o.toString());
-        }
-        return list;
     }
 
 }

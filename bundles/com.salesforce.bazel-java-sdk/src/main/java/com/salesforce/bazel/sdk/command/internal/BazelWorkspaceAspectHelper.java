@@ -40,6 +40,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
+import com.salesforce.bazel.sdk.aspect.AspectTargetInfoFactory;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -347,7 +348,7 @@ public class BazelWorkspaceAspectHelper {
 
     public static Map<BazelLabel, AspectTargetInfo> loadAspectFilePaths(List<String> aspectFilePaths)
             throws IOException, InterruptedException {
-        Map<String, AspectTargetInfo> lToAtis = AspectTargetInfo.loadAspectFilePaths(aspectFilePaths);
+        Map<String, AspectTargetInfo> lToAtis = AspectTargetInfoFactory.loadAspectFilePaths(aspectFilePaths);
         Map<BazelLabel, AspectTargetInfo> bzToAtis = new HashMap<>(lToAtis.size());
         for (Map.Entry<String, AspectTargetInfo> e : lToAtis.entrySet()) {
             bzToAtis.put(new BazelLabel(e.getKey()), e.getValue());

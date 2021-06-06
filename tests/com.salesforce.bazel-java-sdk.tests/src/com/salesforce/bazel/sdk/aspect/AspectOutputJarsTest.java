@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import org.json.simple.JSONObject;
 import org.junit.Test;
 
+import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectOutputJarSet;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 public class AspectOutputJarsTest {
@@ -17,7 +18,7 @@ public class AspectOutputJarsTest {
     //  }
     private final String GUAVA_JAR = BazelPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0.jar"); // $SLASH_OK
     private final String GUAVA_IJAR = BazelPathHelper.osSeps(
-            "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar"); // $SLASH_OK
+        "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar"); // $SLASH_OK
     private final String GUAVA_SJAR =
             BazelPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0-sources.jar"); // $SLASH_OK
 
@@ -25,7 +26,7 @@ public class AspectOutputJarsTest {
     public void testDeserializationHappy() {
         JSONObject jars = createJarsArray(GUAVA_JAR, GUAVA_IJAR, GUAVA_SJAR);
 
-        AspectOutputJarSet parsedJars = new AspectOutputJarSet(jars);
+        JVMAspectOutputJarSet parsedJars = new JVMAspectOutputJarSet(jars);
         assertEquals(GUAVA_JAR, parsedJars.getJar());
         assertEquals(GUAVA_IJAR, parsedJars.getInterfaceJar());
         assertEquals(GUAVA_SJAR, parsedJars.getSrcJar());
@@ -35,7 +36,7 @@ public class AspectOutputJarsTest {
     public void testDeserializationNullJar() {
         JSONObject jars = createJarsArray(null, GUAVA_IJAR, GUAVA_SJAR);
 
-        AspectOutputJarSet parsedJars = new AspectOutputJarSet(jars);
+        JVMAspectOutputJarSet parsedJars = new JVMAspectOutputJarSet(jars);
         assertNull(parsedJars.getJar());
         assertEquals(GUAVA_IJAR, parsedJars.getInterfaceJar());
         assertEquals(GUAVA_SJAR, parsedJars.getSrcJar());
@@ -45,7 +46,7 @@ public class AspectOutputJarsTest {
     public void testDeserializationNullIJar() {
         JSONObject jars = createJarsArray(GUAVA_JAR, null, GUAVA_SJAR);
 
-        AspectOutputJarSet parsedJars = new AspectOutputJarSet(jars);
+        JVMAspectOutputJarSet parsedJars = new JVMAspectOutputJarSet(jars);
         assertEquals(GUAVA_JAR, parsedJars.getJar());
         assertNull(parsedJars.getInterfaceJar());
         assertEquals(GUAVA_SJAR, parsedJars.getSrcJar());
@@ -55,7 +56,7 @@ public class AspectOutputJarsTest {
     public void testDeserializationNullSJar() {
         JSONObject jars = createJarsArray(GUAVA_JAR, GUAVA_IJAR, null);
 
-        AspectOutputJarSet parsedJars = new AspectOutputJarSet(jars);
+        JVMAspectOutputJarSet parsedJars = new JVMAspectOutputJarSet(jars);
         assertEquals(GUAVA_JAR, parsedJars.getJar());
         assertEquals(GUAVA_IJAR, parsedJars.getInterfaceJar());
         assertNull(parsedJars.getSrcJar());

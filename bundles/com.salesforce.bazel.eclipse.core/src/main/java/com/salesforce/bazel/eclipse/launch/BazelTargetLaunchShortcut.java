@@ -23,8 +23,8 @@
  */
 package com.salesforce.bazel.eclipse.launch;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -46,6 +46,7 @@ import org.eclipse.ui.IEditorPart;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
+import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfo;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
@@ -89,15 +90,22 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
         IProject project = eclipseJavaModel.getJavaProject(projectName).getProject();
 
         Collection<AspectTargetInfo> apis = support.getLaunchableAspectTargetInfosForProject(project);
-        Collection<AspectTargetInfo> matchingInfos =
-                apis.stream().filter(api -> fqClassName.equals(api.getMainClass())).collect(Collectors.toList());
-        if (matchingInfos.isEmpty()) {
+        Collection<AspectTargetInfo> mainClassInfos = new ArrayList<>();
+        for (AspectTargetInfo info : apis) {
+            if (info instanceof JVMAspectTargetInfo) {
+                JVMAspectTargetInfo jvmInfo = (JVMAspectTargetInfo) info;
+                if (fqClassName.equals(jvmInfo.getMainClass())) {
+                    mainClassInfos.add(info);
+                }
+            }
+        }
+        if (mainClassInfos.isEmpty()) {
             // bazel allows a java binary rule to specify the main_class as the target name, so we should also look at the name of the targets
             // however bazel does not like the common "src/main/java" root:
             // error: "main_class was not provided and cannot be inferred: source path doesn't include a known root (java, javatests, src, testsrc)"
             throw new IllegalStateException(
-                    "Unable to find a java_binary target that has a main_class of " + fqClassName);
-        } else if (matchingInfos.size() > 1) {
+                "Unable to find a java_binary target that has a main_class of " + fqClassName);
+        } else if (mainClassInfos.size() > 1) {
             // surface correctly
             throw new IllegalStateException("Found multiple java_binary targets that have a main_class of "
                     + fqClassName + " - create a launch configuration manually");
@@ -108,7 +116,7 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
         try {
             ILaunchConfigurationWorkingCopy config = type.newInstance(null, fileName);
             support.setLaunchConfigDefaults(config);
-            AspectTargetInfo api = matchingInfos.iterator().next();
+            AspectTargetInfo api = mainClassInfos.iterator().next();
             BazelLabel label = new BazelLabel(api.getLabel());
             BazelTargetKind kind = BazelTargetKind.valueOfIgnoresCase(api.getKind());
             support.populateBazelLaunchConfig(config, projectName, label, kind);
