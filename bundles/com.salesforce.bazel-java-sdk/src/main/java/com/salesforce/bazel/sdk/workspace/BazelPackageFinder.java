@@ -4,11 +4,14 @@ import java.io.File;
 import java.util.Set;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelBuildFileHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
+/**
+ * Scans the workspace looking for packages that contains rules that are registered with
+ * the SDK.
+ */
 public class BazelPackageFinder {
     LogHelper logger;
 
@@ -16,9 +19,14 @@ public class BazelPackageFinder {
         logger = LogHelper.log(this.getClass());
     }
 
-    // TODO our workspace scanner is looking for Java packages, but uses primitive techniques. switch to use the aspect
-    // approach here, like we do with the classpath computation.
-
+    /**
+     * Navigates the workspace reading Bazel BUILD files, looking for packages that contains rules
+     * types that are registered with the SDK. 
+     * @param dir the starting directory (usually the Bazel workspace root)
+     * @param monitor a progress monitor that is updated
+     * @param buildFileLocations the output, the list of found BUILD files with interesting rules
+     * @param depth the maximum depth to descend
+     */
     public void findBuildFileLocations(File dir, WorkProgressMonitor monitor, Set<File> buildFileLocations, int depth) {
         if (!dir.isDirectory()) {
             return;
@@ -36,7 +44,7 @@ public class BazelPackageFinder {
 
                     // great, this dir is a Bazel package (but this may be a non-Java package)
                     // scan the BUILD file looking for java rules, only add if this is a java project
-                    if (BazelBuildFileHelper.hasJavaRules(dirFile)) {
+                    if (BuildFileSupport.hasRegisteredRules(dirFile)) {
                         buildFileLocations.add(BazelPathHelper.getCanonicalFileSafely(dir));
                     }
                 } else if (dirFile.isDirectory()) {

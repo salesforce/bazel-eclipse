@@ -34,11 +34,14 @@
 package com.salesforce.bazel.sdk.model;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
- * A Bazel rule type (e.g. java_library) we support.
+ * A Bazel rule <i>kind</i> (e.g. java_library) that is supported by the SDK runtime.
+ * In Bazel, a <i>kind</i> is essentially a rule type.
  * <p>
  * It is tempting to make this an Enum, but we want the set of supported kinds to be expandable.
  */
@@ -48,25 +51,27 @@ public class BazelTargetKind {
     protected boolean isRunnable = false;
     protected boolean isTestable = false;
 
-    static Map<String, BazelTargetKind> knownInstances = new HashMap<>();
+    static Set<String> registeredKindNames = new HashSet<>();
+    static Map<String, BazelTargetKind> registeredKinds = new HashMap<>();
 
-    public BazelTargetKind(String targetKind, boolean isRunnable, boolean isTestable) {
-        this.targetKind = targetKind;
+    public BazelTargetKind(String targetKindName, boolean isRunnable, boolean isTestable) {
+        this.targetKind = targetKindName;
         this.isRunnable = isRunnable;
         this.isTestable = isTestable;
 
-        knownInstances.put(targetKind.toLowerCase(), this);
+        registeredKindNames.add(targetKindName.toLowerCase());
+        registeredKinds.put(targetKindName.toLowerCase(), this);
     }
 
     /**
-     * Returns the corresponding TargetKind value based on the specified String value, ignoring the casing of the given
-     * value. Returns null if no matching TargetKind value is found.
+     * Returns the corresponding TargetKind value based on the specified String kind name, ignoring the 
+     * casing of the given value. Returns null if no matching TargetKind is found.
      *
      * @return matching TargetKind instance, null if no match
      */
-    public static BazelTargetKind valueOfIgnoresCase(String value) {
-        String valueLower = value.toLowerCase();
-        BazelTargetKind found = knownInstances.get(valueLower);
+    public static BazelTargetKind valueOfIgnoresCase(String targetKindName) {
+        String valueLower = targetKindName.toLowerCase();
+        BazelTargetKind found = registeredKinds.get(valueLower);
 
         return found;
     }
@@ -79,27 +84,36 @@ public class BazelTargetKind {
      * @throws IllegalStateException
      *             if no matching TargetKind is found for the specified value
      */
-    public static BazelTargetKind valueOfIgnoresCaseRequiresMatch(String value) {
-        BazelTargetKind targetKind = valueOfIgnoresCase(value);
+    public static BazelTargetKind valueOfIgnoresCaseRequiresMatch(String targetKindName) {
+        BazelTargetKind targetKind = valueOfIgnoresCase(targetKindName);
         if (targetKind == null) {
-            throw new IllegalStateException("No matching TargetKind found for value [" + value + "]");
+            throw new IllegalStateException("No matching BazelTargetKind found for [" + targetKindName + "]");
         }
         return targetKind;
     }
 
     /**
-     * Gets the map (key is the kind string, value is the kind object) of registered target kinds.
+     * Gets the set of registered target kinds (e.g. java_library) with support in the SDK.
      */
-    public static Map<String, BazelTargetKind> getKnownKinds() {
+    public static Set<String> getRegisteredTargetKindNames() {
         // returning the live copy, if the SDK user thinks they know a good reason to modify this then
         // give them the ability but hopefully they know what they are doing.
-        return knownInstances;
+        return registeredKindNames;
     }
 
     /**
-     * Returns the target kind as a String.
+     * Gets the map (key is the kind name, value is the kind object) of registered target kinds.
      */
-    public String getKind() {
+    public static Map<String, BazelTargetKind> getRegisteredKinds() {
+        // returning the live copy, if the SDK user thinks they know a good reason to modify this then
+        // give them the ability but hopefully they know what they are doing.
+        return registeredKinds;
+    }
+
+    /**
+     * Returns the target kind name as a String.
+     */
+    public String getKindName() {
         return targetKind;
     }
 
@@ -141,6 +155,6 @@ public class BazelTargetKind {
 
     @Override
     public String toString() {
-        return getKind();
+        return getKindName();
     }
 }

@@ -111,7 +111,7 @@ class BazelLaunchConfigurationSupport {
 
         @Override
         public String toString() {
-            return bazelLabel.toString() + " [" + targetKind.getKind() + "] ";
+            return bazelLabel.toString() + " [" + targetKind.getKindName() + "] ";
         }
     }
 
@@ -192,7 +192,7 @@ class BazelLaunchConfigurationSupport {
         Objects.requireNonNull(projectName);
 
         String labelStr = label == null ? null : label.getLabel();
-        String kindStr = targetKind == null ? null : targetKind.getKind();
+        String kindStr = targetKind == null ? null : targetKind.getKindName();
         config.setAttribute(BazelLaunchConfigAttributes.PROJECT.getAttributeName(), projectName);
         config.setAttribute(BazelLaunchConfigAttributes.LABEL.getAttributeName(), labelStr);
         config.setAttribute(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), kindStr);
@@ -259,7 +259,7 @@ class BazelLaunchConfigurationSupport {
 
     static {
         List<BazelTargetKind> targets = new ArrayList<>();
-        for (BazelTargetKind kind : BazelTargetKind.getKnownKinds().values()) {
+        for (BazelTargetKind kind : BazelTargetKind.getRegisteredKinds().values()) {
             // the expectation is that we'll only get java_binary targets
             // there's nothing wrong with getting other target kinds here,
             // but the target selection ui isn't that great, it should have
