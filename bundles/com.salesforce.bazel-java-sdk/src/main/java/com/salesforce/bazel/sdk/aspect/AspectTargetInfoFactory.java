@@ -25,6 +25,14 @@ public class AspectTargetInfoFactory {
     static {
         providers.add(new JVMAspectTargetInfoFactoryProvider());
     }
+    
+    /**
+     * During initialization, add providers that can parse target specific json in the
+     * apsect files. 
+     */
+    public static void addProvider(AspectTargetInfoFactoryProvider provider) {
+        providers.add(provider);
+    }
 
     /**
      * Constructs a map of label -> @link AspectTargetInfo} from a list of file paths, parsing each files into a

@@ -54,7 +54,7 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
-import com.salesforce.bazel.sdk.init.JVMRuleSupport;
+import com.salesforce.bazel.sdk.init.JvmRuleSupport;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
@@ -152,7 +152,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         BazelExternalJarRuleManager externalJarRuleManager = new BazelExternalJarRuleManager(osEnvStrategy);
 
         // initialize the SDK, tell it to load the JVM rules support
-        JVMRuleSupport.initialize();
+        JvmRuleSupport.initialize();
 
         startInternal(aspectLocation, commandBuilder, consoleFactory, projectMgr, eclipseResourceHelper,
             eclipseJavaCoreHelper, osEnvStrategy, configManager, externalJarRuleManager);

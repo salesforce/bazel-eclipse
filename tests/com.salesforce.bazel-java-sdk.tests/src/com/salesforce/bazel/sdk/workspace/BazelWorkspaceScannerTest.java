@@ -27,10 +27,12 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.salesforce.bazel.sdk.init.JvmRuleSupport;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
@@ -39,6 +41,11 @@ public class BazelWorkspaceScannerTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
+    @Before
+    public void setup() {
+        JvmRuleSupport.initialize();
+    }
+    
     @Test
     public void testHappyPath() throws Exception {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();

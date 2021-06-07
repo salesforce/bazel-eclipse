@@ -55,9 +55,9 @@ import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterUtils;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelBuildFileHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 import com.salesforce.bazel.sdk.workspace.BazelPackageFinder;
+import com.salesforce.bazel.sdk.workspace.BuildFileSupport;
 
 // initial version copied from m2e MavenProjectConfigurator
 
@@ -118,14 +118,14 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
             return false;
         }
 
-        boolean hasJavaRule = false;
+        boolean hasRegisteredRule = false;
         try (InputStream is = buildFile.getContents()) {
-            hasJavaRule = BazelBuildFileHelper.hasJavaRules(is);
+            hasRegisteredRule = BuildFileSupport.hasRegisteredRules(is);
         } catch (Exception anyE) {
             LOG.error(anyE.getMessage(), anyE);
         }
 
-        return hasJavaRule;
+        return hasRegisteredRule;
     }
 
     /**

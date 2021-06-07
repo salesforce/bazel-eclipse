@@ -31,7 +31,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.workspace;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -40,37 +40,45 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
+import org.junit.Before;
 import org.junit.Test;
 
-public class BazelBuildFileHelperTest {
+import com.salesforce.bazel.sdk.init.JvmRuleSupport;
 
+public class BuildFileSupportTest {
+
+    @Before
+    public void setup() {
+        JvmRuleSupport.initialize();
+    }
+    
     @Test
     public void testJavaRulesLines_positive() {
-        assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("java_binary("));
-        assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("java_library("));
-        assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("java_test("));
-        assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("java_web_test_suite("));
-        assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("springboot"));
-        assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("springboot_test("));
+        assertTrue(BuildFileSupport.hasRegisteredRuleInLine("java_binary("));
+        assertTrue(BuildFileSupport.hasRegisteredRuleInLine("java_library("));
+        assertTrue(BuildFileSupport.hasRegisteredRuleInLine("java_test("));
+        assertTrue(BuildFileSupport.hasRegisteredRuleInLine("java_web_test_suite("));
+        assertTrue(BuildFileSupport.hasRegisteredRuleInLine("springboot"));
+        assertTrue(BuildFileSupport.hasRegisteredRuleInLine("springboot_test("));
 
         // spaces
-        assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("   java_binary("));
+        assertTrue(BuildFileSupport.hasRegisteredRuleInLine("   java_binary("));
         // tab
-        assertTrue(BazelBuildFileHelper.hasJavaRulesInLine("\tjava_binary("));
+        assertTrue(BuildFileSupport.hasRegisteredRuleInLine("\tjava_binary("));
     }
 
     @Test
     public void testJavaRulesLines_negative() {
-        assertFalse(BazelBuildFileHelper.hasJavaRulesInLine("ajava_binary("));
-        assertFalse(BazelBuildFileHelper.hasJavaRulesInLine("# java_library("));
-        assertFalse(BazelBuildFileHelper.hasJavaRulesInLine("javatest("));
-        assertFalse(BazelBuildFileHelper.hasJavaRulesInLine("spring boot("));
+        assertFalse(BuildFileSupport.hasRegisteredRuleInLine("ajava_binary("));
+        assertFalse(BuildFileSupport.hasRegisteredRuleInLine("# java_library("));
+        assertFalse(BuildFileSupport.hasRegisteredRuleInLine("javatest("));
+        assertFalse(BuildFileSupport.hasRegisteredRuleInLine("spring boot("));
         assertFalse(
-            BazelBuildFileHelper.hasJavaRulesInLine("load(\"//tools/springboot:springboot.bzl\", \"springboot\")")); // $SLASH_OK bazel path
+            BuildFileSupport.hasRegisteredRuleInLine("load(\"//tools/springboot:springboot.bzl\", \"springboot\")")); // $SLASH_OK bazel path
 
-        assertFalse(BazelBuildFileHelper.hasJavaRulesInLine("\n"));
-        assertFalse(BazelBuildFileHelper.hasJavaRulesInLine(" "));
-        assertFalse(BazelBuildFileHelper.hasJavaRulesInLine(""));
+        assertFalse(BuildFileSupport.hasRegisteredRuleInLine("\n"));
+        assertFalse(BuildFileSupport.hasRegisteredRuleInLine(" "));
+        assertFalse(BuildFileSupport.hasRegisteredRuleInLine(""));
     }
 
     @Test
@@ -87,7 +95,7 @@ public class BazelBuildFileHelperTest {
         sb.append("\n");
 
         InputStream is = new ByteArrayInputStream(sb.toString().getBytes(Charset.forName("UTF-8")));
-        assertTrue(BazelBuildFileHelper.hasJavaRules(is));
+        assertTrue(BuildFileSupport.hasRegisteredRules(is));
     }
 
     @Test
@@ -104,12 +112,12 @@ public class BazelBuildFileHelperTest {
         sb.append("\n");
 
         InputStream is = new ByteArrayInputStream(sb.toString().getBytes(Charset.forName("UTF-8")));
-        assertFalse(BazelBuildFileHelper.hasJavaRules(is));
+        assertFalse(BuildFileSupport.hasRegisteredRules(is));
     }
 
     @Test
     public void testJavaRules_InputStream_negative_emptyBUILDfile() throws Exception {
         InputStream is = new ByteArrayInputStream("".getBytes(Charset.forName("UTF-8")));
-        assertFalse(BazelBuildFileHelper.hasJavaRules(is));
+        assertFalse(BuildFileSupport.hasRegisteredRules(is));
     }
 }

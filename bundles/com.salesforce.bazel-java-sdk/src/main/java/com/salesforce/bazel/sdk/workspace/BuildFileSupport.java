@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
+ * Copyright (c) 2019-2021, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -31,7 +31,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.workspace;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -39,57 +39,51 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
+import java.util.Set;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
-public class BazelBuildFileHelper {
-    static final LogHelper LOG = LogHelper.log(BazelBuildFileHelper.class);
-    /**
-     * List of Strings that can be found in BUILD files that will indicate a Bazel package that is supported by the
-     * Eclipse plugin. Currently, only Java packages are supported.
-     * <p>
-     * The line must begin with one of these tokens (leading whitespace is ignored). This prevents false positives when
-     * comments include one of these tokens. Also, this means that just loading a Java rule in a load() statement is not
-     * enough to trigger the detector.
-     */
-    public static final String[] JAVA_PROJECT_INDICATORS =
-            { "java_binary", "java_library", "java_test", "java_web_test_suite", "springboot", "springboot_test",
-                    "java_proto_library", "java_lite_proto_library", "java_grpc_library" };
+/**
+ * Helper to parse BUILD files. 
+ */
+public class BuildFileSupport {
+    static final LogHelper LOG = LogHelper.log(BuildFileSupport.class);
 
     /**
-     * Parses a File, presumed to be a Bazel BUILD file, looking for indications that it contains Java rules.
+     * Parses a File, presumed to be a Bazel BUILD file, looking for indications that it contains rules
+     * kinds that are registered with the SDK (and therefore interesting).
      * 
      * @param buildFile
-     * @return true if it contains at least one Java rule, false if not
+     * @return true if it contains at least one registered rule, false if not
      */
-    public static boolean hasJavaRules(File buildFile) {
-        boolean hasJavaRules = false;
+    public static boolean hasRegisteredRules(File buildFile) {
+        boolean hasRegisteredRules = false;
 
         if (!buildFile.exists() || !buildFile.canRead()) {
             return false;
         }
 
         try (InputStream is = new FileInputStream(buildFile)) {
-            hasJavaRules = hasJavaRules(is);
+            hasRegisteredRules = hasRegisteredRules(is);
         } catch (Exception anyE) {
             LOG.error(anyE.getMessage(), anyE);
         }
-        return hasJavaRules;
+        return hasRegisteredRules;
     }
 
     /**
      * Parses an InputStream, presumed to be the contents of a Bazel BUILD file, looking for indications that it
-     * contains Java rules.
+     * contains rules of registered kinds.
      * 
      * @param is
-     * @return true if it contains at least one Java rule, false if not
+     * @return true if it contains at least one rule of a registered kind, false if not
      */
-    public static boolean hasJavaRules(InputStream is) {
+    public static boolean hasRegisteredRules(InputStream is) {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
             String buildFileLine = br.readLine();
             while (buildFileLine != null) {
-                if (hasJavaRulesInLine(buildFileLine)) {
+                if (hasRegisteredRuleInLine(buildFileLine)) {
                     return true;
                 }
                 buildFileLine = br.readLine();
@@ -101,9 +95,10 @@ public class BazelBuildFileHelper {
         return false;
     }
 
-    static boolean hasJavaRulesInLine(String buildFileLine) {
+    public static boolean hasRegisteredRuleInLine(String buildFileLine) {
         buildFileLine = buildFileLine.trim();
-        if (Arrays.stream(JAVA_PROJECT_INDICATORS).parallel().anyMatch(buildFileLine::startsWith)) {
+        Set<String> registeredRuleNames = BazelTargetKind.getRegisteredTargetKindNames();
+        if (registeredRuleNames.stream().parallel().anyMatch(buildFileLine::startsWith)) {
             return true;
         }
         return false;
