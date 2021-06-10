@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfoFactory;
@@ -50,9 +49,9 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 /**
  * Manages running, collecting, and caching all of the build info aspects for a specific workspace.
  */
-public class BazelWorkspaceAspectHelper {
-    static final LogHelper LOG = LogHelper.log(BazelWorkspaceAspectHelper.class);
-
+public class BazelWorkspaceAspectProcessor {
+    static final LogHelper LOG = LogHelper.log(BazelWorkspaceAspectProcessor.class);
+    
     private final BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
     private final BazelCommandExecutor bazelCommandExecutor;
 
@@ -83,7 +82,7 @@ public class BazelWorkspaceAspectHelper {
 
     // CTORS
 
-    public BazelWorkspaceAspectHelper(BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner,
+    public BazelWorkspaceAspectProcessor(BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner,
             BazelAspectLocation aspectLocation, BazelCommandExecutor bazelCommandExecutor) {
         this.bazelWorkspaceCommandRunner = bazelWorkspaceCommandRunner;
         this.bazelCommandExecutor = bazelCommandExecutor;
@@ -196,7 +195,11 @@ public class BazelWorkspaceAspectHelper {
     private synchronized void loadTargetInfos(Collection<BazelLabel> cacheMisses,
             Map<BazelLabel, Set<AspectTargetInfo>> resultMap, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+        
+        LOG.info("Starting generation of Aspect files for "+cacheMisses.size()+" packages.");
         List<String> discoveredAspectFilePaths = generateAspectTargetInfoFiles(cacheMisses);
+        LOG.info("Finished generation of Aspect files for "+cacheMisses.size()+" packages.");
+        
         Map<BazelLabel, AspectTargetInfo> aspectInfos = loadAspectFilePaths(discoveredAspectFilePaths);
 
         if (aspectInfos.isEmpty()) {
@@ -293,6 +296,7 @@ public class BazelWorkspaceAspectHelper {
             Map<BazelLabel, AspectTargetInfo> depNameToTargetInfo) {
         Set<AspectTargetInfo> allDeps = new HashSet<>();
         List<AspectTargetInfo> queue = new ArrayList<>();
+        Set<String> skippedLabels = new HashSet<>();
         queue.add(aspectTargetInfo);
         while (!queue.isEmpty()) {
             AspectTargetInfo ati = queue.remove(0);
@@ -301,10 +305,15 @@ public class BazelWorkspaceAspectHelper {
             }
             List<String> depLabels = ati.getDeps();
             for (String label : depLabels) {
+                if (skippedLabels.contains(label)) {
+                    // this is a dep that is not something we work with, so we ignore it
+                    continue;
+                }
                 BazelLabel depLabel = new BazelLabel(label);
                 AspectTargetInfo dep = depNameToTargetInfo.get(depLabel);
                 if (dep == null) {
-                    throw new RuntimeException("No AspectTargetInstance exists for " + depLabel + " - this is a bug");
+                    LOG.info("No AspectTargetInfo exists for " + label + "; it and its descendents are excluded from analysis.");
+                    skippedLabels.add(label);
                 } else {
                     queue.add(dep);
                 }
@@ -322,30 +331,52 @@ public class BazelWorkspaceAspectHelper {
     private synchronized List<String> generateAspectTargetInfoFiles(Collection<BazelLabel> targets)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         if (targets.isEmpty()) {
-            throw new IllegalArgumentException("Parameter targets cannot be empty.");
+            throw new IllegalArgumentException("Parameter [targets] cannot be empty.");
         }
-
-        List<String> args = new ArrayList<>();
-        args.add("build");
-        args.addAll(aspectOptions);
-        args.addAll(targets.stream().map(BazelLabel::toString).collect(Collectors.toList()));
-
-        // Strip out the artifact list, keeping the xyz.bzleclipse-build.json files (located in subdirs in the bazel-out path)
-        // Line must start with >>> and end with the aspect file suffix
-        Function<String, String> filter = t -> t.startsWith(">>>")
-                ? (t.endsWith(AspectTargetInfo.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
-
         File bazelWorkspaceRootDirectory = bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory();
-        List<String> listOfGeneratedFilePaths = bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE,
-            bazelWorkspaceRootDirectory, null, args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
-
+        
+        BazelLabel[] targetsArray = targets.toArray(new BazelLabel[] {});
+        int lastValidTargetIndex = targets.size() - 1;
+        int currentTargetIndex = 0;
+        List<String> listOfGeneratedFilePaths = new ArrayList<>();
+        
+        // run the aspect generation for the target labels, we want to minimize the number of bazel invocations
+        // because there is a few seconds of overhead for each invocation, but we only do 25 at a time so we get 
+        // progress log messages along the way
+        while (currentTargetIndex <= lastValidTargetIndex) {
+            int startTargetIndex = currentTargetIndex;
+            List<String> args = new ArrayList<>();
+            args.add("build");
+            args.addAll(aspectOptions);
+            for (int i = 0; i<25; i++) {
+                if (currentTargetIndex > lastValidTargetIndex) {
+                    break;
+                }
+                String label = targetsArray[currentTargetIndex].toString();
+                currentTargetIndex++;
+                args.add(label);
+            }
+    
+            // Strip out the artifact list, keeping the xyz.bzljavasdk-build.json files (located in subdirs in the bazel-out path)
+            // Line must start with >>> and end with the aspect file suffix
+            LOG.info("Running command to generate aspect file for labels indexed ["+startTargetIndex+"] through ["+
+                    (startTargetIndex+25)+ "] out of the total ["+lastValidTargetIndex+"]");
+            Function<String, String> filter = t -> t.startsWith(">>>")
+                    ? (t.endsWith(AspectTargetInfoFactory.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
+    
+            
+            List<String> partialListOfGeneratedFilePaths = bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE,
+                bazelWorkspaceRootDirectory, null, args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
+            
+            listOfGeneratedFilePaths.addAll(partialListOfGeneratedFilePaths);
+        }
         return listOfGeneratedFilePaths;
     }
 
     private static String getLogStr(BazelLabel target, String caller) {
         return " [target=" + target + ", src=" + caller + "]";
     }
-
+    
     public static Map<BazelLabel, AspectTargetInfo> loadAspectFilePaths(List<String> aspectFilePaths)
             throws IOException, InterruptedException {
         Map<String, AspectTargetInfo> lToAtis = AspectTargetInfoFactory.loadAspectFilePaths(aspectFilePaths);

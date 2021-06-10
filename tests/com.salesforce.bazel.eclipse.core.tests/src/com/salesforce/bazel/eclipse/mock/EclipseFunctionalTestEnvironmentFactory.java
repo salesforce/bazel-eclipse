@@ -35,6 +35,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
@@ -62,6 +63,10 @@ public class EclipseFunctionalTestEnvironmentFactory {
      */
     public static MockEclipse createMockEnvironment_PriorToImport_JavaPackages(File testTempDir,
             int numberOfJavaPackages, boolean explicitJavaTestDeps, boolean useAltConfigFileNames) throws Exception {
+
+        // initialize the SDK support for Java rules
+        JvmRuleInit.initialize();
+
         // build out a Bazel workspace with specified number of Java packages, and a couple of genrules packages just to test that they get ignored
         File wsDir = new File(testTempDir, MockEclipse.BAZEL_WORKSPACE_NAME);
         wsDir.mkdirs();
@@ -76,7 +81,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
 
         TestBazelWorkspaceDescriptor descriptor =
                 new TestBazelWorkspaceDescriptor(wsDir, outputbaseDir).javaPackages(numberOfJavaPackages)
-                        .genrulePackages(2).testOptions(testOptions).useAltConfigFileNames(useAltConfigFileNames);
+                .genrulePackages(2).testOptions(testOptions).useAltConfigFileNames(useAltConfigFileNames);
         TestBazelWorkspaceFactory bazelWorkspaceCreator = new TestBazelWorkspaceFactory(descriptor);
         bazelWorkspaceCreator.build();
 
@@ -103,7 +108,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
 
         // scan the bazel workspace filesystem to build the list of Java projects
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
-        BazelPackageInfo workspaceRootProject = scanner.getPackages(mockEclipse.getBazelWorkspaceRoot());
+        BazelPackageInfo workspaceRootProject = scanner.getPackages(mockEclipse.getBazelWorkspaceRoot(), null);
 
         // choose the list of Bazel packages to import, in this case we assume the user selected all Java packages
         List<BazelPackageLocation> bazelPackagesToImport = new ArrayList<>();

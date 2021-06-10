@@ -14,5 +14,5 @@ It is tempting to move this to *src/main/resources* but some machinery inside th
   would have to change.
 
 The [BazelAspectLocationImpl](../src/main/java/com/salesforce/bazel/eclipse/config/BazelAspectLocationImpl.java#L96)
-  depends on the *bzleclipse_aspect.bzl* file to be in the top-level *resources* directory in the plugin-core jar.
+  depends on the *bzljavasdk_aspect.bzl* file to be in the top-level *resources* directory in the core plugin.
 If you move this directory, you have to also change how the jar is packaged or that search code.

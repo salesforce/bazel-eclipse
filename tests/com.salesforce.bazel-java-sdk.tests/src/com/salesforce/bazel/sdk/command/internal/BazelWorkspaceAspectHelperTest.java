@@ -24,6 +24,7 @@
 package com.salesforce.bazel.sdk.command.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.util.Collections;
@@ -55,7 +56,7 @@ public class BazelWorkspaceAspectHelperTest {
     @Test
     public void testAspectLoading() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
-        BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
+        BazelWorkspaceAspectProcessor aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
         BazelLabel label = new BazelLabel("//projects/libs/javalib0:*"); // $SLASH_OK bazel path
 
         // retrieve the aspects for the target
@@ -63,6 +64,9 @@ public class BazelWorkspaceAspectHelperTest {
         Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
                 aspectHelper.getAspectTargetInfos(targets, "testAspectLoading");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
+        assertNotNull(aspectMap);
+        assertEquals(1, aspectMap.size());
+        assertNotNull(aspectMap.get(label));
         assertEquals(4, aspectMap.get(label).size());
 
         // now check that the caches are populated
@@ -75,7 +79,7 @@ public class BazelWorkspaceAspectHelperTest {
     @Ignore // limitation in test framework makes this test not valid
     public void testAspectLoadingSpecificTarget() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
-        BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
+        BazelWorkspaceAspectProcessor aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
         BazelLabel label = new BazelLabel("//projects/libs/javalib0:javalib0"); // $SLASH_OK bazel path
 
         // retrieve the aspects for the target
@@ -93,7 +97,7 @@ public class BazelWorkspaceAspectHelperTest {
     @Test
     public void testAspectLoadingAndCaching() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
-        BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
+        BazelWorkspaceAspectProcessor aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
         BazelLabel label = new BazelLabel("//projects/libs/javalib0:*"); // $SLASH_OK bazel path
 
         // retrieve the aspects for the target
@@ -114,7 +118,7 @@ public class BazelWorkspaceAspectHelperTest {
     @Test
     public void testAspectCacheFlush() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
-        BazelWorkspaceAspectHelper aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
+        BazelWorkspaceAspectProcessor aspectHelper = env.bazelWorkspaceCommandRunner.getBazelWorkspaceAspectHelper();
         BazelLabel label = new BazelLabel("//projects/libs/javalib0:*"); // $SLASH_OK bazel path
 
         // retrieve the aspects for the target

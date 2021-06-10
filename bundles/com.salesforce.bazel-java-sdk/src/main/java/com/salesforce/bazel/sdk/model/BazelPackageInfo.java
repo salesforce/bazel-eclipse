@@ -416,17 +416,35 @@ public class BazelPackageInfo implements BazelPackageLocation {
     @Override
     public List<BazelPackageLocation> gatherChildren() {
         List<BazelPackageLocation> gatherList = new ArrayList<>();
-        gatherChildrenRecur(gatherList);
+        gatherChildrenRecur(gatherList, null);
         return gatherList;
     }
 
-    public void gatherChildrenRecur(List<BazelPackageLocation> gatherList) {
+    @Override
+    public List<BazelPackageLocation> gatherChildren(String pathFilter) {
+        List<BazelPackageLocation> gatherList = new ArrayList<>();
+        gatherChildrenRecur(gatherList, pathFilter);
+        return gatherList;
+    }
+    
+    public void gatherChildrenRecur(List<BazelPackageLocation> gatherList, String pathFilter) {
         if (!isWorkspaceRoot()) {
-            gatherList.add(this);
+            if (pathFilter != null) {
+                if (this.relativeWorkspacePath.startsWith(pathFilter)) {
+                    // this relative path is projects/libs/foo/bar and the filter is projects/libs/foo
+                    gatherList.add(this);
+                    pathFilter = null; // we don't need to filter any children from here
+                } else if (this.relativeWorkspacePath.length() > pathFilter.length()) {
+                    // we must be in a different branch than the filter, exit this branch
+                    return;
+                }
+            } else {
+                gatherList.add(this);
+            }
         }
         for (BazelPackageLocation child : childPackages.values()) {
             BazelPackageInfo childInfo = (BazelPackageInfo) child;
-            childInfo.gatherChildrenRecur(gatherList);
+            childInfo.gatherChildrenRecur(gatherList, pathFilter);
         }
     }
 

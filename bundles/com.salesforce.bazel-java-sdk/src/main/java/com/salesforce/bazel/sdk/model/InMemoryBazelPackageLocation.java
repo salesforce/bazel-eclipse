@@ -63,4 +63,9 @@ public class InMemoryBazelPackageLocation implements BazelPackageLocation {
         return null;
     }
 
+    @Override
+    public List<BazelPackageLocation> gatherChildren(String pathFilter) {
+        // TODO hard to implement, we plan to rework this class
+        return null;
+    }
 }

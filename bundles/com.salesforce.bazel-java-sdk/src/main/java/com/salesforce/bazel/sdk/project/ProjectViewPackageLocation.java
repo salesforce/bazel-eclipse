@@ -97,6 +97,12 @@ public class ProjectViewPackageLocation implements BazelPackageLocation {
     }
 
     @Override
+    public List<BazelPackageLocation> gatherChildren(String pathFilter) {
+        // TODO hard to implement, this class is planned for a rework
+        return null;
+    }
+
+    @Override
     public List<BazelLabel> getBazelTargets() {
         return targets;
     }

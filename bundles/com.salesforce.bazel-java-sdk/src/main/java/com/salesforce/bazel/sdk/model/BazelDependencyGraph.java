@@ -243,8 +243,8 @@ public class BazelDependencyGraph {
         }
 
         if (processedLabels.contains(label)) {
-            LOG.error("Breaking out of infinite loop while computing project import order for label " + label
-                    + "(issue #197)");
+            LOG.info("Breaking out of infinite loop while computing dependency path for label " + label
+                    + " to " + possibleDependency + "(issue #197) via path "+processedLabels);
             return dependencyResponse(false, depCache, cacheKey);
         }
         processedLabels.add(label);

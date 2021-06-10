@@ -55,6 +55,13 @@ public interface BazelPackageLocation {
     public List<BazelPackageLocation> gatherChildren();
 
     /**
+     * Builds a list containing this node, plus all children (recursively).
+     * The pathFilter must be in the form "projects/libs/foo" and will limit 
+     * the gathering to that path and descendents of that path.
+     */
+    public List<BazelPackageLocation> gatherChildren(String pathFilter);
+
+    /**
      * Returns the targets configured for this Bazel Package, at import time.
      *
      * A null return value indicates that the user did not specify any specific targets.
