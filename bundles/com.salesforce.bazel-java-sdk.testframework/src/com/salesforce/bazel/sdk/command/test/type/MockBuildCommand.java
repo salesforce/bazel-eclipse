@@ -40,7 +40,7 @@ public class MockBuildCommand extends MockCommand {
         //  - generating the aspect json files
         //  - code builds
         // We will fork based on build type...
-        if (commandTokens.get(2).contains("local_eclipse_aspect")) {
+        if (commandTokens.get(2).contains("bazeljavasdk_aspect")) {
             createAspectBuildCommand();
         } else {
             createCodeBuildCommand();
@@ -61,10 +61,10 @@ public class MockBuildCommand extends MockCommand {
         // TODO clean up "Problem adding jar to project" errors seen when running tests from Eclipse, seems to be during aspect phase
         // stderr is a line per path to an aspect json file
 
-        // build command looks like: bazel build --override_repository=local_eclipse_aspect=/tmp/bef/bazelws/bazel-workspace/tools/aspect ...
+        // build command looks like: bazel build --override_repository=bazeljavasdk_aspect=/tmp/bef/bazelws/bazel-workspace/tools/aspect ...
         MockCommandSimulatedOutputMatcher aspectCommandMatcher1 = new MockCommandSimulatedOutputMatcher(1, "build");
         MockCommandSimulatedOutputMatcher aspectCommandMatcher2 =
-                new MockCommandSimulatedOutputMatcher(2, ".*local_eclipse_aspect.*");
+                new MockCommandSimulatedOutputMatcher(2, ".*bazeljavasdk_aspect.*");
 
         for (String packagePath : testWorkspaceFactory.workspaceDescriptor.aspectFileSets.keySet()) {
             // the last arg is the package path with the wildcard target (//projects/libs/javalib0:*)

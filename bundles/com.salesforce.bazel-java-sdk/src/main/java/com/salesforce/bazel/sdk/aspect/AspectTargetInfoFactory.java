@@ -21,7 +21,7 @@ import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfoFactoryProvider;
  */
 public class AspectTargetInfoFactory {
     
-    public static final String ASPECT_FILENAME_SUFFIX = ".bzljavasdk-build.json";
+    public static final String ASPECT_FILENAME_SUFFIX = ".bzljavasdk-data.json";
     
     protected static List<AspectTargetInfoFactoryProvider> providers = new ArrayList<>();
     static {
