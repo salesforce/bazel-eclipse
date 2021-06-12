@@ -67,7 +67,8 @@ public final class ShellCommand implements Command {
     private final SelectOutputStream stderr;
     private final WorkProgressMonitor progressMonitor;
 
-    // TODO ShellCommand timeouts are not usable; if a command times out subsequent commands hang, etc. https://github.com/salesforce/bazel-eclipse/issues/191
+    // TODO ShellCommand timeouts are not usable; if a command times out subsequent commands hang, etc. 
+    // https://github.com/salesforce/bazel-eclipse/issues/191
     private long timeoutMS = 0;
 
     private boolean executed = false;
@@ -97,7 +98,8 @@ public final class ShellCommand implements Command {
      */
     @Override
     public BazelProcessBuilder getProcessBuilder() {
-        // TODO make env variables sent to ShellCommand configurable https://github.com/salesforce/bazel-eclipse/issues/190
+        // TODO make env variables sent to ShellCommand configurable 
+        // https://github.com/salesforce/bazel-eclipse/issues/190
         Map<String, String> bazelEnvironmentVariables = new HashMap<>();
         bazelEnvironmentVariables.put("PULLER_TIMEOUT", "3000"); // increases default timeout from 600 to 3000 seconds for rules_docker downloads
 

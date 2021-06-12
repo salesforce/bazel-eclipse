@@ -135,7 +135,7 @@ public class BazelWorkspaceAspectHelperTest {
         assertEquals(label, aspectMap.keySet().iterator().next());
         assertEquals(1, aspectHelper.numberCacheHits); // the entries all came from cache
 
-        // flush the cache (we do this when the user executes a 'clean' in Eclipse
+        // flush the cache (we do this when the user executes a 'clean' in Eclipse)
         aspectHelper.flushAspectInfoCache();
         assertEquals(0, aspectHelper.aspectInfoCache_current.size());
         // javalib0:javalib0, javalib0:javalib0-test, javalib0:*

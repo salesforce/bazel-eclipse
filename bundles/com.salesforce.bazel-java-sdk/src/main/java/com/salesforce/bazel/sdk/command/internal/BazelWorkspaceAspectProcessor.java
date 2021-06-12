@@ -90,8 +90,8 @@ public class BazelWorkspaceAspectProcessor {
         aspectOptions = null;
         if (aspectLocation != null) {
             aspectOptions = new ArrayList<String>();
-            aspectOptions.add("--override_repository=local_eclipse_aspect=" + aspectLocation.getAspectDirectory());
-            aspectOptions.add("--aspects=@local_eclipse_aspect" + aspectLocation.getAspectLabel());
+            aspectOptions.add("--override_repository=bazeljavasdk_aspect=" + aspectLocation.getAspectDirectory());
+            aspectOptions.add("--aspects=@bazeljavasdk_aspect" + aspectLocation.getAspectLabel());
             aspectOptions.add("-k");
             aspectOptions.add("--output_groups=json-files,classpath-jars,-_,-defaults");
             aspectOptions.add("--experimental_show_artifacts");
@@ -357,7 +357,7 @@ public class BazelWorkspaceAspectProcessor {
                 args.add(label);
             }
     
-            // Strip out the artifact list, keeping the xyz.bzljavasdk-build.json files (located in subdirs in the bazel-out path)
+            // Strip out the artifact list, keeping the xyz.bzljavasdk-data.json files (located in subdirs in the bazel-out path)
             // Line must start with >>> and end with the aspect file suffix
             LOG.info("Running command to generate aspect file for labels indexed ["+startTargetIndex+"] through ["+
                     (startTargetIndex+25)+ "] out of the total ["+lastValidTargetIndex+"]");
