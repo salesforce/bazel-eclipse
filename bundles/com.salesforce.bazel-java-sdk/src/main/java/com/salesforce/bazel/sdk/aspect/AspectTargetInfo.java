@@ -62,11 +62,9 @@ import java.util.List;
  }
  * </pre>
  * <p>
- * See resources/bzleclipse_aspect.bzl for the code that creates the JSON files
+ * See resources/bzljavasdk_aspect.bzl for the code that creates the JSON files
  */
 public class AspectTargetInfo {
-
-    public static final String ASPECT_FILENAME_SUFFIX = ".bzleclipse-build.json";
 
     protected final File aspectDataFile; // full path to the file on the file system
     protected final String workspaceRelativePath; // relative path on the filesystem within the workspace

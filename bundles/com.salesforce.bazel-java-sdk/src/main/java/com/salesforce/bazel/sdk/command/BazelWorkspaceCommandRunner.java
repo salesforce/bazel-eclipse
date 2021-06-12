@@ -52,7 +52,7 @@ import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.internal.BazelCommandExecutor;
 import com.salesforce.bazel.sdk.command.internal.BazelQueryHelper;
 import com.salesforce.bazel.sdk.command.internal.BazelVersionChecker;
-import com.salesforce.bazel.sdk.command.internal.BazelWorkspaceAspectHelper;
+import com.salesforce.bazel.sdk.command.internal.BazelWorkspaceAspectProcessor;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.logging.LoggerFacade;
@@ -127,7 +127,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * Helper for running, collecting and caching the aspects that emit build dependency info for this workspace.
      */
-    private final BazelWorkspaceAspectHelper aspectHelper;
+    private final BazelWorkspaceAspectProcessor aspectHelper;
 
     /**
      * Helper for running bazel query commands.
@@ -185,7 +185,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         this.commandBuilder = commandBuilder;
         bazelCommandExecutor = new BazelCommandExecutor(bazelExecutable, commandBuilder);
 
-        aspectHelper = new BazelWorkspaceAspectHelper(this, aspectLocation, bazelCommandExecutor);
+        aspectHelper = new BazelWorkspaceAspectProcessor(this, aspectLocation, bazelCommandExecutor);
         bazelVersionChecker = new BazelVersionChecker(this.commandBuilder);
         bazelQueryHelper = new BazelQueryHelper(bazelCommandExecutor);
     }
@@ -515,7 +515,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     /**
      * Access to the low level aspect collaborator. Visible for tests.
      */
-    public BazelWorkspaceAspectHelper getBazelWorkspaceAspectHelper() {
+    public BazelWorkspaceAspectProcessor getBazelWorkspaceAspectHelper() {
         return aspectHelper;
     }
 

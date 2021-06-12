@@ -21,6 +21,8 @@ import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfoFactoryProvider;
  */
 public class AspectTargetInfoFactory {
     
+    public static final String ASPECT_FILENAME_SUFFIX = ".bzljavasdk-build.json";
+    
     protected static List<AspectTargetInfoFactoryProvider> providers = new ArrayList<>();
     static {
         providers.add(new JVMAspectTargetInfoFactoryProvider());
@@ -47,7 +49,6 @@ public class AspectTargetInfoFactory {
                 fileList.add(new File(aspectFilePath));
             }
         }
-
         return loadAspectFiles(fileList);
     }
 
@@ -81,6 +82,8 @@ public class AspectTargetInfoFactory {
                 throw new IllegalArgumentException(je);
             }
             buildInfo = loadAspectFromJson(aspectFile, jsonObject, jsonParser);
+        } else {
+            System.err.println("Aspect JSON file is missing: " + aspectFile.getAbsolutePath()); // TODO log
         }
         return buildInfo;
     }

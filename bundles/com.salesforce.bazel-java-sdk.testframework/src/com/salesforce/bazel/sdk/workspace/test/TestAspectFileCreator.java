@@ -23,10 +23,10 @@ public class TestAspectFileCreator {
             String targetName, String extraDependencies, List<String> sources, boolean isJavaLibrary,
             boolean explicitJavaTestDeps) {
 
-        String aspectJsonFilename = targetName + ".bzleclipse-build.json";
+        String aspectJsonFilename = targetName + ".bzljavasdk-build.json";
 
         if (!isJavaLibrary) {
-            aspectJsonFilename = targetName + "-test.bzleclipse-build.json";
+            aspectJsonFilename = targetName + "-test.bzljavasdk-build.json";
         }
 
         String json = null;
@@ -66,7 +66,7 @@ public class TestAspectFileCreator {
             dependencies, sources, mainClass, label, kind, jar, interfacejar, sourcejar);
         File aspectJsonFile =
                 createJavaAspectFileWithThisJson(outputBase, BazelPathHelper.osSepsEscaped(externalName + "/jar"), // $SLASH_OK
-                    "jar.bzleclipse-build.json", json);
+                    "jar.bzljavasdk-build.json", json);
 
         return aspectJsonFile.getAbsolutePath();
     }

@@ -73,9 +73,13 @@ public class BazelEclipseProjectFactoryFTest {
                     numberOfJavaPackages, computeClasspaths, false);
         workspace_IProject =
                 mockEclipse.getImportedProject("Bazel Workspace (" + MockEclipse.BAZEL_WORKSPACE_NAME + ")");
+        assertNotNull(workspace_IProject);
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");
+        assertNotNull(javalib0_IProject);
         javalib0_IJavaProject = mockEclipse.getMockJavaCoreHelper().getJavaProjectForProject(javalib0_IProject);
+        assertNotNull(javalib0_IJavaProject);
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");
+        assertNotNull(javalib1_IProject);
 
         // workspace preferences
         BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();

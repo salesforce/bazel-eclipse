@@ -32,7 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.sdk.init.JvmRuleSupport;
+import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
@@ -43,7 +43,7 @@ public class BazelWorkspaceScannerTest {
 
     @Before
     public void setup() {
-        JvmRuleSupport.initialize();
+        JvmRuleInit.initialize();
     }
     
     @Test
@@ -61,7 +61,7 @@ public class BazelWorkspaceScannerTest {
         new TestBazelWorkspaceFactory(descriptor).build();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
-        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
+        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
 
         assertEquals(5, rootWorkspacePackage.getChildPackageInfos().size());
     }
@@ -73,7 +73,7 @@ public class BazelWorkspaceScannerTest {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
-        scanner.getPackages(tmpWorkspaceDir);
+        scanner.getPackages(tmpWorkspaceDir, null);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class BazelWorkspaceScannerTest {
         new TestBazelWorkspaceFactory(descriptor).build();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
-        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
+        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
 
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());
     }
@@ -97,7 +97,7 @@ public class BazelWorkspaceScannerTest {
         workspaceFile.createNewFile();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
-        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir);
+        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
 
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());
     }

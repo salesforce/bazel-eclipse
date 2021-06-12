@@ -9,4 +9,4 @@ It is tempting to move this to *src/main/resources* but these files need to rema
 This likely means you need to install these files in addition to the java_binary that you build.
 
 The [BazelAspectLocationImpl](../src/main/java/com/salesforce/bazel/eclipse/config/BazelAspectLocationImpl.java#L96)
-  depends on finding the *bzleclipse_aspect.bzl* file on the file system.
+  depends on finding the *bzljavasdk_aspect.bzl* file on the file system.

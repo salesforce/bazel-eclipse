@@ -47,6 +47,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageInfo;
  */
 public class BazelWorkspaceScanner {
 
+
     public static String getBazelWorkspaceName(String bazelWorkspaceRootDirectory) {
         // TODO pull the workspace name out of the WORKSPACE file, until then use the directory name (e.g. bazel-demo)
         String bazelWorkspaceName = "workspace";
@@ -88,7 +89,7 @@ public class BazelWorkspaceScanner {
             ioe.printStackTrace();
             return null;
         }
-        return getPackages(workspaceRootDir);
+        return getPackages(workspaceRootDir, null);
     }
 
     /**
@@ -103,9 +104,12 @@ public class BazelWorkspaceScanner {
      *
      * @param rootDirectory
      *            the directory to scan, which must be the root node of a Bazel workspace
+     * @param excludes
+     *            paths to ignore during the scan, these are typically packages with problematic 
+     *            builds (e.g. require enormous docker base image to be downloaded)
      * @return the workspace root BazelPackageInfo
      */
-    public BazelPackageInfo getPackages(File rootDirectoryFile) throws IOException {
+    public BazelPackageInfo getPackages(File rootDirectoryFile, Set<String> excludes) throws IOException {
         if (rootDirectoryFile == null || !rootDirectoryFile.exists() || !rootDirectoryFile.isDirectory()) {
             // this is the initialization state of the wizard
             return null;
@@ -128,9 +132,11 @@ public class BazelWorkspaceScanner {
                 // root path, already created the root node
                 continue;
             }
-
-            // TODO ooh, this bazel package path manipulation seems error prone
             String relativePath = projectPath.substring(sizeOfWorkspacePath + 1);
+            if (excludes != null && excludes.contains(relativePath)) {
+                System.out.println("Ignoring path "+relativePath);
+                continue;
+            }
 
             // instantiate the project info object, which will automatically hook itself to the appropriate parents
             new BazelPackageInfo(workspace, relativePath);
