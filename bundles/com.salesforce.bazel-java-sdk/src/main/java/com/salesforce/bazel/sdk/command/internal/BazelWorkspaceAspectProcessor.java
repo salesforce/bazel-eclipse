@@ -97,6 +97,14 @@ public class BazelWorkspaceAspectProcessor {
             aspectOptions.add("--experimental_show_artifacts");
         }
     }
+    
+    /**
+     * Override the default arguments that are added to all "bazel build" commands that run for aspect processing.
+     * This is an advanced use case.
+     */
+    public void setAspectOptions( List<String> aspectOptions) {
+    	this.aspectOptions = aspectOptions;
+    }
 
     /**
      * Runs the analysis of the given list of targets using the build information Bazel Aspect and returns a map of

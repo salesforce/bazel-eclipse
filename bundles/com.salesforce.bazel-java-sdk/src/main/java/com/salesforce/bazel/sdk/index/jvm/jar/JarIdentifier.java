@@ -21,41 +21,23 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.index;
+package com.salesforce.bazel.sdk.index.jvm.jar;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
+import com.salesforce.bazel.sdk.index.model.CodeLocationIdentifier;
 
 /**
- * A entry that is the value for each map in the JvmCodeIndex. This class strives to be light on memory since there can
- * be tens of thousands, so we don't create a List for single length entries.
+ * Variant of the location identifier for JVM jar files.
  */
-public class JvmCodeIndexEntry {
-    public CodeLocationDescriptor singleLocation = null;
-    public List<CodeLocationDescriptor> multipleLocations = null;
+public class JarIdentifier extends CodeLocationIdentifier {
+    // Maven GAV - all supported build systems require jars to have GAV
+    public String group;
+    public String artifact;
+    public String version;
 
-    public void addLocation(CodeLocationDescriptor newLocation) {
-        if (multipleLocations != null) {
-            for (CodeLocationDescriptor existing : multipleLocations) {
-                if (existing.id.locationIdentifier.equals(newLocation.id.locationIdentifier)) {
-                    // somehow we already added this (soft link?)
-                    return;
-                }
-            }
-            multipleLocations.add(newLocation);
-        } else if (singleLocation != null) {
-            if (singleLocation.id.locationIdentifier.equals(newLocation.id.locationIdentifier)) {
-                // somehow we already added this (soft link?)
-                return;
-            }
-            multipleLocations = new ArrayList<>(2);
-            multipleLocations.add(singleLocation);
-            multipleLocations.add(newLocation);
-            singleLocation = null;
-        } else {
-            singleLocation = newLocation;
-        }
+    public JarIdentifier(String g, String a, String v) {
+        super(g + ":" + a + ":" + v);
+        this.group = g;
+        this.artifact = a;
+        this.version = v;
     }
 }

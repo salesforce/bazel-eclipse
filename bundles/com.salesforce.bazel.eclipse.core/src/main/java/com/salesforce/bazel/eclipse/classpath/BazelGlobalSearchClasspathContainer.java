@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -51,7 +51,7 @@ import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.sdk.index.BazelJvmIndexClasspath;
+import com.salesforce.bazel.sdk.index.jvm.BazelJvmIndexClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
@@ -76,7 +76,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     private static List<BazelJvmIndexClasspath> instances = new ArrayList<>();
 
     public BazelGlobalSearchClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
 
@@ -105,7 +105,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
         }
 
         bazelJvmIndexClasspath =
-                new BazelJvmIndexClasspath(this.bazelWorkspace, os, externalJarManager, additionalJarLocations);
+                new BazelJvmIndexClasspath(bazelWorkspace, os, externalJarManager, additionalJarLocations);
         instances.add(bazelJvmIndexClasspath);
     }
 

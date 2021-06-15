@@ -25,9 +25,10 @@ package com.salesforce.bazel.sdk.index.source;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.HashSet;
+import java.util.Set;
 
-import com.salesforce.bazel.sdk.index.JvmCodeIndex;
-import com.salesforce.bazel.sdk.index.model.ClassIdentifier;
+import com.salesforce.bazel.sdk.index.CodeIndex;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.index.model.CodeLocationIdentifier;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
@@ -35,11 +36,18 @@ import com.salesforce.bazel.sdk.util.BazelPathHelper;
 /**
  * Crawler that descends into nested directories of source files and adds found files to the index.
  */
-public class JavaSourceCrawler {
-    private final JvmCodeIndex index;
-    private final String artifactMarkerFileName;
+public class SourceFileCrawler {
+    protected final CodeIndex index;
+    protected final String artifactMarkerFileName;
+    protected final Set<String> matchFileSuffixes = new HashSet<>();
+    
+    /**
+     * In most workspaces, the files in the //tools folder is outside the scope of most normal
+     * tool operations. We ignored //tools by default.
+     */
+    private boolean ignoreTools = true;
 
-    public JavaSourceCrawler(JvmCodeIndex index, String artifactMarkerFileName) {
+    public SourceFileCrawler(CodeIndex index, String artifactMarkerFileName) {
         this.index = index;
         this.artifactMarkerFileName = artifactMarkerFileName;
     }
@@ -48,6 +56,16 @@ public class JavaSourceCrawler {
         indexRecur(basePath, "", null, true);
     }
 
+    /**
+     * In most workspaces, the files in the //tools folder is outside the scope of most normal
+     * tool operations. We ignored //tools by default.
+     */
+    public void ignoreTools(boolean ignore) {
+    	this.ignoreTools = ignore;
+    }
+    
+    // INTERNALS
+    
     protected void indexRecur(File path, String relativePathToClosestArtifact,
             CodeLocationDescriptor closestArtifactLocationDescriptor, boolean isRootDir) {
         if (path.isDirectory()) {
@@ -69,56 +87,57 @@ public class JavaSourceCrawler {
                 index.addArtifactLocation(path.getName(), closestArtifactLocationDescriptor);
                 relativePathToClosestArtifact = "";
             }
-        }
 
-        File[] candidateFiles = path.listFiles();
-        String packageName = null;
-        for (File candidateFile : candidateFiles) {
-            try {
-                if (candidateFile.isDirectory()) {
-                    if (isRootDir && candidateFile.getName().startsWith("bazel-")) {
-                        // this is a soft link into the output folders, ignore
-                        continue;
-                    }
-                    if (isRootDir && candidateFile.getName().equals("tools")) {
-                        // this is the standard location for bazel build tools, ignore //tools
-                        continue;
-                    }
-                    String childRelative = candidateFile.getName();
-                    if (!relativePathToClosestArtifact.isEmpty()) {
-                        childRelative =
-                                BazelPathHelper.osSeps(relativePathToClosestArtifact + "/" + candidateFile.getName()); // $SLASH_OK
-                    }
-                    indexRecur(candidateFile, childRelative, closestArtifactLocationDescriptor, false);
-                } else if (candidateFile.canRead()) {
-                    if (candidateFile.getName().endsWith(".java")) {
-                        packageName = foundSourceFile(candidateFile, closestArtifactLocationDescriptor, packageName);
-                    }
-                }
-            } catch (Exception anyE) {
-                log("Reading java source file lead to unexpected error", anyE.getMessage(), candidateFile.getPath());
-                anyE.printStackTrace();
-            }
+	        File[] candidateFiles = path.listFiles();
+	        for (File candidateFile : candidateFiles) {
+	            try {
+	                if (candidateFile.isDirectory()) {
+	                    if (isRootDir && candidateFile.getName().startsWith("bazel-")) {
+	                        // this is a soft link into the output folders, ignore
+	                        continue;
+	                    }
+	                    if (isRootDir && ignoreTools && candidateFile.getName().equals("tools")) {
+	                        // this is the standard location for bazel build tools, ignore //tools
+	                        continue;
+	                    }
+	                    String childRelative = candidateFile.getName();
+	                    if (!relativePathToClosestArtifact.isEmpty()) {
+	                        childRelative =
+	                                BazelPathHelper.osSeps(relativePathToClosestArtifact + "/" + candidateFile.getName()); // $SLASH_OK
+	                    }
+	                    indexRecur(candidateFile, childRelative, closestArtifactLocationDescriptor, false);
+	                } else if (candidateFile.canRead()) {
+	                    if (isSourceFile(candidateFile)) {
+	                        foundSourceFile(candidateFile, closestArtifactLocationDescriptor);
+	                    }
+	                }
+	            } catch (Exception anyE) {
+	                log("Reading java source file lead to unexpected error", anyE.getMessage(), candidateFile.getPath());
+	                anyE.printStackTrace();
+	            }
+	        }
         }
     }
+    
+    /**
+     * Is this file interesting to the crawler? The default impl matches based on file suffix, but a subclass
+     * can override to do something else.
+     */
+    protected boolean isSourceFile(File candidateFile) {
+    	String candidateName = candidateFile.getName();
+    	for (String suffix : matchFileSuffixes) {
+    		if (candidateName.endsWith(suffix)) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
 
-    protected String foundSourceFile(File javaSourceFile, CodeLocationDescriptor artifactLocationDescriptor,
-            String packageName) {
-        // isolate the classname by stripping off the .java and the prefix
-        String fqClassName = javaSourceFile.getPath();
-        fqClassName = fqClassName.substring(0, fqClassName.length() - 5);
-        int javaIndex = fqClassName.indexOf("java"); // TODO this only works for projects that follow Maven conventions
-        fqClassName = fqClassName.substring(javaIndex + 5);
-        fqClassName = fqClassName.replace(File.pathSeparator, ".");
-
-        ClassIdentifier classId = new ClassIdentifier(fqClassName);
-        SourceFileIdentifier sourceFileId = new SourceFileIdentifier(artifactLocationDescriptor, classId);
-        CodeLocationDescriptor sourceLocationDescriptor = new CodeLocationDescriptor(javaSourceFile, sourceFileId);
-
-        sourceLocationDescriptor.addClass(classId);
-        index.addClassnameLocation(fqClassName, sourceLocationDescriptor);
-
-        return packageName;
+    /**
+     * Callback that is invoked when a source file is found. Default implementation does nothing, but a subclass may 
+     * do something with this information.
+     */
+    protected void foundSourceFile(File sourceFile, CodeLocationDescriptor sourceLocationDescriptor) {
     }
 
     protected static void log(String msg, String param1, String param2) {

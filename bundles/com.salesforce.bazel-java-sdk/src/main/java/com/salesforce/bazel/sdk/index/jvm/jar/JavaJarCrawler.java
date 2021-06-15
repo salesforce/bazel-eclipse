@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.index.jar;
+package com.salesforce.bazel.sdk.index.jvm.jar;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -38,8 +38,8 @@ import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
  */
 public class JavaJarCrawler {
 
-    private final JvmCodeIndex index;
-    private final JarIdentiferResolver resolver;
+    private JvmCodeIndex index;
+    private JarIdentiferResolver resolver;
 
     public JavaJarCrawler(JvmCodeIndex index, JarIdentiferResolver resolver) {
         this.index = index;
@@ -63,7 +63,7 @@ public class JavaJarCrawler {
             File[] gavRootIndicators = path.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    // TODO sketchy logic here, we assume at least one downloaded jar comes from a common domain
+                    // TODO sketchy logic here, we assume at least one downloaded jar comes from a common domain 
                     return name.equals("com") || name.equals("org") || name.equals("net");
                 }
             });

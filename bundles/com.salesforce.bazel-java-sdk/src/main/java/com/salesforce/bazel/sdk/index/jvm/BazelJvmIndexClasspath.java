@@ -21,14 +21,15 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.index;
+package com.salesforce.bazel.sdk.index.jvm;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.salesforce.bazel.sdk.index.jar.JarIdentiferResolver;
-import com.salesforce.bazel.sdk.index.jar.JavaJarCrawler;
+import com.salesforce.bazel.sdk.index.CodeIndexEntry;
+import com.salesforce.bazel.sdk.index.jvm.jar.JarIdentiferResolver;
+import com.salesforce.bazel.sdk.index.jvm.jar.JavaJarCrawler;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
@@ -73,7 +74,8 @@ public class BazelJvmIndexClasspath {
     }
 
     /**
-     * Computes the JVM classpath for the associated Bazel workspace
+     * Computes the JVM classpath for the associated Bazel workspace. The first invocation is expected to
+     * take a long time, but subsequent invocations will read from cache.
      */
     public BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
         if (cacheResponse != null) {
@@ -108,6 +110,9 @@ public class BazelJvmIndexClasspath {
         return cacheResponse;
     }
 
+    /**
+     * Clears the cache, which will make the next invocation of getClasspathEntries() expensive.
+     */
     public void clearCache() {
         cacheResponse = null;
     }
@@ -126,7 +131,7 @@ public class BazelJvmIndexClasspath {
         List<JvmClasspathEntry> entries = new ArrayList<>();
 
         for (String artifact : index.artifactDictionary.keySet()) {
-            JvmCodeIndexEntry entry = index.artifactDictionary.get(artifact);
+            CodeIndexEntry entry = index.artifactDictionary.get(artifact);
             if (entry.multipleLocations != null) {
                 // this is the case where the workspace has multiple versions of the same artifact (e.g. guava)
                 // add each version, as there could be classes in one version but not another

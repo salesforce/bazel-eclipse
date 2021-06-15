@@ -28,7 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Location on disk of a file (e.g. jar file) that contains classes.
+ * Location on disk of a file (e.g. foo.jar, foo.class or foo.java) that contains type(s) in either
+ * source or compiled form. 
  */
 public class CodeLocationDescriptor {
     public CodeLocationIdentifier id;
