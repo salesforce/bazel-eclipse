@@ -29,42 +29,42 @@ import java.util.TreeMap;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 
 /**
- * An index of JVM types. This is the output of an indexer that knows how to traverse the file system looking for JVM
- * types. This is useful for tools that need to have a full list of available JVM types. For example, a Bazel IDE will
- * want to be able to list all types imported by the workspace.
+ * An index of types. This is the output of an indexer that knows how to traverse the file system looking for types
+ * for a specific language (e.g. Java). This is useful for tools that need to have a full list of available types. 
+ * For example, a Bazel IDE will want to be able to list all types imported by the workspace.
  * <p>
- * There are two parts to the index: the artifactDictionary and the classDictionary.
+ * There are two parts to the index: the artifactDictionary and the typeDictionary.
  * <p>
- * The artifactDictionary maps the Maven style artifactId to the one or more jar files found that contains that
+ * The artifactDictionary maps the artifactId to the one or more archives found that contains that
  * artifactId. If your directories contains multiple versions of the same artifactId, this will be a list of artifacts.
  * <p>
- * The classDictionary maps each found classname to the discovered location in jar files or raw source files.
- * <p>
- * This is intentionally a lighter indexing system than provided by the MavenIndexer project, which generates full
- * Lucene indexes of code. We found the performance of that indexing solution to be too slow for our needs.
+ * The typeDictionary maps each found type name (e.g. the fully qualified Java classname) to the discovered location in 
+ * archive files or raw source files.
  */
-public class JvmCodeIndex {
-    // key: artifact name  value: jar locations
-    Map<String, JvmCodeIndexEntry> artifactDictionary = new TreeMap<>();
-    // key: classname  value: locations where that classname is found
-    Map<String, JvmCodeIndexEntry> classDictionary = new TreeMap<>();
+public class CodeIndex {
+    // map artifact name to entry(s)
+    public Map<String, CodeIndexEntry> artifactDictionary = new TreeMap<>();
+    // map class name to entry(s)
+    public Map<String, CodeIndexEntry> typeDictionary = new TreeMap<>();
 
     public void addArtifactLocation(String artifact, CodeLocationDescriptor location) {
-        JvmCodeIndexEntry indexEntry = this.artifactDictionary.get(artifact);
+        CodeIndexEntry indexEntry = this.artifactDictionary.get(artifact);
         if (indexEntry == null) {
-            indexEntry = new JvmCodeIndexEntry();
+            indexEntry = new CodeIndexEntry();
         }
         indexEntry.addLocation(location);
         this.artifactDictionary.put(artifact, indexEntry);
+        System.out.println("ADD ARTIFACT ("+artifact+"): " + location.locationOnDisk.getPath());
     }
 
-    public void addClassnameLocation(String classname, CodeLocationDescriptor location) {
-        JvmCodeIndexEntry indexEntry = this.classDictionary.get(classname);
+    public void addTypeLocation(String typeName, CodeLocationDescriptor location) {
+        CodeIndexEntry indexEntry = this.typeDictionary.get(typeName);
         if (indexEntry == null) {
-            indexEntry = new JvmCodeIndexEntry();
+            indexEntry = new CodeIndexEntry();
         }
         indexEntry.addLocation(location);
-        this.classDictionary.put(classname, indexEntry);
+        this.typeDictionary.put(typeName, indexEntry);
+        System.out.println("ADD TYPE ("+typeName+"): " + location.locationOnDisk.getPath());
     }
 
     public void printIndex() {
@@ -75,15 +75,15 @@ public class JvmCodeIndex {
             printArtifact(artifact, artifactDictionary.get(artifact));
         }
         println("");
-        println("CLASSNAME INDEX (" + classDictionary.size() + " entries)");
+        println("TYPE INDEX (" + typeDictionary.size() + " entries)");
         println("----------------------------------------");
-        for (String classname : classDictionary.keySet()) {
-            printArtifact(classname, classDictionary.get(classname));
+        for (String classname : typeDictionary.keySet()) {
+            printArtifact(classname, typeDictionary.get(classname));
         }
         println("");
     }
 
-    private void printArtifact(String artifact, JvmCodeIndexEntry entry) {
+    private void printArtifact(String artifact, CodeIndexEntry entry) {
         println("  " + artifact);
         if (entry.singleLocation != null) {
             println("    " + entry.singleLocation.id.locationIdentifier);
