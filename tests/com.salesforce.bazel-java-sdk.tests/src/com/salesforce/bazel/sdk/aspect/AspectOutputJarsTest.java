@@ -62,7 +62,6 @@ public class AspectOutputJarsTest {
         assertNull(parsedJars.getSrcJar());
     }
 
-    @SuppressWarnings("unchecked")
     private JSONObject createJarsArray(String jar, String ijar, String sourcejar) {
 
         JSONObject jarsObj = new JSONObject();
