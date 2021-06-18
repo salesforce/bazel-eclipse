@@ -88,7 +88,6 @@ public class BazelJvmIndexClasspath {
         List<BazelExternalJarRuleType> ruleTypes =
                 externalJarRuleManager.findInUseExternalJarRuleTypes(this.bazelWorkspace);
         for (BazelExternalJarRuleType ruleType : ruleTypes) {
-            System.out.println("");
             List<File> ruleSpecificLocations = ruleType.getDownloadedJarLocations(bazelWorkspace);
             locations.addAll(ruleSpecificLocations);
         }

@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 
 /**
@@ -46,14 +47,14 @@ import com.salesforce.bazel.sdk.model.BazelPackageInfo;
  * subtree below that.
  */
 public class BazelWorkspaceScanner {
-
+    private static final LogHelper LOG = LogHelper.log(BazelWorkspaceScanner.class);
 
     public static String getBazelWorkspaceName(String bazelWorkspaceRootDirectory) {
         // TODO pull the workspace name out of the WORKSPACE file, until then use the directory name (e.g. bazel-demo)
         String bazelWorkspaceName = "workspace";
         if (bazelWorkspaceRootDirectory != null) {
             int lastSlash = bazelWorkspaceRootDirectory.lastIndexOf(File.separator);
-            if (lastSlash >= 0 && (bazelWorkspaceRootDirectory.length() - lastSlash) > 3) {
+            if ((lastSlash >= 0) && ((bazelWorkspaceRootDirectory.length() - lastSlash) > 3)) {
                 // add the directory name to the label, if it is meaningful (>3 chars)
                 bazelWorkspaceName = bazelWorkspaceRootDirectory.substring(lastSlash + 1);
             } else {
@@ -78,7 +79,7 @@ public class BazelWorkspaceScanner {
      * @return the workspace root BazelPackageInfo
      */
     public BazelPackageInfo getPackages(String rootDirectory) throws IOException {
-        if (rootDirectory == null || rootDirectory.isEmpty()) {
+        if ((rootDirectory == null) || rootDirectory.isEmpty()) {
             // this is the initialization state of the wizard
             return null;
         }
@@ -86,7 +87,7 @@ public class BazelWorkspaceScanner {
         try {
             workspaceRootDir = workspaceRootDir.getCanonicalFile();
         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            LOG.error("error locating path [{}] on the file system", ioe, rootDirectory);
             return null;
         }
         return getPackages(workspaceRootDir, null);
@@ -105,12 +106,12 @@ public class BazelWorkspaceScanner {
      * @param rootDirectory
      *            the directory to scan, which must be the root node of a Bazel workspace
      * @param excludes
-     *            paths to ignore during the scan, these are typically packages with problematic 
+     *            paths to ignore during the scan, these are typically packages with problematic
      *            builds (e.g. require enormous docker base image to be downloaded)
      * @return the workspace root BazelPackageInfo
      */
     public BazelPackageInfo getPackages(File rootDirectoryFile, Set<String> excludes) throws IOException {
-        if (rootDirectoryFile == null || !rootDirectoryFile.exists() || !rootDirectoryFile.isDirectory()) {
+        if ((rootDirectoryFile == null) || !rootDirectoryFile.exists() || !rootDirectoryFile.isDirectory()) {
             // this is the initialization state of the wizard
             return null;
         }
@@ -133,8 +134,8 @@ public class BazelWorkspaceScanner {
                 continue;
             }
             String relativePath = projectPath.substring(sizeOfWorkspacePath + 1);
-            if (excludes != null && excludes.contains(relativePath)) {
-                System.out.println("Ignoring path "+relativePath);
+            if ((excludes != null) && excludes.contains(relativePath)) {
+                LOG.debug("Ignoring path while scanning for packages: [{}]", relativePath);
                 continue;
             }
 

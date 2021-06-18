@@ -3,11 +3,17 @@ package com.salesforce.bazel.sdk.util;
 import java.io.File;
 import java.io.IOException;
 
+import com.salesforce.bazel.sdk.logging.LogHelper;
+
 /**
- * Static utilities.
+ * Static utilities to help with file system paths, especially cross platform.
  */
 public class BazelPathHelper {
+    private static final LogHelper LOG = LogHelper.log(BazelPathHelper.class);
 
+    /**
+     * Primary feature toggle. isUnix is true for all platforms except Windows.
+     */
     public static boolean isUnix = true;
 
     static {
@@ -26,7 +32,7 @@ public class BazelPathHelper {
         try {
             directory = directory.getCanonicalFile();
         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            LOG.error("error locating path [{}] on the file system", ioe, directory.getAbsolutePath());
         }
         return directory;
     }
@@ -42,7 +48,7 @@ public class BazelPathHelper {
         try {
             path = directory.getCanonicalPath();
         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            LOG.error("error locating path [{}] on the file system", ioe, directory.getAbsolutePath());
         }
         if (path == null) {
             // fallback to absolute path in case canonical path fails
@@ -61,7 +67,7 @@ public class BazelPathHelper {
         try {
             path = new File(path).getCanonicalPath();
         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            LOG.error("error locating path [{}] on the file system", ioe, path);
         }
         return path;
     }

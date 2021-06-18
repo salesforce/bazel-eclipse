@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
@@ -45,6 +46,7 @@ import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
  * @since Fall 2020
  */
 public class FlowProjectImporter implements ProjectImporter {
+    private static final LogHelper LOG = LogHelper.log(FlowProjectImporter.class);
 
     private final BazelPackageLocation bazelWorkspaceRootPackageInfo;
     private final List<BazelPackageLocation> selectedBazelPackages;
@@ -80,11 +82,11 @@ public class FlowProjectImporter implements ProjectImporter {
             flow.assertContextState(ctx);
             try {
                 subMonitor.setTaskName(flow.getProgressText());
-                subMonitor.setWorkRemaining(flows.length - i + flow.getTotalWorkTicks(ctx));
+                subMonitor.setWorkRemaining((flows.length - i) + flow.getTotalWorkTicks(ctx));
                 flow.run(ctx, subMonitor);
                 subMonitor.worked(1);
             } catch (Throwable th) {
-                th.printStackTrace();
+                LOG.error("failure during import", th);
                 // this needs to be handled better - generally, error handing is still a mess
                 // this could call a cleanup method on each Flow instance already processed if we
                 // need to undo work done so far

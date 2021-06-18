@@ -42,12 +42,14 @@ import java.util.TreeMap;
 
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * API for calling bazel commands.
  */
 public class BazelCommandManager {
+    private static final LogHelper LOG = LogHelper.log(BazelCommandManager.class);
 
     private final BazelAspectLocation aspectLocation;
     private final CommandBuilder commandBuilder;
@@ -105,15 +107,17 @@ public class BazelCommandManager {
         BazelWorkspaceCommandRunner workspaceCommandRunner = workspaceCommandRunners.get(bazelWorkspaceRootDirectory);
         if (workspaceCommandRunner == null) {
             File bazelExecutable = null;
+            String execPath = "";
             try {
-                bazelExecutable = new File(getBazelExecutablePath());
-            } catch (BazelCommandLineToolConfigurationException ex) {
-                ex.printStackTrace();
+                execPath = getBazelExecutablePath();
+                bazelExecutable = new File(execPath);
+            } catch (Exception ex) {
+                LOG.error("Could not locate the Bazel executable at path [{}]", ex, execPath);
                 return null;
             }
 
             workspaceCommandRunner = new BazelWorkspaceCommandRunner(bazelExecutable, aspectLocation, commandBuilder,
-                    consoleFactory, bazelWorkspaceRootDirectory);
+                consoleFactory, bazelWorkspaceRootDirectory);
             workspaceCommandRunners.put(bazelWorkspaceRootDirectory, workspaceCommandRunner);
         }
         return workspaceCommandRunner;

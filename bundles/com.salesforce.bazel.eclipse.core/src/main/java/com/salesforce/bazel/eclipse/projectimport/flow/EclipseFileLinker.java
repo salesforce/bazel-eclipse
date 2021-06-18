@@ -33,12 +33,14 @@ import org.eclipse.core.runtime.Path;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Knows how to link files (used only during project import).
  */
 class EclipseFileLinker {
+    private static final LogHelper LOG = LogHelper.log(EclipseFileLinker.class);
 
     private final File bazelWorkspaceRootDirectory;
 
@@ -58,14 +60,13 @@ class EclipseFileLinker {
                     null);
             } catch (Exception anyE) {
                 // TODO throwing this exception just writes a log message, we need a modal error popup for this error
-                BazelPluginActivator.error("Failure to link file [" + BazelPathHelper.getCanonicalPathStringSafely(f)
-                        + "] for project [" + eclipseProject.getName() + "]");
+                LOG.error("Failure to link file [{}] for project [{}]", BazelPathHelper.getCanonicalPathStringSafely(f),
+                    eclipseProject.getName());
                 throw new IllegalStateException(anyE);
             }
         } else {
-            BazelPluginActivator
-                    .error("Tried to link a non-existant file [" + BazelPathHelper.getCanonicalPathStringSafely(f)
-                            + "] for project [" + eclipseProject.getName() + "]");
+            LOG.error("Tried to link a non-existant file [{}] for project [{}]",
+                BazelPathHelper.getCanonicalPathStringSafely(f), eclipseProject.getName());
             retval = false;
         }
         return retval;

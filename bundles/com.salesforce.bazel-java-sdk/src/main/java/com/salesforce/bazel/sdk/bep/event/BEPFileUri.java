@@ -8,6 +8,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.salesforce.bazel.sdk.logging.LogHelper;
+
 /**
  * Holder for a uri to a file, and associated helper functions.
  * <p>
@@ -20,6 +22,8 @@ import java.util.List;
  * This class is meant to model the URI property, and provide some common helper functions for working with them.
  */
 public class BEPFileUri {
+    private static final LogHelper LOG = LogHelper.log(BEPFileUri.class);
+
     private final String id;
     private final String uriStr;
     private URI uri;
@@ -28,7 +32,7 @@ public class BEPFileUri {
 
     /**
      * Constructor for BEPFileUri
-     * 
+     *
      * @param id
      *            an identifier that will be helpful in logs/debug to know what this uri is pointing at. The caller
      *            should determine the best identifier for this purpose.
@@ -41,7 +45,7 @@ public class BEPFileUri {
 
     /**
      * Constructor for BEPFileUri
-     * 
+     *
      * @param id
      *            an identifier that will be helpful in logs/debug to know what this uri is pointing at. The caller
      *            should determine the best identifier for this purpose.
@@ -57,13 +61,12 @@ public class BEPFileUri {
 
         if (!uriString.startsWith(("file://"))) {
             throw new IllegalArgumentException(
-                    "Expected a file:// uri for property " + id + ", instead got " + uriString);
+                "Expected a file:// uri for property " + id + ", instead got " + uriString);
         }
 
         try {
             uri = new URI(uriString);
         } catch (URISyntaxException use) {
-            use.printStackTrace();
             throw new IllegalArgumentException(use);
         }
 
@@ -159,7 +162,7 @@ public class BEPFileUri {
                 }
             }
         } catch (Exception ioe) {
-            ioe.printStackTrace();
+            LOG.error("error loading lines from file [{}]", ioe, file.getAbsolutePath());
         }
 
         return lines;
@@ -182,7 +185,7 @@ public class BEPFileUri {
                 text.append("\n");
             }
         } catch (Exception ioe) {
-            ioe.printStackTrace();
+            LOG.error("error loading lines from file [{}]", ioe, file.getAbsolutePath());
         }
 
         return text.toString();

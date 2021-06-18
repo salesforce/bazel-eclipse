@@ -23,10 +23,14 @@
  */
 package com.salesforce.bazel.sdk.index.model;
 
+import com.salesforce.bazel.sdk.logging.LogHelper;
+
 /**
  * Holder object for a type: package name + class name
  */
 public class ClassIdentifier {
+    private static final LogHelper LOG = LogHelper.log(ClassIdentifier.class);
+    
     public String packageName;
     public String classname;
 
@@ -47,12 +51,13 @@ public class ClassIdentifier {
         }
     }
 
+    @Override
     public String toString() {
         return packageName + "." + classname;
     }
 
     private void printId() {
-        System.out.println("p[" + packageName + "] c[" + classname + "]");
+        LOG.info("p[{}] c[{}]", packageName, classname);
     }
 
     public static void main(String[] args) {

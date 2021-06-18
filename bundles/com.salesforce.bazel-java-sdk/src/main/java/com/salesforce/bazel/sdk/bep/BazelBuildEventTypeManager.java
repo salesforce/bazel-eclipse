@@ -21,8 +21,10 @@ import com.salesforce.bazel.sdk.bep.event.BEPTargetConfiguredEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPTestResultEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPTestSummaryEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPUnstructuredCommandLineEvent;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class BazelBuildEventTypeManager {
+    private static final LogHelper LOG = LogHelper.log(BazelBuildEventTypeManager.class);
 
     public static final String EVENTTYPE_IGNORED = "ignored";
 
@@ -82,7 +84,7 @@ public class BazelBuildEventTypeManager {
             JSONObject id = (JSONObject) eventObject.get("id");
 
             if (id != null) {
-                // it is a little awkward to determine the event type, since the type is expressed 
+                // it is a little awkward to determine the event type, since the type is expressed
                 // as a key name, not a key value. So we iterate through the type we care about and
                 // look for a key match.
                 for (String eventType : eventTypes) {
@@ -94,13 +96,13 @@ public class BazelBuildEventTypeManager {
                 }
             }
             if (event == null) {
-                // placeholder event, having this in the list makes it possible to skip reparsing 
+                // placeholder event, having this in the list makes it possible to skip reparsing
                 // lines that were seen in the last iteration of this file by keeping the file lines/events
                 // lists in sync
                 event = createEvent(EVENTTYPE_IGNORED, json, index, null);
             }
         } catch (Exception anyE) {
-            anyE.printStackTrace();
+            LOG.error("Error parsing json BEP event [{}]", anyE, json);
             return null;
         }
 

@@ -48,11 +48,7 @@ import org.junit.Test;
 import com.salesforce.bazel.sdk.logging.CaptureLoggerFacade.LogEvent;
 
 /**
- *
  * Test LogHelper
- *
- * @author Blaine Buxton
- *
  */
 public class LogHelperTest {
     LoggerFacade original;
@@ -71,7 +67,7 @@ public class LogHelperTest {
     public void simple() {
         LogHelper subject = LogHelper.log(getClass());
         final AtomicReference<LogEvent> testEvent = new AtomicReference<>();
-        LoggerFacade facade = new CaptureLoggerFacade((event) -> {
+        LoggerFacade facade = new CaptureLoggerFacade(event -> {
             testEvent.set(event);
         });
         LoggerFacade.setInstance(facade);
@@ -86,11 +82,11 @@ public class LogHelperTest {
     public void logFacadeCanChange() {
         LogHelper subject = LogHelper.log(getClass());
         final AtomicReference<LogEvent> firstEvent = new AtomicReference<>();
-        LoggerFacade first = new CaptureLoggerFacade((event) -> {
+        LoggerFacade first = new CaptureLoggerFacade(event -> {
             firstEvent.set(event);
         });
         final AtomicReference<LogEvent> secondEvent = new AtomicReference<>();
-        LoggerFacade second = new CaptureLoggerFacade((event) -> {
+        LoggerFacade second = new CaptureLoggerFacade(event -> {
             secondEvent.set(event);
         });
         LoggerFacade.setInstance(first);
@@ -99,6 +95,36 @@ public class LogHelperTest {
         subject.info("last mistake");
         assertEquals("first mistake", firstEvent.get().message);
         assertEquals("last mistake", secondEvent.get().message);
+    }
+
+    @Test
+    public void testFormatting() {
+        String result = LoggerFacade.formatMsg(LoggerFacade.class, "abc {} def {}", "ONE", "TWO");
+        assertEquals("[com.salesforce.bazel.sdk.logging.LoggerFacade] abc ONE def TWO", result);
+
+        // arg at the beginning
+        result = LoggerFacade.formatMsg(LoggerFacade.class, "{} def {} fgh", "ONE", "TWO");
+        assertEquals("[com.salesforce.bazel.sdk.logging.LoggerFacade] ONE def TWO fgh", result);
+
+        // args next to each other
+        result = LoggerFacade.formatMsg(LoggerFacade.class, "abc {}{} fgh", "ONE", "TWO");
+        assertEquals("[com.salesforce.bazel.sdk.logging.LoggerFacade] abc ONETWO fgh", result);
+
+        // only an arg
+        result = LoggerFacade.formatMsg(LoggerFacade.class, "{}", "ONE");
+        assertEquals("[com.salesforce.bazel.sdk.logging.LoggerFacade] ONE", result);
+
+        // not enough args
+        result = LoggerFacade.formatMsg(LoggerFacade.class, "abc {} def {} fgh", "ONE");
+        assertEquals("[com.salesforce.bazel.sdk.logging.LoggerFacade] abc ONE def {} fgh", result);
+
+        // extra args
+        result = LoggerFacade.formatMsg(LoggerFacade.class, "{} def {} fgh", "ONE", "TWO", "THREE", "FOUR");
+        assertEquals("[com.salesforce.bazel.sdk.logging.LoggerFacade] ONE def TWO fgh", result);
+
+        // space in the token pattern
+        result = LoggerFacade.formatMsg(LoggerFacade.class, "abc {} def { }", "ONE", "TWO");
+        assertEquals("[com.salesforce.bazel.sdk.logging.LoggerFacade] abc ONE def { }", result);
     }
 
 }

@@ -38,15 +38,15 @@ package com.salesforce.bazel.sdk.logging;
 /**
  * Helper to log messages. Doesn't cache anything but class name for common logging frameworks. This allows the
  * LoggerFacade to be changed and without having to constantly give the class.
- * 
- * This is the preferred way to log.
- * 
- * @author Blaine Buxton
- *
+ * <p>
+ * This is the preferred way to log in the Bazel SDK.
  */
 public class LogHelper {
     final Class<?> from;
 
+    /**
+     * Get the Logger for the <i>from</i> class.
+     */
     public static LogHelper log(Class<?> from) {
         return new LogHelper(from);
     }
@@ -55,24 +55,55 @@ public class LogHelper {
         this.from = from;
     }
 
+    /**
+     * Gets the active log level for this LogHelper.
+     * <p>
+     * Levels: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
+     */
+    public int getLevel() {
+        return getFacade().level;
+    }
+
+    /**
+     * Log an error message. Args are inserted into the message using the {} pattern.
+     */
     public void error(String message, Object... args) {
         getFacade().error(from, message, args);
     }
 
+    /**
+     * Log an error message. Args are inserted into the message using the {} pattern.
+     */
     public void error(String message, Throwable exception, Object... args) {
         getFacade().error(from, message, exception, args);
     }
 
+    /**
+     * Log a warning message. Args are inserted into the message using the {} pattern.
+     */
     public void warn(String message, Object... args) {
         getFacade().warn(from, message, args);
     }
 
+    /**
+     * Log an info message. Args are inserted into the message using the {} pattern.
+     */
     public void info(String message, Object... args) {
         getFacade().info(from, message, args);
     }
 
+    /**
+     * Log a debug message. Args are inserted into the message using the {} pattern.
+     */
     public void debug(String message, Object... args) {
         getFacade().debug(from, message, args);
+    }
+
+    /**
+     * Log a debug message. Args are inserted into the message using the {} pattern.
+     */
+    public void log(int level, String message, Object... args) {
+        getFacade().log(level, from, message, args);
     }
 
     private LoggerFacade getFacade() {

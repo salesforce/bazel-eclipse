@@ -39,9 +39,9 @@ package com.salesforce.bazel.sdk.logging;
 // import org.slf4j.LoggerFactory;
 
 /**
- * 
- * Default facade that crudely logs to stdout/stderr.
- * 
+ * Default facade that logs to stdout/stderr.
+ * <p>
+ * You can set the level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
  */
 public class BasicLoggerFacade extends LoggerFacade {
 
@@ -51,32 +51,41 @@ public class BasicLoggerFacade extends LoggerFacade {
         System.err.println(formatMsg(from, message, args));
     }
 
+    /**
+     * Log an error message. Args are inserted into the message using the {} pattern.
+     */
     @Override
     public void error(Class<?> from, String message, Throwable exception, Object... args) {
-        //LoggerFactory.getLogger(from).error(message, exception, args);
         System.err.println(formatMsg(from, message, args));
     }
 
+    /**
+     * Log a warning message. Args are inserted into the message using the {} pattern.
+     */
     @Override
     public void warn(Class<?> from, String message, Object... args) {
-        // LoggerFactory.getLogger(from).warn(message, args);
-        System.out.println(formatMsg(from, message, args));
+        if (level <= WARN) {
+            System.out.println(formatMsg(from, message, args));
+        }
     }
 
+    /**
+     * Log an info message. Args are inserted into the message using the {} pattern.
+     */
     @Override
     public void info(Class<?> from, String message, Object... args) {
-        // LoggerFactory.getLogger(from).info(message, args);
-        System.out.println(formatMsg(from, message, args));
+        if (level <= INFO) {
+            System.out.println(formatMsg(from, message, args));
+        }
     }
 
+    /**
+     * Log a debug message. Args are inserted into the message using the {} pattern.
+     */
     @Override
     public void debug(Class<?> from, String message, Object... args) {
-        // LoggerFactory.getLogger(from).debug(message, args);
-        // System.out.println(formatMsg(from, message, args));
+        if (level == DEBUG) {
+            System.out.println(formatMsg(from, message, args));
+        }
     }
-
-    private String formatMsg(Class<?> from, String message, Object... args) {
-        return "[" + from.getName() + "] " + message;
-    }
-
 }

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * An index of types. This is the output of an indexer that knows how to traverse the file system looking for types
@@ -42,29 +43,31 @@ import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
  * archive files or raw source files.
  */
 public class CodeIndex {
+    private static final LogHelper LOG = LogHelper.log(CodeIndex.class);
+    
     // map artifact name to entry(s)
     public Map<String, CodeIndexEntry> artifactDictionary = new TreeMap<>();
     // map class name to entry(s)
     public Map<String, CodeIndexEntry> typeDictionary = new TreeMap<>();
 
     public void addArtifactLocation(String artifact, CodeLocationDescriptor location) {
-        CodeIndexEntry indexEntry = this.artifactDictionary.get(artifact);
+        CodeIndexEntry indexEntry = artifactDictionary.get(artifact);
         if (indexEntry == null) {
             indexEntry = new CodeIndexEntry();
         }
         indexEntry.addLocation(location);
-        this.artifactDictionary.put(artifact, indexEntry);
-        System.out.println("ADD ARTIFACT ("+artifact+"): " + location.locationOnDisk.getPath());
+        artifactDictionary.put(artifact, indexEntry);
+        LOG.debug("add artifact ({}): {}", artifact, location.locationOnDisk.getPath());
     }
 
     public void addTypeLocation(String typeName, CodeLocationDescriptor location) {
-        CodeIndexEntry indexEntry = this.typeDictionary.get(typeName);
+        CodeIndexEntry indexEntry = typeDictionary.get(typeName);
         if (indexEntry == null) {
             indexEntry = new CodeIndexEntry();
         }
         indexEntry.addLocation(location);
-        this.typeDictionary.put(typeName, indexEntry);
-        System.out.println("ADD TYPE ("+typeName+"): " + location.locationOnDisk.getPath());
+        typeDictionary.put(typeName, indexEntry);
+        LOG.debug("add type ({}): {}", typeName, location.locationOnDisk.getPath());
     }
 
     public void printIndex() {

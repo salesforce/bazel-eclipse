@@ -13,6 +13,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfoFactoryProvider;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Factory for AspectTargetInfo instances, using the JSON emitted from the aspect.
@@ -21,6 +22,7 @@ import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfoFactoryProvider;
  */
 public class AspectTargetInfoFactory {
     
+    private static final LogHelper LOG = LogHelper.log(AspectTargetInfoFactory.class);
     public static final String ASPECT_FILENAME_SUFFIX = ".bzljavasdk-data.json";
     
     protected static List<AspectTargetInfoFactoryProvider> providers = new ArrayList<>();
@@ -109,7 +111,7 @@ public class AspectTargetInfoFactory {
                 }
             }
             if (info == null) {
-                System.out.println("Could not find an AspectTargetInfoFactoryProvider for rule kind "+kind);
+                LOG.info("Could not find an AspectTargetInfoFactoryProvider for rule kind {}", kind);
             }
         } catch (Exception anyE) {
             //System.err.println("Error parsing Bazel aspect info from file "+aspectDataFile.getAbsolutePath()+". Error: "+anyE.getMessage());

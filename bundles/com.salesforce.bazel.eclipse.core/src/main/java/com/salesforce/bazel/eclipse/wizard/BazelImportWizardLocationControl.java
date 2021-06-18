@@ -43,12 +43,14 @@ import org.eclipse.swt.widgets.Listener;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * This class encapsulates the two controls above the tree control on the first page of the import wizard. The combo box
  * which holds the chosen file system path, and the Browse button.
  */
 public class BazelImportWizardLocationControl {
+    private static final LogHelper LOG = LogHelper.log(BazelImportWizardLocationControl.class);
 
     protected BazelImportWizardPage page;
 
@@ -64,8 +66,8 @@ public class BazelImportWizardLocationControl {
     protected Combo rootDirectoryCombo;
     protected String rootDirectory;
 
-    protected List<String> locations;
-    private boolean showLocation = true;
+    protected List<String> locations = new ArrayList<>();
+    private final boolean showLocation = true;
 
     protected IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 
@@ -85,7 +87,7 @@ public class BazelImportWizardLocationControl {
     public void addLocationControl(Composite composite) {
         fieldsWithHistory = new HashMap<String, List<Combo>>();
 
-        if (showLocation || locations == null || locations.isEmpty()) {
+        if (showLocation || locations.isEmpty()) {
             final Label selectRootDirectoryLabel = new Label(composite, SWT.NONE);
             selectRootDirectoryLabel.setLayoutData(new GridData());
             selectRootDirectoryLabel.setText("WORKSPACE File:");
@@ -95,7 +97,7 @@ public class BazelImportWizardLocationControl {
             rootDirectoryCombo.setFocus();
             addFieldWithHistory("rootDirectory", rootDirectoryCombo); //$NON-NLS-1$
 
-            if (locations != null && locations.size() == 1) {
+            if ((locations != null) && (locations.size() == 1)) {
                 rootDirectoryCombo.setText(locations.get(0));
                 rootDirectory = locations.get(0);
             }
@@ -104,6 +106,7 @@ public class BazelImportWizardLocationControl {
             browseButton.setText("Browse...");
             browseButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
             browseButton.addSelectionListener(new SelectionAdapter() {
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     FileDialog dialog = new FileDialog(page.getShell());
                     dialog.setFileName("WORKSPACE");
@@ -120,9 +123,10 @@ public class BazelImportWizardLocationControl {
                         File workspaceFile = new File(selectedFile);
                         if (!workspaceFile.isFile() || !hasWorkspaceFilename(workspaceFile)) {
                             Display.getDefault().syncExec(new Runnable() {
+                                @Override
                                 public void run() {
                                     MessageDialog.openError(page.getShell(), "Import WORKSPACE",
-                                        "You must select a Bazel WORKSPACE File");
+                                            "You must select a Bazel WORKSPACE File");
                                 }
                             });
                         } else {
@@ -137,8 +141,9 @@ public class BazelImportWizardLocationControl {
             });
 
             rootDirectoryCombo.addListener(SWT.Traverse, new Listener() {
+                @Override
                 public void handleEvent(Event e) {
-                    if (e.keyCode == SWT.CR && rootDirectoryChanged()) {
+                    if ((e.keyCode == SWT.CR) && rootDirectoryChanged()) {
                         //New location entered : don't finish the wizard
                         if (e.detail == SWT.TRAVERSE_RETURN) {
                             e.doit = false;
@@ -149,6 +154,7 @@ public class BazelImportWizardLocationControl {
             });
 
             rootDirectoryCombo.addFocusListener(new FocusAdapter() {
+                @Override
                 public void focusLost(FocusEvent e) {
                     if (rootDirectoryChanged()) {
                         page.scanProjects();
@@ -156,16 +162,19 @@ public class BazelImportWizardLocationControl {
                 }
             });
             rootDirectoryCombo.addSelectionListener(new SelectionAdapter() {
+                @Override
                 public void widgetDefaultSelected(SelectionEvent e) {
                     if (rootDirectoryChanged()) {
                         page.scanProjects();
                     }
                 }
 
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     if (rootDirectoryChanged()) {
                         //in runnable to have the combo popup collapse before disabling controls.
                         Display.getDefault().asyncExec(new Runnable() {
+                            @Override
                             public void run() {
                                 page.scanProjects();
                             }
@@ -175,7 +184,7 @@ public class BazelImportWizardLocationControl {
             });
         }
 
-        if (locations != null && !locations.isEmpty()) {
+        if ((locations != null) && !locations.isEmpty()) {
             page.scanProjects();
         }
 
@@ -193,7 +202,7 @@ public class BazelImportWizardLocationControl {
                 "Path [" + rootDirectory + "] is incomplete. Please provide the full path to the Bazel workspace.");
             return false;
         }
-        return _rootDirectory == null || !_rootDirectory.equals(rootDirectory);
+        return (_rootDirectory == null) || !_rootDirectory.equals(rootDirectory);
     }
 
     /** Adds an input control to the list of fields to save. */
@@ -241,16 +250,14 @@ public class BazelImportWizardLocationControl {
                             // The candidateFile is a soft link to the real WORKSPACE file returned by the Open dialog
                             // This means the candidateFile is probably in the real root directory of the Bazel workspace.
 
-                            System.out.println("WORKSPACE file [" + absPath + "] is a soft link to [" + canonPath
-                                    + "]. Setting workspace root as [" + candidateFile.getParentFile().getAbsolutePath()
-                                    + "]");
+                            LOG.info("WORKSPACE file [{}] is a soft link to [{}]. Setting workspace root as [{}]", absPath, canonPath, candidateFile.getParentFile().getAbsolutePath());
                             return candidateFile;
                         }
                     }
                 }
             }
         } catch (Exception anyE) {
-            anyE.printStackTrace();
+            LOG.error("error resolving soft link for [{}]", anyE, resolvedWorkspaceFile.getAbsolutePath());
             return resolvedWorkspaceFile;
         }
 

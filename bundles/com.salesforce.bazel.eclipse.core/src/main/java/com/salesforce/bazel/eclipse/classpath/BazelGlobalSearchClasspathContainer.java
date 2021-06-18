@@ -54,6 +54,7 @@ import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationExcepti
 import com.salesforce.bazel.sdk.index.jvm.BazelJvmIndexClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
@@ -68,6 +69,8 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * this may make type search slow so we allow the user to disable it in the Bazel preferences.
  */
 public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathContainer {
+    private static final LogHelper LOG = LogHelper.log(BazelGlobalSearchClasspathContainer.class);
+
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER";
 
     protected final BazelConfigurationManager config;
@@ -133,8 +136,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
                 bazelJvmIndexClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
         long endTime = System.currentTimeMillis();
 
-        BazelPluginActivator.info(
-            "BazelGlobalSearchClasspathContainer completed indexing in " + (endTime - startTime) + " milliseconds.");
+        LOG.info("completed indexing in [{}] milliseconds.", (endTime - startTime));
 
         return computedClasspath;
     }
