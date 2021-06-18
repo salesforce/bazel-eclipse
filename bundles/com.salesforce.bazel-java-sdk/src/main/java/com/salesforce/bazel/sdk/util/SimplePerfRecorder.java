@@ -3,7 +3,10 @@ package com.salesforce.bazel.sdk.util;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.salesforce.bazel.sdk.logging.LogHelper;
+
 public class SimplePerfRecorder {
+    private static final LogHelper LOG = LogHelper.log(SimplePerfRecorder.class);
 
     public static Map<String, Long> elapsedTimes = new LinkedHashMap<>();
     public static Map<String, Integer> counts = new LinkedHashMap<>();
@@ -31,9 +34,9 @@ public class SimplePerfRecorder {
     }
 
     public static void logResults() {
-        System.out.println("**** Performance Results ****");
+        LOG.info("**** Performance Results ****");
         for (String operationId : elapsedTimes.keySet()) {
-            System.out.println("  " + operationId + ": " + elapsedTimes.get(operationId) + "ms  invocations: "
+            LOG.info("  " + operationId + ": " + elapsedTimes.get(operationId) + "ms  invocations: "
                     + counts.get(operationId));
         }
 

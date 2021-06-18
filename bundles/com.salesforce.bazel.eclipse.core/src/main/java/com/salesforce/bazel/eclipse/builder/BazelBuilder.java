@@ -141,7 +141,6 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             LOG.error("Bazel not found: {} ", e.getMessage());
         } catch (Exception e) {
             LOG.error("Failed to build: " + e.getMessage(), e);
-            e.printStackTrace();
         } finally {
             progressMonitor.done();
         }

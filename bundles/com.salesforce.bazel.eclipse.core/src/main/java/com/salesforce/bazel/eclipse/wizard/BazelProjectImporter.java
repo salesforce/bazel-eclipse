@@ -12,12 +12,14 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
  * Imports projects with a Progress Dialog. This is used by the Import Wizard and the ProjectView machinery.
  */
 public class BazelProjectImporter {
+    private static final LogHelper LOG = LogHelper.log(BazelProjectImporter.class);
 
     public static void run(BazelPackageLocation workspaceRootProject,
             List<BazelPackageLocation> bazelPackagesToImport) {
@@ -30,7 +32,7 @@ public class BazelProjectImporter {
                 try {
                     projectImporter.run(monitor);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOG.error("catch error during import", e);
                     openError("Error", e);
                 }
             }
@@ -50,7 +52,7 @@ public class BazelProjectImporter {
             @Override
             public void run() {
                 String exceptionMessage = ex.getMessage();
-                if (exceptionMessage == null || exceptionMessage.isEmpty()) {
+                if ((exceptionMessage == null) || exceptionMessage.isEmpty()) {
                     // Exception does not have a message, which usually means it is an NPE.
                     exceptionMessage = "An exception of type [" + ex.getClass().getName()
                             + "] was thrown, but no additional message details are available. "

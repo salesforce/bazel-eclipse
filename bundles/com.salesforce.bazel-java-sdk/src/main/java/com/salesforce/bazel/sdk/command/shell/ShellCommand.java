@@ -50,6 +50,8 @@ import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsole;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.logging.LoggerFacade;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
@@ -60,6 +62,18 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * This class can only be initialized using a builder created with the {@link #builder()} method.
  */
 public final class ShellCommand implements Command {
+    /**
+     * LogHelper for the ShellCommand. It is not final, and public, so that your application can replace
+     * the LogHelper for just this class. Logging the execution of the shell commands is likely something
+     * you will want to tailor for your exact use case.
+     */
+    public static LogHelper LOG = LogHelper.log(ShellCommand.class);
+
+    /**
+     * Level at which ShellCommand should log the stdout/stderr lines that come from the commands.
+     * 0 = DEBUG, 1 = INFO, 2 = WARN, 3 = ERROR
+     */
+    public static int LOG_LEVEL_FOR_STDOUTERR = LoggerFacade.DEBUG;
 
     private final File directory;
     private final List<String> args;
@@ -67,15 +81,15 @@ public final class ShellCommand implements Command {
     private final SelectOutputStream stderr;
     private final WorkProgressMonitor progressMonitor;
 
-    // TODO ShellCommand timeouts are not usable; if a command times out subsequent commands hang, etc. 
+    // TODO ShellCommand timeouts are not usable; if a command times out subsequent commands hang, etc.
     // https://github.com/salesforce/bazel-eclipse/issues/191
     private long timeoutMS = 0;
 
     private boolean executed = false;
 
     ShellCommand(CommandConsole console, File directory, List<String> args, Function<String, String> stdoutSelector,
-            Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
-            WorkProgressMonitor progressMonitor, long timeoutMS) {
+        Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
+        WorkProgressMonitor progressMonitor, long timeoutMS) {
         this.directory = directory;
         this.args = args;
         if (console != null) {
@@ -98,7 +112,7 @@ public final class ShellCommand implements Command {
      */
     @Override
     public BazelProcessBuilder getProcessBuilder() {
-        // TODO make env variables sent to ShellCommand configurable 
+        // TODO make env variables sent to ShellCommand configurable
         // https://github.com/salesforce/bazel-eclipse/issues/190
         Map<String, String> bazelEnvironmentVariables = new HashMap<>();
         bazelEnvironmentVariables.put("PULLER_TIMEOUT", "3000"); // increases default timeout from 600 to 3000 seconds for rules_docker downloads
@@ -139,8 +153,7 @@ public final class ShellCommand implements Command {
         for (String arg : args) {
             command = command + arg + " ";
         }
-        System.out.println("");
-        System.out.println("Executing command (timeout = " + timeoutMS + "): " + command);
+        LOG.info("Executing command (timeout = {}): {}", timeoutMS, command);
         long startTimeMS = System.currentTimeMillis();
         boolean success = false;
 
@@ -170,20 +183,29 @@ public final class ShellCommand implements Command {
 
             // report results to console
             long elapsedTimeMS = System.currentTimeMillis() - startTimeMS;
-            System.out.println("Finished command (" + elapsedTimeMS + " millis) (success=" + success + "): " + command);
-            System.out.println("  >> stdout:");
-            for (String line : stdout.getLines()) {
-                if (!line.trim().isEmpty()) {
-                    System.out.println("  >> " + line);
+            LOG.info("Finished command ({} millis) (success={}): {}", elapsedTimeMS, success, command);
+
+            if (LOG.getLevel() <= LOG_LEVEL_FOR_STDOUTERR) {
+                StringBuffer stdoutBuffer = new StringBuffer();
+                for (String line : stdout.getLines()) {
+                    if (!line.trim().isEmpty()) {
+                        stdoutBuffer.append("  >> ");
+                        stdoutBuffer.append(line);
+                        stdoutBuffer.append("\n");
+                    }
                 }
-            }
-            System.out.println("  >> stderr:");
-            for (String line : stderr.getLines()) {
-                if (!line.trim().isEmpty()) {
-                    System.out.println("  >> " + line);
+                LOG.log(LOG_LEVEL_FOR_STDOUTERR, "\n  >> stdout:\n{}", stdoutBuffer);
+
+                StringBuffer stderrBuffer = new StringBuffer();
+                for (String line : stderr.getLines()) {
+                    if (!line.trim().isEmpty()) {
+                        stderrBuffer.append("  >> ");
+                        stderrBuffer.append(line);
+                        stderrBuffer.append("\n");
+                    }
                 }
+                LOG.log(LOG_LEVEL_FOR_STDOUTERR, "\n  >> stderr:\n{}", stderrBuffer);
             }
-            System.out.println("");
         }
     }
 
@@ -211,7 +233,7 @@ public final class ShellCommand implements Command {
                     outputStream.write(buffer, 0, read);
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+                LOG.error("Error writing command stream to the channel.", ex);
                 // we simply terminate the thread on exceptions
             }
         }

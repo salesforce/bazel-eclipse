@@ -41,6 +41,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.util.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
@@ -49,6 +50,7 @@ import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
  * Configures the classpath container for each project.
  */
 public class SetupClasspathContainersFlow implements ImportFlow {
+    private static final LogHelper LOG = LogHelper.log(SetupClasspathContainersFlow.class);
 
     private static final String STANDARD_VM_CONTAINER_PREFIX = "org.eclipse.jdt.launching.JRE_CONTAINER/"
             + "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-";
@@ -102,7 +104,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
                 resourceHelper.createFolderLink(projectSourceFolder, realSourceDir, IResource.NONE, null);
             } catch (Exception anyE) {
                 // this can happen in degenerate cases such as source directory is the root of the project
-                anyE.printStackTrace();
+                LOG.error("error creating classpath", anyE);
                 continue;
             }
 

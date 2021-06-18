@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Objects;
 
 import com.salesforce.bazel.sdk.command.internal.ConsoleType;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
@@ -40,6 +41,7 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Launch Configs).
  */
 public class BazelLauncherBuilder {
+    private static final LogHelper LOG = LogHelper.log(BazelLauncherBuilder.class);
 
     private final BazelWorkspaceCommandRunner bazelCommandRunner;
     private final CommandBuilder commandBuilder;
@@ -144,9 +146,9 @@ public class BazelLauncherBuilder {
         }
         File appFile = new File(workspaceDirectory, appPath);
         if (!appFile.exists()) {
-            System.out.println("ERROR: Launch executable does not exist: " + appFile.getAbsolutePath());
+            LOG.error("ERROR: Launch executable does not exist: {}", appFile.getAbsolutePath());
         } else {
-            System.out.println("Launch executable: " + appFile.getAbsolutePath());
+            LOG.info("Launch executable: {}", appFile.getAbsolutePath());
         }
 
         List<String> args = new ArrayList<>();

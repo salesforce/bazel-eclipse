@@ -27,10 +27,10 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 public class BazelBuildEventsFileParser {
     static final LogHelper LOG = LogHelper.log(BazelBuildEventsFileParser.class);
 
-    private File bepFile;
+    private final File bepFile;
 
     // since it is common to want to see the errors in a build, we always populate the list
-    private List<BEPEvent> errorEvents = new ArrayList<>();
+    private final List<BEPEvent> errorEvents = new ArrayList<>();
 
     /**
      * Creates the BazelBuildEventsFile for a File. Note that the File may not exist. This can happen if this
@@ -55,10 +55,10 @@ public class BazelBuildEventsFileParser {
 
         if (bepFile.length() < 100) {
             // typically, this is a zero length file which happens soon after a build starts (Bazel truncates the file)
-            // if there are less than 100 bytes in the file, it means there isn't anything interesting to look at yet 
+            // if there are less than 100 bytes in the file, it means there isn't anything interesting to look at yet
             // so just cut off our processing early
             LOG.debug(callerForLog + ": Halting processing of BEP file " + bepFile.getAbsolutePath()
-                    + " because it has a short length of [" + bepFile.length() + "] bytes.");
+            + " because it has a short length of [" + bepFile.length() + "] bytes.");
             return result;
         }
 
@@ -73,7 +73,7 @@ public class BazelBuildEventsFileParser {
             LOG.info(callerForLog + ": Reading " + bepFile.getAbsolutePath());
 
             while ((eventString = b.readLine()) != null) {
-                //System.out.println("EVENT: "+eventString);
+                LOG.debug("BEP EVENT: {}", eventString);
 
                 if (isContinuation && (eventIndex < previousContents.events.size())) {
                     event = previousContents.events.get(eventIndex);
@@ -118,14 +118,14 @@ public class BazelBuildEventsFileParser {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("error reading BEP events file [{}]", e, bepFile.getAbsolutePath());
             return result;
         }
         return result;
     }
 
     public List<BEPEvent> getBuildErrorEvents() {
-        return this.errorEvents;
+        return errorEvents;
     }
 
     // simple manual test client
@@ -136,7 +136,7 @@ public class BazelBuildEventsFileParser {
         BazelBuildEventsFileContents result = bazelEventsFile.readEvents("testapp", null);
 
         for (BEPEvent event : result.events) {
-            System.out.println(event.toString());
+            LOG.info(event.toString());
         }
     }
 }

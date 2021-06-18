@@ -12,10 +12,9 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
  * Orders modules for import such that upstream dependencies are imported before downstream dependencies.
  */
 public class ProjectOrderResolverImpl implements ProjectOrderResolver {
-    LogHelper logger;
+    private static final LogHelper LOG = LogHelper.log(ProjectOrderResolverImpl.class);
 
     public ProjectOrderResolverImpl() {
-        logger = LogHelper.log(this.getClass());
     }
 
     /**
@@ -24,10 +23,11 @@ public class ProjectOrderResolverImpl implements ProjectOrderResolver {
      * Given the complex nature of the dependency graph, and the user can select an arbitrary set of packages to import,
      * this . It assumes that there are hundreds/thousands of packages in the Bazel workspace, and the user will pick
      * 10-20 to import.
-     * 
+     *
      * @return ordered list of modules - leaves nodes goes first, those which dependent on them next and so on up to the
      *         root module
      */
+    @Override
     public Iterable<BazelPackageLocation> computePackageOrder(BazelPackageLocation rootPackage,
             AspectTargetInfos aspects) {
         List<BazelPackageLocation> selectedPackages = rootPackage.gatherChildren();
@@ -42,10 +42,11 @@ public class ProjectOrderResolverImpl implements ProjectOrderResolver {
      * Given the complex nature of the dependency graph, and the user can select an arbitrary set of packages to import,
      * this . It assumes that there are hundreds/thousands of packages in the Bazel workspace, and the user will pick
      * 10-20 to import.
-     * 
+     *
      * @return ordered list of modules - leaves nodes goes first, those which dependent on them next and so on up to the
      *         root module
      */
+    @Override
     public Iterable<BazelPackageLocation> computePackageOrder(BazelPackageLocation rootPackage,
             List<BazelPackageLocation> selectedPackages, AspectTargetInfos aspects) {
 
@@ -65,9 +66,9 @@ public class ProjectOrderResolverImpl implements ProjectOrderResolver {
                 sb.append(pkg.getBazelPackageName());
                 sb.append("  ");
             }
-            logger.debug(sb.toString());
+            LOG.debug(sb.toString());
         } catch (Exception anyE) {
-            anyE.printStackTrace();
+            LOG.error("error computing package order", anyE);
             orderedModules = selectedPackages;
         }
         return orderedModules;

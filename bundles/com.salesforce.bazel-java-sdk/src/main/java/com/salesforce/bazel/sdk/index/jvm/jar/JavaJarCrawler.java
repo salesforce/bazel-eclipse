@@ -32,14 +32,16 @@ import java.util.zip.ZipFile;
 import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndex;
 import com.salesforce.bazel.sdk.index.model.ClassIdentifier;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Crawler that descends into nested directories of jar files and adds found files to the index.
  */
 public class JavaJarCrawler {
+    private static final LogHelper LOG = LogHelper.log(JavaJarCrawler.class);
 
-    private JvmCodeIndex index;
-    private JarIdentiferResolver resolver;
+    private final JvmCodeIndex index;
+    private final JarIdentiferResolver resolver;
 
     public JavaJarCrawler(JvmCodeIndex index, JarIdentiferResolver resolver) {
         this.index = index;
@@ -63,7 +65,7 @@ public class JavaJarCrawler {
             File[] gavRootIndicators = path.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    // TODO sketchy logic here, we assume at least one downloaded jar comes from a common domain 
+                    // TODO sketchy logic here, we assume at least one downloaded jar comes from a common domain
                     return name.equals("com") || name.equals("org") || name.equals("net");
                 }
             });
@@ -88,8 +90,7 @@ public class JavaJarCrawler {
                     }
                 }
             } catch (Exception anyE) {
-                log("Reading jar file lead to unexpected error", anyE.getMessage(), child.getPath());
-                anyE.printStackTrace();
+                LOG.error("Reading jar file lead to unexpected error for path [{}]", anyE, child.getPath());
             } finally {
                 if (zipFile != null) {
                     try {
@@ -102,7 +103,7 @@ public class JavaJarCrawler {
 
     protected void foundJar(File gavRoot, File jarFile, ZipFile zipFile, boolean doIndexClasses) {
         // precisely identify the jar file
-        log("jar:", jarFile.getName(), null);
+        LOG.debug("found jar: [{}]", jarFile.getName());
         JarIdentifier jarId = resolver.resolveJarIdentifier(gavRoot, jarFile, zipFile);
         if (jarId == null) {
             // this jar is not part of the typical dependencies (e.g. it is a jar used in the build toolchain); ignore
@@ -123,7 +124,7 @@ public class JavaJarCrawler {
         try {
             entries = zipFile.entries();
         } catch (Exception anyE) {
-            log("failure opening zipfile", jarFile.getPath(), null);
+            LOG.error("failure opening zipfile [{}]", anyE, jarFile.getPath());
             return;
         }
         while (entries.hasMoreElements()) {
@@ -145,22 +146,11 @@ public class JavaJarCrawler {
             // convert path / into . to form the legal package name, and trim the .class off the end
             fqClassname = fqClassname.replace("/", ".");
             fqClassname = fqClassname.substring(0, fqClassname.length() - 6);
-            //System.out.println("Classname: "+fqClassname+" from jar "+jarId.locationIdentifier);
+            LOG.debug("Indexer found classname: {} in jar {}", fqClassname, jarId.locationIdentifier);
 
             ClassIdentifier classId = new ClassIdentifier(fqClassname);
             jarLocationDescriptor.addClass(classId);
             index.addTypeLocation(classId.classname, jarLocationDescriptor);
         }
     }
-
-    protected static void log(String msg, String param1, String param2) {
-        if (param1 == null) {
-            System.err.println(msg);
-        } else if (param2 == null) {
-            System.err.println(msg + " [" + param1 + "] ");
-        } else {
-            System.err.println(msg + " [" + param1 + "] [" + param2 + "]");
-        }
-    }
-
 }

@@ -70,9 +70,6 @@ import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrat
  */
 public class BazelPluginActivator extends AbstractUIPlugin {
     static final LogHelper LOG = LogHelper.log(BazelPluginActivator.class);
-    // we log to the LOG object by default, but if we detect it could not be configured, we set this to true and log to sys.err instead
-    private static boolean logToSystemErr = false;
-
     // The plug-in ID
     public static final String PLUGIN_ID = "com.salesforce.bazel.eclipse.core"; //$NON-NLS-1$
 
@@ -253,10 +250,10 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         if (!workspaceFile.exists()) {
             workspaceFile = new File(rootDirectory, "WORKSPACE.bazel");
             if (!workspaceFile.exists()) {
-                new Throwable().printStackTrace();
-                BazelPluginActivator.error(
-                    "BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: "
-                            + rootDirectory.getAbsolutePath());
+                Exception stack = new IllegalArgumentException();
+                LOG.error(
+                    "BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: [{}]", stack,
+                    rootDirectory.getAbsolutePath());
                 return;
             }
         }
@@ -331,57 +328,6 @@ public class BazelPluginActivator extends AbstractUIPlugin {
 
     public BazelExternalJarRuleManager getBazelExternalJarRuleManager() {
         return externalJarRuleManager;
-    }
-
-    // LOGGING
-
-    /**
-     * Log an error to the eclipse log.
-     */
-    public static void error(String message) {
-        if (logToSystemErr) {
-            System.err.println(message);
-        } else {
-            LOG.error(message);
-        }
-    }
-
-    /**
-     * Log an error to the eclipse log, with an attached exception.
-     */
-    public static void error(String message, Throwable exception) {
-        if (logToSystemErr) {
-            exception.printStackTrace();
-            System.err.println(message);
-        } else {
-            LOG.error(message, exception);
-        }
-    }
-
-    /**
-     * Log an info message to the eclipse log.
-     */
-    public static void info(String message) {
-        if (logToSystemErr) {
-            System.err.println(message);
-        } else {
-            LOG.info(message);
-        }
-    }
-
-    /**
-     * Log an info message to the eclipse log.
-     */
-    public static void debug(String message) {
-        LOG.debug(message);
-    }
-
-    /**
-     * If there is a failure in configuring the logging subsystem, this method gets called such that logging is sent to
-     * System.err
-     */
-    public static void logToSystemErr() {
-        logToSystemErr = true;
     }
 
     // TEST ONLY

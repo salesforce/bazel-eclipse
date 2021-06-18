@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class BazelWorkspace {
+    private static final LogHelper LOG = LogHelper.log(BazelWorkspace.class);
 
     // DATA
 
@@ -60,12 +62,12 @@ public class BazelWorkspace {
      * The operating system running Bazel and our BEF: osx, linux, windows
      * https://github.com/bazelbuild/bazel/blob/c35746d7f3708acb0d39f3082341de0ff09bd95f/src/main/java/com/google/devtools/build/lib/util/OS.java#L21
      */
-    private String operatingSystem;
+    private final String operatingSystem;
 
     /**
      * The OS identifier used in file system constructs: darwin, linux, windows
      */
-    private String operatingSystemFoldername;
+    private final String operatingSystemFoldername;
 
     /**
      * List of Bazel command options that apply for all workspace commands (i.e. from .bazelrc)
@@ -84,8 +86,8 @@ public class BazelWorkspace {
             OperatingEnvironmentDetectionStrategy osEnvStrategy) {
         this.name = name;
         this.bazelWorkspaceRootDirectory = getCanonicalFileSafely(bazelWorkspaceRootDirectory);
-        this.operatingSystem = osEnvStrategy.getOperatingSystemName();
-        this.operatingSystemFoldername = osEnvStrategy.getOperatingSystemDirectoryName(this.operatingSystem);
+        operatingSystem = osEnvStrategy.getOperatingSystemName();
+        operatingSystemFoldername = osEnvStrategy.getOperatingSystemDirectoryName(operatingSystem);
     }
 
     public void setBazelWorkspaceMetadataStrategy(BazelWorkspaceMetadataStrategy metadataStrategy) {
@@ -102,37 +104,37 @@ public class BazelWorkspace {
         try {
             directory = directory.getCanonicalFile();
         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            LOG.error("Error locating path [{}] on the file system", ioe, directory.getAbsolutePath());
         }
         return directory;
     }
 
-    // GETTERS AND SETTERS    
+    // GETTERS AND SETTERS
 
     public File getBazelWorkspaceRootDirectory() {
-        return this.bazelWorkspaceRootDirectory;
+        return bazelWorkspaceRootDirectory;
     }
 
     public boolean hasBazelWorkspaceRootDirectory() {
-        return this.bazelWorkspaceRootDirectory != null;
+        return bazelWorkspaceRootDirectory != null;
     }
 
     public String getName() {
-        return this.name;
+        return name;
     }
 
     public File getBazelExecRootDirectory() {
-        if (this.bazelExecRootDirectory == null && metadataStrategy != null) {
-            this.bazelExecRootDirectory = metadataStrategy.computeBazelWorkspaceExecRoot();
+        if ((bazelExecRootDirectory == null) && (metadataStrategy != null)) {
+            bazelExecRootDirectory = metadataStrategy.computeBazelWorkspaceExecRoot();
         }
-        return this.bazelExecRootDirectory;
+        return bazelExecRootDirectory;
     }
 
     public File getBazelOutputBaseDirectory() {
-        if (this.bazelOutputBaseDirectory == null && metadataStrategy != null) {
-            this.bazelOutputBaseDirectory = metadataStrategy.computeBazelWorkspaceOutputBase();
+        if ((bazelOutputBaseDirectory == null) && (metadataStrategy != null)) {
+            bazelOutputBaseDirectory = metadataStrategy.computeBazelWorkspaceOutputBase();
         }
-        return this.bazelOutputBaseDirectory;
+        return bazelOutputBaseDirectory;
     }
 
     public List<String> getTargetsForBazelQuery(String query) {
@@ -146,10 +148,10 @@ public class BazelWorkspace {
     }
 
     public File getBazelBinDirectory() {
-        if (this.bazelBinDirectory == null && metadataStrategy != null) {
-            this.bazelBinDirectory = metadataStrategy.computeBazelWorkspaceBin();
+        if ((bazelBinDirectory == null) && (metadataStrategy != null)) {
+            bazelBinDirectory = metadataStrategy.computeBazelWorkspaceBin();
         }
-        return this.bazelBinDirectory;
+        return bazelBinDirectory;
     }
 
     public String getOperatingSystem() {
@@ -161,10 +163,10 @@ public class BazelWorkspace {
     }
 
     public BazelWorkspaceCommandOptions getBazelWorkspaceCommandOptions() {
-        if (this.commandOptions == null) {
-            this.commandOptions = new BazelWorkspaceCommandOptions(this);
-            metadataStrategy.populateBazelWorkspaceCommandOptions(this.commandOptions);
+        if (commandOptions == null) {
+            commandOptions = new BazelWorkspaceCommandOptions(this);
+            metadataStrategy.populateBazelWorkspaceCommandOptions(commandOptions);
         }
-        return this.commandOptions;
+        return commandOptions;
     }
 }

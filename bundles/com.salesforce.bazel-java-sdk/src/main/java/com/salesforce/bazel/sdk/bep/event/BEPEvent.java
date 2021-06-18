@@ -8,6 +8,8 @@ import java.util.Set;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.salesforce.bazel.sdk.logging.LogHelper;
+
 /**
  * Base model of a Build Event Protocol (BEP) event, and parsing utilities. Check for subclasses for specific event type
  * implementations.
@@ -18,6 +20,7 @@ import org.json.simple.JSONObject;
  * <a href="https://docs.bazel.build/versions/master/build-event-protocol.html">BEP Documentation</a>
  */
 public class BEPEvent {
+    private static final LogHelper LOG = LogHelper.log(BEPEvent.class);
 
     // Keeping the raw JSON string for each event can be helpful during debugging, but takes a lot
     // of memory, so this disabled by default
@@ -42,10 +45,10 @@ public class BEPEvent {
         this.index = index;
 
         if (keepRawJsonString) {
-            this.rawEventString = rawEvent;
+            rawEventString = rawEvent;
         }
         if (keepJsonObject) {
-            this.eventObject = eventObj;
+            eventObject = eventObj;
         }
 
         // eventObj is null for event types we ignore (see BazelBuildEventTypeManager.parseEvent())
@@ -53,7 +56,7 @@ public class BEPEvent {
             // any event (theoretically) could be the lastMessage, so check that here in the base event
             Object lastMessage = eventObj.get("lastMessage");
             if (lastMessage != null) {
-                this.isLastMessage = true;
+                isLastMessage = true;
             }
         }
     }
@@ -231,7 +234,7 @@ public class BEPEvent {
             try {
                 value = Integer.parseInt(valueObj.toString());
             } catch (NumberFormatException nfe) {
-                nfe.printStackTrace();
+                LOG.error("error decoding integer from json field [{}]", nfe, valueObj);
             }
         }
         return value;
@@ -243,7 +246,7 @@ public class BEPEvent {
             try {
                 value = Long.parseLong(valueObj.toString());
             } catch (NumberFormatException nfe) {
-                nfe.printStackTrace();
+                LOG.error("error decoding long from json field [{}]", nfe, valueObj);
             }
         }
         return value;
@@ -275,13 +278,13 @@ public class BEPEvent {
         List<String> prefixes = null;
 
         JSONArray prefixArray = (JSONArray) jsonObj.get("pathPrefix");
-        if (prefixArray != null && prefixArray.size() > 0) {
+        if ((prefixArray != null) && (prefixArray.size() > 0)) {
             prefixes = new ArrayList<>();
             for (int i = 0; i < prefixArray.size(); i++) {
                 prefixes.add(prefixArray.get(i).toString());
             }
         }
-        System.out.println("URI: " + uri);
+        LOG.debug("decoded URI: {}", uri);
         if (uri != null) {
             fileUri = new BEPFileUri(name, uri, prefixes);
         }

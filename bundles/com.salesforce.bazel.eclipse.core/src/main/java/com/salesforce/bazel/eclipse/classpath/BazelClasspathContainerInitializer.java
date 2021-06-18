@@ -66,9 +66,9 @@ import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 public class BazelClasspathContainerInitializer extends ClasspathContainerInitializer {
+    private static final LogHelper LOG = LogHelper.log(BazelClasspathContainerInitializer.class);
 
     private static final String CLASSPATH_CONTAINER_UPDATE_JOB_NAME = "BazelClasspathContainerUpdate";
-    private static final LogHelper LOG = LogHelper.log(BazelClasspathContainerInitializer.class);
 
     private static List<IProject> importedProjects = Collections.synchronizedList(new ArrayList<IProject>());
 
@@ -129,9 +129,9 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
             //            }
 
         } catch (IOException | InterruptedException | BackingStoreException e) {
-            BazelPluginActivator.error("Error while creating Bazel classpath container.", e);
+            LOG.error("Error while creating Bazel classpath container.", e);
         } catch (BazelCommandLineToolConfigurationException e) {
-            BazelPluginActivator.error("Bazel not found: " + e.getMessage());
+            LOG.error("Bazel not found: " + e.getMessage());
         }
     }
 
@@ -153,9 +153,9 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 setClasspathContainerForProject(containerPath, javaProject, container, monitor);
                 LOG.info("Updated classpath container of " + project.getName());
             } catch (IOException | InterruptedException | BackingStoreException e) {
-                BazelPluginActivator.error("Error while updating Bazel classpath container.", e);
+                LOG.error("Error while updating Bazel classpath container.", e);
             } catch (BazelCommandLineToolConfigurationException e) {
-                BazelPluginActivator.error("Bazel not found: " + e.getMessage());
+                LOG.error("Bazel not found: " + e.getMessage());
             }
         }).schedule();
     }
@@ -219,7 +219,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
         try {
             project.delete(true, null);
         } catch (CoreException e) {
-            e.printStackTrace();
+            LOG.error("error during undo", e);
         }
     }
 

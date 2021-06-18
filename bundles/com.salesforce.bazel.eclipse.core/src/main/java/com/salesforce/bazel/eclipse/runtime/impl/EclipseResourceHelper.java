@@ -51,6 +51,7 @@ import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
@@ -60,6 +61,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  *
  */
 public class EclipseResourceHelper implements ResourceHelper {
+    private static final LogHelper LOG = LogHelper.log(EclipseResourceHelper.class);
 
     /**
      * Returns the IProject reference for the named project.
@@ -94,6 +96,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     /**
      * Creates the project described by newProject, with the passed description.
      */
+    @Override
     public IProject createProject(IProject newProject, IProjectDescription description, IProgressMonitor monitor)
             throws CoreException {
         if (newProject == null) {
@@ -107,6 +110,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     /**
      * Deletes the specified project.
      */
+    @Override
     public void deleteProject(IProject project, IProgressMonitor monitor) throws CoreException {
         if (!isBazelRootProject(project)) {
             // clear the cached data for this project
@@ -123,6 +127,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     /**
      * Opens the project, or no-op if already open
      */
+    @Override
     public void openProject(IProject project, IProgressMonitor monitor) throws CoreException {
         project.open(monitor);
     }
@@ -133,8 +138,7 @@ public class EclipseResourceHelper implements ResourceHelper {
         Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(BazelPluginActivator.PLUGIN_ID);
 
         if (eclipseProjectPrefs == null) {
-            BazelPluginActivator.error(
-                "Could not find the Preferences node for the Bazel plugin for project [" + project.getName() + "]");
+            LOG.error("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
         }
 
         return eclipseProjectPrefs;
@@ -179,8 +183,8 @@ public class EclipseResourceHelper implements ResourceHelper {
 
     @Override
     public IResource findMemberInWorkspace(IPath path) {
-        IResource resource = this.getEclipseWorkspaceRoot().findMember(path);
-        //System.out.println("findMemberInWorkspace: path="+path.toOSString()+" member.location="+getResourceAbsolutePath(resource));
+        IResource resource = getEclipseWorkspaceRoot().findMember(path);
+        LOG.debug("findMemberInWorkspace: path="+path.toOSString()+" member.location="+getResourceAbsolutePath(resource));
         return resource;
     }
 
@@ -223,8 +227,7 @@ public class EclipseResourceHelper implements ResourceHelper {
         } catch (Exception ex) {
             // this is likely an issue with the resource tree being locked, so we have to defer this update
             // but it works for any type of issue
-            BazelPluginActivator
-                    .info("Deferring updates to project " + project.getName() + " because workspace is locked.");
+            LOG.info("Deferring updates to project [{}] because workspace is locked.", project.getName());
             deferredProjectDescriptionUpdates.add(new DeferredProjectDescriptionUpdate(project, description));
             needsDeferredApplication = true;
         }
@@ -235,12 +238,13 @@ public class EclipseResourceHelper implements ResourceHelper {
      * When setProjectDescription() fails, it is likely because the resource tree is locked. Call this method outside of
      * a locked code path if setProjectDescription() returned true.
      */
+    @Override
     public void applyDeferredProjectDescriptionUpdates() {
-        if (this.deferredProjectDescriptionUpdates.size() == 0) {
+        if (deferredProjectDescriptionUpdates.size() == 0) {
             return;
         }
-        List<DeferredProjectDescriptionUpdate> updates = this.deferredProjectDescriptionUpdates;
-        this.deferredProjectDescriptionUpdates = new ArrayList<>();
+        List<DeferredProjectDescriptionUpdate> updates = deferredProjectDescriptionUpdates;
+        deferredProjectDescriptionUpdates = new ArrayList<>();
         for (DeferredProjectDescriptionUpdate update : updates) {
             // this could theoretically still fail, but we don't want an infinite retry so let this go if it fails
             setProjectDescription(update.project, update.description);
@@ -263,9 +267,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public void createFileLink(IFile thisFile, IPath bazelWorkspaceLocation, int updateFlags,
             IProgressMonitor monitor) {
-        //System.out.println("createFileLink: thisFile="+thisFile.getLocation().toOSString()+" bazelWorkspaceLocation="+bazelWorkspaceLocation.toOSString());
-
         try {
+            LOG.debug("createFileLink: thisFile="+thisFile.getLocation().toOSString()+" bazelWorkspaceLocation="+bazelWorkspaceLocation.toOSString());
             thisFile.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);
@@ -275,9 +278,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public void createFolderLink(IFolder thisFolder, IPath bazelWorkspaceLocation, int updateFlags,
             IProgressMonitor monitor) {
-        //System.out.println("createFolderLink: thisFolder="+thisFolder.getLocation().toOSString()+" bazelWorkspaceLocation="+bazelWorkspaceLocation.toOSString());
-
         try {
+            LOG.debug("createFolderLink: thisFolder="+thisFolder.getLocation().toOSString()+" bazelWorkspaceLocation="+bazelWorkspaceLocation.toOSString());
             thisFolder.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);

@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.bep.event.BEPEvent;
-import com.salesforce.bazel.sdk.bep.file.BazelBuildEventsFileParser;
 import com.salesforce.bazel.sdk.bep.file.BazelBuildEventsFileContents;
+import com.salesforce.bazel.sdk.bep.file.BazelBuildEventsFileParser;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Bazel build event protocol stream (BEP) for a Bazel workspace. A BEP stream allows you to monitor and react to build
@@ -26,8 +27,10 @@ import com.salesforce.bazel.sdk.bep.file.BazelBuildEventsFileContents;
  * bep_test.json).
  */
 public class BazelBuildEventsFileStream extends BazelBuildEventStream {
+    private static final LogHelper LOG = LogHelper.log(BazelBuildEventsFileStream.class);
+
     private int filePollerIntervalSeconds = 5;
-    private List<MonitoredFile> monitoredFiles = new ArrayList<>();
+    private final List<MonitoredFile> monitoredFiles = new ArrayList<>();
     private FilePoller filePoller = null;
 
     public BazelBuildEventsFileStream() {}
@@ -68,7 +71,7 @@ public class BazelBuildEventsFileStream extends BazelBuildEventStream {
      * The stream will monitor the BEP json files for any changes, based on a polling interval.
      */
     public void setFilePollerIntervalSeconds(int seconds) {
-        this.filePollerIntervalSeconds = seconds;
+        filePollerIntervalSeconds = seconds;
     }
 
     @Override
@@ -104,8 +107,7 @@ public class BazelBuildEventsFileStream extends BazelBuildEventStream {
                 for (MonitoredFile monitoredFile : monitoredFiles) {
                     if (!monitoredFile.file.exists()) {
                         // the monitored file does not exist yet (user needs to run a build?)
-                        System.out.println(
-                            "File [" + monitoredFile.file.getAbsolutePath() + "] does not exist yet. Run a build?");
+                        LOG.info("File [{}] does not exist yet. Run a build?", monitoredFile.file.getAbsolutePath());
                         continue;
                     }
 
@@ -113,8 +115,7 @@ public class BazelBuildEventsFileStream extends BazelBuildEventStream {
                     long currentLastMod = monitoredFile.file.lastModified();
                     if (currentLastMod == monitoredFile.fileLastModifiedMS) {
                         // the file hasn't changed since we last parsed it, bail
-                        System.out.println("FilePoller will not parse " + monitoredFile.file.getName()
-                                + " because it hasn't changed.");
+                        LOG.info("FilePoller will not parse [{}] because it hasn't changed.", monitoredFile.file.getName());
                         continue;
                     }
                     monitoredFile.fileLastModifiedMS = currentLastMod;

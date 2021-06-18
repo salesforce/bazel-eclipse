@@ -47,7 +47,6 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Helper that knows how to run bazel query commands.
  */
 public class BazelQueryHelper {
-
     private static final LogHelper LOG = LogHelper.log(BazelQueryHelper.class);
 
     /**
@@ -72,7 +71,7 @@ public class BazelQueryHelper {
     @Deprecated
     public synchronized List<String> listBazelTargetsInBuildFiles(File bazelWorkspaceRootDirectory,
             WorkProgressMonitor progressMonitor, File... directories)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> argBuilder = new ArrayList<>();
         argBuilder.add("query");
         for (File f : directories) {
@@ -92,7 +91,7 @@ public class BazelQueryHelper {
      */
     public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory,
             Collection<BazelLabel> bazelLabels)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if (bazelLabels.isEmpty()) {
             return Collections.singletonList(new BazelBuildFile("//...")); // $SLASH_OK bazel path
@@ -106,10 +105,10 @@ public class BazelQueryHelper {
             BazelBuildFile buildFile = buildFileCache.get(pack);
             if (buildFile == null) {
                 cacheMisses.addAll(packageToLabels.get(pack));
-                LOG.info("QUERY CACHE MISS package: " + pack);
+                LOG.info("Build file cache miss, package: " + pack);
             } else {
                 buildFiles.add(buildFile);
-                LOG.info("QUERY CACHE GET package: " + pack);
+                LOG.info("Build file cache hit, package: " + pack);
             }
         }
 
@@ -160,7 +159,7 @@ public class BazelQueryHelper {
         for (BazelLabel pack : packageToLabel.keySet()) {
             BazelBuildFile buildFile = new BazelBuildFile(pack.getLabel());
             buildFileCache.put(pack, buildFile);
-            LOG.info("QUERY CACHE PUT package: " + pack);
+            LOG.info("Build file cache put, package: " + pack);
             buildFiles.add(buildFile);
             unprocessed.remove(pack);
             for (BazelLabel target : packageToLabel.get(pack)) {
@@ -173,7 +172,7 @@ public class BazelQueryHelper {
         for (BazelLabel pack : unprocessed) {
             BazelBuildFile buildFile = new BazelBuildFile(pack.getLabel());
             buildFileCache.put(pack, buildFile);
-            LOG.info("QUERY CACHE PUT (no targets) package: " + pack);
+            LOG.info("Build file cache put (no targets) package: " + pack);
         }
 
         return buildFiles;
@@ -183,7 +182,7 @@ public class BazelQueryHelper {
         BazelLabel pack = bazelPackageName.toDefaultPackageLabel();
         BazelBuildFile previousValue = buildFileCache.remove(pack);
         if (previousValue != null) {
-            LOG.info("QUERY CACHE FLUSH package " + pack);
+            LOG.info("Build file cache flush, package " + pack);
         }
     }
 }

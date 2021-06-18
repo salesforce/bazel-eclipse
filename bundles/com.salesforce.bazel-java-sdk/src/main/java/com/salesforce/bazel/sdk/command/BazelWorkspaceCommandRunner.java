@@ -406,7 +406,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized List<BazelProblem> runBazelBuild(Set<String> bazelTargets, List<String> extraArgs,
             WorkProgressMonitor progressMonitor)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> extraArgsList = new ArrayList<String>();
         extraArgsList.add("build");
         extraArgsList.addAll(buildOptions);
@@ -448,7 +448,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfoForPackages(
             Collection<BazelPackageLocation> targetPackages, String caller)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<BazelLabel> targetLabels = new ArrayList<>();
         for (BazelPackageLocation pkg : targetPackages) {
             String target = pkg.getBazelPackageFSRelativePath() + ":*";
@@ -553,7 +553,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, progressMonitor, argBuilder,
                 t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException e) {
-            e.printStackTrace();
+            LOG.error("Exception running Bazel clean.", e);
         }
     }
 
@@ -591,7 +591,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         try {
             directory = directory.getCanonicalFile();
         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            LOG.error("Error locating path on file system: [{}]", ioe, directory.getAbsolutePath());
         }
         return directory;
     }
