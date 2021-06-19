@@ -32,19 +32,38 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * <li>Leaf nodes: labels that are not a root, and have no deps. They may have external dependencies (e.g. Maven sourced
  * jars).
  * </ul>
+ * <p>
+ * <b>CAVEAT</b> this dependency graph has a granularity of labels, not targets. What this means is if //a/b/c:foo
+ * depends on //a/d/e:bar, this graph will track the dependency as //a/b/c => //a/d/e. This is sufficient for most
+ * cases, but there are some cases that can't be modeled. If //a/b/c:foo depends on //a/d/e:bar which depends on
+ * //a/b/c:fooz, this graph will fail to model it because foo => bar => fooz would be seen as a cyclic dependency.
  */
 public class BazelDependencyGraph {
 
     private static final LogHelper LOG = LogHelper.log(BazelDependencyGraph.class);
 
     // lookup maps
+
+    // ROOT list of all labels that do not appear on the right side of any dependency relationship
     Set<String> rootLabels = new LinkedHashSet<>();
+
+    // LEAF list of all labels that do not appear on the left side of any dependency relationship
     Set<String> leafLabels = new LinkedHashSet<>();
+
+    // LEAF IGNORES EXTERNALS list of all labels that do not appear on the left side of any dependency relationship,
+    //   not considering any dependencies that refer to an external dep (e.g. @maven//:com_salesforce_foo)
+    Set<String> leafLabelsIgnoreExternals = new LinkedHashSet<>();
+
+    // SOURCES all labels that appear on the left side of a dependency relationship
     Set<String> allSourceLabels = new HashSet<>();
+    // DEPS all labels that appear on the right side of a dependency relationship
     Set<String> allDepLabels = new HashSet<>();
 
     // main journals
+
+    // DEPENDS ON map in which the key is a label, and the value is the set of dependencies
     Map<String, Set<String>> dependsOnMap = new TreeMap<>();
+    // USED BY map in which the key is a label, and the value is the set of label that depend on the label
     Map<String, Set<String>> usedByMap = new TreeMap<>();
 
     /**
@@ -60,24 +79,35 @@ public class BazelDependencyGraph {
      * @param sourceLabel
      *            the label for the source package (//a/b/c)
      * @param depLabel
-     *            the label for the depended-on package (//a/b/c)
+     *            the label for the depended-on package (//foo)
      */
     public void addDependency(String sourceLabel, String depLabel) {
         allDepLabels.add(depLabel);
         allSourceLabels.add(sourceLabel);
+        boolean isDepAnExternal = depLabel.startsWith("@");
+        LOG.debug("{} depends on {}", sourceLabel, depLabel);
 
-        // remove source as a candidate leaf, and dep as a candidate root
+        // remove dep as a candidate root
         rootLabels.remove(depLabel);
+        // remove source as a candidate leaf
         leafLabels.remove(sourceLabel);
-
+        // but be aware we sometimes what leaves without regard to external deps (e.g. maven downloaded deps)
+        if (!isDepAnExternal) {
+            // only if the dep is a local target, then we also remove the sourceLabel from second set
+            leafLabelsIgnoreExternals.remove(sourceLabel);
+        }
         // if the source label is not (yet) a dep anywhere, add it to the root label list
         if (!allDepLabels.contains(sourceLabel)) {
             rootLabels.add(sourceLabel);
         }
 
-        // if the dest label is not (yet) a source anywhere, add it to the leaf label list
+        // if the dest label is not (yet) a source anywhere, add it to the leaf label lists
         if (!allSourceLabels.contains(depLabel)) {
             leafLabels.add(depLabel);
+            if (!isDepAnExternal) {
+                // but only add to this list if the dep is not an external dep
+                leafLabelsIgnoreExternals.add(depLabel);
+            }
         }
 
         Set<String> sourceDeps = dependsOnMap.get(sourceLabel);
@@ -103,7 +133,7 @@ public class BazelDependencyGraph {
      * dependencies (as labels) for the source.
      */
     public Map<String, Set<String>> getDependsOnMap() {
-        return this.dependsOnMap;
+        return dependsOnMap;
     }
 
     /**
@@ -111,7 +141,7 @@ public class BazelDependencyGraph {
      * (as labels) that depend on the label.
      */
     public Map<String, Set<String>> getUsedByMap() {
-        return this.usedByMap;
+        return usedByMap;
     }
 
     /**
@@ -119,7 +149,7 @@ public class BazelDependencyGraph {
      * depends on C, this method will return A.
      */
     public Set<String> getRootLabels() {
-        return this.rootLabels;
+        return rootLabels;
     }
 
     /**
@@ -128,7 +158,22 @@ public class BazelDependencyGraph {
      * alone (i.e. it has not dependency, and is not depended on by another node, it is not included).
      */
     public Set<String> getLeafLabels() {
-        return this.leafLabels;
+        return leafLabels;
+    }
+
+    /**
+     * Returns the set of labels that exist as dependencies to other labels in the workspace, and do not have any
+     * dependencies on other labels. If A depends on B, which depends on C, this method will return C. If a label stands
+     * alone (i.e. it has not dependency, and is not depended on by another node, it is not included).
+     * <p>
+     * If a label only depends on external deps (e.g. @maven//:com_spring_etc), it will be considered a leaf node only
+     * if the passed ignoreExternals is set to true
+     */
+    public Set<String> getLeafLabels(boolean ignoreExternals) {
+        if (ignoreExternals) {
+            return leafLabelsIgnoreExternals;
+        }
+        return leafLabels;
     }
 
     // ANALYSIS
@@ -152,6 +197,21 @@ public class BazelDependencyGraph {
      * Note that there is almost always multiple valid solutions for any given graph+label selection.
      */
     public List<BazelPackageLocation> orderLabels(List<BazelPackageLocation> selectedLabels) {
+        return orderLabels(selectedLabels, true);
+    }
+
+    /**
+     * Using the computed dependency graph, order the passed labels such that no label appears in the list prior to any
+     * label it depends on.
+     * <p>
+     * Note that there is almost always multiple valid solutions for any given graph+label selection.
+     * <p>
+     * Since this method is mostly used to order packages within the active Bazel workspace, you most often will not
+     * want to navigate into the dependency graph of the external dependencies (e.g. maven) while building the
+     * dependency graph. Pass false to followExternalTransitives to trigger this performance optimization.
+     */
+    public List<BazelPackageLocation> orderLabels(List<BazelPackageLocation> selectedLabels,
+            boolean followExternalTransitives) {
         LinkedList<BazelPackageLocation> orderedLabels = null;
 
         /*
@@ -180,7 +240,7 @@ public class BazelDependencyGraph {
                 boolean inserted = false;
                 for (BazelPackageLocation priorInsertedLabel : orderedLabels) {
                     if (isDependency(priorInsertedLabel.getBazelPackageName(), currentLabel.getBazelPackageName(),
-                        depCache)) {
+                        depCache, followExternalTransitives)) {
                         // the label is a dependency of an item already in the list, we need to insert
                         orderedLabels.add(currentIndex, currentLabel);
                         inserted = true;
@@ -212,7 +272,7 @@ public class BazelDependencyGraph {
      * @return
      */
     public boolean isDependency(String label, String possibleDependency) {
-        boolean isDep = isDependencyRecur(label, possibleDependency, null, new HashSet<>());
+        boolean isDep = isDependencyRecur(label, possibleDependency, null, new HashSet<>(), true);
         return isDep;
     }
 
@@ -227,12 +287,37 @@ public class BazelDependencyGraph {
      * @param depCache
      */
     public boolean isDependency(String label, String possibleDependency, Map<String, Boolean> depCache) {
-        boolean isDep = isDependencyRecur(label, possibleDependency, depCache, new HashSet<>());
+        boolean isDep = isDependencyRecur(label, possibleDependency, depCache, new HashSet<>(), true);
+        return isDep;
+    }
+
+    /**
+     * Depth first search to determine if the passed <i>possibleDependency</i> is a direct or transitive dependency of
+     * the passed <i>label</i>. This version of the method allows the caller to pass a cache object (opaque). If you
+     * will call isDependency many times, with repetitive crawls of the dependency graph, the cache will be used so we
+     * only compute areas of the graph once.
+     *
+     * @param label
+     * @param possibleDependency
+     * @param depCache
+     * @param followExternalTransitives
+     *            if false, will not look for the possibleDependency if it is a transitive of an external dependency
+     *            (e.g. //abc depends on @maven//:foo which depends on @maven//:bar; this method will return false for
+     *            label=//abc and possibleDependency=@maven//:bar). This is a performance optimization.
+     */
+    public boolean isDependency(String label, String possibleDependency, Map<String, Boolean> depCache,
+            boolean followExternalTransitives) {
+        boolean isDep =
+                isDependencyRecur(label, possibleDependency, depCache, new HashSet<>(), followExternalTransitives);
         return isDep;
     }
 
     private boolean isDependencyRecur(String label, String possibleDependency, Map<String, Boolean> depCache,
-            Set<String> processedLabels) {
+            Set<String> processedLabels, boolean followExternalTransitives) {
+        if (!followExternalTransitives && label.startsWith("@")) {
+            return false;
+        }
+
         String cacheKey = null;
         if (depCache != null) {
             cacheKey = label + "~" + possibleDependency;
@@ -243,13 +328,23 @@ public class BazelDependencyGraph {
         }
 
         if (processedLabels.contains(label)) {
-            LOG.info("Breaking out of infinite loop while computing dependency path for label " + label
-                    + " to " + possibleDependency + "(issue #197) via path "+processedLabels);
+            StringBuffer pathStr = new StringBuffer();
+            for (String entry : processedLabels) {
+                if (pathStr.length() > 0) {
+                    pathStr.append(" => ");
+                }
+                pathStr.append(entry);
+            }
+            LOG.warn("Breaking out of an infinite loop while computing dependency path for label [" + label
+                + "] to candidate dependency [" + possibleDependency + "] with path [" + pathStr
+                + "]. This is probably not a bug, but a case where two Bazel packages reference each other. "
+                + "There is a way for that to happen that is legal in Bazel, but for this dependency graph implementation "
+                + "this is not supported. This path will not be installed in the graph, which may cause problems for other operations.");
             return dependencyResponse(false, depCache, cacheKey);
         }
         processedLabels.add(label);
 
-        Set<String> dependencies = this.dependsOnMap.get(label);
+        Set<String> dependencies = dependsOnMap.get(label);
 
         if (dependencies == null) {
             // this could be an external label, like @somejar, in which case we will not have any dep information
@@ -260,7 +355,8 @@ public class BazelDependencyGraph {
             if (dependency.equals(possibleDependency)) {
                 return dependencyResponse(true, depCache, cacheKey);
             }
-            if (isDependencyRecur(dependency, possibleDependency, depCache, processedLabels)) {
+            if (isDependencyRecur(dependency, possibleDependency, depCache, processedLabels,
+                followExternalTransitives)) {
                 return true;
             }
         }

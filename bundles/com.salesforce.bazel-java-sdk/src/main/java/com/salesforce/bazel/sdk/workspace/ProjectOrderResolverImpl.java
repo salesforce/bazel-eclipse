@@ -58,7 +58,8 @@ public class ProjectOrderResolverImpl implements ProjectOrderResolver {
         List<BazelPackageLocation> orderedModules = null;
         try {
             BazelDependencyGraph workspaceDepGraph = AspectDependencyGraphBuilder.build(aspects, false);
-            orderedModules = workspaceDepGraph.orderLabels(selectedPackages);
+            boolean followExternalTransitives = false;
+            orderedModules = workspaceDepGraph.orderLabels(selectedPackages, followExternalTransitives);
 
             StringBuffer sb = new StringBuffer();
             sb.append("ImportOrderResolver order of modules: ");

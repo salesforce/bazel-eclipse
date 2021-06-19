@@ -43,6 +43,11 @@ public class AspectDependencyGraphBuilder {
     }
 
     private static String stripTargetFromLabel(String label) {
+        if (label.startsWith("@")) {
+            // this is an external workspace ref, we do not change these since they are correct as-is
+            // ex:  @maven//:junit_junit
+            return label;
+        }
         int colonIndex = label.lastIndexOf(":");
         if (colonIndex > 0) {
             label = label.substring(0, colonIndex);

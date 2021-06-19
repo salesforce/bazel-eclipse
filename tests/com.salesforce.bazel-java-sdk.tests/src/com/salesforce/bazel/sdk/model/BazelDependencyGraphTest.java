@@ -121,4 +121,50 @@ public class BazelDependencyGraphTest {
         assertEquals("mid1", orderedLabels.get(1).getBazelPackageName());
         assertEquals("rootA", orderedLabels.get(2).getBazelPackageName());
     }
+
+    @Test
+    public void testExternalDeps() {
+        BazelDependencyGraph graph = new BazelDependencyGraph();
+
+        graph.addDependency("rootA", "midA1");
+        graph.addDependency("rootA", "midA2");
+        graph.addDependency("midA1", "leafA1");
+        graph.addDependency("midA1", "leafA1b");
+        graph.addDependency("midA2", "leafA2");
+
+        // our local dep depends on an external dep
+        graph.addDependency("leafA2", "@maven//:com_springframework_spring");
+        // and the external dep depends on another external dep
+        graph.addDependency("@maven//:com_springframework_spring", "@maven//:com_foo_bar");
+
+        Set<String> roots = graph.getRootLabels();
+        assertEquals(1, roots.size());
+        assertTrue(roots.contains("rootA"));
+
+        // test leaf identification
+        Set<String> leaves = graph.getLeafLabels();
+        assertEquals(3, leaves.size());
+        assertTrue(leaves.contains("leafA1"));
+        assertTrue(leaves.contains("leafA1b"));
+        assertTrue(leaves.contains("@maven//:com_foo_bar"));
+
+        // test leaf identification (ignoring external deps)
+        // this variant is for cases in which you want to know the leaf nodes, but only for internal workspace deps
+        boolean ignoreExternals = true;
+        leaves = graph.getLeafLabels(ignoreExternals);
+        assertEquals(3, leaves.size());
+        assertTrue(leaves.contains("leafA1"));
+        assertTrue(leaves.contains("leafA1b"));
+        assertTrue(leaves.contains("leafA2"));
+
+        // test ordering alg
+        Set<BazelPackageLocation> selectedLabels = new LinkedHashSet<>();
+        selectedLabels.add(new InMemoryBazelPackageLocation("midA2"));
+        selectedLabels.add(new InMemoryBazelPackageLocation("rootA"));
+        selectedLabels.add(new InMemoryBazelPackageLocation("leafA2"));
+        List<BazelPackageLocation> orderedLabels = graph.orderLabels(selectedLabels);
+        assertEquals("leafA2", orderedLabels.get(0).getBazelPackageName());
+        assertEquals("midA2", orderedLabels.get(1).getBazelPackageName());
+        assertEquals("rootA", orderedLabels.get(2).getBazelPackageName());
+    }
 }
