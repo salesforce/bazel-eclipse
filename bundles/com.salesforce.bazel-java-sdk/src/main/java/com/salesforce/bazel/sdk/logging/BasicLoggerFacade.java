@@ -48,7 +48,7 @@ public class BasicLoggerFacade extends LoggerFacade {
     @Override
     public void error(Class<?> from, String message, Object... args) {
         // LoggerFactory.getLogger(from).error(message, args);
-        System.err.println(formatMsg(from, message, args));
+        System.err.println("ERROR " + formatMsg(from, message, args));
     }
 
     /**
@@ -56,7 +56,8 @@ public class BasicLoggerFacade extends LoggerFacade {
      */
     @Override
     public void error(Class<?> from, String message, Throwable exception, Object... args) {
-        System.err.println(formatMsg(from, message, args));
+        exception.printStackTrace();
+        System.err.println("ERROR " + formatMsg(from, message, args));
     }
 
     /**
@@ -65,7 +66,7 @@ public class BasicLoggerFacade extends LoggerFacade {
     @Override
     public void warn(Class<?> from, String message, Object... args) {
         if (level <= WARN) {
-            System.out.println(formatMsg(from, message, args));
+            System.err.println("WARN " + formatMsg(from, message, args));
         }
     }
 
