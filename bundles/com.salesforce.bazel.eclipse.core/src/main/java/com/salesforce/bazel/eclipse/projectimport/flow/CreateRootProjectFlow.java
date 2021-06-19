@@ -25,13 +25,14 @@ package com.salesforce.bazel.eclipse.projectimport.flow;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
@@ -94,9 +95,17 @@ public class CreateRootProjectFlow implements ImportFlow {
                 new ProjectView(bazelWorkspaceRootDirectory, importedBazelPackages, Collections.emptyList());
         IFile f = BazelPluginActivator.getResourceHelper().getProjectFile(project,
             ProjectViewConstants.PROJECT_VIEW_FILE_NAME);
-        try {
-            f.create(new ByteArrayInputStream(projectView.getContent().getBytes()), false, null);
-        } catch (CoreException e) {
+        String projectViewContent = projectView.getContent();
+        IProgressMonitor monitor = null;
+        boolean forceWrite = true;
+        try (InputStream bis = new ByteArrayInputStream(projectViewContent.getBytes())) {
+            if (f.exists()) {
+                boolean keepHistory = true;
+                f.setContents(bis, forceWrite, keepHistory, monitor);
+            } else {
+                f.create(bis, forceWrite, monitor);
+            }
+        } catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }

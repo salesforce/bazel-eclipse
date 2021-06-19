@@ -56,7 +56,7 @@ class EclipseFileLinker {
         if (f.exists()) {
             IFile projectFile = resourceHelper.getProjectFile(eclipseProject, fileName);
             try {
-                resourceHelper.createFileLink(projectFile, Path.fromOSString(f.getCanonicalPath()), IResource.NONE,
+                resourceHelper.createFileLink(projectFile, Path.fromOSString(f.getCanonicalPath()), IResource.REPLACE,
                     null);
             } catch (Exception anyE) {
                 // TODO throwing this exception just writes a log message, we need a modal error popup for this error
