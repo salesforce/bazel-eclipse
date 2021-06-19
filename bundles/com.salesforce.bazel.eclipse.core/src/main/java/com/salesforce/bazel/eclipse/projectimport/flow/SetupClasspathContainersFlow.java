@@ -101,7 +101,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
             IFolder projectSourceFolder =
                     createFoldersForRelativePackagePath(eclipseProject.getProject(), bazelPackageFSPath, path);
             try {
-                resourceHelper.createFolderLink(projectSourceFolder, realSourceDir, IResource.NONE, null);
+                resourceHelper.createFolderLink(projectSourceFolder, realSourceDir, IResource.REPLACE, null);
             } catch (Exception anyE) {
                 // this can happen in degenerate cases such as source directory is the root of the project
                 LOG.error("error creating classpath", anyE);
