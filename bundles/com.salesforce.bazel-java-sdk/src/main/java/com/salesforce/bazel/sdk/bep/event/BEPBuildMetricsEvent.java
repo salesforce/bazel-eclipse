@@ -1,6 +1,7 @@
 package com.salesforce.bazel.sdk.bep.event;
 
 import org.json.simple.JSONObject;
+import java.util.List;
 
 /**
  * Model for the Build Metrics BEP event.
@@ -14,6 +15,7 @@ public class BEPBuildMetricsEvent extends BEPEvent {
     private int cpuTimeInMs = 0;
     private int wallTimeInMs = 0;
     private int analysisPhaseTimeInMs = 0;
+    private List<String> actionData;
 
     public BEPBuildMetricsEvent(String rawEvent, int index, JSONObject eventObj) {
         super(NAME, rawEvent, index, eventObj);
@@ -51,6 +53,8 @@ public class BEPBuildMetricsEvent extends BEPEvent {
         return analysisPhaseTimeInMs;
     }
 
+    public List<String> getActionData() { return actionData; }
+
     // PARSER
 
     // Notice the numbers are encoded as strings not numbers
@@ -62,7 +66,21 @@ public class BEPBuildMetricsEvent extends BEPEvent {
           "cpuTimeInMs": "647",
           "wallTimeInMs": "3459",
           "analysisPhaseTimeInMs": "23",
-        }
+        },
+        "actionData": [
+                {
+                    "mnemonic": "Javac",
+                    "actionsExecuted": "1",
+                    "firstStartedMs": "1624377065005",
+                    "lastEndedMs": "1624377066819"
+                },
+                {
+                    "mnemonic": "SymlinkTree",
+                    "actionsExecuted": "1",
+                    "firstStartedMs": "1624377059722",
+                    "lastEndedMs": "1624377060231"
+                }
+         ]
        }
      */
 
@@ -71,6 +89,7 @@ public class BEPBuildMetricsEvent extends BEPEvent {
         if (actionSummaryObj != null) {
             actionsCreated = this.decodeIntFromJsonObject(actionSummaryObj.get("actionsCreated"));
             actionsExecuted = this.decodeIntFromJsonObject(actionSummaryObj.get("actionsExecuted"));
+            actionData = this.decodeStringArrayFromJsonObject(actionSummaryObj.get("actionData"));
         }
         JSONObject memoryObj = (JSONObject) metricsDetail.get("memoryMetrics");
         if (memoryObj != null) {
@@ -94,7 +113,7 @@ public class BEPBuildMetricsEvent extends BEPEvent {
     public String toString() {
         return "BEPBuildMetricsEvent [actionsCreated=" + actionsCreated + ", actionsExecuted=" + actionsExecuted
                 + ", usedHeapSizePostBuild=" + usedHeapSizePostBuild + ", cpuTimeInMs=" + cpuTimeInMs
-                + ", wallTimeInMs=" + wallTimeInMs + ", analysisPhaseTimeInMs=" + analysisPhaseTimeInMs + ", index="
+                + ", wallTimeInMs=" + wallTimeInMs + ", analysisPhaseTimeInMs=" + analysisPhaseTimeInMs + ", actionData=" + actionData + ", index="
                 + index + ", eventType=" + eventType + ", isProcessed=" + isProcessed + ", isLastMessage="
                 + isLastMessage + ", isError=" + isError + "]";
     }
