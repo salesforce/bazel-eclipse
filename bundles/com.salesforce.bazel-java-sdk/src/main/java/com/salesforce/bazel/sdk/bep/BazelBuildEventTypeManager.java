@@ -12,6 +12,7 @@ import com.salesforce.bazel.sdk.bep.event.BEPBuildFinishedEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPBuildMetricsEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPConfigurationEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPEvent;
+import com.salesforce.bazel.sdk.bep.event.BEPNamedSetEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPOptionsParsedEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPPatternEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPProgressEvent;
@@ -50,6 +51,7 @@ public class BazelBuildEventTypeManager {
         eventTypes.add(BEPOptionsParsedEvent.NAME);
         eventTypes.add(BEPPatternEvent.NAME);
         eventTypes.add(BEPProgressEvent.NAME);
+        eventTypes.add(BEPNamedSetEvent.NAME);
         eventTypes.add(BEPStartedEvent.NAME);
         eventTypes.add(BEPTargetCompletedEvent.NAME);
         eventTypes.add(BEPTargetConfiguredEvent.NAME);
