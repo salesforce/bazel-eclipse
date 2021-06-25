@@ -8,7 +8,7 @@
 
 # SOURCE
 if [ -z "${SDK_DIR+xxx}" ]; then
-  echo "Please set the location of Bazel Eclipse on your filesystem using the SDK_DIR env variable."
+  echo "Please set the location of Bazel Java SDK on your filesystem using the SDK_DIR env variable."
   echo " This is the absolute path of the directory that contains the WORKSPACE file of bazel-java-sdk"
   exit 1
 fi

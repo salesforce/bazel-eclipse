@@ -105,10 +105,12 @@ public class BEPTestSummaryEvent extends BEPEvent {
 
     void parseDetails(JSONObject testDetail) {
         JSONArray testLogArray = (JSONArray) testDetail.get("passed");
-        for (Object testLog : testLogArray) {
-            BEPFileUri fileUri = this.decodeURIFromJsonObject(testLog);
-            if (fileUri != null) {
-                testLogs.add(fileUri);
+        if (testLogArray != null) {
+            for (Object testLog : testLogArray) {
+                BEPFileUri fileUri = this.decodeURIFromJsonObject(testLog);
+                if (fileUri != null) {
+                    testLogs.add(fileUri);
+                }
             }
         }
         firstStartTimeMillis = this.decodeLongFromJsonObject(testDetail.get("firstStartTimeMillis"));
