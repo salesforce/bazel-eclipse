@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 
 public class BazelOutputDirectoryBuilderTest {
 

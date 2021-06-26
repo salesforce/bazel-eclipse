@@ -40,6 +40,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
+
 /**
  * Model class for a Bazel Java package. It is a node in a tree of the hierarchy of packages. The root node in this tree
  * is the directory which contains the WORKSPACE file, and is a special case in that it does not typically represent
@@ -315,19 +317,19 @@ public class BazelPackageInfo implements BazelPackageLocation {
         }
 
         // split the file system path by OS path separator
-        String regex = "/";
-        if (File.separator.equals("\\")) {
-            regex = "\\\\";
+        String regex = BazelPathHelper.UNIX_SLASH;
+        if (File.separator.equals(BazelPathHelper.WINDOWS_BACKSLASH)) {
+            regex = BazelPathHelper.WINDOWS_BACKSLASH_REGEX;
         }
         String[] pathElements = relativeWorkspacePath.split(regex);
 
         // assemble the path elements into a proper Bazel package name
-        String name = "/"; // $SLASH_OK: bazel path
+        String name = BazelPathHelper.BAZEL_SLASH;
         for (String e : pathElements) {
             if (e.isEmpty()) {
                 continue;
             }
-            name = name + "/" + e; // $SLASH_OK: bazel path
+            name = name + BazelPathHelper.BAZEL_SLASH + e;
         }
 
         // set computedPackageName only when done computing it, to avoid threading issues
@@ -348,7 +350,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
         if (computedPackageNameLastSegment != null) {
             return computedPackageNameLastSegment;
         }
-        int lastSlash = computedPackageName.lastIndexOf("/"); // $SLASH_OK: bazel path
+        int lastSlash = computedPackageName.lastIndexOf(BazelPathHelper.BAZEL_SLASH);
         if (lastSlash == -1) {
             computedPackageNameLastSegment = "";
             return computedPackageNameLastSegment;

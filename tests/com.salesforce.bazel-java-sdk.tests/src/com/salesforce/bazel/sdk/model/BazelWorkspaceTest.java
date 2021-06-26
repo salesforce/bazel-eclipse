@@ -9,7 +9,7 @@ import org.junit.Test;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.model.test.MockBazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.model.test.MockOperatingEnvironmentDetectionStrategy;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 
 public class BazelWorkspaceTest {
 

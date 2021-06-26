@@ -43,6 +43,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
+
 public class BazelLabelTest {
 
     @Test
@@ -209,7 +211,7 @@ public class BazelLabelTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidLabel_trailingSlash() {
-        new BazelLabel("/"); // $SLASH_OK bazel path
+        new BazelLabel(BazelPathHelper.BAZEL_SLASH);
     }
 
     @Test(expected = IllegalArgumentException.class)

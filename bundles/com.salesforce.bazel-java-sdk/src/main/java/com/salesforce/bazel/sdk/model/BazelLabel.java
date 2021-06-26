@@ -33,6 +33,8 @@
  */
 package com.salesforce.bazel.sdk.model;
 
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
+
 /**
  * Answers to everything you've always wanted to ask a Bazel Label.
  * </p>
@@ -63,7 +65,7 @@ public class BazelLabel {
         if (label == null) {
             throw new IllegalArgumentException("label cannot be null");
         }
-        if (label.contains("\\")) {
+        if (label.contains(BazelPathHelper.WINDOWS_BACKSLASH)) {
             // the caller is passing us a label with \ as separators, probably a bug due to Windows paths
             throw new IllegalArgumentException(
                     "Label [" + label + "] has Windows style path delimeters. Bazel paths always have / delimiters");
@@ -144,7 +146,7 @@ public class BazelLabel {
         int i = packagePath.lastIndexOf("...");
         if (i != -1) {
             packagePath = packagePath.substring(0, i);
-            if (packagePath.endsWith("/")) { // $SLASH_OK: bazel path
+            if (packagePath.endsWith(BazelPathHelper.BAZEL_SLASH)) {
                 packagePath = packagePath.substring(0, packagePath.length() - 1);
             }
         } else {
@@ -179,7 +181,7 @@ public class BazelLabel {
      */
     public String getPackageName() {
         String packagePath = getPackagePath();
-        int i = packagePath.lastIndexOf("/"); // $SLASH_OK: bazel path
+        int i = packagePath.lastIndexOf(BazelPathHelper.BAZEL_SLASH);
         return i == -1 ? packagePath : packagePath.substring(i + 1);
     }
 
@@ -215,7 +217,7 @@ public class BazelLabel {
         if (targetName == null) {
             return null;
         }
-        int i = targetName.lastIndexOf("/"); // $SLASH_OK: bazel path
+        int i = targetName.lastIndexOf(BazelPathHelper.BAZEL_SLASH);
         if (i != -1) {
             return targetName.substring(i + 1); // ok because target name cannot end with slash
         }
@@ -270,7 +272,7 @@ public class BazelLabel {
             throw new IllegalAccessError(path);
         }
         path = path.trim();
-        if (path.endsWith("/")) { // $SLASH_OK: bazel path
+        if (path.endsWith(BazelPathHelper.BAZEL_SLASH)) {
             path = path.substring(0, path.length() - 1);
         }
         return path;
@@ -298,7 +300,7 @@ public class BazelLabel {
         if (label.endsWith(":")) {
             throw new IllegalArgumentException(label);
         }
-        if (label.endsWith("/")) { // $SLASH_OK: bazel path
+        if (label.endsWith(BazelPathHelper.BAZEL_SLASH)) {
             throw new IllegalArgumentException(label);
         }
         if (label.equals("//")) {
@@ -307,7 +309,7 @@ public class BazelLabel {
         if (label.startsWith("//")) {
             label = label.substring(2);
         }
-        if (label.startsWith("/")) { // $SLASH_OK: bazel path
+        if (label.startsWith(BazelPathHelper.BAZEL_SLASH)) {
             label = label.substring(1);
         }
         return label;

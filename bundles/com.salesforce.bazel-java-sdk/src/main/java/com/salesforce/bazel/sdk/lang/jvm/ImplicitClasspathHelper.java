@@ -9,7 +9,7 @@ import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 
 /**
  * Bazel generally requires BUILD file authors to list all dependencies explicitly. However, there are a few legacy
@@ -26,6 +26,9 @@ import com.salesforce.bazel.sdk.util.BazelPathHelper;
  * isolated.
  */
 public class ImplicitClasspathHelper {
+
+    // observed location where the TestRunner is written; this is an internal Bazel detail that may change
+    private static final String IMPLICIT_RUNNER = "external/bazel_tools/tools/jdk/_ijar/TestRunner"; // $SLASH_OK
 
     public Set<JvmClasspathEntry> computeImplicitDependencies(BazelWorkspace bazelWorkspace,
             AspectTargetInfo targetInfo) {
@@ -61,14 +64,8 @@ public class ImplicitClasspathHelper {
     }
 
     String computeFilePathForRunnerJar(BazelWorkspace bazelWorkspace, AspectTargetInfo targetInfo) {
-        // The IJ plugin gets this path somehow from query/aspect but we are going to wedge it in via path here since we need to
-        // overhaul our query/aspect in the near future TODO stop using file system hacking for implicit deps
-        // Because of the way we are doing this, there is no aspect json file written on disk that we can consume.
-        // Just write the path to the file directly.
-
         File bazelBinDir = bazelWorkspace.getBazelBinDirectory();
-        File testRunnerDir =
-                new File(bazelBinDir, BazelPathHelper.osSeps("external/bazel_tools/tools/jdk/_ijar/TestRunner")); // $SLASH_OK
+        File testRunnerDir = new File(bazelBinDir, BazelPathHelper.osSeps(IMPLICIT_RUNNER));
 
         LogHelper logger = LogHelper.log(this.getClass());
         if (!testRunnerDir.exists()) {
@@ -76,8 +73,8 @@ public class ImplicitClasspathHelper {
                     + BazelPathHelper.getCanonicalPathStringSafely(testRunnerDir) + "] does not exist.");
             return null;
         }
-        String javaToolsPath = BazelPathHelper
-                .osSeps("external/remote_java_tools_" + bazelWorkspace.getOperatingSystemFoldername() + "/java_tools"); // $SLASH_OK
+        String javaToolsPath = BazelPathHelper.osSeps("external/remote_java_tools_"
+                + bazelWorkspace.getOperatingSystemFoldername() + BazelPathHelper.UNIX_SLASH + "java_tools"); // $SLASH_OK
         File javaToolsDir = new File(testRunnerDir, javaToolsPath);
         if (!javaToolsDir.exists()) {
             logger.error("Could not add implicit test deps to target [" + targetInfo.getLabel() + "], directory ["

@@ -34,22 +34,13 @@ public class BEPNamedSetEvent extends BEPEvent {
     // PARSER
 
     /**
-     * "namedSetOfFiles":{
-     *  "files":[
-     *    {
-     *       "name":"foo/bar/mylib2.jar",
-     *       "uri":"file:///private/var/tmp/_bazel_mbenioff/8fc74f66fda297c82a847368ee50d6a4/execroot/myrepo/bazel-out/darwin-fastbuild/bin/foo/bar/mylib.jar",
-     *       "pathPrefix":[ "bazel-out", "darwin-fastbuild", "bin" ]
-     *    },
-     *    {
-     *      "name":"foo/bar/mylib2.jar",
-     *      "uri":"file:///private/var/tmp/_bazel_mbenioff/8fc74f66fda297c82a847368ee50d6a4/execroot/myrepo/bazel-out/darwin-fastbuild/bin/foo/bar/mylib2.jar",
-     *      "pathPrefix":[ "bazel-out", "darwin-fastbuild", "bin" ]
-     *    }
-     * ]
-     * }
+     * "namedSetOfFiles":{ "files":[ { "name":"foo/bar/mylib2.jar",
+     * "uri":"file:///private/var/tmp/_bazel_mbenioff/8fc74f66fda297c82a847368ee50d6a4/execroot/myrepo/bazel-out/darwin-fastbuild/bin/foo/bar/mylib.jar",
+     * "pathPrefix":[ "bazel-out", "darwin-fastbuild", "bin" ] }, { "name":"foo/bar/mylib2.jar",
+     * "uri":"file:///private/var/tmp/_bazel_mbenioff/8fc74f66fda297c82a847368ee50d6a4/execroot/myrepo/bazel-out/darwin-fastbuild/bin/foo/bar/mylib2.jar",
+     * "pathPrefix":[ "bazel-out", "darwin-fastbuild", "bin" ] } ] }
      */
-    
+
     private void parseDetails(JSONObject setDetail) {
         JSONArray filesArray = (JSONArray) setDetail.get("files");
         if (filesArray != null && filesArray.size() > 0) {
@@ -66,8 +57,7 @@ public class BEPNamedSetEvent extends BEPEvent {
 
     @Override
     public String toString() {
-        return "BEPNamedSetOfFilesEvent [files=" + files + ", index=" + index + ", eventType="
-                + eventType + ", isProcessed=" + isProcessed + ", isLastMessage=" + isLastMessage + ", isError="
-                + isError + "]";
+        return "BEPNamedSetOfFilesEvent [files=" + files + ", index=" + index + ", eventType=" + eventType
+                + ", isProcessed=" + isProcessed + ", isLastMessage=" + isLastMessage + ", isError=" + isError + "]";
     }
 }

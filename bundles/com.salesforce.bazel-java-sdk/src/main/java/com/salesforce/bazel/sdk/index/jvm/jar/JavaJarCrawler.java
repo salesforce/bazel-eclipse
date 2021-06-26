@@ -33,6 +33,7 @@ import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndex;
 import com.salesforce.bazel.sdk.index.model.ClassIdentifier;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 
 /**
  * Crawler that descends into nested directories of jar files and adds found files to the index.
@@ -144,7 +145,7 @@ public class JavaJarCrawler {
                 continue;
             }
             // convert path / into . to form the legal package name, and trim the .class off the end
-            fqClassname = fqClassname.replace("/", ".");
+            fqClassname = fqClassname.replace(BazelPathHelper.JAR_SLASH, ".");
             fqClassname = fqClassname.substring(0, fqClassname.length() - 6);
             LOG.debug("Indexer found classname: {} in jar {}", fqClassname, jarId.locationIdentifier);
 
