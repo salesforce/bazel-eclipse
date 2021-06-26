@@ -26,7 +26,7 @@ public class InMemoryBazelPackageLocation implements BazelPackageLocation {
             this.path = path;
         }
         this.lastSegment = "";
-        int lastSlash = path.indexOf("/");
+        int lastSlash = path.indexOf(File.separator);
         if (lastSlash > 0) {
             this.lastSegment = path.substring(lastSlash + 1);
         }

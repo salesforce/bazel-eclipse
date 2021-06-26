@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.Set;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**

@@ -5,7 +5,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.List;
 
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 
 /**
  * Writes json files to the Bazel output file system that mimic what is written by the Bazel aspects. Each json file
@@ -51,7 +51,7 @@ public class TestAspectFileCreator {
      * @return the absolute File path to the file
      */
     static String createJavaAspectFileForMavenJar(File outputBase, String mavenJarName, String actualJarNameNoSuffix) {
-        String externalName = "external" + "/" + mavenJarName; // $SLASH_OK
+        String externalName = "external" + BazelPathHelper.UNIX_SLASH + mavenJarName;
         String dependencies = null;
         List<String> sources = null;
         String mainClass = null;
@@ -218,7 +218,7 @@ public class TestAspectFileCreator {
         if (sources != null) {
             for (String source : sources) {
                 sb.append("    \""); // $SLASH_OK: escape char
-                source = source.replace("\\", "\\\\"); // hack because Windows paths need to be json escaped
+                source = source.replace(BazelPathHelper.WINDOWS_BACKSLASH, BazelPathHelper.WINDOWS_BACKSLASH_REGEX); // hack because Windows paths need to be json escaped
                 sb.append(source);
                 sb.append("\",\n"); // $SLASH_OK: line continue
             }

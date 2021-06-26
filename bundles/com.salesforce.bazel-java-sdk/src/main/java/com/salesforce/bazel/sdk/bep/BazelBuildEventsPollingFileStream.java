@@ -7,8 +7,8 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Bazel build event protocol stream (BEP) for a Bazel workspace. A BEP stream allows you to monitor and react to build
- * events emitted from Bazel. This implementation spawns a thread and actively polls one or more BEP files for new events.
- * It is intelligent and will only reparse a file if the file modification time has changed.
+ * events emitted from Bazel. This implementation spawns a thread and actively polls one or more BEP files for new
+ * events. It is intelligent and will only reparse a file if the file modification time has changed.
  * <p>
  * Because this stream integrates with your builds with Bazel using BEP, this stream will work with command line builds
  * but also with IDE builds.
@@ -46,7 +46,7 @@ public class BazelBuildEventsPollingFileStream extends BazelBuildEventsFileStrea
      */
     public void addFileToMonitor(File bepFile, boolean parseOnStart) {
         BEPMonitoredFile monitoredFile = addFileToMonitor_Internal(bepFile);
-        
+
         // if caller does not want the initial state parsed, capture the current last mod
         if (!parseOnStart && monitoredFile.file.exists()) {
             monitoredFile.fileLastModifiedMS = monitoredFile.file.lastModified();
@@ -101,7 +101,8 @@ public class BazelBuildEventsPollingFileStream extends BazelBuildEventsFileStrea
                     long currentLastMod = monitoredFile.file.lastModified();
                     if (currentLastMod == monitoredFile.fileLastModifiedMS) {
                         // the file hasn't changed since we last parsed it, bail
-                        LOG.info("FilePoller will not parse [{}] because it hasn't changed.", monitoredFile.file.getName());
+                        LOG.info("FilePoller will not parse [{}] because it hasn't changed.",
+                            monitoredFile.file.getName());
                         continue;
                     }
                     monitoredFile.fileLastModifiedMS = currentLastMod;
