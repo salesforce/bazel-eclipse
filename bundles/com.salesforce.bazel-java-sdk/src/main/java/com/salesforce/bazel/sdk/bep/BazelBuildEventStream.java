@@ -14,10 +14,10 @@ import com.salesforce.bazel.sdk.bep.event.BEPEvent;
 public abstract class BazelBuildEventStream {
 
     List<BazelBuildEventSubscriber> subscribeAll = new ArrayList<>();
-    
+
     Map<String, List<BazelBuildEventSubscriber>> subscribeFiltered = new HashMap<>();
     List<BazelBuildEventSubscriber> subscribeLastMessage = new ArrayList<>();
-    
+
     boolean paused = false;
 
     // PUBLIC API
@@ -37,8 +37,9 @@ public abstract class BazelBuildEventStream {
      * @param eventTypes
      *            the list of event types that you wish to notified for this subscriber, null to subscribe to all event
      *            types
-     * @param matchLastMessage  if the last message in a build is not in the eventTypes, should the event still be published
-     *            to this subscriber? 
+     * @param matchLastMessage
+     *            if the last message in a build is not in the eventTypes, should the event still be published to this
+     *            subscriber?
      */
     public void subscribe(BazelBuildEventSubscriber subscriber, Set<String> eventTypes, boolean matchLastMessage) {
         if (eventTypes == null) {
@@ -52,7 +53,7 @@ public abstract class BazelBuildEventStream {
                 }
                 subscribers.add(subscriber);
             }
-            
+
             if (matchLastMessage) {
                 subscribeLastMessage.add(subscriber);
             }
@@ -90,7 +91,7 @@ public abstract class BazelBuildEventStream {
         }
 
         String eventType = event.getEventType();
-        
+
         if (event.isLastMessage()) {
             for (BazelBuildEventSubscriber subscriber : subscribeLastMessage) {
                 subscriber.onEvent(event);
@@ -116,7 +117,7 @@ public abstract class BazelBuildEventStream {
         }
 
         List<BazelBuildEventSubscriber> notified = new ArrayList<>();
-        
+
         for (BazelBuildEventSubscriber subscriber : subscribeAll) {
             subscriber.onEvent(event);
             notified.add(subscriber);
@@ -131,5 +132,5 @@ public abstract class BazelBuildEventStream {
             }
         }
     }
-    
+
 }

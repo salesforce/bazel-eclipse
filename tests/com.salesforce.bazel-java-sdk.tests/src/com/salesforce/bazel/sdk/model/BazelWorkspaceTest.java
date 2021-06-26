@@ -21,8 +21,8 @@ public class BazelWorkspaceTest {
         // mostly just looking for NPE/runtime exceptions
         String wsDir = ws.getBazelWorkspaceRootDirectory().getAbsolutePath();
         assertTrue(wsDir.contains("bazel-java-sdk-" + wsName + "-workspace"));
-        assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath()
-                .contains("bazel-java-sdk-" + wsName + "-outputdir"));
+        assertTrue(
+            ws.getBazelOutputBaseDirectory().getAbsolutePath().contains("bazel-java-sdk-" + wsName + "-outputdir"));
         assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot" + File.separatorChar + wsName));
         String binDir = BazelPathHelper.osSeps(ws.getBazelBinDirectory().getAbsolutePath()); // $SLASH_OK
         String binDirExpect = BazelPathHelper.osSeps("execroot/" + wsName + "/bazel-out/darwin-fastbuild/bin"); // $SLASH_OK
@@ -37,8 +37,8 @@ public class BazelWorkspaceTest {
         // mostly just looking for NPE/runtime exceptions
         String wsDir = ws.getBazelWorkspaceRootDirectory().getAbsolutePath();
         assertTrue(wsDir.contains("bazel-java-sdk-" + wsName + "-workspace"));
-        assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath()
-                .contains("bazel-java-sdk-" + wsName + "-outputdir"));
+        assertTrue(
+            ws.getBazelOutputBaseDirectory().getAbsolutePath().contains("bazel-java-sdk-" + wsName + "-outputdir"));
         assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot" + File.separatorChar + wsName));
         String binDir = BazelPathHelper.osSeps(ws.getBazelBinDirectory().getAbsolutePath()); // $SLASH_OK
         String binDirExpect = BazelPathHelper.osSeps("execroot/" + wsName + "/bazel-out/linux-fastbuild/bin"); // $SLASH_OK
@@ -53,8 +53,8 @@ public class BazelWorkspaceTest {
         // mostly just looking for NPE/runtime exceptions
         String wsDir = ws.getBazelWorkspaceRootDirectory().getAbsolutePath();
         assertTrue(wsDir.contains("bazel-java-sdk-" + wsName + "-workspace"));
-        assertTrue(ws.getBazelOutputBaseDirectory().getAbsolutePath()
-                .contains("bazel-java-sdk-" + wsName + "-outputdir"));
+        assertTrue(
+            ws.getBazelOutputBaseDirectory().getAbsolutePath().contains("bazel-java-sdk-" + wsName + "-outputdir"));
         assertTrue(ws.getBazelExecRootDirectory().getAbsolutePath().contains("execroot" + File.separator + wsName));
         String binDir = BazelPathHelper.osSeps(ws.getBazelBinDirectory().getAbsolutePath()); // $SLASH_OK
         String binDirExpect = BazelPathHelper.osSeps("execroot/" + wsName + "/bazel-out/windows-fastbuild/bin"); // $SLASH_OK

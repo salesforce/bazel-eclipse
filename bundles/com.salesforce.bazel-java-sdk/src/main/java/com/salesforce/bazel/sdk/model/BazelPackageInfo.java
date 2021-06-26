@@ -426,7 +426,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
         gatherChildrenRecur(gatherList, pathFilter);
         return gatherList;
     }
-    
+
     public void gatherChildrenRecur(List<BazelPackageLocation> gatherList, String pathFilter) {
         if (!isWorkspaceRoot()) {
             if (pathFilter != null) {

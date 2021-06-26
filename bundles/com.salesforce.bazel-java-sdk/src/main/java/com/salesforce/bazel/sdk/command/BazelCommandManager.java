@@ -117,7 +117,7 @@ public class BazelCommandManager {
             }
 
             workspaceCommandRunner = new BazelWorkspaceCommandRunner(bazelExecutable, aspectLocation, commandBuilder,
-                consoleFactory, bazelWorkspaceRootDirectory);
+                    consoleFactory, bazelWorkspaceRootDirectory);
             workspaceCommandRunners.put(bazelWorkspaceRootDirectory, workspaceCommandRunner);
         }
         return workspaceCommandRunner;

@@ -40,8 +40,8 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * A Bazel rule <i>kind</i> (e.g. java_library) that is supported by the SDK runtime.
- * In Bazel, a <i>kind</i> is essentially a rule type.
+ * A Bazel rule <i>kind</i> (e.g. java_library) that is supported by the SDK runtime. In Bazel, a <i>kind</i> is
+ * essentially a rule type.
  * <p>
  * It is tempting to make this an Enum, but we want the set of supported kinds to be expandable.
  */
@@ -64,8 +64,8 @@ public class BazelTargetKind {
     }
 
     /**
-     * Returns the corresponding TargetKind value based on the specified String kind name, ignoring the 
-     * casing of the given value. Returns null if no matching TargetKind is found.
+     * Returns the corresponding TargetKind value based on the specified String kind name, ignoring the casing of the
+     * given value. Returns null if no matching TargetKind is found.
      *
      * @return matching TargetKind instance, null if no match
      */
@@ -130,8 +130,6 @@ public class BazelTargetKind {
     public boolean isTestable() {
         return isTestable;
     }
-
-
 
     @Override
     public int hashCode() {

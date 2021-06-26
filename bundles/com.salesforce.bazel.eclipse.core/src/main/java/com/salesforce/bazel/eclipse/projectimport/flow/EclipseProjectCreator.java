@@ -147,7 +147,7 @@ class EclipseProjectCreator {
             createdEclipseProject = newEclipseProject;
         }
         BazelPluginActivator.getBazelProjectManager()
-        .addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
+                .addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
         return createdEclipseProject;
     }
 }

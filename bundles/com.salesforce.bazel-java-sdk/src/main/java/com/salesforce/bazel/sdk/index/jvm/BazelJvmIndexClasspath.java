@@ -74,8 +74,8 @@ public class BazelJvmIndexClasspath {
     }
 
     /**
-     * Computes the JVM classpath for the associated Bazel workspace. The first invocation is expected to
-     * take a long time, but subsequent invocations will read from cache.
+     * Computes the JVM classpath for the associated Bazel workspace. The first invocation is expected to take a long
+     * time, but subsequent invocations will read from cache.
      */
     public BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
         if (cacheResponse != null) {

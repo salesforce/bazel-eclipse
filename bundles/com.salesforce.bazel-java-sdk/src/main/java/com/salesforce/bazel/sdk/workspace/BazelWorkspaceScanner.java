@@ -106,8 +106,8 @@ public class BazelWorkspaceScanner {
      * @param rootDirectory
      *            the directory to scan, which must be the root node of a Bazel workspace
      * @param excludes
-     *            paths to ignore during the scan, these are typically packages with problematic
-     *            builds (e.g. require enormous docker base image to be downloaded)
+     *            paths to ignore during the scan, these are typically packages with problematic builds (e.g. require
+     *            enormous docker base image to be downloaded)
      * @return the workspace root BazelPackageInfo
      */
     public BazelPackageInfo getPackages(File rootDirectoryFile, Set<String> excludes) throws IOException {

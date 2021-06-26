@@ -66,7 +66,7 @@ public class AspectTargetInfos {
             if (previousValue != null) {
                 if (!previousValue.toString().equals(aspectTargetInfo.toString())) {
                     throw new IllegalStateException(
-                        "Did not expect a duplicate label with different contents: " + previousValue.getLabel());
+                            "Did not expect a duplicate label with different contents: " + previousValue.getLabel());
                 }
             }
         }
@@ -147,7 +147,7 @@ public class AspectTargetInfos {
         for (String sourcePath : aspectTargetInfo.getSources()) {
             if (!Paths.get(sourcePath).startsWith(rootSourcePath)) {
                 throw new IllegalStateException("AspectTargetInfo " + aspectTargetInfo.getLabel()
-                + " has sources that are not under " + rootSourcePath + ": " + aspectTargetInfo.getSources());
+                        + " has sources that are not under " + rootSourcePath + ": " + aspectTargetInfo.getSources());
             }
         }
     }

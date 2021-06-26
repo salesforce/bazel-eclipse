@@ -71,7 +71,7 @@ public class BazelQueryHelper {
     @Deprecated
     public synchronized List<String> listBazelTargetsInBuildFiles(File bazelWorkspaceRootDirectory,
             WorkProgressMonitor progressMonitor, File... directories)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> argBuilder = new ArrayList<>();
         argBuilder.add("query");
         for (File f : directories) {
@@ -91,7 +91,7 @@ public class BazelQueryHelper {
      */
     public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory,
             Collection<BazelLabel> bazelLabels)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if (bazelLabels.isEmpty()) {
             return Collections.singletonList(new BazelBuildFile("//...")); // $SLASH_OK bazel path

@@ -35,13 +35,13 @@ public class JarIdentiferResolver {
     public JarIdentiferResolver() {}
 
     public JarIdentifier resolveJarIdentifier(File gavRoot, File pathFile, ZipFile zipFile) {
-    	if (gavRoot == null) {
-    		return null;
-    	}
-    	if (pathFile == null) {
-    		return null;
-    	}
-    	
+        if (gavRoot == null) {
+            return null;
+        }
+        if (pathFile == null) {
+            return null;
+        }
+
         String path = pathFile.getAbsolutePath();
 
         // do some quick Bazel exclusions (TODO how best to identify the interesting jars in the Bazel output dirs?)

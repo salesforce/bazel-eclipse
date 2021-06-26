@@ -141,17 +141,15 @@
                     </count>
                     <iterate>
                        <and>
-	                       <adapt type="org.eclipse.core.resources.IResource">
-					         <test
-					               property="org.eclipse.core.resources.path"
-					               value="*/src/main/java*">
-					         </test>
-					       </adapt>
-					       <or>
-					       <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
-					       <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
-					       </or>
-				       </and>
+                           <adapt type="org.eclipse.core.resources.IResource">
+                               <test property="org.eclipse.core.resources.path"  value="*/src/main/java*">
+                               </test>
+                           </adapt>
+                           <or>
+                               <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
+                               <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+                           </or>
+                        </and>
                     </iterate>
                 </with>
             </enablement>
@@ -176,13 +174,11 @@
 	                 <or>
 	                   <and>
 	                       <adapt type="org.eclipse.core.resources.IResource">
-					         <test
-					               property="org.eclipse.core.resources.path"
-					               value="*/src/test/java*">
-					         </test>
-					       </adapt>
-					       <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
-				       </and>
+                             <test property="org.eclipse.core.resources.path" value="*/src/test/java*">
+                             </test>
+                           </adapt>
+                           <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
+                       </and>
 	                   <and>
 	                       <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
 	                       <test property="com.salesforce.bazel.eclipse.isTestJavaElement"/>

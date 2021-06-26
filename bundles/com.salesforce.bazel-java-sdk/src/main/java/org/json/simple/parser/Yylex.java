@@ -127,7 +127,7 @@ class Yylex {
 
     /* error messages for the codes above */
     private static final String ZZ_ERROR_MSG[] =
-        { "Unkown internal scanner error", "Error: could not match input", "Error: pushback value was too large" };
+            { "Unkown internal scanner error", "Error: could not match input", "Error: pushback value was too large" };
 
     /**
      * ZZ_ATTRIBUTE[aState] contains the attributes of state <code>aState</code>

@@ -53,7 +53,9 @@ public class BEPBuildMetricsEvent extends BEPEvent {
         return analysisPhaseTimeInMs;
     }
 
-    public List<String> getActionData() { return actionData; }
+    public List<String> getActionData() {
+        return actionData;
+    }
 
     // PARSER
 
@@ -113,8 +115,8 @@ public class BEPBuildMetricsEvent extends BEPEvent {
     public String toString() {
         return "BEPBuildMetricsEvent [actionsCreated=" + actionsCreated + ", actionsExecuted=" + actionsExecuted
                 + ", usedHeapSizePostBuild=" + usedHeapSizePostBuild + ", cpuTimeInMs=" + cpuTimeInMs
-                + ", wallTimeInMs=" + wallTimeInMs + ", analysisPhaseTimeInMs=" + analysisPhaseTimeInMs + ", actionData=" + actionData + ", index="
-                + index + ", eventType=" + eventType + ", isProcessed=" + isProcessed + ", isLastMessage="
-                + isLastMessage + ", isError=" + isError + "]";
+                + ", wallTimeInMs=" + wallTimeInMs + ", analysisPhaseTimeInMs=" + analysisPhaseTimeInMs
+                + ", actionData=" + actionData + ", index=" + index + ", eventType=" + eventType + ", isProcessed="
+                + isProcessed + ", isLastMessage=" + isLastMessage + ", isError=" + isError + "]";
     }
 }

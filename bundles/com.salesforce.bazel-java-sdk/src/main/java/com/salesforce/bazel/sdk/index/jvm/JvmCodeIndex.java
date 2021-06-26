@@ -41,8 +41,8 @@ import com.salesforce.bazel.sdk.index.CodeIndex;
  * Lucene indexes of code. We found the performance of that indexing solution to be too slow for our needs.
  */
 public class JvmCodeIndex extends CodeIndex {
-	
-	// the superclass is sufficient to represent a JVM index. This subclass remains to just host the javadoc that
-	// explains the JVM specific details of this usage. 
-	
+
+    // the superclass is sufficient to represent a JVM index. This subclass remains to just host the javadoc that
+    // explains the JVM specific details of this usage. 
+
 }

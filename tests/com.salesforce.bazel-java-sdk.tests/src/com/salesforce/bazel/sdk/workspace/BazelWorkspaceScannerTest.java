@@ -45,7 +45,7 @@ public class BazelWorkspaceScannerTest {
     public void setup() {
         JvmRuleInit.initialize();
     }
-    
+
     @Test
     public void testHappyPath() throws Exception {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();

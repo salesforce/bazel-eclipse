@@ -16,23 +16,21 @@ import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfoFactoryProvider;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
- * Factory for AspectTargetInfo instances, using the JSON emitted from the aspect.
- * Each rule type will have a different JSON format, and therefore the factory 
- * is specific to a rule type (e.g. java_library).
+ * Factory for AspectTargetInfo instances, using the JSON emitted from the aspect. Each rule type will have a different
+ * JSON format, and therefore the factory is specific to a rule type (e.g. java_library).
  */
 public class AspectTargetInfoFactory {
-    
+
     private static final LogHelper LOG = LogHelper.log(AspectTargetInfoFactory.class);
     public static final String ASPECT_FILENAME_SUFFIX = ".bzljavasdk-data.json";
-    
+
     protected static List<AspectTargetInfoFactoryProvider> providers = new ArrayList<>();
     static {
         providers.add(new JVMAspectTargetInfoFactoryProvider());
     }
-    
+
     /**
-     * During initialization, add providers that can parse target specific json in the
-     * apsect files. 
+     * During initialization, add providers that can parse target specific json in the apsect files.
      */
     public static void addProvider(AspectTargetInfoFactoryProvider provider) {
         providers.add(provider);
@@ -103,9 +101,9 @@ public class AspectTargetInfoFactory {
             String kind = (String) jsonObject.get("kind");
             String label = (String) jsonObject.get("label");
 
-            for (AspectTargetInfoFactoryProvider provider: providers) {
-                info = provider.buildAspectTargetInfo(aspectDataFile, jsonObject, jsonParser, build_file_artifact_location, kind, label,
-                        deps, sources);
+            for (AspectTargetInfoFactoryProvider provider : providers) {
+                info = provider.buildAspectTargetInfo(aspectDataFile, jsonObject, jsonParser,
+                    build_file_artifact_location, kind, label, deps, sources);
                 if (info != null) {
                     break;
                 }
@@ -138,6 +136,5 @@ public class AspectTargetInfoFactory {
         }
         return list;
     }
-
 
 }

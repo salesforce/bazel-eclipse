@@ -52,7 +52,6 @@ public class BazelLauncherBuilderTest {
 
     private static final int DEBUG_PORT = 1234;
 
-
     @Test
     @Ignore // Windows
     public void testBuildRunCommand() throws Exception {

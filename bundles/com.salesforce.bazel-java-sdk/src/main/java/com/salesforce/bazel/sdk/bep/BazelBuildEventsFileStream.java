@@ -11,18 +11,16 @@ import com.salesforce.bazel.sdk.bep.file.BEPFileParser;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
-/**
- * Bazel build event protocol stream (BEP) for a Bazel workspace. This implementation reads a file,
- * publishes the events in the file to the subscriber(s), and ends the stream.
+ * /** Bazel build event protocol stream (BEP) for a Bazel workspace. This implementation reads a file, publishes the
+ * events in the file to the subscriber(s), and ends the stream.
  * <p>
  * Because this stream integrates with your builds with Bazel using BEP, this stream will work with command line builds
  * but also with IDE builds.
  * <p>
  * After creation, you must start the stream by calling activateStream().
  * <p>
- * <b>NOTE:</b> This feature requires you to provide BEP JSON file(s). These can be generated with a configuration 
- * change to your Bazel workspace: you must add the following lines
- * to your .bazelrc file to enable BEP:<br/>
+ * <b>NOTE:</b> This feature requires you to provide BEP JSON file(s). These can be generated with a configuration
+ * change to your Bazel workspace: you must add the following lines to your .bazelrc file to enable BEP:<br/>
  * build --build_event_json_file bep_build.json<br/>
  * test --build_event_json_file bep_test.json<br/>
  * <p>
@@ -40,9 +38,9 @@ public class BazelBuildEventsFileStream extends BazelBuildEventStream {
 
     /**
      * Bazel supports output of BEP events to one or more files. For each BEP file you have configured for your
-     * workspace, you can add it here. The file does not need to exist. This helps in cases when the build has 
-     * not yet run and the file has not been written yet. But this does mean that passing an incorrect File object 
-     * will cause your events to be missed when you activate your stream.
+     * workspace, you can add it here. The file does not need to exist. This helps in cases when the build has not yet
+     * run and the file has not been written yet. But this does mean that passing an incorrect File object will cause
+     * your events to be missed when you activate your stream.
      */
     public void addFileToMonitor(File bepFile) {
         addFileToMonitor_Internal(bepFile);
@@ -51,7 +49,7 @@ public class BazelBuildEventsFileStream extends BazelBuildEventStream {
     @Override
     public void activateStream() {
         super.activateStream();
-        
+
         for (BEPMonitoredFile bepFile : monitoredFiles) {
             processFile(bepFile);
         }
@@ -70,11 +68,10 @@ public class BazelBuildEventsFileStream extends BazelBuildEventStream {
         monitoredFile.bepFile = new BEPFileParser(bepFile);
 
         monitoredFiles.add(monitoredFile);
-        
+
         return monitoredFile;
     }
 
-    
     protected void processFile(BEPMonitoredFile monitoredFile) {
         if (!monitoredFile.file.exists()) {
             // the monitored file does not exist yet (user needs to run a build?)

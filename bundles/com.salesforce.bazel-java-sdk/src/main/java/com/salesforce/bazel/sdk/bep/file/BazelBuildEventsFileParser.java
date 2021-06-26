@@ -58,7 +58,7 @@ public class BazelBuildEventsFileParser {
             // if there are less than 100 bytes in the file, it means there isn't anything interesting to look at yet
             // so just cut off our processing early
             LOG.debug(callerForLog + ": Halting processing of BEP file " + bepFile.getAbsolutePath()
-            + " because it has a short length of [" + bepFile.length() + "] bytes.");
+                    + " because it has a short length of [" + bepFile.length() + "] bytes.");
             return result;
         }
 

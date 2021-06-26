@@ -61,7 +61,7 @@ public class BEPFileUri {
 
         if (!uriString.startsWith(("file://"))) {
             throw new IllegalArgumentException(
-                "Expected a file:// uri for property " + id + ", instead got " + uriString);
+                    "Expected a file:// uri for property " + id + ", instead got " + uriString);
         }
 
         try {

@@ -30,21 +30,21 @@ import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
- * An index of types. This is the output of an indexer that knows how to traverse the file system looking for types
- * for a specific language (e.g. Java). This is useful for tools that need to have a full list of available types. 
- * For example, a Bazel IDE will want to be able to list all types imported by the workspace.
+ * An index of types. This is the output of an indexer that knows how to traverse the file system looking for types for
+ * a specific language (e.g. Java). This is useful for tools that need to have a full list of available types. For
+ * example, a Bazel IDE will want to be able to list all types imported by the workspace.
  * <p>
  * There are two parts to the index: the artifactDictionary and the typeDictionary.
  * <p>
- * The artifactDictionary maps the artifactId to the one or more archives found that contains that
- * artifactId. If your directories contains multiple versions of the same artifactId, this will be a list of artifacts.
+ * The artifactDictionary maps the artifactId to the one or more archives found that contains that artifactId. If your
+ * directories contains multiple versions of the same artifactId, this will be a list of artifacts.
  * <p>
- * The typeDictionary maps each found type name (e.g. the fully qualified Java classname) to the discovered location in 
+ * The typeDictionary maps each found type name (e.g. the fully qualified Java classname) to the discovered location in
  * archive files or raw source files.
  */
 public class CodeIndex {
     private static final LogHelper LOG = LogHelper.log(CodeIndex.class);
-    
+
     // map artifact name to entry(s)
     public Map<String, CodeIndexEntry> artifactDictionary = new TreeMap<>();
     // map class name to entry(s)

@@ -210,8 +210,7 @@ class BazelLaunchConfigurationSupport {
     /**
      * Returns all AspectTargetInfo instances that represent targets of the specified type, for the specified project.
      */
-    Collection<AspectTargetInfo> getAspectTargetInfosForProject(IProject project,
-            Set<BazelTargetKind> targetTypes) {
+    Collection<AspectTargetInfo> getAspectTargetInfosForProject(IProject project, Set<BazelTargetKind> targetTypes) {
         BazelWorkspaceCommandRunner bazelRunner = BazelPluginActivator.getInstance().getWorkspaceCommandRunner();
         AspectTargetInfos apis = computeAspectTargetInfos(project, bazelRunner);
         return apis.lookupByTargetKind(targetTypes);

@@ -166,10 +166,9 @@ public class BEPTestResultEvent extends BEPEvent {
     @Override
     public String toString() {
         return "BEPTestResultEvent [testLabel=" + testLabel + ", testRun=" + testRun + ", testShard=" + testShard
-                + ", testAttempt=" + testAttempt  + ", testDurationMs="
-                + testDurationMs + ", testStatus=" + testStatus + ", testAttemptStartMillisEpoch="
-                + testAttemptStartMillisEpoch + ", testStrategy=" + testStrategy + ", index=" + index + ", eventType="
-                + eventType + ", isProcessed=" + isProcessed + ", isLastMessage=" + isLastMessage + ", isError="
-                + isError + ", actionOutputs=" + actionOutputs + "]";
+                + ", testAttempt=" + testAttempt + ", testDurationMs=" + testDurationMs + ", testStatus=" + testStatus
+                + ", testAttemptStartMillisEpoch=" + testAttemptStartMillisEpoch + ", testStrategy=" + testStrategy
+                + ", index=" + index + ", eventType=" + eventType + ", isProcessed=" + isProcessed + ", isLastMessage="
+                + isLastMessage + ", isError=" + isError + ", actionOutputs=" + actionOutputs + "]";
     }
 }

@@ -9,8 +9,7 @@ import com.salesforce.bazel.sdk.util.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
- * Scans the workspace looking for packages that contains rules that are registered with
- * the SDK.
+ * Scans the workspace looking for packages that contains rules that are registered with the SDK.
  */
 public class BazelPackageFinder {
     LogHelper logger;
@@ -20,12 +19,17 @@ public class BazelPackageFinder {
     }
 
     /**
-     * Navigates the workspace reading Bazel BUILD files, looking for packages that contains rules
-     * types that are registered with the SDK. 
-     * @param dir the starting directory (usually the Bazel workspace root)
-     * @param monitor a progress monitor that is updated
-     * @param buildFileLocations the output, the list of found BUILD files with interesting rules
-     * @param depth the maximum depth to descend
+     * Navigates the workspace reading Bazel BUILD files, looking for packages that contains rules types that are
+     * registered with the SDK.
+     * 
+     * @param dir
+     *            the starting directory (usually the Bazel workspace root)
+     * @param monitor
+     *            a progress monitor that is updated
+     * @param buildFileLocations
+     *            the output, the list of found BUILD files with interesting rules
+     * @param depth
+     *            the maximum depth to descend
      */
     public void findBuildFileLocations(File dir, WorkProgressMonitor monitor, Set<File> buildFileLocations, int depth) {
         if (!dir.isDirectory()) {

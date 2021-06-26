@@ -51,7 +51,7 @@ public class BuildFileSupportTest {
     public void setup() {
         JvmRuleInit.initialize();
     }
-    
+
     @Test
     public void testJavaRulesLines_positive() {
         assertTrue(BuildFileSupport.hasRegisteredRuleInLine("java_binary("));

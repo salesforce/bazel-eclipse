@@ -18,9 +18,9 @@ import com.salesforce.bazel.sdk.bep.event.BEPTestSummaryEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPUnstructuredCommandLineEvent;
 
 /**
- * Default event type resolver. Normally this is the only resolver that BazelBuildEventTypeManager
- * knows about. But if you want to override the implementation used for any event, you can insert
- * another resolver that will resolve events as needed.
+ * Default event type resolver. Normally this is the only resolver that BazelBuildEventTypeManager knows about. But if
+ * you want to override the implementation used for any event, you can insert another resolver that will resolve events
+ * as needed.
  */
 class DefaultBazelBuildEventTypeResolver implements BazelBuildEventTypeResolver {
 

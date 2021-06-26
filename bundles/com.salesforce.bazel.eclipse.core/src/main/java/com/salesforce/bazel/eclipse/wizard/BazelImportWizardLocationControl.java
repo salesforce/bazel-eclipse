@@ -67,7 +67,7 @@ public class BazelImportWizardLocationControl {
     protected String rootDirectory;
 
     protected List<String> locations = new ArrayList<>();
-    private final boolean showLocation = true;
+    protected boolean showLocation = true;
 
     protected IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 
@@ -126,7 +126,7 @@ public class BazelImportWizardLocationControl {
                                 @Override
                                 public void run() {
                                     MessageDialog.openError(page.getShell(), "Import WORKSPACE",
-                                            "You must select a Bazel WORKSPACE File");
+                                        "You must select a Bazel WORKSPACE File");
                                 }
                             });
                         } else {
@@ -250,7 +250,8 @@ public class BazelImportWizardLocationControl {
                             // The candidateFile is a soft link to the real WORKSPACE file returned by the Open dialog
                             // This means the candidateFile is probably in the real root directory of the Bazel workspace.
 
-                            LOG.info("WORKSPACE file [{}] is a soft link to [{}]. Setting workspace root as [{}]", absPath, canonPath, candidateFile.getParentFile().getAbsolutePath());
+                            LOG.info("WORKSPACE file [{}] is a soft link to [{}]. Setting workspace root as [{}]",
+                                absPath, canonPath, candidateFile.getParentFile().getAbsolutePath());
                             return candidateFile;
                         }
                     }

@@ -76,7 +76,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
         String canonicalSourcePathString =
                 BazelPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory())
-                + File.separator + sourcePath;
+                        + File.separator + sourcePath;
         Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
         for (BazelProject candidateProject : bazelProjects) {

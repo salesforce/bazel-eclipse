@@ -63,15 +63,15 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  */
 public final class ShellCommand implements Command {
     /**
-     * LogHelper for the ShellCommand. It is not final, and public, so that your application can replace
-     * the LogHelper for just this class. Logging the execution of the shell commands is likely something
-     * you will want to tailor for your exact use case.
+     * LogHelper for the ShellCommand. It is not final, and public, so that your application can replace the LogHelper
+     * for just this class. Logging the execution of the shell commands is likely something you will want to tailor for
+     * your exact use case.
      */
     public static LogHelper LOG = LogHelper.log(ShellCommand.class);
 
     /**
-     * Level at which ShellCommand should log the stdout/stderr lines that come from the commands.
-     * 0 = DEBUG, 1 = INFO, 2 = WARN, 3 = ERROR
+     * Level at which ShellCommand should log the stdout/stderr lines that come from the commands. 0 = DEBUG, 1 = INFO,
+     * 2 = WARN, 3 = ERROR
      */
     public static int LOG_LEVEL_FOR_STDOUTERR = LoggerFacade.DEBUG;
 
@@ -88,8 +88,8 @@ public final class ShellCommand implements Command {
     private boolean executed = false;
 
     ShellCommand(CommandConsole console, File directory, List<String> args, Function<String, String> stdoutSelector,
-        Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
-        WorkProgressMonitor progressMonitor, long timeoutMS) {
+            Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
+            WorkProgressMonitor progressMonitor, long timeoutMS) {
         this.directory = directory;
         this.args = args;
         if (console != null) {

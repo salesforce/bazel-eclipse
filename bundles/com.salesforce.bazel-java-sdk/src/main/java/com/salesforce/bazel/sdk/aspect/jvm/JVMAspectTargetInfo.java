@@ -38,13 +38,14 @@ public class JVMAspectTargetInfo extends AspectTargetInfo {
     protected List<JVMAspectOutputJarSet> jars;
 
     JVMAspectTargetInfo(File aspectDataFile, JSONObject jsonObject, JSONParser jsonParser, String workspaceRelativePath,
-        String kind, String label, List<String> deps, List<String> sources) throws Exception {
+            String kind, String label, List<String> deps, List<String> sources) throws Exception {
         super(aspectDataFile, workspaceRelativePath, kind, label, deps, sources);
 
         List<JVMAspectOutputJarSet> jarsList = jsonArrayToJarArray(jsonObject.get("jars"), jsonParser);
         jars = jarsList;
 
-        List<JVMAspectOutputJarSet> generatedJarsList = jsonArrayToJarArray(jsonObject.get("generated_jars"), jsonParser);
+        List<JVMAspectOutputJarSet> generatedJarsList =
+                jsonArrayToJarArray(jsonObject.get("generated_jars"), jsonParser);
         generatedJars = generatedJarsList;
 
         String mainClass = (String) jsonObject.get("main_class");
@@ -89,8 +90,6 @@ public class JVMAspectTargetInfo extends AspectTargetInfo {
         }
         return jarList;
     }
-
-
 
     @Override
     public String toString() {

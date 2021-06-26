@@ -45,8 +45,8 @@ public class SourceFileCrawler {
     protected final Set<String> matchFileSuffixes = new HashSet<>();
 
     /**
-     * In most workspaces, the files in the //tools folder is outside the scope of most normal
-     * tool operations. We ignored //tools by default.
+     * In most workspaces, the files in the //tools folder is outside the scope of most normal tool operations. We
+     * ignored //tools by default.
      */
     private boolean ignoreTools = true;
 
@@ -60,8 +60,8 @@ public class SourceFileCrawler {
     }
 
     /**
-     * In most workspaces, the files in the //tools folder is outside the scope of most normal
-     * tool operations. We ignored //tools by default.
+     * In most workspaces, the files in the //tools folder is outside the scope of most normal tool operations. We
+     * ignored //tools by default.
      */
     public void ignoreTools(boolean ignore) {
         ignoreTools = ignore;
@@ -105,8 +105,8 @@ public class SourceFileCrawler {
                         }
                         String childRelative = candidateFile.getName();
                         if (!relativePathToClosestArtifact.isEmpty()) {
-                            childRelative =
-                                    BazelPathHelper.osSeps(relativePathToClosestArtifact + "/" + candidateFile.getName()); // $SLASH_OK
+                            childRelative = BazelPathHelper
+                                    .osSeps(relativePathToClosestArtifact + "/" + candidateFile.getName()); // $SLASH_OK
                         }
                         indexRecur(candidateFile, childRelative, closestArtifactLocationDescriptor, false);
                     } else if (candidateFile.canRead()) {
@@ -122,8 +122,8 @@ public class SourceFileCrawler {
     }
 
     /**
-     * Is this file interesting to the crawler? The default impl matches based on file suffix, but a subclass
-     * can override to do something else.
+     * Is this file interesting to the crawler? The default impl matches based on file suffix, but a subclass can
+     * override to do something else.
      */
     protected boolean isSourceFile(File candidateFile) {
         String candidateName = candidateFile.getName();
@@ -136,9 +136,8 @@ public class SourceFileCrawler {
     }
 
     /**
-     * Callback that is invoked when a source file is found. Default implementation does nothing, but a subclass may
-     * do something with this information.
+     * Callback that is invoked when a source file is found. Default implementation does nothing, but a subclass may do
+     * something with this information.
      */
-    protected void foundSourceFile(File sourceFile, CodeLocationDescriptor sourceLocationDescriptor) {
-    }
+    protected void foundSourceFile(File sourceFile, CodeLocationDescriptor sourceLocationDescriptor) {}
 }

@@ -30,7 +30,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  */
 public class ClassIdentifier {
     private static final LogHelper LOG = LogHelper.log(ClassIdentifier.class);
-    
+
     public String packageName;
     public String classname;
 

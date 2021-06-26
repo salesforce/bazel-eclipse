@@ -81,7 +81,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
 
         TestBazelWorkspaceDescriptor descriptor =
                 new TestBazelWorkspaceDescriptor(wsDir, outputbaseDir).javaPackages(numberOfJavaPackages)
-                .genrulePackages(2).testOptions(testOptions).useAltConfigFileNames(useAltConfigFileNames);
+                        .genrulePackages(2).testOptions(testOptions).useAltConfigFileNames(useAltConfigFileNames);
         TestBazelWorkspaceFactory bazelWorkspaceCreator = new TestBazelWorkspaceFactory(descriptor);
         bazelWorkspaceCreator.build();
 

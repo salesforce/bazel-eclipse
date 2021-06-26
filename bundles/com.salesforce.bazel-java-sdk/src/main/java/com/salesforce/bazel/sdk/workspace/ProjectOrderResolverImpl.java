@@ -14,8 +14,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 public class ProjectOrderResolverImpl implements ProjectOrderResolver {
     private static final LogHelper LOG = LogHelper.log(ProjectOrderResolverImpl.class);
 
-    public ProjectOrderResolverImpl() {
-    }
+    public ProjectOrderResolverImpl() {}
 
     /**
      * Orders all of the packages for import such that no package is imported before any of modules that it depends on.

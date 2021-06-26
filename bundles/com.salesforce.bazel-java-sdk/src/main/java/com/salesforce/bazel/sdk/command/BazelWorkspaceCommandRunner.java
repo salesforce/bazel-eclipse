@@ -157,8 +157,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     // CTORS
 
     /**
-     * This constructor creates the 'global' runner, which is a limited runner that only runs Bazel commands outside 
-     * the context of a workspace, such as version check. Hint: you don't want this one.
+     * This constructor creates the 'global' runner, which is a limited runner that only runs Bazel commands outside the
+     * context of a workspace, such as version check. Hint: you don't want this one.
      */
     public BazelWorkspaceCommandRunner(File bazelExecutable, CommandBuilder commandBuilder) {
 
@@ -200,8 +200,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     }
 
     /**
-     * Returns the execution root of the current Bazel workspace by running <i>bazel info</i>. It 
-     * caches the answer since this cannot change for a workspace.
+     * Returns the execution root of the current Bazel workspace by running <i>bazel info</i>. It caches the answer
+     * since this cannot change for a workspace.
      */
     @Override
     public File computeBazelWorkspaceExecRoot() {
@@ -257,8 +257,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     }
 
     /**
-     * Returns the output base of the current Bazel workspace by running <i>bazel info</i>. It 
-     * caches the answer since this cannot change for a workspace.
+     * Returns the output base of the current Bazel workspace by running <i>bazel info</i>. It caches the answer since
+     * this cannot change for a workspace.
      */
     @Override
     public File computeBazelWorkspaceOutputBase() {
@@ -281,8 +281,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     }
 
     /**
-     * Returns the bazel-bin of the current Bazel workspace by running <i>bazel info</i>. It 
-     * caches the answer since this cannot change for a workspace.
+     * Returns the bazel-bin of the current Bazel workspace by running <i>bazel info</i>. It caches the answer since
+     * this cannot change for a workspace.
      */
     @Override
     public File computeBazelWorkspaceBin() {
@@ -305,8 +305,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     }
 
     /**
-     * Returns the explicitly set options in the workspace config files (.bazelrc et al). This gathers
-     * the data from the announce_rc option in Bazel.
+     * Returns the explicitly set options in the workspace config files (.bazelrc et al). This gathers the data from the
+     * announce_rc option in Bazel.
      */
     @Override
     public void populateBazelWorkspaceCommandOptions(BazelWorkspaceCommandOptions commandOptions) {
@@ -410,7 +410,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized List<BazelProblem> runBazelBuild(Set<String> bazelTargets, List<String> extraArgs,
             WorkProgressMonitor progressMonitor)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> extraArgsList = new ArrayList<String>();
         extraArgsList.add("build");
         extraArgsList.addAll(buildOptions);
@@ -452,7 +452,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfoForPackages(
             Collection<BazelPackageLocation> targetPackages, String caller)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<BazelLabel> targetLabels = new ArrayList<>();
         for (BazelPackageLocation pkg : targetPackages) {
             String target = pkg.getBazelPackageFSRelativePath() + ":*";
@@ -470,7 +470,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      * This method caches its results and won't recompute a previously computed version unless
      * {@link #flushAspectInfoCache()} has been called in between.
      * <p>
-     * This AspectTargetInfo objects returned have extra info if you have the rule specific support loaded for the types 
+     * This AspectTargetInfo objects returned have extra info if you have the rule specific support loaded for the types
      * of rules you have in your workspace. See the com.salesforce.bazel.sdk.init package.
      * <p>
      * TODO it would be worthwhile to evaluate whether Aspects are the best way to get build info, as we could otherwise

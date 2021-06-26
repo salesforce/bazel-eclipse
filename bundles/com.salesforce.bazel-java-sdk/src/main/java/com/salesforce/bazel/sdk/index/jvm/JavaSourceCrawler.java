@@ -37,14 +37,14 @@ import com.salesforce.bazel.sdk.index.source.SourceFileIdentifier;
 public class JavaSourceCrawler extends SourceFileCrawler {
 
     public JavaSourceCrawler(CodeIndex index, String artifactMarkerFileName) {
-    	super(index, artifactMarkerFileName);
-    	
-    	// this crawler is simple, it just looks for .java files
-    	this.matchFileSuffixes.add(".java");
+        super(index, artifactMarkerFileName);
+
+        // this crawler is simple, it just looks for .java files
+        this.matchFileSuffixes.add(".java");
     }
 
     /**
-     * Callback that is invoked when a Java source file is found. We add the source file the type index. 
+     * Callback that is invoked when a Java source file is found. We add the source file the type index.
      */
     protected void foundSourceFile(File sourceFile, CodeLocationDescriptor sourceLocationDescriptor) {
         // isolate the classname by stripping off the .java and the prefix

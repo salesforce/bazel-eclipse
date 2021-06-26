@@ -182,7 +182,7 @@ public class BazelJvmClasspath {
                         continue;
                     }
                     JVMAspectTargetInfo jvmTargetInfo = (JVMAspectTargetInfo) targetInfo;
-                    
+
                     if (actualActivatedTargets.contains(jvmTargetInfo.getLabel())) {
                         if ("java_library".equals(jvmTargetInfo.getKind())) {
                             // this info describes a java_library target in the current package; don't add it to the classpath

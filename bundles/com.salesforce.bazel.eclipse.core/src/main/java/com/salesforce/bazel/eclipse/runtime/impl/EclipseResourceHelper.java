@@ -184,7 +184,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public IResource findMemberInWorkspace(IPath path) {
         IResource resource = getEclipseWorkspaceRoot().findMember(path);
-        LOG.debug("findMemberInWorkspace: path="+path.toOSString()+" member.location="+getResourceAbsolutePath(resource));
+        LOG.debug("findMemberInWorkspace: path=" + path.toOSString() + " member.location="
+                + getResourceAbsolutePath(resource));
         return resource;
     }
 
@@ -268,7 +269,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     public void createFileLink(IFile thisFile, IPath bazelWorkspaceLocation, int updateFlags,
             IProgressMonitor monitor) {
         try {
-            LOG.debug("createFileLink: thisFile="+thisFile.getLocation().toOSString()+" bazelWorkspaceLocation="+bazelWorkspaceLocation.toOSString());
+            LOG.debug("createFileLink: thisFile=" + thisFile.getLocation().toOSString() + " bazelWorkspaceLocation="
+                    + bazelWorkspaceLocation.toOSString());
             thisFile.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);
@@ -279,7 +281,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     public void createFolderLink(IFolder thisFolder, IPath bazelWorkspaceLocation, int updateFlags,
             IProgressMonitor monitor) {
         try {
-            LOG.debug("createFolderLink: thisFolder="+thisFolder.getLocation().toOSString()+" bazelWorkspaceLocation="+bazelWorkspaceLocation.toOSString());
+            LOG.debug("createFolderLink: thisFolder=" + thisFolder.getLocation().toOSString()
+                    + " bazelWorkspaceLocation=" + bazelWorkspaceLocation.toOSString());
             thisFolder.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);

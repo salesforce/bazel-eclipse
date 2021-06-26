@@ -56,7 +56,7 @@ public class AspectTargetInfosTest {
     private final String testPath = BazelPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
     private final String binPath = BazelPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
     private final String selPath = BazelPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
-    
+
     @Test
     public void testLookupByLabel() {
         AspectTargetInfo lib = getAspectTargetInfo("foo1", JvmRuleInit.KIND_JAVA_LIBRARY, libPath);
@@ -100,7 +100,8 @@ public class AspectTargetInfosTest {
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
-        Collection<AspectTargetInfo> infos = apis.lookupByTargetKind(JvmRuleInit.KIND_JAVA_TEST, JvmRuleInit.KIND_JAVA_BINARY);
+        Collection<AspectTargetInfo> infos =
+                apis.lookupByTargetKind(JvmRuleInit.KIND_JAVA_TEST, JvmRuleInit.KIND_JAVA_BINARY);
 
         assertEquals(2, infos.size());
         assertTrue(infos.contains(test));
@@ -195,8 +196,8 @@ public class AspectTargetInfosTest {
         List<String> sourcePathList = Arrays.asList(sourcePaths);
 
         String workspaceRelativePath = "some" + File.separatorChar + "path";
-        return new AspectTargetInfo(new File(""), workspaceRelativePath,
-                targetKind.toString().toLowerCase(), label, new ArrayList<>(), sourcePathList);
+        return new AspectTargetInfo(new File(""), workspaceRelativePath, targetKind.toString().toLowerCase(), label,
+                new ArrayList<>(), sourcePathList);
     }
 
 }

@@ -45,14 +45,14 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
- * Helper to parse BUILD files. 
+ * Helper to parse BUILD files.
  */
 public class BuildFileSupport {
     static final LogHelper LOG = LogHelper.log(BuildFileSupport.class);
 
     /**
-     * Parses a File, presumed to be a Bazel BUILD file, looking for indications that it contains rules
-     * kinds that are registered with the SDK (and therefore interesting).
+     * Parses a File, presumed to be a Bazel BUILD file, looking for indications that it contains rules kinds that are
+     * registered with the SDK (and therefore interesting).
      * 
      * @param buildFile
      * @return true if it contains at least one registered rule, false if not

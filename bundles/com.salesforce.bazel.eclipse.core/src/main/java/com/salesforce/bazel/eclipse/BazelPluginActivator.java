@@ -197,7 +197,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
         } else {
             LOG.info(
-                    "The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
+                "The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
         }
     }
 
@@ -252,8 +252,8 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             if (!workspaceFile.exists()) {
                 Exception stack = new IllegalArgumentException();
                 LOG.error(
-                    "BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: [{}]", stack,
-                    rootDirectory.getAbsolutePath());
+                    "BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: [{}]",
+                    stack, rootDirectory.getAbsolutePath());
                 return;
             }
         }

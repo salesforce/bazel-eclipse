@@ -157,7 +157,7 @@ public class JSONValue {
 
         if (value instanceof Collection) {
             @SuppressWarnings("unchecked")
-            Collection<Object> valueCollection = (Collection<Object>)value;
+            Collection<Object> valueCollection = (Collection<Object>) value;
             JSONArray.writeJSONString(valueCollection, out);
             return;
         }

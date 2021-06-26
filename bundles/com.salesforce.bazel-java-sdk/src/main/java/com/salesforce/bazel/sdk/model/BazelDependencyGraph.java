@@ -336,10 +336,10 @@ public class BazelDependencyGraph {
                 pathStr.append(entry);
             }
             LOG.warn("Breaking out of an infinite loop while computing dependency path for label [" + label
-                + "] to candidate dependency [" + possibleDependency + "] with path [" + pathStr
-                + "]. This is probably not a bug, but a case where two Bazel packages reference each other. "
-                + "There is a way for that to happen that is legal in Bazel, but for this dependency graph implementation "
-                + "this is not supported. This path will not be installed in the graph, which may cause problems for other operations.");
+                    + "] to candidate dependency [" + possibleDependency + "] with path [" + pathStr
+                    + "]. This is probably not a bug, but a case where two Bazel packages reference each other. "
+                    + "There is a way for that to happen that is legal in Bazel, but for this dependency graph implementation "
+                    + "this is not supported. This path will not be installed in the graph, which may cause problems for other operations.");
             return dependencyResponse(false, depCache, cacheKey);
         }
         processedLabels.add(label);

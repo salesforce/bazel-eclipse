@@ -93,7 +93,6 @@ public class AspectTargetInfo {
         return sb.toString();
     }
 
-
     /**
      * Location of the generated file that was used to build this instance.
      *
@@ -138,9 +137,8 @@ public class AspectTargetInfo {
         return sources;
     }
 
-
-    protected AspectTargetInfo(File aspectDataFile, 
-            String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources) {
+    protected AspectTargetInfo(File aspectDataFile, String workspaceRelativePath, String kind, String label,
+            List<String> deps, List<String> sources) {
         this.aspectDataFile = aspectDataFile;
         this.workspaceRelativePath = workspaceRelativePath;
         this.kind = kind;
