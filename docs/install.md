@@ -78,6 +78,13 @@ Otherwise, you can install older versions of BEF using the archive zip files tha
 - *Eclipse* > *About* > *Installation Details* > *Click on the Plugins Tab* > *search for Bazel*: the feature's plugins should be in the list
 - In the *Project Explorer* view, you should be able to right-click, choose *Import*, and see a *Bazel* menu item.
 
+### Known Issues
+
+Now is a good time to browse the [known issues](issues.md) page which covers
+  some common problems.
+If you have a problem, searching the full [Issues list](https://github.com/salesforce/bazel-eclipse/issues)
+  is also a good thing to do.
+
 ### Updating your Bazel Eclipse feature
 
 If you would like a newer build of the Bazel Eclipse feature, you will need to re-install it.
