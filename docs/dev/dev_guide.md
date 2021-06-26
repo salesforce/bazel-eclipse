@@ -87,9 +87,14 @@ Also, the [Build Doc](thebuild.md) explains the details of the build system.
 Please keep tab characters out of the source code and follow our code style.
 The best way to do this is to use the code formatter.
 
-- Launch your Eclipse SDK IDE
 - *Preferences* -> *Java* -> *Code Style* -> *Formatter*
 - Apply the [bazel-eclipse-formatter.xml](../../tools/bazel-eclipse-formatter.xml) style
+
+Also, please set the formatter to be run as a Save action.
+
+- *Preferences* -> *Java* -> *Editor* -> *Save Actions*
+- Enable *Format source code* (all lines)
+- Enable *Organize imports*
 
 ### How to Run and Debug the Feature using the Eclipse SDK
 
