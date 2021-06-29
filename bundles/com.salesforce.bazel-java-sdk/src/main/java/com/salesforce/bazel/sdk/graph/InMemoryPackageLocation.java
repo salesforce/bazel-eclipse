@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 
 /**
  * In memory package location.
@@ -22,7 +23,7 @@ public class InMemoryPackageLocation implements BazelPackageLocation {
     }
 
     public InMemoryPackageLocation(String path) {
-        if (path.startsWith("//")) {
+        if (path.startsWith(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
             this.path = path.substring(2);
         } else {
             this.path = path;

@@ -9,6 +9,7 @@ import java.util.Map;
 import com.salesforce.bazel.sdk.command.test.MockCommand;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutput;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutputMatcher;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
 /**
@@ -68,7 +69,9 @@ public class MockBuildCommand extends MockCommand {
 
         for (String packagePath : testWorkspaceFactory.workspaceDescriptor.aspectFileSets.keySet()) {
             // the last arg is the package path with the wildcard target (//projects/libs/javalib0:*)
-            String wildcardTarget = "//" + packagePath + ":.*"; // TODO this is returning the same set of aspects for each target in a package
+            // TODO this is returning the same set of aspects for each target in a package
+            String wildcardTarget =
+                    BazelPathHelper.BAZEL_ROOT_SLASHES + packagePath + BazelPathHelper.BAZEL_COLON + ".*";
             MockCommandSimulatedOutputMatcher aspectCommandMatcher3 =
                     new MockCommandSimulatedOutputMatcher(7, wildcardTarget);
 

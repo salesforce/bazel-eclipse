@@ -72,7 +72,7 @@ public class BazelLabel {
         }
 
         if (label.startsWith("@")) {
-            int i = label.indexOf("//");
+            int i = label.indexOf(BazelPathHelper.BAZEL_ROOT_SLASHES);
             repositoryName = label.substring(1, i);
             label = label.substring(i);
         } else {
@@ -129,8 +129,9 @@ public class BazelLabel {
      * @return true if this instance represents a concrete label, false otherwise
      */
     public boolean isConcrete() {
-        return !(this.localLabelPart.endsWith("*") || this.localLabelPart.endsWith("...")
-                || this.localLabelPart.endsWith("all"));
+        return !(this.localLabelPart.endsWith(BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS)
+                || this.localLabelPart.endsWith(BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS_STAR)
+                || this.localLabelPart.endsWith(BazelPathHelper.BAZEL_WILDCARD_ALLPACKAGES));
     }
 
     /**
@@ -143,7 +144,7 @@ public class BazelLabel {
      */
     public String getPackagePath() {
         String packagePath = localLabelPart;
-        int i = packagePath.lastIndexOf("...");
+        int i = packagePath.lastIndexOf(BazelPathHelper.BAZEL_WILDCARD_ALLPACKAGES);
         if (i != -1) {
             packagePath = packagePath.substring(0, i);
             if (packagePath.endsWith(BazelPathHelper.BAZEL_SLASH)) {
@@ -191,7 +192,7 @@ public class BazelLabel {
      * @return the target name this label refers to, null if this label uses "..." syntax.
      */
     public String getTargetName() {
-        if (localLabelPart.endsWith("...")) {
+        if (localLabelPart.endsWith(BazelPathHelper.BAZEL_WILDCARD_ALLPACKAGES)) {
             return null;
         }
         if (isPackageDefault()) {
@@ -237,7 +238,9 @@ public class BazelLabel {
         if (!isPackageDefault()) {
             throw new IllegalStateException("label " + localLabelPart + " is not package default");
         }
-        return withRepositoryNameAndLocalLabelPart(repositoryName, getPackagePath() + ":*");
+        // TODO all check for :all?
+        return withRepositoryNameAndLocalLabelPart(repositoryName,
+            getPackagePath() + BazelPathHelper.BAZEL_COLON + BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS_STAR);
     }
 
     @Override
@@ -264,7 +267,7 @@ public class BazelLabel {
 
     private static BazelLabel withRepositoryNameAndLocalLabelPart(String repositoryName, String localLabelPart) {
         return repositoryName == null ? new BazelLabel(localLabelPart)
-                : new BazelLabel("@" + repositoryName + "//" + localLabelPart);
+                : new BazelLabel("@" + repositoryName + BazelPathHelper.BAZEL_ROOT_SLASHES + localLabelPart);
     }
 
     private static String sanitizePackagePath(String path) {
@@ -303,10 +306,10 @@ public class BazelLabel {
         if (label.endsWith(BazelPathHelper.BAZEL_SLASH)) {
             throw new IllegalArgumentException(label);
         }
-        if (label.equals("//")) {
+        if (label.equals(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
             throw new IllegalArgumentException(label);
         }
-        if (label.startsWith("//")) {
+        if (label.startsWith(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
             label = label.substring(2);
         }
         if (label.startsWith(BazelPathHelper.BAZEL_SLASH)) {
@@ -316,6 +319,7 @@ public class BazelLabel {
     }
 
     private static String getFullLabel(String repositoryName, String localLabelPart) {
-        return (repositoryName == null ? "" : "@" + repositoryName) + "//" + localLabelPart;
+        return (repositoryName == null ? "" : "@" + repositoryName) + BazelPathHelper.BAZEL_ROOT_SLASHES
+                + localLabelPart;
     }
 }

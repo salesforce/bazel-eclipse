@@ -11,16 +11,32 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 public class BazelPathHelper {
     private static final LogHelper LOG = LogHelper.log(BazelPathHelper.class);
 
-    // Slash character for Bazel paths; this is provided as a constant to help code searches
-    // for Bazel specific code. 
+    // BAZEL PATH ELEMENTS
+
+    // Double slash characters for root of Bazel paths
+    public static final String BAZEL_ROOT_SLASHES = "//";
+
+    // All packages wildcard 
+    public static final String BAZEL_ALL_REPO_PACKAGES = "//...";
+
+    // Slash character for Bazel paths
     public static final String BAZEL_SLASH = "/";
 
-    // Colon character for Bazel paths that delimits the target; this is provided as a constant to help code searches
-    // for Bazel specific code. 
+    // Colon character for Bazel paths that delimits the target
     public static final String BAZEL_COLON = ":";
 
-    // Slash character for unix file paths; this is provided as a constant to help code searches
-    // for Unix specific code. 
+    // Wildcard used as a package, that identifies all packages at the current level or below
+    public static final String BAZEL_WILDCARD_ALLPACKAGES = "...";
+
+    // Wildcard used as a target, that identifies all targets 
+    public static final String BAZEL_WILDCARD_ALLTARGETS = "all";
+
+    // Wildcard used as a target, that identifies all targets including implicit targets (_deploy.jar etc) 
+    public static final String BAZEL_WILDCARD_ALLTARGETS_STAR = "*";
+
+    // FILE SYSTEM PATH ELEMENTS
+
+    // Slash character for unix file paths
     public static final String UNIX_SLASH = "/";
 
     // Backslash character; this is provided as a constant to help code searches
@@ -34,8 +50,7 @@ public class BazelPathHelper {
     // Java requires a backslash to encode a backslash in the String (2x2=4)
     public static final String WINDOWS_BACKSLASH_REGEX = "\\\\";
 
-    // Slash character for file paths in jar files; this is provided as a constant to help code searches
-    // for Jar specific code. 
+    // Slash character for file paths in jar files
     public static final String JAR_SLASH = "/";
 
     /**

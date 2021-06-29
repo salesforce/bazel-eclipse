@@ -376,7 +376,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
         if ((bazelPackagePath == null) || bazelPackagePath.isEmpty()) {
             throw new IllegalArgumentException("An empty path was passed to BazelPackageInfo.findByPackage()");
         }
-        if (!bazelPackagePath.startsWith("//")) {
+        if (!bazelPackagePath.startsWith(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
             throw new IllegalArgumentException(
                     "You must pass a Bazel path (e.g. //projects/libs/apple) to BazelPackageInfo.findByPackage(), got ["
                             + bazelPackagePath + "]");

@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
@@ -140,7 +141,7 @@ public class BazelWorkspace {
     public List<String> getTargetsForBazelQuery(String query) {
         List<String> results = new ArrayList<String>();
         for (String line : metadataStrategy.computeBazelQuery(query)) {
-            if (line.startsWith("//")) {
+            if (line.startsWith(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
                 results.add(line);
             }
         }

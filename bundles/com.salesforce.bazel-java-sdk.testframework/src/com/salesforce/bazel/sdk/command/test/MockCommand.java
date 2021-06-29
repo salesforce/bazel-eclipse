@@ -143,11 +143,12 @@ public class MockCommand implements Command {
             return true;
         }
 
-        if (target.startsWith("//")) {
+        if (target.startsWith(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
             target = target.substring(2);
         }
         String packageLabel = target;
-        String ruleName = "*";
+        // TODO also need to check for ... and :all
+        String ruleName = BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS_STAR;
         int colonIndex = target.indexOf(BazelPathHelper.BAZEL_COLON);
         if (colonIndex >= 0) {
             packageLabel = target.substring(0, colonIndex);
@@ -157,7 +158,7 @@ public class MockCommand implements Command {
         if (testWorkspaceFactory.workspaceDescriptor.getCreatedPackageByName(packageLabel) == null) {
             returnFalseOrThrow(target);
         }
-        if (!ruleName.equals("*")) {
+        if (!ruleName.equals(BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS_STAR)) {
             // * ruleName is always valid, but if there is a specific rule we need to check
             if (testWorkspaceFactory.workspaceDescriptor.createdTargets.get(target) == null) {
                 returnFalseOrThrow(target);
