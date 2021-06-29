@@ -1,13 +1,16 @@
 package com.salesforce.bazel.sdk.aspect;
 
+import java.util.HashMap;
 import java.util.List;
 
-import com.salesforce.bazel.sdk.model.BazelDependencyGraph;
+import com.salesforce.bazel.sdk.graph.BazelDependencyGraph;
+import com.salesforce.bazel.sdk.graph.BazelDependencyGraphFactory;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 
 /**
- * Builder that uses the set of aspect infos generated for a workspace to construct the dependency graph.
+ * Factory that uses the set of aspect infos generated for a workspace to construct the dependency graph.
  */
-public class AspectDependencyGraphBuilder {
+public class AspectDependencyGraphFactory {
 
     /**
      * Builds the dependency graph using the data collected by running aspects. It is typical that the list of aspects
@@ -18,7 +21,11 @@ public class AspectDependencyGraphBuilder {
      * edge in between two packages if any target in package A depends on any target in package B.
      */
     public static BazelDependencyGraph build(AspectTargetInfos aspects, boolean includeTarget) {
-        BazelDependencyGraph graph = new BazelDependencyGraph();
+        BazelDependencyGraph graph = BazelDependencyGraphFactory.build("AspectDependencyGraphFactory", new HashMap<>());
+
+        // TODO the stripTargetFromLabel invocations here need to be removed in order for us to solve the
+        // the cyclical dependency problems tracked by https://github.com/salesforce/bazel-java-sdk/issues/23
+        // the InMemoryDependencyGraph will also need to be updated to support target level edges
 
         for (AspectTargetInfo info : aspects.getTargetInfos()) {
             String sourceLabel = info.getLabel();
@@ -48,7 +55,7 @@ public class AspectDependencyGraphBuilder {
             // ex:  @maven//:junit_junit
             return label;
         }
-        int colonIndex = label.lastIndexOf(":");
+        int colonIndex = label.lastIndexOf(BazelPathHelper.BAZEL_COLON);
         if (colonIndex > 0) {
             label = label.substring(0, colonIndex);
         }

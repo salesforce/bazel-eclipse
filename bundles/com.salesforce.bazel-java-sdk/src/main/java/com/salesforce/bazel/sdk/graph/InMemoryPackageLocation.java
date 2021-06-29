@@ -1,7 +1,9 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.graph;
 
 import java.io.File;
 import java.util.List;
+
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
  * In memory package location.
@@ -9,17 +11,17 @@ import java.util.List;
  * TODO we need to rethink BazelPackageLocation abstraction.
  *
  */
-public class InMemoryBazelPackageLocation implements BazelPackageLocation {
+public class InMemoryPackageLocation implements BazelPackageLocation {
     private String path;
     private String lastSegment;
 
     // root node
-    public InMemoryBazelPackageLocation() {
+    public InMemoryPackageLocation() {
         this.path = null;
         this.lastSegment = "";
     }
 
-    public InMemoryBazelPackageLocation(String path) {
+    public InMemoryPackageLocation(String path) {
         if (path.startsWith("//")) {
             this.path = path.substring(2);
         } else {

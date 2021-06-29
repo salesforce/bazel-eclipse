@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.graph;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -9,11 +9,15 @@ import java.util.Set;
 
 import org.junit.Test;
 
-public class BazelDependencyGraphTest {
+import com.salesforce.bazel.sdk.graph.InMemoryDependencyGraph;
+import com.salesforce.bazel.sdk.graph.InMemoryPackageLocation;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+
+public class InMemoryDependencyGraphTest {
 
     @Test
     public void testSingleTree() {
-        BazelDependencyGraph graph = new BazelDependencyGraph();
+        InMemoryDependencyGraph graph = new InMemoryDependencyGraph();
 
         graph.addDependency("rootA", "midA1");
         graph.addDependency("rootA", "midA2");
@@ -34,9 +38,9 @@ public class BazelDependencyGraphTest {
 
         // test ordering alg
         Set<BazelPackageLocation> selectedLabels = new LinkedHashSet<>();
-        selectedLabels.add(new InMemoryBazelPackageLocation("midA2"));
-        selectedLabels.add(new InMemoryBazelPackageLocation("rootA"));
-        selectedLabels.add(new InMemoryBazelPackageLocation("leafA2"));
+        selectedLabels.add(new InMemoryPackageLocation("midA2"));
+        selectedLabels.add(new InMemoryPackageLocation("rootA"));
+        selectedLabels.add(new InMemoryPackageLocation("leafA2"));
         List<BazelPackageLocation> orderedLabels = graph.orderLabels(selectedLabels);
         assertEquals("leafA2", orderedLabels.get(0).getBazelPackageName());
         assertEquals("midA2", orderedLabels.get(1).getBazelPackageName());
@@ -45,7 +49,7 @@ public class BazelDependencyGraphTest {
 
     @Test
     public void testMultiDistinctTrees() {
-        BazelDependencyGraph graph = new BazelDependencyGraph();
+        InMemoryDependencyGraph graph = new InMemoryDependencyGraph();
 
         graph.addDependency("rootA", "midA1");
         graph.addDependency("rootA", "midA2");
@@ -76,10 +80,10 @@ public class BazelDependencyGraphTest {
 
         // test ordering alg
         Set<BazelPackageLocation> selectedLabels = new LinkedHashSet<>();
-        selectedLabels.add(new InMemoryBazelPackageLocation("rootA"));
-        selectedLabels.add(new InMemoryBazelPackageLocation("midA1"));
-        selectedLabels.add(new InMemoryBazelPackageLocation("leafA1"));
-        selectedLabels.add(new InMemoryBazelPackageLocation("rootB"));
+        selectedLabels.add(new InMemoryPackageLocation("rootA"));
+        selectedLabels.add(new InMemoryPackageLocation("midA1"));
+        selectedLabels.add(new InMemoryPackageLocation("leafA1"));
+        selectedLabels.add(new InMemoryPackageLocation("rootB"));
         List<BazelPackageLocation> orderedLabels = graph.orderLabels(selectedLabels);
         assertEquals("leafA1", orderedLabels.get(0).getBazelPackageName());
         assertEquals("midA1", orderedLabels.get(1).getBazelPackageName());
@@ -89,7 +93,7 @@ public class BazelDependencyGraphTest {
 
     @Test
     public void testMultiConjoinedTrees() {
-        BazelDependencyGraph graph = new BazelDependencyGraph();
+        InMemoryDependencyGraph graph = new InMemoryDependencyGraph();
 
         graph.addDependency("rootA", "mid1");
         graph.addDependency("rootA", "mid2");
@@ -113,9 +117,9 @@ public class BazelDependencyGraphTest {
 
         // test ordering alg
         Set<BazelPackageLocation> selectedLabels = new LinkedHashSet<>();
-        selectedLabels.add(new InMemoryBazelPackageLocation("rootA"));
-        selectedLabels.add(new InMemoryBazelPackageLocation("mid1"));
-        selectedLabels.add(new InMemoryBazelPackageLocation("leaf1"));
+        selectedLabels.add(new InMemoryPackageLocation("rootA"));
+        selectedLabels.add(new InMemoryPackageLocation("mid1"));
+        selectedLabels.add(new InMemoryPackageLocation("leaf1"));
         List<BazelPackageLocation> orderedLabels = graph.orderLabels(selectedLabels);
         assertEquals("leaf1", orderedLabels.get(0).getBazelPackageName());
         assertEquals("mid1", orderedLabels.get(1).getBazelPackageName());
@@ -124,7 +128,7 @@ public class BazelDependencyGraphTest {
 
     @Test
     public void testExternalDeps() {
-        BazelDependencyGraph graph = new BazelDependencyGraph();
+        InMemoryDependencyGraph graph = new InMemoryDependencyGraph();
 
         graph.addDependency("rootA", "midA1");
         graph.addDependency("rootA", "midA2");
@@ -159,9 +163,9 @@ public class BazelDependencyGraphTest {
 
         // test ordering alg
         Set<BazelPackageLocation> selectedLabels = new LinkedHashSet<>();
-        selectedLabels.add(new InMemoryBazelPackageLocation("midA2"));
-        selectedLabels.add(new InMemoryBazelPackageLocation("rootA"));
-        selectedLabels.add(new InMemoryBazelPackageLocation("leafA2"));
+        selectedLabels.add(new InMemoryPackageLocation("midA2"));
+        selectedLabels.add(new InMemoryPackageLocation("rootA"));
+        selectedLabels.add(new InMemoryPackageLocation("leafA2"));
         List<BazelPackageLocation> orderedLabels = graph.orderLabels(selectedLabels);
         assertEquals("leafA2", orderedLabels.get(0).getBazelPackageName());
         assertEquals("midA2", orderedLabels.get(1).getBazelPackageName());

@@ -44,6 +44,8 @@ public class ProjectView {
     static String TARGETS_SECTION = "targets:";
     static String DIRECTORIES_COMMENT = "# Add the directories you want added as source here";
     static String INDENT = "  ";
+    static String SECTION_COLON = ":"; // section headers have a trailing colon
+    static String COMMENT_PREFIX = "#";
 
     private final File rootWorkspaceDirectory;
     private final Map<BazelPackageLocation, Integer> packageToLineNumber;
@@ -219,7 +221,7 @@ public class ProjectView {
             if (line.isEmpty()) {
                 continue;
             }
-            if (line.startsWith("#")) {
+            if (line.startsWith(COMMENT_PREFIX)) {
                 continue;
             }
             if (line.equals(DIRECTORIES_SECTION)) {
@@ -230,7 +232,7 @@ public class ProjectView {
                 withinDirectoriesSection = false;
                 withinTargetsSection = true;
                 continue;
-            } else if (line.endsWith(":")) {
+            } else if (line.endsWith(SECTION_COLON)) {
                 // some other yet unknown section
                 withinDirectoriesSection = false;
                 withinTargetsSection = false;

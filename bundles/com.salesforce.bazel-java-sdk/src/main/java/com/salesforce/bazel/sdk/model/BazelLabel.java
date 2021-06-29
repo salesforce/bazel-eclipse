@@ -88,7 +88,7 @@ public class BazelLabel {
      * example: "a/b/c" and "my-target-name".
      */
     public BazelLabel(String packagePath, String targetName) {
-        this(sanitizePackagePath(packagePath) + ":" + sanitizeTargetName(targetName));
+        this(sanitizePackagePath(packagePath) + BazelPathHelper.BAZEL_COLON + sanitizeTargetName(targetName));
     }
 
     /**
@@ -119,7 +119,7 @@ public class BazelLabel {
         if (!isConcrete()) {
             return false;
         }
-        int i = localLabelPart.lastIndexOf(":");
+        int i = localLabelPart.lastIndexOf(BazelPathHelper.BAZEL_COLON);
         return i == -1;
     }
 
@@ -150,7 +150,7 @@ public class BazelLabel {
                 packagePath = packagePath.substring(0, packagePath.length() - 1);
             }
         } else {
-            i = localLabelPart.lastIndexOf(":");
+            i = localLabelPart.lastIndexOf(BazelPathHelper.BAZEL_COLON);
             if (i != -1) {
                 packagePath = packagePath.substring(0, i);
             }
@@ -197,7 +197,7 @@ public class BazelLabel {
         if (isPackageDefault()) {
             return getPackageName();
         } else {
-            int i = localLabelPart.lastIndexOf(":");
+            int i = localLabelPart.lastIndexOf(BazelPathHelper.BAZEL_COLON);
             // label cannot end with ":", so this is ok
             return localLabelPart.substring(i + 1);
         }
@@ -283,7 +283,7 @@ public class BazelLabel {
             throw new IllegalArgumentException(target);
         }
         target = target.trim();
-        if (target.startsWith(":")) {
+        if (target.startsWith(BazelPathHelper.BAZEL_COLON)) {
             target = target.substring(1);
         }
         return target;
@@ -297,7 +297,7 @@ public class BazelLabel {
         if (label.length() == 0) {
             throw new IllegalArgumentException(label);
         }
-        if (label.endsWith(":")) {
+        if (label.endsWith(BazelPathHelper.BAZEL_COLON)) {
             throw new IllegalArgumentException(label);
         }
         if (label.endsWith(BazelPathHelper.BAZEL_SLASH)) {

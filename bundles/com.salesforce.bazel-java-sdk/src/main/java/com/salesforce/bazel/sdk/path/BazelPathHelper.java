@@ -15,6 +15,10 @@ public class BazelPathHelper {
     // for Bazel specific code. 
     public static final String BAZEL_SLASH = "/";
 
+    // Colon character for Bazel paths that delimits the target; this is provided as a constant to help code searches
+    // for Bazel specific code. 
+    public static final String BAZEL_COLON = ":";
+
     // Slash character for unix file paths; this is provided as a constant to help code searches
     // for Unix specific code. 
     public static final String UNIX_SLASH = "/";

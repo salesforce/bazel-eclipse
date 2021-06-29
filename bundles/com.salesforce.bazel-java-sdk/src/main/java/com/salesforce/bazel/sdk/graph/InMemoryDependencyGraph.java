@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.graph;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
  * The Bazel dependency graph of the entire workspace. This is implemented using simple Java JDK primitives rather than
@@ -38,9 +39,9 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * cases, but there are some cases that can't be modeled. If //a/b/c:foo depends on //a/d/e:bar which depends on
  * //a/b/c:fooz, this graph will fail to model it because foo => bar => fooz would be seen as a cyclic dependency.
  */
-public class BazelDependencyGraph {
+public class InMemoryDependencyGraph extends BazelDependencyGraph {
 
-    private static final LogHelper LOG = LogHelper.log(BazelDependencyGraph.class);
+    private static final LogHelper LOG = LogHelper.log(InMemoryDependencyGraph.class);
 
     // lookup maps
 
@@ -69,18 +70,21 @@ public class BazelDependencyGraph {
     /**
      * Callers should use the factories to construct the graph.
      */
-    public BazelDependencyGraph() {}
+    public InMemoryDependencyGraph() {}
 
     // CONSTRUCTION
 
     /**
-     * Makes a dependency from source -> dep
+     * Makes a dependency from source -> dep at the package level. For some use cases, package level dependencies are
+     * sufficient (//a/b/c), but in other cases target level dependencies are needed (//a/b/c:d). The caller of this
+     * method should provide as much detail as is available.
      *
      * @param sourceLabel
-     *            the label for the source package (//a/b/c)
+     *            the label for the source package (e.g. //a/b/c or //a/b/c:d)
      * @param depLabel
-     *            the label for the depended-on package (//foo)
+     *            the label for the depended-on package (e.g. //foo or //foo:bar)
      */
+    @Override
     public void addDependency(String sourceLabel, String depLabel) {
         allDepLabels.add(depLabel);
         allSourceLabels.add(sourceLabel);
@@ -132,6 +136,7 @@ public class BazelDependencyGraph {
      * Provides a map for tracking forward deps. The key is the label as a string, and the value is the set of
      * dependencies (as labels) for the source.
      */
+    @Override
     public Map<String, Set<String>> getDependsOnMap() {
         return dependsOnMap;
     }
@@ -140,6 +145,7 @@ public class BazelDependencyGraph {
      * Provides a map for tracking reverse deps. The key is the label as a string, and the value is the set of sources
      * (as labels) that depend on the label.
      */
+    @Override
     public Map<String, Set<String>> getUsedByMap() {
         return usedByMap;
     }
@@ -148,6 +154,7 @@ public class BazelDependencyGraph {
      * Returns the set of labels that are not dependencies for other labels in the workspace. If A depends on B, which
      * depends on C, this method will return A.
      */
+    @Override
     public Set<String> getRootLabels() {
         return rootLabels;
     }
@@ -157,6 +164,7 @@ public class BazelDependencyGraph {
      * dependencies on other labels. If A depends on B, which depends on C, this method will return C. If a label stands
      * alone (i.e. it has not dependency, and is not depended on by another node, it is not included).
      */
+    @Override
     public Set<String> getLeafLabels() {
         return leafLabels;
     }
@@ -169,6 +177,7 @@ public class BazelDependencyGraph {
      * If a label only depends on external deps (e.g. @maven//:com_spring_etc), it will be considered a leaf node only
      * if the passed ignoreExternals is set to true
      */
+    @Override
     public Set<String> getLeafLabels(boolean ignoreExternals) {
         if (ignoreExternals) {
             return leafLabelsIgnoreExternals;
@@ -184,6 +193,7 @@ public class BazelDependencyGraph {
      * <p>
      * Note that there is almost always multiple valid solutions for any given graph+label selection.
      */
+    @Override
     public List<BazelPackageLocation> orderLabels(Set<BazelPackageLocation> selectedLabels) {
         LinkedList<BazelPackageLocation> selectedLabelsList = new LinkedList<>();
         selectedLabelsList.addAll(selectedLabels);
@@ -196,6 +206,7 @@ public class BazelDependencyGraph {
      * <p>
      * Note that there is almost always multiple valid solutions for any given graph+label selection.
      */
+    @Override
     public List<BazelPackageLocation> orderLabels(List<BazelPackageLocation> selectedLabels) {
         return orderLabels(selectedLabels, true);
     }
@@ -210,6 +221,7 @@ public class BazelDependencyGraph {
      * want to navigate into the dependency graph of the external dependencies (e.g. maven) while building the
      * dependency graph. Pass false to followExternalTransitives to trigger this performance optimization.
      */
+    @Override
     public List<BazelPackageLocation> orderLabels(List<BazelPackageLocation> selectedLabels,
             boolean followExternalTransitives) {
         LinkedList<BazelPackageLocation> orderedLabels = null;
@@ -271,6 +283,7 @@ public class BazelDependencyGraph {
      * @param possibleDependency
      * @return
      */
+    @Override
     public boolean isDependency(String label, String possibleDependency) {
         boolean isDep = isDependencyRecur(label, possibleDependency, null, new HashSet<>(), true);
         return isDep;
@@ -286,6 +299,7 @@ public class BazelDependencyGraph {
      * @param possibleDependency
      * @param depCache
      */
+    @Override
     public boolean isDependency(String label, String possibleDependency, Map<String, Boolean> depCache) {
         boolean isDep = isDependencyRecur(label, possibleDependency, depCache, new HashSet<>(), true);
         return isDep;
@@ -305,6 +319,7 @@ public class BazelDependencyGraph {
      *            (e.g. //abc depends on @maven//:foo which depends on @maven//:bar; this method will return false for
      *            label=//abc and possibleDependency=@maven//:bar). This is a performance optimization.
      */
+    @Override
     public boolean isDependency(String label, String possibleDependency, Map<String, Boolean> depCache,
             boolean followExternalTransitives) {
         boolean isDep =

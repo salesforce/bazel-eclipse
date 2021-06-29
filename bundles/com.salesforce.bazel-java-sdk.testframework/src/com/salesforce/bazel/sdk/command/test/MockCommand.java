@@ -32,6 +32,7 @@ import org.mockito.Mockito;
 
 import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
 import com.salesforce.bazel.sdk.command.Command;
+import com.salesforce.bazel.sdk.path.BazelPathHelper;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
@@ -147,7 +148,7 @@ public class MockCommand implements Command {
         }
         String packageLabel = target;
         String ruleName = "*";
-        int colonIndex = target.indexOf(":");
+        int colonIndex = target.indexOf(BazelPathHelper.BAZEL_COLON);
         if (colonIndex >= 0) {
             packageLabel = target.substring(0, colonIndex);
             ruleName = target.substring(colonIndex + 1);

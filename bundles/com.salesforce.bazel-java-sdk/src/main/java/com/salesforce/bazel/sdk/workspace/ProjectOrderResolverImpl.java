@@ -2,10 +2,10 @@ package com.salesforce.bazel.sdk.workspace;
 
 import java.util.List;
 
-import com.salesforce.bazel.sdk.aspect.AspectDependencyGraphBuilder;
+import com.salesforce.bazel.sdk.aspect.AspectDependencyGraphFactory;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
+import com.salesforce.bazel.sdk.graph.BazelDependencyGraph;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelDependencyGraph;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
@@ -56,7 +56,7 @@ public class ProjectOrderResolverImpl implements ProjectOrderResolver {
         // first, generate the dependency graph for the entire workspace
         List<BazelPackageLocation> orderedModules = null;
         try {
-            BazelDependencyGraph workspaceDepGraph = AspectDependencyGraphBuilder.build(aspects, false);
+            BazelDependencyGraph workspaceDepGraph = AspectDependencyGraphFactory.build(aspects, false);
             boolean followExternalTransitives = false;
             orderedModules = workspaceDepGraph.orderLabels(selectedPackages, followExternalTransitives);
 
