@@ -2,7 +2,7 @@ target "bazel-eclipse-feature-target-platform" with source configurePhase requir
 
 environment JavaSE-11
 
-location "https://download.eclipse.org/eclipse/updates/4.20-I-builds/I20210429-1800/" {
+location "https://download.eclipse.org/eclipse/updates/4.20/R-4.20-202106111600/" {
     org.eclipse.e4.rcp.feature.group
     org.eclipse.ecf.core.feature.feature.group
     org.eclipse.ecf.core.ssl.feature.feature.group
