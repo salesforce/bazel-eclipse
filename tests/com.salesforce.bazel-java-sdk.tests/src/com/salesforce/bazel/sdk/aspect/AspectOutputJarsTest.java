@@ -7,7 +7,7 @@ import org.json.simple.JSONObject;
 import org.junit.Test;
 
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectOutputJarSet;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 public class AspectOutputJarsTest {
 
@@ -16,11 +16,11 @@ public class AspectOutputJarsTest {
     //   "interface_jar":"bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar", $SLASH_OK: sample code
     //   "source_jar":"external/com_google_guava_guava/jar/guava-20.0-sources.jar" $SLASH_OK: sample code
     //  }
-    private final String GUAVA_JAR = BazelPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0.jar"); // $SLASH_OK
-    private final String GUAVA_IJAR = BazelPathHelper.osSeps(
+    private final String GUAVA_JAR = FSPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0.jar"); // $SLASH_OK
+    private final String GUAVA_IJAR = FSPathHelper.osSeps(
         "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar"); // $SLASH_OK
     private final String GUAVA_SJAR =
-            BazelPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0-sources.jar"); // $SLASH_OK
+            FSPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0-sources.jar"); // $SLASH_OK
 
     @Test
     public void testDeserializationHappy() {

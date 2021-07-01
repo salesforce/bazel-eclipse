@@ -39,6 +39,8 @@ package com.salesforce.bazel.sdk.aspect;
 import java.io.File;
 import java.util.List;
 
+import com.salesforce.bazel.sdk.model.BazelLabel;
+
 /**
  * A parsed version of the JSON file produced by the application of the Bazel aspect. Each target in each package will
  * have such a file. Look for subclasses of this class for extended information added for specific rule types.
@@ -126,8 +128,15 @@ public class AspectTargetInfo {
     /**
      * Label of the target.
      */
-    public String getLabel() {
+    public String getLabelPath() {
         return label;
+    }
+
+    /**
+     * Label of the target.
+     */
+    public BazelLabel getLabel() {
+        return new BazelLabel(label);
     }
 
     /**

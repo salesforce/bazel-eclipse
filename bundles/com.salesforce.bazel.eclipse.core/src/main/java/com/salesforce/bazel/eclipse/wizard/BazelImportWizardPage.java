@@ -91,7 +91,7 @@ public class BazelImportWizardPage extends WizardPage {
         // that the user correctly pointed the location control to a Bazel workspace, and it found one or
         // more Java packages.
         Object[] checkedElements = projectTree.projectTreeViewer.getCheckedElements();
-        boolean isComplete = checkedElements != null && checkedElements.length > 0;
+        boolean isComplete = (checkedElements != null) && (checkedElements.length > 0);
         setPageComplete(isComplete);
         LOG.info("BazelImportWizardPage.setPageComplete: {}", isComplete);
     }
@@ -106,34 +106,34 @@ public class BazelImportWizardPage extends WizardPage {
 
             // get the selected location
             // when the wizard is first opened, the location field is blank and we have a null root package
-            if (this.locationControl.rootDirectory != null) {
-                this.projectTree.setRootWorkspaceDirectory(this.locationControl.rootDirectory);
-                this.workspaceRootPackage = workspaceScanner.getPackages(this.locationControl.rootDirectory);
+            if (locationControl.rootDirectory != null) {
+                projectTree.setRootWorkspaceDirectory(locationControl.rootDirectory);
+                workspaceRootPackage = workspaceScanner.getPackages(locationControl.rootDirectory);
                 if (workspaceRootPackage != null) {
                     // make sure the user chose a Bazel workspace
                     newEclipseProjects.add(workspaceRootPackage);
                     newFilesystemLocations.add(workspaceRootPackage.getBazelPackageFSAbsolutePath());
-                    this.projectTree.projectTreeViewer.setInput(newEclipseProjects);
-                    this.projectTree.projectTreeViewer.expandAll();
-                    this.projectTree.importProjectViewButton.setEnabled(true);
+                    projectTree.projectTreeViewer.setInput(newEclipseProjects);
+                    projectTree.projectTreeViewer.expandAll();
+                    projectTree.importProjectViewButton.setEnabled(true);
                     if (workspaceRootPackage.getChildPackageInfos().size() < 10) {
                         // short term usability hack, enable all for import if there are less than 10 Bazel packages
-                        this.projectTree.projectTreeViewer.setAllChecked(true);
+                        projectTree.projectTreeViewer.setAllChecked(true);
                     }
-                    uncheckAlreadyImportedProjects(this.projectTree.projectTreeViewer, this.workspaceRootPackage);
+                    uncheckAlreadyImportedProjects(projectTree.projectTreeViewer, workspaceRootPackage);
                 } else {
-                    this.projectTree.projectTreeViewer.setAllChecked(true);
+                    projectTree.projectTreeViewer.setAllChecked(true);
                 }
             }
 
-            this.locationControl.locations = newFilesystemLocations;
+            locationControl.locations = newFilesystemLocations;
 
             setPageComplete();
             setErrorMessage(null);
             setMessage(null);
 
-            this.loadingErrorMessage = null;
-            this.workingSetControl.updateWorkingSet(this.workspaceRootPackage);
+            loadingErrorMessage = null;
+            workingSetControl.updateWorkingSet(workspaceRootPackage);
         } catch (Exception anyE) {
             LOG.error(anyE.getMessage(), anyE);
             setErrorMessage("Error importing the Bazel workspace. Details: " + anyE.getMessage());
@@ -166,7 +166,7 @@ public class BazelImportWizardPage extends WizardPage {
             String target = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false).getConfiguredTargets()
                     .iterator().next();
             BazelLabel label = new BazelLabel(target);
-            String pack = label.toDefaultPackageLabel().getLabel();
+            String pack = label.getPackagePath(true);
             BazelPackageInfo bpi = rootPackage.findByPackage(pack);
             if (bpi != null) {
                 importedPackages.add(bpi);

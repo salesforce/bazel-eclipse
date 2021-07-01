@@ -1,6 +1,6 @@
 package com.salesforce.bazel.sdk.workspace.test;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Descriptor for a manufactured target (java_library, java_test, etc) in a manufactured bazel package in a test
@@ -21,7 +21,7 @@ public class TestBazelTargetDescriptor {
 
     public TestBazelTargetDescriptor(TestBazelPackageDescriptor parentPackage, String targetName, String targetType) {
         this.parentPackage = parentPackage;
-        this.targetPath = parentPackage.packagePath + BazelPathHelper.BAZEL_COLON + targetName;
+        this.targetPath = parentPackage.packagePath + BazelLabel.BAZEL_COLON + targetName;
         this.targetName = targetName;
         this.targetType = targetType;
 

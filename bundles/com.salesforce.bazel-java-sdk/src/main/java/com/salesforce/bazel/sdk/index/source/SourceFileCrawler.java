@@ -32,7 +32,7 @@ import com.salesforce.bazel.sdk.index.CodeIndex;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.index.model.CodeLocationIdentifier;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Crawler that descends into nested directories of source files and adds found files to the index.
@@ -105,10 +105,10 @@ public class SourceFileCrawler {
                         }
                         String childRelative = candidateFile.getName();
                         if (!relativePathToClosestArtifact.isEmpty()) {
-                            childRelative = relativePathToClosestArtifact + BazelPathHelper.UNIX_SLASH
+                            childRelative = relativePathToClosestArtifact + FSPathHelper.UNIX_SLASH
                                     + candidateFile.getName();
                             // convert to Windows path if necessary
-                            childRelative = BazelPathHelper.osSeps(childRelative);
+                            childRelative = FSPathHelper.osSeps(childRelative);
                         }
                         indexRecur(candidateFile, childRelative, closestArtifactLocationDescriptor, false);
                     } else if (candidateFile.canRead()) {

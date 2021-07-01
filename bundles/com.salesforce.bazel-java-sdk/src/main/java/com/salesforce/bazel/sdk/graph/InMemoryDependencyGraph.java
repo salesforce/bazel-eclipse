@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
@@ -88,7 +89,7 @@ public class InMemoryDependencyGraph extends BazelDependencyGraph {
     public void addDependency(String sourceLabel, String depLabel) {
         allDepLabels.add(depLabel);
         allSourceLabels.add(sourceLabel);
-        boolean isDepAnExternal = depLabel.startsWith("@");
+        boolean isDepAnExternal = depLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT);
         LOG.debug("{} depends on {}", sourceLabel, depLabel);
 
         // remove dep as a candidate root
@@ -329,7 +330,7 @@ public class InMemoryDependencyGraph extends BazelDependencyGraph {
 
     private boolean isDependencyRecur(String label, String possibleDependency, Map<String, Boolean> depCache,
             Set<String> processedLabels, boolean followExternalTransitives) {
-        if (!followExternalTransitives && label.startsWith("@")) {
+        if (!followExternalTransitives && label.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)) {
             return false;
         }
 

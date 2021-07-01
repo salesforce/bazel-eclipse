@@ -3,8 +3,8 @@ package com.salesforce.bazel.sdk.graph;
 import java.io.File;
 import java.util.List;
 
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
 
 /**
  * In memory package location.
@@ -23,7 +23,9 @@ public class InMemoryPackageLocation implements BazelPackageLocation {
     }
 
     public InMemoryPackageLocation(String path) {
-        if (path.startsWith(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
+
+        // TODO the fact that we are doing this indicates we aren't sure if the caller is passing a fs path, or bazel path
+        if (path.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)) {
             this.path = path.substring(2);
         } else {
             this.path = path;

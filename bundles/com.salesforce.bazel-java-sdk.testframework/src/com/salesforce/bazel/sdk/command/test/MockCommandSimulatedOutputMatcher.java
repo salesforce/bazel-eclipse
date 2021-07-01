@@ -1,6 +1,6 @@
 package com.salesforce.bazel.sdk.command.test;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Filter that enables Bazel command output to be associated with a particular command. By providing a list of these,
@@ -14,9 +14,9 @@ public class MockCommandSimulatedOutputMatcher {
         matchArgIndex = index;
         matchArgRegex = regex;
 
-        if (matchArgRegex.contains(BazelPathHelper.WINDOWS_BACKSLASH)) {
+        if (matchArgRegex.contains(FSPathHelper.WINDOWS_BACKSLASH)) {
             matchArgRegex =
-                    matchArgRegex.replace(BazelPathHelper.WINDOWS_BACKSLASH, BazelPathHelper.WINDOWS_BACKSLASH_REGEX);
+                    matchArgRegex.replace(FSPathHelper.WINDOWS_BACKSLASH, FSPathHelper.WINDOWS_BACKSLASH_REGEX);
         }
     }
 }

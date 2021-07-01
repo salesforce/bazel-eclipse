@@ -9,7 +9,7 @@ import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Bazel generally requires BUILD file authors to list all dependencies explicitly. However, there are a few legacy
@@ -65,28 +65,28 @@ public class ImplicitClasspathHelper {
 
     String computeFilePathForRunnerJar(BazelWorkspace bazelWorkspace, AspectTargetInfo targetInfo) {
         File bazelBinDir = bazelWorkspace.getBazelBinDirectory();
-        File testRunnerDir = new File(bazelBinDir, BazelPathHelper.osSeps(IMPLICIT_RUNNER));
+        File testRunnerDir = new File(bazelBinDir, FSPathHelper.osSeps(IMPLICIT_RUNNER));
 
         LogHelper logger = LogHelper.log(this.getClass());
         if (!testRunnerDir.exists()) {
-            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabel() + "], directory ["
-                    + BazelPathHelper.getCanonicalPathStringSafely(testRunnerDir) + "] does not exist.");
+            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabelPath() + "], directory ["
+                    + FSPathHelper.getCanonicalPathStringSafely(testRunnerDir) + "] does not exist.");
             return null;
         }
-        String javaToolsPath = BazelPathHelper.osSeps("external/remote_java_tools_"
-                + bazelWorkspace.getOperatingSystemFoldername() + BazelPathHelper.UNIX_SLASH + "java_tools"); // $SLASH_OK
+        String javaToolsPath = FSPathHelper.osSeps("external/remote_java_tools_"
+                + bazelWorkspace.getOperatingSystemFoldername() + FSPathHelper.UNIX_SLASH + "java_tools"); // $SLASH_OK
         File javaToolsDir = new File(testRunnerDir, javaToolsPath);
         if (!javaToolsDir.exists()) {
-            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabel() + "], directory ["
-                    + BazelPathHelper.getCanonicalPathStringSafely(javaToolsDir) + "] does not exist.");
+            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabelPath() + "], directory ["
+                    + FSPathHelper.getCanonicalPathStringSafely(javaToolsDir) + "] does not exist.");
             return null;
         }
         File runnerJar = new File(javaToolsDir, "Runner_deploy-ijar.jar");
         if (!runnerJar.exists()) {
-            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabel() + "], test runner jar ["
-                    + BazelPathHelper.getCanonicalPathStringSafely(runnerJar) + "] does not exist.");
+            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabelPath() + "], test runner jar ["
+                    + FSPathHelper.getCanonicalPathStringSafely(runnerJar) + "] does not exist.");
             return null;
         }
-        return BazelPathHelper.getCanonicalPathStringSafely(runnerJar);
+        return FSPathHelper.getCanonicalPathStringSafely(runnerJar);
     }
 }

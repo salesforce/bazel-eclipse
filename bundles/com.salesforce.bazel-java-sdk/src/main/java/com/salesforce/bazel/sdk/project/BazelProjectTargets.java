@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Object that encapsulates the logic and state regarding the active targets configured for a BazelProject.
@@ -75,7 +75,7 @@ public class BazelProjectTargets {
 
     public void activateWildcardTarget(String wildcardTarget) {
         this.isActivatedWildcardTarget = true;
-        this.configuredTargets.add(projectBazelLabel + BazelPathHelper.BAZEL_COLON + wildcardTarget);
+        this.configuredTargets.add(projectBazelLabel + BazelLabel.BAZEL_COLON + wildcardTarget);
     }
 
     public void activateSpecificTargets(Set<String> activatedTargets) {

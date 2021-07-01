@@ -44,13 +44,13 @@ import java.util.List;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 public class BazelProblemTest {
 
     @Test
     public void getOwningLabel__matchingLabel() {
-        BazelProblem details = BazelProblem.createError(BazelPathHelper.osSeps("a/b/c/d"), 1, "desc"); // $SLASH_OK
+        BazelProblem details = BazelProblem.createError(FSPathHelper.osSeps("a/b/c/d"), 1, "desc"); // $SLASH_OK
         BazelLabel l1 = new BazelLabel("x/y/z"); // $SLASH_OK bazel path
         BazelLabel l2 = new BazelLabel("a/b/c"); // $SLASH_OK bazel path
 
@@ -79,8 +79,8 @@ public class BazelProblemTest {
     @Test
     @Ignore // Windows TODO
     public void toErrorWithRelativizedResourcePath__matchingBazelPackage() {
-        String partialPath = BazelPathHelper.osSeps("/src/main/java/com/MyClass.java"); // $SLASH_OK
-        String fullPath = BazelPathHelper.osSeps("projects/libs/cake/abstractions" + partialPath); // $SLASH_OK
+        String partialPath = FSPathHelper.osSeps("/src/main/java/com/MyClass.java"); // $SLASH_OK
+        String fullPath = FSPathHelper.osSeps("projects/libs/cake/abstractions" + partialPath); // $SLASH_OK
         BazelProblem details = BazelProblem.createError(fullPath, 1, "desc");
 
         details = details.toErrorWithRelativizedResourcePath(new BazelLabel("//projects/libs/cake/abstractions")); // $SLASH_OK bazel path
@@ -100,8 +100,8 @@ public class BazelProblemTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void toErrorWithRelativizedResourcePath__matchingBazelPackagePrefix() {
-        String partialPath = BazelPathHelper.osSeps("/src/main/java/com/MyClass.java"); // $SLASH_OK
-        String fullPath = BazelPathHelper.osSeps("projects/libs/cake/abstractions_foo" + partialPath); // $SLASH_OK
+        String partialPath = FSPathHelper.osSeps("/src/main/java/com/MyClass.java"); // $SLASH_OK
+        String fullPath = FSPathHelper.osSeps("projects/libs/cake/abstractions_foo" + partialPath); // $SLASH_OK
 
         BazelProblem details = BazelProblem.createError(fullPath, 1, "desc");
 
@@ -110,8 +110,8 @@ public class BazelProblemTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void toErrorWithRelativizedResourcePath__differentBazelPackage() {
-        String partialPath = BazelPathHelper.osSeps("/src/main/java/com/MyClass.java"); // $SLASH_OK
-        String fullPath = BazelPathHelper.osSeps("projects/libs/cake/metrics-abstractions" + partialPath); // $SLASH_OK
+        String partialPath = FSPathHelper.osSeps("/src/main/java/com/MyClass.java"); // $SLASH_OK
+        String fullPath = FSPathHelper.osSeps("projects/libs/cake/metrics-abstractions" + partialPath); // $SLASH_OK
 
         BazelProblem details = BazelProblem.createError(fullPath, 1, "desc");
 

@@ -94,7 +94,7 @@ public class BazelQueryHelper {
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if (bazelLabels.isEmpty()) {
-            return Collections.singletonList(new BazelBuildFile("//...")); // $SLASH_OK bazel path
+            return Collections.singletonList(new BazelBuildFile(BazelLabel.BAZEL_ALL_REPO_PACKAGES));
         }
 
         Collection<BazelLabel> cacheMisses = new HashSet<>();
@@ -122,7 +122,7 @@ public class BazelQueryHelper {
     // runs query and populates cache, returns loaded BazelBuildFile instances
     private Collection<BazelBuildFile> runQuery(Collection<BazelLabel> bazelLabels, File bazelWorkspaceRootDirectory)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-        String labels = bazelLabels.stream().map(BazelLabel::getLabel).collect(Collectors.joining(" "));
+        String labels = bazelLabels.stream().map(BazelLabel::getLabelPath).collect(Collectors.joining(" "));
 
         // bazel query 'kind(rule, [label]:*)' --output label_kind
 
@@ -157,20 +157,20 @@ public class BazelQueryHelper {
 
         Collection<BazelBuildFile> buildFiles = new HashSet<>();
         for (BazelLabel pack : packageToLabel.keySet()) {
-            BazelBuildFile buildFile = new BazelBuildFile(pack.getLabel());
+            BazelBuildFile buildFile = new BazelBuildFile(pack.getLabelPath());
             buildFileCache.put(pack, buildFile);
             LOG.info("Build file cache put, package: " + pack);
             buildFiles.add(buildFile);
             unprocessed.remove(pack);
             for (BazelLabel target : packageToLabel.get(pack)) {
                 String ruleType = Objects.requireNonNull(labelToRuleType.get(target));
-                buildFile.addTarget(ruleType, target.getLabel());
+                buildFile.addTarget(ruleType, target.getLabelPath());
             }
         }
 
         // some packages may not have any targets - they need to be accounted for
         for (BazelLabel pack : unprocessed) {
-            BazelBuildFile buildFile = new BazelBuildFile(pack.getLabel());
+            BazelBuildFile buildFile = new BazelBuildFile(pack.getLabelPath());
             buildFileCache.put(pack, buildFile);
             LOG.info("Build file cache put (no targets) package: " + pack);
         }
@@ -179,7 +179,7 @@ public class BazelQueryHelper {
     }
 
     public void flushCache(BazelLabel bazelPackageName) {
-        BazelLabel pack = bazelPackageName.toDefaultPackageLabel();
+        BazelLabel pack = bazelPackageName.getPackageLabel();
         BazelBuildFile previousValue = buildFileCache.remove(pack);
         if (previousValue != null) {
             LOG.info("Build file cache flush, package " + pack);

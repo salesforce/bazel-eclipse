@@ -40,7 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Model class for a Bazel Java package. It is a node in a tree of the hierarchy of packages. The root node in this tree
@@ -312,24 +312,24 @@ public class BazelPackageInfo implements BazelPackageLocation {
             // somehow handle that workspace differently
             // Docs should indicate that a better practice is to keep the root dir free of an actual package
             // For now, assume that anything referring to the root dir is a proxy for 'whole repo'
-            computedPackageName = "//...";
+            computedPackageName = BazelLabel.BAZEL_ALL_REPO_PACKAGES;
             return computedPackageName;
         }
 
         // split the file system path by OS path separator
-        String regex = BazelPathHelper.UNIX_SLASH;
-        if (File.separator.equals(BazelPathHelper.WINDOWS_BACKSLASH)) {
-            regex = BazelPathHelper.WINDOWS_BACKSLASH_REGEX;
+        String regex = FSPathHelper.UNIX_SLASH;
+        if (File.separator.equals(FSPathHelper.WINDOWS_BACKSLASH)) {
+            regex = FSPathHelper.WINDOWS_BACKSLASH_REGEX;
         }
         String[] pathElements = relativeWorkspacePath.split(regex);
 
         // assemble the path elements into a proper Bazel package name
-        String name = BazelPathHelper.BAZEL_SLASH;
+        String name = BazelLabel.BAZEL_SLASH;
         for (String e : pathElements) {
             if (e.isEmpty()) {
                 continue;
             }
-            name = name + BazelPathHelper.BAZEL_SLASH + e;
+            name = name + BazelLabel.BAZEL_SLASH + e;
         }
 
         // set computedPackageName only when done computing it, to avoid threading issues
@@ -350,7 +350,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
         if (computedPackageNameLastSegment != null) {
             return computedPackageNameLastSegment;
         }
-        int lastSlash = computedPackageName.lastIndexOf(BazelPathHelper.BAZEL_SLASH);
+        int lastSlash = computedPackageName.lastIndexOf(BazelLabel.BAZEL_SLASH);
         if (lastSlash == -1) {
             computedPackageNameLastSegment = "";
             return computedPackageNameLastSegment;
@@ -366,7 +366,9 @@ public class BazelPackageInfo implements BazelPackageLocation {
     }
 
     /**
-     * Find a node in the tree that has the passed Bazel package path
+     * Find a node in the tree that has the passed Bazel package path.
+     * <p>
+     * TODO convert arg to BazelLabel, not String
      *
      * @param bazelPackagePath
      *            path to find, such as //projects/libs/apple
@@ -376,13 +378,13 @@ public class BazelPackageInfo implements BazelPackageLocation {
         if ((bazelPackagePath == null) || bazelPackagePath.isEmpty()) {
             throw new IllegalArgumentException("An empty path was passed to BazelPackageInfo.findByPackage()");
         }
-        if (!bazelPackagePath.startsWith(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
+        if (!bazelPackagePath.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)) {
             throw new IllegalArgumentException(
                     "You must pass a Bazel path (e.g. //projects/libs/apple) to BazelPackageInfo.findByPackage(), got ["
                             + bazelPackagePath + "]");
         }
 
-        if ("//...".equals(bazelPackagePath)) {
+        if (BazelLabel.BAZEL_ALL_REPO_PACKAGES.equals(bazelPackagePath)) {
             // special case
             return workspaceRootNode;
         }

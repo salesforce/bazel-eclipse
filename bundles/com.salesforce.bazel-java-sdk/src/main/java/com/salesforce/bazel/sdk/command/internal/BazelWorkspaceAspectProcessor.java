@@ -276,17 +276,17 @@ public class BazelWorkspaceAspectProcessor {
         // find starting point, based on target - this is trivial, but we also support wildcard
         // targets (so that we can run a single bazal build cmd and get all aspects)
         for (AspectTargetInfo ati : depNameToTargetInfo.values()) {
-            BazelLabel currentLabel = new BazelLabel(ati.getLabel());
+            BazelLabel currentLabel = new BazelLabel(ati.getLabelPath());
             if (requestingLabel.isConcrete()) {
                 if (requestingLabel.equals(currentLabel)) {
                     Set<AspectTargetInfo> allDeps = getTransitiveClosure(ati, depNameToTargetInfo);
-                    transitivesClosures.put(new BazelLabel(ati.getLabel()), allDeps);
+                    transitivesClosures.put(new BazelLabel(ati.getLabelPath()), allDeps);
                 }
             } else {
                 // all targets in the requested package qualify
                 if (currentLabel.getPackagePath().equals(requestingLabel.getPackagePath())) {
                     Set<AspectTargetInfo> allDeps = getTransitiveClosure(ati, depNameToTargetInfo);
-                    transitivesClosures.put(new BazelLabel(ati.getLabel()), allDeps);
+                    transitivesClosures.put(new BazelLabel(ati.getLabelPath()), allDeps);
                 }
             }
         }

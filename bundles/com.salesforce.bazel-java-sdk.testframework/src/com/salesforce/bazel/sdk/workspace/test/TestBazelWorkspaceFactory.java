@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Utility class to generate a Bazel workspace and other artifacts on the filesystem. As of this writing, the workspace
@@ -64,7 +65,7 @@ public class TestBazelWorkspaceFactory {
         }
 
         // make the test runner jar file, just in case a project in this workspace uses it (see ImplicitDependencyHelper)
-        String testRunnerPath = BazelPathHelper
+        String testRunnerPath = FSPathHelper
                 .osSeps("external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools"); // $SLASH_OK
         File testRunnerDir = new File(workspaceDescriptor.dirBazelBin, testRunnerPath);
         testRunnerDir.mkdirs();
@@ -85,7 +86,7 @@ public class TestBazelWorkspaceFactory {
         for (int i = 0; i < workspaceDescriptor.numberJavaPackages; i++) {
             String packageName = "javalib" + i;
             String packageRelativeBazelPath = libsRelativeBazelPath + "/" + packageName; // $SLASH_OK bazel path
-            String packageRelativeFilePath = BazelPathHelper.osSeps(packageRelativeBazelPath);
+            String packageRelativeFilePath = FSPathHelper.osSeps(packageRelativeBazelPath);
             File javaPackageDir = new File(libsDir, packageName);
             javaPackageDir.mkdir();
 
@@ -103,24 +104,24 @@ public class TestBazelWorkspaceFactory {
 
             // main source
             List<String> sourceFiles = new ArrayList<>();
-            String srcMainPath = BazelPathHelper.osSeps("src/main/java/com/salesforce/fruit" + i); // $SLASH_OK
+            String srcMainPath = FSPathHelper.osSeps("src/main/java/com/salesforce/fruit" + i); // $SLASH_OK
             File javaSrcMainDir = new File(javaPackageDir, srcMainPath);
             javaSrcMainDir.mkdirs();
             // Apple.java
             File javaFile1 = new File(javaSrcMainDir, "Apple" + i + ".java");
             javaFile1.createNewFile();
             String appleSrc =
-                    BazelPathHelper.osSeps(packageRelativeBazelPath + "/" + srcMainPath + "/Apple" + i + ".java"); // $SLASH_OK
+                    FSPathHelper.osSeps(packageRelativeBazelPath + "/" + srcMainPath + "/Apple" + i + ".java"); // $SLASH_OK
             sourceFiles.add(appleSrc);
             // Banana.java
             File javaFile2 = new File(javaSrcMainDir, "Banana" + i + ".java");
             javaFile2.createNewFile();
             String bananaSrc =
-                    BazelPathHelper.osSeps(packageRelativeBazelPath + "/" + srcMainPath + "/Banana" + i + ".java"); // $SLASH_OK
+                    FSPathHelper.osSeps(packageRelativeBazelPath + "/" + srcMainPath + "/Banana" + i + ".java"); // $SLASH_OK
             sourceFiles.add(bananaSrc);
 
             // main resources
-            String srcMainResourcesPath = BazelPathHelper.osSeps("src/main/resources"); // $SLASH_OK
+            String srcMainResourcesPath = FSPathHelper.osSeps("src/main/resources"); // $SLASH_OK
             File javaSrcMainResourcesDir = new File(javaPackageDir, srcMainResourcesPath);
             javaSrcMainResourcesDir.mkdirs();
             File resourceFile = new File(javaSrcMainResourcesDir, "main.properties");
@@ -145,18 +146,18 @@ public class TestBazelWorkspaceFactory {
 
             // test source
             List<String> testSourceFiles = new ArrayList<>();
-            String srcTestPath = BazelPathHelper.osSeps("src/test/java/com/salesforce/fruit" + i); // $SLASH_OK
+            String srcTestPath = FSPathHelper.osSeps("src/test/java/com/salesforce/fruit" + i); // $SLASH_OK
             File javaSrcTestDir = new File(javaPackageDir, srcTestPath);
             javaSrcTestDir.mkdirs();
             File javaTestFile1 = new File(javaSrcTestDir, "Apple" + i + "Test.java");
             javaTestFile1.createNewFile();
             String appleTestSrc =
-                    BazelPathHelper.osSeps(packageRelativeBazelPath + "/" + srcTestPath + "/Apple" + i + "Test.java"); // $SLASH_OK
+                    FSPathHelper.osSeps(packageRelativeBazelPath + "/" + srcTestPath + "/Apple" + i + "Test.java"); // $SLASH_OK
             testSourceFiles.add(appleTestSrc);
             File javaTestFile2 = new File(javaSrcTestDir, "Banana" + i + "Test.java");
             javaTestFile2.createNewFile();
             String bananaTestSrc =
-                    BazelPathHelper.osSeps(packageRelativeBazelPath + "/" + srcTestPath + "/Banana" + i + "Test.java"); // $SLASH_OK
+                    FSPathHelper.osSeps(packageRelativeBazelPath + "/" + srcTestPath + "/Banana" + i + "Test.java"); // $SLASH_OK
             testSourceFiles.add(bananaTestSrc);
 
             // test fruit source aspect
@@ -166,7 +167,7 @@ public class TestBazelWorkspaceFactory {
             packageAspectFiles.add(aspectFilePath_testsource);
 
             // test resources
-            String srcTestResourcesPath = BazelPathHelper.osSeps("src/test/resources"); // $SLASH_OK
+            String srcTestResourcesPath = FSPathHelper.osSeps("src/test/resources"); // $SLASH_OK
             File javaSrcTestResourcesDir = new File(javaPackageDir, srcTestResourcesPath);
             javaSrcTestResourcesDir.mkdirs();
             File testResourceFile = new File(javaSrcTestResourcesDir, "test.properties");
@@ -191,7 +192,7 @@ public class TestBazelWorkspaceFactory {
                 packageAspectFiles.add(previousAspectFilePath);
             }
             // now save off our current lib target to add to the next
-            previousJavaLibTarget = packageRelativeBazelPath + BazelPathHelper.BAZEL_COLON + packageName;
+            previousJavaLibTarget = packageRelativeBazelPath + BazelLabel.BAZEL_COLON + packageName;
             previousAspectFilePath = aspectFilePath_mainsource;
 
             // write fake jar files to the filesystem for this project
@@ -216,7 +217,7 @@ public class TestBazelWorkspaceFactory {
             createGenruleBuildFile(buildFile, packageDescriptor);
 
             File shellScript = new File(genruleLib, "gocrazy" + i + ".sh");
-            if (!BazelPathHelper.isUnix) {
+            if (!FSPathHelper.isUnix) {
                 shellScript = new File(genruleLib, "gocrazy" + i + ".cmd");
             }
             shellScript.createNewFile();
@@ -269,7 +270,7 @@ public class TestBazelWorkspaceFactory {
         sb.append(packageName);
         sb.append("\",\n"); // $SLASH_OK: line continue
         sb.append("   tools = \"gocrazy.sh\",\n"); // $SLASH_OK: escape char
-        if (BazelPathHelper.isUnix) {
+        if (FSPathHelper.isUnix) {
             sb.append("   cmd = \"./$(location gocrazy.sh) abc\",\n"); // $SLASH_OK
         } else {
             sb.append("   cmd = \"./$(location gocrazy.cmd) abc\",\n");
@@ -280,12 +281,12 @@ public class TestBazelWorkspaceFactory {
     }
 
     private void createFakeExternalJars(File dirOutputBase, String foldername, String jarname) throws IOException {
-        String fakeJarPath = BazelPathHelper.osSeps("external/" + foldername + "/jar/" + jarname + ".jar"); // $SLASH_OK
+        String fakeJarPath = FSPathHelper.osSeps("external/" + foldername + "/jar/" + jarname + ".jar"); // $SLASH_OK
         File fakeJar = new File(dirOutputBase, fakeJarPath);
         fakeJar.createNewFile();
 
         String fakeSourceJarPath =
-                BazelPathHelper.osSeps("external/" + foldername + "/jar/" + jarname + "-sources.jar"); // $SLASH_OK
+                FSPathHelper.osSeps("external/" + foldername + "/jar/" + jarname + "-sources.jar"); // $SLASH_OK
         File fakeSourceJar = new File(dirOutputBase, fakeSourceJarPath);
         fakeSourceJar.createNewFile();
     }

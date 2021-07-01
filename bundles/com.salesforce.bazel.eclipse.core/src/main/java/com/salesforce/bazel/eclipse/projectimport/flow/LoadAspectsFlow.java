@@ -69,7 +69,7 @@ public class LoadAspectsFlow implements ImportFlow {
             List<BazelLabel> targets = map.get(packageLocation);
             targets = Objects.requireNonNull(targets);
             for (BazelLabel target : targets) {
-                labels.add(target.getLabel());
+                labels.add(target.getLabelPath());
             }
         }
 

@@ -32,7 +32,7 @@ import org.mockito.Mockito;
 
 import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
 import com.salesforce.bazel.sdk.command.Command;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
@@ -143,13 +143,13 @@ public class MockCommand implements Command {
             return true;
         }
 
-        if (target.startsWith(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
+        if (target.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)) {
             target = target.substring(2);
         }
         String packageLabel = target;
         // TODO also need to check for ... and :all
-        String ruleName = BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS_STAR;
-        int colonIndex = target.indexOf(BazelPathHelper.BAZEL_COLON);
+        String ruleName = BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR;
+        int colonIndex = target.indexOf(BazelLabel.BAZEL_COLON);
         if (colonIndex >= 0) {
             packageLabel = target.substring(0, colonIndex);
             ruleName = target.substring(colonIndex + 1);
@@ -158,7 +158,7 @@ public class MockCommand implements Command {
         if (testWorkspaceFactory.workspaceDescriptor.getCreatedPackageByName(packageLabel) == null) {
             returnFalseOrThrow(target);
         }
-        if (!ruleName.equals(BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS_STAR)) {
+        if (!ruleName.equals(BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR)) {
             // * ruleName is always valid, but if there is a specific rule we need to check
             if (testWorkspaceFactory.workspaceDescriptor.createdTargets.get(target) == null) {
                 returnFalseOrThrow(target);

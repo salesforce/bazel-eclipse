@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Set;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
@@ -49,7 +49,7 @@ public class BazelPackageFinder {
                     // great, this dir is a Bazel package (but this may be a non-Java package)
                     // scan the BUILD file looking for java rules, only add if this is a java project
                     if (BuildFileSupport.hasRegisteredRules(dirFile)) {
-                        buildFileLocations.add(BazelPathHelper.getCanonicalFileSafely(dir));
+                        buildFileLocations.add(FSPathHelper.getCanonicalFileSafely(dir));
                     }
                 } else if (dirFile.isDirectory()) {
                     findBuildFileLocations(dirFile, monitor, buildFileLocations, depth + 1);

@@ -15,7 +15,7 @@ public final class BazelLabelUtil {
     public static Map<BazelLabel, Collection<BazelLabel>> groupByPackage(Collection<BazelLabel> labels) {
         Map<BazelLabel, Collection<BazelLabel>> packageToLabels = new HashMap<>();
         for (BazelLabel label : labels) {
-            BazelLabel pack = label.toDefaultPackageLabel();
+            BazelLabel pack = label.getPackageLabel();
             Collection<BazelLabel> group = packageToLabels.get(pack);
             if (group == null) {
                 group = new HashSet<>();

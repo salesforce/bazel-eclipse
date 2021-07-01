@@ -38,7 +38,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 
 public interface BazelConstants {
 
@@ -58,6 +58,6 @@ public interface BazelConstants {
      * The targets configured by default for each imported Bazel package.
      */
     Collection<String> DEFAULT_PACKAGE_TARGETS =
-            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS_STAR)));
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR)));
 
 }

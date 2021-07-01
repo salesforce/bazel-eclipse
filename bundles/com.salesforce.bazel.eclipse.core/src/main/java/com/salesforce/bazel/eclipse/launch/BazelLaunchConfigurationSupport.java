@@ -191,7 +191,7 @@ class BazelLaunchConfigurationSupport {
         Objects.requireNonNull(config);
         Objects.requireNonNull(projectName);
 
-        String labelStr = label == null ? null : label.getLabel();
+        String labelStr = label == null ? null : label.getLabelPath();
         String kindStr = targetKind == null ? null : targetKind.getKindName();
         config.setAttribute(BazelLaunchConfigAttributes.PROJECT.getAttributeName(), projectName);
         config.setAttribute(BazelLaunchConfigAttributes.LABEL.getAttributeName(), labelStr);
@@ -231,7 +231,7 @@ class BazelLaunchConfigurationSupport {
     List<TypedBazelLabel> getBazelTargetsForProject(IProject project, Set<BazelTargetKind> targetTypes) {
         List<TypedBazelLabel> typedBazelLabels = new ArrayList<>();
         for (AspectTargetInfo api : getAspectTargetInfosForProject(project, targetTypes)) {
-            BazelLabel label = new BazelLabel(api.getLabel());
+            BazelLabel label = api.getLabel();
             BazelTargetKind kind = BazelTargetKind.valueOfIgnoresCase(api.getKind());
             typedBazelLabels.add(new TypedBazelLabel(label, kind));
         }

@@ -76,7 +76,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
         String canonicalSourcePathString =
                 BazelPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory())
-                        + File.separator + sourcePath;
+                + File.separator + sourcePath;
         Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
         for (BazelProject candidateProject : bazelProjects) {
@@ -231,7 +231,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
                 String target = eclipseProjectBazelPrefs.get(propertyName, "");
                 if (!target.isEmpty()) {
                     BazelLabel label = new BazelLabel(target);
-                    if (!label.getLabel().startsWith(projectLabel)) {
+                    if (!label.getLabelPath().startsWith(projectLabel)) {
                         // the user jammed in a label not associated with this project, ignore
                         //continue;
                     }
@@ -289,7 +289,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
         int i = 0;
         for (BazelLabel bazelTarget : bazelTargets) {
-            eclipseProjectBazelPrefs.put(TARGET_PROPERTY_PREFIX + i, bazelTarget.getLabel());
+            eclipseProjectBazelPrefs.put(TARGET_PROPERTY_PREFIX + i, bazelTarget.getLabelPath());
             i++;
         }
         i = 0;

@@ -57,6 +57,8 @@ public interface BazelPackageLocation {
     /**
      * Builds a list containing this node, plus all children (recursively). The pathFilter must be in the form
      * "projects/libs/foo" and will limit the gathering to that path and descendents of that path.
+     * <p>
+     * TODO convert pathFilter to a BazelLabel; SDK Issue #37
      */
     public List<BazelPackageLocation> gatherChildren(String pathFilter);
 

@@ -188,7 +188,7 @@ public class BazelLauncherBuilder {
         args.add("--flaky_test_attempts=1");
         args.addAll(extraArgs);
         args.add("--");
-        args.add(bazelTarget.getLabel());
+        args.add(bazelTarget.getLabelPath());
 
         if (isDebugMode) {
             args.add("--test_arg=--wrapper_script_flag=--debug=" + debugHost + ":" + debugPort);

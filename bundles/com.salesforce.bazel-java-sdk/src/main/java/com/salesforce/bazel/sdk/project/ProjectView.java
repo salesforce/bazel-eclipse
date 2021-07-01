@@ -91,7 +91,7 @@ public class ProjectView {
             sb.append(System.lineSeparator());
             sb.append(TARGETS_SECTION).append(System.lineSeparator());
             for (BazelLabel target : targetToLineNumber.keySet()) {
-                sb.append(INDENT).append(target.getLabel()).append(System.lineSeparator());
+                sb.append(INDENT).append(target.getLabelPath()).append(System.lineSeparator());
             }
         }
         return sb.toString();

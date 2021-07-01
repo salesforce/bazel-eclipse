@@ -37,7 +37,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Objects;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * A wrapper for a Bazel logical "problem" (error/warning).
@@ -147,7 +147,7 @@ public class BazelProblem {
 
     private String getRelativeResourcePath(BazelLabel label) {
         String bazelPackagePath = label.getPackagePath();
-        String relativeFilePath = BazelPathHelper.osSeps(bazelPackagePath + BazelPathHelper.UNIX_SLASH);
+        String relativeFilePath = FSPathHelper.osSeps(bazelPackagePath + FSPathHelper.UNIX_SLASH);
         if (resourcePath.startsWith(relativeFilePath) && (resourcePath.length() > (relativeFilePath.length()))) {
             return File.separator + resourcePath.substring(relativeFilePath.length());
         }
