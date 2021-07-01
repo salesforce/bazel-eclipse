@@ -62,11 +62,11 @@ public class AspectTargetInfos {
 
     public AspectTargetInfos(Collection<AspectTargetInfo> aspectTargetInfos) {
         for (AspectTargetInfo aspectTargetInfo : aspectTargetInfos) {
-            AspectTargetInfo previousValue = labelToAspectTargetInfo.put(aspectTargetInfo.getLabel(), aspectTargetInfo);
+            AspectTargetInfo previousValue = labelToAspectTargetInfo.put(aspectTargetInfo.getLabelPath(), aspectTargetInfo);
             if (previousValue != null) {
                 if (!previousValue.toString().equals(aspectTargetInfo.toString())) {
                     throw new IllegalStateException(
-                            "Did not expect a duplicate label with different contents: " + previousValue.getLabel());
+                            "Did not expect a duplicate label with different contents: " + previousValue.getLabelPath());
                 }
             }
         }
@@ -84,7 +84,7 @@ public class AspectTargetInfos {
 
     public void addAll(Set<AspectTargetInfo> aspectTargetInfoSet) {
         for (AspectTargetInfo info : aspectTargetInfoSet) {
-            labelToAspectTargetInfo.put(info.getLabel(), info);
+            labelToAspectTargetInfo.put(info.getLabelPath(), info);
         }
     }
 
@@ -103,7 +103,7 @@ public class AspectTargetInfos {
                     matchedTargetInfos.add(aspectTargetInfo);
                 }
             } else {
-                System.err.println("AspectTargetInfo " + aspectTargetInfo.getLabel() + " has an unknown kind: "
+                System.err.println("AspectTargetInfo " + aspectTargetInfo.getLabelPath() + " has an unknown kind: "
                         + aspectTargetInfo.getKind());
             }
         }
@@ -146,7 +146,7 @@ public class AspectTargetInfos {
     private static void assertAllSourcesHaveSameRootPath(Path rootSourcePath, AspectTargetInfo aspectTargetInfo) {
         for (String sourcePath : aspectTargetInfo.getSources()) {
             if (!Paths.get(sourcePath).startsWith(rootSourcePath)) {
-                throw new IllegalStateException("AspectTargetInfo " + aspectTargetInfo.getLabel()
+                throw new IllegalStateException("AspectTargetInfo " + aspectTargetInfo.getLabelPath()
                         + " has sources that are not under " + rootSourcePath + ": " + aspectTargetInfo.getSources());
             }
         }

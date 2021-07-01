@@ -33,25 +33,58 @@
  */
 package com.salesforce.bazel.sdk.model;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Answers to everything you've always wanted to ask a Bazel Label.
  * </p>
  * Pass this around in code instead of String primitives.
- * </p>
- * <b>IMPORTANT NOTE</b> internally this class assumes that '/' is the path separator used in label/target names. This
- * will most likely need to get fixed to support running on Windows.
- * </p>
- *
- * @author stoens
- * @since Hawaii 2019
  */
 public class BazelLabel {
 
-    private final String localLabelPart;
-    private final String repositoryName;
+    // BAZEL PATH CONSTANTS
+    // Please use these in your code, instead of hardcoded Strings. It makes it easier to 
+    // reason about path manipulation code.
+
+    // Wildcard used as a target, that identifies all targets including implicit targets (_deploy.jar etc) 
+    public static final String BAZEL_WILDCARD_ALLTARGETS_STAR = "*";
+
+    // Wildcard used as a target, that identifies all targets 
+    public static final String BAZEL_WILDCARD_ALLTARGETS = "all";
+
+    // Wildcard used as a package, that identifies all packages at the current level or below
+    public static final String BAZEL_WILDCARD_ALLPACKAGES = "...";
+
+    // All packages wildcard 
+    public static final String BAZEL_ALL_REPO_PACKAGES = "//...";
+
+    // Double slash characters for root of Bazel paths
+    public static final String BAZEL_ROOT_SLASHES = "//";
+
+    // Colon character for Bazel paths that delimits the target
+    public static final String BAZEL_COLON = ":";
+
+    // Slash character for Bazel paths
+    public static final String BAZEL_SLASH = "/";
+
+    // @ symbol that precedes external repo paths
+    public static final String BAZEL_EXTERNALREPO_AT = "@";
+
+    // INSTANCE MEMBERS
+
+    // the full label path, as it is known by Bazel
     private final String fullLabel;
+
+    // the local label path part
+    // for //a/b/c, this will be a/b/c
+    // for @foo//a/b/c this will be a/b/c
+    private final String localLabelPart;
+
+    // if this label points to an external repo, the repository name; otherwise null
+    // for @foo//a/b/c this will be foo
+    private final String repositoryName;
+
+    // CTORS
 
     /**
      * A BazelLabel instance can be created with any syntactically valid Bazel Label String.
@@ -60,78 +93,41 @@ public class BazelLabel {
      * //foo/blah:t1<br>
      * //foo<br>
      * blah/...<br>
+     * <p>
+     * Throws an IllegalArgumentException is the label string does not parse correctly.
      */
-    public BazelLabel(String label) {
-        if (label == null) {
-            throw new IllegalArgumentException("label cannot be null");
-        }
-        if (label.contains(BazelPathHelper.WINDOWS_BACKSLASH)) {
-            // the caller is passing us a label with \ as separators, probably a bug due to Windows paths
-            throw new IllegalArgumentException(
-                    "Label [" + label + "] has Windows style path delimeters. Bazel paths always have / delimiters");
-        }
+    public BazelLabel(String labelPathStr) {
+        BazelLabel.validateLabelPath(labelPathStr, true);
 
-        if (label.startsWith("@")) {
-            int i = label.indexOf(BazelPathHelper.BAZEL_ROOT_SLASHES);
-            repositoryName = label.substring(1, i);
-            label = label.substring(i);
+        if (isExternalRepoPath(labelPathStr)) {
+            int i = labelPathStr.indexOf(BazelLabel.BAZEL_ROOT_SLASHES);
+            repositoryName = labelPathStr.substring(1, i);
+            labelPathStr = labelPathStr.substring(i);
         } else {
             repositoryName = null;
         }
-        label = sanitizeLabel(label);
-        localLabelPart = label;
-        fullLabel = getFullLabel(repositoryName, localLabelPart);
+        localLabelPart = BazelLabel.makeLabelPathRelative(labelPathStr);
+        fullLabel = getFullLabelPath(repositoryName, localLabelPart);
     }
 
     /**
      * Instantiates a BazelLabel instance with the Bazel package path and the label name specified separately. For
-     * example: "a/b/c" and "my-target-name".
+     * example: "a/b/c" and "my-target-name" becomes //a/b/c:my-target-name.
      */
     public BazelLabel(String packagePath, String targetName) {
-        this(sanitizePackagePath(packagePath) + BazelPathHelper.BAZEL_COLON + sanitizeTargetName(targetName));
+        this(sanitizePackagePath(packagePath) + BazelLabel.BAZEL_COLON + sanitizeTargetName(targetName));
     }
 
+    // PATH OPERATIONS
+
     /**
-     * Returns the label as a String.
+     * Returns the label path as a String.
      *
      * @return the label
      */
-    public String getLabel() {
+    public String getLabelPath() {
+        // TODO seems like the default target should be added here if the target is missing
         return fullLabel;
-    }
-
-    /**
-     * Returns the repository of this label, null if no repository was specified for this label.
-     *
-     * @return the repository name, without the leading '@' and trailing "//"
-     */
-    public String getRepositoryName() {
-        return repositoryName;
-    }
-
-    /**
-     * If a label omits the target name it refers to and it doesn't use wildcard syntax, it refers to the
-     * package-default target. This is that target that has the same name as the Bazel Package it lives in.
-     *
-     * @return true if this instance points to the package default target, false otherwise
-     */
-    public boolean isPackageDefault() {
-        if (!isConcrete()) {
-            return false;
-        }
-        int i = localLabelPart.lastIndexOf(BazelPathHelper.BAZEL_COLON);
-        return i == -1;
-    }
-
-    /**
-     * If a label refers to a single Bazel Target, is it concrete. If it using wildcard syntax, it is not concrete.
-     *
-     * @return true if this instance represents a concrete label, false otherwise
-     */
-    public boolean isConcrete() {
-        return !(this.localLabelPart.endsWith(BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS)
-                || this.localLabelPart.endsWith(BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS_STAR)
-                || this.localLabelPart.endsWith(BazelPathHelper.BAZEL_WILDCARD_ALLPACKAGES));
     }
 
     /**
@@ -144,14 +140,14 @@ public class BazelLabel {
      */
     public String getPackagePath() {
         String packagePath = localLabelPart;
-        int i = packagePath.lastIndexOf(BazelPathHelper.BAZEL_WILDCARD_ALLPACKAGES);
+        int i = packagePath.lastIndexOf(BazelLabel.BAZEL_WILDCARD_ALLPACKAGES);
         if (i != -1) {
             packagePath = packagePath.substring(0, i);
-            if (packagePath.endsWith(BazelPathHelper.BAZEL_SLASH)) {
+            if (packagePath.endsWith(BazelLabel.BAZEL_SLASH)) {
                 packagePath = packagePath.substring(0, packagePath.length() - 1);
             }
         } else {
-            i = localLabelPart.lastIndexOf(BazelPathHelper.BAZEL_COLON);
+            i = localLabelPart.lastIndexOf(BazelLabel.BAZEL_COLON);
             if (i != -1) {
                 packagePath = packagePath.substring(0, i);
             }
@@ -160,65 +156,104 @@ public class BazelLabel {
     }
 
     /**
-     * Returns the default package label for this label. The default package label does not specify an explicit target
-     * and only corresponds to the package path.
+     * Returns the package path of this label, which is the "path part" of the label, excluding any specific target or
+     * target wildcard pattern.
      *
-     * For example, given //foo/blah/goo:t1, the corresponding default package label is //foo/blah/goo.
+     * For example, given a label //foo/blah/goo:t1, the package path is foo/blah/goo.
      *
-     * @return BazelLabel instance representing the default package label.
-     * @throws IllegalArgumentException
-     *             if this label is a root-level label (//...) and therefore doesn't have a package path.
+     * @return the package path of this label
      */
-    public BazelLabel toDefaultPackageLabel() {
-        return withRepositoryNameAndLocalLabelPart(repositoryName, getPackagePath());
+    public String getPackagePath(boolean includePrefixes) {
+        if (!includePrefixes) {
+            return getPackagePath();
+        }
+        String packagePath = fullLabel;
+        int i = packagePath.lastIndexOf(BazelLabel.BAZEL_WILDCARD_ALLPACKAGES);
+        if (i != -1) {
+            packagePath = packagePath.substring(0, i);
+            if (packagePath.endsWith(BazelLabel.BAZEL_SLASH)) {
+                packagePath = packagePath.substring(0, packagePath.length() - 1);
+            }
+        } else {
+            i = packagePath.lastIndexOf(BazelLabel.BAZEL_COLON);
+            if (i != -1) {
+                packagePath = packagePath.substring(0, i);
+            }
+        }
+        return packagePath;
+    }
+
+    /**
+     * Returns the package path of this label, which is the "path part" of the label, excluding any specific target or
+     * target wildcard pattern.
+     *
+     * For example, given a label //foo/blah/goo:t1, the package label is //foo/blah/goo.
+     *
+     * @return the package path of this label
+     */
+    public BazelLabel getPackageLabel() {
+        return new BazelLabel(getPackagePath(true));
     }
 
     /**
      * Returns the package name of this label, which is the right-most path component of the package path.
-     *
-     * For example, given a label //foo/blah/goo:t1, the package name is goo.
+     * <p>
+     * //foo/blah/goo:t1 => goo<br>
+     * //foo/blah/... => blah
      *
      * @return the package name of this label
      */
     public String getPackageName() {
-        String packagePath = getPackagePath();
-        int i = packagePath.lastIndexOf(BazelPathHelper.BAZEL_SLASH);
-        return i == -1 ? packagePath : packagePath.substring(i + 1);
+        String result = getPackagePath();
+        int i = result.lastIndexOf(BazelLabel.BAZEL_SLASH);
+        if (i != -1) {
+            result = result.substring(i + 1);
+        }
+        i = result.lastIndexOf(BazelLabel.BAZEL_COLON);
+        if (i != -1) {
+            result = result.substring(0, i);
+        }
+        return result;
     }
 
     /**
-     * Returns the target part of this label.
+     * Returns the target part of this label. //a/b/c:d => d
+     * <p>
+     * If this label does not specify a target, the default target is implied and this method will return that. //a/b/c
+     * => //a/b/c:c => c
      *
      * @return the target name this label refers to, null if this label uses "..." syntax.
      */
     public String getTargetName() {
-        if (localLabelPart.endsWith(BazelPathHelper.BAZEL_WILDCARD_ALLPACKAGES)) {
+        if (localLabelPart.endsWith(BazelLabel.BAZEL_WILDCARD_ALLPACKAGES)) {
+            // TODO why does * get a free pass here?
             return null;
         }
-        if (isPackageDefault()) {
+        if (isDefaultTarget()) {
             return getPackageName();
         } else {
-            int i = localLabelPart.lastIndexOf(BazelPathHelper.BAZEL_COLON);
-            // label cannot end with ":", so this is ok
-            return localLabelPart.substring(i + 1);
+            int colonIndex = localLabelPart.lastIndexOf(BazelLabel.BAZEL_COLON);
+            return localLabelPart.substring(colonIndex + 1);
         }
     }
 
     /**
-     * Some Bazel Target names use a path-like syntax. This method returns the last component of that path. If the
+     * Some Bazel target names use a path-like syntax. This method returns the last component of that path. If the
      * target name doesn't use a path-like syntax, this method returns the target name.
-     *
+     * <p>
      * For example: if the target name is "a/b/c/d", this method returns "d". if the target name is "a/b/c/", this
      * method returns "c". if the target name is "foo", this method returns "foo".
      *
      * @return the last path component of the target name if the target name is path-like
      */
-    public String getLastComponentOfTargetName() {
+    @Deprecated
+    public String getTargetNameLastComponent() {
+        // TODO where did this method come from? I think it is from the maven_jar days, not convinced we still need this
         String targetName = getTargetName();
         if (targetName == null) {
             return null;
         }
-        int i = targetName.lastIndexOf(BazelPathHelper.BAZEL_SLASH);
+        int i = targetName.lastIndexOf(BazelLabel.BAZEL_SLASH);
         if (i != -1) {
             return targetName.substring(i + 1); // ok because target name cannot end with slash
         }
@@ -226,22 +261,74 @@ public class BazelLabel {
     }
 
     /**
-     * Adds package wildcard syntax to a package default label.
-     *
-     * For example: //foo/blah -> //foo:blah:*
+     * Converts label to a package wildcard path.
+     * <p>
+     * Example1: //foo/blah -> //foo:blah:*<br>
+     * Example2: //foo/blah:bar -> //foo:blah:*
      *
      * @return a new BazelLabel instance, with added package wildcard syntax
      * @throws IllegalStateException
      *             if this is not a package default label
      */
-    public BazelLabel toPackageWildcardLabel() {
-        if (!isPackageDefault()) {
+    @Deprecated
+    public BazelLabel getLabelAsWildcard() {
+        // TODO why do we need this?
+        // TODO this shouldnt care about default target
+        if (!isDefaultTarget()) {
             throw new IllegalStateException("label " + localLabelPart + " is not package default");
         }
         // TODO all check for :all?
-        return withRepositoryNameAndLocalLabelPart(repositoryName,
-            getPackagePath() + BazelPathHelper.BAZEL_COLON + BazelPathHelper.BAZEL_WILDCARD_ALLTARGETS_STAR);
+        return getFullLabel(repositoryName,
+            getPackagePath() + BazelLabel.BAZEL_COLON + BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR);
     }
+
+    // EXTERNAL REPOS
+
+    /**
+     * Does this label refer to an external repo? Ex: @foo//a/b/c:d
+     */
+    public boolean isExternalRepoLabel() {
+        return fullLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT);
+    }
+
+    /**
+     * Returns the repository of this label, null if no repository was specified for this label.
+     *
+     * @return the repository name, without the leading '@' and trailing "//"
+     */
+    public String getExternalRepositoryName() {
+        return repositoryName;
+    }
+
+    // NATURES
+
+    /**
+     * If a label omits the target name it refers to and it doesn't use wildcard syntax, it refers to the
+     * package-default target. This is that target that has the same name as the Bazel Package it lives in.
+     *
+     * @return true if this instance points to the package default target, false otherwise
+     */
+    public boolean isDefaultTarget() {
+        if (!isConcrete()) {
+            return false;
+        }
+        int i = localLabelPart.lastIndexOf(BazelLabel.BAZEL_COLON);
+        return i == -1;
+    }
+
+    /**
+     * If a label refers to a single Bazel Target, is it concrete. If it using wildcard syntax, it is not concrete. For
+     * the purposes of this method, a label using the default target (//a/b/c) is concrete.
+     *
+     * @return true if this instance represents a concrete label, false otherwise
+     */
+    public boolean isConcrete() {
+        return !(this.localLabelPart.endsWith(BazelLabel.BAZEL_WILDCARD_ALLTARGETS)
+                || this.localLabelPart.endsWith(BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR)
+                || this.localLabelPart.endsWith(BazelLabel.BAZEL_WILDCARD_ALLPACKAGES));
+    }
+
+    // MISC OPERATIONS
 
     @Override
     public int hashCode() {
@@ -265,61 +352,116 @@ public class BazelLabel {
         return fullLabel;
     }
 
-    private static BazelLabel withRepositoryNameAndLocalLabelPart(String repositoryName, String localLabelPart) {
-        return repositoryName == null ? new BazelLabel(localLabelPart)
-                : new BazelLabel("@" + repositoryName + BazelPathHelper.BAZEL_ROOT_SLASHES + localLabelPart);
+    // PUBLIC STATIC HELPERS
+
+    /**
+     * Looks for obvious label format errors.
+     * <p>
+     * Returns false, or throws an IllegalArgumentException (if throwOnError=true) if a problem is found.
+     */
+    public static boolean validateLabelPath(String labelPathStr, boolean throwOnError) {
+        try {
+            if (labelPathStr == null) {
+                throw new IllegalArgumentException(labelPathStr);
+            }
+            labelPathStr = labelPathStr.trim();
+            if (labelPathStr.length() == 0) {
+                throw new IllegalArgumentException(labelPathStr);
+            }
+            if (labelPathStr.endsWith(BAZEL_COLON)) {
+                throw new IllegalArgumentException(labelPathStr);
+            }
+            if (labelPathStr.endsWith(BAZEL_SLASH)) {
+                throw new IllegalArgumentException(labelPathStr);
+            }
+            if (labelPathStr.equals(BAZEL_ROOT_SLASHES)) {
+                throw new IllegalArgumentException(labelPathStr);
+            }
+            if (labelPathStr.contains(FSPathHelper.WINDOWS_BACKSLASH)) {
+                // the caller is passing us a label with \ as separators, probably a bug due to Windows paths
+                throw new IllegalArgumentException("Label [" + labelPathStr
+                        + "] has Windows style path delimeters. Bazel paths always have / delimiters");
+            }
+        } catch (IllegalArgumentException iae) {
+            if (throwOnError) {
+                throw iae;
+            }
+            return false;
+        }
+        return true;
     }
 
+    // PRIVATE STATIC HELPERS
+
+    /**
+     * Converts the label path to the relative label path.
+     * <p>
+     * //a/b/c returns a/b/c, /a/b/c returns a/b/c
+     */
+    private static String makeLabelPathRelative(String labelPath) {
+        labelPath = labelPath.trim();
+        if (labelPath.startsWith(BAZEL_ROOT_SLASHES)) {
+            labelPath = labelPath.substring(2);
+        } else if (labelPath.startsWith(BAZEL_SLASH)) {
+            labelPath = labelPath.substring(1);
+        }
+        return labelPath;
+    }
+
+    /**
+     * Removes the trailing slash from a path
+     */
     private static String sanitizePackagePath(String path) {
         if (path == null) {
-            throw new IllegalAccessError(path);
+            throw new IllegalArgumentException("BazelLabel cannot have a null path.");
         }
         path = path.trim();
-        if (path.endsWith(BazelPathHelper.BAZEL_SLASH)) {
+        if (path.endsWith(BazelLabel.BAZEL_SLASH)) {
             path = path.substring(0, path.length() - 1);
         }
         return path;
     }
 
+    /**
+     * Trims a leading colon from the target
+     */
     private static String sanitizeTargetName(String target) {
         if (target == null) {
-            throw new IllegalArgumentException(target);
+            // TODO this should be allowed, a null target implies the default target (e.g. //a/b/c => //a/b/c:c)
+            throw new IllegalArgumentException("BazelLabel needs a target");
         }
         target = target.trim();
-        if (target.startsWith(BazelPathHelper.BAZEL_COLON)) {
+        if (target.startsWith(BazelLabel.BAZEL_COLON)) {
             target = target.substring(1);
         }
         return target;
     }
 
-    private static String sanitizeLabel(String label) {
-        if (label == null) {
-            throw new IllegalArgumentException(label);
+    /**
+     * Assembles the full path from an external repository name and the local label path. (foo, //a/b/c) => @foo//a/b/c)
+     */
+    private static String getFullLabelPath(String externalRepositoryName, String localLabelPart) {
+        String result = BazelLabel.BAZEL_ROOT_SLASHES + localLabelPart;
+        if (externalRepositoryName != null) {
+            result = BazelLabel.BAZEL_EXTERNALREPO_AT + externalRepositoryName + result;
         }
-        label = label.trim();
-        if (label.length() == 0) {
-            throw new IllegalArgumentException(label);
-        }
-        if (label.endsWith(BazelPathHelper.BAZEL_COLON)) {
-            throw new IllegalArgumentException(label);
-        }
-        if (label.endsWith(BazelPathHelper.BAZEL_SLASH)) {
-            throw new IllegalArgumentException(label);
-        }
-        if (label.equals(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
-            throw new IllegalArgumentException(label);
-        }
-        if (label.startsWith(BazelPathHelper.BAZEL_ROOT_SLASHES)) {
-            label = label.substring(2);
-        }
-        if (label.startsWith(BazelPathHelper.BAZEL_SLASH)) {
-            label = label.substring(1);
-        }
-        return label;
+        return result;
     }
 
-    private static String getFullLabel(String repositoryName, String localLabelPart) {
-        return (repositoryName == null ? "" : "@" + repositoryName) + BazelPathHelper.BAZEL_ROOT_SLASHES
-                + localLabelPart;
+    /**
+     * Assembles the BazelLabel from an external repository name and the local label path. (foo, //a/b/c)
+     * => @foo//a/b/c)
+     */
+    private static BazelLabel getFullLabel(String externalRepositoryName, String localLabelPart) {
+        String fullLabelStr = getFullLabelPath(externalRepositoryName, localLabelPart);
+        return new BazelLabel(fullLabelStr);
     }
+
+    /**
+     * Does this label refer to an external repo? Ex: @foo//a/b/c:d
+     */
+    private static boolean isExternalRepoPath(String labelPathStr) {
+        return labelPathStr.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT);
+    }
+
 }

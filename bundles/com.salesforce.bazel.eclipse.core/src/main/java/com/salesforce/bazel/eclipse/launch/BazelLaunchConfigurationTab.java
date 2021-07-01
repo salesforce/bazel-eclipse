@@ -194,7 +194,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         if (labelsForSelectedProject == null) {
             labelsForSelectedProject = support.getLaunchableBazelTargetsForProject(project);
             labelsForSelectedProject
-                    .sort((t1, t2) -> t1.getBazelLabel().getLabel().compareTo(t2.getBazelLabel().getLabel()));
+            .sort((t1, t2) -> t1.getBazelLabel().getLabelPath().compareTo(t2.getBazelLabel().getLabelPath()));
         }
     }
 
@@ -323,10 +323,11 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         // if the target name uses a path-like syntax: my/target/name, then return
         // "name (my/target/name)" ($SLASH_OK bazel path)
         // otherwise just return the target name
-        if (label.getLastComponentOfTargetName().equals(label.getTargetName())) {
+        // TODO is it even legal to have slashes in target names? who does this?
+        if (label.getTargetNameLastComponent().equals(label.getTargetName())) {
             return label.getTargetName();
         } else {
-            return label.getLastComponentOfTargetName() + " (" + label.getTargetName() + ")";
+            return label.getTargetNameLastComponent() + " (" + label.getTargetName() + ")";
         }
     }
 }

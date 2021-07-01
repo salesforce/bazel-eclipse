@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.salesforce.bazel.sdk.graph.BazelDependencyGraph;
 import com.salesforce.bazel.sdk.graph.BazelDependencyGraphFactory;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Factory that uses the set of aspect infos generated for a workspace to construct the dependency graph.
@@ -28,9 +28,9 @@ public class AspectDependencyGraphFactory {
         // the InMemoryDependencyGraph will also need to be updated to support target level edges
 
         for (AspectTargetInfo info : aspects.getTargetInfos()) {
-            String sourceLabel = info.getLabel();
+            String sourcePackagePath = info.getLabelPath();
             if (!includeTarget) {
-                sourceLabel = stripTargetFromLabel(sourceLabel);
+                sourcePackagePath = stripTargetFromLabel(sourcePackagePath);
             }
             List<String> depLabels = info.getDeps();
             for (String depLabel : depLabels) {
@@ -38,28 +38,25 @@ public class AspectDependencyGraphFactory {
                     depLabel = stripTargetFromLabel(depLabel);
                 }
 
-                if (sourceLabel.equals(depLabel)) {
+                if (sourcePackagePath.equals(depLabel)) {
                     // this is a intra-package dependency (a common case when targets are stripped)
                     continue;
                 }
 
-                graph.addDependency(sourceLabel, depLabel);
+                graph.addDependency(sourcePackagePath, depLabel);
             }
         }
         return graph;
     }
 
-    private static String stripTargetFromLabel(String label) {
-        if (label.startsWith("@")) {
+    private static String stripTargetFromLabel(String labelStr) {
+        BazelLabel label = new BazelLabel(labelStr);
+        if (label.isExternalRepoLabel()) {
             // this is an external workspace ref, we do not change these since they are correct as-is
             // ex:  @maven//:junit_junit
-            return label;
+            return label.getLabelPath();
         }
-        int colonIndex = label.lastIndexOf(BazelPathHelper.BAZEL_COLON);
-        if (colonIndex > 0) {
-            label = label.substring(0, colonIndex);
-        }
-        return label;
+        return label.getPackagePath(true);
     }
 
 }

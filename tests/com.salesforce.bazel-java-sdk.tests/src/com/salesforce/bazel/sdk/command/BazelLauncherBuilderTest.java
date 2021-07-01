@@ -42,7 +42,7 @@ import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 
@@ -64,13 +64,13 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setTargetKind(targetKind);
         launcherBuilder.setArgs(Collections.emptyList());
 
-        addBazelCommandOutput(env, 0, BazelPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0"), // $SLASH_OK
+        addBazelCommandOutput(env, 0, FSPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0"), // $SLASH_OK
             "fake bazel launcher script result");
 
         Command command = launcherBuilder.build();
         BazelProcessBuilder processBuilder = command.getProcessBuilder();
         List<String> cmdTokens = processBuilder.command();
-        String filesystemPath = BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
+        String filesystemPath = FSPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
         assertTrue(cmdTokens.get(0).endsWith(filesystemPath));
         assertFalse(cmdTokens.contains("debug"));
     }
@@ -88,12 +88,12 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setArgs(Collections.emptyList());
         launcherBuilder.setDebugMode(true, "localhost", DEBUG_PORT);
 
-        addBazelCommandOutput(env, 0, BazelPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0"), // $SLASH_OK
+        addBazelCommandOutput(env, 0, FSPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0"), // $SLASH_OK
             "fake bazel launcher script result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
-        String filesystemPath = BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
+        String filesystemPath = FSPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
         assertTrue(cmdTokens.get(0).endsWith(filesystemPath));
         assertFalse(cmdTokens.contains("debug=" + DEBUG_PORT));
     }
@@ -115,7 +115,7 @@ public class BazelLauncherBuilderTest {
 
         assertEquals(env.bazelExecutable.getAbsolutePath(), cmdTokens.get(0));
         assertEquals("test", cmdTokens.get(1));
-        assertTrue(cmdTokens.contains(label.getLabel()));
+        assertTrue(cmdTokens.contains(label.getLabelPath()));
         assertFalse(cmdTokens.toString().contains("debug"));
     }
 
@@ -136,7 +136,7 @@ public class BazelLauncherBuilderTest {
 
         assertEquals(env.bazelExecutable.getAbsolutePath(), cmdTokens.get(0));
         assertEquals("test", cmdTokens.get(1));
-        assertTrue(cmdTokens.contains(label.getLabel()));
+        assertTrue(cmdTokens.contains(label.getLabelPath()));
         assertFalse(cmdTokens.toString().contains("debug"));
     }
 
@@ -160,7 +160,7 @@ public class BazelLauncherBuilderTest {
         assertEquals(env.bazelExecutable.getAbsolutePath(), cmdTokens.get(0));
         assertEquals("test", cmdTokens.get(1));
         assertTrue(cmdTokens.contains("--test_filter=someBazelTestFilter"));
-        assertTrue(cmdTokens.contains(label.getLabel()));
+        assertTrue(cmdTokens.contains(label.getLabelPath()));
         assertFalse(cmdTokens.toString().contains("debug"));
     }
 
@@ -182,7 +182,7 @@ public class BazelLauncherBuilderTest {
 
         assertEquals(env.bazelExecutable.getAbsolutePath(), cmdTokens.get(0));
         assertEquals("test", cmdTokens.get(1));
-        assertTrue(cmdTokens.contains(label.getLabel()));
+        assertTrue(cmdTokens.contains(label.getLabelPath()));
         assertTrue(cmdTokens.toString().contains("debug"));
         assertTrue(cmdTokens.contains("--test_arg=--wrapper_script_flag=--debug=localhost:" + DEBUG_PORT));
     }

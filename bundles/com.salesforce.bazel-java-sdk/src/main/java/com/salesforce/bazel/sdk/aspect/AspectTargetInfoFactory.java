@@ -60,7 +60,7 @@ public class AspectTargetInfoFactory {
         Map<String, AspectTargetInfo> infos = new HashMap<>();
         for (File aspectFile : aspectFiles) {
             AspectTargetInfo buildInfo = loadAspectFile(aspectFile);
-            infos.put(buildInfo.getLabel(), buildInfo);
+            infos.put(buildInfo.getLabelPath(), buildInfo);
         }
         return infos;
     }

@@ -6,7 +6,6 @@ import java.util.Objects;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
 
 /**
  * Represents a line in a project view file.
@@ -63,9 +62,9 @@ public class ProjectViewPackageLocation implements BazelPackageLocation {
             // somehow handle that workspace differently
             // Docs should indicate that a better practice is to keep the root dir free of an actual package
             // For now, assume that anything referring to the root dir is a proxy for 'whole repo'
-            return BazelPathHelper.BAZEL_ALL_REPO_PACKAGES;
+            return BazelLabel.BAZEL_ALL_REPO_PACKAGES;
         }
-        return BazelPathHelper.BAZEL_ROOT_SLASHES + packagePath;
+        return BazelLabel.BAZEL_ROOT_SLASHES + packagePath;
     }
 
     @Override

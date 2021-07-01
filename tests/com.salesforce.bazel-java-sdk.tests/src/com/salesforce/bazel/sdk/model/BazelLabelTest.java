@@ -43,25 +43,23 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
-
 public class BazelLabelTest {
 
     @Test
     public void testGetRepository() {
-        assertEquals("foo", new BazelLabel("@foo//a/b/c:t1").getRepositoryName()); // $SLASH_OK bazel path
-        assertNull(new BazelLabel("//a/b/c").getRepositoryName()); // $SLASH_OK bazel path
+        assertEquals("foo", new BazelLabel("@foo//a/b/c:t1").getExternalRepositoryName()); // $SLASH_OK bazel path
+        assertNull(new BazelLabel("//a/b/c").getExternalRepositoryName()); // $SLASH_OK bazel path
     }
 
     @Test
     public void testIsPackageDefault() {
-        assertTrue(new BazelLabel("foo").isPackageDefault());
-        assertTrue(new BazelLabel("//foo/blah").isPackageDefault()); // $SLASH_OK bazel path
-        assertFalse(new BazelLabel("blah:t").isPackageDefault());
-        assertFalse(new BazelLabel("//:query").isPackageDefault());
-        assertFalse(new BazelLabel("//...").isPackageDefault());
-        assertFalse(new BazelLabel("//:*").isPackageDefault());
-        assertTrue(new BazelLabel("@foo//foo/blah").isPackageDefault()); // $SLASH_OK bazel path
+        assertTrue(new BazelLabel("foo").isDefaultTarget());
+        assertTrue(new BazelLabel("//foo/blah").isDefaultTarget()); // $SLASH_OK bazel path
+        assertFalse(new BazelLabel("blah:t").isDefaultTarget());
+        assertFalse(new BazelLabel("//:query").isDefaultTarget());
+        assertFalse(new BazelLabel("//...").isDefaultTarget());
+        assertFalse(new BazelLabel("//:*").isDefaultTarget());
+        assertTrue(new BazelLabel("@foo//foo/blah").isDefaultTarget()); // $SLASH_OK bazel path
     }
 
     @Test
@@ -93,27 +91,27 @@ public class BazelLabelTest {
     }
 
     @Test
-    public void testToDefaultPackageLabel() {
-        assertEquals("//foo", new BazelLabel("foo").toDefaultPackageLabel().getLabel());
-        assertEquals("//foo/blah", new BazelLabel("//foo/blah").toDefaultPackageLabel().getLabel()); // $SLASH_OK bazel path
-        assertEquals("//foo/blah", new BazelLabel("foo/blah:t1").toDefaultPackageLabel().getLabel()); // $SLASH_OK bazel path
-        assertEquals("//blah", new BazelLabel("blah/...").toDefaultPackageLabel().getLabel()); // $SLASH_OK bazel path
-        assertEquals("//blah", new BazelLabel("blah:*").toDefaultPackageLabel().getLabel());
-        assertEquals("@foo//blah/goo", new BazelLabel("@foo//blah/goo:t1").toDefaultPackageLabel().getLabel()); // $SLASH_OK bazel path
+    public void testGetPackageLabel() {
+        assertEquals("//foo", new BazelLabel("foo").getPackageLabel().getLabelPath());
+        assertEquals("//foo/blah", new BazelLabel("//foo/blah").getPackageLabel().getLabelPath()); // $SLASH_OK bazel path
+        assertEquals("//foo/blah", new BazelLabel("foo/blah:t1").getPackageLabel().getLabelPath()); // $SLASH_OK bazel path
+        assertEquals("//blah", new BazelLabel("blah/...").getPackageLabel().getLabelPath()); // $SLASH_OK bazel path
+        assertEquals("//blah", new BazelLabel("blah:*").getPackageLabel().getLabelPath());
+        assertEquals("@foo//blah/goo", new BazelLabel("@foo//blah/goo:t1").getPackageLabel().getLabelPath()); // $SLASH_OK bazel path
     }
 
     @Test
     public void testInvalidButAcceptableInput() {
         // we fixup the input for these cases
-        assertEquals("//foo:t1", new BazelLabel("/foo:t1").getLabel()); // $SLASH_OK bazel path
-        assertEquals("//foo:t1", new BazelLabel("foo", ":t1").getLabel());
-        assertEquals("//foo:t1", new BazelLabel("foo/", "t1").getLabel()); // $SLASH_OK bazel path
-        assertEquals("//foo:t1", new BazelLabel("/foo/", "t1").getLabel()); // $SLASH_OK bazel path
+        assertEquals("//foo:t1", new BazelLabel("/foo:t1").getLabelPath()); // $SLASH_OK bazel path
+        assertEquals("//foo:t1", new BazelLabel("foo", ":t1").getLabelPath());
+        assertEquals("//foo:t1", new BazelLabel("foo/", "t1").getLabelPath()); // $SLASH_OK bazel path
+        assertEquals("//foo:t1", new BazelLabel("/foo/", "t1").getLabelPath()); // $SLASH_OK bazel path
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testToDefaultPackageLabel_invalidRootLabel() {
-        new BazelLabel("//...").toDefaultPackageLabel();
+    public void testgetPackageLabel_invalidRootLabel() {
+        new BazelLabel("//...").getPackageLabel();
     }
 
     @Test
@@ -146,35 +144,19 @@ public class BazelLabelTest {
 
     @Test
     public void testGetLabel() {
-        assertEquals("//foo", new BazelLabel("foo").getLabel());
-        assertEquals("//foo/blah", new BazelLabel("//foo/blah").getLabel()); // $SLASH_OK bazel path
-        assertEquals("//foo/blah:t1", new BazelLabel("foo/blah:t1").getLabel()); // $SLASH_OK bazel path
-        assertEquals("//:query", new BazelLabel("//:query").getLabel());
-        assertEquals("//...", new BazelLabel("//...").getLabel());
-        assertEquals("//:*", new BazelLabel("//:*").getLabel());
-        assertEquals("@foo//blah/goo:t1", new BazelLabel("@foo//blah/goo:t1").getLabel()); // $SLASH_OK bazel path
-    }
-
-    @Test
-    public void testToPackageWildcardLabel() {
-        assertEquals("//foo:*", new BazelLabel("foo").toPackageWildcardLabel().getLabel());
-        assertEquals("@repo//foo:*", new BazelLabel("@repo//foo").toPackageWildcardLabel().getLabel());
-    }
-
-    @Test
-    public void testGetLastComponentOfTargetName() {
-        assertEquals("test123", new BazelLabel("test123").getLastComponentOfTargetName());
-        assertEquals("test123", new BazelLabel("foo:test123").getLastComponentOfTargetName());
-        assertEquals("blah", new BazelLabel("foo:src/foo/blah").getLastComponentOfTargetName()); // $SLASH_OK bazel path
-        assertEquals("query", new BazelLabel("//:query").getLastComponentOfTargetName());
-        assertEquals(null, new BazelLabel("//...").getLastComponentOfTargetName());
-        assertEquals("blah", new BazelLabel("@repo//foo:src/foo/blah").getLastComponentOfTargetName()); // $SLASH_OK bazel path
+        assertEquals("//foo", new BazelLabel("foo").getLabelPath());
+        assertEquals("//foo/blah", new BazelLabel("//foo/blah").getLabelPath()); // $SLASH_OK bazel path
+        assertEquals("//foo/blah:t1", new BazelLabel("foo/blah:t1").getLabelPath()); // $SLASH_OK bazel path
+        assertEquals("//:query", new BazelLabel("//:query").getLabelPath());
+        assertEquals("//...", new BazelLabel("//...").getLabelPath());
+        assertEquals("//:*", new BazelLabel("//:*").getLabelPath());
+        assertEquals("@foo//blah/goo:t1", new BazelLabel("@foo//blah/goo:t1").getLabelPath()); // $SLASH_OK bazel path
     }
 
     @Test
     public void testPackageAndTargetCtor() {
-        assertEquals("//a/b/c:foo", new BazelLabel("a/b/c", "foo").getLabel()); // $SLASH_OK bazel path
-        assertEquals("//a/b/c:foo", new BazelLabel("//a/b/c", "foo").getLabel()); // $SLASH_OK bazel path
+        assertEquals("//a/b/c:foo", new BazelLabel("a/b/c", "foo").getLabelPath()); // $SLASH_OK bazel path
+        assertEquals("//a/b/c:foo", new BazelLabel("//a/b/c", "foo").getLabelPath()); // $SLASH_OK bazel path
     }
 
     @Test
@@ -187,11 +169,6 @@ public class BazelLabelTest {
         assertEquals(2, s.size());
         assertTrue(s.contains(new BazelLabel("//a/b/c"))); // $SLASH_OK bazel path
         assertTrue(s.contains(new BazelLabel("@repo//a/b/c"))); // $SLASH_OK bazel path
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testToPackageWildcardLabel_invalidLabel() {
-        assertEquals("//foo:*", new BazelLabel("foo:test").toPackageWildcardLabel().getLabel());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -211,7 +188,7 @@ public class BazelLabelTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidLabel_trailingSlash() {
-        new BazelLabel(BazelPathHelper.BAZEL_SLASH);
+        new BazelLabel(BazelLabel.BAZEL_SLASH);
     }
 
     @Test(expected = IllegalArgumentException.class)

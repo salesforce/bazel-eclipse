@@ -6,35 +6,10 @@ import java.io.IOException;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
- * Static utilities to help with file system paths, especially cross platform.
+ * Constants and utils for file system paths.
  */
-public class BazelPathHelper {
-    private static final LogHelper LOG = LogHelper.log(BazelPathHelper.class);
-
-    // BAZEL PATH ELEMENTS
-
-    // Double slash characters for root of Bazel paths
-    public static final String BAZEL_ROOT_SLASHES = "//";
-
-    // All packages wildcard 
-    public static final String BAZEL_ALL_REPO_PACKAGES = "//...";
-
-    // Slash character for Bazel paths
-    public static final String BAZEL_SLASH = "/";
-
-    // Colon character for Bazel paths that delimits the target
-    public static final String BAZEL_COLON = ":";
-
-    // Wildcard used as a package, that identifies all packages at the current level or below
-    public static final String BAZEL_WILDCARD_ALLPACKAGES = "...";
-
-    // Wildcard used as a target, that identifies all targets 
-    public static final String BAZEL_WILDCARD_ALLTARGETS = "all";
-
-    // Wildcard used as a target, that identifies all targets including implicit targets (_deploy.jar etc) 
-    public static final String BAZEL_WILDCARD_ALLTARGETS_STAR = "*";
-
-    // FILE SYSTEM PATH ELEMENTS
+public class FSPathHelper {
+    private static final LogHelper LOG = LogHelper.log(FSPathHelper.class);
 
     // Slash character for unix file paths
     public static final String UNIX_SLASH = "/";
@@ -57,10 +32,9 @@ public class BazelPathHelper {
      * Primary feature toggle. isUnix is true for all platforms except Windows.
      */
     public static boolean isUnix = true;
-
     static {
         if (System.getProperty("os.name").contains("Windows")) {
-            isUnix = false;
+            FSPathHelper.isUnix = false;
         }
     }
 
@@ -144,14 +118,4 @@ public class BazelPathHelper {
         return path;
     }
 
-    /**
-     * Convert a slash style relative path to Windows backslash, if running on Windows
-     */
-    public static String bazelLabelSeps(String fsPath) {
-        String path = fsPath;
-        if (!isUnix) {
-            path = fsPath.replace(WINDOWS_BACKSLASH, UNIX_SLASH);
-        }
-        return path;
-    }
 }

@@ -34,7 +34,7 @@
 package com.salesforce.bazel.sdk.command;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Knows how to build paths to various files under bazel output directories (bazel-bin etc)
@@ -49,13 +49,13 @@ public class BazelOutputDirectoryBuilder {
     public String getRunScriptPath(BazelLabel label) {
         StringBuilder sb = new StringBuilder();
         sb.append("bazel-bin");
-        sb.append(BazelPathHelper.UNIX_SLASH);
+        sb.append(FSPathHelper.UNIX_SLASH);
         sb.append(label.getPackagePath());
-        sb.append(BazelPathHelper.UNIX_SLASH);
+        sb.append(FSPathHelper.UNIX_SLASH);
         sb.append(label.getTargetName());
 
         // generate the String, converting to Windows style path if necessary
-        String path = BazelPathHelper.osSeps(sb.toString());
+        String path = FSPathHelper.osSeps(sb.toString());
 
         return path;
     }

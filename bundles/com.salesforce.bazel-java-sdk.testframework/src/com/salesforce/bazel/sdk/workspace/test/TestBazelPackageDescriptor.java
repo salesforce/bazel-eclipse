@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Descriptor for a manufactured bazel package in a test workspace.
@@ -28,7 +28,7 @@ public class TestBazelPackageDescriptor {
     public TestBazelPackageDescriptor(TestBazelWorkspaceDescriptor parentWorkspace, String packagePath,
             String packageName, File diskLocation) {
 
-        if (packagePath.contains(BazelPathHelper.WINDOWS_BACKSLASH)) {
+        if (packagePath.contains(FSPathHelper.WINDOWS_BACKSLASH)) {
             // Windows bug, someone passed in a Windows path
             throw new IllegalArgumentException(
                     "Windows filesystem path passed to TestBazelPackageDescriptor instead of the Bazel package path: "

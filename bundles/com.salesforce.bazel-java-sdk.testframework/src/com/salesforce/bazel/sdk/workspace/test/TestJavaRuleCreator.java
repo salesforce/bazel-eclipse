@@ -5,7 +5,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.Map;
 
-import com.salesforce.bazel.sdk.path.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 public class TestJavaRuleCreator {
     public static void createJavaBuildFile(TestBazelWorkspaceDescriptor workspaceDescriptor, File buildFile,
@@ -24,8 +24,8 @@ public class TestJavaRuleCreator {
 
     @SuppressWarnings("unused")
     private static String createJavaBinaryRule(String packageName, int packageIndex) {
-        String main = BazelPathHelper.osSeps("src/main/java/**/*.java"); // $SLASH_OK
-        String mainProps = BazelPathHelper.osSeps("src/main/resources/main.properties"); // $SLASH_OK
+        String main = FSPathHelper.osSeps("src/main/java/**/*.java"); // $SLASH_OK
+        String mainProps = FSPathHelper.osSeps("src/main/resources/main.properties"); // $SLASH_OK
 
         StringBuffer sb = new StringBuffer();
         sb.append("java_binary(\n   name=\""); // $SLASH_OK: escape char
@@ -40,7 +40,7 @@ public class TestJavaRuleCreator {
     }
 
     private static String createJavaLibraryRule(String packageName) {
-        String main = BazelPathHelper.osSeps("src/main/java/**/*.java"); // $SLASH_OK
+        String main = FSPathHelper.osSeps("src/main/java/**/*.java"); // $SLASH_OK
         StringBuffer sb = new StringBuffer();
         sb.append("java_library(\n   name=\""); // $SLASH_OK: escape char
         sb.append(packageName);
@@ -53,8 +53,8 @@ public class TestJavaRuleCreator {
 
     private static String createJavaTestRule(String packageName, Map<String, String> commandOptions) {
         boolean explicitJavaTestDeps = "true".equals(commandOptions.get("explicit_java_test_deps"));
-        String test = BazelPathHelper.osSeps("src/test/java/**/*.java"); // $SLASH_OK
-        String testProps = BazelPathHelper.osSeps("src/test/resources/test.properties"); // $SLASH_OK
+        String test = FSPathHelper.osSeps("src/test/java/**/*.java"); // $SLASH_OK
+        String testProps = FSPathHelper.osSeps("src/test/resources/test.properties"); // $SLASH_OK
 
         StringBuffer sb = new StringBuffer();
         sb.append("java_test(\n   name=\""); // $SLASH_OK: escape char
@@ -85,7 +85,7 @@ public class TestJavaRuleCreator {
 
     @SuppressWarnings("unused")
     private static String createSpringBootTestRule(String packageName) {
-        String src = BazelPathHelper.osSeps("src/**/*.java"); // $SLASH_OK
+        String src = FSPathHelper.osSeps("src/**/*.java"); // $SLASH_OK
 
         StringBuffer sb = new StringBuffer();
         sb.append("springboot_test(\n   name=\""); // $SLASH_OK: escape char
