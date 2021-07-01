@@ -1,75 +1,106 @@
 package com.salesforce.bazel.sdk.workspace;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
+import com.salesforce.bazel.sdk.util.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
- * Scans the workspace looking for packages that contains rules that are registered with the SDK.
+ * Scanner for a Bazel workspace to locate BUILD files that contain rules that are supported by the SDK.
  */
 public class BazelPackageFinder {
-    LogHelper logger;
+    LogHelper logger = LogHelper.log(this.getClass());
 
-    public BazelPackageFinder() {
-        logger = LogHelper.log(this.getClass());
-    }
+    public BazelPackageFinder() {}
 
-    /**
-     * Navigates the workspace reading Bazel BUILD files, looking for packages that contains rules types that are
-     * registered with the SDK.
-     * 
-     * @param dir
-     *            the starting directory (usually the Bazel workspace root)
-     * @param monitor
-     *            a progress monitor that is updated
-     * @param buildFileLocations
-     *            the output, the list of found BUILD files with interesting rules
-     * @param depth
-     *            the maximum depth to descend
-     */
     public void findBuildFileLocations(File dir, WorkProgressMonitor monitor, Set<File> buildFileLocations, int depth) {
         if (!dir.isDirectory()) {
             return;
         }
 
         try {
-            File[] dirFiles = dir.listFiles();
-            for (File dirFile : dirFiles) {
 
-                if (shouldIgnore(dirFile, depth)) {
-                    continue;
-                }
+            // collect all BUILD files
+            List<Path> buildFiles = new ArrayList<>(1000);
 
-                if (isBuildFile(dirFile)) {
+            Path start = dir.toPath();
+            Files.walkFileTree(start, new FileVisitor<Path>() {
 
-                    // great, this dir is a Bazel package (but this may be a non-Java package)
-                    // scan the BUILD file looking for java rules, only add if this is a java project
-                    if (BuildFileSupport.hasRegisteredRules(dirFile)) {
-                        buildFileLocations.add(FSPathHelper.getCanonicalFileSafely(dir));
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    if (start.relativize(dir).toString().startsWith("bazel-")) {
+                        // this is a Bazel internal directory at the root of the project dir, ignore
+                        return FileVisitResult.SKIP_SUBTREE;
                     }
-                } else if (dirFile.isDirectory()) {
-                    findBuildFileLocations(dirFile, monitor, buildFileLocations, depth + 1);
+
+                    if (dir.getFileName().toString().equals("target")) {
+                        // skip Maven target directories
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+
+                    if (dir.getFileName().toString().equals(".bazel")) {
+                        // skip Core .bazel directory
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+
+                    return FileVisitResult.CONTINUE;
                 }
-            }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (isBuildFile(file)) {
+                        buildFiles.add(file);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+            });
+
+            // scan all build files
+            // normally in the SDK we do not use Java streams, to make the code more accessible, but the parallel
+            // streaming here really speeds up the file system scan
+            buildFiles.parallelStream().forEach(file -> {
+                // great, this dir is a Bazel package (but this may be a non-Java package)
+                // scan the BUILD file looking for java rules, only add if this is a java project
+                if (BuildFileSupport.hasRegisteredRules(file.toFile())) {
+                    buildFileLocations.add(BazelPathHelper.getCanonicalFileSafely(file.getParent().toFile()));
+                }
+            });
+
         } catch (Exception anyE) {
             logger.error("ERROR scanning for Bazel packages: {}", anyE.getMessage());
         }
     }
 
-    private static boolean shouldIgnore(File f, int depth) {
-        if (depth == 0 && f.isDirectory() && f.getName().startsWith("bazel-")) {
-            // this is a Bazel internal directory at the root of the project dir, ignore
-            // TODO should this use one of the ignore directory facilities at the bottom of this class?
-            return true;
-        }
-        return false;
+    private static boolean isBuildFile(Path candidate) {
+        return BazelConstants.BUILD_FILE_NAMES.contains(candidate.getFileName().toString());
     }
 
-    private static boolean isBuildFile(File candidate) {
-        return BazelConstants.BUILD_FILE_NAMES.contains(candidate.getName());
+    public Set<File> findBuildFileLocations(File rootDirectoryFile) throws IOException {
+        Set<File> files = ConcurrentHashMap.newKeySet();
+        findBuildFileLocations(rootDirectoryFile, null, files, 0);
+        return files;
     }
 }
