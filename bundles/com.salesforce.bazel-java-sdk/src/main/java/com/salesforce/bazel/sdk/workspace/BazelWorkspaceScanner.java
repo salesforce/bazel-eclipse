@@ -49,16 +49,21 @@ import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 public class BazelWorkspaceScanner {
     private static final LogHelper LOG = LogHelper.log(BazelWorkspaceScanner.class);
 
+    private static final int MEANINGFUL_DIR_NAME_THRESHOLD = 3;
+
     public static String getBazelWorkspaceName(String bazelWorkspaceRootDirectory) {
         // TODO pull the workspace name out of the WORKSPACE file, until then use the directory name (e.g. bazel-demo)
         String bazelWorkspaceName = "workspace";
         if (bazelWorkspaceRootDirectory != null) {
+            bazelWorkspaceName = bazelWorkspaceRootDirectory;
+
             int lastSlash = bazelWorkspaceRootDirectory.lastIndexOf(File.separator);
-            if ((lastSlash >= 0) && ((bazelWorkspaceRootDirectory.length() - lastSlash) > 3)) {
-                // add the directory name to the label, if it is meaningful (>3 chars)
-                bazelWorkspaceName = bazelWorkspaceRootDirectory.substring(lastSlash + 1);
-            } else {
-                bazelWorkspaceName = bazelWorkspaceRootDirectory;
+            if (lastSlash >= 0) {
+                int dirNameLength = bazelWorkspaceRootDirectory.length() - lastSlash;
+                if (dirNameLength > MEANINGFUL_DIR_NAME_THRESHOLD) {
+                    // add the directory name to the label, if it is meaningful (>3 chars)
+                    bazelWorkspaceName = bazelWorkspaceRootDirectory.substring(lastSlash + 1);
+                }
             }
         }
         return bazelWorkspaceName;

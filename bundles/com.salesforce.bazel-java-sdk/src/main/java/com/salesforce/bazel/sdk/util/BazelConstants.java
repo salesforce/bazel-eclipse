@@ -40,24 +40,28 @@ import java.util.HashSet;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
-public interface BazelConstants {
+public final class BazelConstants {
+
+    private BazelConstants() {
+
+    }
 
     /**
      * The Bazel BUILD files BEF looks for.
      */
-    Collection<String> WORKSPACE_FILE_NAMES =
+    public static final Collection<String> WORKSPACE_FILE_NAMES =
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList("WORKSPACE", "WORKSPACE.bazel")));
 
     /**
      * The Bazel BUILD files BEF looks for.
      */
-    Collection<String> BUILD_FILE_NAMES =
+    public static final Collection<String> BUILD_FILE_NAMES =
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList("BUILD", "BUILD.bazel")));
 
     /**
      * The targets configured by default for each imported Bazel package.
      */
-    Collection<String> DEFAULT_PACKAGE_TARGETS =
+    public static final Collection<String> DEFAULT_PACKAGE_TARGETS =
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList(BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR)));
 
 }

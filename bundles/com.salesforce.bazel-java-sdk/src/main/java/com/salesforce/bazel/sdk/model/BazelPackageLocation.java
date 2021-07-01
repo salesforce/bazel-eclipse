@@ -47,12 +47,12 @@ public interface BazelPackageLocation {
      *
      * e.g. "//projects/libs/apple"
      */
-    public String getBazelPackageName();
+    String getBazelPackageName();
 
     /**
      * Builds a list containing this node, plus all children (recursively)
      */
-    public List<BazelPackageLocation> gatherChildren();
+    List<BazelPackageLocation> gatherChildren();
 
     /**
      * Builds a list containing this node, plus all children (recursively). The pathFilter must be in the form
@@ -60,14 +60,14 @@ public interface BazelPackageLocation {
      * <p>
      * TODO convert pathFilter to a BazelLabel; SDK Issue #37
      */
-    public List<BazelPackageLocation> gatherChildren(String pathFilter);
+    List<BazelPackageLocation> gatherChildren(String pathFilter);
 
     /**
      * Returns the targets configured for this Bazel Package, at import time.
      *
      * A null return value indicates that the user did not specify any specific targets.
      */
-    default public List<BazelLabel> getBazelTargets() {
+    default List<BazelLabel> getBazelTargets() {
         return null;
     }
 }

@@ -39,13 +39,13 @@ public interface WorkProgressMonitor {
      *            <code>UNKNOWN</code> the implementation is free to indicate progress in a way which doesn't require
      *            the total number of work units in advance.
      */
-    public void beginTask(String name, int totalWork);
+    void beginTask(String name, int totalWork);
 
     /**
      * Notifies that the work is done; that is, either the main task is completed or the user canceled it. This method
      * may be called more than once (implementations should be prepared to handle this case).
      */
-    public void done();
+    void done();
 
     /**
      * Returns whether cancelation of current operation has been requested. Long-running operations should poll to see
@@ -54,7 +54,7 @@ public interface WorkProgressMonitor {
      * @return <code>true</code> if cancellation has been requested, and <code>false</code> otherwise
      * @see #setCanceled(boolean)
      */
-    public boolean isCanceled();
+    boolean isCanceled();
 
     /**
      * Sets the cancel state to the given value.
@@ -64,7 +64,7 @@ public interface WorkProgressMonitor {
      *            <code>false</code> clears this flag
      * @see #isCanceled()
      */
-    public void setCanceled(boolean value);
+    void setCanceled(boolean value);
 
     /**
      * Notifies that a subtask of the main task is beginning. Subtasks are optional; the main task might not have
@@ -73,7 +73,7 @@ public interface WorkProgressMonitor {
      * @param name
      *            the name (or description) of the subtask
      */
-    public void subTask(String name);
+    void subTask(String name);
 
     /**
      * Notifies that a given number of work unit of the main task has been completed. Note that this amount represents
@@ -82,7 +82,7 @@ public interface WorkProgressMonitor {
      * @param work
      *            a non-negative number of work units just completed
      */
-    public void worked(int work);
+    void worked(int work);
 
     WorkProgressMonitor NOOP = new WorkProgressMonitor() {
         @Override

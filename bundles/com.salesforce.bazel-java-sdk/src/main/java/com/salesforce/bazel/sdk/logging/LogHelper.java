@@ -41,8 +41,8 @@ package com.salesforce.bazel.sdk.logging;
  * <p>
  * This is the preferred way to log in the Bazel SDK.
  */
-public class LogHelper {
-    final Class<?> from;
+public final class LogHelper {
+    private final Class<?> from;
 
     /**
      * Get the Logger for the <i>from</i> class.

@@ -53,7 +53,7 @@ public abstract class LoggerFacade {
     /**
      * Configure the default logger, which just logs to stdout and stderr.
      */
-    static LoggerFacade instance = new BasicLoggerFacade();
+    private static LoggerFacade instance = new BasicLoggerFacade();
 
     /**
      * Call once at startup to replace the default facade with one more appropriate to the environment.

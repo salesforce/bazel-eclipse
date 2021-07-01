@@ -22,7 +22,7 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Scanner for a Bazel workspace to locate BUILD files that contain rules that are supported by the SDK.
  */
 public class BazelPackageFinder {
-    LogHelper logger = LogHelper.log(this.getClass());
+    private final LogHelper logger = LogHelper.log(this.getClass());
 
     public BazelPackageFinder() {}
 

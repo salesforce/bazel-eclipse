@@ -8,19 +8,19 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 /**
  * Constants and utils for file system paths.
  */
-public class FSPathHelper {
+public final class FSPathHelper {
     private static final LogHelper LOG = LogHelper.log(FSPathHelper.class);
 
     // Slash character for unix file paths
     public static final String UNIX_SLASH = "/";
 
     // Backslash character; this is provided as a constant to help code searches
-    // for Windows specific code. There are two backslash characters because Java 
+    // for Windows specific code. There are two backslash characters because Java
     // requires a leading backslash to encode a backslash
     public static final String WINDOWS_BACKSLASH = "\\";
 
     // Regex pattern to use to look for a single backslash character in a path
-    // why 4? 
+    // why 4?
     // Regex needs a double \ to escape backslash in the matcher (1+1=2)
     // Java requires a backslash to encode a backslash in the String (2x2=4)
     public static final String WINDOWS_BACKSLASH_REGEX = "\\\\";
@@ -28,8 +28,13 @@ public class FSPathHelper {
     // Slash character for file paths in jar files
     public static final String JAR_SLASH = "/";
 
+    private FSPathHelper() {
+
+    }
+
     /**
-     * Primary feature toggle. isUnix is true for all platforms except Windows.
+     * Primary feature toggle. isUnix is true for all platforms except Windows. TODO this needs to be reworked in SDK
+     * Issue #32
      */
     public static boolean isUnix = true;
     static {
