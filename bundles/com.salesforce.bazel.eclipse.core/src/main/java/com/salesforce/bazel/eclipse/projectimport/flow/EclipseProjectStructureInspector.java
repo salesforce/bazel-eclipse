@@ -30,8 +30,8 @@ import java.util.List;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Discovers well know paths in a bazel project.
@@ -58,7 +58,7 @@ class EclipseProjectStructureInspector {
 
         // add this node buildable target
         String bazelPackageRootDirectory =
-                BazelPathHelper.getCanonicalPathStringSafely(packageNode.getWorkspaceRootDirectory());
+                FSPathHelper.getCanonicalPathStringSafely(packageNode.getWorkspaceRootDirectory());
         File packageDirectory =
                 new File(packageNode.getWorkspaceRootDirectory(), packageNode.getBazelPackageFSRelativePath());
 

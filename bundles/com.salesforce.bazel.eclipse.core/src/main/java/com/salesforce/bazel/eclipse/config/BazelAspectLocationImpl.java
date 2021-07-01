@@ -47,7 +47,7 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Implementation of {@link BazelAspectLocation} using Eclipse OSGi Bundle locations.
@@ -94,12 +94,12 @@ public class BazelAspectLocationImpl implements BazelAspectLocation {
             // on the filesystem, we need to fail. The Aspect is critical to the computation of the classpath,
             // so nothing will work without it. Fail hard if it is missing.
             if (!aspectWorkspaceDirFile.exists()) {
-                File canonicalFile = BazelPathHelper.getCanonicalFileSafely(new File(aspectPath));
+                File canonicalFile = FSPathHelper.getCanonicalFileSafely(new File(aspectPath));
                 if (!canonicalFile.exists()) {
                     logger.error(
                         "The BEF Aspect file is not found on disk: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
                     throw new IllegalStateException(
-                            "Could not load the BEF Aspect on disk [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
+                        "Could not load the BEF Aspect on disk [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
                 }
             }
             logger.info("BEF Aspect location: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");

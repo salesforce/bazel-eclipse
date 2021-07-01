@@ -11,11 +11,6 @@ import java.util.Map;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.salesforce.bazel.sdk.graph.BazelDependencyGraph;
-import com.salesforce.bazel.sdk.graph.BazelDependencyGraphBuilder;
-import com.salesforce.bazel.sdk.graph.BazelDependencyGraphFactory;
-import com.salesforce.bazel.sdk.graph.InMemoryDependencyGraph;
-
 public class BazelDependencyGraphFactoryTest {
 
     @Test

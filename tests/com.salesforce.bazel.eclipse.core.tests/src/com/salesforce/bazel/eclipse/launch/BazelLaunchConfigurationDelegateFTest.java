@@ -46,7 +46,7 @@ import com.salesforce.bazel.eclipse.mock.MockResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutputMatcher;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 public class BazelLaunchConfigurationDelegateFTest {
     @Rule
@@ -60,7 +60,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
         addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 0,
-            BazelPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0"), "bazel run result"); // $SLASH_OK
+            FSPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0"), "bazel run result"); // $SLASH_OK
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
 
         // method under test
@@ -69,7 +69,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         // verify
         MockResourceHelper mockResourceHelper = mockEclipse.getMockResourceHelper();
         String[] cmdLine = mockResourceHelper.lastExecCommandLine;
-        String filesystemPath = BazelPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
+        String filesystemPath = FSPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
         assertTrue(cmdLine[0].endsWith(filesystemPath));
         assertTrue(cmdLine[1].contains("debug"));
         assertTrue(cmdLine[2].contains("testvalue1"));
@@ -160,7 +160,7 @@ public class BazelLaunchConfigurationDelegateFTest {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_binary");
         } else if ("selenium".equals(verb)) {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(),
-                "java_web_test_suite");
+                    "java_web_test_suite");
         }
 
         List<String> args = new ArrayList<>();

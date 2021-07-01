@@ -34,7 +34,7 @@ import org.eclipse.core.runtime.Path;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Knows how to link files (used only during project import).
@@ -60,13 +60,13 @@ class EclipseFileLinker {
                     null);
             } catch (Exception anyE) {
                 // TODO throwing this exception just writes a log message, we need a modal error popup for this error
-                LOG.error("Failure to link file [{}] for project [{}]", BazelPathHelper.getCanonicalPathStringSafely(f),
+                LOG.error("Failure to link file [{}] for project [{}]", FSPathHelper.getCanonicalPathStringSafely(f),
                     eclipseProject.getName());
                 throw new IllegalStateException(anyE);
             }
         } else {
             LOG.error("Tried to link a non-existant file [{}] for project [{}]",
-                BazelPathHelper.getCanonicalPathStringSafely(f), eclipseProject.getName());
+                FSPathHelper.getCanonicalPathStringSafely(f), eclipseProject.getName());
             retval = false;
         }
         return retval;

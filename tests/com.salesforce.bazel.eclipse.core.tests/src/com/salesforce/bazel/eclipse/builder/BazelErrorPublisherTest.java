@@ -18,8 +18,8 @@ import org.junit.Test;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.BazelProject;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 public class BazelErrorPublisherTest {
 
@@ -27,11 +27,11 @@ public class BazelErrorPublisherTest {
     public void testAssignErrorsToOwningProject() throws Exception {
         IProject project1 = getMockedProject("P1").getProject();
         BazelLabel l1 = new BazelLabel("projects/libs/lib1:*"); // $SLASH_OK: bazel path
-        String testJavaPath = BazelPathHelper.osSeps("projects/libs/lib1/src/Test.java");
+        String testJavaPath = FSPathHelper.osSeps("projects/libs/lib1/src/Test.java");
         BazelProblem error1 = BazelProblem.createError(testJavaPath, 21, "foo"); // $SLASH_OK
         IProject project2 = getMockedProject("P2").getProject();
         BazelLabel l2 = new BazelLabel("projects/libs/lib2:*"); // $SLASH_OK: bazel path
-        String test2JavaPath = BazelPathHelper.osSeps("projects/libs/lib2/src/Test2.java"); // $SLASH_OK
+        String test2JavaPath = FSPathHelper.osSeps("projects/libs/lib2/src/Test2.java"); // $SLASH_OK
         BazelProblem error2 = BazelProblem.createError(test2JavaPath, 22, "blah");
         Map<BazelLabel, BazelProject> labelToProject = new HashMap<>();
         labelToProject.put(l1, new BazelProject("P1", project1));
@@ -45,13 +45,13 @@ public class BazelErrorPublisherTest {
         Collection<BazelProblem> p1Errors = projectToErrors.get(project1);
         assertEquals(1, p1Errors.size());
         BazelProblem p1Error = p1Errors.iterator().next();
-        assertEquals(BazelPathHelper.osSeps("/src/Test.java"), p1Error.getResourcePath()); // $SLASH_OK
+        assertEquals(FSPathHelper.osSeps("/src/Test.java"), p1Error.getResourcePath()); // $SLASH_OK
         assertEquals(21, p1Error.getLineNumber());
         assertEquals("foo", p1Error.getDescription());
         Collection<BazelProblem> p2Errors = projectToErrors.get(project2);
         assertEquals(1, p2Errors.size());
         BazelProblem p2Error = p2Errors.iterator().next();
-        assertEquals(BazelPathHelper.osSeps("/src/Test2.java"), p2Error.getResourcePath()); // $SLASH_OK
+        assertEquals(FSPathHelper.osSeps("/src/Test2.java"), p2Error.getResourcePath()); // $SLASH_OK
         assertEquals(22, p2Error.getLineNumber());
         assertEquals("blah", p2Error.getDescription());
     }
@@ -61,10 +61,10 @@ public class BazelErrorPublisherTest {
         IProject project1 = getMockedProject("P1").getProject();
         BazelLabel l1 = new BazelLabel("projects/libs/lib1:*"); // $SLASH_OK: bazel path
         BazelProblem error1 =
-                BazelProblem.createError(BazelPathHelper.osSeps("projects/libs/lib1/src/Test.java"), 21, "foo"); // $SLASH_OK
+                BazelProblem.createError(FSPathHelper.osSeps("projects/libs/lib1/src/Test.java"), 21, "foo"); // $SLASH_OK
         Map<BazelLabel, BazelProject> labelToProject = Collections.singletonMap(l1, new BazelProject("P1", project1));
         BazelProblem error2 =
-                BazelProblem.createError(BazelPathHelper.osSeps("projects/libs/lib2/src/Test2.java"), 22, "blah"); // $SLASH_OK
+                BazelProblem.createError(FSPathHelper.osSeps("projects/libs/lib2/src/Test2.java"), 22, "blah"); // $SLASH_OK
         IProject rootProject = getMockedProject("ROOT").getProject();
 
         Map<IProject, List<BazelProblem>> projectToErrors = BazelErrorPublisher
@@ -73,10 +73,10 @@ public class BazelErrorPublisherTest {
         assertEquals(2, projectToErrors.size());
         Collection<BazelProblem> rootLevelErrors = projectToErrors.get(rootProject);
         BazelProblem rootError = rootLevelErrors.iterator().next();
-        assertEquals(BazelPathHelper.osSeps("/WORKSPACE"), rootError.getResourcePath()); // $SLASH_OK
+        assertEquals(FSPathHelper.osSeps("/WORKSPACE"), rootError.getResourcePath()); // $SLASH_OK
         assertEquals(0, rootError.getLineNumber());
         assertTrue(rootError.getDescription().startsWith(BazelErrorPublisher.UNKNOWN_PROJECT_ERROR_MSG_PREFIX));
-        assertTrue(rootError.getDescription().contains(BazelPathHelper.osSeps("projects/libs/lib2/src/Test2.java"))); // $SLASH_OK
+        assertTrue(rootError.getDescription().contains(FSPathHelper.osSeps("projects/libs/lib2/src/Test2.java"))); // $SLASH_OK
         assertTrue(rootError.getDescription().contains("blah"));
     }
 

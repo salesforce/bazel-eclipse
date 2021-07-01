@@ -64,10 +64,10 @@ import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 /**
  * Provide the runtime classpath for JUnit tests. These are obtained from the test rule's generated param files that
@@ -173,7 +173,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                                         public void run() {
                                             MessageDialog.openError(Display.getDefault().getActiveShell(),
                                                 "Unknown Target",
-                                                "One or all of the tests trying to be executed are not part of a Bazel java_test target");
+                                                    "One or all of the tests trying to be executed are not part of a Bazel java_test target");
                                         }
                                     });
                                 }
@@ -194,10 +194,10 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                 jarPaths = getPathsToJars(paramsFile);
             } catch (IOException e) {
                 throw new CoreException(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(),
-                        "Error parsing " + paramsFile.getAbsolutePath(), e));
+                    "Error parsing " + paramsFile.getAbsolutePath(), e));
             }
             for (String rawPath : jarPaths) {
-                String canonicalPath = BazelPathHelper.getCanonicalPathStringSafely(new File(base, rawPath));
+                String canonicalPath = FSPathHelper.getCanonicalPathStringSafely(new File(base, rawPath));
                 IPath eachPath = new Path(canonicalPath);
                 if (eachPath.toFile().exists()) {
                     IRuntimeClasspathEntry src = JavaRuntime.newArchiveRuntimeClasspathEntry(eachPath);
@@ -234,8 +234,8 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
         File bazelBinDir = BazelPluginActivator.getBazelWorkspace().getBazelBinDirectory();
         String paramsName = className.replace('.', File.separatorChar) + suffix;
 
-        File paramFile = new File(new File(new File(bazelBinDir, targetPath), BazelPathHelper.osSeps("src/test/java")), // $SLASH_OK
-                paramsName);
+        File paramFile = new File(new File(new File(bazelBinDir, targetPath), FSPathHelper.osSeps("src/test/java")), // $SLASH_OK
+            paramsName);
         if (paramFile.exists()) {
             paramFiles.add(paramFile);
         } else {
@@ -246,7 +246,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
             List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
             for (String label : labels) {
                 paramFile = new File(new File(bazelBinDir, targetPath),
-                        label.substring(label.lastIndexOf(":") + 1) + suffix);
+                    label.substring(label.lastIndexOf(":") + 1) + suffix);
                 paramFiles.add(paramFile);
             }
         }

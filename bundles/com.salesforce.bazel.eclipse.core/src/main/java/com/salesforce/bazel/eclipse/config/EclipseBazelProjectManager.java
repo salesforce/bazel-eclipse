@@ -27,10 +27,10 @@ import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
 
 public class EclipseBazelProjectManager extends BazelProjectManager {
     /**
@@ -75,7 +75,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
         Collection<BazelProject> bazelProjects = getAllProjects();
 
         String canonicalSourcePathString =
-                BazelPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory())
+                FSPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory())
                 + File.separator + sourcePath;
         Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
@@ -98,7 +98,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
                 IPath projectLocation = res.getLocation();
                 if ((projectLocation != null) && !projectLocation.isEmpty()) {
                     String canonicalProjectRoot =
-                            BazelPathHelper.getCanonicalPathStringSafely(projectLocation.toOSString());
+                            FSPathHelper.getCanonicalPathStringSafely(projectLocation.toOSString());
                     if (canonicalSourcePathString.startsWith(canonicalProjectRoot)) {
                         IPath[] inclusionPatterns = entry.getInclusionPatterns();
                         IPath[] exclusionPatterns = entry.getExclusionPatterns();
@@ -281,7 +281,10 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
         eclipseProjectBazelPrefs.put(BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspaceRoot);
 
-        String bazelPackagePath = BazelPathHelper.bazelLabelSeps(packageFSPath);
+        // convert file system path to bazel path; for linux/macos the slashes are already fine,
+        // this is only a thing for windows
+        String bazelPackagePath = packageFSPath.replace(FSPathHelper.WINDOWS_BACKSLASH, "/");
+
         if (!bazelPackagePath.startsWith("//")) {
             bazelPackagePath = "//" + bazelPackagePath;
         }

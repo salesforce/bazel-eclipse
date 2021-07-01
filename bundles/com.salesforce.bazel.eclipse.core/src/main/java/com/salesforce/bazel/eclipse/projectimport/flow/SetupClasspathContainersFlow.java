@@ -43,7 +43,7 @@ import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 
 /**
@@ -91,7 +91,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
     // where the Java Package structure starts
     private static void createClasspath(IPath bazelWorkspacePath, String bazelPackageFSPath,
             List<String> packageSourceCodeFSRelativePaths, IJavaProject eclipseProject, int javaLanguageLevel)
-            throws CoreException {
+                    throws CoreException {
         List<IClasspathEntry> classpathEntries = new LinkedList<>();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
 
@@ -110,7 +110,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
 
             IPath outputDir = null; // null is a legal value, it means use the default
             boolean isTestSource = false;
-            if (path.endsWith(BazelPathHelper.osSeps("src/test/java"))) { // NON_CONFORMING PROJECT SUPPORT, $SLASH_OK
+            if (path.endsWith(FSPathHelper.osSeps("src/test/java"))) { // NON_CONFORMING PROJECT SUPPORT, $SLASH_OK
                 isTestSource = true;
                 outputDir = new Path(eclipseProject.getPath().toOSString() + File.separatorChar + "testbin");
             }
@@ -148,7 +148,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
 
         if (!packageSourceCodeFSRelativePath.startsWith(bazelPackageFSPath)) {
             throw new IllegalStateException("src code path " + packageSourceCodeFSRelativePath
-                    + " expected to be under bazel package path " + bazelPackageFSPath);
+                + " expected to be under bazel package path " + bazelPackageFSPath);
         }
 
         IFolder currentFolder = null;
@@ -156,8 +156,8 @@ public class SetupClasspathContainersFlow implements ImportFlow {
             currentFolder = project.getFolder(packageSourceCodeFSRelativePath);
         } else {
             String sourceDirectoryPath =
-                    BazelPathHelper.osSeps(packageSourceCodeFSRelativePath.substring(bazelPackageFSPath.length() + 1)); // +1 for '/'
-            String[] pathComponents = sourceDirectoryPath.split(BazelPathHelper.osSepRegex());
+                    FSPathHelper.osSeps(packageSourceCodeFSRelativePath.substring(bazelPackageFSPath.length() + 1)); // +1 for '/'
+            String[] pathComponents = sourceDirectoryPath.split(FSPathHelper.osSepRegex());
             for (int i = 0; i < pathComponents.length; i++) {
                 String pathComponent = pathComponents[i];
                 if (currentFolder == null) {

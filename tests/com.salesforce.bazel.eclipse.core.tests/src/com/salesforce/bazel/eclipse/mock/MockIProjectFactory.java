@@ -38,7 +38,7 @@ import org.mockito.Mockito;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Convenience factory for create Mockito mock iProjects.
@@ -57,7 +57,7 @@ public class MockIProjectFactory {
         IPath absolutePath = new Path(bom.absolutePathToEclipseProjectDirectory);
         Mockito.when(mockProject.getLocation()).thenReturn(absolutePath);
         Mockito.when(mockProject.getWorkspace())
-                .thenReturn(BazelPluginActivator.getResourceHelper().getEclipseWorkspace());
+        .thenReturn(BazelPluginActivator.getResourceHelper().getEclipseWorkspace());
         try {
             Mockito.when(mockProject.getReferencedProjects()).thenReturn(new IProject[] {});
         } catch (Exception anyE) {}
@@ -84,7 +84,7 @@ public class MockIProjectFactory {
         for (String natureId : bom.customNatures.keySet()) {
             try {
                 Mockito.when(mockProject.getNature(ArgumentMatchers.eq(natureId)))
-                        .thenReturn(bom.customNatures.get(natureId));
+                .thenReturn(bom.customNatures.get(natureId));
             } catch (Exception anyE) {}
         }
         description.setNatureIds(bom.customNatures.keySet().toArray(new String[] {}));
@@ -105,7 +105,7 @@ public class MockIProjectFactory {
 
         // normally the apple-api Eclipse project will be located as a top level directory in the Eclipse workspace directory
         bom.absolutePathToEclipseProjectDirectory =
-                BazelPathHelper.osSeps(absolutePathToEclipseWorkspace + "/" + projectName); // $SLASH_OK
+                FSPathHelper.osSeps(absolutePathToEclipseWorkspace + "/" + projectName); // $SLASH_OK
         bom.hasBazelNature = false;
         bom.hasJavaNature = false;
 
@@ -118,7 +118,7 @@ public class MockIProjectFactory {
 
         // normally the apple-api Eclipse project will be located as a top level directory in the Eclipse workspace directory
         bom.absolutePathToEclipseProjectDirectory =
-                BazelPathHelper.osSeps(absolutePathToEclipseWorkspace + "/" + projectName); // $SLASH_OK
+                FSPathHelper.osSeps(absolutePathToEclipseWorkspace + "/" + projectName); // $SLASH_OK
 
         bom.absolutePathToBazelPackageDirectory = absolutePathToBazelPackage;
 
