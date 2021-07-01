@@ -8,13 +8,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
-import com.salesforce.bazel.sdk.util.BazelPathHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
@@ -81,11 +82,12 @@ public class BazelPackageFinder {
             // scan all build files
             // normally in the SDK we do not use Java streams, to make the code more accessible, but the parallel
             // streaming here really speeds up the file system scan
+            Set<File> syncSet = Collections.synchronizedSet(buildFileLocations);
             buildFiles.parallelStream().forEach(file -> {
                 // great, this dir is a Bazel package (but this may be a non-Java package)
                 // scan the BUILD file looking for java rules, only add if this is a java project
                 if (BuildFileSupport.hasRegisteredRules(file.toFile())) {
-                    buildFileLocations.add(BazelPathHelper.getCanonicalFileSafely(file.getParent().toFile()));
+                    syncSet.add(FSPathHelper.getCanonicalFileSafely(file.getParent().toFile()));
                 }
             });
 
