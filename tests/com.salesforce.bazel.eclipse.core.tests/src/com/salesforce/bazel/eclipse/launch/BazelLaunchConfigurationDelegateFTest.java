@@ -59,8 +59,9 @@ public class BazelLaunchConfigurationDelegateFTest {
         ILaunchConfiguration launchConfig = createLaunchConfiguration("run");
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
+        // on Windows, the launcher is an .exe file extension
         addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 0,
-            FSPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0"), "bazel run result"); // $SLASH_OK
+            FSPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0.*"), "bazel run result"); // $SLASH_OK
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
 
         // method under test
@@ -69,8 +70,12 @@ public class BazelLaunchConfigurationDelegateFTest {
         // verify
         MockResourceHelper mockResourceHelper = mockEclipse.getMockResourceHelper();
         String[] cmdLine = mockResourceHelper.lastExecCommandLine;
-        String filesystemPath = FSPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
-        assertTrue(cmdLine[0].endsWith(filesystemPath));
+        String expectedExec = FSPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
+        String actualExec = cmdLine[0];
+
+        System.out.println("testHappyRunLaunch expectedExec = " + expectedExec + " actualPath = " + actualExec);
+
+        assertTrue(actualExec.endsWith(expectedExec) || actualExec.endsWith(expectedExec + ".exe"));
         assertTrue(cmdLine[1].contains("debug"));
         assertTrue(cmdLine[2].contains("testvalue1"));
         assertTrue(cmdLine[3].contains("testvalue2"));
