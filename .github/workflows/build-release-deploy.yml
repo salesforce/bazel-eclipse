@@ -55,5 +55,6 @@ jobs:
         with:
           branch: gh-pages
           folder: update-site
-          single-commit: true
+          clean: false
+          commit-message: bef-release
           ssh-key: ${{ secrets.DEPLOY_KEY }}
