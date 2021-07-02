@@ -1,8 +1,8 @@
-## Bazel Eclipse for Windows
+## Bazel Eclipse Feature for Windows
 
 Windows support has been introduced into the code line as of June 2021 and the
   first release with Windows support is [1.4.0](https://github.com/salesforce/bazel-eclipse/releases).
-Please be aware that the authors of BEF are not well suited to support Windows.
+Please be aware though that the authors of BEF are not well suited to support Windows.
 
 Our support for Windows consists of the following:
 - Intentional design to model all paths with classes to guard against assumptions of path separators.
@@ -14,6 +14,19 @@ Speaking personally (@plaird), I did the Windows port but I haven't used Windows
 If you have issues or suggestions on how better to support this platform we would
   welcome any feedback and expertise.
 
+### Prerequisites
+
+Before you continue with this page, we need to assume some things:
+
+- Your Bazel workspace is building correctly on your Windows machine prior to installing BEF
+  - This includes having awareness and solutions for *BAZEL_SH* and *JAVA_HOME* issues
+  - Please seek out the right solutions from the [Bazel Windows documentation](https://docs.bazel.build/versions/main/windows.html)
+- Understand that BEF is currently limited to Bazel packages with Java rules and [conform to certain file layout conventions](conforming_java_packages.md)
+- You are on modern-ish versions of Windows, Bazel, Java, and Eclipse.
+
+If you are good with the above, please follow [our install doc](install.md)
+  and our [user guide](using_the_feature.md).
+
 ### You MUST Set the Bazel Install Path in Preferences
 
 Is there a standard location for Bazel on Windows?
@@ -21,20 +34,22 @@ On Linux and Mac, we have a reasonable default of ```~/bin/bazel``` but on Windo
   it is not clear what the default should be.
 
 Make sure to set the Eclipse preference **prior** to doing any BEF operation (like Project Import).
+- Launch Eclipse with BEF installed
 - Open _Windows -> Preferences_
 - Click on the _Bazel_ section
-- Set the Bazel executable path
+- Set the Bazel executable path, and set it to your path to the *bazel.exe*
 
 **CreateProcess Error Code 5 Access Denied**
 
 If you get the above error, this is a problem with BEF not finding your Bazel executable.
 Make sure you set your preference correctly.
-Restart Eclipse if the problem continues, as that can help.
+Restart Eclipse if the setting does not appear to take effect.
 
 ### Build Failures?
 
+As stated above, your Bazel workspace must be building successfully from the command line before using BEF.
 If you have build errors, please investigate general Windows support for Bazel,
-  and the role of BAZEL_SH in your environment.
+  and the role of *BAZEL_SH* in your environment.
 Under the covers, BEF is invoking *bazel.exe* from a shell to run your build.
 
 Suggested reading:
@@ -46,6 +61,7 @@ Suggested reading:
 
 Many Bazel workspaces with Java use *rules_jvm_external* to manage external dependencies.
 Under the hood, *rules_jvm_external* uses a tool called Coursier to download the jars.
+You may see an error such as this:
 
 ```
 >> ERROR: Error fetching repository: Traceback (most recent call last):
@@ -57,5 +73,5 @@ Under the hood, *rules_jvm_external* uses a tool called Coursier to download the
 This is covered in [this issue](https://github.com/bazelbuild/rules_jvm_external/issues/464) in *rules_jvm_external*.
 
 Fixes:
-- set JAVA_HOME not just in Git Bash, but in env https://mkyong.com/java/how-to-set-java_home-on-windows-10/
+- set *JAVA_HOME* not just in Git Bash, but in env https://mkyong.com/java/how-to-set-java_home-on-windows-10/
 - make sure you are using the JDK not the JRE
