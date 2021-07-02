@@ -51,15 +51,22 @@ Things to look for:
 
 ### Releasing from GitHub to the Update Site
 
-Our [update site](https://opensource.salesforce.com/bazel-eclipse/) is the official location
-  of our releases.
+Note that we have two update sites, one for the official releases and one for release candidates.
+Deploy a release candidate and test it prior to releasing the official release.
+
+- [Update Instructions](https://opensource.salesforce.com/bazel-eclipse/) are written [here](https://github.com/salesforce/bazel-eclipse/blob/master/.github/update-site-index.html)
+- Official release update site: https://opensource.salesforce.com/bazel-eclipse/update-site
+- Release candidate (RC) update site: http://opensource.salesforce.com/bazel-eclipse/update-site-release-candidate
 
 :fire: The update site is our live installation location for our users. If you are doing
 experimental work with the release process, please do not release directly to _gh-pages_
-branch. Update the _github-pages-deploy-action_ stage in
+branch.
+
+- Issue a release candidate prior to deploying an official release
+- Update the _github-pages-deploy-action_ stage in
 [the workflow](../../.github/workflows/build-release-deploy.yml) to deploy to a test
-branch if you have **any** doubts about what you are releasing. Also, be prepared
-to rollback the [gh-pages branch](https://github.com/salesforce/bazel-eclipse/tree/gh-pages)
+branch if you have **any** doubts about what you are releasing.
+- Be prepared to rollback the [gh-pages branch](https://github.com/salesforce/bazel-eclipse/tree/gh-pages)
 at the first sign of trouble (see steps on how to do this in next section).
 
 Our GitHub repo has our release process implemented as a GitHub Actions workflow.
@@ -67,7 +74,7 @@ To build the release, make sure you have your versions set and committed to mast
 
 Then, run the release workflow:
  - Navigate to the [Bazel Eclipse Actions](https://github.com/salesforce/bazel-eclipse/actions) tab in GitHub
- - Click on the _Bazel Eclipse Feature Release_ button in the left nav
+ - Click on the _Bazel Eclipse Feature Release_ or _Bazel Eclipse Feature Test Release Candidate_ button in the left nav
  - Click on the _Run Workflow_ button on the right side, and pick the branch to release from (normally _master_)
  - Monitor the build, it should take about a minute
  - Navigate to the [gh-pages branch](https://github.com/salesforce/bazel-eclipse/tree/gh-pages) of the repo. It contains all the files from the release.
@@ -80,6 +87,7 @@ First, check that our landing page is available and has correct instructions:
 - [BEF Update Site landing page](https://opensource.salesforce.com/bazel-eclipse/)
 
 Next, follow the instructions on the page and install BEF into a fresh copy of Eclipse.
+If you are testing a release candidate, remember to use the RC update site http://opensource.salesforce.com/bazel-eclipse/update-site-release-candidate.
 Finally, repeat the install test with the zip file that is in the root directory of the *gh-pages* branch
 
 If anything fails, revert the changes in the _gh-pages_ branch ASAP!
@@ -132,3 +140,4 @@ Instead of explaining how it works, here are some pointers to some interesting f
 
 - [Release workflow definition](../../.github/workflows/build-release-deploy.yml)
 - [Update site layout script](../../.github/create-update-site.sh)
+- [Update site layout script for RCs](../../.github/create-update-site-rc.sh)
