@@ -13,21 +13,53 @@ For more information about open source at Salesforce, see this page:
 
 ### Origins
 
-This project began as a Salesforce private fork of the [Google Bazel Eclipse plugin](https://github.com/bazelbuild/eclipse) aka *e4b*,
-  which had been abandoned.
+This project began as a hackathon project of Peter Laird (@plaird) at Salesforce in 2018.
+It was seeded by a fork of the [Google Bazel Eclipse plugin](https://github.com/bazelbuild/eclipse)
+  aka *e4b*, which had been abandoned.
 The last commit taken from that repo was *dc387fa035edca898fc5ffc80519f79f6d2d4f78* from April 2018.
-The plugin (now evolved into a *feature* consisting of a set of plugins) has been heavily modified since the original fork.
 
-The Bazel Aspect implementation that computes package dependencies, and the code for the Bazel classpath container are the main surviving elements of the original implementation.
-The code has been modified, but the original ideas remain the same.
+The plugin (now evolved into a *feature* consisting of a set of plugins) has been heavily modified since the original fork.
+Almost nothing remains of the original Google code.
+The idea to use a Bazel Aspect implementation to compute package dependencies is the main surviving element
+  of the original Google implementation.
 Based on code comments, we believe the Aspect originally came from the [Bazel IntelliJ plugin](https://github.com/bazelbuild/intellij) project.
+
+### Open Source and Continued Development
+
+Starting in 2019, a small team within Salesforce took up development of BEF as an unfunded side project,
+  which continues to this day (Peter Laird, Simon Toens, Blaine Buxton, Nishant D'Souza, Di Sang).
+BEF is almost entirely a passion project - most hours are invested from personal time on evenings and weekends.
+
+### Bazel Java SDK
+
+BEF was architected from the early days recognizing that most of the code required for BEF is actually not
+  specific to Eclipse.
+While that code was born inside of BEF, it was kept as a separate Eclipse plugin with the intention to split
+  it out as a separate top level project - the [Bazel Java SDK](dev/bazeljavasdk.md).
+The formal separation occurred in early 2021.
+
+### Build Implementation History
+
+The original build from the Google *e4b* plugin was implemented in Bazel using custom rules.
+This was good enough to get a rough binary produced, but nothing more.
+Many Eclipse plugin metadata requirements were not honored.
+@plaird fixed some of it, but gave up and retreated to use Bazel only to run command line build/tests,
+Packaging of the actual BEF binary was done via Eclipse *Export* within the Eclipse SDK.
+
+In 2021, Gunnar Wagenknecht (@guw) used his Eclipse expertise to reimplement [the build](dev/thebuild.md)
+  using Maven Tycho.
+Tycho is the de facto standard for Eclipse plugins, and allowed us to switch to command line builds
+  for the binaries.
+Never mind the blasphemy of building a Bazel-focused product with Maven.
+Gunnar also contributed the initial GitHub Actions CI solution, which builds the online update site
+  in GitHub Pages.
 
 ### Attribution
 
-All files from the original repository have been modified to some extent, and many were created after the initial fork.
+All files from the original repository have been modified to some extent, and most were created after the initial fork.
 Therefore all files carry at least a notice like this:
 ```
-Copyright 2019 Salesforce. All rights reserved.
+Copyright 2019-2021 Salesforce. All rights reserved.
 ```
 
 Files and code blocks that originated in the original fork carry the following notice, with an AUTHORS file that

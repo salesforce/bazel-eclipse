@@ -1,5 +1,51 @@
 ## Known Issues with Bazel Eclipse
 
+### Compilation Errors after Import
+
+After importing one or more packages from your Bazel workspace into BEF, you may
+  find that you have many build errors in your source files.
+This can also happen upon restart of Eclipse.
+
+This often happens if you have a build error in your Bazel workspace.
+BEF needs to run a build to compute the dependency graph and collect other details
+  about your workspace.
+If the build fails, some of that information will not be available to BEF.
+
+The best indicator that this has happened (for Java projects) is the _Bazel Classpath Container_
+  is missing from the project in the Eclipse Package Explorer.
+This is seen by expanding the project node in the explorer - there should be a node
+  labelled _Bazel Classpath Container_ nested underneath.
+
+### "One or more cycles were detected in the build path of project"
+
+This issue can happen if you have this pattern in your workspace:
+
+- ```//a/b/c:foo``` depends on ```//x/y/z:bar```
+- ```//x/y/z:bar``` depends on ```//a/b/c:oops```
+
+and you import both ```//a/b/c``` and ```//x/y/z``` as projects into BEF.
+Bazel is happy with the above dependency graph because Bazel tracks dependencies
+  at the target level (```foo => bar => oops```) which has no cycle.
+
+The problem is Eclipse tracks dependency information at the Project level.
+BEF maps each Bazel package as an Eclipse Project, as that is the most reasonable balance
+  between fidelity to Bazel and usability.
+Therefore Eclipse sees the dependency graph as ```c => z => c``` which is a cycle.
+
+We will explore a permanent solution to this in [Issue 197](https://github.com/salesforce/bazel-eclipse/issues/197)
+  but there might not be a 100% effective solution to this given we can't expect to make
+  changes to Eclipse or JDT.
+
+In the meantime, there are two workarounds:
+- Only import one of the Bazel packages (```//a/b/c``` or ```//x/y/z```) into Eclipse to prevent the cycle.
+- Delete the error from the _Problems View_ in Eclipse and the Error will not return often. Right click on the error line, and choose _Delete_.
+
+
+### "CreateProcess Error Code 5 Access Denied", "Error fetching repository" (Windows)
+
+All Windows platform issues are documented on a dedicated page.
+See our dedicated [Windows Guide](windows.md) for more details.
+
 ### Eclipse Titlebar Shows the IntelliJ Icon (Mac)
 
 On Mac, when a file is open in an editor, Eclipse displays the icon for that

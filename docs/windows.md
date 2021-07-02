@@ -1,22 +1,51 @@
 ## Bazel Eclipse for Windows
 
+Windows support has been introduced into the code line as of June 2021 and the
+  first release with Windows support is [1.4.0](https://github.com/salesforce/bazel-eclipse/releases).
+Please be aware that the authors of BEF are not well suited to support Windows.
 
-### Install Path in Preferences
+Our support for Windows consists of the following:
+- Intentional design to model all paths with classes to guard against assumptions of path separators.
+- Windows build in CI to detect test failures on the Windows platform
+- Cursory manual testing on a Windows machine each release
+
+Speaking personally (@plaird), I did the Windows port but I haven't used Windows
+  for development in 15 years.
+If you have issues or suggestions on how better to support this platform we would
+  welcome any feedback and expertise.
+
+### You MUST Set the Bazel Install Path in Preferences
 
 Is there a standard location for Bazel on Windows?
-I don't know so make sure to update your Bazel Preference.
+On Linux and Mac, we have a reasonable default of ```~/bin/bazel``` but on Windows
+  it is not clear what the default should be.
 
-CreateProcess Error Code 5 Access Denied
+Make sure to set the Eclipse preference **prior** to doing any BEF operation (like Project Import).
+- Open _Windows -> Preferences_
+- Click on the _Bazel_ section
+- Set the Bazel executable path
 
-### BAZEL_SH
+**CreateProcess Error Code 5 Access Denied**
 
-todo
+If you get the above error, this is a problem with BEF not finding your Bazel executable.
+Make sure you set your preference correctly.
+Restart Eclipse if the problem continues, as that can help.
 
-### Coursier
+### Build Failures?
 
+If you have build errors, please investigate general Windows support for Bazel,
+  and the role of BAZEL_SH in your environment.
+Under the covers, BEF is invoking *bazel.exe* from a shell to run your build.
 
+Suggested reading:
+- [Bazel for Windows](https://docs.bazel.build/versions/main/windows.html)
+- [Example Bazel Issue](https://github.com/bazelbuild/bazel/issues/6474)
+- [Example StackOverflow Post](https://stackoverflow.com/questions/46181672/windows-10-bazel-sh-configuration)
 
-https://github.com/bazelbuild/rules_jvm_external/issues/464
+### Coursier: Error fetching repository
+
+Many Bazel workspaces with Java use *rules_jvm_external* to manage external dependencies.
+Under the hood, *rules_jvm_external* uses a tool called Coursier to download the jars.
 
 ```
 >> ERROR: Error fetching repository: Traceback (most recent call last):
@@ -24,6 +53,8 @@ https://github.com/bazelbuild/rules_jvm_external/issues/464
 >> 		fail("Unable to run coursier: " + exec_result.stderr)
 >> Error in fail: Unable to run coursier: java.io.IOException: ERROR: src/main/native/windows/process.cc(202): CreateProcessW("C:\Users\coloradolaird\Desktop\devtools\jdk\oraclejdk_11_0_11\bin\java" -noverify -jar C:/users/coloradolaird/_bazel_coloradolaird/dugk4uzr/external/maven/coursier): The system cannot find the file specified.
 ```
+
+This is covered in [this issue](https://github.com/bazelbuild/rules_jvm_external/issues/464) in *rules_jvm_external*.
 
 Fixes:
 - set JAVA_HOME not just in Git Bash, but in env https://mkyong.com/java/how-to-set-java_home-on-windows-10/

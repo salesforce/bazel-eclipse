@@ -18,6 +18,8 @@ It is that easy!
   <img style="width:80px;" typeof="foaf:Image" class="img-responsive" src="https://marketplace.eclipse.org/sites/all/themes/solstice/public/images/marketplace/btn-install.svg" alt="Drag to your running Eclipse workspace." />
 </a>
 
+BEF is supported on Linux and Macos, and has [conditional Windows support](docs/windows.md).
+
 **Detailed Installation and User's Guides**
 
 For detailed manual installation and setup instructions, and the User's Guide, see these pages:
@@ -29,7 +31,7 @@ For detailed manual installation and setup instructions, and the User's Guide, s
 
 ## BEF Status and Roadmap
 
-Active development of this feature is currently being done by a team within Salesforce.
+Development of this feature is currently being done as a side project by a team within Salesforce.
 You can track our past/current/future work using these links:
 
 - [BEF project management](https://github.com/salesforce/bazel-eclipse/projects)
@@ -63,9 +65,9 @@ To start developing this feature, follow the instructions on our Dev Guide.
 To find planned features, known technical debt and known bugs that need work, please look at:
 
 - [BEF project management](https://github.com/salesforce/bazel-eclipse/projects)
+- [Bazel Java SDK project management](https://github.com/salesforce/bazel-java-sdk/issues)
 - _TODO_ comments in the code base; smaller ideas are tracked using simple _TODO_ comments
 
 ## History and Credit
 
-This project began as a Salesforce private fork of the [Google Bazel Eclipse plugin](https://github.com/bazelbuild/eclipse), which had been abandoned.
 Full history and credit is explained in the [history and credit document](docs/history.md).

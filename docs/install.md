@@ -12,10 +12,10 @@ Install a recent copy of whatever is asked for below, unless a specific version 
 ### Supported Platforms
 
 We will support you on:
-- Mac - reasonably recent OS versions
+- Mac - reasonably recent OS versions, with issues [noted on this page](macos.md).
 - Linux - reasonably recent OS version of a major distro (Ubuntu, Mint, etc)
+- Windows - supported, but [we are looking for expertise](windows.md) to support this better.
 
-Windows support is tracked as [Issue 36](https://github.com/salesforce/bazel-eclipse/issues/36), see that work item for current status.
 Other platforms (yo, OS/2 user!) may also work, but you may need to contribute patches if there are issues.
 
 ### Installing a JDK
@@ -36,7 +36,7 @@ The feature is built against a [recent version](../tools/eclipse_jars) of the Ec
 This seems like it is a no-brainer.
 Eclipse has been around for two decades, so it should launch with no issues.
 But it doesn't launch in some cases, at least on Macs.
-Consult [this doc](mac_eclipse_jdk.md) if your Eclipse fails to launch on Mac.
+Consult [this doc](macos.md) if your Eclipse fails to launch on Mac.
 
 ### Installing Bazel
 

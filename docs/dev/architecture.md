@@ -88,6 +88,13 @@ You can see it in action by visiting the *Java Build Path* properties for each i
 The *Libraries* tab will show an entry called *Bazel Classpath Container* on the classpath of the Eclipse project.
 Inside of that is a dynamic list of dependencies that are used by the targets in the workspace.
 
+### Bazel Java SDK
+
+Most of the code used by BEF is actually sourced from a companion top-level project -
+  the [Bazel Java SDK](bazeljavasdk.md).
+Before doing any work on BEF, it is important to understand what the SDK is, how it is
+  incorporated in to BEF, and design tenets of the SDK.
+
 ### What does Maven do?
 
 It makes sense to look over the fence at the Maven plugins to see how they have implemented the same
@@ -102,4 +109,4 @@ Not only does this separate concerns, but it makes unit testing simpler.
 Only one plugin (the *plugin-core*) has access to Eclipse APIs.
 
 - **com.salesforce.bazel.eclipse.core**: this plugin is the one that is integrated with Eclipse APIs, and contains classes such as the activator
-- **com.salesforce.bazel-java-sdk**: handles model abstractions and command execution for Bazel
+- **com.salesforce.bazel-java-sdk**: handles model abstractions and command execution for Bazel. This is a vendored copy of the [Bazel Java SDK](https://github.com/salesforce/bazel-java-sdk) which is a general purpose SDK for Bazel.

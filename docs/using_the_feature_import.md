@@ -45,8 +45,8 @@ Please see the [Conforming Java Packages explainer](conforming_java_packages.md)
 #### Known Issue: Import of a Bazel Workspace is Slow
 
 Be aware that importing a large number of Bazel packages into Eclipse is slow.
-BEF currently computes the classpath for each Java rule in each imported package.
-Because Java packages tend to have many *java_test* rules, this can take a long time.
+BEF currently computes the classpath for each Java target in each imported package.
+Because Java packages tend to have many *java_test* targets, this can take a long time.
 This is done [for specific reasons](https://github.com/salesforce/bazel-eclipse/issues/29), but is ripe for optimization.
 
 This issue is tracked as: [Improve performance of Bazel workspace import](https://github.com/salesforce/bazel-eclipse/issues/4)
