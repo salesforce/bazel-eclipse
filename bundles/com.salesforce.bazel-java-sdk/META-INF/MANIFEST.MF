@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Bazel Java SDK Plugin
 Bundle-SymbolicName: com.salesforce.bazel-java-sdk;singleton:=true
 Automatic-Module-Name: com.salesforce.bazel.eclipse.model
-Bundle-Version: 1.3.1.qualifier
+Bundle-Version: 1.4.0.qualifier
 Export-Package: com.salesforce.bazel.sdk.aspect,
  com.salesforce.bazel.sdk.aspect.jvm,
  com.salesforce.bazel.sdk.command,

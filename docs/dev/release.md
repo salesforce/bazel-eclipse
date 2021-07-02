@@ -16,21 +16,23 @@ The version is set in a number of files, both for Maven and for OSGi (Eclipse).
 For Maven pom.xml files, keep the *SNAPSHOT* suffix (e.g. *1.3.1-SNAPSHOT*).
 For OSGi meta files, keep the *qualifier* suffix (e.g. *1.3.1.qualifier*).
 
-Tycho has commands for this, and is a good start, but they don't do the full job:
+Tycho has commands for this, and is a good start, but they don't do the full job so you will need to iterate:
 ```
+ # auto update the version
  mvn -X -DnewVersion=1.3.1-SNAPSHOT tycho-versions:set-version
  mvn -X tycho-versions:update-eclipse-metadata
+
+ # rebuild with the new versions
+ mvn clean verify
+
+ # after the build, do a sweep for the old version to see if anything was missed, iterate if so
+ find . -type f | xargs grep 1.3.0-SNAPSHOT
 ```
 
 In the end, you will need to manually ensure the new version is applied everywhere.
 This [PR for version 1.3.1](https://github.com/salesforce/bazel-eclipse/pull/225/files)
   gives you an idea.
-Grepping through the code base looking for the old versions is not a bad idea.
 
-Verify all the files are in order before submitting to master with this command:
-```
-mvn clean verify
-```
 
 ### Local Build and Testing
 
