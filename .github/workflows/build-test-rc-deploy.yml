@@ -1,4 +1,4 @@
-name: Bazel Eclipse Feature Test Release Candidate 
+name: Bazel Eclipse Feature Test Release Candidate
 
 on:
   # manually from the Actions tab
@@ -45,15 +45,15 @@ jobs:
           BUILD_LABEL: "CI ${{ steps.time.outputs.time }} (${{ steps.branch_name.outputs.branch }})"
         run: mvn --batch-mode clean verify
 
-      - name: Create the update-site layout on the filesystem
+      - name: Create the update-site-release-candidate layout on the filesystem
         id: create_layout
         shell: bash
-        run: .github/create-update-site.sh
+        run: .github/create-update-site-rc.sh
 
       - name: Deploy Update Site 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.1
         with:
           branch: gh-pages
-          folder: update-site
+          folder: update-site-release-candidate
           single-commit: true
           ssh-key: ${{ secrets.DEPLOY_KEY }}
