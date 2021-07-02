@@ -4,8 +4,16 @@ on: [push, pull_request]
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - displayTargetName: ubuntu
+            os: ubuntu-latest
+          - displayTargetName: windows
+            os: windows-latest
+          - displayTargetName: mac
+            os: macos-latest
 
     steps:
       - uses: actions/checkout@v2
