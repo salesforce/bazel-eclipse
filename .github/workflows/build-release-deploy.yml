@@ -1,4 +1,4 @@
-name: Bazel Eclipse Feature Release
+name: BEF Release
 
 on:
   # manually from the Actions tab

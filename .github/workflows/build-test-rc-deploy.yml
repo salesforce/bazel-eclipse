@@ -1,4 +1,4 @@
-name: Bazel Eclipse Feature Test Release Candidate
+name: BEF Release Test Candidate
 
 on:
   # manually from the Actions tab
