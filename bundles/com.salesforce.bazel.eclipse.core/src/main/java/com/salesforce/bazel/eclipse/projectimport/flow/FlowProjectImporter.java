@@ -23,6 +23,7 @@
  */
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +34,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
+import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
@@ -63,6 +65,15 @@ public class FlowProjectImporter implements ProjectImporter {
 
     @Override
     public List<IProject> run(IProgressMonitor progressMonitor) {
+        // Do a check before kicking off the import that we have a real Bazel executable available.
+        // If we proceed without it, some factory infra is setup incorrectly, and it is hard to reset that state.
+        String executablePath = BazelPluginActivator.getInstance().getConfigurationManager().getBazelExecutablePath();
+        File executableFile = new File(executablePath);
+        if (!executableFile.exists() || !executableFile.canExecute()) {
+            throw new IllegalStateException("Cannot start the import because there is no configured Bazel executable. "
+                    + "Please configure the Bazel executable in the Eclipse preferences.");
+        }
+
         ImportContext ctx =
                 new ImportContext(bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver);
         SimplePerfRecorder.reset();
