@@ -61,9 +61,8 @@ public class BazelProblemTest {
     }
 
     @Test
-    @Ignore // Windows TODO
     public void getOwningLabel__nestedLabel() {
-        BazelProblem details = BazelProblem.createError("a/b/c/d/e", 1, "desc"); // $SLASH_OK bazel path
+        BazelProblem details = BazelProblem.createError(FSPathHelper.osSeps("a/b/c/d/e"), 1, "desc"); // $SLASH_OK
         BazelLabel l0 = new BazelLabel("b/c/d"); // $SLASH_OK bazel path
         BazelLabel l1 = new BazelLabel("a/b"); // $SLASH_OK bazel path
         BazelLabel l2 = new BazelLabel("a/b/c"); // $SLASH_OK bazel path
@@ -77,7 +76,6 @@ public class BazelProblemTest {
     }
 
     @Test
-    @Ignore // Windows TODO
     public void toErrorWithRelativizedResourcePath__matchingBazelPackage() {
         String partialPath = FSPathHelper.osSeps("/src/main/java/com/MyClass.java"); // $SLASH_OK
         String fullPath = FSPathHelper.osSeps("projects/libs/cake/abstractions" + partialPath); // $SLASH_OK
@@ -89,13 +87,12 @@ public class BazelProblemTest {
     }
 
     @Test
-    @Ignore // Windows TODO
     public void toErrorWithRelativizedResourcePath__rootPackage() {
-        BazelProblem details = BazelProblem.createError("/bazelproject", 1, "desc"); // $SLASH_OK bazel path
+        BazelProblem details = BazelProblem.createError(FSPathHelper.osSeps("/bazelproject"), 1, "desc"); // $SLASH_OK
 
         details = details.toErrorWithRelativizedResourcePath(new BazelLabel("//..."));
 
-        assertEquals("/bazelproject", details.getResourcePath()); // $SLASH_OK bazel path
+        assertEquals(FSPathHelper.osSeps("/bazelproject"), details.getResourcePath()); // $SLASH_OK
     }
 
     @Test(expected = IllegalArgumentException.class)
