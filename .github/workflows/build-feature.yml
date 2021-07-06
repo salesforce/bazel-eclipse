@@ -1,6 +1,13 @@
 name: BEF PR Build
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  repository_dispatch:
 
 jobs:
   build:
