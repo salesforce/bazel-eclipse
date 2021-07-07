@@ -5,12 +5,12 @@ Windows support has been introduced into the code line as of June 2021 and the
 Please be aware though that the authors of BEF are not well suited to support Windows.
 
 Our support for Windows consists of the following:
-- Intentional design to model all paths with classes to guard against assumptions of path separators.
-- Windows build in CI to detect test failures on the Windows platform
-- Cursory manual testing on a Windows machine each release
+- Explicit type model for all styles of paths (filesystem, bazel labels) to enforce separator correctness.
+- Windows build in CI to detect test failures on the Windows platform.
+- Cursory manual testing on a Windows machine each release.
 
 Speaking personally (@plaird), I did the Windows port but I haven't used Windows
-  for development in 15 years.
+  for development in 12 years.
 If you have issues or suggestions on how better to support this platform we would
   welcome any feedback and expertise.
 
@@ -42,7 +42,7 @@ Make sure to set the Eclipse preference **prior** to doing any BEF operation (li
 **CreateProcess Error Code 5 Access Denied**
 
 If you get the above error, this is a problem with BEF not finding your Bazel executable.
-Make sure you set your preference correctly.
+Make sure you set your Bazel executable preference correctly.
 Restart Eclipse if the setting does not appear to take effect.
 
 ### Build Failures?
@@ -72,6 +72,6 @@ You may see an error such as this:
 
 This is covered in [this issue](https://github.com/bazelbuild/rules_jvm_external/issues/464) in *rules_jvm_external*.
 
-Fixes:
-- set *JAVA_HOME* not just in Git Bash, but in env https://mkyong.com/java/how-to-set-java_home-on-windows-10/
-- make sure you are using the JDK not the JRE
+Possible fixes:
+- Set *JAVA_HOME* not just in Git Bash, but in the Windows environment https://mkyong.com/java/how-to-set-java_home-on-windows-10/
+- Make sure you are using the JDK not the JRE
