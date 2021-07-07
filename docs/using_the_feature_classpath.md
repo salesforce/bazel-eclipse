@@ -52,9 +52,6 @@ You may then manually configure the JDK by configuring the Build Path of any Ecl
 
 ### Global Search Classpath
 
-Currently, this is an experimental feature.
-See [Global Search Classpath](https://github.com/salesforce/bazel-eclipse/issues/161) issue for status.
-
 This feature provides a benefit when working with large Bazel workspaces.
 With a large workspace, during import you will likely only choose to import a handful of packages.
 BEF will configure an Eclipse project for each of those packages, with the proper classpath.
@@ -69,12 +66,13 @@ It scans the external jar directory of the Bazel build, and adds all found jars 
   nested under the Bazel Workspace project in the Package Explorer.
 By having them appear in a classpath object, JDT can now find all enclosed types.
 
-To enable this feature do the following *before* importing packages into your workspace:  
+To disable this feature do the following *before* importing packages into your workspace:  
 - *Eclipse -> Preferences -> Bazel* (exact menu varies by platform)
-- Click the *Enable global classpath search* option.
+- Uncheck the *Enable global classpath search* option.
 
 Note that the feature may not work for all use cases.
-Check the Issue linked above for details.
+See the [Global Search Classpath](https://github.com/salesforce/bazel-eclipse/issues/161) issue for status
+  and open issues.
 
 ### Next Topic: Launching binaries and tests from Eclipse
 
