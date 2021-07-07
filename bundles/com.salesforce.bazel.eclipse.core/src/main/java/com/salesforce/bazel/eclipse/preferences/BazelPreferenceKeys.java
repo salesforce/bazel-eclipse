@@ -21,7 +21,7 @@ public class BazelPreferenceKeys {
 
     // path the the bazel executable
     public static final String BAZEL_PATH_PREF_NAME = "BAZEL_PATH";
-    {
+    static {
         String defaultExecutablePath = BazelCommandManager.getDefaultBazelExecutablePath();
         defaultValues.put(BAZEL_PATH_PREF_NAME, defaultExecutablePath);
     }
@@ -31,8 +31,8 @@ public class BazelPreferenceKeys {
     // to look for the local cache of downloaded jars.
     public static final String GLOBALCLASSPATH_SEARCH_PREF_NAME = "GLOBALCLASSPATH_SEARCH_ENABLED";
     public static final String EXTERNAL_JAR_CACHE_PATH_PREF_NAME = "EXTERNAL_JAR_CACHE_PATH";
-    {
-        defaultValues.put(GLOBALCLASSPATH_SEARCH_PREF_NAME, "false");
+    static {
+        defaultValues.put(GLOBALCLASSPATH_SEARCH_PREF_NAME, "true");
     }
 
     // *********************************************************************
@@ -44,7 +44,7 @@ public class BazelPreferenceKeys {
     // out this is the case. This flag disables this feature, in case that logic causes problems for some users.
     // https://github.com/salesforce/bazel-eclipse/issues/164
     public static final String DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK = "DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK";
-    {
+    static {
         defaultValues.put(DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK, "false");
     }
 

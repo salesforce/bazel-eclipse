@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -56,7 +56,7 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
     private static class BazelBinaryFieldEditor extends FileFieldEditor {
         BazelBinaryFieldEditor(Composite parent) {
             super(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, "Path to the &Bazel binary:", true, VALIDATE_ON_KEY_STROKE,
-                    parent);
+                parent);
         }
 
         @Override
@@ -89,14 +89,14 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
 
         public BazelGlobalClasspathSearchEnabledFieldEditor(Composite parent) {
             super(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME,
-                    "Enable &global classpath search? (experimental)", SEPARATE_LABEL, parent);
+                "Enable &global classpath search?", SEPARATE_LABEL, parent);
         }
     }
 
     private static class BazelExternalDownloadCachePathEditor extends DirectoryFieldEditor {
         BazelExternalDownloadCachePathEditor(Composite parent) {
             super(BazelPreferenceKeys.EXTERNAL_JAR_CACHE_PATH_PREF_NAME,
-                    "Optional: path to the local &cache of downloaded jar files:", parent);
+                "Optional: path to the local &cache of downloaded jar files:", parent);
         }
 
         @Override
@@ -129,6 +129,7 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
         super(GRID);
     }
 
+    @Override
     public void createFieldEditors() {
         addField(new BazelBinaryFieldEditor(getFieldEditorParent()));
         addField(new BazelGlobalClasspathSearchEnabledFieldEditor(getFieldEditorParent()));
