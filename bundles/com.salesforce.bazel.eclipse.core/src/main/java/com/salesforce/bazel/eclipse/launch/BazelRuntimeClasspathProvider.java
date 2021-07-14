@@ -63,6 +63,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.BazelProject;
@@ -73,10 +74,10 @@ import com.salesforce.bazel.sdk.project.BazelProjectTargets;
  * Provide the runtime classpath for JUnit tests. These are obtained from the test rule's generated param files that
  * list the exact order of jars that the bazel test runner uses.
  *
- * @author Blaine Buxton
- *
  */
 public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
+    private static final LogHelper LOG = LogHelper.log(BazelRuntimeClasspathProvider.class);
+
     public static final String BAZEL_SOURCEPATH_PROVIDER =
             "com.salesforce.bazel.eclipse.launchconfig.sourcepathProvider";
     public static final String BAZEL_CLASSPATH_PROVIDER = "com.salesforce.bazel.eclipse.launchconfig.classpathProvider";
@@ -118,7 +119,11 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
             result.add(entry);
         }
 
-        return result.toArray(new IRuntimeClasspathEntry[result.size()]);
+        IRuntimeClasspathEntry[] resolvedClasspath = result.toArray(new IRuntimeClasspathEntry[result.size()]);
+
+        LOG.info("Runtime classpath: {}", (Object[]) resolvedClasspath);
+
+        return resolvedClasspath;
 
     }
 

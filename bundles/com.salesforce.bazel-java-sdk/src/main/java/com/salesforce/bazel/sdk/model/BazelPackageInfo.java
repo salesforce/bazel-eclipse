@@ -57,8 +57,6 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
  * WORKSPACE root (BazelPackageInfo instance 1)<br/>
  * //projects/libs/apple (BazelPackageInfo instance 2) <br/>
  * //projects/libs/banana (BazelPackageInfo instance 3) <br/>
- *
- * @author plaird
  */
 public class BazelPackageInfo implements BazelPackageLocation {
 

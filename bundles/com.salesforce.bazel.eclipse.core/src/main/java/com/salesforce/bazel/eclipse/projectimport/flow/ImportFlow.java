@@ -27,9 +27,6 @@ import org.eclipse.core.runtime.SubMonitor;
 
 /**
  * A single project import step.
- *
- * @author stoens
- * @since Fall 2020
  */
 public interface ImportFlow {
 

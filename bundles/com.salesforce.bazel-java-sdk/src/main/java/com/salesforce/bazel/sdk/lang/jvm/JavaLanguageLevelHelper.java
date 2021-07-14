@@ -2,9 +2,6 @@ package com.salesforce.bazel.sdk.lang.jvm;
 
 /**
  * Utility methods for the Java language levels
- * 
- * @author plaird
- *
  */
 public class JavaLanguageLevelHelper {
 

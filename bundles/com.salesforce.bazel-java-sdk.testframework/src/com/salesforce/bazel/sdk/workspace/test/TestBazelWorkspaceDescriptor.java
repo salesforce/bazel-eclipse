@@ -7,8 +7,6 @@ import java.util.TreeMap;
 
 /**
  * Descriptor that describes the workspace to be built by the TestBazelWorkspaceFactory.
- *
- * @author plaird
  */
 public class TestBazelWorkspaceDescriptor {
 

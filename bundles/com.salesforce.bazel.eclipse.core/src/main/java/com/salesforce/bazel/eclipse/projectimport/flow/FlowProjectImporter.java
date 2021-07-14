@@ -43,9 +43,6 @@ import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 
 /**
  * Calls on ProjectImportFlow instances to drive project import.
- *
- * @author stoens
- * @since Fall 2020
  */
 public class FlowProjectImporter implements ProjectImporter {
     private static final LogHelper LOG = LogHelper.log(FlowProjectImporter.class);

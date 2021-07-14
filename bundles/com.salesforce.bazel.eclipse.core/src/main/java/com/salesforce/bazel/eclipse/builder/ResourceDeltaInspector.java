@@ -48,9 +48,6 @@ import com.salesforce.bazel.sdk.util.BazelConstants;
 
 /**
  * Convenience methods for looking into a IResourceDelta.
- *
- * @author stoens
- * @since The Corona Madness
  */
 class ResourceDeltaInspector {
 

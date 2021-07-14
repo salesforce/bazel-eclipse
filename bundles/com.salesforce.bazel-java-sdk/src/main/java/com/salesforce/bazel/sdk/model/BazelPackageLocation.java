@@ -7,8 +7,6 @@ import java.util.List;
  * Minimal representation of a Bazel Package location on the file system.
  *
  * @see BazelLabel for a container that is also Bazel Target aware.
- * @author stoens
- * @since March 2020
  */
 public interface BazelPackageLocation {
 

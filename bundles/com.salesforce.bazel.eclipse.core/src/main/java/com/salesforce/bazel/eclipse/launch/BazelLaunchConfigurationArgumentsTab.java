@@ -22,11 +22,8 @@ import com.salesforce.bazel.sdk.command.ArgumentSplitter;
 
 /**
  * Launch Configuration Tab to specify arguments for Bazel runnable targets.
- *
+ * <p>
  * Inspired by org.eclipse.jdt.debug.ui.launchConfigurations.JavaArgumentsTab.
- *
- * @author stoens
- * @since April 2020
  */
 public class BazelLaunchConfigurationArgumentsTab extends AbstractLaunchConfigurationTab {
 
@@ -76,7 +73,7 @@ public class BazelLaunchConfigurationArgumentsTab extends AbstractLaunchConfigur
                     if ((programArgumentsText.getStyle() & SWT.SINGLE) != 0) {
                         e.doit = true;
                     } else {
-                        if (!programArgumentsText.isEnabled() || (e.stateMask & SWT.MODIFIER_MASK) != 0) {
+                        if (!programArgumentsText.isEnabled() || ((e.stateMask & SWT.MODIFIER_MASK) != 0)) {
                             e.doit = true;
                         }
                     }

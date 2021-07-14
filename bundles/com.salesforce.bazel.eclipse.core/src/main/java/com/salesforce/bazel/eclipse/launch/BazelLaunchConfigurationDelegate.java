@@ -72,9 +72,6 @@ import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
  * Runs a previously configured Bazel target.
- *
- * @author stoens
- * @since summer 2019
  */
 public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDelegate {
 

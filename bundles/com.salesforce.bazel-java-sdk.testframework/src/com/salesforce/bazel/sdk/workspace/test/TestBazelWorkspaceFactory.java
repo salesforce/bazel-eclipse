@@ -18,8 +18,6 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
  * looking for particular files.
  * <p>
  * There is a separate test layer in the command plugin that simulates Bazel command executions.
- *
- * @author plaird
  */
 public class TestBazelWorkspaceFactory {
 

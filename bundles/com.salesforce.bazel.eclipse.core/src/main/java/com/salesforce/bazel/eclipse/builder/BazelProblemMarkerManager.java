@@ -21,11 +21,8 @@ import com.salesforce.bazel.sdk.model.BazelProblem;
 /**
  * Publishes {@link BazelProblem} instances as {@link IMarker} markers to the Problems View. Keeps track of previously
  * published markers so they can be removed again.
- *
+ * <p>
  * TODO Review the need for running within a WorkspaceModifyOperation, and whether it is done correctly.
- *
- * @author stoens
- * @since Summer 2020
  */
 public class BazelProblemMarkerManager {
 

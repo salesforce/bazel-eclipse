@@ -34,9 +34,6 @@ import com.salesforce.bazel.sdk.util.BazelConstants;
  * </pre>
  *
  * Exclusions are not supported yet.
- *
- * @author stoens
- * @since March 2020
  */
 public class ProjectView {
 

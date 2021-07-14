@@ -41,9 +41,6 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * A wrapper for a Bazel logical "problem" (error/warning).
- *
- * @author nishant.dsouza
- * @since 5/3/2019
  */
 public class BazelProblem {
 

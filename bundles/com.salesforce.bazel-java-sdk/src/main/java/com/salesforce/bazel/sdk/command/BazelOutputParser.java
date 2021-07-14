@@ -40,9 +40,6 @@ import com.salesforce.bazel.sdk.model.BazelProblem;
 
 /**
  * Parses Bazel output.
- * 
- * @author stoens
- * @since the real summer of 2019
  */
 public class BazelOutputParser {
 

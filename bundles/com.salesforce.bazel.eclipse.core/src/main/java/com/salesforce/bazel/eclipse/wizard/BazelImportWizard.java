@@ -30,8 +30,6 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
  * Entrypoint for the Bazel Workspace import wizard
- *
- * @author plaird
  */
 public class BazelImportWizard extends Wizard implements IImportWizard {
     static final LogHelper LOG = LogHelper.log(BazelImportWizard.class);

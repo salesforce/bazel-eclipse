@@ -62,10 +62,6 @@ import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 /**
  * Supporting logic for Bazel Launch Configurations.
- *
- * @author stoens
- * @since summer 2019
- *
  */
 class BazelLaunchConfigurationSupport {
 

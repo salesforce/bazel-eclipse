@@ -43,10 +43,6 @@ import org.eclipse.swt.widgets.Text;
 
 /**
  * Some useful methods copied from org.eclipse.debug.internal.ui.SWTFactory (which isn't API)
- * 
- * @author stoens
- * @since summer 2019
- *
  */
 public class BazelSWTFactory {
 

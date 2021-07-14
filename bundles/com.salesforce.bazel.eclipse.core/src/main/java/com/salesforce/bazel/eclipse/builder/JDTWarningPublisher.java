@@ -23,10 +23,6 @@ import com.salesforce.bazel.sdk.model.BazelProblem;
 
 /**
  * This class publishes JDT based code warnings to the Problems View.
- *
- * @author stoens
- * @since Summer 2020
- *
  */
 class JDTWarningPublisher implements IElementChangedListener {
 

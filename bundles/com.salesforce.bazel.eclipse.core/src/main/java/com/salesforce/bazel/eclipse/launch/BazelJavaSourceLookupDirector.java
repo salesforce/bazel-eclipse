@@ -52,9 +52,6 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 
 /**
  * Copied and adapted from org.eclipse.jdt.internal.launching.JavaSourceLookupDirector.
- * 
- * @author stoens
- * @since summer 2019
  */
 public class BazelJavaSourceLookupDirector extends AbstractSourceLookupDirector {
 
@@ -73,9 +70,9 @@ public class BazelJavaSourceLookupDirector extends AbstractSourceLookupDirector 
     public void initializeParticipants() {
         addParticipants(new ISourceLookupParticipant[] { new JavaSourceLookupParticipant() });
         List<ISourceContainer> sourceContainers = new ArrayList<>();
-        sourceContainers.add(new JavaProjectSourceContainer(this.mainProject));
-        addSourceJarsForDependencies(this.mainProject, sourceContainers);
-        for (IJavaProject project : this.otherProjects) {
+        sourceContainers.add(new JavaProjectSourceContainer(mainProject));
+        addSourceJarsForDependencies(mainProject, sourceContainers);
+        for (IJavaProject project : otherProjects) {
             sourceContainers.add(new JavaProjectSourceContainer(project));
             addSourceJarsForDependencies(project, sourceContainers);
         }

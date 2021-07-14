@@ -37,10 +37,6 @@ import org.eclipse.debug.ui.AbstractLaunchConfigurationTabGroup;
 import org.eclipse.debug.ui.ILaunchConfigurationDialog;
 import org.eclipse.debug.ui.ILaunchConfigurationTab;
 
-/**
- * @author stoens
- * @since summer 2019
- */
 public class BazelLaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabGroup {
 
     @Override

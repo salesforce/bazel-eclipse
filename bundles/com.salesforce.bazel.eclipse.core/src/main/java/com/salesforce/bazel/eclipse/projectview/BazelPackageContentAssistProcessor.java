@@ -28,9 +28,6 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 /**
  * File system path based Content Assistant (auto-completion). Adapted from
  * org.eclipse.ui.texteditor.HippieProposalProcessor.
- *
- * @author stoens
- * @since March 2020
  */
 final class BazelPackageContentAssistProcessor implements IContentAssistProcessor {
 

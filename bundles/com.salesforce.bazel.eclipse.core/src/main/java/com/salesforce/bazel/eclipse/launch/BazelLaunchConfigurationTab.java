@@ -67,9 +67,6 @@ import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
  * Launch Configuration Tab to select a project and Bazel target to launch.
- *
- * @author stoens
- * @since summer 2019
  */
 public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab {
 

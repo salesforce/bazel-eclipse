@@ -56,9 +56,6 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * Resource helper implementation used when running in a live Eclipse runtime.
- *
- * @author plaird
- *
  */
 public class EclipseResourceHelper implements ResourceHelper {
     private static final LogHelper LOG = LogHelper.log(EclipseResourceHelper.class);

@@ -47,6 +47,7 @@ import org.eclipse.ui.IEditorPart;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfo;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
@@ -54,6 +55,7 @@ import com.salesforce.bazel.sdk.model.BazelTargetKind;
  * Supports the Run or Debug operations for Java classes with a main method.
  */
 public class BazelTargetLaunchShortcut implements ILaunchShortcut {
+    private static final LogHelper LOG = LogHelper.log(BazelTargetLaunchShortcut.class);
 
     private final BazelLaunchConfigurationSupport support = new BazelLaunchConfigurationSupport();
 
@@ -84,6 +86,8 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
         }
 
         String fqClassName = packageName + "." + fileName;
+        LOG.info("Bazel target launcher for [{}]", fqClassName);
+
         IWorkspaceRoot eclipseWorkspaceRoot = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot();
         IJavaModel eclipseJavaModel =
                 BazelPluginActivator.getJavaCoreHelper().getJavaModelForWorkspace(eclipseWorkspaceRoot);

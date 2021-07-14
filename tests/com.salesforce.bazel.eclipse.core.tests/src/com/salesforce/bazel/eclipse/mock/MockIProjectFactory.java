@@ -42,8 +42,6 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Convenience factory for create Mockito mock iProjects.
- *
- * @author plaird
  */
 public class MockIProjectFactory {
 
@@ -130,8 +128,6 @@ public class MockIProjectFactory {
 
     /**
      * Fill out your BOM here. I decided not to do a fluent API since I think the BOMs will be highly standardized.
-     *
-     * @author plaird
      *
      */
     public static class MockIProjectDescriptor {

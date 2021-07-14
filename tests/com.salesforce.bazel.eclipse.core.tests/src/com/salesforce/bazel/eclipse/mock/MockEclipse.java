@@ -48,8 +48,6 @@ import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
  * Primary entry point into the mocking framework for the core plugin. We only mock the small slice of Eclipse that is
  * used by our plugins. But it is enough to unit test the Core plugin which is the where we put all of our code that
  * integrates with Eclipse APIs.
- *
- * @author plaird
  */
 public class MockEclipse {
 

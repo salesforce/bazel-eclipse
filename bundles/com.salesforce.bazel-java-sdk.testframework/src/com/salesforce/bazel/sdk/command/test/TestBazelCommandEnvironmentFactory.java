@@ -39,8 +39,6 @@ import com.salesforce.bazel.sdk.workspace.test.TestOptions;
  * Factory for creating test environments for Bazel Command functional tests. Produces a real
  * BazelWorkspaceCommandRunner with collaborators, with mock command execution underneath it all. Logically, this layer
  * replaces the real Bazel executable with command simulations.
- *
- * @author plaird
  */
 public class TestBazelCommandEnvironmentFactory {
     public TestBazelWorkspaceFactory testWorkspace;

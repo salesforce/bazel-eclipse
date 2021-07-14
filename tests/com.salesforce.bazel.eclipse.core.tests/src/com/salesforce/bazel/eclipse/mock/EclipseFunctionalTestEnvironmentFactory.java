@@ -46,8 +46,6 @@ import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 /**
  * Factory for creating test environments for Eclipse functional tests. Produces a Mock Eclipse workspace from
  * templates.
- *
- * @author plaird
  */
 public class EclipseFunctionalTestEnvironmentFactory {
 
