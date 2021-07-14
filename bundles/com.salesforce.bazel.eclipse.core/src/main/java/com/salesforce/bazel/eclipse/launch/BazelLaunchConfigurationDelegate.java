@@ -71,7 +71,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
- * Runs a previously configured Bazel target.
+ * Runs a Bazel non-test target, like a java_binary.
  */
 public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDelegate {
 
