@@ -18,7 +18,7 @@ If you have issues or suggestions on how better to support this platform we woul
 
 Before you continue with this page, we need to assume some things:
 
-- Your Bazel workspace is building correctly on your Windows machine prior to installing BEF
+- Your Bazel workspace is building correctly on your Windows machine prior to importing into BEF
   - This includes having awareness and solutions for *BAZEL_SH* and *JAVA_HOME* issues
   - Please seek out the right solutions from the [Bazel Windows documentation](https://docs.bazel.build/versions/main/windows.html)
 - Understand that BEF is currently limited to Bazel packages with Java rules and [conform to certain file layout conventions](conforming_java_packages.md)
@@ -53,7 +53,8 @@ If you have build errors, please investigate general Windows support for Bazel,
 Under the covers, BEF is invoking *bazel.exe* from a shell to run your build.
 
 Suggested reading:
-- [Bazel for Windows](https://docs.bazel.build/versions/main/windows.html)
+- [Bazel for Windows user docs](https://docs.bazel.build/versions/main/windows.html)
+- [Bazel for Windows dev docs](https://docs.google.com/document/d/17YIqUdffxpwcKP-0whHM6TFELN8VohTpjiiEIbbRfts)
 - [Example Bazel Issue](https://github.com/bazelbuild/bazel/issues/6474)
 - [Example StackOverflow Post](https://stackoverflow.com/questions/46181672/windows-10-bazel-sh-configuration)
 

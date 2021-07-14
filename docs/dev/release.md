@@ -135,10 +135,13 @@ The BEF record is here, which will have an _Edit_ button if you are entitled:
 
 - [BEF in the Eclipse Marketplace](https://marketplace.eclipse.org/content/bazel-eclipse-feature)
 
-When you create a new release, use these data points:
+When you create a new _Solution Version_, use these data points:
 - Version: use the full version like *1.4.0.v20210707-0040*
 - Update site: https://opensource.salesforce.com/bazel-eclipse/update-site
 - Feature id: *com.salesforce.bazel.eclipse.feature*
+
+Make sure to remove the previous _Solution Version_ entry, so that the Marketplace will
+  offer the newer version metadata.
 
 ## Release Implementation
 

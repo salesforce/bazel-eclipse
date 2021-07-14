@@ -40,19 +40,20 @@ Current development is dedicated to Bazel workspaces with Java rules.
 The **1.x** release line is focused on:
 - Basic features of Java editing (code completion, incremental compilation, launching programs, debugging, etc)
 - Correctness of the Bazel-derived classpath
-- Scalability
-- Gradually reducing [certain file layout restrictions](docs/conforming_java_packages.md).
+- Scalability and performance
+- Gradually reducing [certain package file layout restrictions](docs/conforming_java_packages.md).
 
 The **2.x** release line will work towards adding Bazel specific features to Eclipse:
 - BUILD file editor
 - Automatic dependency management
-- Support for more complex package layouts
+- Support for more complex Java package layouts
+
+Support for languages other than Java will likely not appear prior to 3.x.
 
 ## Community, Support and Contributions
 
-You may join and post to our discussion forum here:
-
-- [Bazel Eclipse Feature discussion group](https://groups.google.com/forum/#!forum/bazel-eclipse-discuss)
+Please file an Issue if you have an issue or would like to request a new feature.
+Another place for discussion is the [general Bazel ide-dev channel](https://bazelbuild.slack.com/archives/CM8JQCANN) on Slack.
 
 We welcome outside contributions.
 As with any OSS project, please contact our team prior to starting any major refactoring or feature work,
