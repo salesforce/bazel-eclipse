@@ -96,6 +96,7 @@
          </run>
       </builder>
    </extension>
+   
    <extension
          id="com.salesforce.bazel.eclipse.launch"
          point="org.eclipse.debug.core.launchConfigurationTypes">
@@ -106,14 +107,16 @@
             name="Bazel Target">
       </launchConfigurationType>
    </extension>
+   
    <extension
         point="org.eclipse.debug.ui.launchConfigurationTypeImages">
-    <launchConfigurationTypeImage
-            id="com.salesforce.bazel.eclipse.launch.image"
-            configTypeID="com.salesforce.bazel.eclipse.launch"
-            icon="resources/bazelicon.gif">
-    </launchConfigurationTypeImage>
+        <launchConfigurationTypeImage
+                id="com.salesforce.bazel.eclipse.launch.image"
+                configTypeID="com.salesforce.bazel.eclipse.launch"
+                icon="resources/bazelicon.gif">
+        </launchConfigurationTypeImage>
    </extension>   
+   
    <extension
          id="com.salesforce.bazel.eclipse.launch.tab"
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
@@ -126,71 +129,55 @@
    
    <extension
     point="org.eclipse.debug.ui.launchShortcuts">
-    <shortcut
-        class="com.salesforce.bazel.eclipse.launch.BazelTargetLaunchShortcut"
-        icon="resources/bazelicon.gif"
-        id="com.salesforce.bazel.eclipse.launch.shortcut"
-        label="Bazel Target"
-        modes="run, debug">
-        <contextualLaunch>
-            <enablement>
-                <with
-                    variable="selection">
-                    <count
-                        value="+">
-                    </count>
-                    <iterate>
-                       <and>
-                           <adapt type="org.eclipse.core.resources.IResource">
-                               <test property="org.eclipse.core.resources.path"  value="*/src/main/java*">
-                               </test>
-                           </adapt>
-                           <or>
-                               <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
-                               <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
-                           </or>
-                        </and>
-                    </iterate>
-                </with>
-            </enablement>
-        </contextualLaunch>
-    </shortcut>
+        <shortcut
+            class="com.salesforce.bazel.eclipse.launch.BazelTargetLaunchShortcut"
+            icon="resources/bazelicon.gif"
+            id="com.salesforce.bazel.eclipse.launch.shortcut"
+            label="Bazel Target"
+            modes="run, debug">
+            <contextualLaunch>
+                <enablement>
+                    <with
+                        variable="selection">
+                        <count
+                            value="+">
+                        </count>
+                        <iterate>
+                           <and>
+                               <adapt type="org.eclipse.core.resources.IResource">
+                                   <test property="org.eclipse.core.resources.path"  value="*/src/main/java*">
+                                   </test>
+                               </adapt>
+                               <or>
+                                   <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
+                                   <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+                               </or>
+                            </and>
+                        </iterate>
+                    </with>
+                </enablement>
+            </contextualLaunch>
+        </shortcut>
+   </extension>
     
-    <shortcut
-    class="com.salesforce.bazel.eclipse.launch.BazelJunitTargetLaunchShortcut"
-    category="com.salesforce.bazel.eclipse.launch"
-    icon="resources/bazelicon.gif"
-    id="com.salesforce.bazel.eclipse.launch.junit.shortcut"
-    label="JUnit Bazel Target"
-    modes="run, debug">
-	    <contextualLaunch>
-	        <enablement>
-	            <with
-	                variable="selection">
-	                <count
-	                    value="+">
-	                </count>
-	                <iterate>
-	                 <or>
-	                   <and>
-	                       <adapt type="org.eclipse.core.resources.IResource">
-                             <test property="org.eclipse.core.resources.path" value="*/src/test/java*">
-                             </test>
-                           </adapt>
-                           <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
-                       </and>
-	                   <and>
-	                       <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
-	                       <test property="com.salesforce.bazel.eclipse.isTestJavaElement"/>
-	                   </and>
-	                 </or>
-	                </iterate>
-	            </with>
-	        </enablement>
-	    </contextualLaunch>
-    </shortcut>
+   <extension
+         point="org.eclipse.debug.core.launchDelegates">
+      <launchDelegate
+            name="Bazel JUnit"
+            modes="run, debug"
+            type="org.eclipse.jdt.junit.launchconfig"
+            delegate="com.salesforce.bazel.eclipse.launch.BazelJunitLaunchConfigurationDelegate"
+            id="bazel.junit.launcher">
+      </launchDelegate>
    </extension>
    
+   <extension
+         point="org.eclipse.jdt.junit.testRunListeners">
+      <testRunListener
+            class="com.salesforce.bazel.eclipse.launch.BazelTestRunListener">
+      </testRunListener>
+   </extension>
+
    <extension point="org.eclipse.ui.commands">
       <command
             name="Bazel Target"

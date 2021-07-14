@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
+ * Copyright (c) 2021, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -33,24 +33,28 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-
 package com.salesforce.bazel.eclipse.launch;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.junit.launcher.JUnitLaunchShortcut;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate;
 
 /**
- * Launch target for Bazel JUnit Tests - enables the BazelRuntimeClasspathProviders
+ * Plug point into the Eclipse JUnit launcher call chain; allows us to inject the Bazel runtime classpath provider so
+ * the test uses the Bazel computed classpath.
  */
-public class BazelJunitTargetLaunchShortcut extends JUnitLaunchShortcut {
+public class BazelJunitLaunchConfigurationDelegate extends JUnitLaunchConfigurationDelegate {
 
     @Override
-    protected ILaunchConfigurationWorkingCopy createLaunchConfiguration(IJavaElement element) throws CoreException {
-        ILaunchConfigurationWorkingCopy config = createLaunchConfiguration(element, null);
-        BazelRuntimeClasspathProvider.enable(config);
+    public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
+            throws CoreException {
+
+        BazelRuntimeClasspathProvider.enable(configuration);
         BazelRuntimeClasspathProvider.canOpenErrorDialog.set(true);
-        return config;
+
+        super.launch(configuration, mode, launch, monitor);
     }
+
 }

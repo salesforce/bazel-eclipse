@@ -34,23 +34,28 @@ You can also debug it, with breakpoints, by launching as a *Debug Configuration*
 
 There are several paths to run (or debug) tests from BEF.
 
-Method 1: top level Run menu
+**Method 1: top-level Run menu**
 
-1. Navigate to the *Run* menu, choose *Run As...* and click the *New* button for *Bazel Target*
-1. Select the project, and then the test target from the drop down.
-1. You should now be able to run the test.
+1. In the Package Explorer view, click on the test folder (*src/test/java*), a test Java package (*com.salesforce.hello*), or a specific test class (*HelloWorldTest.java*)
+1. Navigate to the top-level *Run* menu, choose *Run As* and then *JUnit Test*
+1. The JUnit view will populate with the test results
 
-You can also debug it, with breakpoints, by launching as a *Debug Configuration*.
+You can also debug it, with breakpoints, by launching it as a *Debug Configuration*.
 
-Method 2: Package Explorer context menu
+**Method 2: Package Explorer context menu**
 
 1. In the Package Explorer view, click on the test folder (*src/test/java*), a test Java package (*com.salesforce.hello*), or a specific test class (*HelloWorldTest.java*)
 1. Right click on it, and find the *Run As* or *Debug As* item in the context menu
-1. Choose *JUnit Bazel Target*
+1. Choose *JUnit Test*
 1. The JUnit view will populate with the test results
 
-:warning: the standard JUnit Launcher *JUnit Test* does not work.
-[Issue 18](https://github.com/salesforce/bazel-eclipse/issues/18) tracks that work item.
+:point_right: The first time you run JUnit tests in your Eclipse workspace, you will be presented
+  with a dialog to choose the *Preferred Launcher*.
+The **Bazel JUnit Launcher** is the correct one to choose.
+You can configure this per launcher, or for most cases click the *Change Workspace Settings* link
+  and configure it for all launchers in your Eclipse workspace.
+When doing this, click on both *\[Debug\]* and *\[Run\]* types, and check the box for
+  *Bazel JUnit Launcher* for each.
 
 ### Next Topic: Explore!
 
