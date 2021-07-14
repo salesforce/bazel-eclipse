@@ -10,9 +10,9 @@ import org.junit.Test;
 public class BEPTargetConfiguredEventTest {
 
     private static final String configuredEvent = "{\n" + "  \"id\": {\n" + "    \"targetConfigured\": {\n"
-            + "      \"label\": \"//projects/libs/scone/abstractions:abstractions\"\n" + "    }\n" + "  },\n"
+            + "      \"label\": \"//projects/foo/abstractions:abstractions\"\n" + "    }\n" + "  },\n"
             + "  \"children\": [\n" + "    {\n" + "      \"targetCompleted\": {\n"
-            + "        \"label\": \"//projects/libs/scone/abstractions:abstractions\",\n"
+            + "        \"label\": \"//projects/foo/abstractions:abstractions\",\n"
             + "        \"configuration\": {\n"
             + "          \"id\": \"1aee508e1d8c40d63ce4bd544a171e81ac2463f0e7d2f7a8dd4d4ddf19a5366e\"\n" + "        }\n"
             + "      }\n" + "    }\n" + "  ],\n" + "  \"configured\": {\n"

@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -51,59 +51,59 @@ public class BazelOutputParser {
     public List<BazelProblem> getErrorBazelMarkerDetails(String latestLine) {
         List<BazelProblem> allBazelMarkerDetails = new ArrayList<>();
         String line = latestLine.trim();
-        if (this.parsingErrors) {
+        if (parsingErrors) {
             if (line.isEmpty()) {
-                if (this.errorSourcePathLine != null) {
-                    allBazelMarkerDetails.add(buildErrorDetails(this.errorSourcePathLine, this.moreDetailsLine));
-                    this.errorSourcePathLine = null;
-                    this.moreDetailsLine = null;
+                if (errorSourcePathLine != null) {
+                    allBazelMarkerDetails.add(buildErrorDetails(errorSourcePathLine, moreDetailsLine));
+                    errorSourcePathLine = null;
+                    moreDetailsLine = null;
                 }
             }
 
             else if (isInitialErrorSourcePathLine(line)) {
-                if (this.errorSourcePathLine == null) {
-                    this.errorSourcePathLine = line;
+                if (errorSourcePathLine == null) {
+                    errorSourcePathLine = line;
                 } else {
-                    allBazelMarkerDetails.add(buildErrorDetails(this.errorSourcePathLine, this.moreDetailsLine));
-                    this.errorSourcePathLine = line;
-                    this.moreDetailsLine = null;
+                    allBazelMarkerDetails.add(buildErrorDetails(errorSourcePathLine, moreDetailsLine));
+                    errorSourcePathLine = line;
+                    moreDetailsLine = null;
                 }
 
             } else if (isNonErrorStatusLine(line)) {
-                this.parsingErrors = false;
-                if (this.errorSourcePathLine != null) {
-                    allBazelMarkerDetails.add(buildErrorDetails(this.errorSourcePathLine, this.moreDetailsLine));
-                    this.errorSourcePathLine = null;
-                    this.moreDetailsLine = null;
+                parsingErrors = false;
+                if (errorSourcePathLine != null) {
+                    allBazelMarkerDetails.add(buildErrorDetails(errorSourcePathLine, moreDetailsLine));
+                    errorSourcePathLine = null;
+                    moreDetailsLine = null;
                 }
             } else {
-                if (this.errorSourcePathLine != null) {
+                if (errorSourcePathLine != null) {
                     // already found a line like this: projects/libs/apple/apple-api/src/main/java/demo/apple/api/Apple.java:15: error: ';' expected
                     // the next like may have more details
-                    if (this.moreDetailsLine == null) {
-                        this.moreDetailsLine = line;
+                    if (moreDetailsLine == null) {
+                        moreDetailsLine = line;
                     }
                 }
             }
         } else {
             if (isErrorStatusLine(line)) {
-                this.parsingErrors = true;
+                parsingErrors = true;
             }
         }
 
-        if (this.moreDetailsLine != null) {
-            allBazelMarkerDetails.add(buildErrorDetails(this.errorSourcePathLine, this.moreDetailsLine));
-            this.errorSourcePathLine = null;
-            this.moreDetailsLine = null;
+        if (moreDetailsLine != null) {
+            allBazelMarkerDetails.add(buildErrorDetails(errorSourcePathLine, moreDetailsLine));
+            errorSourcePathLine = null;
+            moreDetailsLine = null;
         }
 
         return allBazelMarkerDetails;
     }
 
     public List<BazelProblem> getErrors(List<String> lines) {
-        this.parsingErrors = false;
-        this.errorSourcePathLine = null;
-        this.moreDetailsLine = null;
+        parsingErrors = false;
+        errorSourcePathLine = null;
+        moreDetailsLine = null;
         List<BazelProblem> errors = new ArrayList<>();
         for (String line : lines) {
             List<BazelProblem> bazelMarkerDetails = getErrorBazelMarkerDetails(line);
@@ -127,7 +127,7 @@ public class BazelOutputParser {
             lineNumber = Integer.parseInt(errorSourcePathLine.substring(i + 1, j));
             description = errorSourcePathLine.substring(j + 1).trim();
             for (String errorPrefix : new String[] { "error", "error:", "ERROR", "ERROR:" }) {
-                if (description.startsWith(errorPrefix) && description.length() > errorPrefix.length() + 1) {
+                if (description.startsWith(errorPrefix) && (description.length() > (errorPrefix.length() + 1))) {
                     description = capitalize(description.substring(errorPrefix.length() + 1).trim());
                     break;
                 }
@@ -137,7 +137,7 @@ public class BazelOutputParser {
             }
         } catch (Exception anyE) {
             // BUILD file update error TODO
-            // errorSourcePathLine: ERROR: /Users/plaird/dev/sfdc-bazel/projects/libs/scone/scone-starter-jetty/scone-starter-jetty-impl/BUILD:81:1: Target '//projects/libs/scone/scone-starter-jetty/scone-starter-jetty-impl:src/main/java/com/salesforce/sconems/jetty/HttpTraceDisabler.java' contains an error and its package is in error and referenced by '//projects/libs/scone/scone-starter-jetty/scone-starter-jetty-impl:scone-starter-jetty-impl' 
+            // errorSourcePathLine: ERROR: /Users/plaird/dev/myrepo/a/b/c/BUILD:81:1: Target '//a/b/c:src/main/java/com/salesforce/jetty/Foo.java' contains an error and its package is in error and referenced by '//a/b/d:f'
             // moreDetailsLine: null
             System.err.println("Failed to parse line: " + errorSourcePathLine + " with details: " + moreDetailsLine);
             description = "BUILD file error";

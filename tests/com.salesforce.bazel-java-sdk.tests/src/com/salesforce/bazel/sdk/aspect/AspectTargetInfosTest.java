@@ -126,15 +126,15 @@ public class AspectTargetInfosTest {
     @Test
     public void testLookupByRootSourcePath__noSubstringMatch() {
         AspectTargetInfo api =
-                getAspectTargetInfo("myclass", FSPathHelper.osSeps("projects/services/scone/MyClass.java")); // $SLASH_OK
+                getAspectTargetInfo("myclass", FSPathHelper.osSeps("projects/services/foo/MyClass.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(api);
         Collection<AspectTargetInfo> infos =
-                apis.lookupByRootSourcePath(FSPathHelper.osSeps("projects/services/scone")); // $SLASH_OK
+                apis.lookupByRootSourcePath(FSPathHelper.osSeps("projects/services/foo")); // $SLASH_OK
 
         assertEquals(1, infos.size());
         assertSame(api, infos.iterator().next());
-        assertEquals(0, apis.lookupByRootSourcePath(FSPathHelper.osSeps("projects/services/scon")).size()); // $SLASH_OK
+        assertEquals(0, apis.lookupByRootSourcePath(FSPathHelper.osSeps("projects/services/fo")).size()); // $SLASH_OK
     }
 
     @Test
