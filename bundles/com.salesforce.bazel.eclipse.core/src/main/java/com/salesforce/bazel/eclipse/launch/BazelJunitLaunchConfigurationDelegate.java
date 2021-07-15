@@ -51,8 +51,8 @@ public class BazelJunitLaunchConfigurationDelegate extends JUnitLaunchConfigurat
     public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
             throws CoreException {
 
-        BazelRuntimeClasspathProvider.enable(configuration);
-        BazelRuntimeClasspathProvider.canOpenErrorDialog.set(true);
+        BazelTestClasspathProvider.enable(configuration);
+        BazelTestClasspathProvider.canOpenErrorDialog.set(true);
 
         super.launch(configuration, mode, launch, monitor);
     }

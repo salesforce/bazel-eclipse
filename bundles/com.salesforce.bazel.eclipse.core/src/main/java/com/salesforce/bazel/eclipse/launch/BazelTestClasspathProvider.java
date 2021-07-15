@@ -39,10 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.CoreException;
@@ -63,6 +60,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.sdk.lang.jvm.BazelJvmTestClasspathHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
@@ -71,21 +69,17 @@ import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 /**
- * Provide the runtime classpath for JUnit tests. These are obtained from the test rule's generated param files that
- * list the exact order of jars that the bazel test runner uses.
- *
+ * Provide the classpath for JUnit tests. These are obtained from the test rule's generated param files that list the
+ * exact order of jars that the bazel test runner uses.
  */
-public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
-    private static final LogHelper LOG = LogHelper.log(BazelRuntimeClasspathProvider.class);
+public class BazelTestClasspathProvider extends StandardClasspathProvider {
+    private static final LogHelper LOG = LogHelper.log(BazelTestClasspathProvider.class);
 
     public static final String BAZEL_SOURCEPATH_PROVIDER =
             "com.salesforce.bazel.eclipse.launchconfig.sourcepathProvider";
     public static final String BAZEL_CLASSPATH_PROVIDER = "com.salesforce.bazel.eclipse.launchconfig.classpathProvider";
 
-    static final String BAZEL_DEPLOY_PARAMS_SUFFIX = "_deploy.jar-0.params";
-    static final String BAZEL_SRC_DEPLOY_PARAMS_SUFFIX = "_deploy-src.jar-0.params";
-
-    private static final Bundle BUNDLE = FrameworkUtil.getBundle(BazelRuntimeClasspathProvider.class);
+    private static final Bundle BUNDLE = FrameworkUtil.getBundle(BazelTestClasspathProvider.class);
 
     // computeUnresolvedClassPathEntries() is called multiple times while trying to run a single test,
     // we need this variable to keep track of when to open the error dialog
@@ -120,11 +114,9 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
         }
 
         IRuntimeClasspathEntry[] resolvedClasspath = result.toArray(new IRuntimeClasspathEntry[result.size()]);
-
-        LOG.info("Runtime classpath: {}", (Object[]) resolvedClasspath);
+        LOG.info("Test classpath: {}", (Object[]) resolvedClasspath);
 
         return resolvedClasspath;
-
     }
 
     /**
@@ -132,7 +124,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
      *
      * @param configuration
      * @param isSource
-     *            - calculate binary or source entries
+     *            - calculate binary (false) or source (true) entries
      * @return
      * @throws CoreException
      * @throws InterruptedException
@@ -142,71 +134,22 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
             throws CoreException {
         List<IRuntimeClasspathEntry> result = new ArrayList<>();
         IJavaProject project = JavaRuntime.getJavaProject(configuration);
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        File base = bazelWorkspace.getBazelExecRootDirectory();
-        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
-
-        String testClassName = configuration.getAttribute("org.eclipse.jdt.launching.MAIN_TYPE", (String) null);
-        String suffix = getParamsJarSuffix(isSource);
-
         String projectName = project.getProject().getName();
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         BazelProject bazelProject = bazelProjectManager.getProject(projectName);
-
+        String testClassName = configuration.getAttribute("org.eclipse.jdt.launching.MAIN_TYPE", (String) null);
         BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
-        Set<File> paramFiles = new HashSet<File>();
 
-        for (String eachTarget : targets.getConfiguredTargets()) {
+        // look for the param files for the test classname and/or targets
+        BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult =
+                BazelJvmTestClasspathHelper.findParamFilesForTests(bazelWorkspace, isSource, testClassName, targets);
 
-            if ((testClassName == null) || testClassName.equals("")) {
-                String query = "tests(" + eachTarget + ")";
-                List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
-                File bazelBinDir = BazelPluginActivator.getBazelWorkspace().getBazelBinDirectory();
-
-                for (String label : labels) {
-                    String testRuleName = label.substring(label.lastIndexOf(":") + 1);
-                    String targetPath = eachTarget.split(":")[0];
-                    String paramFilename = testRuleName + suffix;
-                    File pFile = new File(new File(bazelBinDir, targetPath), paramFilename);
-                    if (pFile.exists()) {
-                        paramFiles.add(pFile);
-                    } else {
-                        LOG.warn(
-                            "Could not locate params file for test: \nlabel [{}] \ntestRuleName [{}] "
-                                    + "\ntargetPath [{}] \nparamFilename [{}] \npFilePath [{}]",
-                                    label, targetPath, paramFilename, pFile.getAbsolutePath());
-
-                        Display.getDefault().asyncExec(new Runnable() {
-                            @Override
-                            public void run() {
-                                // TODO create a pref for a user to be able to ignore these errors; often the user will
-                                // be "yeah yeah, just run the tests that you can find" when this happens
-                                if (canOpenErrorDialog.get()) {
-                                    canOpenErrorDialog.set(false);
-                                    Display.getDefault().syncExec(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            MessageDialog.openError(Display.getDefault().getActiveShell(),
-                                                "Unknown Target",
-                                                "One or more of the targets being executed are not part of a Bazel java_test target (e.g. "
-                                                        + label + "). The target(s) will be ignored.");
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                    }
-                }
-            } else {
-                Set<File> pFiles = findParamsFileForJar(project, eachTarget, testClassName, suffix);
-                paramFiles.addAll(pFiles);
-            }
-
-        }
-
-        for (File paramsFile : paramFiles) {
+        File base = bazelWorkspace.getBazelExecRootDirectory();
+        for (File paramsFile : testParamFilesResult.paramFiles) {
             List<String> jarPaths;
             try {
-                jarPaths = getPathsToFile(paramsFile);
+                jarPaths = BazelJvmTestClasspathHelper.getSourceAndOutputJarsFromParamsFile(paramsFile);
             } catch (IOException e) {
                 throw new CoreException(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(),
                     "Error parsing " + paramsFile.getAbsolutePath(), e));
@@ -224,111 +167,34 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                 }
             }
         }
+
+        if (!testParamFilesResult.unrunnableLabels.isEmpty()) {
+            StringBuffer unrunnableLabelsString = new StringBuffer();
+            for (String label : testParamFilesResult.unrunnableLabels) {
+                unrunnableLabelsString.append(label);
+                unrunnableLabelsString.append(" ");
+            }
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    // TODO create a pref for a user to be able to ignore these errors; often the user will
+                    // be "yeah yeah, just run the tests that you can find" when this happens
+                    if (canOpenErrorDialog.get()) {
+                        canOpenErrorDialog.set(false);
+                        Display.getDefault().syncExec(new Runnable() {
+                            @Override
+                            public void run() {
+                                MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target",
+                                    "One or more of the targets being executed are not part of a Bazel java_test target ( "
+                                            + unrunnableLabelsString + "). The target(s) will be ignored.");
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
         return result.toArray(new IRuntimeClasspathEntry[result.size()]);
-    }
-
-    String getParamsJarSuffix(boolean isSource) {
-        String suffix = BAZEL_DEPLOY_PARAMS_SUFFIX;
-
-        if (isSource) {
-            suffix = BAZEL_SRC_DEPLOY_PARAMS_SUFFIX;
-        }
-        return suffix;
-    }
-
-    /**
-     * Bazel maintains a params file for each java_test rule. This method finds it.
-     * <p>
-     * This needs to be re-implemented - the path is hardcoded. It should be path of the test rule TODO - Remove
-     * hardcoded src/test/java
-     *
-     * @param project
-     * @param paramsName
-     * @param target
-     * @return
-     */
-    Set<File> findParamsFileForJar(IJavaProject project, String target, String className, String suffix) {
-        Set<File> paramFiles = new HashSet<>();
-
-        String targetPath = target.split(":")[0];
-
-        // testJar for bazel's iterative test rules
-        File bazelBinDir = BazelPluginActivator.getBazelWorkspace().getBazelBinDirectory();
-        String paramsName = className.replace('.', File.separatorChar) + suffix;
-
-        File targetBinPath = new File(bazelBinDir, targetPath);
-        File targetBinTestPath = new File(targetBinPath, FSPathHelper.osSeps("src/test/java")); // $SLASH_OK
-
-        File paramFile = new File(targetBinTestPath, paramsName);
-        if (paramFile.exists()) {
-            paramFiles.add(paramFile);
-        } else {
-            // find the testJar for single test rule using Bazel Query
-            String query = "attr(test_class, " + className + "$, " + target + ")";
-            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-            List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
-
-            for (String label : labels) {
-                String filename = label.substring(label.lastIndexOf(":") + 1) + suffix;
-                paramFile = new File(bazelBinDir, filename);
-
-                if (paramFile.exists()) {
-                    paramFiles.add(paramFile);
-                } else {
-                    LOG.warn("Test params file does not exist for: \ntarget [{}] \nclassname [{}] \nsuffix [{}]"
-                            + "\nquery [{}] \nlabel [{}] \nfilename [{}] \npath [{}]",
-                            target, className, suffix, query, label, filename, paramFile.getAbsolutePath());
-                }
-            }
-        }
-        return paramFiles;
-    }
-
-    /**
-     * Parse the jars from the given params file
-     *
-     * @param paramsFile
-     * @return
-     * @throws IOException
-     */
-    List<String> getPathsToFile(File paramsFile) throws IOException {
-        if (!paramsFile.exists()) {
-            return null;
-        }
-        try (Scanner scanner = new Scanner(paramsFile)) {
-            return getPathsToJars(scanner);
-        }
-    }
-
-    /**
-     * Gets the paths from lines from scanner
-     *
-     * @param scanner
-     * @return
-     */
-    List<String> getPathsToJars(Scanner scanner) {
-        List<String> result = new ArrayList<>();
-        boolean addToResult = false;
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            if (addToResult && !line.startsWith("--")) {
-                String jar = line.split(",")[0];
-                if (jar.endsWith(".jar")) {
-                    result.add(jar);
-                }
-            } else {
-                addToResult = false;
-            }
-            if (line.startsWith("--output")) {
-                addToResult = true;
-                continue;
-            }
-            if (line.startsWith("--sources")) {
-                addToResult = true;
-                continue;
-            }
-        }
-        return result;
     }
 
     /**
