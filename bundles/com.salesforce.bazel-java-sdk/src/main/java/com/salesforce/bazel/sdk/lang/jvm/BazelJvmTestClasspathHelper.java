@@ -216,16 +216,17 @@ public class BazelJvmTestClasspathHelper {
             List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
 
             for (String label : labels) {
-                String filename = label.substring(label.lastIndexOf(":") + 1) + suffix;
-                paramFile = new File(bazelBinDir, filename);
+                String targetName = label.substring(label.lastIndexOf(":") + 1);
+                String paramFilename = targetName + suffix;
+                paramFile = new File(targetBinPath, paramFilename);
 
                 if (paramFile.exists()) {
                     paramFiles.add(paramFile);
                 } else {
-                    LOG.warn(
+                    LOG.error(
                         "Test params file does not exist for: \ntarget [{}] \nclassname [{}] \nsuffix [{}]"
                                 + "\nquery [{}] \nlabel [{}] \nfilename [{}] \npath [{}]",
-                                target, className, suffix, query, label, filename, paramFile.getAbsolutePath());
+                                target, className, suffix, query, label, paramFilename, paramFile.getAbsolutePath());
                 }
             }
         }
