@@ -165,6 +165,7 @@
       <launchDelegate
             name="Bazel JUnit"
             modes="run, debug"
+            delegateDescription="The Bazel JUnit Launcher *must* be used for launching JUnit tests in a Bazel workspace. See the Bazel Eclipse Feature launcher documentation for more details."
             type="org.eclipse.jdt.junit.launchconfig"
             delegate="com.salesforce.bazel.eclipse.launch.BazelJunitLaunchConfigurationDelegate"
             id="bazel.junit.launcher">

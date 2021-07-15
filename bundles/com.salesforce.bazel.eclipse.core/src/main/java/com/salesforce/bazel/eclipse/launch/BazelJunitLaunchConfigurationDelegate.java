@@ -44,6 +44,11 @@ import org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate;
 /**
  * Plug point into the Eclipse JUnit launcher call chain; allows us to inject the Bazel runtime classpath provider so
  * the test uses the Bazel computed classpath.
+ * <p>
+ * Note that the user must elect to use this delegate (referred to as the 'Launcher' in the UI). This delegate is
+ * registered in plugin.xml as a "org.eclipse.jdt.junit.launchconfig" type delegate. This means it will compete with the
+ * native Eclipse delegate for JUnit launching duties. The user will be presented with a UI for them to choose the
+ * delegate they want, and they *must* choose the Bazel one.
  */
 public class BazelJunitLaunchConfigurationDelegate extends JUnitLaunchConfigurationDelegate {
 
@@ -51,6 +56,7 @@ public class BazelJunitLaunchConfigurationDelegate extends JUnitLaunchConfigurat
     public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
             throws CoreException {
 
+        // the enable method sets an attribute on the configuration to use the Bazel test classpath provider
         BazelTestClasspathProvider.enable(configuration);
         BazelTestClasspathProvider.canOpenErrorDialog.set(true);
 
