@@ -164,13 +164,22 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
 
                 for (String label : labels) {
                     String testRuleName = label.substring(label.lastIndexOf(":") + 1);
-                    File pFile = new File(new File(bazelBinDir, eachTarget.split(":")[0]), testRuleName + suffix);
+                    String targetPath = eachTarget.split(":")[0];
+                    String paramFilename = testRuleName + suffix;
+                    File pFile = new File(new File(bazelBinDir, targetPath), paramFilename);
                     if (pFile.exists()) {
                         paramFiles.add(pFile);
                     } else {
+                        LOG.warn(
+                            "Could not locate params file for test: \nlabel [{}] \ntestRuleName [{}] "
+                                    + "\ntargetPath [{}] \nparamFilename [{}] \npFilePath [{}]",
+                                    label, targetPath, paramFilename, pFile.getAbsolutePath());
+
                         Display.getDefault().asyncExec(new Runnable() {
                             @Override
                             public void run() {
+                                // TODO create a pref for a user to be able to ignore these errors; often the user will
+                                // be "yeah yeah, just run the tests that you can find" when this happens
                                 if (canOpenErrorDialog.get()) {
                                     canOpenErrorDialog.set(false);
                                     Display.getDefault().syncExec(new Runnable() {
@@ -178,7 +187,8 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                                         public void run() {
                                             MessageDialog.openError(Display.getDefault().getActiveShell(),
                                                 "Unknown Target",
-                                                    "One or all of the tests trying to be executed are not part of a Bazel java_test target");
+                                                "One or more of the targets being executed are not part of a Bazel java_test target (e.g. "
+                                                        + label + "). The target(s) will be ignored.");
                                         }
                                     });
                                 }
@@ -187,7 +197,7 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
                     }
                 }
             } else {
-                Set<File> pFiles = findParamsJar(project, eachTarget, testClassName, suffix);
+                Set<File> pFiles = findParamsFileForJar(project, eachTarget, testClassName, suffix);
                 paramFiles.addAll(pFiles);
             }
 
@@ -196,10 +206,14 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
         for (File paramsFile : paramFiles) {
             List<String> jarPaths;
             try {
-                jarPaths = getPathsToJars(paramsFile);
+                jarPaths = getPathsToFile(paramsFile);
             } catch (IOException e) {
                 throw new CoreException(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(),
                     "Error parsing " + paramsFile.getAbsolutePath(), e));
+            }
+            if (jarPaths == null) {
+                // error has already been logged, just try to soldier on
+                continue;
             }
             for (String rawPath : jarPaths) {
                 String canonicalPath = FSPathHelper.getCanonicalPathStringSafely(new File(base, rawPath));
@@ -223,6 +237,8 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
     }
 
     /**
+     * Bazel maintains a params file for each java_test rule. This method finds it.
+     * <p>
      * This needs to be re-implemented - the path is hardcoded. It should be path of the test rule TODO - Remove
      * hardcoded src/test/java
      *
@@ -231,28 +247,38 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
      * @param target
      * @return
      */
-    Set<File> findParamsJar(IJavaProject project, String target, String className, String suffix) {
+    Set<File> findParamsFileForJar(IJavaProject project, String target, String className, String suffix) {
         Set<File> paramFiles = new HashSet<>();
 
         String targetPath = target.split(":")[0];
+
         // testJar for bazel's iterative test rules
         File bazelBinDir = BazelPluginActivator.getBazelWorkspace().getBazelBinDirectory();
         String paramsName = className.replace('.', File.separatorChar) + suffix;
 
-        File paramFile = new File(new File(new File(bazelBinDir, targetPath), FSPathHelper.osSeps("src/test/java")), // $SLASH_OK
-            paramsName);
+        File targetBinPath = new File(bazelBinDir, targetPath);
+        File targetBinTestPath = new File(targetBinPath, FSPathHelper.osSeps("src/test/java")); // $SLASH_OK
+
+        File paramFile = new File(targetBinTestPath, paramsName);
         if (paramFile.exists()) {
             paramFiles.add(paramFile);
         } else {
-            // testJar for single test rule
-            // test rules where testName is not the same as testClass
+            // find the testJar for single test rule using Bazel Query
             String query = "attr(test_class, " + className + "$, " + target + ")";
             BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
             List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
+
             for (String label : labels) {
-                paramFile = new File(new File(bazelBinDir, targetPath),
-                    label.substring(label.lastIndexOf(":") + 1) + suffix);
-                paramFiles.add(paramFile);
+                String filename = label.substring(label.lastIndexOf(":") + 1) + suffix;
+                paramFile = new File(bazelBinDir, filename);
+
+                if (paramFile.exists()) {
+                    paramFiles.add(paramFile);
+                } else {
+                    LOG.warn("Test params file does not exist for: \ntarget [{}] \nclassname [{}] \nsuffix [{}]"
+                            + "\nquery [{}] \nlabel [{}] \nfilename [{}] \npath [{}]",
+                            target, className, suffix, query, label, filename, paramFile.getAbsolutePath());
+                }
             }
         }
         return paramFiles;
@@ -265,7 +291,10 @@ public class BazelRuntimeClasspathProvider extends StandardClasspathProvider {
      * @return
      * @throws IOException
      */
-    List<String> getPathsToJars(File paramsFile) throws IOException {
+    List<String> getPathsToFile(File paramsFile) throws IOException {
+        if (!paramsFile.exists()) {
+            return null;
+        }
         try (Scanner scanner = new Scanner(paramsFile)) {
             return getPathsToJars(scanner);
         }
