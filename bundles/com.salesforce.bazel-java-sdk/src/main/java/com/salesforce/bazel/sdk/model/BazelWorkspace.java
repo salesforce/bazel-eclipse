@@ -141,7 +141,9 @@ public class BazelWorkspace {
         List<String> results = new ArrayList<String>();
         for (String line : metadataStrategy.computeBazelQuery(query)) {
             if (line.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)) {
-                results.add(line);
+                // the trim() is essential here, on Windows, otherwise we end up with a trailing
+                // /r character which is a line feed
+                results.add(line.trim());
             }
         }
         return results;
