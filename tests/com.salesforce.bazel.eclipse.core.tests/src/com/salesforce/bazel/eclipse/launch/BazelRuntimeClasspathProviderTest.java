@@ -30,14 +30,14 @@ import java.util.Scanner;
 
 import org.junit.Test;
 
+import com.salesforce.bazel.sdk.lang.jvm.BazelJvmTestClasspathHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 public class BazelRuntimeClasspathProviderTest {
 
     @Test
     public void getPathsToJars() {
-        BazelRuntimeClasspathProvider subject = new BazelRuntimeClasspathProvider();
-        List<String> result = subject.getPathsToJars(new Scanner(PARAM_FILE_CONTENTS));
+        List<String> result = BazelJvmTestClasspathHelper.getPathsToJars(new Scanner(PARAM_FILE_CONTENTS));
 
         String deployPath = FSPathHelper.osSeps(
                 "bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/src/test/java/demo/banana/api/BananaTest_deploy.jar"); // $SLASH_OK
@@ -62,9 +62,8 @@ public class BazelRuntimeClasspathProviderTest {
 
     @Test
     public void getParamsJarSuffix() {
-        BazelRuntimeClasspathProvider subject = new BazelRuntimeClasspathProvider();
-        assertEquals("_deploy.jar-0.params", subject.getParamsJarSuffix(false));
-        assertEquals("_deploy-src.jar-0.params", subject.getParamsJarSuffix(true));
+        assertEquals("_deploy.jar-0.params", BazelJvmTestClasspathHelper.getParamsJarSuffix(false));
+        assertEquals("_deploy-src.jar-0.params", BazelJvmTestClasspathHelper.getParamsJarSuffix(true));
     }
 
     private static String PARAM_FILE_CONTENTS = "--output\n" + FSPathHelper.osSeps(

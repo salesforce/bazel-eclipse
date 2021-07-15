@@ -30,7 +30,7 @@
    <extension point="org.eclipse.jdt.launching.classpathProviders">
       <classpathProvider 
           id="com.salesforce.bazel.eclipse.launchconfig.classpathProvider"
-          class="com.salesforce.bazel.eclipse.launch.BazelRuntimeClasspathProvider"/>
+          class="com.salesforce.bazel.eclipse.launch.BazelTestClasspathProvider"/>
       <classpathProvider 
           id="com.salesforce.bazel.eclipse.launchconfig.sourcepathProvider"
           class="org.eclipse.jdt.launching.StandardSourcePathProvider"/>
