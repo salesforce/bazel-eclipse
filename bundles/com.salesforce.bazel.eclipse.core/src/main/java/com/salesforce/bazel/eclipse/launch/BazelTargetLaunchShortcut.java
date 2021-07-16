@@ -40,8 +40,10 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
@@ -103,16 +105,42 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
                 }
             }
         }
+
+        // validation
         if (mainClassInfos.isEmpty()) {
-            // bazel allows a java binary rule to specify the main_class as the target name, so we should also look at the name of the targets
-            // however bazel does not like the common "src/main/java" root:
-            // error: "main_class was not provided and cannot be inferred: source path doesn't include a known root (java, javatests, src, testsrc)"
-            throw new IllegalStateException(
-                "Unable to find a java_binary target that has a main_class of " + fqClassName);
+            // we need a java_binary rule to specify the main_class as our target class...
+            String message =
+                    "Unable to find a 'java_binary' target in the BUILD file that has a 'main_class' of " + fqClassName;
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    Display.getDefault().syncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            MessageDialog.openError(Display.getDefault().getActiveShell(), "No Launchable Target",
+                                message);
+                        }
+                    });
+                }
+            });
+            throw new IllegalStateException(message);
         } else if (mainClassInfos.size() > 1) {
-            // surface correctly
-            throw new IllegalStateException("Found multiple java_binary targets that have a main_class of "
-                    + fqClassName + " - create a launch configuration manually");
+            // if there are multiple java_binary rules found, we don't know which one to invoke...
+            String message = "Found multiple 'java_binary' targets in the BUILD file that have a 'main_class' of "
+                    + fqClassName + " - create a launch configuration manually in the Run Configurations menu.";
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    Display.getDefault().syncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            MessageDialog.openError(Display.getDefault().getActiveShell(),
+                                "Multiple Launchable Targets", message);
+                        }
+                    });
+                }
+            });
+            throw new IllegalStateException(message);
         }
 
         ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
@@ -134,6 +162,7 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
     @Override
     public void launch(IEditorPart editor, String mode) {
         //TODO: Add UI to the editor to run from the editor
+        LOG.info("BEF received an editor launch event, but does not currently have an implementation for it.");
     }
 
 }

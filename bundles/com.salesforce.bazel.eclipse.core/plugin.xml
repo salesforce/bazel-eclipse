@@ -139,20 +139,11 @@
                 <enablement>
                     <with
                         variable="selection">
-                        <count
-                            value="+">
+                        <count value="+">
                         </count>
                         <iterate>
-                           <and>
-                               <adapt type="org.eclipse.core.resources.IResource">
-                                   <test property="org.eclipse.core.resources.path"  value="*/src/main/java*">
-                                   </test>
-                               </adapt>
-                               <or>
-                                   <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
-                                   <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
-                               </or>
-                            </and>
+                           <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
+                           <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
                         </iterate>
                     </with>
                 </enablement>
