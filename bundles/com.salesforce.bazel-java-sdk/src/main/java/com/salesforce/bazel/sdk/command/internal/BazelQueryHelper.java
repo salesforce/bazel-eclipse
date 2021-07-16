@@ -45,6 +45,9 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Helper that knows how to run bazel query commands.
+ * <p>
+ * TODO this is not really an API, this is just random commands. It is hidden behind the workspaceommandrunner, it
+ * should be surfaced as a public class
  */
 public class BazelQueryHelper {
     private static final LogHelper LOG = LogHelper.log(BazelQueryHelper.class);
@@ -71,7 +74,7 @@ public class BazelQueryHelper {
     @Deprecated
     public synchronized List<String> listBazelTargetsInBuildFiles(File bazelWorkspaceRootDirectory,
             WorkProgressMonitor progressMonitor, File... directories)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> argBuilder = new ArrayList<>();
         argBuilder.add("query");
         for (File f : directories) {
@@ -85,13 +88,10 @@ public class BazelQueryHelper {
     /**
      * Returns the list of targets, with type data, found in a BUILD files for the given package. Uses Bazel Query to
      * build the list.
-     *
-     * @param bazelPackageName
-     *            the label path that identifies the package where the BUILD file lives (//projects/libs/foo)
      */
     public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory,
             Collection<BazelLabel> bazelLabels)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if (bazelLabels.isEmpty()) {
             return Collections.singletonList(new BazelBuildFile(BazelLabel.BAZEL_ALL_REPO_PACKAGES));
@@ -113,15 +113,37 @@ public class BazelQueryHelper {
         }
 
         if (!cacheMisses.isEmpty()) {
-            Collection<BazelBuildFile> loadedBuildFiles = runQuery(cacheMisses, bazelWorkspaceRootDirectory);
+            Collection<BazelBuildFile> loadedBuildFiles = runLabelQuery(cacheMisses, bazelWorkspaceRootDirectory);
             buildFiles.addAll(loadedBuildFiles);
         }
         return buildFiles;
     }
 
-    // runs query and populates cache, returns loaded BazelBuildFile instances
-    private Collection<BazelBuildFile> runQuery(Collection<BazelLabel> bazelLabels, File bazelWorkspaceRootDirectory)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+    /**
+     * Returns the list of source files that are used to build a target. Uses Bazel Query to build the list.
+     */
+    public synchronized Collection<String> querySourceFilesForTarget(File bazelWorkspaceRootDirectory,
+            BazelLabel bazelLabel)
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+
+        Collection<String> sourceFilePaths = runSourceFileQuery(bazelLabel, bazelWorkspaceRootDirectory);
+        return sourceFilePaths;
+    }
+
+    public void flushCache(BazelLabel bazelPackageName) {
+        BazelLabel pack = bazelPackageName.getPackageLabel();
+        BazelBuildFile previousValue = buildFileCache.remove(pack);
+        if (previousValue != null) {
+            LOG.info("Build file cache flush, package " + pack);
+        }
+    }
+
+    // Internals
+
+    // runs label query and populates cache, returns loaded BazelBuildFile instances
+    private Collection<BazelBuildFile> runLabelQuery(Collection<BazelLabel> bazelLabels,
+            File bazelWorkspaceRootDirectory)
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         String labels = bazelLabels.stream().map(BazelLabel::getLabelPath).collect(Collectors.joining(" "));
 
         // bazel query 'kind(rule, [label]:*)' --output label_kind
@@ -178,11 +200,45 @@ public class BazelQueryHelper {
         return buildFiles;
     }
 
-    public void flushCache(BazelLabel bazelPackageName) {
-        BazelLabel pack = bazelPackageName.getPackageLabel();
-        BazelBuildFile previousValue = buildFileCache.remove(pack);
-        if (previousValue != null) {
-            LOG.info("Build file cache flush, package " + pack);
+    // runs label query and populates cache, returns loaded BazelBuildFile instances
+    private Collection<String> runSourceFileQuery(BazelLabel bazelLabel, File bazelWorkspaceRootDirectory)
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+
+        // bazel query 'kind("source file", deps(//apple-api:apple-api))'
+        // bazel query 'kind("source file", deps(//apple-api:*))'
+
+        List<String> argBuilder = new ArrayList<>();
+        argBuilder.add("query");
+        argBuilder.add("kind('source file', deps(" + bazelLabel + "))");
+        List<String> resultLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null,
+            argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
+
+        // Sample Output:  (notice the cruft we don't want)
+        // @local_jdk//:bin/javap
+        // @bazel_tools//third_party/def_parser:def_parser.h
+        // @bazel_tools//third_party/def_parser:def_parser.cc
+        // //apple-api:source/dev/demo/apple/api/AppleOrchard.java
+        // //apple-api:source/dev/demo/apple/api/Apple.java
+        // //apple-api:BUILD
+
+        Set<String> sourceFilePaths = new HashSet<>();
+        for (String resultLine : resultLines) {
+            resultLine = resultLine.trim();
+            if (!resultLine.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)) {
+                // this isn't a source file
+                continue;
+            }
+            // we only want the path after the colon
+            //  //apple-api:source/dev/demo/apple/api/AppleOrchard.java => source/dev/demo/apple/api/AppleOrchard.java
+            int colonIndex = resultLine.indexOf(":");
+            if (colonIndex != -1) {
+                String sourcePath = resultLine.substring(colonIndex + 1);
+                if (!BazelBuildFile.isBuildFile(sourcePath)) {
+                    sourceFilePaths.add(sourcePath);
+                }
+            }
         }
+        return sourceFilePaths;
     }
+
 }

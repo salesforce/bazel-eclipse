@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -36,10 +36,14 @@
 
 package com.salesforce.bazel.sdk.model;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
+import com.salesforce.bazel.sdk.util.BazelConstants;
 
 /**
  * Abstraction over the internal details of a BUILD file. Depending on how this object was built, it may not contain all
@@ -56,27 +60,48 @@ public class BazelBuildFile {
      * Maps the String rule type (e.g. java_library) to the target labels (e.g. "//projects/libs/foo:foolib",
      * "//projects/libs/foo:barlib")
      */
-    private Map<String, Set<String>> typeToTargetMap = new TreeMap<>();
+    private final Map<String, Set<String>> typeToTargetMap = new TreeMap<>();
 
     /**
      * Maps the String target label (e.g. //projects/libs/foo:foolib) to the rule type (e.g. java_library)
      */
-    private Map<String, String> targetToTypeMap = new TreeMap<>();
+    private final Map<String, String> targetToTypeMap = new TreeMap<>();
 
-    private Set<String> allTargets = new TreeSet<>();
+    private final Set<String> allTargets = new TreeSet<>();
+
+    public static boolean isBuildFile(Path candidatePath) {
+        return BazelConstants.BUILD_FILE_NAMES.contains(candidatePath.getFileName().toString());
+    }
+
+    public static boolean isBuildFile(String candidatePath) {
+        for (String name : BazelConstants.BUILD_FILE_NAMES) {
+            // optimize for the NOT result, so try to minimize the work for the false case
+            if (candidatePath.endsWith(name)) {
+                if (candidatePath.equals(name)) {
+                    // path is just a single token BUILD or BUILD.bazel
+                    return true;
+                }
+                if (candidatePath.endsWith(File.separator + name)) {
+                    // we don't want to be fooled by a filename like fooBUILD, so we add the separator in the test
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     public BazelBuildFile(String label) {
         this.label = label;
     }
 
     public void addTarget(String ruleType, String targetLabel) {
-        this.targetToTypeMap.put(targetLabel, ruleType);
-        this.allTargets.add(targetLabel);
+        targetToTypeMap.put(targetLabel, ruleType);
+        allTargets.add(targetLabel);
 
         Set<String> targetsForRuleType = typeToTargetMap.get(ruleType);
         if (targetsForRuleType == null) {
             targetsForRuleType = new TreeSet<>();
-            this.typeToTargetMap.put(ruleType, targetsForRuleType);
+            typeToTargetMap.put(ruleType, targetsForRuleType);
         }
         if (!targetsForRuleType.contains(targetLabel)) {
             targetsForRuleType.add(targetLabel);
@@ -85,22 +110,22 @@ public class BazelBuildFile {
     }
 
     public String getLabel() {
-        return this.label;
+        return label;
     }
 
     public Set<String> getRuleTypes() {
-        return this.typeToTargetMap.keySet();
+        return typeToTargetMap.keySet();
     }
 
     public Set<String> getTargetsForRuleType(String ruleType) {
-        return this.typeToTargetMap.get(ruleType);
+        return typeToTargetMap.get(ruleType);
     }
 
     public String getRuleTypeForTarget(String targetLabel) {
-        return this.targetToTypeMap.get(targetLabel);
+        return targetToTypeMap.get(targetLabel);
     }
 
     public Set<String> getAllTargetLabels() {
-        return this.allTargets;
+        return allTargets;
     }
 }
