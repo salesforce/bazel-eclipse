@@ -53,7 +53,7 @@ class EclipseFileLinker {
         boolean retval = true;
 
         File f = new File(new File(bazelWorkspaceRootDirectory, packageFSPath), fileName);
-        if (f.exists()) {
+        if (f.exists() && f.isFile()) {
             IFile projectFile = resourceHelper.getProjectFile(eclipseProject, fileName);
             try {
                 resourceHelper.createFileLink(projectFile, Path.fromOSString(f.getCanonicalPath()), IResource.REPLACE,

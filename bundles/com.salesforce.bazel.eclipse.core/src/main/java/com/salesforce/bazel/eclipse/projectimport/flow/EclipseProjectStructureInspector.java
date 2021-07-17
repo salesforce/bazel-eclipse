@@ -39,7 +39,7 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 
 /**
- * Discovers well know paths in a bazel project.
+ * Discovers well know paths in a bazel project. Invoked during import.
  */
 class EclipseProjectStructureInspector {
     private static final LogHelper LOG = LogHelper.log(EclipseProjectStructureInspector.class);

@@ -37,12 +37,13 @@ import com.salesforce.bazel.sdk.util.BazelConstants;
  */
 public class ProjectView {
 
-    static String DIRECTORIES_SECTION = "directories:";
-    static String TARGETS_SECTION = "targets:";
-    static String DIRECTORIES_COMMENT = "# Add the directories you want added as source here";
-    static String INDENT = "  ";
-    static String SECTION_COLON = ":"; // section headers have a trailing colon
-    static String COMMENT_PREFIX = "#";
+    static final int INIT_INDENT = 3;
+    static final String DIRECTORIES_SECTION = "directories:";
+    static final String TARGETS_SECTION = "targets:";
+    static final String DIRECTORIES_COMMENT = "# Add the directories you want added as source here";
+    static final String INDENT = "  ";
+    static final String SECTION_COLON = ":"; // section headers have a trailing colon
+    static final String COMMENT_PREFIX = "#";
 
     private final File rootWorkspaceDirectory;
     private final Map<BazelPackageLocation, Integer> packageToLineNumber;
@@ -56,9 +57,9 @@ public class ProjectView {
         Map<BazelPackageLocation, Integer> pl = new LinkedHashMap<>();
         Map<BazelLabel, Integer> tl = new LinkedHashMap<>();
         initSections(directories, targets, pl, tl);
-        this.packageToLineNumber = Collections.unmodifiableMap(pl);
+        packageToLineNumber = Collections.unmodifiableMap(pl);
         // this may get modified, so the map has to be mutable
-        this.targetToLineNumber = tl;
+        targetToLineNumber = tl;
     }
 
     /**
@@ -69,9 +70,9 @@ public class ProjectView {
         Map<BazelPackageLocation, Integer> pl = new LinkedHashMap<>();
         Map<BazelLabel, Integer> tl = new LinkedHashMap<>();
         parseSections(content, rootWorkspaceDirectory, pl, tl);
-        this.packageToLineNumber = Collections.unmodifiableMap(pl);
+        packageToLineNumber = Collections.unmodifiableMap(pl);
         // this may get modified, so the map has to be mutable
-        this.targetToLineNumber = tl;
+        targetToLineNumber = tl;
     }
 
     /**
@@ -194,7 +195,7 @@ public class ProjectView {
         // directories:
         //   # comment
         // therefore:
-        int lineNumber = 3;
+        int lineNumber = INIT_INDENT;
         for (BazelPackageLocation pack : packages) {
             packageToLineNumber.put(pack, lineNumber);
             lineNumber += 1;
