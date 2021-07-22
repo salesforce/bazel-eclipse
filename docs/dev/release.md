@@ -18,6 +18,9 @@ For OSGi meta files, keep the *qualifier* suffix (e.g. *1.3.1.qualifier*).
 
 Tycho has commands for this, and is a good start, but they don't do the full job so you will need to iterate:
 ```
+ # clean first, so when you grep through files you dont get built artfiacts
+ mvn clean
+
  # auto update the version
  mvn -X -DnewVersion=1.3.1-SNAPSHOT tycho-versions:set-version
  mvn -X tycho-versions:update-eclipse-metadata

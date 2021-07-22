@@ -7,7 +7,7 @@
   <artifactId>bazel-eclipse-feature-maven-parent</artifactId>
   <!-- when changing version, make sure to update the version further down in this
        file in the target-platform-configuration plugin stanza, it must match! -->
-  <version>1.4.1-SNAPSHOT</version>
+  <version>1.5.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <!-- common settings for all modules -->
@@ -230,7 +230,7 @@
             <artifact>
               <groupId>${project.groupId}</groupId>
               <artifactId>target-platform</artifactId>
-              <version>1.4.1-SNAPSHOT</version>
+              <version>1.5.0-SNAPSHOT</version>
             </artifact>
           </target>
           <environments>

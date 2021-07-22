@@ -40,3 +40,4 @@ pom.tycho
 
 # other
 *.patch
+offline_project_mgmt.md
