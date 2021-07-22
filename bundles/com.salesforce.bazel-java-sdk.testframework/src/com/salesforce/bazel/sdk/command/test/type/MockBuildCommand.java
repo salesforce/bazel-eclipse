@@ -31,9 +31,8 @@ public class MockBuildCommand extends MockCommand {
         String target = findBazelTargetInArgs();
         if (!isValidBazelTarget(target)) {
             // by default, isValidBazelTarget() will throw an exception if the package is missing, but the test may configure it to return false instead
-            errorLines = Arrays.asList(new String[] { "ERROR: no such package '" + target
-                    + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.",
-                    "- /fake/path/" + target }); // // $SLASH_OK: bazel path
+            errorLines = Arrays.asList("ERROR: no such package '" + target
+                + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.", "- /fake/path/" + target); // // $SLASH_OK: bazel path
             return;
         }
 
@@ -73,7 +72,7 @@ public class MockBuildCommand extends MockCommand {
             String wildcardTarget =
                     BazelLabel.BAZEL_ROOT_SLASHES + packagePath + BazelLabel.BAZEL_COLON + ".*";
             MockCommandSimulatedOutputMatcher aspectCommandMatcher3 =
-                    new MockCommandSimulatedOutputMatcher(7, wildcardTarget);
+                    new MockCommandSimulatedOutputMatcher(11, wildcardTarget);
 
             List<MockCommandSimulatedOutputMatcher> matchers = new ArrayList<>();
             Collections.addAll(matchers, aspectCommandMatcher1, aspectCommandMatcher2, aspectCommandMatcher3);
@@ -102,9 +101,7 @@ public class MockBuildCommand extends MockCommand {
         // assume the build will succeed and pre-set the stdout message (something further down may set this differently though)
         // note the time, target count, and action count are all static; if you want to write tests that inspect those values you have a lot of work to do here
         outputLines =
-                Arrays.asList(new String[] { "INFO: Analyzed 19 targets (0 packages loaded, 1 target configured).",
-                        "INFO: Found 19 targets...", "INFO: Elapsed time: 0.146s, Critical Path: 0.00s",
-                        "INFO: Build completed successfully, 1 total action" });
+                Arrays.asList("INFO: Analyzed 19 targets (0 packages loaded, 1 target configured).", "INFO: Found 19 targets...", "INFO: Elapsed time: 0.146s, Critical Path: 0.00s", "INFO: Build completed successfully, 1 total action");
 
         // TODO derive build output from test workspace structure
         // TODO allow testOptions to determine that a package build should fail

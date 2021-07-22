@@ -35,7 +35,6 @@
  */
 package com.salesforce.bazel.eclipse.classpath;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,7 +77,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     protected IClasspathEntry[] lastComputedClasspath = null;
 
     public BaseBazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
 
@@ -140,13 +139,11 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
             computedClasspath = computeClasspath();
 
             // convert the logical entries into concrete Eclipse entries
-            File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
-            File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
             for (JvmClasspathEntry entry : computedClasspath.jvmClasspathEntries) {
                 if (entry.pathToJar != null) {
-                    IPath jarPath = getIPathOnDisk(bazelOutputBase, bazelExecRoot, entry.pathToJar);
+                    IPath jarPath = getIPathOnDisk(bazelWorkspace, entry.pathToJar);
                     if (jarPath != null) {
-                        IPath srcJarPath = getIPathOnDisk(bazelOutputBase, bazelExecRoot, entry.pathToSourceJar);
+                        IPath srcJarPath = getIPathOnDisk(bazelWorkspace, entry.pathToSourceJar);
                         IPath srcJarRootPath = null;
                         eclipseClasspathEntries.add(
                             javaCoreHelper.newLibraryEntry(jarPath, srcJarPath, srcJarRootPath, entry.isTestJar));
@@ -188,43 +185,49 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
 
     // HELPERS
 
-    protected IPath getIPathOnDisk(File bazelOutputBase, File bazelExecRoot, String file) {
-        if (file == null) {
+    protected IPath getIPathOnDisk(BazelWorkspace bazelWorkspace, String filePathStr) {
+        if (filePathStr == null) {
             return null;
         }
-        Path initialFilePath = Paths.get(file);
-        Path path = null;
-        if (initialFilePath.isAbsolute()) {
-            path = initialFilePath;
-        } else if (file.startsWith("external")) {
-            path = Paths.get(bazelOutputBase.getAbsolutePath(), file);
+
+        Path filePath = Paths.get(filePathStr);
+        Path absolutePath = null;
+        if (filePath.isAbsolute()) {
+            absolutePath = filePath;
         } else {
-            path = Paths.get(bazelExecRoot.getAbsolutePath(), file);
+            String bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory().getAbsolutePath();
+            absolutePath = Paths.get(bazelExecRoot, filePathStr);
+            if (!Files.exists(absolutePath)) {
+                String bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory().getAbsolutePath();
+                absolutePath = Paths.get(bazelOutputBase, filePathStr);
+                logger.info("The path retrieved from the aspect was rooted in outputbase, which is unexpected: {}",
+                    filePathStr);
+            }
         }
 
         // We have had issues with Eclipse complaining about symlinks in the Bazel output directories not being real,
         // so we resolve them before handing them back to Eclipse.
-        if (Files.isSymbolicLink(path)) {
+        if (Files.isSymbolicLink(absolutePath)) {
             try {
                 // resolving the link will fail if the symlink does not a point to a real file
-                path = Files.readSymbolicLink(path);
+                absolutePath = Files.readSymbolicLink(absolutePath);
             } catch (IOException ex) {
                 // TODO this can happen if someone does a 'bazel clean' using the command line #113
                 // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
                 logger.error("Problem adding jar to project [" + bazelProject.name
-                        + "] because it does not exist on the filesystem: " + path);
+                    + "] because it does not exist on the filesystem: " + absolutePath);
                 continueOrThrow(ex);
             }
         } else {
             // it is a normal path, check for existence
-            if (!Files.exists(path)) {
+            if (!Files.exists(absolutePath)) {
                 // TODO this can happen if someone does a 'bazel clean' using the command line #113
                 // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
                 logger.error("Problem adding jar to project [" + bazelProject.name
-                        + "] because it does not exist on the filesystem: " + path);
+                    + "] because it does not exist on the filesystem: " + absolutePath);
             }
         }
-        return org.eclipse.core.runtime.Path.fromOSString(path.toString());
+        return org.eclipse.core.runtime.Path.fromOSString(absolutePath.toString());
     }
 
     protected void continueOrThrow(Throwable th) {

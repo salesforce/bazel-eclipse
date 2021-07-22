@@ -33,6 +33,7 @@
  */
 package com.salesforce.bazel.sdk.aspect.jvm;
 
+import java.io.File;
 import java.util.Objects;
 
 import org.json.simple.JSONObject;
@@ -42,14 +43,41 @@ import org.json.simple.JSONObject;
  * (java_library).
  */
 public final class JVMAspectOutputJarSet {
-    private final String ijar; // interface_jar
-    private final String jar; // jar
-    private final String srcjar; // source_jar
+    private String ijar; // interface_jar
+    private String jar; // jar
+    private String srcjar; // source_jar
 
-    public JVMAspectOutputJarSet(JSONObject obj) {
-        this.jar = (String) obj.get("jar");
-        this.ijar = (String) obj.get("interface_jar");
-        this.srcjar = (String) obj.get("source_jar");
+    public JVMAspectOutputJarSet(JSONObject arrayObj) {
+        JSONObject jarObj = (JSONObject) arrayObj.get("jar");
+        if (jarObj != null) {
+            String relPath = (String) jarObj.get("relative_path");
+            String base = (String) jarObj.get("root_execution_path_fragment");
+            if (base != null) {
+                jar = base + File.separator + relPath;
+            } else {
+                jar = relPath;
+            }
+        }
+        JSONObject ijarObj = (JSONObject) arrayObj.get("interface_jar");
+        if (ijarObj != null) {
+            String base = (String) ijarObj.get("root_execution_path_fragment");
+            String relPath = (String) ijarObj.get("relative_path");
+            if (base != null) {
+                ijar = base + File.separator + relPath;
+            } else {
+                ijar = relPath;
+            }
+        }
+        JSONObject sjarObj = (JSONObject) arrayObj.get("source_jar");
+        if (sjarObj != null) {
+            String base = (String) sjarObj.get("root_execution_path_fragment");
+            String relPath = (String) sjarObj.get("relative_path");
+            if (base != null) {
+                srcjar = base + File.separator + relPath;
+            } else {
+                srcjar = relPath;
+            }
+        }
     }
 
     @Override

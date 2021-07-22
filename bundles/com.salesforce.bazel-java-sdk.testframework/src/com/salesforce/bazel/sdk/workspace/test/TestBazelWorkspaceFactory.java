@@ -90,7 +90,7 @@ public class TestBazelWorkspaceFactory {
 
             // create the catalog entries
             TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(workspaceDescriptor,
-                    packageRelativeBazelPath, packageName, javaPackageDir);
+                packageRelativeBazelPath, packageName, javaPackageDir);
 
             // we will be collecting locations of Aspect json files for this package
             Set<String> packageAspectFiles = new TreeSet<>();
@@ -126,9 +126,12 @@ public class TestBazelWorkspaceFactory {
             resourceFile.createNewFile();
 
             // main fruit source aspect
-            String extraDep = previousJavaLibTarget != null ? "    \"//" + previousJavaLibTarget + "\",\n" : null; // $SLASH_OK: bazel path
+            List<String> extraDeps = new ArrayList<>();
+            if (previousJavaLibTarget != null) {
+                extraDeps.add(previousJavaLibTarget);
+            }
             String aspectFilePath_mainsource = TestAspectFileCreator.createJavaAspectFile(
-                workspaceDescriptor.outputBaseDirectory, packageRelativeBazelPath, packageName, packageName, extraDep,
+                workspaceDescriptor.outputBaseDirectory, packageRelativeBazelPath, packageName, packageName, extraDeps,
                 sourceFiles, true, explicitJavaTestDeps);
             packageAspectFiles.add(aspectFilePath_mainsource);
 
@@ -181,7 +184,7 @@ public class TestBazelWorkspaceFactory {
                     workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core", "hamcrest-core-1.3");
                 packageAspectFiles.add(aspectFilePath_hamcrest);
                 createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core",
-                    "hamcrest-core-1.3");
+                        "hamcrest-core-1.3");
             }
 
             // we chain the libs together to test inter project deps
@@ -208,7 +211,7 @@ public class TestBazelWorkspaceFactory {
 
             // create the catalog entries
             TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(workspaceDescriptor,
-                    packageRelativeBazelPath, packageName, genruleLib);
+                packageRelativeBazelPath, packageName, genruleLib);
 
             File buildFile = new File(genruleLib, workspaceDescriptor.buildFilename);
             buildFile.createNewFile();

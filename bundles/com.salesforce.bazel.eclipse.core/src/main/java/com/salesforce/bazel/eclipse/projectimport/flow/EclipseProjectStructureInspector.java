@@ -128,9 +128,10 @@ class EclipseProjectStructureInspector {
                 LOG.error("Failed querying package [{}] for source files.", anyE, packageLabel);
             }
 
-            if (results != null) {
+            if ((results != null) && (results.size() > 0)) {
                 LOG.warn(
-                        "Non-Maven layouts are not yet supported by BEF: https://github.com/salesforce/bazel-eclipse/issues/8");
+                    "Non-Maven layouts are not yet supported by BEF. Package {} Issue: https://github.com/salesforce/bazel-eclipse/issues/8",
+                    packageLabel);
                 // the results will contain paths like this:
                 //   source/dev/com/salesforce/foo/Bar.java
                 // but it can also have non-java source files, so we need to check for that

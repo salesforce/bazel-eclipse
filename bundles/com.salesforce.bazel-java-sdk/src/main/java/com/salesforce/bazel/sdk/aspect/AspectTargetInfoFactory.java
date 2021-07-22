@@ -60,7 +60,21 @@ public class AspectTargetInfoFactory {
         Map<String, AspectTargetInfo> infos = new HashMap<>();
         for (File aspectFile : aspectFiles) {
             AspectTargetInfo buildInfo = loadAspectFile(aspectFile);
-            infos.put(buildInfo.getLabelPath(), buildInfo);
+            if (buildInfo == null) {
+                // bug in the aspect parsing code
+                LOG.error("The aspect file could not be parsed for aspect path {}",
+                    aspectFile.getAbsolutePath());
+                continue;
+            }
+
+            String labelPath = buildInfo.getLabelPath();
+            if (labelPath != null) {
+                infos.put(labelPath, buildInfo);
+            } else {
+                // bug in the aspect parsing code
+                LOG.error("Bug in the aspect parsing code, the label is null for package path {} for aspect file {}",
+                    buildInfo.workspaceRelativePath, aspectFile.getAbsolutePath());
+            }
         }
         return infos;
     }
@@ -78,32 +92,37 @@ public class AspectTargetInfoFactory {
             try {
                 jsonObject = (JSONObject) jsonParser.parse(new FileReader(aspectFile));
             } catch (Exception je) {
-                System.err.println("JSON file has illegal characters: " + aspectFile.getAbsolutePath()); // TODO log
+                LOG.error("JSON file {} has illegal characters: {}", aspectFile.getAbsolutePath(),
+                    aspectFile.getAbsolutePath());
                 throw new IllegalArgumentException(je);
             }
             buildInfo = loadAspectFromJson(aspectFile, jsonObject, jsonParser);
         } else {
-            System.err.println("Aspect JSON file is missing: " + aspectFile.getAbsolutePath()); // TODO log
+            LOG.error("Aspect JSON file {} is missing.", aspectFile.getAbsolutePath());
         }
         return buildInfo;
     }
 
     // INTERNAL
 
-    static AspectTargetInfo loadAspectFromJson(File aspectDataFile, JSONObject jsonObject, JSONParser jsonParser) {
+    static AspectTargetInfo loadAspectFromJson(File aspectDataFile, JSONObject aspectObject, JSONParser jsonParser) {
         AspectTargetInfo info = null;
 
         try {
-            List<String> deps = jsonArrayToStringArray(jsonObject.get("dependencies"));
-            List<String> sources = jsonArrayToStringArray(jsonObject.get("sources"));
+            List<String> deps = loadDeps(aspectObject);
 
-            String build_file_artifact_location = null; // object.getString("build_file_artifact_location");
-            String kind = (String) jsonObject.get("kind");
-            String label = (String) jsonObject.get("label");
+            String build_file_artifact_location = "test";//aspectObject.getString("build_file_artifact_location");
+            String kind = (String) aspectObject.get("kind_string");
+            if (kind == null) {
+                LOG.error(
+                    "Aspect file {} is missing the kind_string property; this is likely a data file created by an older version of the aspect",
+                    aspectDataFile);
+            }
+            String label = loadLabel(aspectObject);
 
             for (AspectTargetInfoFactoryProvider provider : providers) {
-                info = provider.buildAspectTargetInfo(aspectDataFile, jsonObject, jsonParser,
-                    build_file_artifact_location, kind, label, deps, sources);
+                info = provider.buildAspectTargetInfo(aspectDataFile, aspectObject, jsonParser,
+                    build_file_artifact_location, kind, label, deps);
                 if (info != null) {
                     break;
                 }
@@ -118,21 +137,37 @@ public class AspectTargetInfoFactory {
         return info;
     }
 
-    private static List<String> jsonArrayToStringArray(Object arrayAsObject) throws Exception {
+    private static String loadLabel(JSONObject aspectObject) throws Exception {
+        String label = null;
+
+        JSONObject keyObj = (JSONObject) aspectObject.get("key");
+        if (keyObj != null) {
+            Object labelObj = keyObj.get("label");
+            if (labelObj != null) {
+                label = labelObj.toString();
+            }
+        }
+
+        return label;
+    }
+
+    private static List<String> loadDeps(JSONObject aspectObject) throws Exception {
         List<String> list = new ArrayList<>();
-        if (arrayAsObject == null) {
+        if (aspectObject == null) {
             return list;
         }
-
-        JSONArray array = null;
-        if (arrayAsObject instanceof JSONArray) {
-            array = (JSONArray) arrayAsObject;
-        } else {
-            return list;
-        }
-
-        for (Object o : array) {
-            list.add(o.toString());
+        JSONArray depArray = (JSONArray) aspectObject.get("deps");
+        if (depArray != null) {
+            for (Object dep : depArray) {
+                JSONObject depObj = (JSONObject) dep;
+                JSONObject targetObj = (JSONObject) depObj.get("target");
+                if (targetObj != null) {
+                    Object labelObj = targetObj.get("label");
+                    if (labelObj != null) {
+                        list.add(labelObj.toString());
+                    }
+                }
+            }
         }
         return list;
     }

@@ -12,6 +12,6 @@ import org.json.simple.parser.JSONParser;
 public interface AspectTargetInfoFactoryProvider {
 
     AspectTargetInfo buildAspectTargetInfo(File aspectDataFile, JSONObject jsonObject, JSONParser jsonParser,
-            String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources);
+            String workspaceRelativePath, String kind, String label, List<String> deps);
 
 }

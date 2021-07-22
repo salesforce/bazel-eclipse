@@ -73,7 +73,7 @@ public class AspectTargetInfo {
     protected final List<String> deps;
     protected final String kind;
     protected final String label;
-    protected final List<String> sources;
+    protected List<String> sources;
 
     @Override
     public String toString() {
