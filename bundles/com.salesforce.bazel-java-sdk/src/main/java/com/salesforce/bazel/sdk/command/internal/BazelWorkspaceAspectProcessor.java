@@ -56,9 +56,10 @@ public class BazelWorkspaceAspectProcessor {
     private final BazelCommandExecutor bazelCommandExecutor;
 
     /**
-     * These arguments are added to all "bazel build" commands that run for aspect processing
+     * These arguments are added to all "bazel build" commands that run for aspect processing. This is public so that
+     * your tool can override them as needed.
      */
-    private List<String> aspectOptions;
+    public List<String> aspectOptions;
 
     /**
      * Cache of the Aspect data for each target. key=String target (//a/b/c) value=Set<AspectTargetInfo> data that came
@@ -93,8 +94,13 @@ public class BazelWorkspaceAspectProcessor {
             aspectOptions.add("--override_repository=bazeljavasdk_aspect=" + aspectLocation.getAspectDirectory());
             aspectOptions.add("--aspects=@bazeljavasdk_aspect" + aspectLocation.getAspectLabel());
             aspectOptions.add("-k");
-            aspectOptions.add("--output_groups=json-files,classpath-jars,-_,-defaults");
+            aspectOptions.add(
+                    "--output_groups=intellij-info-generic,intellij-info-java-direct-deps,intellij-resolve-java-direct-deps");
+            aspectOptions.add("--nobuild_event_binary_file_path_conversion");
+            aspectOptions.add("--noexperimental_run_validations");
             aspectOptions.add("--experimental_show_artifacts");
+            aspectOptions.add("--curses=no");
+            aspectOptions.add("--progress_in_terminal_title=no");
         }
     }
 
@@ -202,7 +208,7 @@ public class BazelWorkspaceAspectProcessor {
 
     private synchronized void loadTargetInfos(Collection<BazelLabel> cacheMisses,
             Map<BazelLabel, Set<AspectTargetInfo>> resultMap, String caller)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         LOG.info("Starting generation of Aspect files for " + cacheMisses.size() + " packages.");
         List<String> discoveredAspectFilePaths = generateAspectTargetInfoFiles(cacheMisses);
@@ -219,7 +225,7 @@ public class BazelWorkspaceAspectProcessor {
             for (BazelLabel label : cacheMisses) {
                 Set<AspectTargetInfo> lastgood = aspectInfoCache_lastgood.get(label);
                 if (lastgood == null) {
-                    LOG.info("Aspect execution failed (all) for target: " + label + getLogStr(label, caller));
+                    LOG.info("Aspect execution failed (all) for target: {}", getLogStr(label, caller));
                 } else {
                     resultMap.put(label, lastgood);
                 }
@@ -321,7 +327,7 @@ public class BazelWorkspaceAspectProcessor {
                 AspectTargetInfo dep = depNameToTargetInfo.get(depLabel);
                 if (dep == null) {
                     LOG.info("No AspectTargetInfo exists for " + label
-                            + "; it and its descendents are excluded from analysis.");
+                        + "; it and its descendents are excluded from analysis.");
                     skippedLabels.add(label);
                 } else {
                     queue.add(dep);
@@ -350,7 +356,7 @@ public class BazelWorkspaceAspectProcessor {
         List<String> listOfGeneratedFilePaths = new ArrayList<>();
 
         // run the aspect generation for the target labels, we want to minimize the number of bazel invocations
-        // because there is a few seconds of overhead for each invocation, but we only do 25 at a time so we get 
+        // because there is a few seconds of overhead for each invocation, but we only do 25 at a time so we get
         // progress log messages along the way
         while (currentTargetIndex <= lastValidTargetIndex) {
             int startTargetIndex = currentTargetIndex;
@@ -369,15 +375,14 @@ public class BazelWorkspaceAspectProcessor {
             // Strip out the artifact list, keeping the xyz.bzljavasdk-data.json files (located in subdirs in the bazel-out path)
             // Line must start with >>> and end with the aspect file suffix
             LOG.info("Running command to generate aspect file for labels indexed [" + startTargetIndex + "] through ["
-                    + (startTargetIndex + 25) + "] out of the total [" + lastValidTargetIndex + "]");
+                    + (startTargetIndex + 25) + "] out of the total [" + (lastValidTargetIndex + 1) + "]");
             Function<String, String> filter = t -> t.startsWith(">>>")
                     ? (t.endsWith(AspectTargetInfoFactory.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
 
-            List<String> partialListOfGeneratedFilePaths =
-                    bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE, bazelWorkspaceRootDirectory,
-                        null, args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
-
-            listOfGeneratedFilePaths.addAll(partialListOfGeneratedFilePaths);
+                    List<String> partialListOfGeneratedFilePaths = bazelCommandExecutor.runBazelAndGetErrorLines(
+                        ConsoleType.WORKSPACE, bazelWorkspaceRootDirectory, null,
+                        args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
+                    listOfGeneratedFilePaths.addAll(partialListOfGeneratedFilePaths);
         }
         return listOfGeneratedFilePaths;
     }
@@ -391,7 +396,13 @@ public class BazelWorkspaceAspectProcessor {
         Map<String, AspectTargetInfo> lToAtis = AspectTargetInfoFactory.loadAspectFilePaths(aspectFilePaths);
         Map<BazelLabel, AspectTargetInfo> bzToAtis = new HashMap<>(lToAtis.size());
         for (Map.Entry<String, AspectTargetInfo> e : lToAtis.entrySet()) {
-            bzToAtis.put(new BazelLabel(e.getKey()), e.getValue());
+            String key = e.getKey();
+            if (key == null) {
+                // bug
+                continue;
+            }
+            AspectTargetInfo value = e.getValue();
+            bzToAtis.put(new BazelLabel(key), value);
         }
         return bzToAtis;
     }

@@ -125,6 +125,9 @@ public abstract class LoggerFacade {
      */
     static String formatMsg(Class<?> from, String message, Object... args) {
         for (Object arg : args) {
+            if (arg == null) {
+                arg = "<null>";
+            }
             int nextSlot = message.indexOf("{}");
             if (nextSlot != -1) {
                 if (nextSlot == 0) {

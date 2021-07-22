@@ -92,7 +92,7 @@ public class BazelWorkspaceCommandRunnerTest {
 
     @Test
     public void testWorkspaceRunner_workspacesetup() throws Exception {
-        File testDir = tmpFolder.newFolder();
+        File testDir = new File("/tmp/pjltest");//tmpFolder.newFolder();
         File workspaceDir = new File(testDir, "bazel-workspace");
         workspaceDir.mkdirs();
         File outputbaseDir = new File(testDir, "outputbase");

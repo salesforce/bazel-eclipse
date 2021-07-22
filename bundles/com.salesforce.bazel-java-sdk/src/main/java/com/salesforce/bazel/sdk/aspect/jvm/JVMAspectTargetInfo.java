@@ -37,19 +37,28 @@ public class JVMAspectTargetInfo extends AspectTargetInfo {
     protected List<JVMAspectOutputJarSet> generatedJars;
     protected List<JVMAspectOutputJarSet> jars;
 
-    JVMAspectTargetInfo(File aspectDataFile, JSONObject jsonObject, JSONParser jsonParser, String workspaceRelativePath,
-            String kind, String label, List<String> deps, List<String> sources) throws Exception {
-        super(aspectDataFile, workspaceRelativePath, kind, label, deps, sources);
+    JVMAspectTargetInfo(File aspectDataFile, JSONObject aspectObject, JSONParser jsonParser,
+            String workspaceRelativePath, String kind, String label, List<String> deps) throws Exception {
+        super(aspectDataFile, workspaceRelativePath, kind, label, deps, null);
 
-        List<JVMAspectOutputJarSet> jarsList = jsonArrayToJarArray(jsonObject.get("jars"), jsonParser);
-        jars = jarsList;
+        JSONObject ideInfoObj = (JSONObject) aspectObject.get("java_ide_info");
+        if (ideInfoObj != null) {
+            sources = loadSources(ideInfoObj);
 
-        List<JVMAspectOutputJarSet> generatedJarsList =
-                jsonArrayToJarArray(jsonObject.get("generated_jars"), jsonParser);
-        generatedJars = generatedJarsList;
+            List<JVMAspectOutputJarSet> jarsList = jsonArrayToJarArray(ideInfoObj.get("jars"), jsonParser);
+            jars = jarsList;
 
-        String mainClass = (String) jsonObject.get("main_class");
-        this.mainClass = mainClass;
+            List<JVMAspectOutputJarSet> generatedJarsList =
+                    jsonArrayToJarArray(ideInfoObj.get("generated_jars"), jsonParser);
+            generatedJars = generatedJarsList;
+
+            String mainClass = (String) ideInfoObj.get("main_class");
+            this.mainClass = mainClass;
+        } else {
+            sources = new ArrayList<>();
+            jars = new ArrayList<>();
+            generatedJars = new ArrayList<>();
+        }
     }
 
     /**
@@ -71,6 +80,24 @@ public class JVMAspectTargetInfo extends AspectTargetInfo {
      */
     public String getMainClass() {
         return mainClass;
+    }
+
+    private static List<String> loadSources(JSONObject ideInfoObj) throws Exception {
+        List<String> list = new ArrayList<>();
+        if (ideInfoObj == null) {
+            return list;
+        }
+        JSONArray sourceArray = (JSONArray) ideInfoObj.get("sources");
+        if (sourceArray != null) {
+            for (Object sourceObject : sourceArray) {
+                JSONObject sourceObj = (JSONObject) sourceObject;
+                Object pathObj = sourceObj.get("relative_path");
+                if (pathObj != null) {
+                    list.add(pathObj.toString());
+                }
+            }
+        }
+        return list;
     }
 
     private static List<JVMAspectOutputJarSet> jsonArrayToJarArray(Object arrayObject, JSONParser jsonParser)

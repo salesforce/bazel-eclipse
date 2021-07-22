@@ -48,7 +48,7 @@ sdk_root=$SDK_DIR
 # Mapping Rules
 
 # Aspect
-cp $bef_root/bundles/com.salesforce.bazel-java-sdk/aspect/* $sdk_root/sdk/bazel-java-sdk/aspect
+cp -R $bef_root/bundles/com.salesforce.bazel-java-sdk/aspect/* $sdk_root/sdk/bazel-java-sdk/aspect
 
 # SDK Java Classes
 cp -R $bef_root/bundles/com.salesforce.bazel-java-sdk/src/main/java/* $sdk_root/sdk/bazel-java-sdk/src/main/java

@@ -3,6 +3,7 @@ package com.salesforce.bazel.sdk.workspace.test;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.path.FSPathHelper;
@@ -20,7 +21,7 @@ public class TestAspectFileCreator {
      * @return the absolute File path to the file
      */
     static String createJavaAspectFile(File outputBase, String packageRelativePath, String packageName,
-            String targetName, String extraDependencies, List<String> sources, boolean isJavaLibrary,
+            String targetName, List<String> extraDependencies, List<String> sources, boolean isJavaLibrary,
             boolean explicitJavaTestDeps) {
 
         String aspectJsonFilename = targetName + ".bzljavasdk-data.json";
@@ -52,7 +53,7 @@ public class TestAspectFileCreator {
      */
     static String createJavaAspectFileForMavenJar(File outputBase, String mavenJarName, String actualJarNameNoSuffix) {
         String externalName = "external" + FSPathHelper.UNIX_SLASH + mavenJarName;
-        String dependencies = null;
+        List<String> dependencies = null;
         List<String> sources = null;
         String mainClass = null;
         String label = "@" + mavenJarName + "//jar:jar";
@@ -88,10 +89,12 @@ public class TestAspectFileCreator {
      * }
      */
     static String createAspectJsonForJavaLibraryTarget(String packageRelativePath, String packageName,
-            String targetName, String extraDependencies, List<String> sources) {
-        String dependencies = "\"@org_slf4j_slf4j_api//jar:jar\",\n    \"@com_google_guava_guava//jar:jar\",\n";
+            String targetName, List<String> extraDependencies, List<String> sources) {
+        List<String> dependencies = new ArrayList<>();
+        dependencies.add("@org_slf4j_slf4j_api//jar:jar");
+        dependencies.add("@com_google_guava_guava//jar:jar");
         if (extraDependencies != null) {
-            dependencies = dependencies + extraDependencies;
+            dependencies.addAll(extraDependencies);
         }
         String mainClass = null;
         String label = packageRelativePath + ":" + targetName;
@@ -122,18 +125,19 @@ public class TestAspectFileCreator {
      * }
      */
     static String createAspectJsonForJavaTestTarget(String packageRelativePath, String packageName, String targetName,
-            String testTargetName, String extraDependencies, List<String> sources, boolean explicitJavaTestDeps) {
-        String explicitDependencies = "";
+            String testTargetName, List<String> extraDependencies, List<String> sources, boolean explicitJavaTestDeps) {
+        List<String> dependencies = new ArrayList<>();
         if (explicitJavaTestDeps) {
             // See ImplicitDependencyHelper.java
             // if the workspace is configured to disallow implicit test deps, the BUILD file (and thus the aspect) needs to
             // explicitly include junit/hamcrest
-            explicitDependencies = "\"@junit_junit//jar:jar\",\n    \"@org_hamcrest_hamcrest_core//jar:jar\",\n    "; // $SLASH_OK: escape char
+            dependencies.add("@junit_junit//jar:jar"); // $SLASH_OK: escape char
+            dependencies.add("@org_hamcrest_hamcrest_core//jar:jar"); // $SLASH_OK: escape char
         }
         String targetLabel = packageRelativePath + ":" + targetName;
-        String dependencies = explicitDependencies + "\"" + targetLabel + "\",\n"; // $SLASH_OK: bazel path
+        dependencies.add(targetLabel);
         if (extraDependencies != null) {
-            dependencies = dependencies + extraDependencies;
+            dependencies.addAll(extraDependencies);
         }
         String mainClass = null;
         String label = packageRelativePath + ":" + testTargetName;
@@ -149,7 +153,7 @@ public class TestAspectFileCreator {
 
     }
 
-    private static String createAspectJsonForJavaArtifact(String buildFileLocation, String dependencies,
+    private static String createAspectJsonForJavaArtifact(String buildFileLocation, List<String> dependencies,
             List<String> sources, String mainClass, String label, String kind, String jar, String interfacejar,
             String sourcejar) {
         StringBuilder sb = new StringBuilder();
@@ -161,69 +165,90 @@ public class TestAspectFileCreator {
         sb.append("\",\n"); // $SLASH_OK: line continue
 
         // dependencies
-        sb.append("  \"dependencies\":[\n    "); // $SLASH_OK: escape char
+        sb.append("  \"deps\":[\n    "); // $SLASH_OK: escape char
         if (dependencies != null) {
-            sb.append(dependencies);
+            for (String dep : dependencies) {
+                sb.append("      {\n");
+                sb.append("        \"target\": {\n");
+                sb.append("          \"label\": \"");
+                sb.append(dep);
+                sb.append("\"\n");
+                sb.append("        }\n");
+                sb.append("      },\n");
+            }
         }
         sb.append("  ],\n");
 
+        // start ide info
+        sb.append("  \"java_ide_info\": {\n");
+
         // generated_jars
-        sb.append("  \"generated_jars\":[],\n"); // $SLASH_OK: escape char
+        sb.append("    \"generated_jars\":[],\n"); // $SLASH_OK: escape char
 
         // jars
-        sb.append("  \"jars\":[ {\n"); // $SLASH_OK: escape char
+        sb.append("    \"jars\":[\n     {\n"); // $SLASH_OK: escape char
         {
             // jar
             if (jar != null) {
-                sb.append("    \"jar\":\""); // $SLASH_OK: escape char
+                sb.append("      \"jar\": {\n"); // $SLASH_OK: escape char
+                sb.append("        \"relative_path\": \""); // $SLASH_OK: escape char
                 sb.append(jar);
-                sb.append("\",\n"); // $SLASH_OK: line continue
+                sb.append("\"\n"); // $SLASH_OK: line continue
+                sb.append("      },\n"); // $SLASH_OK: escape char
             }
 
             // interfacejar
             if (interfacejar != null) {
-                sb.append("    \"interface_jar\":\""); // $SLASH_OK: escape char
+                sb.append("      \"interface_jar\": {\n"); // $SLASH_OK: escape char
+                sb.append("        \"relative_path\": \""); // $SLASH_OK: escape char
                 sb.append(interfacejar);
-                sb.append("\",\n"); // $SLASH_OK: line continue
+                sb.append("\"\n"); // $SLASH_OK: line continue
+                sb.append("      },\n"); // $SLASH_OK: escape char
             }
 
             // source_jar
             if (sourcejar != null) {
-                sb.append("    \"source_jar\":\""); // $SLASH_OK: escape char
+                sb.append("      \"source_jar\": {\n"); // $SLASH_OK: escape char
+                sb.append("        \"relative_path\": \""); // $SLASH_OK: escape char
                 sb.append(sourcejar);
-                sb.append("\",\n"); // $SLASH_OK: line continue
+                sb.append("\"\n"); // $SLASH_OK: line continue
+                sb.append("      },\n"); // $SLASH_OK: escape char
             }
         }
-        sb.append("  }  ],\n");
-
-        // kind
-        sb.append("  \"kind\":\""); // $SLASH_OK: escape char
-        sb.append(kind);
-        sb.append("\",\n"); // $SLASH_OK: line continue
-
-        // label
-        sb.append("  \"label\":\""); // $SLASH_OK: escape char
-        sb.append(label);
-        sb.append("\",\n"); // $SLASH_OK: line continue
+        sb.append("     }\n    ],\n");
 
         // main_class
         if (mainClass != null) {
-            sb.append("  \"main_class\":\""); // $SLASH_OK: escape char
+            sb.append("    \"main_class\":\""); // $SLASH_OK: escape char
             sb.append(mainClass);
             sb.append("\",\n"); // $SLASH_OK: line continue
         }
 
         // sources
-        sb.append("  \"sources\":[\n"); // $SLASH_OK: escape char
+        sb.append("    \"sources\":[\n"); // $SLASH_OK: escape char
         if (sources != null) {
             for (String source : sources) {
-                sb.append("    \""); // $SLASH_OK: escape char
+                sb.append("        { \"relative_path\": \""); // $SLASH_OK: escape char
                 source = source.replace(FSPathHelper.WINDOWS_BACKSLASH, FSPathHelper.WINDOWS_BACKSLASH_REGEX); // hack because Windows paths need to be json escaped
                 sb.append(source);
-                sb.append("\",\n"); // $SLASH_OK: line continue
+                sb.append("\"},\n"); // $SLASH_OK: line continue
             }
         }
         sb.append("  ],\n");
+
+        // end ide info
+        sb.append("  },\n");
+
+        // kind
+        sb.append("  \"kind_string\":\""); // $SLASH_OK: escape char
+        sb.append(kind);
+        sb.append("\",\n"); // $SLASH_OK: line continue
+
+        // label
+        sb.append("  \"key\": {\n"); // $SLASH_OK: escape char
+        sb.append("    \"label\":\""); // $SLASH_OK: escape char
+        sb.append(label);
+        sb.append("\"\n  },\n"); // $SLASH_OK: line continue
 
         sb.append("}\n");
         return sb.toString();

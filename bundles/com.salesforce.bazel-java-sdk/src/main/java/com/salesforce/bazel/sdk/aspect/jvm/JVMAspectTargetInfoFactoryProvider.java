@@ -18,14 +18,15 @@ public class JVMAspectTargetInfoFactoryProvider implements AspectTargetInfoFacto
 
     @Override
     public AspectTargetInfo buildAspectTargetInfo(File aspectDataFile, JSONObject jsonObject, JSONParser jsonParser,
-            String workspaceRelativePath, String kind, String label, List<String> deps, List<String> sources) {
+            String workspaceRelativePath, String kind, String label, List<String> deps) {
         JVMAspectTargetInfo info = null;
 
         // TODO verify kind is a JVM rule type; but be careful to allow open ended (like scala, etc) as JVM support evolves
 
         try {
+
             info = new JVMAspectTargetInfo(aspectDataFile, jsonObject, jsonParser, workspaceRelativePath, kind, label,
-                    deps, sources);
+                    deps);
         } catch (Exception anyE) {
             LOG.error("Error creating the JVMAspectTargetInfo for path [{}] label [{}] kind [{}] from json {}", anyE,
                 workspaceRelativePath, label, kind, jsonObject);
@@ -33,5 +34,4 @@ public class JVMAspectTargetInfoFactoryProvider implements AspectTargetInfoFacto
 
         return info;
     }
-
 }

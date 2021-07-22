@@ -23,7 +23,6 @@
  */
 package com.salesforce.bazel.sdk.lang.jvm;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -113,19 +112,19 @@ public class BazelJvmClasspath {
         boolean isImport = false;
         BazelJvmClasspathResponse response = new BazelJvmClasspathResponse();
 
-        if (this.cachedEntries != null) {
+        if (cachedEntries != null) {
             long now = System.currentTimeMillis();
-            if ((now - this.cachePutTimeMillis) > CLASSPATH_CACHE_TIMEOUT_MS) {
+            if ((now - cachePutTimeMillis) > CLASSPATH_CACHE_TIMEOUT_MS) {
                 logger.info("Evicted classpath from cache for project " + bazelProject.name);
-                this.cachedEntries = null;
+                cachedEntries = null;
             } else {
                 logger.debug("  Using cached classpath for project " + bazelProject.name);
-                return this.cachedEntries;
+                return cachedEntries;
             }
         }
 
         logger.info("Computing classpath for project " + bazelProject.name + " (cached entries: " + foundCachedEntries
-                + ", is import: " + isImport + ")");
+            + ", is import: " + isImport + ")");
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
@@ -135,7 +134,7 @@ public class BazelJvmClasspath {
 
         try {
             BazelProjectTargets configuredTargetsForProject =
-                    this.bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
+                    bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
 
             // get the model of the BUILD file for this package, which will tell us the type of each target and the list
             // of all targets if configured with the wildcard target
@@ -193,9 +192,10 @@ public class BazelJvmClasspath {
                         // example here are java_import targets in the BUILD file that directly load jars from the file system
                         //   java_import(name = "zip4j", jars = ["lib/zip4j-2.6.4.jar"])
                         if (!"java_import".equals(jvmTargetInfo.getKind())) {
-                            // some other case that we didn't expect, proceed but log a warn
-                            logger.warn("Unexpected local target type as dependency: " + jvmTargetInfo.getKind()
-                                    + "; expected either java_library or java_import.");
+                            // some other case like java_binary, proto_library, java_proto_library, etc
+                            // proceed but log a warn
+                            logger.info("Found unsupported target type as dependency: " + jvmTargetInfo.getKind()
+                                    + "; the JVM classpath processor currently supports java_library or java_import.");
                         }
                     }
 
@@ -212,7 +212,7 @@ public class BazelJvmClasspath {
                             } else {
                                 // there was a problem with the aspect computation, this might resolve itself if we recompute it
                                 bazelWorkspaceCmdRunner
-                                        .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
+                                .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
                             }
                         }
                         for (JVMAspectOutputJarSet jarSet : jvmTargetInfo.getJars()) {
@@ -223,7 +223,7 @@ public class BazelJvmClasspath {
                             } else {
                                 // there was a problem with the aspect computation, this might resolve itself if we recompute it
                                 bazelWorkspaceCmdRunner
-                                        .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
+                                .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
                             }
                         }
                     } else { // otherProject != null
@@ -262,20 +262,21 @@ public class BazelJvmClasspath {
             } // for loop
 
         } catch (IOException | InterruptedException e) {
-            logger.error("Unable to compute classpath containers entries for project " + bazelProject.name, e);
+            logger.error("Unable to compute classpath containers entries for project {}, error: ", e,
+                bazelProject.name);
             return returnEmptyClasspathOrThrow(e);
         } catch (BazelCommandLineToolConfigurationException e) {
-            logger.error("Bazel not found: " + e.getMessage());
+            logger.error("Classpath could not be computed. Bazel not found: {}", e, e.getMessage());
             return returnEmptyClasspathOrThrow(e);
         } catch (RuntimeException re) {
-            logger.error("Bazel not found: " + re.getMessage());
+            logger.error("Exception caught during classpath computation: {}", re, re.getMessage());
             return returnEmptyClasspathOrThrow(re);
         }
 
         // cache the entries
-        this.cachePutTimeMillis = System.currentTimeMillis();
+        cachePutTimeMillis = System.currentTimeMillis();
         response.jvmClasspathEntries = assembleClasspathEntries(mainClasspathEntryMap, testClasspathEntryMap);
-        this.cachedEntries = response;
+        cachedEntries = response;
         logger.debug("Cached the classpath for project " + bazelProject.name);
 
         SimplePerfRecorder.addTime("classpath", startTimeMS);
@@ -327,8 +328,11 @@ public class BazelJvmClasspath {
      * Returns the IJavaProject in the current workspace that contains at least one of the specified sources.
      */
     private BazelProject getSourceProjectForSourcePaths(List<String> sources) {
+        if (sources == null) {
+            return null;
+        }
         for (String candidate : sources) {
-            BazelProject project = this.bazelProjectManager.getSourceProjectForSourcePath(bazelWorkspace, candidate);
+            BazelProject project = bazelProjectManager.getSourceProjectForSourcePath(bazelWorkspace, candidate);
             if (project != null) {
                 return project;
             }
@@ -347,8 +351,8 @@ public class BazelJvmClasspath {
             WorkProgressMonitor progressMonitor, Set<JVMAspectOutputJarSet> jars, boolean isTestLib) {
         JvmClasspathEntry[] entries = new JvmClasspathEntry[jars.size()];
         int i = 0;
-        File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
-        File bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory();
+        bazelWorkspace.getBazelOutputBaseDirectory();
+        bazelWorkspace.getBazelExecRootDirectory();
         for (JVMAspectOutputJarSet jar : jars) {
             entries[i] = jarsToClasspathEntry(jar, isTestLib);
             i++;

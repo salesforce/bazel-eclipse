@@ -1,5 +1,5 @@
 # This is a workspace file for creating a local repository added with --override_repository when
-# using the aspect so we can load the bzljavasdk_aspect.bzl Skylark aspect extension when calling
+# using the aspect so we can load the bzleclipse_aspect.bzl Skylark aspect extension when calling
 # bazel build from Eclipse.
 
 # This WORKSPACE is NOT used in the context of the Bazel build for the plugin. It is copied

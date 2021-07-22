@@ -45,7 +45,7 @@ bef_root=$(pwd)
 # Mapping Rules
 
 # Aspect
-cp $sdk_root/sdk/bazel-java-sdk/aspect/* $bef_root/bundles/com.salesforce.bazel-java-sdk/aspect
+cp -R $sdk_root/sdk/bazel-java-sdk/aspect/* $bef_root/bundles/com.salesforce.bazel-java-sdk/aspect
 
 # SDK Java Classes
 cp -R $sdk_root/sdk/bazel-java-sdk/src/main/java/* $bef_root/bundles/com.salesforce.bazel-java-sdk/src/main/java
