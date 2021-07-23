@@ -132,7 +132,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public Preferences getProjectBazelPreferences(IProject project) {
         IScopeContext eclipseProjectScope = new ProjectScope(project);
-        Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(BazelPluginActivator.PLUGIN_ID);
+        Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(BazelPluginActivator.CORE_PLUGIN_ID);
 
         if (eclipseProjectPrefs == null) {
             LOG.error("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());

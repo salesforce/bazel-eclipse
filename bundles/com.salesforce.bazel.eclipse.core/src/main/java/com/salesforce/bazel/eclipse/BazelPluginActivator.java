@@ -70,8 +70,10 @@ import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrat
  */
 public class BazelPluginActivator extends AbstractUIPlugin {
     static final LogHelper LOG = LogHelper.log(BazelPluginActivator.class);
-    // The plug-in ID
-    public static final String PLUGIN_ID = "com.salesforce.bazel.eclipse.core"; //$NON-NLS-1$
+
+    // The plug-in IDs
+    public static final String CORE_PLUGIN_ID = "com.salesforce.bazel.eclipse.core"; //$NON-NLS-1$
+    public static final String SDK_PLUGIN_ID = "com.salesforce.bazel-java-sdk"; //$NON-NLS-1$
 
     // GLOBAL COLLABORATORS
     // TODO move the collaborators to some other place, perhaps a dedicated static context object
@@ -197,7 +199,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
         } else {
             LOG.info(
-                "The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
+                    "The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
         }
     }
 
