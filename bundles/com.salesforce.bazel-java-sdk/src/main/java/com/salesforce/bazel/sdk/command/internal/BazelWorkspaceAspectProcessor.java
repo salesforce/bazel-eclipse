@@ -48,6 +48,8 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Manages running, collecting, and caching all of the build info aspects for a specific workspace.
+ * <p>
+ * TODO this belongs in an sdk.aspect package, not buried down in command.internal
  */
 public class BazelWorkspaceAspectProcessor {
     static final LogHelper LOG = LogHelper.log(BazelWorkspaceAspectProcessor.class);
@@ -82,6 +84,11 @@ public class BazelWorkspaceAspectProcessor {
     int numberCacheHits = 0;
 
     // CTORS
+
+    // if you change or reorder the aspectOptions args below, you will need to update these
+    // indices because our test framework looks for args by index
+    public static final int ASPECTCMD_EXTERNALREPO_ARGINDEX = 2;
+    public static final int ASPECTCMD_TARGETLABEL_ARGINDEX = 11;
 
     public BazelWorkspaceAspectProcessor(BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner,
             BazelAspectLocation aspectLocation, BazelCommandExecutor bazelCommandExecutor) {

@@ -52,7 +52,7 @@ public interface BazelAspectLocation {
     /**
      * Returns the label of the aspect in the Bazel workspace (with the function name).
      * <p>
-     * For example: "//:bzljavasdk_aspect.bzl%bzleclipse_aspect"
+     * For example: "//:bzljavasdk_aspect.bzl%bzljavasdk_aspect"
      */
     public String getAspectLabel();
 }

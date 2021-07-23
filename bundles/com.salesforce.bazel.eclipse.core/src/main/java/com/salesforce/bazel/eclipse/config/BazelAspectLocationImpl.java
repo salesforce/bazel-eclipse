@@ -127,7 +127,7 @@ public class BazelAspectLocationImpl implements BazelAspectLocation {
 
     @Override
     public String getAspectLabel() {
-        return "//:bzljavasdk_aspect.bzl%bzleclipse_aspect";
+        return "//:bzljavasdk_aspect.bzl%bzljavasdk_aspect";
     }
 
 }

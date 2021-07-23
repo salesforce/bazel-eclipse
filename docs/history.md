@@ -22,7 +22,6 @@ The plugin (now evolved into a *feature* consisting of a set of plugins) has bee
 Almost nothing remains of the original Google code.
 The idea to use a Bazel Aspect implementation to compute package dependencies is the main surviving element
   of the original Google implementation.
-Based on code comments, we believe the Aspect originally came from the [Bazel IntelliJ plugin](https://github.com/bazelbuild/intellij) project.
 
 ### Open Source and Continued Development
 
@@ -53,6 +52,12 @@ Tycho is the de facto standard for Eclipse plugins, and allowed us to switch to 
 Never mind the blasphemy of building a Bazel-focused product with Maven.
 Gunnar also contributed the initial GitHub Actions CI solution, which builds the online update site
   in GitHub Pages.
+
+### Aspect Implementation
+
+BEF/SDK gathers dependency graph information using a Bazel Aspect.
+The aspect implementation comes from the [Bazel IntelliJ plugin](https://github.com/bazelbuild/intellij) project.
+We copy over a newer copy from time to time and integrate it into BEF/SDK.
 
 ### Attribution
 

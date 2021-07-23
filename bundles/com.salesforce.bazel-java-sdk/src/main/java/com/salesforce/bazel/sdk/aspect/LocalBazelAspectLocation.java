@@ -24,7 +24,7 @@ public class LocalBazelAspectLocation implements BazelAspectLocation {
     /**
      * Returns the label of the aspect in the Bazel workspace (with the function name).
      * <p>
-     * For example: "//:bzljavasdk_aspect.bzl%bzleclipse_aspect"
+     * For example: "//:bzljavasdk_aspect.bzl%bzljavasdk_aspect"
      */
     @Override
     public String getAspectLabel() {

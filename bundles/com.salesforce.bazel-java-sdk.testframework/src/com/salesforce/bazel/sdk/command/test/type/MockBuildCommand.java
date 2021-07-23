@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.salesforce.bazel.sdk.command.internal.BazelWorkspaceAspectProcessor;
 import com.salesforce.bazel.sdk.command.test.MockCommand;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutput;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutputMatcher;
@@ -64,7 +65,8 @@ public class MockBuildCommand extends MockCommand {
         // build command looks like: bazel build --override_repository=bazeljavasdk_aspect=/tmp/bef/bazelws/bazel-workspace/tools/aspect ...
         MockCommandSimulatedOutputMatcher aspectCommandMatcher1 = new MockCommandSimulatedOutputMatcher(1, "build");
         MockCommandSimulatedOutputMatcher aspectCommandMatcher2 =
-                new MockCommandSimulatedOutputMatcher(2, ".*bazeljavasdk_aspect.*");
+                new MockCommandSimulatedOutputMatcher(BazelWorkspaceAspectProcessor.ASPECTCMD_EXTERNALREPO_ARGINDEX,
+                        ".*bazeljavasdk_aspect.*");
 
         for (String packagePath : testWorkspaceFactory.workspaceDescriptor.aspectFileSets.keySet()) {
             // the last arg is the package path with the wildcard target (//projects/libs/javalib0:*)
@@ -72,7 +74,8 @@ public class MockBuildCommand extends MockCommand {
             String wildcardTarget =
                     BazelLabel.BAZEL_ROOT_SLASHES + packagePath + BazelLabel.BAZEL_COLON + ".*";
             MockCommandSimulatedOutputMatcher aspectCommandMatcher3 =
-                    new MockCommandSimulatedOutputMatcher(11, wildcardTarget);
+                    new MockCommandSimulatedOutputMatcher(BazelWorkspaceAspectProcessor.ASPECTCMD_TARGETLABEL_ARGINDEX,
+                            wildcardTarget);
 
             List<MockCommandSimulatedOutputMatcher> matchers = new ArrayList<>();
             Collections.addAll(matchers, aspectCommandMatcher1, aspectCommandMatcher2, aspectCommandMatcher3);

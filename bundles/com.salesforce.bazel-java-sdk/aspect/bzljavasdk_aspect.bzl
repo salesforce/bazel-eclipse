@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The Bazel Java SDK and Bazel Eclipse projects use this aspect developed for the
+# IntelliJ plugin. https://github.com/bazelbuild/intellij/tree/master/aspect
+
+# LAST COPY FROM BAZEL IJ PLUGIN:
+#   ~ April 2021
+
+
 """Bazel-specific intellij aspect."""
 
 load(
@@ -68,4 +75,4 @@ semantics = struct(
 def _aspect_impl(target, ctx):
     return intellij_info_aspect_impl(target, ctx, semantics)
 
-bzleclipse_aspect = make_intellij_info_aspect(_aspect_impl, semantics)
+bzljavasdk_aspect = make_intellij_info_aspect(_aspect_impl, semantics)

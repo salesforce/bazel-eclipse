@@ -5,3 +5,5 @@
 # This WORKSPACE is NOT used in the context of the Bazel build for the plugin. It is copied
 # into the Bazel Eclipse plugin jar as-is, and it is used when running Bazel command line
 # under the covers when using the Bazel plugin.
+
+workspace(name = "bazeljavasdk_aspect")
