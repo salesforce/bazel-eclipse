@@ -58,7 +58,7 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
 public class BazelAspectLocationImpl implements BazelAspectLocation {
 
     /**
-     * Returns the path of the Aspect file(s) from this plugin, which needs to be extracted on the filesystem.
+     * Returns the path of the Aspect file(s) from the SDK plugin, which needs to be extracted on the filesystem.
      * <p>
      * This is easily broken by changes in Eclipse packaging, so be careful and validate the location. This
      * implementation assumes this plugin was been installed 'unpacked' in the p2 cache. This takes some effort. See
@@ -73,14 +73,15 @@ public class BazelAspectLocationImpl implements BazelAspectLocation {
     private static File getAspectWorkspace() {
         LogHelper logger = LogHelper.log(BazelAspectLocationImpl.class);
         try {
-            Bundle bazelCorePlugin = Platform.getBundle(BazelPluginActivator.PLUGIN_ID);
-            if (bazelCorePlugin == null) {
+            Bundle bazelSDKPlugin = Platform.getBundle(BazelPluginActivator.SDK_PLUGIN_ID);
+            if (bazelSDKPlugin == null) {
                 logger.error(
-                    "Eclipse OSGi subsystem could not find the core plugin [" + BazelPluginActivator.PLUGIN_ID + "]");
-                throw new IllegalStateException("Eclipse OSGi subsystem could not find the core plugin ["
-                        + BazelPluginActivator.PLUGIN_ID + "]");
+                    "Eclipse OSGi subsystem could not find the Bazel SDK plugin [" + BazelPluginActivator.SDK_PLUGIN_ID
+                    + "]");
+                throw new IllegalStateException("Eclipse OSGi subsystem could not find the Bazel SDK plugin ["
+                        + BazelPluginActivator.SDK_PLUGIN_ID + "]");
             }
-            URL url = bazelCorePlugin.getEntry("resources");
+            URL url = bazelSDKPlugin.getEntry("aspect");
             URL resolved = FileLocator.resolve(url);
             if (resolved == null) {
                 logger.error("Could not load BEF Aspect location [" + url + "]");
@@ -90,16 +91,23 @@ public class BazelAspectLocationImpl implements BazelAspectLocation {
             String aspectPath = resolved.getPath();
             File aspectWorkspaceDirFile = new File(aspectPath);
 
-            // This is a critical piece of validation. If the packaging breaks and the Aspect is no longer
-            // on the filesystem, we need to fail. The Aspect is critical to the computation of the classpath,
-            // so nothing will work without it. Fail hard if it is missing.
+            // verify the aspect is available extractd on the file system
             if (!aspectWorkspaceDirFile.exists()) {
                 File canonicalFile = FSPathHelper.getCanonicalFileSafely(new File(aspectPath));
                 if (!canonicalFile.exists()) {
-                    logger.error(
-                        "The BEF Aspect file is not found on disk: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
-                    throw new IllegalStateException(
-                        "Could not load the BEF Aspect on disk [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
+                    if (aspectPath.contains("com.salesforce.bazel-java-sdk"+File.separator+"target")) {
+                        // this is a test bundle for unit tests, it is ok that we cant load the aspect because it is not
+                        // properly packaged as a feature
+                        logger.info("Detected running as test bundle, the aspect files are not available but this is expected: ["+aspectPath+"]");
+                    } else {
+                        // This is a critical piece of validation. If the packaging breaks and the Aspect is no longer
+                        // on the filesystem, we need to fail. The Aspect is critical to the computation of the classpath,
+                        // so nothing will work without it. Fail hard if it is missing.
+                        logger.error(
+                            "The BEF Aspect file is not found on disk: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
+                        throw new IllegalStateException(
+                            "Could not load the BEF Aspect on disk [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
+                    }
                 }
             }
             logger.info("BEF Aspect location: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
