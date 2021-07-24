@@ -34,6 +34,8 @@ import org.eclipse.core.resources.IProject;
 
 import com.salesforce.bazel.eclipse.project.EclipseFileLinker;
 import com.salesforce.bazel.eclipse.project.EclipseProjectCreator;
+import com.salesforce.bazel.eclipse.project.EclipseProjectStructure;
+import com.salesforce.bazel.eclipse.project.EclipseProjectStructureInspector;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
@@ -47,6 +49,7 @@ public class ImportContext {
     private final BazelPackageLocation bazelWorkspaceRootPackageInfo;
     private final List<BazelPackageLocation> selectedBazelPackages;
     private final ProjectOrderResolver projectOrderResolver;
+    private final Map<String, EclipseProjectStructure> eclipseProjectStructureCache = new HashMap<>();
 
     private final List<IProject> importedProjects = new ArrayList<>();
     private final Map<IProject, BazelPackageLocation> projectToPackageLocation = new HashMap<>();
@@ -62,7 +65,7 @@ public class ImportContext {
     private EclipseFileLinker eclipseFileLinker;
 
     ImportContext(BazelPackageLocation bazelWorkspaceRootPackageInfo, List<BazelPackageLocation> selectedBazelPackages,
-            ProjectOrderResolver projectOrderResolver) {
+        ProjectOrderResolver projectOrderResolver) {
         this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
         this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
         this.projectOrderResolver = Objects.requireNonNull(projectOrderResolver);
@@ -70,8 +73,8 @@ public class ImportContext {
 
     public void init(File bazelWorkspaceRootDirectory) {
         this.bazelWorkspaceRootDirectory = Objects.requireNonNull(bazelWorkspaceRootDirectory);
-        this.eclipseProjectCreator = new EclipseProjectCreator(bazelWorkspaceRootDirectory);
-        this.eclipseFileLinker = new EclipseFileLinker(bazelWorkspaceRootDirectory);
+        eclipseProjectCreator = new EclipseProjectCreator(bazelWorkspaceRootDirectory);
+        eclipseFileLinker = new EclipseFileLinker(bazelWorkspaceRootDirectory);
     }
 
     public BazelPackageLocation getBazelWorkspaceRootPackageInfo() {
@@ -118,8 +121,8 @@ public class ImportContext {
     }
 
     public void addImportedProject(IProject project, BazelPackageLocation bazelPackageLocation) {
-        this.importedProjects.add(project);
-        this.projectToPackageLocation.put(project, bazelPackageLocation);
+        importedProjects.add(project);
+        projectToPackageLocation.put(project, bazelPackageLocation);
     }
 
     /**
@@ -167,5 +170,21 @@ public class ImportContext {
 
     public EclipseFileLinker getEclipseFileLinker() {
         return eclipseFileLinker;
+    }
+
+    /**
+     * The importer flows will look up the structure of each Eclipse project multiple times during import. They are
+     * expensive to compute, and so caching them for the duration of import is a big benefit.
+     */
+    public EclipseProjectStructure getProjectStructure(BazelPackageLocation packageNode) {
+        String cacheKey = packageNode.getBazelPackageFSRelativePath();
+        EclipseProjectStructure structure = eclipseProjectStructureCache.get(cacheKey);
+
+        if (structure == null) {
+            structure = EclipseProjectStructureInspector.computePackageSourceCodePaths(packageNode);
+            eclipseProjectStructureCache.put(cacheKey, structure);
+        }
+
+        return structure;
     }
 }

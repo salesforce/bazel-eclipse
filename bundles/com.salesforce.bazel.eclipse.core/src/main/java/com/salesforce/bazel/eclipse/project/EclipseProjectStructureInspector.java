@@ -25,9 +25,7 @@ package com.salesforce.bazel.eclipse.project;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -40,31 +38,16 @@ import com.salesforce.bazel.sdk.util.BazelConstants;
 
 /**
  * Discovers well know paths in a bazel project. Invoked during import.
+ * <p>
+ * This is expensive to compute, so you should be calling the getProjectStructure() method on ImportContext instead, as
+ * it caches the results for the duration of the import.
  */
 public class EclipseProjectStructureInspector {
     private static final LogHelper LOG = LogHelper.log(EclipseProjectStructureInspector.class);
 
-    private final List<String> packageSourceCodeFSPaths = new ArrayList<>();
-    private final List<BazelLabel> bazelTargets = new ArrayList<>();
-
-    public EclipseProjectStructureInspector(BazelPackageLocation packageNode) {
-        computePackageSourceCodePaths(packageNode);
-    }
-
-    public List<String> getPackageSourceCodeFSPaths() {
-        return packageSourceCodeFSPaths;
-    }
-
-    public List<BazelLabel> getBazelTargets() {
-        return bazelTargets;
-    }
-
-    private void computePackageSourceCodePaths(BazelPackageLocation packageNode) {
+    public static EclipseProjectStructure computePackageSourceCodePaths(BazelPackageLocation packageNode) {
+        EclipseProjectStructure result = new EclipseProjectStructure();
         boolean foundSourceCodePaths = false;
-
-        // TODO TODO TODO performance during import
-        // During import we are getting in here multiple times for the same package node; this is expensive
-        // and so we should have a short lived cache to respond quickly for duplicate queries
 
         // add this node buildable target
         File workspaceRootDir = packageNode.getWorkspaceRootDirectory();
@@ -80,7 +63,7 @@ public class EclipseProjectStructureInspector {
                 + "main" + File.separator + "java";
         File mainSrcDir = new File(bazelWorkspaceRootPath + File.separator + mainSrcRelPath);
         if (mainSrcDir.exists()) {
-            packageSourceCodeFSPaths.add(mainSrcRelPath);
+            result.packageSourceCodeFSPaths.add(mainSrcRelPath);
             foundSourceCodePaths = true;
         }
 
@@ -89,7 +72,7 @@ public class EclipseProjectStructureInspector {
                 + File.separator + "main" + File.separator + "resources";
         File mainResourcesDir = new File(bazelWorkspaceRootPath + File.separator + mainResourcesRelPath);
         if (mainResourcesDir.exists()) {
-            packageSourceCodeFSPaths.add(mainResourcesRelPath);
+            result.packageSourceCodeFSPaths.add(mainResourcesRelPath);
             foundSourceCodePaths = true;
         }
 
@@ -98,7 +81,7 @@ public class EclipseProjectStructureInspector {
                 + "test" + File.separator + "java";
         File testSrcDir = new File(bazelWorkspaceRootPath + File.separator + testSrcRelPath);
         if (testSrcDir.exists()) {
-            packageSourceCodeFSPaths.add(testSrcRelPath);
+            result.packageSourceCodeFSPaths.add(testSrcRelPath);
             foundSourceCodePaths = true;
         }
         // MAVEN TEST RESOURCES
@@ -106,7 +89,7 @@ public class EclipseProjectStructureInspector {
                 + File.separator + "test" + File.separator + "resources";
         File testResourcesDir = new File(bazelWorkspaceRootPath + File.separator + testResourcesRelPath);
         if (testResourcesDir.exists()) {
-            packageSourceCodeFSPaths.add(testResourcesRelPath);
+            result.packageSourceCodeFSPaths.add(testResourcesRelPath);
             foundSourceCodePaths = true;
         }
 
@@ -151,16 +134,18 @@ public class EclipseProjectStructureInspector {
 
         // proto files are generally in the toplevel folder (not a Maven convention, but common), lets check for those now
         if (packageDir.list(new ProtoFileFilter()).length > 0) {
-            packageSourceCodeFSPaths.add(packageNode.getBazelPackageFSRelativePath());
+            result.packageSourceCodeFSPaths.add(packageNode.getBazelPackageFSRelativePath());
         }
 
         if (foundSourceCodePaths) {
             String packagePath = packageNode.getBazelPackageFSRelativePath();
             String labelPath = packagePath.replace(FSPathHelper.WINDOWS_BACKSLASH, BazelLabel.BAZEL_SLASH); // convert Windows style paths to Bazel label paths
             for (String target : BazelConstants.DEFAULT_PACKAGE_TARGETS) {
-                bazelTargets.add(new BazelLabel(labelPath, target));
+                result.bazelTargets.add(new BazelLabel(labelPath, target));
             }
         }
+
+        return result;
     }
 
     private static class ProtoFileFilter implements FilenameFilter {

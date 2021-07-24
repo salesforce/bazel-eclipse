@@ -8,7 +8,7 @@ import java.util.Objects;
 
 import org.eclipse.core.runtime.SubMonitor;
 
-import com.salesforce.bazel.eclipse.project.EclipseProjectStructureInspector;
+import com.salesforce.bazel.eclipse.project.EclipseProjectStructure;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
@@ -36,8 +36,8 @@ public class DetermineTargetsFlow implements ImportFlow {
         for (BazelPackageLocation packageLocation : ctx.getSelectedBazelPackages()) {
             List<BazelLabel> targets = packageLocation.getBazelTargets();
             if (targets == null) {
-                EclipseProjectStructureInspector inspector = new EclipseProjectStructureInspector(packageLocation);
-                targets = inspector.getBazelTargets();
+                EclipseProjectStructure structure = ctx.getProjectStructure(packageLocation);
+                targets = structure.getBazelTargets();
             }
             packageLocationToTargets.put(packageLocation, Collections.unmodifiableList(targets));
             LOG.info("Configured targets for " + packageLocation.getBazelPackageFSRelativePath() + ": " + targets);

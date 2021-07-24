@@ -34,7 +34,7 @@ import org.eclipse.jdt.core.IJavaProject;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.EclipseClasspathUtil;
-import com.salesforce.bazel.eclipse.project.EclipseProjectStructureInspector;
+import com.salesforce.bazel.eclipse.project.EclipseProjectStructure;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
@@ -63,12 +63,12 @@ public class SetupClasspathContainersFlow implements ImportFlow {
         List<IProject> importedProjects = ctx.getImportedProjects();
         for (IProject project : importedProjects) {
             BazelPackageLocation packageLocation = ctx.getPackageLocationForProject(project);
-            EclipseProjectStructureInspector inspector = new EclipseProjectStructureInspector(packageLocation);
+            EclipseProjectStructure structure = ctx.getProjectStructure(packageLocation);
             String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
             IJavaProject javaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
 
             // create the classpath; there is no return value because the cp is set directly into the passed javaProject
-            EclipseClasspathUtil.createClasspath(bazelWorkspaceRootDirectory, packageFSPath, inspector.getPackageSourceCodeFSPaths(),
+            EclipseClasspathUtil.createClasspath(bazelWorkspaceRootDirectory, packageFSPath, structure.getPackageSourceCodeFSPaths(),
                 javaProject, ctx.getJavaLanguageLevel());
 
             progressSubMonitor.worked(1);
