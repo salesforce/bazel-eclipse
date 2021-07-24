@@ -26,14 +26,18 @@ package com.salesforce.bazel.eclipse.project;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.lang.jvm.BazelJvmSourceFolderResolver;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
+import com.salesforce.bazel.sdk.project.SourcePath;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 
 /**
@@ -45,9 +49,13 @@ import com.salesforce.bazel.sdk.util.BazelConstants;
 public class EclipseProjectStructureInspector {
     private static final LogHelper LOG = LogHelper.log(EclipseProjectStructureInspector.class);
 
+    // We will always want Maven optimization enabled for official builds, but for internal testing we sometimes want
+    // to disable this so we can be sure the bazel query path is working for some of our internal repos that happen to
+    // follow Maven conventions. We should really make a pref for this TODO
+    public static boolean ENABLE_MAVEN_OPTIMIZATION = true;
+
     public static EclipseProjectStructure computePackageSourceCodePaths(BazelPackageLocation packageNode) {
-        EclipseProjectStructure result = new EclipseProjectStructure();
-        boolean foundSourceCodePaths = false;
+        EclipseProjectStructure result = null;
 
         // add this node buildable target
         File workspaceRootDir = packageNode.getWorkspaceRootDirectory();
@@ -57,8 +65,48 @@ public class EclipseProjectStructureInspector {
 
         // first check for the common case of Maven-like directory structure; this is the quickest way
         // to find the source files for a project
+        if (ENABLE_MAVEN_OPTIMIZATION) {
+            result = doCheapMavenStructureCheck(packageNode, workspaceRootDir, bazelWorkspaceRootPath,
+                bazelPackageFSRelativePath, packageDir);
+        }
+
+        if (result == null) {
+            // we didn't find any Maven style source paths, so we need to do the expensive Bazel Query option
+            LOG.info("Starting Bazel Query strategy for finding source files in package {}...",
+                bazelPackageFSRelativePath);
+            result = doExpensiveBazelQueryStructureCheck(packageNode, workspaceRootDir, bazelWorkspaceRootPath,
+                bazelPackageFSRelativePath, packageDir);
+        }
+
+        if (result != null) {
+            // we found some source paths
+
+            // we dont do much for proto files (at least, not currently, see #60) so only
+            // check for proto files if we already have other source files
+            //   https://github.com/salesforce/bazel-eclipse/issues/60
+            // proto files are generally in the toplevel folder (not a Maven convention, but common), lets check for those now
+            // eventually we should use bazel query for these as well
+            if (packageDir.list(new ProtoFileFilter()).length > 0) {
+                result.packageSourceCodeFSPaths.add(packageNode.getBazelPackageFSRelativePath());
+            }
+
+            // TODO derive the list of active targets, this isnt quite right, we should be honoring the list we already have
+            String packagePath = packageNode.getBazelPackageFSRelativePath();
+            String labelPath = packagePath.replace(FSPathHelper.WINDOWS_BACKSLASH, BazelLabel.BAZEL_SLASH); // convert Windows style paths to Bazel label paths
+            for (String target : BazelConstants.DEFAULT_PACKAGE_TARGETS) {
+                result.bazelTargets.add(new BazelLabel(labelPath, target));
+            }
+        }
+
+        return result;
+    }
+
+    private static EclipseProjectStructure doCheapMavenStructureCheck(BazelPackageLocation packageNode,
+            File workspaceRootDir, String bazelWorkspaceRootPath, String bazelPackageFSRelativePath, File packageDir) {
+        EclipseProjectStructure result = new EclipseProjectStructure();
 
         // MAVEN MAIN SRC
+        boolean foundSourceCodePaths = false;
         String mainSrcRelPath = bazelPackageFSRelativePath + File.separator + "src" + File.separator
                 + "main" + File.separator + "java";
         File mainSrcDir = new File(bazelWorkspaceRootPath + File.separator + mainSrcRelPath);
@@ -93,60 +141,78 @@ public class EclipseProjectStructureInspector {
             foundSourceCodePaths = true;
         }
 
-        if (!foundSourceCodePaths) {
-            // the package is not following Maven conventions  NON_CONFORMING PROJECT SUPPORT
-            // https://git.soma.salesforce.com/services/bazel-eclipse/blob/master/docs/conforming_java_packages.md
-            // tracked as ISSUE #8  https://github.com/salesforce/bazel-eclipse/issues/8
-
-            // we didn't find any Maven style source path, so we need to do the expensive Bazel Query option
-            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-            BazelWorkspaceCommandRunner commandRunner =
-                    BazelPluginActivator.getBazelCommandManager().getWorkspaceCommandRunner(bazelWorkspace);
-            BazelLabel packageLabel =
-                    new BazelLabel(bazelPackageFSRelativePath, BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR);
-            Collection<String> results = null;
-            try {
-                results = commandRunner.querySourceFilesForTarget(workspaceRootDir, packageLabel);
-            } catch (Exception anyE) {
-                LOG.error("Failed querying package [{}] for source files.", anyE, packageLabel);
-            }
-
-            if ((results != null) && (results.size() > 0)) {
-                LOG.warn(
-                    "Non-Maven layouts are not yet supported by BEF. Package {} Issue: https://github.com/salesforce/bazel-eclipse/issues/8",
-                    packageLabel);
-                // the results will contain paths like this:
-                //   source/dev/com/salesforce/foo/Bar.java
-                // but it can also have non-java source files, so we need to check for that
-
-                // Remaining work:
-                // 1. we need to introspect the source file for the the package path (.java we need to determine com/salesforce/foo)
-                // 2. test JUnit launchers classpath are broken
-
-                // PJL fake example
-                //packageSourceCodeFSPaths.add(bazelPackageFSRelativePath + File.separator + "source" + File.separator + "dev");
-                // packageSourceCodeFSPaths.add(bazelPackageFSRelativePath + File.separator + "source" + File.separator + "test");
-                //foundSourceCodePaths = true;
-            } else {
-                LOG.info("Did not find any source files for package [{}], ignoring for import.", packageLabel);
-            }
-        }
-
-        // proto files are generally in the toplevel folder (not a Maven convention, but common), lets check for those now
-        if (packageDir.list(new ProtoFileFilter()).length > 0) {
-            result.packageSourceCodeFSPaths.add(packageNode.getBazelPackageFSRelativePath());
-        }
-
         if (foundSourceCodePaths) {
-            String packagePath = packageNode.getBazelPackageFSRelativePath();
-            String labelPath = packagePath.replace(FSPathHelper.WINDOWS_BACKSLASH, BazelLabel.BAZEL_SLASH); // convert Windows style paths to Bazel label paths
-            for (String target : BazelConstants.DEFAULT_PACKAGE_TARGETS) {
-                result.bazelTargets.add(new BazelLabel(labelPath, target));
+            return result;
+        }
+        return null;
+    }
+
+    private static EclipseProjectStructure doExpensiveBazelQueryStructureCheck(BazelPackageLocation packageNode,
+            File workspaceRootDir, String bazelWorkspaceRootPath, String bazelPackageFSRelativePath, File packageDir) {
+        EclipseProjectStructure result = new EclipseProjectStructure();
+
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        BazelWorkspaceCommandRunner commandRunner =
+                BazelPluginActivator.getBazelCommandManager().getWorkspaceCommandRunner(bazelWorkspace);
+        BazelLabel packageLabel =
+                new BazelLabel(bazelPackageFSRelativePath, BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR);
+        Collection<String> results = null;
+        try {
+            results = commandRunner.querySourceFilesForTarget(workspaceRootDir, packageLabel);
+        } catch (Exception anyE) {
+            LOG.error("Failed querying package [{}] for source files.", anyE, packageLabel);
+        }
+
+        if ((results != null) && (results.size() > 0)) {
+            // the results will contain paths like this:
+            //   source/dev/com/salesforce/foo/Bar.java
+            // but it can also have non-java source files, so we need to check for that
+
+            Set<String> alreadySeenBasePaths = new HashSet<>();
+
+            for (String srcPath : results) {
+                if (srcPath.endsWith(".java")) {
+                    // it is expensive to formalize the source path as it involves parsing the source file,
+                    // so try to bail out here early
+                    boolean alreadySeen = false;
+                    for (String alreadySeenBasePath : alreadySeenBasePaths) {
+                        if (srcPath.startsWith(alreadySeenBasePath)) {
+                            alreadySeen = true;
+                            break;
+                        }
+                    }
+
+                    if (!alreadySeen) {
+                        File sourceFile = new File(packageDir, srcPath);
+                        if (!sourceFile.exists()) {
+                            // this file is coming from a package outside of our package from somewhere else in the
+                            // Bazel workspace, so we don't consider it for our project source paths
+                            continue;
+                        }
+                        SourcePath srcPathObj =
+                                BazelJvmSourceFolderResolver.formalizeSourcePath(packageDir, srcPath);
+                        if (srcPathObj != null) {
+                            String workspacePathToSourceDirectory =
+                                    bazelPackageFSRelativePath + File.separator + srcPathObj.pathToDirectory;
+                            result.packageSourceCodeFSPaths.add(workspacePathToSourceDirectory);
+                            alreadySeenBasePaths.add(srcPathObj.pathToDirectory);
+                            LOG.info("Found source path {} for package {}", srcPathObj.pathToDirectory,
+                                bazelPackageFSRelativePath);
+                        } else {
+                            LOG.info("Could not derive source path from {} for package {}", srcPath,
+                                bazelPackageFSRelativePath);
+                        }
+                    }
+                }
             }
+        } else {
+            LOG.info("Did not find any source files for package [{}], ignoring for import.", packageLabel);
+            result = null;
         }
 
         return result;
     }
+
 
     private static class ProtoFileFilter implements FilenameFilter {
         @Override

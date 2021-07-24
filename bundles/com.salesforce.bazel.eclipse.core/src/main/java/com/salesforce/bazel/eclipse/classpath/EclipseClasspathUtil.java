@@ -84,7 +84,7 @@ public final class EclipseClasspathUtil {
 
             IPath outputDir = null; // null is a legal value, it means use the default
             boolean isTestSource = false;
-            if (path.endsWith(FSPathHelper.osSeps("src/test/java"))) { // NON_CONFORMING PROJECT SUPPORT, $SLASH_OK
+            if (path.contains(File.separator + "test")) { // NON_CONFORMING PROJECT SUPPORT, $SLASH_OK
                 isTestSource = true;
                 outputDir = new Path(javaProject.getPath().toOSString() + File.separatorChar + "testbin");
             }
