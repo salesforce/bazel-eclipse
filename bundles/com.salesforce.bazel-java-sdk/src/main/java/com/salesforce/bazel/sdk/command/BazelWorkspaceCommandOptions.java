@@ -1,3 +1,36 @@
+/**
+ * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ * disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ * following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ *
+ */
 package com.salesforce.bazel.sdk.command;
 
 import java.util.HashMap;
@@ -20,9 +53,9 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  */
 public class BazelWorkspaceCommandOptions {
 
-    private BazelWorkspace bazelWorkspace;
-    private Map<String, String> allExplicitOptions = new HashMap<>();
-    private Map<String, Map<String, String>> contextualExplicitOptions = new HashMap<>();
+    private final BazelWorkspace bazelWorkspace;
+    private final Map<String, String> allExplicitOptions = new HashMap<>();
+    private final Map<String, Map<String, String>> contextualExplicitOptions = new HashMap<>();
 
     public BazelWorkspaceCommandOptions(BazelWorkspace bazelWorkspace) {
         this.bazelWorkspace = bazelWorkspace;
@@ -74,6 +107,7 @@ public class BazelWorkspaceCommandOptions {
         return optionValue;
     }
 
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("BazelWorkspaceCommandOptions: workspace_name:");
@@ -97,9 +131,9 @@ public class BazelWorkspaceCommandOptions {
         // INFO: Options provided by the client:
         //   Inherited 'common' options: --isatty=1 --terminal_columns=260
         // INFO: Reading rc options for 'test' from /Users/darth/dev/deathstar/.user-bazelrc:
-        //   Inherited 'build' options: --javacopt=-source 8 -target 8 --host_javabase=//tools/jdk:my-linux-jdk11 --javabase=//tools/jdk:my-linux-jdk8 --stamp 
-        //      --workspace_status_command tools/buildstamp/get_workspace_status --test_output=errors --verbose_explanations --explain=/tmp/bazel_explain.txt 
-        //      --output_filter=^(?!@) --incompatible_no_support_tools_in_action_inputs=false --incompatible_depset_is_not_iterable=false --incompatible_new_actions_api=false 
+        //   Inherited 'build' options: --javacopt=-source 8 -target 8 --host_javabase=//tools/jdk:my-linux-jdk11 --javabase=//tools/jdk:my-linux-jdk8 --stamp
+        //      --workspace_status_command tools/buildstamp/get_workspace_status --test_output=errors --verbose_explanations --explain=/tmp/bazel_explain.txt
+        //      --output_filter=^(?!@) --incompatible_no_support_tools_in_action_inputs=false --incompatible_depset_is_not_iterable=false --incompatible_new_actions_api=false
         //      --incompatible_disable_deprecated_attr_params=false --incompatible_depset_union=false
         // INFO: Reading rc options for 'test' from /Users/darth/dev/deathstar/.base-bazelrc:
         //   'test' options: --explicit_java_test_deps=true --test_timeout=45,180,300,360 --test_tag_filters=-flaky
@@ -137,10 +171,10 @@ public class BazelWorkspaceCommandOptions {
                     continue;
                 } else if (optionTokens.length == 1) {
                     // if only the option name is provided, the value is implied to be 'true' (e.g. --stamp is interpreted as --stamp=true)
-                    this.allExplicitOptions.put(optionTokens[0], "true");
+                    allExplicitOptions.put(optionTokens[0], "true");
                     getContextualMap(optionsContext).put(optionTokens[0], "true");
                 } else {
-                    this.allExplicitOptions.put(optionTokens[0], optionTokens[1]);
+                    allExplicitOptions.put(optionTokens[0], optionTokens[1]);
                     getContextualMap(optionsContext).put(optionTokens[0], optionTokens[1]);
                 }
             }
@@ -148,7 +182,7 @@ public class BazelWorkspaceCommandOptions {
     }
 
     private Map<String, String> getContextualMap(String context) {
-        Map<String, String> contextualMap = this.contextualExplicitOptions.get(context);
+        Map<String, String> contextualMap = contextualExplicitOptions.get(context);
         if (contextualMap == null) {
             contextualMap = new TreeMap<>();
             contextualExplicitOptions.put(context, contextualMap);

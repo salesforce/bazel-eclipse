@@ -1,93 +1,126 @@
+/**
+ * Copyright (c) 2021, Salesforce.com, Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ * disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ * following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ *
+ */
 package com.salesforce.bazel.sdk.bep.event;
 
-import java.util.ArrayList;
-import java.util.List;
+ import java.util.ArrayList;
+ import java.util.List;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+ import org.json.simple.JSONArray;
+ import org.json.simple.JSONObject;
 
-/**
- * Model for the Test Summary BEP event.
- */
-public class BEPTestSummaryEvent extends BEPEvent {
-    public static final String NAME = "testSummary";
+ /**
+  * Model for the Test Summary BEP event.
+  */
+ public class BEPTestSummaryEvent extends BEPEvent {
+     public static final String NAME = "testSummary";
 
-    private String testLabel;
-    private String testStatus;
-    private List<BEPFileUri> testLogs = new ArrayList<>();
-    private long firstStartTimeMillis;
-    private long lastStopTimeMillis;
-    private int totalRunDurationMillis;
-    private int totalRunCount;
-    private int runCount;
+     private String testLabel;
+     private String testStatus;
+     private final List<BEPFileUri> testLogs = new ArrayList<>();
+     private long firstStartTimeMillis;
+     private long lastStopTimeMillis;
+     private int totalRunDurationMillis;
+     private int totalRunCount;
+     private int runCount;
 
-    public BEPTestSummaryEvent(String rawEvent, int index, JSONObject eventObj) {
-        super(NAME, rawEvent, index, eventObj);
+     public BEPTestSummaryEvent(String rawEvent, int index, JSONObject eventObj) {
+         super(NAME, rawEvent, index, eventObj);
 
-        JSONObject idDetail = (JSONObject) eventObj.get("id");
-        if (idDetail != null) {
-            parseId(idDetail);
-        }
+         JSONObject idDetail = (JSONObject) eventObj.get("id");
+         if (idDetail != null) {
+             parseId(idDetail);
+         }
 
-        JSONObject testDetail = (JSONObject) eventObj.get("testSummary");
-        if (testDetail != null) {
-            parseDetails(testDetail);
-        }
-    }
+         JSONObject testDetail = (JSONObject) eventObj.get("testSummary");
+         if (testDetail != null) {
+             parseDetails(testDetail);
+         }
+     }
 
-    // GETTERS
+     // GETTERS
 
-    public String getTestLabel() {
-        return testLabel;
-    }
+     public String getTestLabel() {
+         return testLabel;
+     }
 
-    public String getTestStatus() {
-        return testStatus;
-    }
+     public String getTestStatus() {
+         return testStatus;
+     }
 
-    public List<BEPFileUri> getTestLogs() {
-        return testLogs;
-    }
+     public List<BEPFileUri> getTestLogs() {
+         return testLogs;
+     }
 
-    public long getFirstStartTimeMillis() {
-        return firstStartTimeMillis;
-    }
+     public long getFirstStartTimeMillis() {
+         return firstStartTimeMillis;
+     }
 
-    public long getLastStopTimeMillis() {
-        return lastStopTimeMillis;
-    }
+     public long getLastStopTimeMillis() {
+         return lastStopTimeMillis;
+     }
 
-    public int getTotalRunDurationMillis() {
-        return totalRunDurationMillis;
-    }
+     public int getTotalRunDurationMillis() {
+         return totalRunDurationMillis;
+     }
 
-    public int getTotalRunCount() {
-        return totalRunCount;
-    }
+     public int getTotalRunCount() {
+         return totalRunCount;
+     }
 
-    public int getRunCount() {
-        return runCount;
-    }
+     public int getRunCount() {
+         return runCount;
+     }
 
-    // PARSER
+     // PARSER
 
-    /*
+     /*
      "id": {
       "testSummary": {
         "label": "//foo:foo-test",
         "configuration": { "id": "63cc040ed2b86a512099924e698df6e0b9848625e6ca33d9556c5993dccbc2fb" }
       }
-     } 
-     */
+     }
+      */
 
-    void parseId(JSONObject idDetail) {
-        JSONObject testId = (JSONObject) idDetail.get("testSummary");
-        if (testId != null) {
-            testLabel = decodeStringFromJsonObject(testId.get("label"));
-        }
-    }
+     void parseId(JSONObject idDetail) {
+         JSONObject testId = (JSONObject) idDetail.get("testSummary");
+         if (testId != null) {
+             testLabel = decodeStringFromJsonObject(testId.get("label"));
+         }
+     }
 
-    /*
+     /*
        "testSummary": {
          "totalRunCount": 1,
          "passed": [
@@ -101,37 +134,37 @@ public class BEPTestSummaryEvent extends BEPEvent {
          "totalRunDurationMillis": "458",
          "runCount": 1
        }
-     */
+      */
 
-    void parseDetails(JSONObject testDetail) {
-        JSONArray testLogArray = (JSONArray) testDetail.get("passed");
-        if (testLogArray != null) {
-            for (Object testLog : testLogArray) {
-                BEPFileUri fileUri = this.decodeURIFromJsonObject(testLog);
-                if (fileUri != null) {
-                    testLogs.add(fileUri);
-                }
-            }
-        }
-        firstStartTimeMillis = this.decodeLongFromJsonObject(testDetail.get("firstStartTimeMillis"));
-        lastStopTimeMillis = this.decodeLongFromJsonObject(testDetail.get("lastStopTimeMillis"));
-        totalRunDurationMillis = this.decodeIntFromJsonObject(testDetail.get("totalRunDurationMillis"));
+     void parseDetails(JSONObject testDetail) {
+         JSONArray testLogArray = (JSONArray) testDetail.get("passed");
+         if (testLogArray != null) {
+             for (Object testLog : testLogArray) {
+                 BEPFileUri fileUri = decodeURIFromJsonObject(testLog);
+                 if (fileUri != null) {
+                     testLogs.add(fileUri);
+                 }
+             }
+         }
+         firstStartTimeMillis = decodeLongFromJsonObject(testDetail.get("firstStartTimeMillis"));
+         lastStopTimeMillis = decodeLongFromJsonObject(testDetail.get("lastStopTimeMillis"));
+         totalRunDurationMillis = decodeIntFromJsonObject(testDetail.get("totalRunDurationMillis"));
 
-        testStatus = this.decodeStringFromJsonObject(testDetail.get("overallStatus"));
-        if ("FAILED".equals(testStatus)) {
-            this.isError = true;
-        }
+         testStatus = decodeStringFromJsonObject(testDetail.get("overallStatus"));
+         if ("FAILED".equals(testStatus)) {
+             isError = true;
+         }
 
-        runCount = this.decodeIntFromJsonObject(testDetail.get("runCount"));
-        totalRunCount = this.decodeIntFromJsonObject(testDetail.get("totalRunCount"));
-    }
+         runCount = decodeIntFromJsonObject(testDetail.get("runCount"));
+         totalRunCount = decodeIntFromJsonObject(testDetail.get("totalRunCount"));
+     }
 
-    @Override
-    public String toString() {
-        return "BEPTestSummaryEvent [testLabel=" + testLabel + ", testStatus=" + testStatus + ", actionOutputs="
-                + testLogs + ", firstStartTimeMillis=" + firstStartTimeMillis + ", lastStopTimeMillis="
-                + lastStopTimeMillis + ", totalRunDurationMillis=" + totalRunDurationMillis + ", totalRunCount="
-                + totalRunCount + ", runCount=" + runCount + ", index=" + index + ", eventType=" + eventType
-                + ", isProcessed=" + isProcessed + ", isLastMessage=" + isLastMessage + ", isError=" + isError + "]";
-    }
-}
+     @Override
+     public String toString() {
+         return "BEPTestSummaryEvent [testLabel=" + testLabel + ", testStatus=" + testStatus + ", actionOutputs="
+                 + testLogs + ", firstStartTimeMillis=" + firstStartTimeMillis + ", lastStopTimeMillis="
+                 + lastStopTimeMillis + ", totalRunDurationMillis=" + totalRunDurationMillis + ", totalRunCount="
+                 + totalRunCount + ", runCount=" + runCount + ", index=" + index + ", eventType=" + eventType
+                 + ", isProcessed=" + isProcessed + ", isLastMessage=" + isLastMessage + ", isError=" + isError + "]";
+     }
+ }

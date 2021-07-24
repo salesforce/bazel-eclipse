@@ -332,7 +332,7 @@ public class BazelJvmClasspath {
             return null;
         }
         for (String candidate : sources) {
-            BazelProject project = bazelProjectManager.getSourceProjectForSourcePath(bazelWorkspace, candidate);
+            BazelProject project = bazelProjectManager.getOwningProjectForSourcePath(bazelWorkspace, candidate);
             if (project != null) {
                 return project;
             }

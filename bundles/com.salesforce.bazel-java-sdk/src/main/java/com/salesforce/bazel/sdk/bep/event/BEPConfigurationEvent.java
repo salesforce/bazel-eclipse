@@ -1,51 +1,84 @@
+/**
+ * Copyright (c) 2021, Salesforce.com, Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ * disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ * following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ *
+ */
 package com.salesforce.bazel.sdk.bep.event;
 
-import java.util.HashMap;
-import java.util.Map;
+ import java.util.HashMap;
+ import java.util.Map;
 
-import org.json.simple.JSONObject;
+ import org.json.simple.JSONObject;
 
-/**
- * Model for the Configuration BEP event.
- */
-public class BEPConfigurationEvent extends BEPEvent {
+ /**
+  * Model for the Configuration BEP event.
+  */
+ public class BEPConfigurationEvent extends BEPEvent {
 
-    public static final String NAME = "configuration";
-    private String mnemonic;
-    private String platformName;
-    private String cpu;
-    private Map<String, String> makeVariables = new HashMap<>();
+     public static final String NAME = "configuration";
+     private String mnemonic;
+     private String platformName;
+     private String cpu;
+     private final Map<String, String> makeVariables = new HashMap<>();
 
-    public BEPConfigurationEvent(String rawEvent, int index, JSONObject eventObj) {
-        super(NAME, rawEvent, index, eventObj);
+     public BEPConfigurationEvent(String rawEvent, int index, JSONObject eventObj) {
+         super(NAME, rawEvent, index, eventObj);
 
-        JSONObject configDetail = (JSONObject) eventObj.get("configuration");
-        if (configDetail != null) {
-            parseDetails(configDetail);
-        }
-    }
+         JSONObject configDetail = (JSONObject) eventObj.get("configuration");
+         if (configDetail != null) {
+             parseDetails(configDetail);
+         }
+     }
 
-    // GETTERS
+     // GETTERS
 
-    public String getMnemonic() {
-        return mnemonic;
-    }
+     public String getMnemonic() {
+         return mnemonic;
+     }
 
-    public String getPlatformName() {
-        return platformName;
-    }
+     public String getPlatformName() {
+         return platformName;
+     }
 
-    public String getCpu() {
-        return cpu;
-    }
+     public String getCpu() {
+         return cpu;
+     }
 
-    public Map<String, String> getMakeVariables() {
-        return makeVariables;
-    }
+     public Map<String, String> getMakeVariables() {
+         return makeVariables;
+     }
 
-    // PARSING
+     // PARSING
 
-    /*
+     /*
      "configuration": {
        "mnemonic": "darwin-fastbuild",
        "platformName": "darwin",
@@ -57,31 +90,31 @@ public class BEPConfigurationEvent extends BEPEvent {
          "BINDIR": "bazel-out/darwin-fastbuild/bin"
        }
      }
-     */
+      */
 
-    void parseDetails(JSONObject configDetail) {
-        mnemonic = this.decodeStringFromJsonObject(configDetail.get("mnemonic"));
-        platformName = this.decodeStringFromJsonObject(configDetail.get("platformName"));
-        cpu = this.decodeStringFromJsonObject(configDetail.get("cpu"));
+     void parseDetails(JSONObject configDetail) {
+         mnemonic = decodeStringFromJsonObject(configDetail.get("mnemonic"));
+         platformName = decodeStringFromJsonObject(configDetail.get("platformName"));
+         cpu = decodeStringFromJsonObject(configDetail.get("cpu"));
 
-        JSONObject makeVariablesObj = (JSONObject) configDetail.get("makeVariable");
-        if (makeVariablesObj != null) {
-            for (Object key : makeVariablesObj.keySet()) {
-                Object value = makeVariablesObj.get(key);
-                if (value != null) {
-                    makeVariables.put(key.toString(), value.toString());
-                }
-            }
-        }
-    }
+         JSONObject makeVariablesObj = (JSONObject) configDetail.get("makeVariable");
+         if (makeVariablesObj != null) {
+             for (Object key : makeVariablesObj.keySet()) {
+                 Object value = makeVariablesObj.get(key);
+                 if (value != null) {
+                     makeVariables.put(key.toString(), value.toString());
+                 }
+             }
+         }
+     }
 
-    // TOSTRING
+     // TOSTRING
 
-    @Override
-    public String toString() {
-        return "BEPConfigurationEvent [mnemonic=" + mnemonic + ", platformName=" + platformName + ", cpu=" + cpu
-                + ", makeVariables=" + makeVariables + ", index=" + index + ", eventType=" + eventType
-                + ", isProcessed=" + isProcessed + ", isLastMessage=" + isLastMessage + ", isError=" + isError + "]";
-    }
+     @Override
+     public String toString() {
+         return "BEPConfigurationEvent [mnemonic=" + mnemonic + ", platformName=" + platformName + ", cpu=" + cpu
+                 + ", makeVariables=" + makeVariables + ", index=" + index + ", eventType=" + eventType
+                 + ", isProcessed=" + isProcessed + ", isLastMessage=" + isLastMessage + ", isError=" + isError + "]";
+     }
 
-}
+ }

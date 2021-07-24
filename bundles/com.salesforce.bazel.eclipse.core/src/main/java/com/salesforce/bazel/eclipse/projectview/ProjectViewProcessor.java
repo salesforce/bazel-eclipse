@@ -1,16 +1,3 @@
-package com.salesforce.bazel.eclipse.projectview;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.project.ProjectView;
-import com.salesforce.bazel.sdk.project.ProjectViewPackageLocation;
-import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
-
 /**
  * Copyright (c) 2020, Salesforce.com, Inc. All rights reserved.
  *
@@ -44,6 +31,19 @@ import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
  * specific language governing permissions and limitations under the License.
  *
  */
+package com.salesforce.bazel.eclipse.projectview;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.project.ProjectView;
+import com.salesforce.bazel.sdk.project.ProjectViewPackageLocation;
+import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
+
 final class ProjectViewProcessor {
 
     private static final LogHelper LOG = LogHelper.log(ProjectViewProcessor.class);
@@ -73,7 +73,7 @@ final class ProjectViewProcessor {
                     invalidDirectories.add(packageLocation);
                 } else {
                     additionalDirectories.addAll(additionalPackages.stream()
-                            .map(p -> new ProjectViewPackageLocation(rootDir, p)).collect(Collectors.toList()));
+                        .map(p -> new ProjectViewPackageLocation(rootDir, p)).collect(Collectors.toList()));
                 }
             }
         }
