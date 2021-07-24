@@ -36,6 +36,7 @@ import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -47,6 +48,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * complain about the slowness of this step, remind them to run a <i>bazel build //...</i> prior to import.
  */
 public class LoadAspectsFlow implements ImportFlow {
+    private static final LogHelper LOG = LogHelper.log(LoadAspectsFlow.class);
 
     @Override
     public String getProgressText() {
@@ -70,7 +72,11 @@ public class LoadAspectsFlow implements ImportFlow {
         Map<BazelPackageLocation, List<BazelLabel>> map = ctx.getPackageLocationToTargets();
         for (BazelPackageLocation packageLocation : ctx.getSelectedBazelPackages()) {
             List<BazelLabel> targets = map.get(packageLocation);
-            targets = Objects.requireNonNull(targets);
+            if (targets == null) {
+                LOG.warn("There are no targets configured for package {}, will not run any aspects for it.",
+                    packageLocation.getBazelPackageFSRelativePath());
+                continue;
+            }
             for (BazelLabel target : targets) {
                 labels.add(target.getLabelPath());
             }

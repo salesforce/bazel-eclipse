@@ -50,7 +50,6 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
  * Determines the configured targets, for import, for each Bazel Package being imported.
  */
 public class DetermineTargetsFlow implements ImportFlow {
-
     private static final LogHelper LOG = LogHelper.log(DetermineTargetsFlow.class);
 
     @Override
@@ -70,7 +69,13 @@ public class DetermineTargetsFlow implements ImportFlow {
             List<BazelLabel> targets = packageLocation.getBazelTargets();
             if (targets == null) {
                 EclipseProjectStructure structure = ctx.getProjectStructure(packageLocation);
-                targets = structure.getBazelTargets();
+                if (structure != null) {
+                    targets = structure.getBazelTargets();
+                } else {
+                    LOG.warn("Could not determine the project structure of package {}. Ignoring...",
+                        packageLocation.getBazelPackageFSRelativePath());
+                    continue;
+                }
             }
             packageLocationToTargets.put(packageLocation, Collections.unmodifiableList(targets));
             LOG.info("Configured targets for " + packageLocation.getBazelPackageFSRelativePath() + ": " + targets);
