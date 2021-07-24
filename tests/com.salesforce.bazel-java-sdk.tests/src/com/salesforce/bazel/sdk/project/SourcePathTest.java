@@ -37,56 +37,72 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
+/**
+ * SourcePath helps us split paths to source files into the source directory and pkg+file path.
+ * src/main/java/com/salesforce/foo/Foo.java => src/main/java + com/salesforce/foo/Foo.java
+ * <p>
+ * In order for this to work, the caller needs to know the package name (com/salesforce/foo) through some other means
+ * (e.g. parse the package line in the java file).
+ */
 public class SourcePathTest {
 
     @Test
-    @Ignore // make Windows compat
     public void happyTests() {
         // Maven main
-        SourcePath sp =
-                SourcePath.splitNamespacedPath("src/main/java/com/salesforce/foo/Foo.java", "com/salesforce/foo");
+        String filepath = seps("src/main/java/com/salesforce/foo/Foo.java");
+        String pkgpath = seps("com/salesforce/foo");
+        SourcePath sp = SourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNotNull(sp);
-        assertEquals("src/main/java", sp.pathToDirectory);
-        assertEquals("com/salesforce/foo/Foo.java", sp.pathToFile);
+        assertEquals(seps("src/main/java"), sp.pathToDirectory);
+        assertEquals(seps("com/salesforce/foo/Foo.java"), sp.pathToFile);
 
         // Maven test
-        sp = SourcePath.splitNamespacedPath("src/main/test/com/salesforce/foo/Foo.java", "com/salesforce/foo");
+        filepath = seps("src/test/java/com/salesforce/foo/Foo.java");
+        pkgpath = seps("com/salesforce/foo");
+        sp = SourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNotNull(sp);
-        assertEquals("src/main/test", sp.pathToDirectory);
-        assertEquals("com/salesforce/foo/Foo.java", sp.pathToFile);
+        assertEquals(seps("src/test/java"), sp.pathToDirectory);
+        assertEquals(seps("com/salesforce/foo/Foo.java"), sp.pathToFile);
 
         // default package
-        sp = SourcePath.splitNamespacedPath("src/main/java/Foo.java", "");
+        filepath = seps("src/main/java/Foo.java");
+        pkgpath = seps("");
+        sp = SourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNotNull(sp);
-        assertEquals("src/main/java", sp.pathToDirectory);
+        assertEquals(seps("src/main/java"), sp.pathToDirectory);
         assertEquals("Foo.java", sp.pathToFile);
 
         // custom
-        sp = SourcePath.splitNamespacedPath("sources/com/salesforce/foo/Foo.java", "com/salesforce/foo");
+        filepath = seps("sources/com/salesforce/foo/Foo.java");
+        pkgpath = seps("com/salesforce/foo");
+        sp = SourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNotNull(sp);
         assertEquals("sources", sp.pathToDirectory);
-        assertEquals("com/salesforce/foo/Foo.java", sp.pathToFile);
+        assertEquals(seps("com/salesforce/foo/Foo.java"), sp.pathToFile);
     }
 
     @Test
-    @Ignore // make Windows compat
     public void unhappyTests() {
-        // package mismatch
-        String path = FSPathHelper.osSeps("src/main/java/com/salesforce/foo/Foo.java");
-        SourcePath sp = SourcePath.splitNamespacedPath(path, "com/salesforce/bar");
+        // package mismatch (bar vs foo)
+        String filepath = seps("src/main/java/com/salesforce/foo/Foo.java");
+        String pkgpath = seps("com/salesforce/bar");
+        SourcePath sp = SourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNull(sp);
 
         // subpackage
-        sp = SourcePath.splitNamespacedPath("src/main/test/com/salesforce/foo/bar/Foo.java", "com/salesforce/foo");
+        filepath = seps("src/main/com/salesforce/foo/bar/Foo.java");
+        pkgpath = seps("com/salesforce/foo");
+        sp = SourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNull(sp);
 
-        // no path
-        sp = SourcePath.splitNamespacedPath("Foo.java", "com/salesforce/foo");
+        // no path for file
+        filepath = seps("Foo.java");
+        pkgpath = seps("com/salesforce/foo");
+        sp = SourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNull(sp);
 
         // null path
@@ -98,22 +114,31 @@ public class SourcePathTest {
         assertNull(sp);
 
         // Forgot the file
-        sp = SourcePath.splitNamespacedPath("src/main/java/com/salesforce/foo", "com/salesforce/foo");
+        filepath = seps("src/main/java/com/salesforce/foo");
+        pkgpath = seps("com/salesforce/foo");
+        sp = SourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNull(sp);
 
         // Forgot the file 2
-        sp = SourcePath.splitNamespacedPath("src/main/java/com/salesforce/foo/", "com/salesforce/foo");
+        filepath = seps("src/main/java/com/salesforce/foo/");
+        pkgpath = seps("com/salesforce/foo");
+        sp = SourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNull(sp);
     }
 
     @Test
-    @Ignore // make Windows compat
     public void edgeCaseTests() {
         // Duped path elements
-        SourcePath sp = SourcePath.splitNamespacedPath("src/main/java/com/salesforce/foo/com/salesforce/foo/Foo.java",
-                "com/salesforce/foo");
+        String filepath = seps("src/main/java/com/salesforce/foo/com/salesforce/foo/Foo.java");
+        String pkgpath = seps("com/salesforce/foo");
+        SourcePath sp = SourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNotNull(sp);
-        assertEquals("src/main/java/com/salesforce/foo", sp.pathToDirectory);
-        assertEquals("com/salesforce/foo/Foo.java", sp.pathToFile);
+        assertEquals(seps("src/main/java/com/salesforce/foo"), sp.pathToDirectory);
+        assertEquals(seps("com/salesforce/foo/Foo.java"), sp.pathToFile);
+    }
+
+    // convert unix paths to windows paths, if running tests on windows
+    private String seps(String path) {
+        return FSPathHelper.osSeps(path);
     }
 }
