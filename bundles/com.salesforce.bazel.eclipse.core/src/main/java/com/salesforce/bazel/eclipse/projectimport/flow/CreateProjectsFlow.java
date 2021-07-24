@@ -83,7 +83,7 @@ public class CreateProjectsFlow implements ImportFlow {
                 List<BazelLabel> bazelTargets = ctx.getPackageLocationToTargets().get(packageLocation);
 
                 // create the project
-                IProject project = projectCreator.createProject(packageLocation, bazelTargets,
+                IProject project = projectCreator.createProject(ctx, packageLocation, bazelTargets,
                     currentImportedProjects, existingImportedProjects, fileLinker);
 
                 if (project != null) {

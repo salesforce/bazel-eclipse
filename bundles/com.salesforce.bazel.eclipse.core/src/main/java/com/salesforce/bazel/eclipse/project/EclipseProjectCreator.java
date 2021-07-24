@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.JavaCore;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.projectimport.flow.ImportContext;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -69,20 +70,20 @@ public class EclipseProjectCreator {
         return rootProject;
     }
 
-    public IProject createProject(BazelPackageLocation packageLocation,
+    public IProject createProject(ImportContext ctx, BazelPackageLocation packageLocation,
             List<BazelLabel> bazelTargets, List<IProject> currentImportedProjects,
             List<IProject> existingImportedProjects, EclipseFileLinker fileLinker) {
 
         String projectName = EclipseProjectUtils.computeEclipseProjectNameForBazelPackage(packageLocation,
             existingImportedProjects, currentImportedProjects);
-        EclipseProjectStructureInspector inspector = new EclipseProjectStructureInspector(packageLocation);
+        EclipseProjectStructure structure = ctx.getProjectStructure(packageLocation);
         String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
         List<BazelLabel> targets = Objects.requireNonNull(bazelTargets);
         IProject project = null;
 
         if (BazelDirectoryStructureUtil.isBazelPackage(bazelWorkspaceRootDirectory, packageFSPath)) {
             // create the project
-            project = createProject(projectName, packageFSPath, inspector.getPackageSourceCodeFSPaths(), targets);
+            project = createProject(projectName, packageFSPath, structure.getPackageSourceCodeFSPaths(), targets);
 
             // link all files in the package root into the Eclipse project
             linkFilesInPackageDirectory(fileLinker, project, packageFSPath,
