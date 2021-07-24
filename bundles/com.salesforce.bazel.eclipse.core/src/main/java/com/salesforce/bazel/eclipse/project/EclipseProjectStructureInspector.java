@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.projectimport.flow;
+package com.salesforce.bazel.eclipse.project;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -41,21 +41,21 @@ import com.salesforce.bazel.sdk.util.BazelConstants;
 /**
  * Discovers well know paths in a bazel project. Invoked during import.
  */
-class EclipseProjectStructureInspector {
+public class EclipseProjectStructureInspector {
     private static final LogHelper LOG = LogHelper.log(EclipseProjectStructureInspector.class);
 
     private final List<String> packageSourceCodeFSPaths = new ArrayList<>();
     private final List<BazelLabel> bazelTargets = new ArrayList<>();
 
-    EclipseProjectStructureInspector(BazelPackageLocation packageNode) {
+    public EclipseProjectStructureInspector(BazelPackageLocation packageNode) {
         computePackageSourceCodePaths(packageNode);
     }
 
-    List<String> getPackageSourceCodeFSPaths() {
+    public List<String> getPackageSourceCodeFSPaths() {
         return packageSourceCodeFSPaths;
     }
 
-    List<BazelLabel> getBazelTargets() {
+    public List<BazelLabel> getBazelTargets() {
         return bazelTargets;
     }
 

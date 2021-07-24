@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import org.eclipse.core.runtime.SubMonitor;
 
+import com.salesforce.bazel.eclipse.project.EclipseProjectStructureInspector;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;

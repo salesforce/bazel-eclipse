@@ -32,6 +32,8 @@ import java.util.Objects;
 
 import org.eclipse.core.resources.IProject;
 
+import com.salesforce.bazel.eclipse.project.EclipseFileLinker;
+import com.salesforce.bazel.eclipse.project.EclipseProjectCreator;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;

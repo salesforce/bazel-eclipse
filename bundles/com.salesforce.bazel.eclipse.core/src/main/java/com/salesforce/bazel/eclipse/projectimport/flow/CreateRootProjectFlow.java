@@ -23,25 +23,20 @@
  */
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.InputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
+import com.salesforce.bazel.eclipse.project.EclipseFileLinker;
+import com.salesforce.bazel.eclipse.projectview.ProjectViewUtils;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.project.ProjectView;
-import com.salesforce.bazel.sdk.project.ProjectViewConstants;
 import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
 /**
@@ -69,44 +64,27 @@ public class CreateRootProjectFlow implements ImportFlow {
             throw new IllegalArgumentException();
         }
 
-        EclipseFileLinker fileLinker = ctx.getEclipseFileLinker();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        String rootProjectName =
-                BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME + " (" + bazelWorkspace.getName() + ")";
         IProject rootProject = resourceHelper.getBazelWorkspaceProject(bazelWorkspace);
         if (rootProject == null) {
+            String rootProjectName =
+                    BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME + " (" + bazelWorkspace.getName() + ")";
             rootProject = ctx.getEclipseProjectCreator().createRootProject(rootProjectName);
         }
 
         // link all files in the workspace root into the Eclipse project
+        EclipseFileLinker fileLinker = ctx.getEclipseFileLinker();
         ctx.getEclipseProjectCreator().linkFilesInPackageDirectory(fileLinker, rootProject, "",
             bazelWorkspaceRootDirectory, null);
 
+        // write the project view file which lists the imported packages
+        // TODO I think this is wrong, if someone imports multiple times into the same workspace, we want a list of all projects in workspace
+        //   resourceHelper.getProjectsForBazelWorkspace(bazelWorkspace)
         List<BazelPackageLocation> selectedBazelPackages = ctx.getSelectedBazelPackages();
-        writeProjectViewFile(bazelWorkspaceRootDirectory, rootProject, selectedBazelPackages);
+        ProjectViewUtils.writeProjectViewFile(bazelWorkspaceRootDirectory, rootProject, selectedBazelPackages);
 
         ctx.setRootProject(rootProject);
     }
 
-    private static void writeProjectViewFile(File bazelWorkspaceRootDirectory, IProject project,
-            List<BazelPackageLocation> importedBazelPackages) {
-        ProjectView projectView =
-                new ProjectView(bazelWorkspaceRootDirectory, importedBazelPackages, Collections.emptyList());
-        IFile f = BazelPluginActivator.getResourceHelper().getProjectFile(project,
-            ProjectViewConstants.PROJECT_VIEW_FILE_NAME);
-        String projectViewContent = projectView.getContent();
-        IProgressMonitor monitor = null;
-        boolean forceWrite = true;
-        try (InputStream bis = new ByteArrayInputStream(projectViewContent.getBytes())) {
-            if (f.exists()) {
-                boolean keepHistory = true;
-                f.setContents(bis, forceWrite, keepHistory, monitor);
-            } else {
-                f.create(bis, forceWrite, monitor);
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
 }

@@ -13,7 +13,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.junit.Test;
 
-import com.salesforce.bazel.eclipse.classpath.EclipseClasspathUtil;
+import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 
 public class EclipseClasspathUtilTest {
 
@@ -29,7 +29,7 @@ public class EclipseClasspathUtilTest {
         IJavaProject D = getMockedProject("D", new String[] {});
         IJavaProject unrelated = getMockedProject("unrelated", new String[] { "Z" });
 
-        Set<IProject> downstreams = EclipseClasspathUtil.getDownstreamProjectsOf(D.getProject(),
+        Set<IProject> downstreams = EclipseProjectUtils.getDownstreamProjectsOf(D.getProject(),
             new IJavaProject[] { A, B, C, D, unrelated });
 
         assertEquals(3, downstreams.size());
@@ -44,7 +44,7 @@ public class EclipseClasspathUtilTest {
     public void testDownstreamSetImpl() throws Exception {
         IJavaProject A = getMockedProject("A", new String[] {});
 
-        Set<IProject> downstreams = EclipseClasspathUtil.getDownstreamProjectsOf(A.getProject(), new IJavaProject[] {});
+        Set<IProject> downstreams = EclipseProjectUtils.getDownstreamProjectsOf(A.getProject(), new IJavaProject[] {});
 
         assertFalse("Do not use a TreeSet", downstreams instanceof TreeSet);
     }

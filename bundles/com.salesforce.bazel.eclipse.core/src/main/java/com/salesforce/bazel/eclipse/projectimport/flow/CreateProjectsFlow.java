@@ -33,19 +33,17 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.project.EclipseFileLinker;
+import com.salesforce.bazel.eclipse.project.EclipseProjectCreator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
 /**
  * Creates an Eclipse Project for each imported Bazel Package.
  */
 public class CreateProjectsFlow implements ImportFlow {
-
-    private static final LogHelper LOG = LogHelper.log(CreateProjectsFlow.class);
 
     @Override
     public String getProgressText() {
@@ -74,67 +72,27 @@ public class CreateProjectsFlow implements ImportFlow {
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         File bazelWorkspaceRootDirectory = ctx.getBazelWorkspaceRootDirectory();
         Iterable<BazelPackageLocation> orderedModules = ctx.getOrderedModules();
-
         EclipseProjectCreator projectCreator = new EclipseProjectCreator(bazelWorkspaceRootDirectory);
 
-        List<IProject> previouslyImportedProjects =
+        List<IProject> currentImportedProjects = ctx.getImportedProjects();
+        List<IProject> existingImportedProjects =
                 Arrays.asList(resourceHelper.getProjectsForBazelWorkspace(bazelWorkspace));
+
         for (BazelPackageLocation packageLocation : orderedModules) {
             if (!packageLocation.isWorkspaceRoot()) {
-                String projectName = computeEclipseProjectNameForBazelPackage(packageLocation,
-                    previouslyImportedProjects, ctx.getImportedProjects());
-                EclipseProjectStructureInspector inspector = new EclipseProjectStructureInspector(packageLocation);
-                String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
-                List<BazelLabel> targets =
-                        Objects.requireNonNull(ctx.getPackageLocationToTargets().get(packageLocation));
-                IProject project = projectCreator.createProject(projectName, packageFSPath,
-                    inspector.getPackageSourceCodeFSPaths(), targets);
+                List<BazelLabel> bazelTargets = ctx.getPackageLocationToTargets().get(packageLocation);
 
-                if (BazelDirectoryStructureUtil.isBazelPackage(bazelWorkspaceRootDirectory, packageFSPath)) {
-                    // link all files in the package root into the Eclipse project
-                    ctx.getEclipseProjectCreator().linkFilesInPackageDirectory(fileLinker, project, packageFSPath,
-                        new File(bazelWorkspaceRootDirectory, packageFSPath), null);
+                // create the project
+                IProject project = projectCreator.createProject(packageLocation, bazelTargets,
+                    currentImportedProjects, existingImportedProjects, fileLinker);
+
+                if (project != null) {
                     ctx.addImportedProject(project, packageLocation);
-                } else {
-                    LOG.error("Could not find BUILD file for package {}",
-                        packageLocation.getBazelPackageFSRelativePath());
                 }
+
                 progressMonitor.worked(1);
             }
         }
     }
 
-    /**
-     * Uses the last token in the Bazel package token (e.g. apple-api for //projects/libs/apple-api) for the name. But
-     * if another project has already been imported with the same name, start appending a number to the name until it
-     * becomes unique.
-     */
-    private static String computeEclipseProjectNameForBazelPackage(BazelPackageLocation packageInfo,
-            List<IProject> previouslyImportedProjects, List<IProject> currentlyImportedProjectsList) {
-        String packageName = packageInfo.getBazelPackageNameLastSegment();
-        String finalPackageName = packageName;
-        int index = 2;
-
-        boolean foundUniqueName = false;
-        while (!foundUniqueName) {
-            foundUniqueName = true;
-            if (doesProjectNameConflict(previouslyImportedProjects, finalPackageName)
-                    || doesProjectNameConflict(currentlyImportedProjectsList, finalPackageName)) {
-                finalPackageName = packageName + index;
-                index++;
-                foundUniqueName = false;
-            }
-        }
-        return finalPackageName;
-    }
-
-    private static boolean doesProjectNameConflict(List<IProject> existingProjectsList, String packageName) {
-        for (IProject otherProject : existingProjectsList) {
-            String otherProjectName = otherProject.getName();
-            if (packageName.equals(otherProjectName)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

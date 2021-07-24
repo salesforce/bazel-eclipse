@@ -56,6 +56,7 @@ import org.eclipse.swt.widgets.Display;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -164,7 +165,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
         // get downstream projects of the given project
         JavaCoreHelper javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
         IJavaProject[] allImportedProjects = javaCoreHelper.getAllBazelJavaProjects(false);
-        Set<IProject> downstreams = EclipseClasspathUtil.getDownstreamProjectsOf(project, allImportedProjects);
+        Set<IProject> downstreams = EclipseProjectUtils.getDownstreamProjectsOf(project, allImportedProjects);
 
         // flush caches
         BazelWorkspace bzlWs = BazelPluginActivator.getBazelWorkspace();

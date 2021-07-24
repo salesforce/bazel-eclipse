@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.projectimport.flow;
+package com.salesforce.bazel.eclipse.project;
 
 import java.io.File;
 import java.util.Objects;
@@ -39,16 +39,16 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
 /**
  * Knows how to link files (used only during project import).
  */
-class EclipseFileLinker {
+public class EclipseFileLinker {
     private static final LogHelper LOG = LogHelper.log(EclipseFileLinker.class);
 
     private final File bazelWorkspaceRootDirectory;
 
-    EclipseFileLinker(File bazelWorkspaceRootDirectory) {
+    public EclipseFileLinker(File bazelWorkspaceRootDirectory) {
         this.bazelWorkspaceRootDirectory = Objects.requireNonNull(bazelWorkspaceRootDirectory);
     }
 
-    boolean link(String packageFSPath, IProject eclipseProject, String fileName) {
+    public boolean link(String packageFSPath, IProject eclipseProject, String fileName) {
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         boolean retval = true;
 

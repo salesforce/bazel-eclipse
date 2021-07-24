@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.projectimport.flow;
+package com.salesforce.bazel.eclipse.project;
 
 import java.io.File;
 import java.net.URI;
@@ -43,23 +43,25 @@ import com.salesforce.bazel.eclipse.projectimport.ProjectImporterUtils;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
 /**
  * Creates Eclipse Projects (IProject instances) during Project Import.
  */
-class EclipseProjectCreator {
+public class EclipseProjectCreator {
 
     private static final LogHelper LOG = LogHelper.log(EclipseProjectCreator.class);
 
     private final File bazelWorkspaceRootDirectory;
 
-    EclipseProjectCreator(File bazelWorkspaceRootDirectory) {
+    public EclipseProjectCreator(File bazelWorkspaceRootDirectory) {
         this.bazelWorkspaceRootDirectory = Objects.requireNonNull(bazelWorkspaceRootDirectory);
     }
 
-    IProject createRootProject(String projectName) {
+    public IProject createRootProject(String projectName) {
         IProject rootProject = createProject(projectName, "", Collections.emptyList(), Collections.emptyList());
         if (rootProject == null) {
             throw new IllegalStateException(
@@ -68,7 +70,31 @@ class EclipseProjectCreator {
         return rootProject;
     }
 
-    IProject createProject(String projectName, String packageFSPath, List<String> packageSourceCodeFSPaths,
+    public IProject createProject(BazelPackageLocation packageLocation,
+            List<BazelLabel> bazelTargets, List<IProject> currentImportedProjects,
+            List<IProject> existingImportedProjects, EclipseFileLinker fileLinker) {
+
+        String projectName = EclipseProjectUtils.computeEclipseProjectNameForBazelPackage(packageLocation,
+            existingImportedProjects, currentImportedProjects);
+        EclipseProjectStructureInspector inspector = new EclipseProjectStructureInspector(packageLocation);
+        String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
+        List<BazelLabel> targets = Objects.requireNonNull(bazelTargets);
+        IProject project = null;
+
+        if (BazelDirectoryStructureUtil.isBazelPackage(bazelWorkspaceRootDirectory, packageFSPath)) {
+            // create the project
+            project = createProject(projectName, packageFSPath, inspector.getPackageSourceCodeFSPaths(), targets);
+
+            // link all files in the package root into the Eclipse project
+            linkFilesInPackageDirectory(fileLinker, project, packageFSPath,
+                new File(bazelWorkspaceRootDirectory, packageFSPath), null);
+        } else {
+            LOG.error("Could not find BUILD file for package {}", packageLocation.getBazelPackageFSRelativePath());
+        }
+        return project;
+    }
+
+    public IProject createProject(String projectName, String packageFSPath, List<String> packageSourceCodeFSPaths,
             List<BazelLabel> bazelTargets) {
         URI eclipseProjectLocation = null; // let Eclipse use the default location
 
@@ -91,7 +117,7 @@ class EclipseProjectCreator {
     /**
      * Links files in the root of package into the Eclipse project.
      */
-    void linkFilesInPackageDirectory(EclipseFileLinker fileLinker, IProject project, String packageFSPath,
+    public void linkFilesInPackageDirectory(EclipseFileLinker fileLinker, IProject project, String packageFSPath,
             File packageDirFile, String fileExtension) {
         File[] pkgFiles = packageDirFile.listFiles();
 
@@ -147,7 +173,7 @@ class EclipseProjectCreator {
             createdEclipseProject = newEclipseProject;
         }
         BazelPluginActivator.getBazelProjectManager()
-                .addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
+        .addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
         return createdEclipseProject;
     }
 }

@@ -42,6 +42,9 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * Computes all aspects for all bazel packages being imported.
+ * <p>
+ * This step in the flow can take a <b>LONG</b> time if the Bazel workspace is dirty and needs to be rebuilt. If users
+ * complain about the slowness of this step, remind them to run a <i>bazel build //...</i> prior to import.
  */
 public class LoadAspectsFlow implements ImportFlow {
 

@@ -59,7 +59,7 @@ import org.eclipse.jdt.core.JavaCore;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
-import com.salesforce.bazel.eclipse.classpath.EclipseClasspathUtil;
+import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -131,7 +131,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 IProject rootWorkspaceProject = Arrays.stream(allImportedProjects)
                         .filter(p -> resourceHelper.isBazelRootProject(p.getProject())).findFirst().get().getProject();
                 Set<IProject> downstreamProjects =
-                        EclipseClasspathUtil.getDownstreamProjectsOf(project, allImportedProjects);
+                        EclipseProjectUtils.getDownstreamProjectsOf(project, allImportedProjects);
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor, rootWorkspaceProject,
                     monitor);
 
@@ -191,7 +191,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects,
             WorkProgressMonitor progressMonitor, IProject rootProject, IProgressMonitor monitor)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         Set<String> bazelTargets = new TreeSet<>();
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         List<BazelProject> bazelProjects = new ArrayList<>();
