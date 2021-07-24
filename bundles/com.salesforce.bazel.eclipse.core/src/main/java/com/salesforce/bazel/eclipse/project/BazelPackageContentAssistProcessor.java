@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.projectview;
+package com.salesforce.bazel.eclipse.project;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -29,7 +29,7 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
  * File system path based Content Assistant (auto-completion). Adapted from
  * org.eclipse.ui.texteditor.HippieProposalProcessor.
  */
-final class BazelPackageContentAssistProcessor implements IContentAssistProcessor {
+public final class BazelPackageContentAssistProcessor implements IContentAssistProcessor {
 
     private static final ICompletionProposal[] NO_PROPOSALS = new ICompletionProposal[0];
     private static final IContextInformation[] NO_CONTEXTS = new IContextInformation[0];
@@ -88,11 +88,12 @@ final class BazelPackageContentAssistProcessor implements IContentAssistProcesso
 
     private String getPrefix(ITextViewer viewer, int offset) throws BadLocationException {
         IDocument doc = viewer.getDocument();
-        if (doc == null || offset > doc.getLength())
+        if ((doc == null) || (offset > doc.getLength())) {
             return null;
+        }
 
         int length = 0;
-        while (--offset >= 0 && doc.getChar(offset) != '\n') {
+        while ((--offset >= 0) && (doc.getChar(offset) != '\n')) {
             length++;
         }
 
@@ -125,7 +126,7 @@ final class BazelPackageContentAssistProcessor implements IContentAssistProcesso
     }
 
     private static final class Proposal implements ICompletionProposal, ICompletionProposalExtension,
-            ICompletionProposalExtension2, ICompletionProposalExtension3 {
+    ICompletionProposalExtension2, ICompletionProposalExtension3 {
         private final String fString;
         private final String fPrefix;
         private final int fOffset;
@@ -204,9 +205,9 @@ final class BazelPackageContentAssistProcessor implements IContentAssistProcesso
         public boolean validate(IDocument document, int offset, DocumentEvent event) {
             try {
                 int prefixStart = fOffset - fPrefix.length();
-                return offset >= fOffset && offset < fOffset + fString.length()
+                return (offset >= fOffset) && (offset < (fOffset + fString.length()))
                         && document.get(prefixStart, offset - (prefixStart))
-                                .equals((fPrefix + fString).substring(0, offset - prefixStart));
+                        .equals((fPrefix + fString).substring(0, offset - prefixStart));
             } catch (BadLocationException x) {
                 return false;
             }

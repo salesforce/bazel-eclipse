@@ -27,6 +27,7 @@ import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.builder.BazelProblemMarkerManager;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.project.BazelPackageContentAssistProcessor;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.wizard.BazelProjectImporter;
 import com.salesforce.bazel.sdk.logging.LogHelper;

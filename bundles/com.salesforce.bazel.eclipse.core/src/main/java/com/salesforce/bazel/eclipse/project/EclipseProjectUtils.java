@@ -5,9 +5,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
+import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
@@ -80,4 +84,18 @@ public class EclipseProjectUtils {
         return false;
     }
 
+    public static void addNatureToEclipseProject(IProject eclipseProject, String nature) throws CoreException {
+        if (!eclipseProject.hasNature(nature)) {
+            ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
+
+            IProjectDescription eclipseProjectDescription = resourceHelper.getProjectDescription(eclipseProject);
+            String[] prevNatures = eclipseProjectDescription.getNatureIds();
+            String[] newNatures = new String[prevNatures.length + 1];
+            System.arraycopy(prevNatures, 0, newNatures, 0, prevNatures.length);
+            newNatures[prevNatures.length] = nature;
+            eclipseProjectDescription.setNatureIds(newNatures);
+
+            resourceHelper.setProjectDescription(eclipseProject, eclipseProjectDescription);
+        }
+    }
 }

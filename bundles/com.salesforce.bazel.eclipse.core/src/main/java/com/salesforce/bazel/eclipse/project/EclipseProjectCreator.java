@@ -39,7 +39,6 @@ import org.eclipse.jdt.core.JavaCore;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.projectimport.ProjectImporterUtils;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -103,8 +102,8 @@ public class EclipseProjectCreator {
         IProject eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation);
         BazelProject bazelProject = bazelProjectManager.getProject(projectName);
         try {
-            ProjectImporterUtils.addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID);
-            ProjectImporterUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID);
+            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID);
+            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID);
             BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
             projMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), packageFSPath,
                 bazelTargets, new ArrayList<>()); // TODO pass buildFlags
