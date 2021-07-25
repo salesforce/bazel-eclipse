@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.project;
+package com.salesforce.bazel.sdk.project.structure;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,30 +29,34 @@ import java.util.List;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
- * Value object that holds the primary model of a Bazel aware Eclipse project.
+ * Value object that holds the layout of source directories in a Bazel project.
+ * <p>
+ * TODO merge this with BazelProject?
  */
-public class EclipseProjectStructure {
+public class ProjectStructure {
 
     /**
-     * The relative file system path, starting at the root of the workspace, to the directory containing the source
-     * files. For languages like Java that use directories to organize files into packages, the path will be to the base
-     * of the package.
+     * The relative file system path, starting at the root of the workspace, to the directories containing the source
+     * files. For languages like Java that use directories to organize files by Java package (com.salesforce.foo), the
+     * path will be to the base of the package (the directory that contains the "com" directory).
      * <p>
      * Example: projects/libs/apple/apple-api/src/main/java
      */
-    final List<String> packageSourceCodeFSPaths = new ArrayList<>();
+    public final List<String> packageSourceCodeFSPaths = new ArrayList<>();
 
     /**
-     * The list of Bazel targets enabled for this Eclipse project.
+     * The list of Bazel targets enabled for this project.
      * <p>
      * Example: //projects/foo:foo, //projects/foo:foo_tests
      */
-    final List<BazelLabel> bazelTargets = new ArrayList<>();
+    public final List<BazelLabel> bazelTargets = new ArrayList<>();
+
 
     public List<String> getPackageSourceCodeFSPaths() {
         return packageSourceCodeFSPaths;
     }
 
+    @Deprecated // this should be coming from somewhere else
     public List<BazelLabel> getBazelTargets() {
         return bazelTargets;
     }

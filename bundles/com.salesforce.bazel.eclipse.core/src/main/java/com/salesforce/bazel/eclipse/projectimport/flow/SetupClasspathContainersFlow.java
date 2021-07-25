@@ -34,8 +34,8 @@ import org.eclipse.jdt.core.IJavaProject;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.EclipseClasspathUtil;
-import com.salesforce.bazel.eclipse.project.EclipseProjectStructure;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 
 /**
  * Configures the classpath container for each project.
@@ -63,7 +63,7 @@ public class SetupClasspathContainersFlow implements ImportFlow {
         List<IProject> importedProjects = ctx.getImportedProjects();
         for (IProject project : importedProjects) {
             BazelPackageLocation packageLocation = ctx.getPackageLocationForProject(project);
-            EclipseProjectStructure structure = ctx.getProjectStructure(packageLocation);
+            ProjectStructure structure = ctx.getProjectStructure(packageLocation);
             String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
             IJavaProject javaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
 
