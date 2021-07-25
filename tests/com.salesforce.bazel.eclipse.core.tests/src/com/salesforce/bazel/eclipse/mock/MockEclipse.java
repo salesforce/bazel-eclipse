@@ -115,8 +115,9 @@ public class MockEclipse {
         mockPrefsStore = new MockIPreferenceStore();
         mockIProjectFactory = new MockIProjectFactory();
         mockJavaCoreHelper = new MockJavaCoreHelper();
-        mockPrefsStore.strings.put(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME,
-            bazelCommandEnvironment.bazelExecutable.getAbsolutePath());
+
+        // Eclipse preferences for BEF
+        setupDefaultPreferences();
 
         // feature collaborators
         pluginActivator = new BazelPluginActivator();
@@ -134,6 +135,12 @@ public class MockEclipse {
         // At this point our plugins are wired up, the Bazel workspace is created, but the user
         // has not run a Bazel Import... wizard yet. See EclipseFunctionalTestEnvironmentFactory
         // for how to run import.
+    }
+
+    private void setupDefaultPreferences() {
+        mockPrefsStore.strings.put(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME,
+            bazelCommandEnvironment.bazelExecutable.getAbsolutePath());
+        mockPrefsStore.booleans.put(BazelPreferenceKeys.PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME, true);
     }
 
     // GETTERS

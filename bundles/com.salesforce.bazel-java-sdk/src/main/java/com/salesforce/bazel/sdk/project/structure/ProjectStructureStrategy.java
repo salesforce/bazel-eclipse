@@ -35,6 +35,8 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  */
 public abstract class ProjectStructureStrategy {
 
+    // STATIC UTILITIES
+
     /**
      * List of pluggable strategies used to derive the source directories for a project during import. The list is
      * public and is intended to be modified by SDK extensions. Each supported language will likely have one or more
@@ -51,18 +53,46 @@ public abstract class ProjectStructureStrategy {
         projectStructureStrategies.add(new BazelQueryProjectStructureStrategy());
     }
 
+    /**
+     * Only used in cases where a user running a tool with the SDK hits a problem with a custom strategy. This method
+     * allows the tool user to set a config/pref option to disable the non-required strategies.
+     */
+    public static void toggleEnableNonrequiredStrategies(boolean newState) {
+        for (ProjectStructureStrategy strategy : ProjectStructureStrategy.projectStructureStrategies) {
+            if (!strategy.isRequired) {
+                strategy.enabled = newState;
+            }
+        }
+    }
+
     public static ProjectStructure determineProjectStructure(BazelWorkspace bazelWorkspace,
             BazelPackageLocation packageNode, BazelWorkspaceCommandRunner commandRunner) {
         ProjectStructure result = null;
 
         for (ProjectStructureStrategy strategy : ProjectStructureStrategy.projectStructureStrategies) {
-            result = strategy.doStructureAnalysis(bazelWorkspace, packageNode, commandRunner);
-            if (result != null) {
-                break;
+            if (strategy.enabled) {
+                result = strategy.doStructureAnalysis(bazelWorkspace, packageNode, commandRunner);
+                if (result != null) {
+                    break;
+                }
             }
         }
         return result;
     }
+
+    // INSTANCES
+
+    /**
+     * If enabled this strategy will be used by the determineProjectStructure() static method.
+     */
+    public boolean enabled = true;
+
+    /**
+     * A convenience mechanism for marking one or more strategies as required, which is normally immune to being
+     * disabled. For most cases the Bazel Query strategy should not be disabled because it is the general purpose
+     * solution.
+     */
+    public boolean isRequired = false;
 
     /**
      * Inspect the project and determine the structure of this project. If this strategy is not suited to analyze the

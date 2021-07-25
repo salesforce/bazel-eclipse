@@ -77,9 +77,15 @@ public class BazelPreferenceKeys {
     // out this is the case. This flag disables this feature, in case that logic causes problems for some users.
     // https://github.com/salesforce/bazel-eclipse/issues/164
     public static final String DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK = "DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK";
+    // We have an optimization for quickly determining the location of source files by using known conventions,
+    // but some workspaces may have structures that confuse this optimization.
+    public static final String PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME = "PROJECTSTRUCTUREOPTIMIZATIONS_ENABLED";
+
     static {
         defaultValues.put(DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK, "false");
+        defaultValues.put(PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME, "true");
     }
+
 
     // *********************************************************************
     // BEF DEVELOPER PREFS (for efficient repetitive testing of BEF)
@@ -87,16 +93,19 @@ public class BazelPreferenceKeys {
     // The import wizard will be populated by this path if set, which saves time during repetitive testing of imports
     public static final String BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME = "BAZEL_DEFAULT_WORKSPACE_PATH";
 
+
     // *********************************************************************
     // ARRAYS
     // Be sure to add your new pref name here, as that is how the global pref file gets loaded into Eclipse prefs
 
     // prefs that have string values
     public static final String[] ALL_STRING_PREFS = new String[] { BAZEL_PATH_PREF_NAME,
-            EXTERNAL_JAR_CACHE_PATH_PREF_NAME, BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME };
+            EXTERNAL_JAR_CACHE_PATH_PREF_NAME, BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME,
+            PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME };
 
     // prefs that have boolean values
     public static final String[] ALL_BOOLEAN_PREFS =
-            new String[] { GLOBALCLASSPATH_SEARCH_PREF_NAME, DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK };
+            new String[] { GLOBALCLASSPATH_SEARCH_PREF_NAME, DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK,
+                    PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME };
 
 }
