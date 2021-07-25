@@ -35,20 +35,24 @@ package com.salesforce.bazel.sdk.lang.jvm;
 
 import java.io.File;
 
-import com.salesforce.bazel.sdk.project.SourcePath;
+import com.salesforce.bazel.sdk.path.SourcePathSplitterStrategy;
+import com.salesforce.bazel.sdk.path.SplitSourcePath;
 
 /**
- * Takes a project relative path to a JVM source file, and splits the path into two parts:
+ * Takes a project relative path to a Java source file, and splits the path into two parts:
  * <ul>
- * <li>src/main/java</li>
+ * <li>source/java</li>
  * <li>com/salesforce/foo/Foo.java</li>
  * </ul>
+ * <p>
+ * To do this the splitter must parse the .java file to see the "package com.salesforce.foo;" statement which makes this
+ * operation a bit expensive.
  */
-public class BazelJvmSourceFolderResolver {
-    // TODO this needs to follow an interface as it needs to be pluggable to support other langs than java
+public class JavaSourcePathSplitterStrategy extends SourcePathSplitterStrategy {
 
-    public static SourcePath formalizeSourcePath(File basePath, String relativePathToSourceFile) {
-        // We want relativePathToSourceFile to be like this:  src/main/java/com/salesforce/foo/Foo.java
+    @Override
+    public SplitSourcePath splitSourcePath(File basePath, String relativePathToSourceFile) {
+        // we expect relativePathToSourceFile to be like this:  source/java/com/salesforce/foo/Foo.java
 
         String packageName = null;
         if (relativePathToSourceFile.endsWith(".java")) {
@@ -64,7 +68,7 @@ public class BazelJvmSourceFolderResolver {
         String packagePath = packageName.replace(".", File.separator);
 
         // split it
-        SourcePath sourcePath = SourcePath.splitNamespacedPath(relativePathToSourceFile, packagePath);
+        SplitSourcePath sourcePath = SplitSourcePath.splitNamespacedPath(relativePathToSourceFile, packagePath);
 
         return sourcePath;
     }

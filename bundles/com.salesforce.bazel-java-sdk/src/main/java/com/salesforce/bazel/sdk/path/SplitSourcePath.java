@@ -31,20 +31,28 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.project;
+package com.salesforce.bazel.sdk.path;
 
 import java.io.File;
 
 /**
- * Models a project relative path to a JVM source file, and splits the path into two parts:
+ * Models a project/package relative path to a source file, and splits the path into two parts like:
  * <ul>
- * <li>src/main/java</li>
+ * <li>source/java</li>
  * <li>com/salesforce/foo/Foo.java</li>
  * </ul>
  */
-public class SourcePath {
-    public String pathToDirectory;
-    public String pathToFile;
+public class SplitSourcePath {
+
+    /**
+     * The source directory part of the original path. Example: source/java
+     */
+    public String sourceDirectoryPath;
+
+    /**
+     * The file path part of the original path. Example: com/salesforce/foo/Foo.java
+     */
+    public String filePath;
 
     /**
      * Utility function that can be useful for all languages that use directory paths to express namespace/package (like
@@ -53,11 +61,11 @@ public class SourcePath {
      * itself.
      *
      * @param relativePathToSourceFile
-     *            src/main/java/com/salesforce/foo/Foo.java
+     *            source/java/com/salesforce/foo/Foo.java
      * @param packagePath
      *            com/salesforce/foo; default package would be empty string
      */
-    public static SourcePath splitNamespacedPath(String relativePathToSourceFile, String packagePath) {
+    public static SplitSourcePath splitNamespacedPath(String relativePathToSourceFile, String packagePath) {
         if ((relativePathToSourceFile == null) || (packagePath == null)) {
             return null;
         }
@@ -69,7 +77,7 @@ public class SourcePath {
             relativePathToSourceFile = relativePathToSourceFile.substring(0, relativePathToSourceFile.length() - 1);
         }
 
-        // Strip the filename:  src/main/java/com/salesforce/foo
+        // Strip the filename:  source/java/com/salesforce/foo
         int lastSlash = relativePathToSourceFile.lastIndexOf(File.separator);
         if (lastSlash == -1) {
             // what?
@@ -78,7 +86,7 @@ public class SourcePath {
         String relativePathToWithoutSourceFile = relativePathToSourceFile.substring(0, lastSlash);
 
         // We can now expect that relativePathToWithoutSourceFile ends with packagePath
-        SourcePath sourcePath = new SourcePath();
+        SplitSourcePath sourcePath = new SplitSourcePath();
         if (relativePathToWithoutSourceFile.endsWith(packagePath)) {
             // hooray, we know what we are doing, do some fancy math to figure it out
             int lastIndex = relativePathToWithoutSourceFile.length() - packagePath.length();
@@ -86,8 +94,8 @@ public class SourcePath {
                 // default package, makes for weird math
                 lastIndex = relativePathToWithoutSourceFile.length() + 1;
             }
-            sourcePath.pathToDirectory = relativePathToWithoutSourceFile.substring(0, lastIndex - 1);
-            sourcePath.pathToFile = relativePathToSourceFile.substring(lastIndex);
+            sourcePath.sourceDirectoryPath = relativePathToWithoutSourceFile.substring(0, lastIndex - 1);
+            sourcePath.filePath = relativePathToSourceFile.substring(lastIndex);
         } else {
             // what?
             return null;

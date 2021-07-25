@@ -35,8 +35,10 @@ package com.salesforce.bazel.sdk.init;
 
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfoFactory;
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfoFactoryProvider;
+import com.salesforce.bazel.sdk.lang.jvm.JavaSourcePathSplitterStrategy;
 import com.salesforce.bazel.sdk.lang.jvm.MavenProjectStructureStrategy;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
+import com.salesforce.bazel.sdk.path.SourcePathSplitterStrategy;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructureStrategy;
 
 /**
@@ -65,11 +67,20 @@ public class JvmRuleInit {
      * Call once at the start of the tool to initialize the JVM rule support.
      */
     public static void initialize() {
+        // Provider that can parse the JVM specific bits out of the Aspect data files
         AspectTargetInfoFactory.addProvider(new JVMAspectTargetInfoFactoryProvider());
 
+        // Strategy impl for short cutting our computation of source folders if we detect that the project layout
+        // follows Maven conventions
         if (ENABLE_MAVEN_STRUCTURE_STRATEGY) {
             ProjectStructureStrategy.projectStructureStrategies.add(0, new MavenProjectStructureStrategy());
         }
+
+        // Strategy impl for splitting Java source file paths (source/java/com/salesforce/foo/Foo.java) into
+        // the sourceDir part and file part (source/java and com/salesforce/foo/Foo.java). This is used when
+        // a project does not follow Maven conventions and we have to determine the correct directories to use
+        // as source folders
+        SourcePathSplitterStrategy.splitterStrategies.put(".java", new JavaSourcePathSplitterStrategy());
     }
 
 }
