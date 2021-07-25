@@ -34,11 +34,11 @@ import org.eclipse.core.resources.IProject;
 
 import com.salesforce.bazel.eclipse.project.EclipseFileLinker;
 import com.salesforce.bazel.eclipse.project.EclipseProjectCreator;
-import com.salesforce.bazel.eclipse.project.EclipseProjectStructure;
 import com.salesforce.bazel.eclipse.project.EclipseProjectStructureInspector;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 
 /**
@@ -49,7 +49,7 @@ public class ImportContext {
     private final BazelPackageLocation bazelWorkspaceRootPackageInfo;
     private final List<BazelPackageLocation> selectedBazelPackages;
     private final ProjectOrderResolver projectOrderResolver;
-    private final Map<String, EclipseProjectStructure> eclipseProjectStructureCache = new HashMap<>();
+    private final Map<String, ProjectStructure> ProjectSourceStructureCache = new HashMap<>();
 
     private final List<IProject> importedProjects = new ArrayList<>();
     private final Map<IProject, BazelPackageLocation> projectToPackageLocation = new HashMap<>();
@@ -176,13 +176,13 @@ public class ImportContext {
      * The importer flows will look up the structure of each Eclipse project multiple times during import. They are
      * expensive to compute, and so caching them for the duration of import is a big benefit.
      */
-    public EclipseProjectStructure getProjectStructure(BazelPackageLocation packageNode) {
+    public ProjectStructure getProjectStructure(BazelPackageLocation packageNode) {
         String cacheKey = packageNode.getBazelPackageFSRelativePath();
-        EclipseProjectStructure structure = eclipseProjectStructureCache.get(cacheKey);
+        ProjectStructure structure = ProjectSourceStructureCache.get(cacheKey);
 
         if (structure == null) {
             structure = EclipseProjectStructureInspector.computePackageSourceCodePaths(packageNode);
-            eclipseProjectStructureCache.put(cacheKey, structure);
+            ProjectSourceStructureCache.put(cacheKey, structure);
         }
 
         return structure;

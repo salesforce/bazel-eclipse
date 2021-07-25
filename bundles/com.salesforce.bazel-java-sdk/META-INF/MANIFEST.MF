@@ -22,6 +22,7 @@ Export-Package: com.salesforce.bazel.sdk.aspect,
  com.salesforce.bazel.sdk.model,
  com.salesforce.bazel.sdk.path,
  com.salesforce.bazel.sdk.project,
+ com.salesforce.bazel.sdk.project.structure,
  com.salesforce.bazel.sdk.util,
  com.salesforce.bazel.sdk.workspace
 Bundle-Vendor: Salesforce

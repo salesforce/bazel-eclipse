@@ -46,6 +46,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
 /**
@@ -76,7 +77,7 @@ public class EclipseProjectCreator {
 
         String projectName = EclipseProjectUtils.computeEclipseProjectNameForBazelPackage(packageLocation,
             existingImportedProjects, currentImportedProjects);
-        EclipseProjectStructure structure = ctx.getProjectStructure(packageLocation);
+        ProjectStructure structure = ctx.getProjectStructure(packageLocation);
         String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
         List<BazelLabel> targets = Objects.requireNonNull(bazelTargets);
         IProject project = null;
