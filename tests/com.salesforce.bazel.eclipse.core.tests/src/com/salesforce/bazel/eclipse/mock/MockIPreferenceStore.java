@@ -37,7 +37,8 @@ public class MockIPreferenceStore implements IPreferenceStore {
             "MockIPreferenceStore is pay as you go, you have hit a method that is not implemented.";
 
     public Map<String, String> strings = new TreeMap<>();
-    private List<IPropertyChangeListener> propChangeListeners = new ArrayList<>();
+    public Map<String, Boolean> booleans = new TreeMap<>();
+    private final List<IPropertyChangeListener> propChangeListeners = new ArrayList<>();
 
     // MOCKED METHODS
 
@@ -56,6 +57,16 @@ public class MockIPreferenceStore implements IPreferenceStore {
         strings.put(name, value);
     }
 
+    @Override
+    public boolean getBoolean(String name) {
+        Boolean result = booleans.get(name);
+        if (result == null) {
+            // by Eclipse definition, a boolean pref has a default value of false
+            result = false;
+        }
+        return result;
+    }
+
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
 
@@ -66,11 +77,6 @@ public class MockIPreferenceStore implements IPreferenceStore {
 
     @Override
     public void firePropertyChangeEvent(String name, Object oldValue, Object newValue) {
-        throw new UnsupportedOperationException(UOE_MSG);
-    }
-
-    @Override
-    public boolean getBoolean(String name) {
         throw new UnsupportedOperationException(UOE_MSG);
     }
 

@@ -27,20 +27,26 @@ import java.io.File;
 import java.util.Objects;
 
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.lang.jvm.JavaLanguageLevelHelper;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
+import com.salesforce.bazel.sdk.project.structure.ProjectStructureStrategy;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 
 /**
  * Import initialization type work.
  */
 public class InitImportFlow implements ImportFlow {
+    private static final LogHelper LOG = LogHelper.log(InitImportFlow.class);
 
     @Override
     public String getProgressText() {
@@ -86,6 +92,20 @@ public class InitImportFlow implements ImportFlow {
         String javacoptString = options.getContextualOption("build", "javacopt");
         int sourceLevel = JavaLanguageLevelHelper.getSourceLevelAsInt(javacoptString);
         ctx.setJavaLanguageLevel(sourceLevel);
+
+        // we support pluggable project structure strategies to optimize import performance
+        // this will use knowledge of common patterns like Maven to quickly locate source directories
+        // but if a strategy gets this wrong it can cause problems
+        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
+        IPreferenceStore prefsStore = resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
+        boolean enabledStructureStrategies =
+                prefsStore.getBoolean(BazelPreferenceKeys.PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME);
+        if (!enabledStructureStrategies) {
+            LOG.warn(
+                "The pluggable project structure strategies are disabled which is not the default, but is sometimes disabled by a user to workaround an issue.");
+        }
+        ProjectStructureStrategy.toggleEnableNonrequiredStrategies(enabledStructureStrategies);
+
     }
 
     private static File initContext(ImportContext ctx) {

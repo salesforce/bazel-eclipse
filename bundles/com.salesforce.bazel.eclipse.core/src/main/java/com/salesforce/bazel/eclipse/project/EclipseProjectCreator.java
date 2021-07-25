@@ -79,6 +79,11 @@ public class EclipseProjectCreator {
             existingImportedProjects, currentImportedProjects);
         ProjectStructure structure = ctx.getProjectStructure(packageLocation);
         String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
+        if (bazelTargets == null) {
+            LOG.error("There were no Bazel targets found for package {}, ignoring...",
+                packageLocation.getBazelPackageFSRelativePath());
+            return null;
+        }
         List<BazelLabel> targets = Objects.requireNonNull(bazelTargets);
         IProject project = null;
 
@@ -91,6 +96,7 @@ public class EclipseProjectCreator {
                 new File(bazelWorkspaceRootDirectory, packageFSPath), null);
         } else {
             LOG.error("Could not find BUILD file for package {}", packageLocation.getBazelPackageFSRelativePath());
+            return null;
         }
         return project;
     }

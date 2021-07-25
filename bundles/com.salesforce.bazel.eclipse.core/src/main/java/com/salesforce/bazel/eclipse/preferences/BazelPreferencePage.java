@@ -125,6 +125,18 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
         }
     }
 
+    /**
+     * Preference to control the behavior of the project structure strategies during import. See
+     * ProjectStructureStrategy for more information.
+     */
+    private static class ProjectStructureOptimizationEnabledFieldEditor extends BooleanFieldEditor {
+
+        public ProjectStructureOptimizationEnabledFieldEditor(Composite parent) {
+            super(BazelPreferenceKeys.PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME,
+                "Enable &project structure optimizations during import? (rare to disable)", SEPARATE_LABEL, parent);
+        }
+    }
+
     public BazelPreferencePage() {
         super(GRID);
     }
@@ -134,6 +146,7 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
         addField(new BazelBinaryFieldEditor(getFieldEditorParent()));
         addField(new BazelGlobalClasspathSearchEnabledFieldEditor(getFieldEditorParent()));
         addField(new BazelExternalDownloadCachePathEditor(getFieldEditorParent()));
+        addField(new ProjectStructureOptimizationEnabledFieldEditor(getFieldEditorParent()));
     }
 
     @Override

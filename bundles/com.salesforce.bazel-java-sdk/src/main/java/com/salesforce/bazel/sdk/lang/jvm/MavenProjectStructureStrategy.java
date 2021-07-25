@@ -26,6 +26,7 @@ package com.salesforce.bazel.sdk.lang.jvm;
 import java.io.File;
 
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
@@ -33,9 +34,14 @@ import com.salesforce.bazel.sdk.project.structure.ProjectStructureStrategy;
 
 /**
  * Project structure strategy that is optimized to quickly determine if this project is laid out with Maven conventions
- * (src/main/java, src/test/java).
+ * (src/main/java, src/test/java). It is much faster than the fallback Bazel Query strategy.
+ * <p>
+ * But there is a risk in using this strategy. If a package has src/main/java and src/test/java, and yet has additional
+ * source folders, those will be missed. The tool env should allow the user to disable this strategy for certain
+ * workspaces because of this.
  */
 public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
+    private static final LogHelper LOG = LogHelper.log(MavenProjectStructureStrategy.class);
 
     @Override
     public ProjectStructure doStructureAnalysis(BazelWorkspace bazelWorkspace, BazelPackageLocation packageNode,
@@ -56,6 +62,7 @@ public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
             result.packageSourceCodeFSPaths.add(mainSrcRelPath);
         } else {
             // by design, this strategy will only be ineffect if src/main/java exists
+            LOG.info("Package {} does not have src/main/java so is not a Maven-like project", packageRelPath);
             return null;
         }
 
@@ -73,7 +80,12 @@ public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
         File testSrcDir = new File(workspaceRootDir, testSrcRelPath);
         if (testSrcDir.exists()) {
             result.packageSourceCodeFSPaths.add(testSrcRelPath);
+        } else {
+            // by design, this strategy will only be ineffect if src/test/java exists
+            LOG.info("Package {} does not have src/test/java so is not a Maven-like project", packageRelPath);
+            return null;
         }
+
         // MAVEN TEST RESOURCES
         String testResourcesRelPath =
                 packageRelPath + File.separator + "src" + File.separator + "test" + File.separator + "resources";
