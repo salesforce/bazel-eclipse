@@ -182,12 +182,12 @@ public class FSTree implements Comparable<FSTree> {
      * <p>
      * The returned list of paths are in lexographic order.
      */
-    public static List<String> computeMeaningfulDirectories(FSTree otherSourcePaths, String pathDelimiter) {
+    public static List<String> computeMeaningfulDirectories(FSTree rootNode, String pathDelimiter) {
         List<String> paths = new ArrayList<>();
         // - For each child directory in the root of the project directory..
         // - Find the first subdirectory that contains more than one child
         // - Make that a source folder
-        for (FSTree child : otherSourcePaths.getChildren()) {
+        for (FSTree child : rootNode.getChildren()) {
             computeMeaningfulDirectoriesRecur(paths, child, pathDelimiter);
         }
         return paths;
