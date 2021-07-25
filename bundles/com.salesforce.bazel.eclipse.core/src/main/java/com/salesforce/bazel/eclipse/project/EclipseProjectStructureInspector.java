@@ -26,7 +26,9 @@ package com.salesforce.bazel.eclipse.project;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
@@ -37,6 +39,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
+import com.salesforce.bazel.sdk.path.FSTree;
 import com.salesforce.bazel.sdk.project.SourcePath;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 
@@ -105,14 +108,18 @@ public class EclipseProjectStructureInspector {
             File workspaceRootDir, String bazelWorkspaceRootPath, String bazelPackageFSRelativePath, File packageDir) {
         EclipseProjectStructure result = new EclipseProjectStructure();
 
+        // NOTE: order of adding the result.packageSourceCodeFSPaths array is important. Eclipse
+        // will honor that order in the project explorer
+
         // MAVEN MAIN SRC
-        boolean foundSourceCodePaths = false;
         String mainSrcRelPath = bazelPackageFSRelativePath + File.separator + "src" + File.separator
                 + "main" + File.separator + "java";
         File mainSrcDir = new File(bazelWorkspaceRootPath + File.separator + mainSrcRelPath);
         if (mainSrcDir.exists()) {
             result.packageSourceCodeFSPaths.add(mainSrcRelPath);
-            foundSourceCodePaths = true;
+        } else {
+            // by design, this strategy will only be ineffect if src/main/java exists
+            return null;
         }
 
         // MAVEN MAIN RESOURCES
@@ -121,7 +128,6 @@ public class EclipseProjectStructureInspector {
         File mainResourcesDir = new File(bazelWorkspaceRootPath + File.separator + mainResourcesRelPath);
         if (mainResourcesDir.exists()) {
             result.packageSourceCodeFSPaths.add(mainResourcesRelPath);
-            foundSourceCodePaths = true;
         }
 
         // MAVEN TEST SRC
@@ -130,7 +136,6 @@ public class EclipseProjectStructureInspector {
         File testSrcDir = new File(bazelWorkspaceRootPath + File.separator + testSrcRelPath);
         if (testSrcDir.exists()) {
             result.packageSourceCodeFSPaths.add(testSrcRelPath);
-            foundSourceCodePaths = true;
         }
         // MAVEN TEST RESOURCES
         String testResourcesRelPath = bazelPackageFSRelativePath + File.separator + "src"
@@ -138,13 +143,9 @@ public class EclipseProjectStructureInspector {
         File testResourcesDir = new File(bazelWorkspaceRootPath + File.separator + testResourcesRelPath);
         if (testResourcesDir.exists()) {
             result.packageSourceCodeFSPaths.add(testResourcesRelPath);
-            foundSourceCodePaths = true;
         }
 
-        if (foundSourceCodePaths) {
-            return result;
-        }
-        return null;
+        return result;
     }
 
     private static EclipseProjectStructure doExpensiveBazelQueryStructureCheck(BazelPackageLocation packageNode,
@@ -169,28 +170,29 @@ public class EclipseProjectStructureInspector {
             // but it can also have non-java source files, so we need to check for that
 
             Set<String> alreadySeenBasePaths = new HashSet<>();
+            FSTree otherSourcePaths = new FSTree();
 
             for (String srcPath : results) {
-                if (srcPath.endsWith(".java")) {
-                    // it is expensive to formalize the source path as it involves parsing the source file,
-                    // so try to bail out here early
-                    boolean alreadySeen = false;
-                    for (String alreadySeenBasePath : alreadySeenBasePaths) {
-                        if (srcPath.startsWith(alreadySeenBasePath)) {
-                            alreadySeen = true;
-                            break;
-                        }
-                    }
+                File sourceFile = new File(packageDir, srcPath);
+                if (!sourceFile.exists()) {
+                    // this file is coming from a package outside of our package from somewhere else in the
+                    // Bazel workspace, so we don't consider it for our project source paths
+                    continue;
+                }
 
-                    if (!alreadySeen) {
-                        File sourceFile = new File(packageDir, srcPath);
-                        if (!sourceFile.exists()) {
-                            // this file is coming from a package outside of our package from somewhere else in the
-                            // Bazel workspace, so we don't consider it for our project source paths
-                            continue;
-                        }
-                        SourcePath srcPathObj =
-                                BazelJvmSourceFolderResolver.formalizeSourcePath(packageDir, srcPath);
+                // it is expensive to formalize the source path as it involves parsing the source file,
+                // so try to bail out here early
+                boolean alreadySeen = false;
+                for (String alreadySeenBasePath : alreadySeenBasePaths) {
+                    if (srcPath.startsWith(alreadySeenBasePath)) {
+                        alreadySeen = true;
+                        break;
+                    }
+                }
+
+                if (!alreadySeen) {
+                    if (srcPath.endsWith(".java")) {
+                        SourcePath srcPathObj = BazelJvmSourceFolderResolver.formalizeSourcePath(packageDir, srcPath);
                         if (srcPathObj != null) {
                             String workspacePathToSourceDirectory =
                                     bazelPackageFSRelativePath + File.separator + srcPathObj.pathToDirectory;
@@ -202,9 +204,21 @@ public class EclipseProjectStructureInspector {
                             LOG.info("Could not derive source path from {} for package {}", srcPath,
                                 bazelPackageFSRelativePath);
                         }
+                    } else {
+                        LOG.info("Found file of unknown type for source path from {} for package {}?", srcPath,
+                            bazelPackageFSRelativePath);
+                        FSTree.addNode(otherSourcePaths, srcPath, File.separator, true);
                     }
                 }
             }
+
+            // now figure out a reasonable way to represent the source paths of resource files
+            computeResourceDirectories(bazelPackageFSRelativePath, result, otherSourcePaths);
+
+            // NOTE: the order of result.packageSourceCodeFSPaths array is important. Eclipse
+            // will honor that order in the project explorer. Because we don't know the proper order
+            // based on folder names (e.g. main, test) we just sort alphabetically.
+            Collections.sort(result.packageSourceCodeFSPaths);
         } else {
             LOG.info("Did not find any source files for package [{}], ignoring for import.", packageLabel);
             result = null;
@@ -213,6 +227,17 @@ public class EclipseProjectStructureInspector {
         return result;
     }
 
+    private static void computeResourceDirectories(String bazelPackageFSRelativePath, EclipseProjectStructure result,
+            FSTree otherSourcePaths) {
+
+        // this is not an exact science, see the FSTree class for the algorithm for identifying directories that would
+        // be helpful to add
+        List<String> resourceDirectoryPaths = FSTree.computeMeaningfulDirectories(otherSourcePaths, File.separator);
+        for (String resourceDirectoryPath : resourceDirectoryPaths) {
+            String path = bazelPackageFSRelativePath + File.separator + resourceDirectoryPath;
+            result.packageSourceCodeFSPaths.add(path);
+        }
+    }
 
     private static class ProtoFileFilter implements FilenameFilter {
         @Override
