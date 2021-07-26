@@ -39,7 +39,8 @@ import com.salesforce.bazel.sdk.path.SourcePathSplitterStrategy;
 import com.salesforce.bazel.sdk.path.SplitSourcePath;
 
 /**
- * Takes a project relative path to a Java source file, and splits the path into two parts:
+ * Takes a project relative path to a Java source file (source/java/com/salesforce/foo/Foo.java), and splits the path
+ * into two parts:
  * <ul>
  * <li>source/java</li>
  * <li>com/salesforce/foo/Foo.java</li>
@@ -47,8 +48,20 @@ import com.salesforce.bazel.sdk.path.SplitSourcePath;
  * <p>
  * To do this the splitter must parse the .java file to see the "package com.salesforce.foo;" statement which makes this
  * operation a bit expensive.
+ * <p>
+ * There is an anti-pattern of not using the package hierarchy in the path to the source files (e.g.
+ * source/java/Foo.java) which is supported by Bazel and other build systems but is definitely not what people should be
+ * doing. This anti-pattern is supported by this splitter when detected by returning the whole path, minus the file, as
+ * the SplitSourcePath.sourceDirectoryPath. This may work with some tools (Bazel, for example, is ok with this), but
+ * other tools (e.g. Eclipse) will flag this use case as an error.
  */
 public class JavaSourcePathSplitterStrategy extends SourcePathSplitterStrategy {
+
+    /**
+     * if true, this tells the splitter to tolerate the case where the package name is not in the hierarchy; the tool
+     * can set this to false to disable this behavior
+     */
+    public static boolean allowMissingPackageHierarchy = true;
 
     @Override
     public SplitSourcePath splitSourcePath(File basePath, String relativePathToSourceFile) {
@@ -64,15 +77,19 @@ public class JavaSourcePathSplitterStrategy extends SourcePathSplitterStrategy {
             // not enough information to split the path correctly
             return null;
         }
-        // convert it to: com/salesforce/foo
-        String packagePath = packageName.replace(".", File.separator);
+        // convert 'com.salesforce.foo' to 'com/salesforce/foo'
+        String namespacePath = packageName.replace(".", File.separator);
 
         // split it
-        SplitSourcePath sourcePath = SplitSourcePath.splitNamespacedPath(relativePathToSourceFile, packagePath);
+        SplitSourcePath sourcePath = SplitSourcePath.splitNamespacedPath(relativePathToSourceFile, namespacePath,
+            allowMissingPackageHierarchy);
 
         return sourcePath;
     }
 
+    /**
+     * This method finds the Java file on the file system, reads it, and returns the package name (with dot separators)
+     */
     private static String findJavaFilePackage(File basePath, String relativePathToSourceFile) {
         File srcFile = new File(basePath + File.separator + relativePathToSourceFile);
         JavaSourceFile javaSrcFile = new JavaSourceFile(srcFile);
