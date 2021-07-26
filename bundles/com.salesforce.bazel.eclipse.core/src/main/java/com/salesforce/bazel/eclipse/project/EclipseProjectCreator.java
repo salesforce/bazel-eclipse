@@ -89,7 +89,7 @@ public class EclipseProjectCreator {
 
         if (BazelDirectoryStructureUtil.isBazelPackage(bazelWorkspaceRootDirectory, packageFSPath)) {
             // create the project
-            project = createProject(projectName, packageFSPath, structure.getPackageSourceCodeFSPaths(), targets);
+            project = createProject(projectName, packageFSPath, structure.getMainSourceDirFSPaths(), targets);
 
             // link all files in the package root into the Eclipse project
             linkFilesInPackageDirectory(fileLinker, project, packageFSPath,

@@ -35,6 +35,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.path.FSTree;
 import com.salesforce.bazel.sdk.path.SourcePathSplitterStrategy;
 import com.salesforce.bazel.sdk.path.SplitSourcePath;
@@ -45,6 +46,19 @@ import com.salesforce.bazel.sdk.path.SplitSourcePath;
  */
 public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy {
     private static final LogHelper LOG = LogHelper.log(BazelQueryProjectStructureStrategy.class);
+
+    /**
+     * Test source files will generally appear in a directory hierarchy that contains a directory named "test" or
+     * "tests". If we can rely on this, this is a major optimization because we don't need to run lots of queries to
+     * figure out what source files are only used by tests.
+     * <p>
+     * This is public so that tools can update this set as needed.
+     */
+    public static Set<String> testSourceCodeFolderMarkers = new HashSet<>();
+    static {
+        testSourceCodeFolderMarkers.add("test");
+        testSourceCodeFolderMarkers.add("tests");
+    }
 
     @Override
     public ProjectStructure doStructureAnalysis(BazelWorkspace bazelWorkspace, BazelPackageLocation packageNode,
@@ -93,9 +107,16 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
                         SplitSourcePath srcPathObj = splitSourcePath(packageDir, srcPath);
 
                         if (srcPathObj != null) {
-                            String workspacePathToSourceDirectory =
+                            String packageRelPathToFile =
                                     packageRelPath + File.separator + srcPathObj.sourceDirectoryPath;
-                            result.packageSourceCodeFSPaths.add(workspacePathToSourceDirectory);
+
+                            boolean isTestPath = FSPathHelper.doesPathContainNamedResource(
+                                srcPathObj.sourceDirectoryPath, testSourceCodeFolderMarkers);
+                            if (isTestPath) {
+                                result.testSourceDirFSPaths.add(packageRelPathToFile);
+                            } else {
+                                result.mainSourceDirFSPaths.add(packageRelPathToFile);
+                            }
                             alreadySeenBasePaths.add(srcPathObj.sourceDirectoryPath);
                             LOG.info("Found source path {} for package {}", srcPathObj.sourceDirectoryPath,
                                 packageRelPath);
@@ -116,10 +137,11 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
             // now figure out a reasonable way to represent the source paths of resource files
             computeResourceDirectories(packageRelPath, result, resourceFileStructure);
 
-            // NOTE: the order of result.packageSourceCodeFSPaths array is important. Eclipse
+            // NOTE: the order of source paths in the lists is important. Eclipse
             // will honor that order in the project explorer. Because we don't know the proper order
             // based on folder names (e.g. main, test) we just sort alphabetically.
-            Collections.sort(result.packageSourceCodeFSPaths);
+            Collections.sort(result.mainSourceDirFSPaths);
+            Collections.sort(result.testSourceDirFSPaths);
         } else {
             LOG.info("Did not find any source files for package [{}], ignoring for import.", packageLabel);
             result = null;
@@ -160,7 +182,7 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
         List<String> resourceDirectoryPaths = FSTree.computeMeaningfulDirectories(otherSourcePaths, File.separator);
         for (String resourceDirectoryPath : resourceDirectoryPaths) {
             String path = bazelPackageFSRelativePath + File.separator + resourceDirectoryPath;
-            result.packageSourceCodeFSPaths.add(path);
+            result.mainSourceDirFSPaths.add(path);
         }
     }
 

@@ -29,7 +29,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.internal.launching.JREContainerInitializer;
 
-import com.salesforce.bazel.eclipse.classpath.EclipseClasspathUtil;
+import com.salesforce.bazel.eclipse.classpath.EclipseSourceClasspathUtil;
 
 /**
  * This logic has to run once per Eclipse lifetime. It is indirectly triggered when we setup the VM for the classpath
@@ -47,7 +47,7 @@ public class InitJREFlow implements ImportFlow {
     @Override
     public void run(ImportContext ctx, SubMonitor progressMonitor) throws CoreException {
         // TODO why is this assuming JDK 11? In InitImportFlow we actually derive the right one based on Bazel settings
-        IPath path = Path.fromOSString(EclipseClasspathUtil.STANDARD_VM_CONTAINER_PREFIX + "11");
+        IPath path = Path.fromOSString(EclipseSourceClasspathUtil.STANDARD_VM_CONTAINER_PREFIX + "11");
 
         // on my machine, this takes ~2 seconds
         JREContainerInitializer.resolveVM(path);

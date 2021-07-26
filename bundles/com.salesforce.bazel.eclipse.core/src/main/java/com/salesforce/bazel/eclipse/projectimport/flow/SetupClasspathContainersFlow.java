@@ -33,17 +33,17 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.classpath.EclipseClasspathUtil;
+import com.salesforce.bazel.eclipse.classpath.EclipseSourceClasspathUtil;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 
 /**
- * Configures the classpath container for each project.
+ * Configures the Source directories into the classpath container for each project.
  */
 public class SetupClasspathContainersFlow implements ImportFlow {
     @Override
     public String getProgressText() {
-        return "Configuring classpath containers";
+        return "Configuring source directories into the classpath containers";
     }
 
     @Override
@@ -67,8 +67,10 @@ public class SetupClasspathContainersFlow implements ImportFlow {
             String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
             IJavaProject javaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
 
-            // create the classpath; there is no return value because the cp is set directly into the passed javaProject
-            EclipseClasspathUtil.createClasspath(bazelWorkspaceRootDirectory, packageFSPath, structure.getPackageSourceCodeFSPaths(),
+            // create the source dirs classpath (adding each source directory to the cp, and adding the JDK); there is no
+            // return value because the cp is set directly into the passed javaProject; this method also links in the
+            // source directory IFolders into the project
+            EclipseSourceClasspathUtil.createClasspath(bazelWorkspaceRootDirectory, packageFSPath, structure,
                 javaProject, ctx.getJavaLanguageLevel());
 
             progressSubMonitor.worked(1);
