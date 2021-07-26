@@ -59,7 +59,7 @@ public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
                 packageRelPath + File.separator + "src" + File.separator + "main" + File.separator + "java";
         File mainSrcDir = new File(workspaceRootDir, mainSrcRelPath);
         if (mainSrcDir.exists()) {
-            result.packageSourceCodeFSPaths.add(mainSrcRelPath);
+            result.mainSourceDirFSPaths.add(mainSrcRelPath);
         } else {
             // by design, this strategy will only be ineffect if src/main/java exists
             LOG.info("Package {} does not have src/main/java so is not a Maven-like project", packageRelPath);
@@ -71,7 +71,7 @@ public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
                 packageRelPath + File.separator + "src" + File.separator + "main" + File.separator + "resources";
         File mainResourcesDir = new File(workspaceRootDir, mainResourcesRelPath);
         if (mainResourcesDir.exists()) {
-            result.packageSourceCodeFSPaths.add(mainResourcesRelPath);
+            result.mainSourceDirFSPaths.add(mainResourcesRelPath);
         }
 
         // MAVEN TEST SRC
@@ -79,7 +79,7 @@ public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
                 packageRelPath + File.separator + "src" + File.separator + "test" + File.separator + "java";
         File testSrcDir = new File(workspaceRootDir, testSrcRelPath);
         if (testSrcDir.exists()) {
-            result.packageSourceCodeFSPaths.add(testSrcRelPath);
+            result.testSourceDirFSPaths.add(testSrcRelPath);
         } else {
             // by design, this strategy will only be ineffect if src/test/java exists
             LOG.info("Package {} does not have src/test/java so is not a Maven-like project", packageRelPath);
@@ -91,7 +91,7 @@ public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
                 packageRelPath + File.separator + "src" + File.separator + "test" + File.separator + "resources";
         File testResourcesDir = new File(workspaceRootDir, testResourcesRelPath);
         if (testResourcesDir.exists()) {
-            result.packageSourceCodeFSPaths.add(testResourcesRelPath);
+            result.testSourceDirFSPaths.add(testResourcesRelPath);
         }
 
         return result;

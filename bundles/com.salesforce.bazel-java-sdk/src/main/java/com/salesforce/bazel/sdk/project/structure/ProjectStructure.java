@@ -36,13 +36,34 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 public class ProjectStructure {
 
     /**
-     * The relative file system path, starting at the root of the workspace, to the directories containing the source
-     * files. For languages like Java that use directories to organize files by Java package (com.salesforce.foo), the
-     * path will be to the base of the package (the directory that contains the "com" directory).
+     * The relative file system paths, starting at the root of the workspace, to the directories containing the main
+     * source files. For languages like Java that use directories to organize files by Java package
+     * (com.salesforce.foo), the path will be to the base of the package (the directory that contains the "com"
+     * directory).
      * <p>
      * Example: projects/libs/apple/apple-api/src/main/java
      */
-    public final List<String> packageSourceCodeFSPaths = new ArrayList<>();
+    public final List<String> mainSourceDirFSPaths = new ArrayList<>();
+
+    /**
+     * The relative file system paths, starting at the root of the workspace, to the directories containing the test
+     * source files. For languages like Java that use directories to organize files by Java package
+     * (com.salesforce.foo), the path will be to the base of the package (the directory that contains the "com"
+     * directory).
+     * <p>
+     * Example: projects/libs/apple/apple-api/src/test/java
+     */
+    public final List<String> testSourceDirFSPaths = new ArrayList<>();
+
+    public List<String> getMainSourceDirFSPaths() {
+        return mainSourceDirFSPaths;
+    }
+
+    public List<String> getTestSourceDirFSPaths() {
+        return testSourceDirFSPaths;
+    }
+
+    // DEPRECATED
 
     /**
      * The list of Bazel targets enabled for this project.
@@ -51,10 +72,6 @@ public class ProjectStructure {
      */
     public final List<BazelLabel> bazelTargets = new ArrayList<>();
 
-
-    public List<String> getPackageSourceCodeFSPaths() {
-        return packageSourceCodeFSPaths;
-    }
 
     @Deprecated // this should be coming from somewhere else
     public List<BazelLabel> getBazelTargets() {
