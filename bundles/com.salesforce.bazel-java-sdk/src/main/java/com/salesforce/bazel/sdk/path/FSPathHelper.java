@@ -34,10 +34,10 @@
 package com.salesforce.bazel.sdk.path;
 
 import java.io.File;
- import java.io.IOException;
- import java.util.Set;
+import java.io.IOException;
+import java.util.Set;
 
- import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Constants and utils for file system paths.
@@ -159,10 +159,10 @@ public final class FSPathHelper {
 
     /**
      * Given a set of tokens, this function walks through the provided path looking for a node in the hierarchy with
-      * that name. If a resource (file/directory) is found, this function returns true.
+     * that name. If a resource (file/directory) is found, this function returns true.
      * <p>
      * An example use case is looking for a directory named 'test' or 'tests' in a file system path.
-      */
+     */
     public static boolean doesPathContainNamedResource(String filesystemPath, Set<String> targetNames) {
         String[] pathElements = filesystemPath.split(File.separator);
         for (String element : pathElements) {
@@ -171,5 +171,18 @@ public final class FSPathHelper {
             }
         }
         return false;
+    }
+
+    /**
+     * Removes the last resource from the path.
+     * <p>
+     * Example: source/java/com/salesforce/foo/Foo.java => source/java/com/salesforce/foo
+     */
+    public static String removeLastResource(String filesystemPath) {
+        int lastSlash = filesystemPath.lastIndexOf(File.separator);
+        if (lastSlash > -1) {
+            return filesystemPath.substring(0, lastSlash);
+        }
+        return "";
     }
 }

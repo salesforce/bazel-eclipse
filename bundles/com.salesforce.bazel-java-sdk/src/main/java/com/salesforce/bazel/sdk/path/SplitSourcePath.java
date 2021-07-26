@@ -66,6 +66,26 @@ public class SplitSourcePath {
      *            com/salesforce/foo; default package would be empty string
      */
     public static SplitSourcePath splitNamespacedPath(String relativePathToSourceFile, String packagePath) {
+        return splitNamespacedPath(relativePathToSourceFile, packagePath, false);
+    }
+
+    /**
+     * Utility function that can be useful for all languages that use directory paths to express namespace/package (like
+     * Java). It splits the passed path into the dir and file parts. You must know the namespace/package path in order
+     * for this function to know where to make the split. The package path is usually retrieved from parsing the file
+     * itself.
+     *
+     * @param relativePathToSourceFile
+     *            source/java/com/salesforce/foo/Foo.java
+     * @param packagePath
+     *            com/salesforce/foo; default package would be empty string
+     * @param allowMissingPackageHierarchy
+     *            if true, this method will return the entire path (minus the last resource) as the source dir if the
+     *            namespace hierarchy is not reflected in the relative path (e.g. src/java/Foo.java, and the package
+     *            name is com.salesforce.foo). if false, this method will return null in this case
+     */
+    public static SplitSourcePath splitNamespacedPath(String relativePathToSourceFile, String packagePath,
+            boolean allowMissingPackageHierarchy) {
         if ((relativePathToSourceFile == null) || (packagePath == null)) {
             return null;
         }
@@ -97,8 +117,16 @@ public class SplitSourcePath {
             sourcePath.sourceDirectoryPath = relativePathToWithoutSourceFile.substring(0, lastIndex - 1);
             sourcePath.filePath = relativePathToSourceFile.substring(lastIndex);
         } else {
-            // what?
-            return null;
+            // This is a case in which the workspace file layout does not use the standard convention of encoding
+            // the package/namespace into the file hierarchy. This might be legal but is a bad practice.
+            if (allowMissingPackageHierarchy) {
+                // In this case the best we can do is take the entire hierarchy as the source directory
+                // source/java/Foo.java => source/java, Foo.java
+                sourcePath.sourceDirectoryPath = relativePathToWithoutSourceFile;
+                sourcePath.filePath = relativePathToSourceFile.substring(lastSlash + 1);
+            } else {
+                sourcePath = null;
+            }
         }
 
         return sourcePath;

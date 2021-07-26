@@ -46,6 +46,8 @@ import java.util.Map;
  */
 public abstract class SourcePathSplitterStrategy {
 
+    // STATIC
+
     /**
      * Map of pluggable strategies used to split a source path (src/main/java/com/salesforce/foo/Foo.java) into two
      * components based on language specific rules:
@@ -71,6 +73,8 @@ public abstract class SourcePathSplitterStrategy {
         }
         return splitter;
     }
+
+    // INSTANCES
 
     /**
      * Split a source path (src/main/java/com/salesforce/foo/Foo.java) into two components based on language specific

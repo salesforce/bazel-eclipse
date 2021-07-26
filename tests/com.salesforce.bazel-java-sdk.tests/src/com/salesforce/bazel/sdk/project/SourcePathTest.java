@@ -88,22 +88,10 @@ public class SourcePathTest {
 
     @Test
     public void unhappyTests() {
-        // package mismatch (bar vs foo)
-        String filepath = seps("src/main/java/com/salesforce/foo/Foo.java");
-        String pkgpath = seps("com/salesforce/bar");
-        SplitSourcePath sp = SplitSourcePath.splitNamespacedPath(filepath, pkgpath);
-        assertNull(sp);
-
-        // subpackage
-        filepath = seps("src/main/com/salesforce/foo/bar/Foo.java");
-        pkgpath = seps("com/salesforce/foo");
-        sp = SplitSourcePath.splitNamespacedPath(filepath, pkgpath);
-        assertNull(sp);
-
         // no path for file
-        filepath = seps("Foo.java");
-        pkgpath = seps("com/salesforce/foo");
-        sp = SplitSourcePath.splitNamespacedPath(filepath, pkgpath);
+        String filepath = seps("Foo.java");
+        String pkgpath = seps("com/salesforce/foo");
+        SplitSourcePath sp = SplitSourcePath.splitNamespacedPath(filepath, pkgpath);
         assertNull(sp);
 
         // null path
@@ -114,16 +102,11 @@ public class SourcePathTest {
         sp = SplitSourcePath.splitNamespacedPath("Foo.java", null);
         assertNull(sp);
 
-        // Forgot the file
-        filepath = seps("src/main/java/com/salesforce/foo");
+        // missing namespace hierarchy
+        boolean allowMissingPackageHierarchy = false;
+        filepath = seps("source/java/ui/Foo.java");
         pkgpath = seps("com/salesforce/foo");
-        sp = SplitSourcePath.splitNamespacedPath(filepath, pkgpath);
-        assertNull(sp);
-
-        // Forgot the file 2
-        filepath = seps("src/main/java/com/salesforce/foo/");
-        pkgpath = seps("com/salesforce/foo");
-        sp = SplitSourcePath.splitNamespacedPath(filepath, pkgpath);
+        sp = SplitSourcePath.splitNamespacedPath(filepath, pkgpath, allowMissingPackageHierarchy);
         assertNull(sp);
     }
 
@@ -136,6 +119,27 @@ public class SourcePathTest {
         assertNotNull(sp);
         assertEquals(seps("src/main/java/com/salesforce/foo"), sp.sourceDirectoryPath);
         assertEquals(seps("com/salesforce/foo/Foo.java"), sp.filePath);
+
+        boolean allowMissingPackageHierarchy = true;
+
+        // missing hierarchy; in this case we are forced to take the entire path leading up to the file
+        // as the sourceDir. This is because it is actually legal (but bad practice) to put a Java file in any old
+        // directory, and not use the standard hierarchy based on package.
+        filepath = seps("source/java/ui/Foo.java");
+        pkgpath = seps("com/salesforce/foo");
+        sp = SplitSourcePath.splitNamespacedPath(filepath, pkgpath, allowMissingPackageHierarchy);
+        assertNotNull(sp);
+        assertEquals(seps("source/java/ui"), sp.sourceDirectoryPath);
+        assertEquals("Foo.java", sp.filePath);
+
+        // package mismatch (bar vs foo); this also triggers the missing hierarchy use case, and so the entire
+        // directory structure becomes the sourceDir path
+        filepath = seps("src/main/java/com/salesforce/foo/Foo.java");
+        pkgpath = seps("com/salesforce/bar");
+        sp = SplitSourcePath.splitNamespacedPath(filepath, pkgpath, allowMissingPackageHierarchy);
+        assertNotNull(sp);
+        assertEquals(seps("src/main/java/com/salesforce/foo"), sp.sourceDirectoryPath);
+        assertEquals("Foo.java", sp.filePath);
     }
 
     // convert unix paths to windows paths, if running tests on windows
