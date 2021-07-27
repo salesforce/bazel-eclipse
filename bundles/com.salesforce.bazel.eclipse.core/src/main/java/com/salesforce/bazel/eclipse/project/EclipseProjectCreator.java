@@ -63,7 +63,7 @@ public class EclipseProjectCreator {
     }
 
     public IProject createRootProject(String projectName) {
-        IProject rootProject = createProject(projectName, "", Collections.emptyList(), Collections.emptyList());
+        IProject rootProject = createProject(projectName, "", new ProjectStructure(), Collections.emptyList());
         if (rootProject == null) {
             throw new IllegalStateException(
                     "Could not create the root workspace project. Look back in the log for more details.");
@@ -89,7 +89,7 @@ public class EclipseProjectCreator {
 
         if (BazelDirectoryStructureUtil.isBazelPackage(bazelWorkspaceRootDirectory, packageFSPath)) {
             // create the project
-            project = createProject(projectName, packageFSPath, structure.getMainSourceDirFSPaths(), targets);
+            project = createProject(projectName, packageFSPath, structure, targets);
 
             // link all files in the package root into the Eclipse project
             linkFilesInPackageDirectory(fileLinker, project, packageFSPath,
@@ -101,13 +101,13 @@ public class EclipseProjectCreator {
         return project;
     }
 
-    public IProject createProject(String projectName, String packageFSPath, List<String> packageSourceCodeFSPaths,
+    public IProject createProject(String projectName, String packageFSPath, ProjectStructure structure,
             List<BazelLabel> bazelTargets) {
         URI eclipseProjectLocation = null; // let Eclipse use the default location
 
         BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
 
-        IProject eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation);
+        IProject eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation, structure);
         BazelProject bazelProject = bazelProjectManager.getProject(projectName);
         try {
             EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID);
@@ -141,7 +141,8 @@ public class EclipseProjectCreator {
         }
     }
 
-    private static IProject createBaseEclipseProject(String eclipseProjectName, URI location) {
+    private static IProject createBaseEclipseProject(String eclipseProjectName, URI location,
+            ProjectStructure structure) {
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         IProgressMonitor progressMonitor = null;
 
@@ -179,8 +180,11 @@ public class EclipseProjectCreator {
                 eclipseProjectName);
             createdEclipseProject = newEclipseProject;
         }
-        BazelPluginActivator.getBazelProjectManager()
-        .addProject(new BazelProject(eclipseProjectName, createdEclipseProject));
+
+        // create the logical bazel project
+        BazelProject bazelProject = new BazelProject(eclipseProjectName, createdEclipseProject, structure);
+        BazelPluginActivator.getBazelProjectManager().addProject(bazelProject);
+
         return createdEclipseProject;
     }
 }

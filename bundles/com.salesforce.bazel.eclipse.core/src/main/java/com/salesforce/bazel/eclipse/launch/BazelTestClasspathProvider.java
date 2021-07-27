@@ -143,13 +143,14 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
 
         // look for the param files for the test classname and/or targets
         BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult =
-                BazelJvmTestClasspathHelper.findParamFilesForTests(bazelWorkspace, isSource, testClassName, targets);
+                BazelJvmTestClasspathHelper.findParamFilesForTests(bazelWorkspace, bazelProject, isSource,
+                    testClassName, targets);
 
         File base = bazelWorkspace.getBazelExecRootDirectory();
         for (File paramsFile : testParamFilesResult.paramFiles) {
             List<String> jarPaths;
             try {
-                jarPaths = BazelJvmTestClasspathHelper.getSourceAndOutputJarsFromParamsFile(paramsFile);
+                jarPaths = BazelJvmTestClasspathHelper.getClasspathJarsFromParamsFile(paramsFile);
             } catch (IOException e) {
                 throw new CoreException(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(),
                     "Error parsing " + paramsFile.getAbsolutePath(), e));

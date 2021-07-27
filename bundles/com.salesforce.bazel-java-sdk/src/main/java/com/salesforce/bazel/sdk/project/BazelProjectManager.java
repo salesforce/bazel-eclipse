@@ -59,9 +59,13 @@ public abstract class BazelProjectManager {
         logger = LogHelper.log(this.getClass());
     }
 
-    public void addProject(BazelProject project) {
-        projectMap.put(project.name, project);
-        project.bazelProjectManager = this;
+    public void addProject(BazelProject newProject) {
+        BazelProject existingProject = projectMap.get(newProject.name);
+        if (existingProject != null) {
+            newProject.merge(existingProject);
+        }
+        projectMap.put(newProject.name, newProject);
+        newProject.bazelProjectManager = this;
     }
 
     public BazelProject getProject(String name) {
@@ -166,5 +170,4 @@ public abstract class BazelProjectManager {
         cmdRunner.flushAspectInfoCacheForPackage(packageLabel);
         cmdRunner.flushQueryCache(new BazelLabel(packageLabel));
     }
-
 }

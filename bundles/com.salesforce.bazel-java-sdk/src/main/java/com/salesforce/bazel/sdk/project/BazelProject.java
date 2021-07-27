@@ -36,6 +36,7 @@ package com.salesforce.bazel.sdk.project;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 
 /**
  * A BazelProject is a logical concept that has no concrete artifact in the Bazel workspace. It is a BazelPackage that
@@ -46,12 +47,13 @@ import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 public class BazelProject {
     public String name;
 
-    // TODO implement mapping of project to bazel packages contained within
     public List<BazelPackageInfo> bazelPackages;
     public BazelProjectManager bazelProjectManager;
+    public ProjectStructure projectStructure = new ProjectStructure();
 
-    // the tool environment (e.g. IDE) may provide a project implementation object of its own, that is
-    // stored here
+    /**
+     * the tool environment (e.g. IDE) may provide a project implementation object of its own, that is stored here
+     */
     public Object projectImpl;
 
     public BazelProject(String name) {
@@ -74,7 +76,46 @@ public class BazelProject {
         this.projectImpl = projectImpl;
     }
 
+    public BazelProject(String name, Object projectImpl, ProjectStructure projectStructure) {
+        this.name = name;
+        this.projectImpl = projectImpl;
+        this.projectStructure = projectStructure;
+
+    }
+
     public Object getProjectImpl() {
         return projectImpl;
+    }
+
+    public ProjectStructure getProjectStructure() {
+        return projectStructure;
+    }
+
+    /**
+     * Merges this project with the passed project. For each element, this project will win out if it has meaningful
+     * data, else the olderProject data will be used for that element.
+     */
+    public void merge(BazelProject olderProject) {
+        if (olderProject == null) {
+            return;
+        }
+
+        if (!olderProject.name.equals(name)) {
+            throw new IllegalArgumentException(
+                "failed trying to merge BazelProjects of different names: " + name + " and " + olderProject.name);
+        }
+
+        if ((bazelPackages != null) && (bazelPackages.size() > 0)) {
+            olderProject.bazelPackages = bazelPackages;
+        } else {
+            bazelPackages = olderProject.bazelPackages;
+        }
+
+        if (projectStructure != null) {
+            projectStructure.merge(olderProject.projectStructure);
+        } else {
+            projectStructure = olderProject.projectStructure;
+        }
+
     }
 }

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
@@ -26,6 +27,11 @@ public class BazelWorkspace {
     private final String name;
 
     // COLLABORATORS
+
+    /**
+     * Bazel command runner for this workspace
+     */
+    private BazelWorkspaceCommandRunner commandRunner;
 
     /**
      * Strategy delegate that can compute the data for file paths
@@ -88,6 +94,10 @@ public class BazelWorkspace {
         this.bazelWorkspaceRootDirectory = getCanonicalFileSafely(bazelWorkspaceRootDirectory);
         operatingSystem = osEnvStrategy.getOperatingSystemName();
         operatingSystemFoldername = osEnvStrategy.getOperatingSystemDirectoryName(operatingSystem);
+    }
+
+    public void setBazelWorkspaceCommandRunner(BazelWorkspaceCommandRunner runner) {
+        commandRunner = runner;
     }
 
     public void setBazelWorkspaceMetadataStrategy(BazelWorkspaceMetadataStrategy metadataStrategy) {
@@ -162,6 +172,10 @@ public class BazelWorkspace {
 
     public String getOperatingSystemFoldername() {
         return operatingSystemFoldername;
+    }
+
+    public BazelWorkspaceCommandRunner getBazelWorkspaceCommandRunner() {
+        return commandRunner;
     }
 
     public BazelWorkspaceCommandOptions getBazelWorkspaceCommandOptions() {

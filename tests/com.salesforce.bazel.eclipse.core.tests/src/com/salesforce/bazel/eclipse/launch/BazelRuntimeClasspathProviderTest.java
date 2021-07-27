@@ -37,7 +37,7 @@ public class BazelRuntimeClasspathProviderTest {
 
     @Test
     public void getPathsToJars() {
-        List<String> result = BazelJvmTestClasspathHelper.getPathsToJars(new Scanner(PARAM_FILE_CONTENTS));
+        List<String> result = BazelJvmTestClasspathHelper.getClasspathJarsFromParamsFile(new Scanner(PARAM_FILE_CONTENTS));
 
         String deployPath = FSPathHelper.osSeps(
                 "bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/src/test/java/demo/banana/api/BananaTest_deploy.jar"); // $SLASH_OK

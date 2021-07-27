@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.lang.jvm.MavenProjectStructureStrategy;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
@@ -34,6 +36,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * Pluggable strategy for establishing the basic structure of a project. Used early during import.
  */
 public abstract class ProjectStructureStrategy {
+    private static final LogHelper LOG = LogHelper.log(MavenProjectStructureStrategy.class);
 
     // STATIC UTILITIES
 
@@ -73,6 +76,8 @@ public abstract class ProjectStructureStrategy {
             if (strategy.enabled) {
                 result = strategy.doStructureAnalysis(bazelWorkspace, packageNode, commandRunner);
                 if (result != null) {
+                    LOG.info("Package {} file layout was processed by the {}",
+                        packageNode.getBazelPackageFSRelativePath(), strategy.getClass().getName());
                     break;
                 }
             }
