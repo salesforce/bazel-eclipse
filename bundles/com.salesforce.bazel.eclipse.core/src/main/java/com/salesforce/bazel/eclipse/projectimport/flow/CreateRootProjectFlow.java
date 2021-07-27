@@ -46,7 +46,7 @@ public class CreateRootProjectFlow implements ImportFlow {
 
     @Override
     public String getProgressText() {
-        return "Creating root project";
+        return "Creating root project for the Eclipse workspace.";
     }
 
     @Override

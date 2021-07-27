@@ -50,7 +50,7 @@ public class InitImportFlow implements ImportFlow {
 
     @Override
     public String getProgressText() {
-        return "Preparing import";
+        return "Preparing Bazel Eclipse for import.";
     }
 
     @Override
@@ -102,7 +102,7 @@ public class InitImportFlow implements ImportFlow {
                 prefsStore.getBoolean(BazelPreferenceKeys.PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME);
         if (!enabledStructureStrategies) {
             LOG.warn(
-                "The pluggable project structure strategies are disabled which is not the default, but is sometimes disabled by a user to workaround an issue.");
+                    "The pluggable project structure strategies are disabled which is not the default, but is sometimes disabled by a user to workaround an issue.");
         }
         ProjectStructureStrategy.toggleEnableNonrequiredStrategies(enabledStructureStrategies);
 

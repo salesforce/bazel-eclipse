@@ -54,7 +54,7 @@ public class DetermineTargetsFlow implements ImportFlow {
 
     @Override
     public String getProgressText() {
-        return "Analyzing targets";
+        return "Analyzing Bazel targets for use by Eclipse builds.";
     }
 
     @Override

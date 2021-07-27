@@ -42,7 +42,7 @@ public class SetupRootClasspathContainerFlow implements ImportFlow {
 
     @Override
     public String getProgressText() {
-        return "Configuring root project classpath";
+        return "Configuring the root project classpath.";
     }
 
     @Override

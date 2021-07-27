@@ -52,7 +52,7 @@ public class LoadAspectsFlow implements ImportFlow {
 
     @Override
     public String getProgressText() {
-        return "Loading type information";
+        return "Extracting dependency information from Bazel.";
     }
 
     @Override

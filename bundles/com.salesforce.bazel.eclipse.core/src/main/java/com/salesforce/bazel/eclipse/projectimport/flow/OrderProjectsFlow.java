@@ -39,7 +39,7 @@ public class OrderProjectsFlow implements ImportFlow {
 
     @Override
     public String getProgressText() {
-        return "Determining project order";
+        return "Determining the correct order to import the projects.";
     }
 
     @Override

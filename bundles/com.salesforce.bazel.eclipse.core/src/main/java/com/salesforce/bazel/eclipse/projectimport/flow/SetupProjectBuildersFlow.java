@@ -43,7 +43,7 @@ public class SetupProjectBuildersFlow implements ImportFlow {
 
     @Override
     public String getProgressText() {
-        return "Configuring project builders";
+        return "Configuring Eclipse project builders for the imported projects.";
     }
 
     @Override

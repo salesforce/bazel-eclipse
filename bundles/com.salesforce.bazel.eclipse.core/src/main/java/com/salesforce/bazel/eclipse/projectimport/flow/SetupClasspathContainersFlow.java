@@ -43,7 +43,7 @@ import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 public class SetupClasspathContainersFlow implements ImportFlow {
     @Override
     public String getProgressText() {
-        return "Configuring source directories into the classpath containers";
+        return "Configuring the source code directories into the Eclipse classpath containers.";
     }
 
     @Override

@@ -47,7 +47,7 @@ public class CreateProjectsFlow implements ImportFlow {
 
     @Override
     public String getProgressText() {
-        return "Creating projects";
+        return "Creating Eclipse projects to contain the Bazel packages.";
     }
 
     @Override

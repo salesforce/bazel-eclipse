@@ -57,7 +57,7 @@ public class LoadTargetsFlow implements ImportFlow {
 
     @Override
     public String getProgressText() {
-        return "Loading Bazel targets";
+        return "Extracting available Bazel targets for the chosen Bazel packages.";
     }
 
     @Override
