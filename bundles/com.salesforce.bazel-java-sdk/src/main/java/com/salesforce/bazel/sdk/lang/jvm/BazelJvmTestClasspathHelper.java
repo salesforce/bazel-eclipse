@@ -43,9 +43,11 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
+import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 /**
@@ -77,6 +79,7 @@ public class BazelJvmTestClasspathHelper {
     public static String getParamsJarSuffix(boolean isSource) {
         String suffix = BAZEL_DEPLOY_PARAMS_SUFFIX;
         if (isSource) {
+            // TODO what is the use case for finding a test classpath for a src jar?
             suffix = BAZEL_SRC_DEPLOY_PARAMS_SUFFIX;
         }
         return suffix;
@@ -88,8 +91,8 @@ public class BazelJvmTestClasspathHelper {
      * If a testClassName is passed, it will often speed up the operation as the param file for that test class can
      * often be found on the file system.
      */
-    public static ParamFileResult findParamFilesForTests(BazelWorkspace bazelWorkspace, boolean isSource,
-            String testClassName, BazelProjectTargets targets) {
+    public static ParamFileResult findParamFilesForTests(BazelWorkspace bazelWorkspace, BazelProject bazelProject,
+            boolean isSource, String testClassName, BazelProjectTargets targets) {
         ParamFileResult result = null;
 
         // we use a cache because some IDEs may issue the same query multiple times in a short period of time
@@ -105,9 +108,9 @@ public class BazelJvmTestClasspathHelper {
 
         if (result == null) {
             if ((testClassName == null) || testClassName.equals("")) {
-                result = findParamFilesForTestTargets(bazelWorkspace, isSource, targets);
+                result = findParamFilesForTestTargets(bazelWorkspace, bazelProject, isSource, targets);
             } else {
-                result = findParamFilesForTestClassname(bazelWorkspace, isSource, targets, testClassName);
+                result = findParamFilesForTestClassname(bazelWorkspace, bazelProject, isSource, targets, testClassName);
             }
             cachedResults.put(cacheKey, result);
         }
@@ -139,8 +142,8 @@ public class BazelJvmTestClasspathHelper {
      * <p>
      * Internally, this method uses Bazel query, which is somewhat expensive.
      */
-    public static ParamFileResult findParamFilesForTestTargets(BazelWorkspace bazelWorkspace, boolean isSource,
-            BazelProjectTargets targets) {
+    public static ParamFileResult findParamFilesForTestTargets(BazelWorkspace bazelWorkspace, BazelProject bazelProject,
+            boolean isSource, BazelProjectTargets targets) {
         ParamFileResult result = new ParamFileResult();
 
         File bazelBinDir = bazelWorkspace.getBazelBinDirectory();
@@ -169,67 +172,107 @@ public class BazelJvmTestClasspathHelper {
      * Looks up the param files associated with the passed testclass. If this command needs to resort to a bazel query
      * to find it, the scope of the bazel query commands will be the passed targets.
      */
-    public static ParamFileResult findParamFilesForTestClassname(BazelWorkspace bazelWorkspace, boolean isSource,
-            BazelProjectTargets targets, String testClassName) {
+    public static ParamFileResult findParamFilesForTestClassname(BazelWorkspace bazelWorkspace,
+            BazelProject bazelProject, boolean isSource, BazelProjectTargets targets, String testClassName) {
         ParamFileResult result = new ParamFileResult();
 
         String suffix = BazelJvmTestClasspathHelper.getParamsJarSuffix(isSource);
 
         for (String target : targets.getConfiguredTargets()) {
-            Set<File> testParamFiles = BazelJvmTestClasspathHelper.findParamsFileForTestClassnameAndTarget(bazelWorkspace, target,
-                testClassName, suffix);
+            Set<File> testParamFiles = BazelJvmTestClasspathHelper.findParamsFileForTestClassnameAndTarget(
+                bazelWorkspace, bazelProject, target, testClassName, suffix);
             result.paramFiles.addAll(testParamFiles);
         }
         return result;
     }
 
     /**
-     * Bazel maintains a params file for each java_test rule. This method finds it.
-     * <p>
-     * TODO This needs to be re-implemented - the path is hardcoded. It should be path of the test rule Remove hardcoded
-     * src/test/java
-     *
-     * @param project
-     * @param paramsName
-     * @param target
-     * @return
+     * Bazel maintains a params file for each java_test rule. It contains classpath info for the test. This method finds
+     * the params file.
      */
-    public static Set<File> findParamsFileForTestClassnameAndTarget(BazelWorkspace bazelWorkspace, String target, String className,
+    public static Set<File> findParamsFileForTestClassnameAndTarget(BazelWorkspace bazelWorkspace,
+            BazelProject bazelProject, String target, String className,
             String suffix) {
+        // TODO in what case will there be multiple test param files?
         Set<File> paramFiles = new HashSet<>();
-
+        File paramFile = null;
         String targetPath = target.split(":")[0];
-
-        // testJar for bazel's iterative test rules
         File bazelBinDir = bazelWorkspace.getBazelBinDirectory();
+
+        // check the expected locations for param files; this is the fastest way but only works
+        // if the java_test rule instance is named the same as the package+class (which is common)
+        //   java_test( name = "com.salesforce.foo.FooTest" ...
         String paramsName = className.replace('.', File.separatorChar) + suffix;
-
-        File targetBinPath = new File(bazelBinDir, targetPath);
-        File targetBinTestPath = new File(targetBinPath, FSPathHelper.osSeps("src/test/java")); // $SLASH_OK
-
-        File paramFile = new File(targetBinTestPath, paramsName);
-        if (paramFile.exists()) {
-            paramFiles.add(paramFile);
-        } else {
-            // find the testJar for single test rule using Bazel Query
-            String query = "attr(test_class, " + className + "$, " + target + ")";
-            List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
-
-            for (String label : labels) {
-                String targetName = label.substring(label.lastIndexOf(":") + 1);
-                String paramFilename = targetName + suffix;
-                paramFile = new File(targetBinPath, paramFilename);
-
-                if (paramFile.exists()) {
-                    paramFiles.add(paramFile);
-                } else {
-                    LOG.error(
-                        "Test params file does not exist for: \ntarget [{}] \nclassname [{}] \nsuffix [{}]"
-                                + "\nquery [{}] \nlabel [{}] \nfilename [{}] \npath [{}]",
-                                target, className, suffix, query, label, paramFilename, paramFile.getAbsolutePath());
-                }
+        List<String> testPaths = bazelProject.getProjectStructure().testSourceDirFSPaths;
+        for (String relTestPath : testPaths) {
+            File targetBinTestPath = new File(bazelBinDir, FSPathHelper.osSeps(relTestPath));
+            paramFile = new File(targetBinTestPath, paramsName);
+            if (paramFile.exists()) {
+                paramFiles.add(paramFile);
+                LOG.info("Found the test params file for {} the cheap way.", className);
+                break;
+            } else {
+                paramFile = null;
             }
         }
+        if (paramFiles.size() > 0) {
+            // found useful param files
+            return paramFiles;
+        }
+
+        // the cheap way failed, now find the target name for the test rule using more expensive Bazel Query
+        // TODO we are using the param files because that is a cheap option, but once we start hitting bazel query and builds
+        //  below, I think we should be using the aspects instead (which should be cached by this point)
+        String query = "attr(test_class, " + className + "$, " + target + ")";
+        List<String> labels = bazelWorkspace.getTargetsForBazelQuery(query);
+
+        // we can now sanity check the request - does this test class even have java_test target?
+        if (labels.size() == 0) {
+            // no, this is a dangling test class without a java_test rule
+            LOG.error("The test class {} does not have a target defined in the BUILD file.", className);
+            return paramFiles;
+        }
+
+        // TODO we can have multiple labels if the same test class is used multiple times in a BUILD file? perhaps with different resource files to test different cases? figure this out
+        for (String label : labels) {
+            String targetName = label.substring(label.lastIndexOf(":") + 1);
+            String paramFilename = targetName + suffix;
+            File targetBinPath = new File(bazelBinDir, targetPath);
+            paramFile = new File(targetBinPath, paramFilename);
+
+            if (paramFile.exists()) {
+                paramFiles.add(paramFile);
+                LOG.info("Found the test params file for {} the expensive way.", className);
+            } else {
+                // still haven't found the param file; this is because the output dir does not have a
+                // {target}_deploy.jar-0.params file, which is because a build with * target hasnt been run
+                // recently with this package now we have to do more expensive operations - run the deploy
+                // build target for this test
+                BazelWorkspaceCommandRunner commandRunner = bazelWorkspace.getBazelWorkspaceCommandRunner();
+                Set<String> buildTargets = new HashSet<>();
+                buildTargets.add(label + "_deploy.jar");
+                try {
+                    commandRunner.runBazelBuild(buildTargets, new ArrayList<>());
+                    if (paramFile.exists()) {
+                        paramFiles.add(paramFile);
+                        LOG.info("Found the test params file for {} the extra expensive way.", className);
+                    }
+                } catch (Exception anyE) {
+                    LOG.error("Could not build target {}, which is needed to compute the classpath for the test",
+                        label + "_deploy.jar");
+                }
+
+            }
+        }
+        if (paramFiles.size() > 0) {
+            // found useful param files
+            return paramFiles;
+        }
+
+        // TODO we failed to get the classpath; we need to set the classpath to something, so we dont blow up so badly;
+        //   we should just use the already computed classpath for the entire project
+        LOG.error("The test class {} does not have a classpath data persisted in the output directories.", className);
+
         return paramFiles;
     }
 
@@ -247,22 +290,22 @@ public class BazelJvmTestClasspathHelper {
      */
 
     /**
-     * Parse the output/source jars from the given params file.
+     * Parse the classpath jars from the given params file.
      */
-    public static List<String> getSourceAndOutputJarsFromParamsFile(File paramsFile) throws IOException {
+    public static List<String> getClasspathJarsFromParamsFile(File paramsFile) throws IOException {
         if (!paramsFile.exists()) {
             return null;
         }
         try (Scanner scanner = new Scanner(paramsFile)) {
-            return getPathsToJars(scanner);
+            return getClasspathJarsFromParamsFile(scanner);
         }
     }
 
     /**
-     * Parses the param file, looking for source and output entries. These entries point to the materialized files for
-     * the classpath for the test.
+     * Parses the param file, looking for classpath entries. These entries point to the materialized files for the
+     * classpath for the test.
      */
-    public static List<String> getPathsToJars(Scanner scanner) {
+    public static List<String> getClasspathJarsFromParamsFile(Scanner scanner) {
         List<String> result = new ArrayList<>();
         boolean addToResult = false;
         while (scanner.hasNextLine()) {
@@ -286,5 +329,4 @@ public class BazelJvmTestClasspathHelper {
         }
         return result;
     }
-
 }

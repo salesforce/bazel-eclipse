@@ -260,7 +260,9 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             }
         }
         bazelWorkspace = new BazelWorkspace(workspaceName, rootDirectory, osEnvStrategy);
-        bazelWorkspace.setBazelWorkspaceMetadataStrategy(getWorkspaceCommandRunner());
+        BazelWorkspaceCommandRunner commandRunner = getWorkspaceCommandRunner();
+        bazelWorkspace.setBazelWorkspaceMetadataStrategy(commandRunner);
+        bazelWorkspace.setBazelWorkspaceCommandRunner(commandRunner);
 
         // write it to the preferences file
         configurationManager.setBazelWorkspacePath(rootDirectory.getAbsolutePath());

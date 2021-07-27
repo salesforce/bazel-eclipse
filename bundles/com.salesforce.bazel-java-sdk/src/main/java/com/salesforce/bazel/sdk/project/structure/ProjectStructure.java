@@ -30,8 +30,6 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Value object that holds the layout of source directories in a Bazel project.
- * <p>
- * TODO merge this with BazelProject?
  */
 public class ProjectStructure {
 
@@ -43,7 +41,7 @@ public class ProjectStructure {
      * <p>
      * Example: projects/libs/apple/apple-api/src/main/java
      */
-    public final List<String> mainSourceDirFSPaths = new ArrayList<>();
+    public List<String> mainSourceDirFSPaths = new ArrayList<>();
 
     /**
      * The relative file system paths, starting at the root of the workspace, to the directories containing the test
@@ -53,7 +51,7 @@ public class ProjectStructure {
      * <p>
      * Example: projects/libs/apple/apple-api/src/test/java
      */
-    public final List<String> testSourceDirFSPaths = new ArrayList<>();
+    public List<String> testSourceDirFSPaths = new ArrayList<>();
 
     public List<String> getMainSourceDirFSPaths() {
         return mainSourceDirFSPaths;
@@ -61,6 +59,26 @@ public class ProjectStructure {
 
     public List<String> getTestSourceDirFSPaths() {
         return testSourceDirFSPaths;
+    }
+
+    /**
+     * Merges this structure with the passed structure. For each element, this structure will win out if it has
+     * meaningful data, else the olderStructure data will be used for that element.
+     */
+    public void merge(ProjectStructure olderStructure) {
+        if (olderStructure == null) {
+            return;
+        }
+        if (mainSourceDirFSPaths.size() > 0) {
+            olderStructure.mainSourceDirFSPaths = mainSourceDirFSPaths;
+        } else {
+            mainSourceDirFSPaths = olderStructure.mainSourceDirFSPaths;
+        }
+        if (testSourceDirFSPaths.size() > 0) {
+            olderStructure.testSourceDirFSPaths = testSourceDirFSPaths;
+        } else {
+            testSourceDirFSPaths = olderStructure.testSourceDirFSPaths;
+        }
     }
 
     // DEPRECATED

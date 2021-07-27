@@ -93,13 +93,15 @@ public class TestBazelCommandEnvironmentFactory {
         commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace, testOptions);
 
         BazelCommandManager bazelCommandManager = new BazelCommandManager(bazelAspectLocation, commandBuilder,
-                commandConsole, bazelExecutable.bazelExecutableFile);
+            commandConsole, bazelExecutable.bazelExecutableFile);
         bazelCommandManager.setBazelExecutablePath(bazelExecutable.bazelExecutableFile.getAbsolutePath());
 
         OperatingEnvironmentDetectionStrategy osStrategy = Mockito.mock(OperatingEnvironmentDetectionStrategy.class);
         BazelWorkspace bazelWorkspace =
                 new BazelWorkspace("test", testWorkspace.workspaceDescriptor.workspaceRootDirectory, osStrategy);
-        bazelWorkspace.setBazelWorkspaceMetadataStrategy(bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace));
+        BazelWorkspaceCommandRunner commandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
+        bazelWorkspace.setBazelWorkspaceMetadataStrategy(commandRunner);
+        bazelWorkspace.setBazelWorkspaceCommandRunner(commandRunner);
 
         globalCommandRunner = bazelCommandManager.getGlobalCommandRunner();
         bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
