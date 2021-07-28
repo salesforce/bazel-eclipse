@@ -23,6 +23,8 @@
  */
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
+import java.io.File;
+import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.core.resources.IProject;
@@ -34,6 +36,10 @@ import org.eclipse.jdt.core.IJavaProject;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
+import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
+import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndex;
+import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * Configures the classpath container for the special root project.
@@ -57,5 +63,17 @@ public class SetupRootClasspathContainerFlow implements ImportFlow {
         IProject rootProject = ctx.getRootProject();
         IJavaProject javaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(rootProject);
         javaProject.setRawClasspath(new IClasspathEntry[] { cpe }, null);
+
+        // trigger the load of the global search index
+        BazelPluginActivator activator = BazelPluginActivator.getInstance();
+        if (activator.getConfigurationManager().isGlobalClasspathSearchEnabled()) {
+            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+            BazelExternalJarRuleManager externalJarManager = activator.getBazelExternalJarRuleManager();
+            List<File> additionalJarLocations = BazelGlobalSearchClasspathContainer.loadAdditionalLocations();
+
+            // this might take a while if it hasn't been computed yet
+            JvmCodeIndex.buildWorkspaceIndex(bazelWorkspace, externalJarManager, additionalJarLocations,
+                new EclipseWorkProgressMonitor(progressSubMonitor));
+        }
     }
 }

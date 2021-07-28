@@ -60,16 +60,16 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * within the package are excluded from the classpath, as they are presumed to be represented by source code found in
  * source folders.
  */
-public class BazelJvmClasspath {
+public class BazelJvmClasspath implements JvmClasspath {
     // TODO make classpath cache timeout configurable
     private static final long CLASSPATH_CACHE_TIMEOUT_MS = 300000;
 
-    private final BazelWorkspace bazelWorkspace;
-    private final BazelProjectManager bazelProjectManager;
-    private final BazelProject bazelProject;
-    private final ImplicitClasspathHelper implicitDependencyHelper;
-    private final OperatingEnvironmentDetectionStrategy osDetector;
-    private final BazelCommandManager bazelCommandManager;
+    protected final BazelWorkspace bazelWorkspace;
+    protected final BazelProjectManager bazelProjectManager;
+    protected final BazelProject bazelProject;
+    protected final ImplicitClasspathHelper implicitDependencyHelper;
+    protected final OperatingEnvironmentDetectionStrategy osDetector;
+    protected final BazelCommandManager bazelCommandManager;
     private final LogHelper logger;
 
     private BazelJvmClasspathResponse cachedEntries;
@@ -99,6 +99,7 @@ public class BazelJvmClasspath {
      * TODO provide different classpath strategies. This one the Maven-like/Eclipse JDT style, where the classpath is
      * the union of the classpaths of all java rules in the package.
      */
+    @Override
     public BazelJvmClasspathResponse getClasspathEntries() {
         // sanity check
         if (bazelWorkspace == null) {
@@ -195,7 +196,7 @@ public class BazelJvmClasspath {
                             // some other case like java_binary, proto_library, java_proto_library, etc
                             // proceed but log a warn
                             logger.info("Found unsupported target type as dependency: " + jvmTargetInfo.getKind()
-                                    + "; the JVM classpath processor currently supports java_library or java_import.");
+                            + "; the JVM classpath processor currently supports java_library or java_import.");
                         }
                     }
 

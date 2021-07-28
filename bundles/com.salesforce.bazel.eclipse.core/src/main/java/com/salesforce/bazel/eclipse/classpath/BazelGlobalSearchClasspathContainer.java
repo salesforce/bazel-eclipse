@@ -79,7 +79,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     private static List<BazelJvmIndexClasspath> instances = new ArrayList<>();
 
     public BazelGlobalSearchClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
 
@@ -95,17 +95,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
         BazelExternalJarRuleManager externalJarManager = activator.getBazelExternalJarRuleManager();
 
         // check if the user has provided an additional location to look for jars
-        List<File> additionalJarLocations = null;
-        IPreferenceStore prefs = activator.getPreferenceStore();
-        String jarCacheDir = prefs.getString(BazelPreferenceKeys.EXTERNAL_JAR_CACHE_PATH_PREF_NAME);
-        if (jarCacheDir != null) {
-            // user has specified a location, make sure it exists
-            File jarCacheDirFile = new File(jarCacheDir);
-            if (jarCacheDirFile.exists()) {
-                additionalJarLocations = new ArrayList<>();
-                additionalJarLocations.add(jarCacheDirFile);
-            }
-        }
+        List<File> additionalJarLocations = loadAdditionalLocations();
 
         bazelJvmIndexClasspath =
                 new BazelJvmIndexClasspath(bazelWorkspace, os, externalJarManager, additionalJarLocations);
@@ -124,7 +114,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     }
 
     @Override
-    protected BazelJvmClasspathResponse computeClasspath() {
+    public BazelJvmClasspathResponse computeClasspath() {
         if (!config.isGlobalClasspathSearchEnabled()) {
             // user has disabled the global search feature
             return new BazelJvmClasspathResponse();
@@ -146,5 +136,24 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
         for (BazelJvmIndexClasspath instance : instances) {
             instance.clearCache();
         }
+    }
+
+    /**
+     * Uses the preference store in Eclipse to get additional locations in which to look for jars.
+     */
+    public static List<File> loadAdditionalLocations() {
+        List<File> additionalJarLocations = null;
+        BazelPluginActivator activator = BazelPluginActivator.getInstance();
+        IPreferenceStore prefs = activator.getPreferenceStore();
+        String jarCacheDir = prefs.getString(BazelPreferenceKeys.EXTERNAL_JAR_CACHE_PATH_PREF_NAME);
+        if (jarCacheDir != null) {
+            // user has specified a location, make sure it exists
+            File jarCacheDirFile = new File(jarCacheDir);
+            if (jarCacheDirFile.exists()) {
+                additionalJarLocations = new ArrayList<>();
+                additionalJarLocations.add(jarCacheDirFile);
+            }
+        }
+        return additionalJarLocations;
     }
 }

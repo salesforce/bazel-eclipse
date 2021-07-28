@@ -28,13 +28,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.index.CodeIndexEntry;
-import com.salesforce.bazel.sdk.index.jvm.jar.JarIdentiferResolver;
-import com.salesforce.bazel.sdk.index.jvm.jar.JavaJarCrawler;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
-import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleType;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
@@ -60,6 +57,8 @@ public class BazelJvmIndexClasspath {
      */
     protected List<File> additionalJarLocations;
 
+    // computed data
+    protected JvmCodeIndex index;
     protected BazelJvmClasspathResponse cacheResponse;
 
     /**
@@ -77,52 +76,36 @@ public class BazelJvmIndexClasspath {
      * Computes the JVM classpath for the associated Bazel workspace. The first invocation is expected to take a long
      * time, but subsequent invocations will read from cache.
      */
-    public BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
+    public synchronized BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
         if (cacheResponse != null) {
             return cacheResponse;
         }
-        JvmCodeIndex index = new JvmCodeIndex();
-        List<File> locations = new ArrayList<>();
 
-        // for each jar downloading rule type in the workspace, add the appropriate local directories of the downloaded jars
-        List<BazelExternalJarRuleType> ruleTypes =
-                externalJarRuleManager.findInUseExternalJarRuleTypes(this.bazelWorkspace);
-        for (BazelExternalJarRuleType ruleType : ruleTypes) {
-            List<File> ruleSpecificLocations = ruleType.getDownloadedJarLocations(bazelWorkspace);
-            locations.addAll(ruleSpecificLocations);
-        }
-
-        // add internal location (jars built by the bazel workspace
-        addInternalLocations(locations);
-
-        // add the additional directories the user wants to search
-        if (additionalJarLocations != null) {
-            locations.addAll(additionalJarLocations);
-        }
-
-        // now do the searching
-        for (File location : locations) {
-            getClasspathEntriesInternal(location, index, progressMonitor);
-        }
-
+        index = JvmCodeIndex.buildWorkspaceIndex(bazelWorkspace, externalJarRuleManager, additionalJarLocations,
+            progressMonitor);
         cacheResponse = convertIndexIntoResponse(index);
+
         return cacheResponse;
+    }
+
+    /**
+     * Gets the computed index.
+     */
+    public synchronized JvmCodeIndex getIndex(WorkProgressMonitor progressMonitor) {
+        if (index != null) {
+            return index;
+        }
+        index = JvmCodeIndex.buildWorkspaceIndex(bazelWorkspace, externalJarRuleManager, additionalJarLocations,
+            progressMonitor);
+        return index;
     }
 
     /**
      * Clears the cache, which will make the next invocation of getClasspathEntries() expensive.
      */
-    public void clearCache() {
+    public synchronized void clearCache() {
+        index = null;
         cacheResponse = null;
-    }
-
-    /* visible for testing */
-    void getClasspathEntriesInternal(File location, JvmCodeIndex index, WorkProgressMonitor progressMonitor) {
-        if (location != null && location.exists()) {
-            JarIdentiferResolver jarResolver = new JarIdentiferResolver();
-            JavaJarCrawler jarCrawler = new JavaJarCrawler(index, jarResolver);
-            jarCrawler.index(location, false);
-        }
     }
 
     protected BazelJvmClasspathResponse convertIndexIntoResponse(JvmCodeIndex index) {
@@ -166,9 +149,5 @@ public class BazelJvmIndexClasspath {
             cpEntry = new JvmClasspathEntry(location.locationOnDisk.getPath(), candidateSourcePath.getPath(), false);
         }
         entries.add(cpEntry);
-    }
-
-    protected void addInternalLocations(List<File> locations) {
-        // TODO INTERNAL (jars produced by Bazel)
     }
 }

@@ -35,9 +35,19 @@ package com.salesforce.bazel.sdk.path;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Constants and utils for file system paths.
@@ -185,4 +195,65 @@ public final class FSPathHelper {
         }
         return "";
     }
+
+    /**
+     * Utility to find all files in a tree with a particular extension.
+     */
+    public static Set<File> findFileLocations(File dir, String extension, WorkProgressMonitor monitor, int depth) {
+        if (!dir.isDirectory()) {
+            return null;
+        }
+        Set<File> fileLocations = new TreeSet<>();
+
+        try {
+
+            // collect all Java files
+            List<Path> files = new ArrayList<>(1000);
+
+            Path start = dir.toPath();
+            Files.walkFileTree(start, new FileVisitor<Path>() {
+
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (isFileWithExtension(file, extension)) {
+                        files.add(file);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+            });
+
+            // normally in the SDK we do not use Java streams, to make the code more accessible, but the parallel
+            // streaming here really speeds up the file system scan
+            Set<File> syncSet = Collections.synchronizedSet(fileLocations);
+            files.parallelStream().forEach(file -> {
+                syncSet.add(FSPathHelper.getCanonicalFileSafely(file.toFile()));
+            });
+
+        } catch (Exception anyE) {
+            LOG.error("ERROR scanning for files with extension {} in location {}", anyE, extension,
+                dir.getAbsolutePath());
+        }
+        return fileLocations;
+    }
+
+    private static boolean isFileWithExtension(Path candidate, String extension) {
+        return candidate.getFileName().toString().endsWith(extension);
+    }
+
 }
