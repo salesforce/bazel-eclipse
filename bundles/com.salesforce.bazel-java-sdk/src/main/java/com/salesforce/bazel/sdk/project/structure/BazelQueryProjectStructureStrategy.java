@@ -68,6 +68,7 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
         File workspaceRootDir = bazelWorkspace.getBazelWorkspaceRootDirectory();
         String packageRelPath = packageNode.getBazelPackageFSRelativePath();
         File packageDir = new File(workspaceRootDir, packageRelPath); // TODO move this to the PackageLocation api
+        result.projectPath = packageDir;
 
         BazelLabel packageLabel = new BazelLabel(packageRelPath, BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR);
 

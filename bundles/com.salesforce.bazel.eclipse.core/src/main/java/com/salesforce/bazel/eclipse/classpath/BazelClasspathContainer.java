@@ -49,16 +49,20 @@ import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.DynamicBazelJvmClasspath;
 
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
 
     protected final BazelJvmClasspath bazelClasspath;
 
+    // TODO make this an Eclipse pref
+    public boolean USE_DYNAMIC_CP = false;
+
     private static List<BazelJvmClasspath> instances = new ArrayList<>();
 
     public BazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
 
@@ -67,13 +71,22 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
             BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper);
 
-        bazelClasspath = new BazelJvmClasspath(this.bazelWorkspace, bazelProjectManager, bazelProject,
+        if (USE_DYNAMIC_CP) {
+            bazelClasspath = new DynamicBazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
+                new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager(),
+                null);
+        } else {
+            bazelClasspath = new BazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
                 new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
+        }
         instances.add(bazelClasspath);
     }
 
     @Override
     public String getDescription() {
+        if (USE_DYNAMIC_CP) {
+            return "Dynamic Classpath Container";
+        }
         return "Bazel Classpath Container";
     }
 

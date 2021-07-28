@@ -23,6 +23,7 @@
  */
 package com.salesforce.bazel.sdk.project.structure;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,8 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * Value object that holds the layout of source directories in a Bazel project.
  */
 public class ProjectStructure {
+
+    public File projectPath;
 
     /**
      * The relative file system paths, starting at the root of the workspace, to the directories containing the main
@@ -52,6 +55,14 @@ public class ProjectStructure {
      * Example: projects/libs/apple/apple-api/src/test/java
      */
     public List<String> testSourceDirFSPaths = new ArrayList<>();
+
+    public ProjectStructure() {
+
+    }
+
+    public File getProjectPath() {
+        return projectPath;
+    }
 
     public List<String> getMainSourceDirFSPaths() {
         return mainSourceDirFSPaths;

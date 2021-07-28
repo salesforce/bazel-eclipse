@@ -46,13 +46,14 @@ public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
     @Override
     public ProjectStructure doStructureAnalysis(BazelWorkspace bazelWorkspace, BazelPackageLocation packageNode,
             BazelWorkspaceCommandRunner commandRunner) {
-        ProjectStructure result = new ProjectStructure();
 
         // NOTE: order of adding the result.packageSourceCodeFSPaths array is important. Eclipse
         // will honor that order in the project explorer
 
         File workspaceRootDir = bazelWorkspace.getBazelWorkspaceRootDirectory();
         String packageRelPath = packageNode.getBazelPackageFSRelativePath();
+        ProjectStructure result = new ProjectStructure();
+        result.projectPath = new File(workspaceRootDir, packageRelPath);
 
         // MAVEN MAIN SRC
         String mainSrcRelPath =
