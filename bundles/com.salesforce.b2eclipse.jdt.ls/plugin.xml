@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="com.salesforce.b2eclipse.bazelNature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="com.salesforce.b2eclipse.BazelNature">
+         </run>
+      </runtime>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="com.salesforce.b2eclipse.classpath.BazelClasspathContainerInitializer"
+            id="com.salesforce.bazel.eclipse.BAZEL_CONTAINER">
+      </classpathContainerInitializer>
+   </extension>
+      <extension
+         id="importers"
+         point="org.eclipse.jdt.ls.core.importers">
+         <importer
+            id = "bazelProjectImporter"
+            order ="500"
+            class = "com.salesforce.b2eclipse.managers.BazelProjectImporter"/>
+   </extension>
+   <extension
+   		 id="buildSupporter"
+         point="org.eclipse.jdt.ls.core.buildSupport">
+         <buildSupport
+         	id="bazelSupport"
+         	order="500"
+         	class="com.salesforce.b2eclipse.managers.BazelBuildSupport" />
+   </extension>
+</plugin>

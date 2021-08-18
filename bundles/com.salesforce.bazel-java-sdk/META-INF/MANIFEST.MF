@@ -1,10 +1,13 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Eclipse-BundleShape: dir
 Bundle-Name: Bazel Java SDK Plugin
 Bundle-SymbolicName: com.salesforce.bazel-java-sdk;singleton:=true
-Automatic-Module-Name: com.salesforce.bazel.eclipse.model
 Bundle-Version: 1.5.0.qualifier
+Bundle-Vendor: Salesforce
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Automatic-Module-Name: com.salesforce.bazel.eclipse.model
+Bundle-ActivationPolicy: lazy
+Eclipse-BundleShape: dir
 Export-Package: com.salesforce.bazel.sdk.aspect,
  com.salesforce.bazel.sdk.aspect.jvm,
  com.salesforce.bazel.sdk.command,
@@ -25,6 +28,3 @@ Export-Package: com.salesforce.bazel.sdk.aspect,
  com.salesforce.bazel.sdk.project.structure,
  com.salesforce.bazel.sdk.util,
  com.salesforce.bazel.sdk.workspace
-Bundle-Vendor: Salesforce
-Bundle-RequiredExecutionEnvironment: JavaSE-11
-Bundle-ActivationPolicy: lazy

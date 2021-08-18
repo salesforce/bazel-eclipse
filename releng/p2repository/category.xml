@@ -3,6 +3,9 @@
    <feature id="com.salesforce.bazel.eclipse.feature">
       <category name="com.salesforce.bazel.eclipse"/>
    </feature>
+   <feature id="com.salesforce.b2eclipse.jdt.ls.feature">
+      <category name="com.salesforce.bazel.eclipse"/>
+   </feature>
    <category-def name="com.salesforce.bazel.eclipse" label="Bazel">
       <description>
          Bazel Eclipse Feature provides support for the Bazel build system in Eclipse. https://github.com/salesforce/bazel-eclipse
