@@ -1,4 +1,4 @@
-## Preferences and Settings with the Bazel Eclipse Feature
+## Preferences and Settings with the Bazel Eclipse Feature ![BEF Logo](logos/bef_logo_small.png)
 
 As a power user, you will want to configure your IDE the way you like it.
 This page documents some ways to do that.

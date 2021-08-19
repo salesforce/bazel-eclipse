@@ -1,4 +1,4 @@
-# Bazel Eclipse Feature: Launch Configurations
+# Bazel Eclipse Feature: Launch Configurations ![BEF Logo](logos/bef_logo_small.png)
 
 Running external processes, tests or apps (Java main methods) is supported using Bazel Launch Configurations.
 

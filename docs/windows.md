@@ -1,4 +1,4 @@
-## Bazel Eclipse Feature for Windows
+## Bazel Eclipse Feature for Windows ![BEF Logo](logos/bef_logo_small.png)
 
 Windows support has been introduced into the code line as of June 2021 and the
   first release with Windows support is [1.4.0](https://github.com/salesforce/bazel-eclipse/releases).
