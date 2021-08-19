@@ -63,6 +63,7 @@ public class BazelWorkspaceScannerTest {
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
 
+        assertEquals(5, scanner.projects.size());
         assertEquals(5, rootWorkspacePackage.getChildPackageInfos().size());
     }
 
@@ -87,6 +88,7 @@ public class BazelWorkspaceScannerTest {
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
 
+        assertEquals(0, scanner.projects.size());
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());
     }
 
@@ -99,6 +101,7 @@ public class BazelWorkspaceScannerTest {
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
         BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
 
+        assertEquals(0, scanner.projects.size());
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());
     }
 }

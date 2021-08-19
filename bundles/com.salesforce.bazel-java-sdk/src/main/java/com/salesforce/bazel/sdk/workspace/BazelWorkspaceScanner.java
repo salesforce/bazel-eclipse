@@ -49,6 +49,10 @@ import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 public class BazelWorkspaceScanner {
     private static final LogHelper LOG = LogHelper.log(BazelWorkspaceScanner.class);
 
+    // list of found projects from the last scan; this is only intended to be accessed by tests
+    // this class is not intended to maintain state for real applications
+    Set<File> projects = null;
+
     private static final int MEANINGFUL_DIR_NAME_THRESHOLD = 3;
 
     public static String getBazelWorkspaceName(String bazelWorkspaceRootDirectory) {
@@ -126,7 +130,7 @@ public class BazelWorkspaceScanner {
         // TODO the correct way to do this is put the scan on another thread, and allow it to update the progress monitor.
         // Do it on-thread for now as it is easiest.
 
-        Set<File> projects = new TreeSet<>();
+        projects = new TreeSet<>();
         BazelPackageFinder packageFinder = new BazelPackageFinder();
         packageFinder.findBuildFileLocations(rootDirectoryFile, null, projects, 0);
 

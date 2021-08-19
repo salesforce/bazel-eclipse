@@ -152,19 +152,6 @@ public class BazelPackageInfo implements BazelPackageLocation {
                     + "] was used to construct a BazelPackageInfo.");
         }
 
-        File workspaceFile = new File(directory, WORKSPACE_FILENAME);
-        if (workspaceFile.exists()) {
-            throw new IllegalArgumentException(
-                    "The path [" + directory.getAbsolutePath() + "] contains a " + WORKSPACE_FILENAME
-                            + " file. Nested workspaces are not supported by BazelPackageInfo at this time");
-        }
-        workspaceFile = new File(directory, WORKSPACE_FILENAME_ALT);
-        if (workspaceFile.exists()) {
-            throw new IllegalArgumentException(
-                    "The path [" + directory.getAbsolutePath() + "] contains a " + WORKSPACE_FILENAME_ALT
-                            + " file. Nested workspaces are not supported by BazelPackageInfo at this time");
-        }
-
         // compute and cache the package name
         String packageName = getBazelPackageName();
 
@@ -432,11 +419,11 @@ public class BazelPackageInfo implements BazelPackageLocation {
     public void gatherChildrenRecur(List<BazelPackageLocation> gatherList, String pathFilter) {
         if (!isWorkspaceRoot()) {
             if (pathFilter != null) {
-                if (this.relativeWorkspacePath.startsWith(pathFilter)) {
+                if (relativeWorkspacePath.startsWith(pathFilter)) {
                     // this relative path is projects/libs/foo/bar and the filter is projects/libs/foo
                     gatherList.add(this);
                     pathFilter = null; // we don't need to filter any children from here
-                } else if (this.relativeWorkspacePath.length() > pathFilter.length()) {
+                } else if (relativeWorkspacePath.length() > pathFilter.length()) {
                     // we must be in a different branch than the filter, exit this branch
                     return;
                 }
