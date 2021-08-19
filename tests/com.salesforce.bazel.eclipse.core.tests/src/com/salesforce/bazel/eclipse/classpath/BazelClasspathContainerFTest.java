@@ -224,8 +224,8 @@ public class BazelClasspathContainerFTest {
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");
         javalib1_IJavaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(javalib1_IProject);
 
-        assertTrue(mockEclipse.getBazelWorkspaceCreator().workspaceDescriptor.createdPackages.size() == 4);
-        //        assertTrue(mockEclipse.getBazelWorkspaceCreator().workspaceDescriptor.createdTargets.size() == 4);
+        assertEquals(4, mockEclipse.getBazelWorkspaceCreator().workspaceDescriptor.createdPackages.size());
+        //        assertEquals(4, mockEclipse.getBazelWorkspaceCreator().workspaceDescriptor.createdTargets.size());
 
         return mockEclipse;
     }

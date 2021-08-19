@@ -72,27 +72,6 @@ public class BazelPackageInfoTest {
         assertTrue(root.getChildPackageInfos().contains(child2));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNestedWorkspace() throws IOException {
-        BazelPackageInfo root = getRootBazelPackageInfo(true);
-
-        File nestedWSDir = tmpDir.newFolder("root", "nestedWS");
-        new File(nestedWSDir, "WORKSPACE").createNewFile();
-
-        // will throw, as we don't support nested workspaces yet
-        new BazelPackageInfo(root, "nestedWS");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testNestedWorkspaceWithWorkspaceDotBazel() throws IOException {
-        BazelPackageInfo root = getRootBazelPackageInfo(true);
-
-        File nestedWSDir = tmpDir.newFolder("root", "nestedWS");
-        new File(nestedWSDir, "WORKSPACE.bazel").createNewFile();
-
-        // will throw, as we don't support nested workspaces yet
-        new BazelPackageInfo(root, "nestedWS");
-    }
 
     // HELPERS
 

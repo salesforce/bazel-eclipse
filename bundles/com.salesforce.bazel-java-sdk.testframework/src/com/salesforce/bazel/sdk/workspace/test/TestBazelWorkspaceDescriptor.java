@@ -28,6 +28,9 @@ public class TestBazelWorkspaceDescriptor {
     public int numberJavaPackages = 0;
     public int numberGenrulePackages = 0;
 
+    // just throw a random nested workspace in the mix, to test that we ignore it
+    public boolean addFakeNestedWorkspace = true;
+
     // BUILT FIELDS (filled in after the workspace is built on disk)
 
     // directories
