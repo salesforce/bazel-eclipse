@@ -1,4 +1,4 @@
-## Bazel Eclipse Feature Dev Guide
+## Bazel Eclipse Feature Dev Guide ![BEF Developer Logo](../logos/bef_developers_small.png)
 
 These instructions are for developers wishing to make modifications to the Bazel Eclipse Feature.
 If you only want to **use** the feature, check out our simpler instructions [over here.](../using_the_feature.md)

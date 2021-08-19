@@ -1,4 +1,4 @@
-## Understanding the Java Classpath with the Bazel Eclipse Feature
+## Understanding the Java Classpath with the Bazel Eclipse Feature ![BEF Logo](logos/bef_logo_small.png)
 
 BEF ultimately computes classpath information and maps it into the existing Java Developer Tools (JDT) plugins of Eclipse.
 This works well, but there are some caveats to this mapping.

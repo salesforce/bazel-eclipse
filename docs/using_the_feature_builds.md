@@ -1,4 +1,4 @@
-## Building your Workspace with the Bazel Eclipse Feature
+## Building your Workspace with the Bazel Eclipse Feature ![BEF Logo](logos/bef_logo_small.png)
 
 This page contains information related to workspace builds using the feature.
 

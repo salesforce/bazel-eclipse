@@ -1,4 +1,4 @@
-## Releases of the Bazel Eclipse Feature
+## Releases of the Bazel Eclipse Feature ![BEF Logo](logos/bef_logo_small.png)
 
 This page provides information on how to install a version of the Bazel Eclipse feature into your Eclipse install.
 

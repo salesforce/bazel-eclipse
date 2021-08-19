@@ -1,4 +1,4 @@
-# Bazel Eclipse Feature (BEF)
+# Bazel Eclipse Feature (BEF) ![BEF Logo](docs/logos/bef_logo_small.png)
 
 This is the Eclipse Feature for developing [Bazel](http://bazel.io) projects in Eclipse.
 The Bazel Eclipse Feature supports importing, building, and testing Java projects that are built using the Bazel build system.

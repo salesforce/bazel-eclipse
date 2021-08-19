@@ -1,4 +1,4 @@
-## Bazel Eclipse Feature Users Guide
+## Bazel Eclipse Feature Users Guide ![BEF Logo](logos/bef_logo_small.png)
 
 This page provides links to documentation on how to use the Bazel Eclipse Feature.
 All of them assume you have already [installed your toolchain](install.md).

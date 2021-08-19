@@ -1,4 +1,4 @@
-## Using the Bazel Eclipse Feature: Workspace Import
+## Using the Bazel Eclipse Feature: Workspace Import ![BEF Logo](logos/bef_logo_small.png)
 
 To work on your Bazel Workspace you must first import it.
 Note that there is no IDE support for creating a new Bazel Workspace from the IDE, it must already exist.
