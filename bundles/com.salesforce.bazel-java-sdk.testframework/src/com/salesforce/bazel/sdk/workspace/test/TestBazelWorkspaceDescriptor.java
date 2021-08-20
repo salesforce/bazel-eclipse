@@ -1,6 +1,7 @@
 package com.salesforce.bazel.sdk.workspace.test;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -24,13 +25,6 @@ public class TestBazelWorkspaceDescriptor {
     // See the TestOptions class for ways to find all the available options.
     public TestOptions testOptions = new TestOptions();
 
-    // ideally this would be an extensible scheme for any type of rules to be generated
-    public int numberJavaPackages = 0;
-    public int numberGenrulePackages = 0;
-
-    // just throw a random nested workspace in the mix, to test that we ignore it
-    public boolean addFakeNestedWorkspace = true;
-
     // BUILT FIELDS (filled in after the workspace is built on disk)
 
     // directories
@@ -47,10 +41,14 @@ public class TestBazelWorkspaceDescriptor {
     // map of package path (projects/libs/javalib0) to the directory containing the package on the file system
     public Map<String, TestBazelPackageDescriptor> createdPackages = new TreeMap<>();
 
+    // map of package path (projects/libs/javalib0) to the list of source files (main and test) for the package
+    public Map<String, List<String>> createdMainSourceFilesForPackages = new TreeMap<>();
+    public Map<String, List<String>> createdTestSourceFilesForPackages = new TreeMap<>();
+
     public TestBazelPackageDescriptor getCreatedPackageByName(String packageName) {
         TestBazelPackageDescriptor desc = createdPackages.get(packageName);
         if (desc == null) {
-            System.out.println("Test caused a package to be requested that does not exist: " + packageName);
+            System.err.println("Test caused a package to be requested that does not exist: " + packageName);
         }
         return desc;
     }
@@ -96,33 +94,21 @@ public class TestBazelWorkspaceDescriptor {
 
     // CONFIGURATION
 
-    public TestBazelWorkspaceDescriptor useAltConfigFileNames(boolean useAltName) {
-        if (useAltName) {
-            workspaceFilename = "WORKSPACE.bazel";
-            buildFilename = "BUILD.bazel";
-        } else {
-            workspaceFilename = "WORKSPACE";
-            buildFilename = "BUILD";
-        }
-        return this;
-    }
-
-    public TestBazelWorkspaceDescriptor javaPackages(int count) {
-        numberJavaPackages = count;
-        return this;
-    }
-
-    public TestBazelWorkspaceDescriptor genrulePackages(int count) {
-        numberGenrulePackages = count;
-        return this;
-    }
-
     /**
      * List of options that allow you to create test workspaces with specific Mock features enabled. The features are
      * specific to each Mock*Command.
      */
     public TestBazelWorkspaceDescriptor testOptions(TestOptions options) {
         testOptions = options;
+
+        if (options.useAltConfigFileNames) {
+            workspaceFilename = "WORKSPACE.bazel";
+            buildFilename = "BUILD.bazel";
+        } else {
+            workspaceFilename = "WORKSPACE";
+            buildFilename = "BUILD";
+        }
+
         return this;
     }
 

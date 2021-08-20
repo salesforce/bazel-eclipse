@@ -42,6 +42,7 @@ import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 /**
  * Tests various behaviors of the BazelWorkspaceAspectHelper collaborator.
@@ -63,11 +64,11 @@ public class BazelWorkspaceAspectHelperTest {
         List<BazelLabel> targets = Collections.singletonList(label);
         Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
                 aspectHelper.getAspectTargetInfos(targets, "testAspectLoading");
-        // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
+        // aspect infos returned for: guava, slf4j, hamcrest, junit, javalib0, javalib0-test
         assertNotNull(aspectMap);
         assertEquals(1, aspectMap.size());
         assertNotNull(aspectMap.get(label));
-        assertEquals(4, aspectMap.get(label).size());
+        assertEquals(6, aspectMap.get(label).size());
 
         // now check that the caches are populated
         // javalib0:javalib0, javalib0:javalib0-test, javalib0:*
@@ -157,11 +158,13 @@ public class BazelWorkspaceAspectHelperTest {
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
 
+        TestOptions testOptions = new TestOptions().numberOfJavaPackages(1);
+
         TestBazelWorkspaceDescriptor descriptor =
-                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(1);
+                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).testOptions(testOptions);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
-        env.createTestEnvironment(workspace, testDir, null);
+        env.createTestEnvironment(workspace, testDir, testOptions);
 
         return env;
     }

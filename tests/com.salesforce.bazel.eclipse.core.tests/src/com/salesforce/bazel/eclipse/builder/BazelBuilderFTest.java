@@ -4,8 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.eclipse.core.resources.IBuildConfiguration;
 import org.eclipse.core.resources.IProject;
@@ -19,7 +17,7 @@ import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
-import com.salesforce.bazel.sdk.command.test.MockCommandBuilder;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 @SuppressWarnings("unused")
 public class BazelBuilderFTest {
@@ -36,7 +34,7 @@ public class BazelBuilderFTest {
     @Ignore // still need to fix the publishProblemMarkers() issue "Workspace is closed"
     public void testBazelBuilder_Success() throws Exception {
         MockEclipse mockEclipse = setupMockEnvironmentForClasspathTest("testBazelBuilder_Success", true);
-        MockCommandBuilder mockCommandBuilder = mockEclipse.getMockCommandBuilder();
+        mockEclipse.getMockCommandBuilder();
 
         BazelBuilder bazelBuilder = createTestBazelBuilder(javalib1_IProject);
         IProject builderProject = bazelBuilder.getProject();
@@ -63,12 +61,12 @@ public class BazelBuilderFTest {
         //testTempDir = new File("/tmp/bef/bazelws");
         //testTempDir.mkdirs();
 
-        // create the mock Eclipse runtime in the correct state
-        int numberOfJavaPackages = 2;
-        boolean computeClasspaths = true;
+        TestOptions testOptions = new TestOptions().numberOfJavaPackages(2).computeClasspaths(true)
+                .explicitJavaTestDeps(explicitJavaTestDeps);
+
         MockEclipse mockEclipse =
                 EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
-                    numberOfJavaPackages, computeClasspaths, explicitJavaTestDeps);
+                    testOptions);
 
         workspace_IProject =
                 mockEclipse.getImportedProject("Bazel Workspace (" + MockEclipse.BAZEL_WORKSPACE_NAME + ")");

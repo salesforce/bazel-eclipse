@@ -36,7 +36,12 @@ import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
+/**
+ * This test makes sure the workspace scanner correctly identifies packages to import. It does NOT verify the internal
+ * details of those scanned project (e.g. the classpath is correctly computed).
+ */
 public class BazelWorkspaceScannerTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
@@ -53,11 +58,12 @@ public class BazelWorkspaceScannerTest {
 
         //        File tmpWorkspaceDir = new File("/tmp/bazeltest/ws"); // $SLASH_OK sample code
         //        File tmpOutputBase = new File("/tmp/bazeltest/bin"); // $SLASH_OK sample code
-        //File tmpWorkspaceDir = new File("C:\\Users\\coloradolaird\\Desktop\\dev\\tools\\temp\\ws"); // $SLASH_OK sample code
-        //File tmpOutputBase = new File("C:\\Users\\coloradolaird\\Desktop\\dev\\tools\\temp\\bin"); // $SLASH_OK sample code
+
+        TestOptions testOptions = new TestOptions().numberOfJavaPackages(5).numberGenrulePackages(2);
 
         TestBazelWorkspaceDescriptor descriptor =
-                new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(5).genrulePackages(2);
+                new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).testOptions(testOptions);
+
         new TestBazelWorkspaceFactory(descriptor).build();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
@@ -66,6 +72,7 @@ public class BazelWorkspaceScannerTest {
         assertEquals(5, scanner.projects.size());
         assertEquals(5, rootWorkspacePackage.getChildPackageInfos().size());
     }
+
 
     // UNHAPPY PATHS
 
@@ -81,8 +88,10 @@ public class BazelWorkspaceScannerTest {
     public void testNoJavaProjects() throws Exception {
         File tmpWorkspaceDir = tmpFolder.newFolder().getCanonicalFile();
         File tmpOutputBase = tmpFolder.newFolder().getCanonicalFile();
+        TestOptions testOptions = new TestOptions().numberOfJavaPackages(0).numberGenrulePackages(2);
+
         TestBazelWorkspaceDescriptor descriptor =
-                new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).javaPackages(0).genrulePackages(2);
+                new TestBazelWorkspaceDescriptor(tmpWorkspaceDir, tmpOutputBase).testOptions(testOptions);
         new TestBazelWorkspaceFactory(descriptor).build();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();

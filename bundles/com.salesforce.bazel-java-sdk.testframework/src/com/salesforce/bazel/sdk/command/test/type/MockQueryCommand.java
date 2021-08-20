@@ -1,20 +1,21 @@
 package com.salesforce.bazel.sdk.command.test.type;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import com.salesforce.bazel.sdk.command.test.MockCommand;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelPackageDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelTargetDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 /**
  * Simulates an invocation of 'bazel query xyz'
  */
 public class MockQueryCommand extends MockCommand {
 
-    public MockQueryCommand(List<String> commandTokens, Map<String, String> testOptions,
+    public MockQueryCommand(List<String> commandTokens, TestOptions testOptions,
             TestBazelWorkspaceFactory testWorkspaceFactory) {
         super(commandTokens, testOptions, testWorkspaceFactory);
 
@@ -52,20 +53,76 @@ public class MockQueryCommand extends MockCommand {
             }
 
             // the query is for :* which means all targets, so iterate through the package's targets and write a line per target to stdout
+            List<String> outputLines = new ArrayList<>();
             for (TestBazelTargetDescriptor target : queryPackageDescriptor.targets.values()) {
                 String outputString = target.targetType + " rule //" + target.targetPath;
-                addSimulatedOutputToCommandStdOut(outputString);
+                outputLines.add(outputString);
             }
+            addSimulatedOutputToCommandStdOut(outputLines);
         } else if (queryArg.startsWith("kind('source file', deps")) {
             // QUERY:
-            //    kind('source file', deps(//:*))
-            // TODO simluate source file queries
-            System.err.println(
-                    "Test framework (MockQueryCommand) is not simulating the response of Bazel query for source files yet. Returning no output.");
+            //    kind('source file', deps(//a/b/c:*))
+            // RESPONSE:
+            //    //projects/libs/apple/apple-api:src/test/resources/test.properties
+            //    //projects/libs/apple/apple-api:src/test/java/demo/apple/api/AppleTest2.java
+            //    //projects/libs/apple/apple-api:src/test/java/demo/apple/api/AppleTest.java
+            //    //projects/libs/apple/apple-api:src/main/resources/apple.properties
+            //    //projects/libs/apple/apple-api:src/main/java/demo/apple/api/AppleOrchard.java
+            //    //projects/libs/apple/apple-api:src/main/java/demo/apple/api/Apple.java
+            //    //projects/libs/apple/apple-api:BUILD
+
+            int wildcard = queryArg.indexOf("*");
+            String queryPackage = queryArg.substring(27, wildcard - 1);
+            List<String> outputLines = new ArrayList<>();
+
+            List<String> mainSourceFiles = testWorkspaceFactory.workspaceDescriptor.createdMainSourceFilesForPackages.get(queryPackage);
+            if (mainSourceFiles != null) {
+                for (String mainSourceFile : mainSourceFiles) {
+                    String sourcePath = convertSourceFilePath(queryPackage, mainSourceFile);
+                    outputLines.add(sourcePath);
+                }
+            }
+            List<String> testSourceFiles =
+                    testWorkspaceFactory.workspaceDescriptor.createdTestSourceFilesForPackages.get(queryPackage);
+            if (testSourceFiles != null) {
+                for (String testSourceFile : testSourceFiles) {
+                    String sourcePath = convertSourceFilePath(queryPackage, testSourceFile);
+                    outputLines.add(sourcePath);
+                }
+            }
+
+            // we have to filter out a bunch of internal source file paths (jdk source files, etc) so simulate those here
+            addExtraneousSourceFileLines(queryPackage, outputLines);
+
+            addSimulatedOutputToCommandStdOut(outputLines);
         } else {
             throw new IllegalArgumentException(
                 "The plugin issued the command 'bazel query' with an unknown type of query. "
                         + "The mocking layer (MockQueryCommand) does not know how to simulate a response.");
         }
     }
+
+    private String convertSourceFilePath(String queryPackage, String rawSourceFilePath) {
+        // convert: projects/libs/javalib0/source/dev/java/com/salesforce/fruit0/Apple0.java
+        // to:    //projects/libs/javalib0:source/dev/java/com/salesforce/fruit0/Apple0.java
+
+        String sourcePath = rawSourceFilePath.substring(queryPackage.length() + 1);
+        return "//" + queryPackage + ":" + sourcePath;
+    }
+
+    // we have to filter out a bunch of non-source file paths (jdk source files, etc) so simulate those here
+    private void addExtraneousSourceFileLines(String queryPackage, List<String> outputLines) {
+        outputLines.add("//" + queryPackage + ":BUILD");
+        outputLines.add("@bazel_tools//src/tools/launcher:java_launcher.h");
+        outputLines.add("@bazel_tools//src/tools/launcher:java_launcher.cc");
+        outputLines.add("@local_config_cc//:builtin_include_directory_paths");
+        outputLines.add("@local_config_cc//:wrapped_clang");
+        outputLines.add("@local_jdk//:bin/jinfo");
+        outputLines.add("@local_jdk//:bin/keytool");
+        outputLines.add(
+            "@maven//:v1/https/repo1.maven.org/maven2/ch/qos/logback/logback-core/1.2.3/logback-core-1.2.3-sources.jar");
+        addSimulatedOutputToCommandStdOut("@remote_java_tools_darwin//:java_tools/ijar/zip.cc");
+        outputLines.add("@remote_java_tools_linux//java_tools/zlib:crc32.c");
+    }
+
 }

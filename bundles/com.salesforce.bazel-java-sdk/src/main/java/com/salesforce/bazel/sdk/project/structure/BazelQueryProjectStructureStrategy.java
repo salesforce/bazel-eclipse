@@ -70,7 +70,8 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
         File packageDir = new File(workspaceRootDir, packageRelPath); // TODO move this to the PackageLocation api
         result.projectPath = packageDir;
 
-        BazelLabel packageLabel = new BazelLabel(packageRelPath, BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR);
+        String labelPath = packageRelPath.replaceAll(FSPathHelper.WINDOWS_BACKSLASH_REGEX, "/");
+        BazelLabel packageLabel = new BazelLabel(labelPath, BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR);
 
         // execute the expensive query, this will take a few seconds to run at least
         Collection<String> results = runBazelQueryForSourceFiles(workspaceRootDir, packageLabel, commandRunner);

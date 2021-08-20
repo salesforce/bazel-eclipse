@@ -25,8 +25,8 @@ package com.salesforce.bazel.sdk.command.test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.mockito.Mockito;
 
@@ -38,23 +38,16 @@ import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 public class MockCommand implements Command {
 
-    // almost all tests should fail if an unknown target (not found in the underlying test workspace) is passed to a command
-    // if you are testing failure cases, this can be set to "false" so that a Bazel error is simulated instead
-    public static final String TESTOPTION_FAILTESTFORUNKNOWNTARGET = "FAILTESTFORUNKNOWNTARGET";
-    static {
-        TestOptions.advertise(TESTOPTION_FAILTESTFORUNKNOWNTARGET);
-    }
-
     // INPUTS
     public List<String> commandTokens;
-    public Map<String, String> testOptions;
+    public TestOptions testOptions;
     public TestBazelWorkspaceFactory testWorkspaceFactory;
 
     // OUTPUTS
-    public List<String> outputLines;
-    public List<String> errorLines;
+    public List<String> outputLines = new ArrayList<>();
+    public List<String> errorLines = new ArrayList<>();
 
-    public MockCommand(List<String> commandTokens, Map<String, String> testOptions,
+    public MockCommand(List<String> commandTokens, TestOptions testOptions,
             TestBazelWorkspaceFactory testWorkspaceFactory) {
         this.commandTokens = commandTokens;
         this.testOptions = testOptions;
@@ -63,18 +56,20 @@ public class MockCommand implements Command {
 
     public void addSimulatedOutputToCommandStdOut(String... someStrings) {
         outputLines = new ArrayList<>();
-        for (String someString : someStrings) {
-            outputLines.add(someString);
-        }
-        errorLines = new ArrayList<>();
+        Collections.addAll(outputLines, someStrings);
+    }
+
+    public void addSimulatedOutputToCommandStdOut(List<String> someStrings) {
+        outputLines = someStrings;
     }
 
     public void addSimulatedOutputToCommandStdErr(String... someStrings) {
         errorLines = new ArrayList<>();
-        for (String someString : someStrings) {
-            errorLines.add(someString);
-        }
-        outputLines = new ArrayList<>();
+        Collections.addAll(errorLines, someStrings);
+    }
+
+    public void addSimulatedOutputToCommandStdErr(List<String> someStrings) {
+        errorLines = someStrings;
     }
 
     @Override
@@ -158,11 +153,9 @@ public class MockCommand implements Command {
         if (testWorkspaceFactory.workspaceDescriptor.getCreatedPackageByName(packageLabel) == null) {
             returnFalseOrThrow(target);
         }
-        if (!ruleName.equals(BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR)) {
-            // * ruleName is always valid, but if there is a specific rule we need to check
-            if (testWorkspaceFactory.workspaceDescriptor.createdTargets.get(target) == null) {
-                returnFalseOrThrow(target);
-            }
+        // * ruleName is always valid, but if there is a specific rule we need to check
+        if (!ruleName.equals(BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR) && (testWorkspaceFactory.workspaceDescriptor.createdTargets.get(target) == null)) {
+            returnFalseOrThrow(target);
         }
 
         return true;
@@ -173,8 +166,7 @@ public class MockCommand implements Command {
      * Usually this means that the command was malformed, or there is a bug in the mocking layer.
      */
     private boolean returnFalseOrThrow(String target) {
-        String failOnMissingStr = testOptions.get(TESTOPTION_FAILTESTFORUNKNOWNTARGET);
-        if ("false".equals(failOnMissingStr)) {
+        if (!testOptions.failTestForUnknownTarget) {
             return false;
         }
         throw new IllegalArgumentException("Bazel command attempted to process an unknown target [" + target + "]");

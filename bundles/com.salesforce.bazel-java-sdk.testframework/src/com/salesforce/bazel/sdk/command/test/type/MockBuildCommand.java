@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import com.salesforce.bazel.sdk.command.internal.BazelWorkspaceAspectProcessor;
 import com.salesforce.bazel.sdk.command.test.MockCommand;
@@ -12,13 +11,14 @@ import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutput;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutputMatcher;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 /**
  * Simulates a "bazel build //a/b/c" command
  */
 public class MockBuildCommand extends MockCommand {
 
-    public MockBuildCommand(List<String> commandTokens, Map<String, String> testOptions,
+    public MockBuildCommand(List<String> commandTokens, TestOptions testOptions,
             TestBazelWorkspaceFactory testWorkspaceFactory) {
         super(commandTokens, testOptions, testWorkspaceFactory);
 
@@ -75,13 +75,12 @@ public class MockBuildCommand extends MockCommand {
                     BazelLabel.BAZEL_ROOT_SLASHES + packagePath + BazelLabel.BAZEL_COLON + ".*";
             MockCommandSimulatedOutputMatcher aspectCommandMatcher3 =
                     new MockCommandSimulatedOutputMatcher(BazelWorkspaceAspectProcessor.ASPECTCMD_TARGETLABEL_ARGINDEX,
-                            wildcardTarget);
+                        wildcardTarget);
 
             List<MockCommandSimulatedOutputMatcher> matchers = new ArrayList<>();
             Collections.addAll(matchers, aspectCommandMatcher1, aspectCommandMatcher2, aspectCommandMatcher3);
 
-            List<String> aspectFilePathsList = new ArrayList<>();
-            aspectFilePathsList.addAll(testWorkspaceFactory.workspaceDescriptor.aspectFileSets.get(packagePath));
+            List<String> aspectFilePathsList = new ArrayList<>(testWorkspaceFactory.workspaceDescriptor.aspectFileSets.get(packagePath));
             String nameForLog = "Aspect file set for target: " + wildcardTarget;
             MockCommandSimulatedOutput aspectOutput =
                     new MockCommandSimulatedOutput(nameForLog, outputLines, aspectFilePathsList, matchers);

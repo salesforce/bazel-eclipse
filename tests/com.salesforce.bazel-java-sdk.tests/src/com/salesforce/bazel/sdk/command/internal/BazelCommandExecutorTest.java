@@ -37,6 +37,7 @@ import com.salesforce.bazel.sdk.command.test.MockWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 public class BazelCommandExecutorTest {
     @Rule
@@ -60,7 +61,7 @@ public class BazelCommandExecutorTest {
                 new BazelCommandExecutor(env.bazelExecutable.bazelExecutableFile, env.commandBuilder);
         List<String> result =
                 executor.runBazelAndGetOutputLines(env.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(),
-                    new MockWorkProgressMonitor(), args, (t) -> t, 0);
+                    new MockWorkProgressMonitor(), args, t -> t, 0);
 
         assertEquals(2, result.size());
         assertEquals("result line 1", result.get(0));
@@ -85,7 +86,7 @@ public class BazelCommandExecutorTest {
                 new BazelCommandExecutor(env.bazelExecutable.bazelExecutableFile, env.commandBuilder);
         List<String> result =
                 executor.runBazelAndGetErrorLines(env.bazelWorkspaceCommandRunner.getBazelWorkspaceRootDirectory(),
-                    new MockWorkProgressMonitor(), args, (t) -> t, 0);
+                    new MockWorkProgressMonitor(), args, t -> t, 0);
 
         assertEquals(2, result.size());
         assertEquals("result line 1", result.get(0));
@@ -116,11 +117,13 @@ public class BazelCommandExecutorTest {
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
 
+        TestOptions testOptions = new TestOptions().numberOfJavaPackages(1);
+
         TestBazelWorkspaceDescriptor descriptor =
-                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(1);
+                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
-        env.createTestEnvironment(workspace, testDir, null);
+        env.createTestEnvironment(workspace, testDir, testOptions);
 
         return env;
     }
