@@ -46,6 +46,7 @@ import java.io.File;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -82,6 +83,7 @@ public class BazelClasspathContainerFTest {
      * ImplicitDependencyHelper.java for more details on implicit deps.
      */
     @Test
+    @Ignore
     public void testClasspath_BazelJavaProject_implicitdeps() throws Exception {
         // SETUP
         // javalib0 is the base Java library created by our test harness
