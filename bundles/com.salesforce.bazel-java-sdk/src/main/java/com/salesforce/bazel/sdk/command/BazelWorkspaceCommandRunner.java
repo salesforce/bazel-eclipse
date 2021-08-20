@@ -37,6 +37,7 @@
 package com.salesforce.bazel.sdk.command;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -376,7 +377,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized Collection<String> querySourceFilesForTarget(File bazelWorkspaceRootDirectory,
             BazelLabel bazelLabel)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         return bazelQueryHelper.querySourceFilesForTarget(bazelWorkspaceRootDirectory, bazelLabel);
     }
 
@@ -432,12 +433,11 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             progressMonitor, extraArgsList, new ErrorOutputSelector(), BazelCommandExecutor.TIMEOUT_INFINITE);
         if (output.isEmpty()) {
             return Collections.emptyList();
-        } else {
-            BazelOutputParser outputParser = new BazelOutputParser();
-            List<BazelProblem> errors = outputParser.getErrors(output);
-            logErrors(errors);
-            return errors;
         }
+        BazelOutputParser outputParser = new BazelOutputParser();
+        List<BazelProblem> errors = outputParser.getErrors(output);
+        logErrors(errors);
+        return errors;
     }
 
     private void logErrors(List<BazelProblem> errors) {
@@ -581,6 +581,45 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public void runBazelVersionCheck() throws BazelCommandLineToolConfigurationException {
         bazelVersionChecker.runBazelVersionCheck(bazelExecutable, bazelWorkspaceRootDirectory);
+    }
+
+    public File getBazelGeneratedFilesFolder() {
+        try {
+            List<String> argBuilder = new ArrayList<>();
+            argBuilder.add("info");
+            argBuilder.add("bazel-genfiles");
+
+            List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null,
+                argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
+            outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
+            return new File(String.join("", outputLines));
+        } catch (Exception exc) {
+            throw new IllegalStateException(exc);
+        }
+    }
+
+    public String getProjectMainOutputPath(String project) {
+        // bazel-bin/[PACKAGE_PATH]/_javac/[TARGET_NAME]/[TARGET_TYPE][LAST_PATH_COMP_TARGET_NAME]_classes
+        // -??? TODO investigate
+        File genFolder = getBazelGeneratedFilesFolder();
+        File javacFolder = new File(genFolder, project + "/_javac/" + project);
+        FileFilter fileFilter = file -> file.isDirectory() && file.getName().endsWith("_classes");
+        File[] folders = javacFolder.listFiles(fileFilter);
+        if ((folders != null) && (folders.length > 0)) {
+            return folders[0].getAbsolutePath();
+        }
+        return null;
+    }
+
+    public String getProjectTestOutputPath(String project) {
+        File genFolder = getBazelGeneratedFilesFolder();
+        File javacFolder = new File(genFolder, project + "/_javac/" + project + "-test");
+        FileFilter fileFilter = file -> file.isDirectory() && file.getName().endsWith("_classes");
+        File[] folders = javacFolder.listFiles(fileFilter);
+        if ((folders != null) && (folders.length > 0)) {
+            return folders[0].getAbsolutePath();
+        }
+        return null;
     }
 
     // HELPERS

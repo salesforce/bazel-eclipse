@@ -34,6 +34,10 @@
 package com.salesforce.bazel.sdk.lang.jvm;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -106,20 +110,17 @@ public class ImplicitClasspathHelper {
                     + FSPathHelper.getCanonicalPathStringSafely(testRunnerDir) + "] does not exist.");
             return null;
         }
-        String javaToolsPath = FSPathHelper.osSeps("external/remote_java_tools_"
-                + bazelWorkspace.getOperatingSystemFoldername() + FSPathHelper.UNIX_SLASH + "java_tools"); // $SLASH_OK
-        File javaToolsDir = new File(testRunnerDir, javaToolsPath);
-        if (!javaToolsDir.exists()) {
-            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabelPath() + "], directory ["
-                    + FSPathHelper.getCanonicalPathStringSafely(javaToolsDir) + "] does not exist.");
-            return null;
-        }
-        File runnerJar = new File(javaToolsDir, "Runner_deploy-ijar.jar");
-        if (!runnerJar.exists()) {
-            logger.error("Could not add implicit test deps to target [" + targetInfo.getLabelPath() + "], test runner jar ["
-                    + FSPathHelper.getCanonicalPathStringSafely(runnerJar) + "] does not exist.");
-            return null;
-        }
+        File runnerJar = findTestRunnerFolder(testRunnerDir);
         return FSPathHelper.getCanonicalPathStringSafely(runnerJar);
+    }
+
+    private File findTestRunnerFolder(File testRunnerDir) {
+        try {
+            return Files.find(testRunnerDir.toPath(), 5,
+                (path, attr) -> String.valueOf(path).endsWith("Runner_deploy-ijar.jar"), FileVisitOption.FOLLOW_LINKS)
+                    .findFirst().map(Path::toFile).orElse(null);
+        } catch (IOException e) {
+            return null;
+        }
     }
 }

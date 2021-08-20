@@ -102,7 +102,7 @@ public class BazelWorkspaceAspectProcessor {
             aspectOptions.add("--aspects=@bazeljavasdk_aspect" + aspectLocation.getAspectLabel());
             aspectOptions.add("-k");
             aspectOptions.add(
-                    "--output_groups=intellij-info-generic,intellij-info-java-direct-deps,intellij-resolve-java-direct-deps");
+                "--output_groups=intellij-info-generic,intellij-info-java-direct-deps,intellij-resolve-java-direct-deps");
             aspectOptions.add("--nobuild_event_binary_file_path_conversion");
             aspectOptions.add("--noexperimental_run_validations");
             aspectOptions.add("--experimental_show_artifacts");
@@ -215,7 +215,7 @@ public class BazelWorkspaceAspectProcessor {
 
     private synchronized void loadTargetInfos(Collection<BazelLabel> cacheMisses,
             Map<BazelLabel, Set<AspectTargetInfo>> resultMap, String caller)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         LOG.info("Starting generation of Aspect files for " + cacheMisses.size() + " packages.");
         List<String> discoveredAspectFilePaths = generateAspectTargetInfoFiles(cacheMisses);
@@ -334,12 +334,15 @@ public class BazelWorkspaceAspectProcessor {
                 AspectTargetInfo dep = depNameToTargetInfo.get(depLabel);
                 if (dep == null) {
                     LOG.info("No AspectTargetInfo exists for " + label
-                        + "; it and its descendents are excluded from analysis.");
+                            + "; it and its descendents are excluded from analysis.");
                     skippedLabels.add(label);
                 } else {
                     queue.add(dep);
                 }
             }
+        }
+        if ("java_test".equals(aspectTargetInfo.getKind())) {
+            allDeps.add(aspectTargetInfo); //add aspect itself and filter out on the level of classpath container
         }
         return Collections.unmodifiableSet(allDeps);
     }
@@ -386,10 +389,10 @@ public class BazelWorkspaceAspectProcessor {
             Function<String, String> filter = t -> t.startsWith(">>>")
                     ? (t.endsWith(AspectTargetInfoFactory.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
 
-                    List<String> partialListOfGeneratedFilePaths = bazelCommandExecutor.runBazelAndGetErrorLines(
-                        ConsoleType.WORKSPACE, bazelWorkspaceRootDirectory, null,
-                        args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
-                    listOfGeneratedFilePaths.addAll(partialListOfGeneratedFilePaths);
+            List<String> partialListOfGeneratedFilePaths =
+                    bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE, bazelWorkspaceRootDirectory,
+                        null, args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
+            listOfGeneratedFilePaths.addAll(partialListOfGeneratedFilePaths);
         }
         return listOfGeneratedFilePaths;
     }
