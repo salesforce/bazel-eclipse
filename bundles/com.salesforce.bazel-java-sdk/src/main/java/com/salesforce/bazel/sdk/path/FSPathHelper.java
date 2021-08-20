@@ -58,13 +58,20 @@ public final class FSPathHelper {
     // Slash character for unix file paths
     public static final String UNIX_SLASH = "/";
 
+    // Regex pattern to use to capture the / for unix file paths.
+    // Please consider calling osSepRegex() instead of using this directly.
+    // This is just /. The variable name is what we are after - make it clear this is a regex use case
+    // so we have visual cue that we need to use the Windows regex if on Windows.
+    public static final String UNIX_SLASH_REGEX = "/";
+
     // Backslash character; this is provided as a constant to help code searches
     // for Windows specific code. There are two backslash characters because Java
     // requires a leading backslash to encode a backslash
     public static final String WINDOWS_BACKSLASH = "\\";
 
-    // Regex pattern to use to look for a single backslash character in a path
-    // why 4?
+    // Regex pattern to use to look for a single backslash character in a path.
+    // Please consider calling osSepRegex() instead of using this directly.
+    // Why 4 backslashes?
     // Regex needs a double \ to escape backslash in the matcher (1+1=2)
     // Java requires a backslash to encode a backslash in the String (2x2=4)
     public static final String WINDOWS_BACKSLASH_REGEX = "\\\\";
@@ -139,7 +146,7 @@ public final class FSPathHelper {
 
     public static String osSepRegex() {
         if (isUnix) {
-            return UNIX_SLASH;
+            return UNIX_SLASH_REGEX;
         }
         return WINDOWS_BACKSLASH_REGEX;
     }
@@ -174,12 +181,8 @@ public final class FSPathHelper {
      * An example use case is looking for a directory named 'test' or 'tests' in a file system path.
      */
     public static boolean doesPathContainNamedResource(String filesystemPath, Set<String> targetNames) {
-        String[] pathElements = null;
-        if (isUnix) {
-            pathElements = filesystemPath.split(UNIX_SLASH);
-        } else {
-            pathElements = filesystemPath.split(WINDOWS_BACKSLASH_REGEX);
-        }
+        String[] pathElements = filesystemPath.split(osSepRegex());
+
         for (String element : pathElements) {
             if (targetNames.contains(element)) {
                 return true;
