@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
@@ -41,6 +40,7 @@ import com.salesforce.bazel.sdk.command.test.type.MockTestCommand;
 import com.salesforce.bazel.sdk.command.test.type.MockVersionCommand;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 /**
  * This is the main component of the mocking layer for the Bazel command line. This command builder creates command
@@ -66,7 +66,7 @@ public class MockCommandBuilder extends CommandBuilder {
     // arbitrary option map provided by the test, can be interpreted by the Commands in a specific way
     // see the Mock*Command classes for details on what is available
     // for example, you may wish for a certain package to fail to build, that is an option in MockBuildCommand
-    private final Map<String, String> testOptions;
+    private final TestOptions testOptions;
 
     /**
      * This is an ordered list of output/error lines that will be returned from the Mock commands. Tests need to
@@ -84,7 +84,7 @@ public class MockCommandBuilder extends CommandBuilder {
      */
 
     public MockCommandBuilder(CommandConsoleFactory consoleFactory, TestBazelWorkspaceFactory testWorkspaceFactory,
-            Map<String, String> testOptions) {
+            TestOptions testOptions) {
         super(consoleFactory);
         this.testWorkspaceFactory = testWorkspaceFactory;
         this.testOptions = testOptions;

@@ -3,7 +3,6 @@ package com.salesforce.bazel.sdk.workspace.test;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.util.Map;
 
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
@@ -51,8 +50,8 @@ public class TestJavaRuleCreator {
         return sb.toString();
     }
 
-    private static String createJavaTestRule(String packageName, Map<String, String> commandOptions) {
-        boolean explicitJavaTestDeps = "true".equals(commandOptions.get("explicit_java_test_deps"));
+    private static String createJavaTestRule(String packageName, TestOptions commandOptions) {
+        boolean explicitJavaTestDeps = commandOptions.explicitJavaTestDeps;
         String test = FSPathHelper.osSeps("src/test/java/**/*.java"); // $SLASH_OK
         String testProps = FSPathHelper.osSeps("src/test/resources/test.properties"); // $SLASH_OK
 

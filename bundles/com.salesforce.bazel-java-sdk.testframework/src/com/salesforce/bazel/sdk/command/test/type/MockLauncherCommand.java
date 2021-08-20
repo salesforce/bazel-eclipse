@@ -1,11 +1,11 @@
 package com.salesforce.bazel.sdk.command.test.type;
 
 import java.util.List;
-import java.util.Map;
 
 import com.salesforce.bazel.sdk.command.test.MockCommand;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutput;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 /**
  * Simulates an invocation of a launcher script (bazel run //a/b/c) from Bazel
@@ -17,7 +17,7 @@ public class MockLauncherCommand extends MockCommand {
     /**
      * Test must provide a set of simulatedOutputLinesProvidedByTest
      */
-    public MockLauncherCommand(List<String> commandTokens, Map<String, String> testOptions,
+    public MockLauncherCommand(List<String> commandTokens, TestOptions testOptions,
             TestBazelWorkspaceFactory testWorkspaceFactory,
             List<MockCommandSimulatedOutput> simulatedOutputLinesProvidedByTest) {
         super(commandTokens, testOptions, testWorkspaceFactory);
@@ -39,9 +39,9 @@ public class MockLauncherCommand extends MockCommand {
                 commandPretty = commandPretty + token + " ";
             }
             throw new IllegalStateException(
-                    "The MockLauncherCommand does not have enough output to provide to simulate the launcher commands. There are "
-                            + simulatedOutputLinesProvidedByTest.size() + " outputs configured. Command as received:\n"
-                            + commandPretty);
+                "The MockLauncherCommand does not have enough output to provide to simulate the launcher commands. There are "
+                        + simulatedOutputLinesProvidedByTest.size() + " outputs configured. Command as received:\n"
+                        + commandPretty);
         }
     }
 }

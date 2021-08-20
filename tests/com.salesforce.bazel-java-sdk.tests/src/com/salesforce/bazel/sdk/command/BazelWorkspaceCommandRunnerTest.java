@@ -37,7 +37,6 @@ import org.junit.rules.TemporaryFolder;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.test.MockWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
-import com.salesforce.bazel.sdk.command.test.type.MockVersionCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
@@ -75,7 +74,7 @@ public class BazelWorkspaceCommandRunnerTest {
     public void testGlobalRunner_checkBazelVersion_fail() throws Exception {
         TestOptions testOptions = new TestOptions();
         // minimum supported Bazel version is currently 1.0.0, so this should cause check to fail
-        testOptions.put(MockVersionCommand.TESTOPTION_BAZELVERSION, "0.9.0");
+        testOptions.bazelVersion = "0.9.0";
 
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
         env.createTestEnvironment(tmpFolder.newFolder(), testOptions);
@@ -98,12 +97,14 @@ public class BazelWorkspaceCommandRunnerTest {
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
 
+        TestOptions testOptions = new TestOptions().numberOfJavaPackages(3);
+
         // setup a test workspace on disk, this will write out WORKSPACE, BUILD and aspect files
         TestBazelWorkspaceDescriptor descriptor =
-                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(3);
+                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).testOptions(testOptions);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
-        env.createTestEnvironment(workspace, testDir, null);
+        env.createTestEnvironment(workspace, testDir, testOptions);
 
         // get the command runner associated with our test workspace on disk
         BazelWorkspaceCommandRunner workspaceRunner = env.bazelWorkspaceCommandRunner;
@@ -114,8 +115,8 @@ public class BazelWorkspaceCommandRunnerTest {
         targets.add(label);
         Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
                 workspaceRunner.getAspectTargetInfos(targets, "testWorkspaceRunner");
-        // aspect infos returned for: guava, slf4j, javalib0, javalib0-test
-        assertEquals(4, aspectMap.get(new BazelLabel(label)).size());
+        // aspect infos returned for: guava, slf4j, javalib0, javalib0-test, javalib1, javalib2
+        assertEquals(6, aspectMap.get(new BazelLabel(label)).size());
 
         // run a clean, should not throw an exception
         workspaceRunner.runBazelClean(new MockWorkProgressMonitor());

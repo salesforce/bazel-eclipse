@@ -44,6 +44,7 @@ import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 public class BazelLauncherBuilderTest {
     @Rule
@@ -63,7 +64,7 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setArgs(Collections.emptyList());
 
         addBazelCommandOutput(env, 0, FSPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0.*"), // $SLASH_OK
-            "fake bazel launcher script result");
+                "fake bazel launcher script result");
 
         Command command = launcherBuilder.build();
         BazelProcessBuilder processBuilder = command.getProcessBuilder();
@@ -87,7 +88,7 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setDebugMode(true, "localhost", DEBUG_PORT);
 
         addBazelCommandOutput(env, 0, FSPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0.*"), // $SLASH_OK
-            "fake bazel launcher script result");
+                "fake bazel launcher script result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
@@ -194,11 +195,14 @@ public class BazelLauncherBuilderTest {
         workspaceDir.mkdirs();
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
+
+        TestOptions testOptions = new TestOptions().numberOfJavaPackages(3);
+
         TestBazelWorkspaceDescriptor descriptor =
-                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).javaPackages(3);
+                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).testOptions(testOptions);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
-        env.createTestEnvironment(workspace, testDir, null);
+        env.createTestEnvironment(workspace, testDir, testOptions);
 
         return env;
     }

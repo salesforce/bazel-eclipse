@@ -60,7 +60,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
      * </ul>
      */
     public static MockEclipse createMockEnvironment_PriorToImport_JavaPackages(File testTempDir,
-            int numberOfJavaPackages, boolean explicitJavaTestDeps, boolean useAltConfigFileNames) throws Exception {
+            TestOptions testOptions) throws Exception {
 
         // initialize the SDK support for Java rules
         JvmRuleInit.initialize();
@@ -71,15 +71,8 @@ public class EclipseFunctionalTestEnvironmentFactory {
         File outputbaseDir = new File(testTempDir, "outputbase");
         outputbaseDir.mkdirs();
 
-        // tell the mocking framework to write the BUILD files such that all java test deps are explicit (not the default)
-        TestOptions testOptions = new TestOptions();
-        if (explicitJavaTestDeps) {
-            testOptions.put("EXPLICIT_JAVA_TEST_DEPS", "true");
-        }
-
         TestBazelWorkspaceDescriptor descriptor =
-                new TestBazelWorkspaceDescriptor(wsDir, outputbaseDir).javaPackages(numberOfJavaPackages)
-                        .genrulePackages(2).testOptions(testOptions).useAltConfigFileNames(useAltConfigFileNames);
+                new TestBazelWorkspaceDescriptor(wsDir, outputbaseDir).testOptions(testOptions);
         TestBazelWorkspaceFactory bazelWorkspaceCreator = new TestBazelWorkspaceFactory(descriptor);
         bazelWorkspaceCreator.build();
 
@@ -98,11 +91,10 @@ public class EclipseFunctionalTestEnvironmentFactory {
      * <li>Each Bazel Java package is an imported Eclipse Java project with Bazel nature
      * </ul>
      */
-    public static MockEclipse createMockEnvironment_Imported_All_JavaPackages(File testTempDir,
-            int numberOfJavaPackages, boolean computeClasspaths, boolean explicitJavaTestDeps) throws Exception {
+    public static MockEclipse createMockEnvironment_Imported_All_JavaPackages(File testTempDir, TestOptions testOptions)
+            throws Exception {
         // create base configuration, which includes the real bazel workspace on disk
-        MockEclipse mockEclipse = createMockEnvironment_PriorToImport_JavaPackages(testTempDir, numberOfJavaPackages,
-            explicitJavaTestDeps, false);
+        MockEclipse mockEclipse = createMockEnvironment_PriorToImport_JavaPackages(testTempDir, testOptions);
 
         // scan the bazel workspace filesystem to build the list of Java projects
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
@@ -124,7 +116,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
         mockEclipse.setImportedProjectsList(importedProjectsList);
 
         // do you want to simulate Eclipse calling getClasspath on the classpath container for each project?
-        if (computeClasspaths) {
+        if (testOptions.computeClasspaths) {
             for (IProject project : importedProjectsList) {
                 JavaCoreHelper javaHelper = mockEclipse.getMockJavaCoreHelper();
                 javaHelper.getResolvedClasspath(javaHelper.getJavaProjectForProject(project), false);
@@ -137,10 +129,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
     private static void addBazelPackageInfosToSelectedList(BazelPackageInfo currentNode,
             List<BazelPackageLocation> bazelPackagesToImport) {
         Collection<BazelPackageInfo> children = currentNode.getChildPackageInfos();
-        for (BazelPackageInfo child : children) {
-            // eventually this method should accept filter criteria, but for now we are just importing all packages
-            bazelPackagesToImport.add(child);
-        }
+        bazelPackagesToImport.addAll(children);
     }
 
     private static class MockProgressMonitor implements IProgressMonitor {

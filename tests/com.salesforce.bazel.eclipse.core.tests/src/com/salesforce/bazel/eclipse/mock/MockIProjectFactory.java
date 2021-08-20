@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
@@ -35,6 +36,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
@@ -89,7 +92,8 @@ public class MockIProjectFactory {
 
         // files and folders
         MockIFolder projectFolder = new MockIFolder(mockProject);
-        Mockito.when(mockProject.getFolder(ArgumentMatchers.anyString())).thenReturn(projectFolder);
+        GetProjectFolderAnswer getProjectFolderAnswer = new GetProjectFolderAnswer(mockProject, projectFolder);
+        Mockito.when(mockProject.getFolder(ArgumentMatchers.anyString())).then(getProjectFolderAnswer);
         IFile mockFile = Mockito.mock(IFile.class);
         Mockito.when(mockFile.exists()).thenReturn(false);
         Mockito.when(mockProject.getFile(ArgumentMatchers.anyString())).thenReturn(mockFile);
@@ -159,5 +163,28 @@ public class MockIProjectFactory {
         public MockIProjectDescriptor(String projectName) {
             name = projectName;
         }
+    }
+
+    /**
+     * This solves a complicated Mock case where the getFolder(String name) method is called on the IProject. We need to
+     * dynamically create the child MockIFolder with the name that was passed.
+     */
+    private static class GetProjectFolderAnswer implements Answer<IFolder> {
+        private final IProject project;
+        private final MockIFolder projectFolder;
+
+        public GetProjectFolderAnswer(IProject project, MockIFolder projectFolder) {
+            this.project = project;
+            this.projectFolder = projectFolder;
+        }
+
+        @Override
+        public IFolder answer(InvocationOnMock invocation) throws Throwable {
+            String queriedName = invocation.getArgument(0);
+            IFolder folder = new MockIFolder(project, projectFolder, queriedName);
+
+            return folder;
+        }
+
     }
 }

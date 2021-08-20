@@ -115,13 +115,12 @@ public class BazelJvmClasspath implements JvmClasspath {
 
         if (cachedEntries != null) {
             long now = System.currentTimeMillis();
-            if ((now - cachePutTimeMillis) > CLASSPATH_CACHE_TIMEOUT_MS) {
-                logger.info("Evicted classpath from cache for project " + bazelProject.name);
-                cachedEntries = null;
-            } else {
+            if ((now - cachePutTimeMillis) <= CLASSPATH_CACHE_TIMEOUT_MS) {
                 logger.debug("  Using cached classpath for project " + bazelProject.name);
                 return cachedEntries;
             }
+            logger.info("Evicted classpath from cache for project " + bazelProject.name);
+            cachedEntries = null;
         }
 
         logger.info("Computing classpath for project " + bazelProject.name + " (cached entries: " + foundCachedEntries
@@ -150,7 +149,8 @@ public class BazelJvmClasspath implements JvmClasspath {
                 // since we only call query with labels for the same package, we expect to get a single BazelBuildFile instance back
                 if (buildFiles.isEmpty()) {
                     throw new IllegalStateException("Unexpected empty BazelBuildFile collection, this is a bug");
-                } else if (buildFiles.size() > 1) {
+                }
+                if (buildFiles.size() > 1) {
                     throw new IllegalStateException("Expected a single BazelBuildFile instance, this is a bug");
                 } else {
                     bazelBuildFileModel = buildFiles.iterator().next();
@@ -200,7 +200,8 @@ public class BazelJvmClasspath implements JvmClasspath {
                         }
                     }
 
-                    BazelProject otherProject = getSourceProjectForSourcePaths(jvmTargetInfo.getSources());
+                    List<String> sourcePaths = jvmTargetInfo.getSources();
+                    BazelProject otherProject = getSourceProjectForSourcePaths(sourcePaths);
                     if (otherProject == null) {
                         // no project found that houses the sources of this bazel target, add the jars to the classpath
                         // this means that this is an external jar, or a jar produced by a bazel target that was not imported
@@ -308,8 +309,8 @@ public class BazelJvmClasspath implements JvmClasspath {
 
             // make it main cp
             mainClasspathEntryMap.put(pathStr, cpEntry);
-        } else {
-            // add to the test classpath?
+        } else { 
+            // add to the test classpath? 
             // if it already exists in the main classpath, do not also add to the test classpath
             if (!mainClasspathEntryMap.containsKey(pathStr)) {
                 testClasspathEntryMap.put(pathStr, cpEntry);
@@ -319,8 +320,7 @@ public class BazelJvmClasspath implements JvmClasspath {
 
     private JvmClasspathEntry[] assembleClasspathEntries(Map<String, JvmClasspathEntry> mainClasspathEntryMap,
             Map<String, JvmClasspathEntry> testClasspathEntryMap) {
-        List<JvmClasspathEntry> classpathEntries = new ArrayList<>();
-        classpathEntries.addAll(mainClasspathEntryMap.values());
+        List<JvmClasspathEntry> classpathEntries = new ArrayList<>(mainClasspathEntryMap.values());
         classpathEntries.addAll(testClasspathEntryMap.values());
         return classpathEntries.toArray(new JvmClasspathEntry[] {});
     }
@@ -342,7 +342,7 @@ public class BazelJvmClasspath implements JvmClasspath {
     }
 
     private JvmClasspathEntry jarsToClasspathEntry(JVMAspectOutputJarSet jarSet, boolean isTestLib) {
-        JvmClasspathEntry cpEntry = null;
+        JvmClasspathEntry cpEntry;
         cpEntry = new JvmClasspathEntry(jarSet.getJar(), jarSet.getSrcJar(), isTestLib);
         return cpEntry;
     }

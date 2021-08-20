@@ -47,6 +47,7 @@ import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.test.MockCommandSimulatedOutputMatcher;
 import com.salesforce.bazel.sdk.command.test.TestBazelCommandEnvironmentFactory;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 public class BazelLaunchConfigurationDelegateFTest {
     @Rule
@@ -73,7 +74,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         String expectedExec = FSPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
         String actualExec = cmdLine[0];
 
-        System.out.println("testHappyRunLaunch expectedExec = " + expectedExec + " actualPath = " + actualExec);
+        //System.out.println("testHappyRunLaunch expectedExec = " + expectedExec + " actualPath = " + actualExec);
 
         assertTrue(actualExec.endsWith(expectedExec) || actualExec.endsWith(expectedExec + ".exe"));
         assertTrue(cmdLine[1].contains("debug"));
@@ -145,12 +146,12 @@ public class BazelLaunchConfigurationDelegateFTest {
         //testTempDir = new File("/tmp/bef/bazelws"); // $SLASH_OK: sample code
         //testTempDir.mkdirs();
 
-        // create the mock Eclipse runtime in the correct state
-        int numberOfJavaPackages = 1;
-        boolean computeClasspaths = true;
+        TestOptions testOptions =
+                new TestOptions().numberOfJavaPackages(1).computeClasspaths(true).explicitJavaTestDeps(false);
+
         MockEclipse mockEclipse =
                 EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
-                    numberOfJavaPackages, computeClasspaths, false);
+                    testOptions);
 
         return mockEclipse;
     }

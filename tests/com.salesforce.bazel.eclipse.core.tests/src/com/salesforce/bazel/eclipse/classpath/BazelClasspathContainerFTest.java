@@ -55,6 +55,7 @@ import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 public class BazelClasspathContainerFTest {
     @Rule
@@ -86,7 +87,8 @@ public class BazelClasspathContainerFTest {
         // javalib0 is the base Java library created by our test harness
         // javalib1 is the second Java library created by our test harness, and it is made to depend on javalib0
         boolean explicitJavaTestDeps = false;
-        setupMockEnvironmentForClasspathTest("tcpbjp_im", explicitJavaTestDeps);
+
+        setupMockEnvironmentForClasspathTest("tcpbjp_im", explicitJavaTestDeps, false, false);
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
         // NOTE: classpath entries are ordered lists so they should always be in the same positions
@@ -106,11 +108,11 @@ public class BazelClasspathContainerFTest {
         // bazel-output-base/execroot/mock_workspace/external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar
         entries = javaHelper.getResolvedClasspath(javalib0_IJavaProject, false);
         assertNotNull(entries);
-        //printClasspathEntries("tcpbjp_im RESOLVED", entries);
+        printClasspathEntries("tcpbjp_im RESOLVED0", entries);
         assertEquals(3, entries.length);
-        assertTrue(entries[0].getPath().toString().contains("Runner")); // this is the magical implicit dep TestRunner jar that adds hamcrest, junit, javax.annotation to cp
-        assertTrue(entries[1].getPath().toString().contains("guava"));
-        assertTrue(entries[2].getPath().toString().contains("slf4j"));
+        assertTrue(entries[0].getPath().toString().contains("guava"));
+        assertTrue(entries[1].getPath().toString().contains("slf4j"));
+        assertTrue(entries[2].getPath().toString().contains("Runner")); // this is the magical implicit dep TestRunner jar that adds hamcrest, junit, javax.annotation to cp
 
         // THIRD check that the resolved classpath has 3 entries for javalib1: (TestRunner comes from implicit deps)
         // bazel-output-base/execroot/test_workspace/bazel-out/darwin-fastbuild/bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools/Runner_deploy-ijar.jar
@@ -119,10 +121,10 @@ public class BazelClasspathContainerFTest {
         // javalib0
         entries = javaHelper.getResolvedClasspath(javalib1_IJavaProject, false);
         assertNotNull(entries);
-        // printClasspathEntries(entries);
+        printClasspathEntries("tcpbjp_im RESOLVED1", entries);
         assertEquals(4, entries.length);
         // make sure we picked up the inter-project dep (javalib1 depends on javalib0)
-        assertEquals("javalib0", entries[3].getPath().toString());
+        assertEquals("javalib0", entries[2].getPath().toString());
     }
 
     /**
@@ -138,7 +140,8 @@ public class BazelClasspathContainerFTest {
         // javalib0 is the base Java library created by our test harness
         // javalib1 is the second Java library created by our test harness, and it is made to depend on javalib0
         boolean explicitJavaTestDeps = true;
-        setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps);
+
+        setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, false, false);
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
         // NOTE: classpath entries are ordered lists so they should always be in the same positions
@@ -162,9 +165,9 @@ public class BazelClasspathContainerFTest {
         //printClasspathEntries("tcpbjp_ex", entries);
         assertEquals(4, entries.length);
         assertTrue(entries[0].getPath().toString().contains("guava"));
-        assertTrue(entries[1].getPath().toString().contains("junit"));
-        assertTrue(entries[2].getPath().toString().contains("hamcrest"));
-        assertTrue(entries[3].getPath().toString().contains("slf4j"));
+        assertTrue(entries[1].getPath().toString().contains("slf4j"));
+        assertTrue(entries[2].getPath().toString().contains("junit"));
+        assertTrue(entries[3].getPath().toString().contains("hamcrest"));
 
         // THIRD check that the resolved classpath has 5 entries for javalib1:
         // bazel-output-base/execroot/mock_workspace/external/com_google_guava_guava/jar/guava-20.0.jar
@@ -174,10 +177,77 @@ public class BazelClasspathContainerFTest {
         // javalib0
         entries = javaHelper.getResolvedClasspath(javalib1_IJavaProject, false);
         assertNotNull(entries);
-        // printClasspathEntries(entries);
+        //printClasspathEntries("tcpbjp_ex", entries);
         assertEquals(5, entries.length);
         // make sure we picked up the inter-project dep (javalib1 depends on javalib0)
-        assertEquals("javalib0", entries[4].getPath().toString());
+        assertEquals("javalib0", entries[2].getPath().toString());
+    }
+
+    /**
+     * We create an Eclipse project for the Bazel Workspace with a Java project.
+     * <p>
+     * Variant: this java package uses a non-Maven layout. It has source/dev/java and source/test/java.
+     */
+    @Test
+    public void testClasspath_BazelJavaProject_nonstandardLayout() throws Exception {
+        // SETUP
+        // javalib0 is the base Java library created by our test harness
+        // javalib1 is the second Java library created by our test harness, and it is made to depend on javalib0
+
+        boolean explicitJavaTestDeps = true;
+        boolean nonstandardlayout = true;
+        boolean nonstandardlayout_multipledirs = false;
+
+        setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, nonstandardlayout,
+            nonstandardlayout_multipledirs);
+
+        JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
+
+        // NOTE: classpath entries are ordered lists so they should always be in the same positions
+
+        // FIRST check that the project raw classpath has 4 entries for javalib0:
+        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
+        // javalib0/source/dev/java
+        // javalib0/sources/test/java
+        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8
+        IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
+        assertNotNull(entries);
+        printClasspathEntries("testClasspath_BazelJavaProject_nonstandardLayout", entries);
+
+    }
+
+    /**
+     * We create an Eclipse project for the Bazel Workspace with a Java project.
+     * <p>
+     * Variant: this java package uses a non-Maven layout. It has source/dev/java, source/dev2/java, source/test/java,
+     * source/test2/java.
+     */
+    @Test
+    public void testClasspath_BazelJavaProject_nonstandardLayout_multiple() throws Exception {
+        // SETUP
+        // javalib0 is the base Java library created by our test harness
+        // javalib1 is the second Java library created by our test harness, and it is made to depend on javalib0
+
+        boolean explicitJavaTestDeps = true;
+        boolean nonstandardlayout = true;
+        boolean nonstandardlayout_multipledirs = true;
+
+        setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, nonstandardlayout,
+            nonstandardlayout_multipledirs);
+
+        JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
+
+        // NOTE: classpath entries are ordered lists so they should always be in the same positions
+
+        // FIRST check that the project raw classpath has 4 entries for javalib0:
+        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
+        // javalib0/source/dev/java
+        // javalib0/source/test/java
+        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8
+        IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
+        assertNotNull(entries);
+        printClasspathEntries("testClasspath_BazelJavaProject_nonstandardLayout_multiple", entries);
+
     }
 
     /**
@@ -187,7 +257,7 @@ public class BazelClasspathContainerFTest {
     @Test
     public void testClasspath_BazelWorkspaceProject() throws Exception {
         boolean explicitJavaTestDeps = false;
-        setupMockEnvironmentForClasspathTest("tcpbwp", explicitJavaTestDeps);
+        setupMockEnvironmentForClasspathTest("tcpbwp", explicitJavaTestDeps, false, false);
         ResourceHelper resourceHelper = mock(ResourceHelper.class);
         when(resourceHelper.isBazelRootProject(workspace_IProject)).thenReturn(true);
 
@@ -200,8 +270,9 @@ public class BazelClasspathContainerFTest {
 
     // HELPERS
 
-    private MockEclipse setupMockEnvironmentForClasspathTest(String testName, boolean explicitJavaTestDeps)
-            throws Exception {
+    private MockEclipse setupMockEnvironmentForClasspathTest(String testName, boolean explicitJavaTestDeps,
+            boolean nonstandardLayout, boolean nonstandardMultipleDirs)
+                    throws Exception {
         File testDir = tmpFolder.newFolder();
         File testTempDir = new File(testDir, testName);
         testTempDir.mkdirs();
@@ -211,11 +282,18 @@ public class BazelClasspathContainerFTest {
         //testTempDir.mkdirs();
 
         // create the mock Eclipse runtime in the correct state
-        int numberOfJavaPackages = 2;
-        boolean computeClasspaths = true;
+
+        TestOptions testOptions = new TestOptions().numberOfJavaPackages(2).computeClasspaths(true)
+                .explicitJavaTestDeps(explicitJavaTestDeps).nonStandardJavaLayout_enabled(nonstandardLayout)
+                .nonStandardJavaLayout_multipledirs(nonstandardMultipleDirs);
+
+        if (nonstandardLayout) {
+
+        }
+
         MockEclipse mockEclipse =
                 EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
-                    numberOfJavaPackages, computeClasspaths, explicitJavaTestDeps);
+                    testOptions);
 
         workspace_IProject =
                 mockEclipse.getImportedProject("Bazel Workspace (" + MockEclipse.BAZEL_WORKSPACE_NAME + ")");
@@ -224,8 +302,7 @@ public class BazelClasspathContainerFTest {
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");
         javalib1_IJavaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(javalib1_IProject);
 
-        assertEquals(4, mockEclipse.getBazelWorkspaceCreator().workspaceDescriptor.createdPackages.size());
-        //        assertEquals(4, mockEclipse.getBazelWorkspaceCreator().workspaceDescriptor.createdTargets.size());
+        assertEquals(2, mockEclipse.getBazelWorkspaceCreator().workspaceDescriptor.createdPackages.size());
 
         return mockEclipse;
     }
