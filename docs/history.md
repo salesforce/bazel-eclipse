@@ -5,6 +5,7 @@
 The project is sponsored by Salesforce.
 Salesforce has opened the repository as open source as of November 20, 2019, with contributors located here:
 
+<!-- markdown-link-check-disable-next-line -->
 - [Bazel Eclipse Feature contributors](https://github.com/salesforce/bazel-eclipse/settings/collaboration)
 
 For more information about open source at Salesforce, see this page:

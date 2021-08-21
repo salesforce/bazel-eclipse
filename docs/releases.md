@@ -17,6 +17,7 @@ Our list of releases is here:
 We maintain our latest release on our public update site. The update site is available here:
 
 - [Bazel Eclipse Update Site Instructions](https://opensource.salesforce.com/bazel-eclipse/)
+<!-- markdown-link-check-disable-next-line -->
 - Bazel Eclipse Update Site: https://opensource.salesforce.com/bazel-eclipse/update-site
 
 If you prefer, we also attach a built binary archive of each release that you can install.

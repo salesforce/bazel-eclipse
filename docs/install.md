@@ -29,7 +29,7 @@ More details of our JDK support strategy can be [found here](dev/jdk.md).
 ### Installing Eclipse
 
 Download the latest release of [Eclipse IDE for Java Developers](https://www.eclipse.org/downloads/packages/release/2018-09/r/eclipse-ide-java-developers).
-The feature is built against a [recent version](../tools/eclipse_jars) of the Eclipse SDK, so older versions won't work.
+The feature is built against a of the Eclipse SDK, so older versions won't work.
 
 **Launching Eclipse**
 
@@ -43,7 +43,7 @@ Consult [this doc](macos.md) if your Eclipse fails to launch on Mac.
 The Bazel Eclipse Feature does not come with an embedded install of Bazel.
 You must have Bazel installed on your machine and in your shell path.
 
-The [BazelVersionChecker](../plugin-libs/plugin-command/src/main/java/com/salesforce/bazel/eclipse/command/internal/BazelVersionChecker.java) has a version check when setting the Bazel executable in the Eclipse preferences.
+The BazelVersionChecker class has a version check when setting the Bazel executable in the Eclipse preferences.
 Choose a version of Bazel that is at least as high as that check.
 
 ### Installing the Bazel Eclipse feature into Eclipse
@@ -65,6 +65,7 @@ If you want to install the latest version of BEF, follow these steps to install 
 - Start Eclipse.
 - In Eclipse, go to *Help* -> *Install New Software*
 - Click the *Add* button
+<!-- markdown-link-check-disable-next-line -->
 - For the location, enter: **https://opensource.salesforce.com/bazel-eclipse/update-site**
 - Give the location a name, like *Bazel-Eclipse updatesite*
 - Check the box next to the *Bazel Eclipse* item, then hit *Next*

@@ -1,0 +1,20 @@
+name: Check for broken markdown links
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  schedule:
+      - cron: '0 10 * * *'
+
+jobs:
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-verbose-mode: 'yes'

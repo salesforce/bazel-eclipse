@@ -60,7 +60,9 @@ Note that we have two update sites, one for the official releases and one for re
 Deploy a release candidate and test it prior to releasing the official release.
 
 - [Update Instructions](https://opensource.salesforce.com/bazel-eclipse/) are written [here](https://github.com/salesforce/bazel-eclipse/blob/master/.github/update-site-index.html)
+<!-- markdown-link-check-disable-next-line -->
 - Official release update site: https://opensource.salesforce.com/bazel-eclipse/update-site
+<!-- markdown-link-check-disable-next-line -->
 - Release candidate (RC) update site: http://opensource.salesforce.com/bazel-eclipse/update-site-release-candidate
 
 :fire: The update site is our live installation location for our users. If you are doing
@@ -92,6 +94,7 @@ First, check that our landing page is available and has correct instructions:
 - [BEF Update Site landing page](https://opensource.salesforce.com/bazel-eclipse/)
 
 Next, follow the instructions on the page and install BEF into a fresh copy of Eclipse.
+<!-- markdown-link-check-disable-next-line -->
 If you are testing a release candidate, remember to use the RC update site http://opensource.salesforce.com/bazel-eclipse/update-site-release-candidate.
 Finally, repeat the install test with the zip file that is in the root directory of the *gh-pages* branch
 
@@ -140,6 +143,7 @@ The BEF record is here, which will have an _Edit_ button if you are entitled:
 
 When you create a new _Solution Version_, use these data points:
 - Version: use the full version like *1.4.0.v20210707-0040*
+<!-- markdown-link-check-disable-next-line -->
 - Update site: https://opensource.salesforce.com/bazel-eclipse/update-site
 - Feature id: *com.salesforce.bazel.eclipse.feature*
 
