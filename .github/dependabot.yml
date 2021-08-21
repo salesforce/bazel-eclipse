@@ -1,7 +1,5 @@
 version: 2
 updates:
-
-  # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -10,5 +8,5 @@ updates:
     assignees:
       - "plaird"
     commit-message:
-      prefix: "GitHub Actions update"
+      prefix: "Dependabot:"
     open-pull-requests-limit: 2

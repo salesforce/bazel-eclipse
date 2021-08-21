@@ -1,4 +1,4 @@
-## Building your Workspace with the Bazel Eclipse Feature ![BEF Logo](logos/bef_logo_small.png)
+## Building your Workspace with the Bazel Eclipse Feature ![BEF Logo](../logos/bef_logo_small.png)
 
 This page contains information related to workspace builds using the feature.
 
@@ -13,7 +13,7 @@ Because the feature executes the Bazel binary as a user would from the command l
   the build has high fidelity to the command line configuration.
 For example, your *.bazelrc* file is honored by the feature.
 
-For more information on how the feature invokes Bazel, see the [architecture page](dev/architecture.md).
+For more information on how the feature invokes Bazel, see the [architecture page](../dev/architecture.md).
 
 ### Next Topic: Understanding the Java Classpath
 

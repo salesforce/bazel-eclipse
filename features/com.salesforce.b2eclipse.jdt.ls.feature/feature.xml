@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Main configuration file for BEF.
+  Main configuration file for Bazel Java Language Server.
 
   Normally you don't need to update anything in here. See the release.md doc for
-  steps to update the version and release BEF.
+  steps to update the version and release Bazel Java Lanuage Server.
 -->
 <feature
       id="com.salesforce.b2eclipse.jdt.ls.feature"

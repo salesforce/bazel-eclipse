@@ -1,7 +1,7 @@
 ## Bazel Eclipse Feature Dev Guide ![BEF Developer Logo](../logos/bef_developers_small.png)
 
-These instructions are for developers wishing to make modifications to the Bazel Eclipse Feature.
-If you only want to **use** the feature, check out our simpler instructions [over here.](../using_the_feature.md)
+These instructions are for developers wishing to make modifications to the Bazel Eclipse Feature and the Language Server.
+If you only want to **use** the Eclipse feature, check out our simpler instructions [over here.](../bef/using_the_feature.md)
 
 ### Learning about Eclipse Features and Plugins
 
@@ -30,7 +30,7 @@ Maven Tycho is mostly used as part of CI.
 ### Installing your Toolchain
 
 It is assumed that you have already installed your Bazel Eclipse Feature toolchain.
-See [this installation document](../install.md) for details.
+See [this installation document](../bef/install.md) for details.
 
 ### Install the Eclipse SDK (includes the Plugin Development Environment)
 
