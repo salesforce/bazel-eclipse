@@ -100,7 +100,7 @@ Before doing any work on BEF, it is important to understand what the SDK is, how
 It makes sense to look over the fence at the Maven plugins to see how they have implemented the same
   functionality.
 
-- [M2Eclipse plugins](https://github.com/eclipse/m2e-core)
+- [M2Eclipse plugins](https://github.com/eclipse-m2e/m2e-core)
 
 ### The plugins that compose the Bazel Eclipse Feature
 

@@ -16,7 +16,7 @@ Finally, all log events go to the SLF4J/Logback file that is discussed below.
 
 ### How To
 To log, simply create a LogHelper instance with the class that will log to it.
-This is just like SLF4J's LoggerFactory.getLog(Class<?>) method.
+This is just like SLF4J's *LoggerFactory.getLog(Class<?>)* method.
 ```java
 import com.salesforce.bazel.eclipse.logging.LogHelper;
 ...
@@ -32,7 +32,7 @@ public void warn(String message, Object... args);
 public void info(String message, Object... args);
 public void debug(String message, Object... args);
 ```
-These methods can be found [here](../../bzl-java-sdk/src/main/java/com/salesforce/bazel/eclipse/logging/LogHelper.java).
+These methods can be found in *LogHelper.java*.
 
 These methods should be familiar to SLF4j users.
 The ```message```and ```args``` work just like SLF4J where ```{}``` is used to substitute values in the ```args```.
@@ -77,10 +77,10 @@ LOG.debug("Health check was successful");
 ### Log Configuration
 The SLF4J/Logback log can be configured to change format, log rolling, log size, etc.
 To learn more about configuration, please read the [Logback documentation](https://logback.qos.ch/manual/configuration.html).
-The configuration file is located in [logback.xml](../../plugin-core/logback.xml).
+The configuration file is located in *logback.xml* in the Core plugin.
 
 #### Enable debug events to be seen
-If you want to turn on debug level events in the SLF4J/Loback log, change the following xml in the [logback.xml](../../plugin-core/logback.xml) from INFO to DEBUG.
+If you want to turn on debug level events in the SLF4J/Loback log, change the following xml in the *logback.xml* from INFO to DEBUG.
 ```xml
 <root level="INFO">
 ```

@@ -37,7 +37,6 @@ See [this installation document](../install.md) for details.
 In addition to the installation steps above, you need to install the **Eclipse SDK** which is more
   than just the typical Java IDE download that you normally use.
 The SDK includes the [Plugin Development Environment](http://www.eclipse.org/pde/)
-The correct version to use is tracked in our build toolchain [here](../../tools/eclipse_jars).
 
 - [Download the Eclipse SDK](http://download.eclipse.org/eclipse/downloads/)
 

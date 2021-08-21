@@ -11,7 +11,7 @@ Roughly 90% of the code to support Bazel in Eclipse is not specific to Eclipse, 
 
 For that reason, a vendored (static copy) version of the SDK lives in this repository.
 As changes are made to the SDK in either repository, the changes are copied across
-  using scripts such as [sdk_copybara.sh](../../sdk_copybara.sh).
+  using scripts such as [sdk_copybara.sh](../../sdk-copybara.sh).
 
 More details can be found in these places:
 - [Bazel Java SDK](https://github.com/salesforce/bazel-java-sdk)
