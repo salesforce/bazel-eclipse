@@ -51,7 +51,7 @@ jobs:
         run: .github/bef-create-update-site.sh
 
       - name: Deploy Update Site 🚀
-        uses: JamesIves/github-pages-deploy-action@4.1.1
+        uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: gh-pages
           folder: update-site
