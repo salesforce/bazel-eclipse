@@ -35,7 +35,7 @@ BEF is almost entirely a passion project - most hours are invested from personal
 BEF was architected from the early days recognizing that most of the code required for BEF is actually not
   specific to Eclipse.
 While that code was born inside of BEF, it was kept as a separate Eclipse plugin with the intention to split
-  it out as a separate top level project - the [Bazel Java SDK](dev/bazeljavasdk.md).
+  it out as a separate top level project - the [Bazel Java SDK](../dev/bazeljavasdk.md).
 The formal separation occurred in early 2021.
 
 ### Build Implementation History
@@ -46,7 +46,7 @@ Many Eclipse plugin metadata requirements were not honored.
 @plaird fixed some of it, but gave up and retreated to use Bazel only to run command line build/tests,
 Packaging of the actual BEF binary was done via Eclipse *Export* within the Eclipse SDK.
 
-In 2021, Gunnar Wagenknecht (@guw) used his Eclipse expertise to reimplement [the build](dev/thebuild.md)
+In 2021, Gunnar Wagenknecht (@guw) used his Eclipse expertise to reimplement [the build](../dev/thebuild.md)
   using Maven Tycho.
 Tycho is the de facto standard for Eclipse plugins, and allowed us to switch to command line builds
   for the binaries.
@@ -81,4 +81,4 @@ The Bazel Import Wizard UI was adapted from a similar wizard in the [M2Eclipse](
 Copyright (c) 2008-2018 Sonatype, Inc. and others.
 ```
 
-Formal documentation of the above is contained in the [NOTICE](../NOTICE) file.
+Formal documentation of the above is contained in the [NOTICE](../../NOTICE) file.

@@ -1,4 +1,4 @@
-name: BEF PR Build
+name: Matrix PR Build
 
 on:
   push:

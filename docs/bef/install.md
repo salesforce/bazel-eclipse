@@ -3,7 +3,7 @@
 This page documents how to get up and running with Eclipse and the Bazel Eclipse feature.
 These instructions are for **users that just want to use** the Bazel Eclipse feature.
 
- 👷There is [a different installation process](dev/dev_guide.md) if you want to actually make changes to the feature.
+ 👷There is [a different installation process](../dev/dev_guide.md) if you want to actually make changes to the feature.
 
 This section will eventually contain a matrix of supported configurations.
 But at this point, we are not that organized.
@@ -24,7 +24,7 @@ At this time, we don't have specific guidance on what JDK version you should be 
 Any JDK11 or above should work.
 We support modern versions of Java, so whatever you pick should just work.
 If you find one that does NOT work, let us know.
-More details of our JDK support strategy can be [found here](dev/jdk.md).
+More details of our JDK support strategy can be [found here](../dev/jdk.md).
 
 ### Installing Eclipse
 

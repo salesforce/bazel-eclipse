@@ -1,4 +1,4 @@
-## Known Issues with Bazel Eclipse ![BEF Logo](logos/bef_developers_small.png)
+## Known Issues with Bazel Eclipse ![BEF Logo](../logos/bef_developers_small.png)
 
 ### Compilation Errors after Import
 

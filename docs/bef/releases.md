@@ -1,4 +1,4 @@
-## Releases of the Bazel Eclipse Feature ![BEF Logo](logos/bef_logo_small.png)
+## Releases of the Bazel Eclipse Feature ![BEF Logo](../logos/bef_logo_small.png)
 
 This page provides information on how to install a version of the Bazel Eclipse feature into your Eclipse install.
 
@@ -29,4 +29,4 @@ These steps assume you have already setup your toolchain (JDK, Bazel) which is c
   [here](install.md).
 
 Note that the way to build the update site zip archive is an evolving story.
-Read the documentation on the [build documentation page](dev/thebuild.md) which will have instructions on how best to do it.
+Read the documentation on the [build documentation page](../dev/thebuild.md) which will have instructions on how best to do it.
