@@ -1,4 +1,4 @@
-name: Check for broken markdown links
+name: Docs broken link checker
 
 on:
   push:

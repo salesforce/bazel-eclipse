@@ -3,7 +3,7 @@
 This document is for maintainers.
 This is the set of steps for releasing a new version of BEF.
 
-## Release Process
+## Release Process (BEF and BJLS)
 
 ### Setting the Version
 
@@ -37,7 +37,7 @@ This [PR for version 1.3.1](https://github.com/salesforce/bazel-eclipse/pull/225
   gives you an idea.
 
 
-### Local Build and Testing
+### Local Build and Testing (BEF)
 
 Prior to releasing BEF, please test it from a fresh install of standard Eclipse (not an SDK version).
 Launching BEF (as inner eclipse) from the Eclipse SDK (outer eclipse) is not a sufficient test.
@@ -54,12 +54,17 @@ Things to look for:
 - There are no build errors in the Problems View
 - Open a .java file in an editor an make sure there aren't any red squigglies
 
-### Releasing from GitHub to the Update Site
+### Local Build and Testing (BJLS)
 
-Note that we have two update sites, one for the official releases and one for release candidates.
+Steps to be determined.
+
+### Releasing from GitHub to the Update Site (BEF)
+
+Note that we have two update sites for *each* product, one for the official releases and one for release candidates.
 Deploy a release candidate and test it prior to releasing the official release.
 
-- [Update Instructions](https://opensource.salesforce.com/bazel-eclipse/) are written [here](https://github.com/salesforce/bazel-eclipse/blob/master/.github/update-site-index.html)
+BEF Links:
+- [Update Instructions](https://opensource.salesforce.com/bazel-eclipse/) are written [here](https://github.com/salesforce/bazel-eclipse/blob/master/.github/bef-update-site-index.html)
 <!-- markdown-link-check-disable-next-line -->
 - Official release update site: https://opensource.salesforce.com/bazel-eclipse/update-site
 <!-- markdown-link-check-disable-next-line -->
@@ -71,7 +76,7 @@ branch.
 
 - Issue a release candidate prior to deploying an official release
 - Update the _github-pages-deploy-action_ stage in
-[the workflow](../../.github/workflows/build-release-deploy.yml) to deploy to a test
+[the workflow](../../.github/workflows/bef-build-release-deploy.yml) to deploy to a test
 branch if you have **any** doubts about what you are releasing.
 - Be prepared to rollback the [gh-pages branch](https://github.com/salesforce/bazel-eclipse/tree/gh-pages)
 at the first sign of trouble (see steps on how to do this in next section).
@@ -81,13 +86,13 @@ To build the release, make sure you have your versions set and committed to mast
 
 Then, run the release workflow:
  - Navigate to the [Bazel Eclipse Actions](https://github.com/salesforce/bazel-eclipse/actions) tab in GitHub
- - Click on the _Bazel Eclipse Feature Release_ or _Bazel Eclipse Feature Test Release Candidate_ button in the left nav
+ - Click on the _BEF Release_ or _BEF Release Test Candidate_ button in the left nav
  - Click on the _Run Workflow_ button on the right side, and pick the branch to release from (normally _master_)
  - Monitor the build, it should take about a minute
  - Navigate to the [gh-pages branch](https://github.com/salesforce/bazel-eclipse/tree/gh-pages) of the repo. It contains all the files from the release.
    - Verify the files look to be correct (i.e. check version in the filenames)
 
-### Test the Update Site
+### Test the Update Site (BEF)
 
 First, check that our landing page is available and has correct instructions:
 
@@ -134,7 +139,7 @@ git tag 1.3.1.updatesite
 git push origin 1.3.1.updatesite
 ```
 
-### Update the Eclipse Marketplace Record
+### Update the Eclipse Marketplace Record (BEF)
 
 For each release, we need to add an entry to our Marketplace record.
 The BEF record is here, which will have an _Edit_ button if you are entitled:
@@ -150,11 +155,11 @@ When you create a new _Solution Version_, use these data points:
 Make sure to remove the previous _Solution Version_ entry, so that the Marketplace will
   offer the newer version metadata.
 
-## Release Implementation
+## Release Implementation (BEF)
 
 The release workflow is defined using GitHub Actions.
 Instead of explaining how it works, here are some pointers to some interesting files:
 
-- [Release workflow definition](../../.github/workflows/build-release-deploy.yml)
-- [Update site layout script](../../.github/create-update-site.sh)
-- [Update site layout script for RCs](../../.github/create-update-site-rc.sh)
+- [Release workflow definition](../../.github/workflows/bef-build-release-deploy.yml)
+- [Update site layout script](../../.github/bef-create-update-site.sh)
+- [Update site layout script for RCs](../../.github/bef-create-update-site-rc.sh)
