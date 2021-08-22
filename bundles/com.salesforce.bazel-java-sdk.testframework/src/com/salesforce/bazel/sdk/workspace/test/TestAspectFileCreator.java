@@ -97,7 +97,7 @@ public class TestAspectFileCreator {
             dependencies.addAll(extraDependencies);
         }
         String mainClass = null;
-        String label = packageRelativePath + ":" + targetName;
+        String label = "//" + packageRelativePath + ":" + targetName;
         String jar = FSPathHelper
                 .osSepsEscaped("bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + targetName + ".jar");
         String interfacejar = FSPathHelper.osSepsEscaped(
@@ -140,7 +140,7 @@ public class TestAspectFileCreator {
             dependencies.addAll(extraDependencies);
         }
         String mainClass = null;
-        String label = packageRelativePath + ":" + testTargetName;
+        String label = "//" + packageRelativePath + ":" + testTargetName;
         String jar = FSPathHelper.osSepsEscaped(
             "bazel-out/darwin-fastbuild/bin/" + packageRelativePath + "/lib" + testTargetName + ".jar");
         String interfacejar = null;
