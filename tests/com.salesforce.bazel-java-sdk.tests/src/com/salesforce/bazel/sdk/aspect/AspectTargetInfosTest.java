@@ -34,6 +34,7 @@
 package com.salesforce.bazel.sdk.aspect;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -52,33 +53,46 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 public class AspectTargetInfosTest {
 
+    private final static String FAKE_REL_PATH = "some" + File.separatorChar + "path";
     private final String libPath = FSPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
     private final String testPath = FSPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
     private final String binPath = FSPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
     private final String selPath = FSPathHelper.osSeps("a/b/c/d/Foo.java"); // $SLASH_OK
 
     @Test
+    public void testBasics() {
+        AspectTargetInfo lib = getAspectTargetInfo("//libs/foo1", JvmRuleInit.KIND_JAVA_LIBRARY, libPath);
+
+        assertNotNull(lib.getAspectDataFile());
+        assertEquals(FAKE_REL_PATH, lib.getWorkspaceRelativePath());
+        assertEquals("//libs/foo1", lib.getLabel().getLabelPath());
+
+        // just make sure no exception is thrown
+        lib.toString();
+    }
+
+    @Test
     public void testLookupByLabel() {
-        AspectTargetInfo lib = getAspectTargetInfo("foo1", JvmRuleInit.KIND_JAVA_LIBRARY, libPath);
-        AspectTargetInfo test = getAspectTargetInfo("foo2", JvmRuleInit.KIND_JAVA_TEST, testPath);
-        AspectTargetInfo bin = getAspectTargetInfo("foo3", JvmRuleInit.KIND_JAVA_BINARY, binPath);
-        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", JvmRuleInit.KIND_SELENIUM_TEST, selPath);
+        AspectTargetInfo lib = getAspectTargetInfo("//foo1", JvmRuleInit.KIND_JAVA_LIBRARY, libPath);
+        AspectTargetInfo test = getAspectTargetInfo("//foo2", JvmRuleInit.KIND_JAVA_TEST, testPath);
+        AspectTargetInfo bin = getAspectTargetInfo("//foo3", JvmRuleInit.KIND_JAVA_BINARY, binPath);
+        AspectTargetInfo seleniumTest = getAspectTargetInfo("//foo4", JvmRuleInit.KIND_SELENIUM_TEST, selPath);
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
-        assertSame(lib, apis.lookupByLabel("foo1"));
-        assertSame(test, apis.lookupByLabel("foo2"));
-        assertSame(bin, apis.lookupByLabel("foo3"));
-        assertSame(seleniumTest, apis.lookupByLabel("foo4"));
+        assertSame(lib, apis.lookupByLabel("//foo1"));
+        assertSame(test, apis.lookupByLabel("//foo2"));
+        assertSame(bin, apis.lookupByLabel("//foo3"));
+        assertSame(seleniumTest, apis.lookupByLabel("//foo4"));
         assertNull(apis.lookupByLabel("blah"));
     }
 
     @Test
     public void testLookupByTargetKind__singleTargetKind() {
-        AspectTargetInfo lib = getAspectTargetInfo("foo1", JvmRuleInit.KIND_JAVA_LIBRARY, libPath);
-        AspectTargetInfo test = getAspectTargetInfo("foo2", JvmRuleInit.KIND_JAVA_TEST, testPath);
-        AspectTargetInfo bin = getAspectTargetInfo("foo3", JvmRuleInit.KIND_JAVA_BINARY, binPath);
-        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", JvmRuleInit.KIND_SELENIUM_TEST, selPath);
+        AspectTargetInfo lib = getAspectTargetInfo("//foo1", JvmRuleInit.KIND_JAVA_LIBRARY, libPath);
+        AspectTargetInfo test = getAspectTargetInfo("//foo2", JvmRuleInit.KIND_JAVA_TEST, testPath);
+        AspectTargetInfo bin = getAspectTargetInfo("//foo3", JvmRuleInit.KIND_JAVA_BINARY, binPath);
+        AspectTargetInfo seleniumTest = getAspectTargetInfo("//foo4", JvmRuleInit.KIND_SELENIUM_TEST, selPath);
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
@@ -93,10 +107,10 @@ public class AspectTargetInfosTest {
 
     @Test
     public void testLookupByTargetKind__multipleTargetKinds() {
-        AspectTargetInfo lib = getAspectTargetInfo("foo1", JvmRuleInit.KIND_JAVA_LIBRARY, libPath);
-        AspectTargetInfo test = getAspectTargetInfo("foo2", JvmRuleInit.KIND_JAVA_TEST, testPath);
-        AspectTargetInfo bin = getAspectTargetInfo("foo3", JvmRuleInit.KIND_JAVA_BINARY, binPath);
-        AspectTargetInfo seleniumTest = getAspectTargetInfo("foo4", JvmRuleInit.KIND_SELENIUM_TEST, selPath);
+        AspectTargetInfo lib = getAspectTargetInfo("//foo1", JvmRuleInit.KIND_JAVA_LIBRARY, libPath);
+        AspectTargetInfo test = getAspectTargetInfo("//foo2", JvmRuleInit.KIND_JAVA_TEST, testPath);
+        AspectTargetInfo bin = getAspectTargetInfo("//foo3", JvmRuleInit.KIND_JAVA_BINARY, binPath);
+        AspectTargetInfo seleniumTest = getAspectTargetInfo("//foo4", JvmRuleInit.KIND_SELENIUM_TEST, selPath);
 
         AspectTargetInfos apis = new AspectTargetInfos(lib, test, bin, seleniumTest);
 
@@ -110,7 +124,7 @@ public class AspectTargetInfosTest {
 
     @Test
     public void testLookupByRootSourcePath() {
-        AspectTargetInfo api = getAspectTargetInfo("foo", libPath);
+        AspectTargetInfo api = getAspectTargetInfo("//foo", libPath);
 
         AspectTargetInfos infos = new AspectTargetInfos(api);
 
@@ -139,8 +153,8 @@ public class AspectTargetInfosTest {
 
     @Test
     public void testLookupByRootSourcePath__multipleMatching() {
-        AspectTargetInfo foo = getAspectTargetInfo("foo", FSPathHelper.osSeps("a/b/c/aaa/Foo.java")); // $SLASH_OK
-        AspectTargetInfo blah = getAspectTargetInfo("blah", FSPathHelper.osSeps("a/b/c/zzz/Blah.java")); // $SLASH_OK
+        AspectTargetInfo foo = getAspectTargetInfo("//foo", FSPathHelper.osSeps("a/b/c/aaa/Foo.java")); // $SLASH_OK
+        AspectTargetInfo blah = getAspectTargetInfo("//blah", FSPathHelper.osSeps("a/b/c/zzz/Blah.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(foo, blah);
 
@@ -155,7 +169,7 @@ public class AspectTargetInfosTest {
 
     @Test
     public void testLookupByRootSourcePath__sourcesWithCommonRootPathValidation() {
-        AspectTargetInfo foo = getAspectTargetInfo("foo", FSPathHelper.osSeps("a/b/c/aaa/ccc/Foo.java"), // $SLASH_OK
+        AspectTargetInfo foo = getAspectTargetInfo("//foo", FSPathHelper.osSeps("a/b/c/aaa/ccc/Foo.java"), // $SLASH_OK
             FSPathHelper.osSeps("a/b/c/aaa/ddd/Blah.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(foo);
@@ -169,7 +183,7 @@ public class AspectTargetInfosTest {
 
     @Test(expected = IllegalStateException.class)
     public void testLookupByRootSourcePath__sourcesWithoutCommonRootPathValidation_partialPath() {
-        AspectTargetInfo foo = getAspectTargetInfo("foo", FSPathHelper.osSeps("a/b/c/aaa/Foo.java"), // $SLASH_OK
+        AspectTargetInfo foo = getAspectTargetInfo("//foo", FSPathHelper.osSeps("a/b/c/aaa/Foo.java"), // $SLASH_OK
             FSPathHelper.osSeps("a/b/c/zzz/Blah.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(foo);
@@ -179,7 +193,7 @@ public class AspectTargetInfosTest {
 
     @Test(expected = IllegalStateException.class)
     public void testLookupByRootSourcePath__sourcesWithoutCommonRootPathValidation_fullPath() {
-        AspectTargetInfo foo = getAspectTargetInfo("foo", FSPathHelper.osSeps("a/b/c/aaa/Foo.java"), // $SLASH_OK
+        AspectTargetInfo foo = getAspectTargetInfo("//foo", FSPathHelper.osSeps("a/b/c/aaa/Foo.java"), // $SLASH_OK
             FSPathHelper.osSeps("x/y/z/aaa/Blah.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(foo);
@@ -195,9 +209,9 @@ public class AspectTargetInfosTest {
             String... sourcePaths) {
         List<String> sourcePathList = Arrays.asList(sourcePaths);
 
-        String workspaceRelativePath = "some" + File.separatorChar + "path";
+        String workspaceRelativePath = FAKE_REL_PATH;
         return new AspectTargetInfo(new File(""), workspaceRelativePath, targetKind.toString().toLowerCase(), label,
-                new ArrayList<>(), sourcePathList);
+            new ArrayList<>(), sourcePathList);
     }
 
 }
