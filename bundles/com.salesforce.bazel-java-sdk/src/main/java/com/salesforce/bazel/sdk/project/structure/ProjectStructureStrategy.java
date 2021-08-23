@@ -93,9 +93,11 @@ public abstract class ProjectStructureStrategy {
     public boolean enabled = true;
 
     /**
-     * A convenience mechanism for marking one or more strategies as required, which is normally immune to being
-     * disabled. For most cases the Bazel Query strategy should not be disabled because it is the general purpose
-     * solution.
+     * A mechanism for marking one or more strategies as required, which is normally immune to being disabled.
+     * <p>
+     * For example, for most cases the Bazel Query strategy should not be disabled by the user (required = true) because
+     * it is the general purpose solution. Whereas the Maven strategy is an optimization, but may mistake a package
+     * layout and so the user should be able to disable it (required = false).
      */
     public boolean isRequired = false;
 

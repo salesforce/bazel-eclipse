@@ -20,7 +20,7 @@ public class TestAspectFileCreator {
      *
      * @return the absolute File path to the file
      */
-    static String createJavaAspectFile(File outputBase, String packageRelativePath, String packageName,
+    public static String createJavaAspectFile(File outputBase, String packageRelativePath, String packageName,
             String targetName, List<String> extraDependencies, List<String> sources, boolean isJavaLibrary,
             boolean explicitJavaTestDeps) {
 
@@ -51,7 +51,8 @@ public class TestAspectFileCreator {
      *
      * @return the absolute File path to the file
      */
-    static String createJavaAspectFileForMavenJar(File outputBase, String mavenJarName, String actualJarNameNoSuffix) {
+    public static String createJavaAspectFileForMavenJar(File outputBase, String mavenJarName,
+            String actualJarNameNoSuffix) {
         String externalName = "external" + FSPathHelper.UNIX_SLASH + mavenJarName;
         List<String> dependencies = null;
         List<String> sources = null;
@@ -88,7 +89,7 @@ public class TestAspectFileCreator {
      *   "projects/libs/apple/apple-api/src/main/java/demo/apple/api/AppleW.java"]
      * }
      */
-    static String createAspectJsonForJavaLibraryTarget(String packageRelativePath, String packageName,
+    public static String createAspectJsonForJavaLibraryTarget(String packageRelativePath, String packageName,
             String targetName, List<String> extraDependencies, List<String> sources) {
         List<String> dependencies = new ArrayList<>();
         dependencies.add("@org_slf4j_slf4j_api//jar:jar");
@@ -124,7 +125,8 @@ public class TestAspectFileCreator {
      *  "sources":["projects/libs/apple/apple-api/src/test/java/demo/apple/api/AppleTest2.java"]
      * }
      */
-    static String createAspectJsonForJavaTestTarget(String packageRelativePath, String packageName, String targetName,
+    public static String createAspectJsonForJavaTestTarget(String packageRelativePath, String packageName,
+            String targetName,
             String testTargetName, List<String> extraDependencies, List<String> sources, boolean explicitJavaTestDeps) {
         List<String> dependencies = new ArrayList<>();
         if (explicitJavaTestDeps) {

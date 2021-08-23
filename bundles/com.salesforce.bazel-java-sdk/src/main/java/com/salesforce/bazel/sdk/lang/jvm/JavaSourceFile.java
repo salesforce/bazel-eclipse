@@ -30,22 +30,20 @@ import java.io.IOException;
 import java.io.Reader;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelSourceFile;
 
 /**
  * Models a java source file.
  */
-public class JavaSourceFile {
+public class JavaSourceFile extends BazelSourceFile {
     static final LogHelper LOG = LogHelper.log(JavaSourceFile.class);
-
-    private final String absolutePath;
-    private final File javaFile;
 
     public JavaSourceFile(File javaFile) {
         if (javaFile == null) {
             throw new IllegalArgumentException("Caller passed a null JavaFile to the constructor.");
         }
         absolutePath = javaFile.getAbsolutePath();
-        this.javaFile = javaFile;
+        this.sourceFile = javaFile;
 
         if (!absolutePath.endsWith(".java")) {
             throw new IllegalArgumentException("Caller passed a non JavaFile to the constructor. Path: "+absolutePath);
@@ -56,12 +54,12 @@ public class JavaSourceFile {
      * Returns the JVM package (ex: "a.b.c") if the "package a.b.c;" line is in this File, null otherwise.
      */
     public String readPackageFromFile() {
-        if (!javaFile.exists()) {
-            throw new IllegalStateException("Cannot parse missing JavaFile: " + javaFile.getAbsolutePath());
+        if (!sourceFile.exists()) {
+            throw new IllegalStateException("Cannot parse missing JavaFile: " + sourceFile.getAbsolutePath());
         }
         String packageName = null;
 
-        try (Reader reader = new FileReader(javaFile)) {
+        try (Reader reader = new FileReader(sourceFile)) {
             packageName = getPackageFromReader(reader);
         } catch (Exception anyE) {
             LOG.error(anyE.getMessage(), anyE);
@@ -108,7 +106,7 @@ public class JavaSourceFile {
                 packageName = line.substring(8, lineLength - 1);
             } else {
                 LOG.warn("This package line [{}] from Java file [{}] does not end in a semicolon", line,
-                    javaFile.getAbsolutePath());
+                    sourceFile.getAbsolutePath());
                 packageName = line.substring(8);
             }
 

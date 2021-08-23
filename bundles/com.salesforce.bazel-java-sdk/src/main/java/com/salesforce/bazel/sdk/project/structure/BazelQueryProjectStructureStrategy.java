@@ -34,6 +34,7 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.model.BazelSourceFile;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.path.FSTree;
@@ -63,20 +64,30 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
     @Override
     public ProjectStructure doStructureAnalysis(BazelWorkspace bazelWorkspace, BazelPackageLocation packageNode,
             BazelWorkspaceCommandRunner commandRunner) {
-        ProjectStructure result = new ProjectStructure();
 
         File workspaceRootDir = bazelWorkspace.getBazelWorkspaceRootDirectory();
         String packageRelPath = packageNode.getBazelPackageFSRelativePath();
         File packageDir = new File(workspaceRootDir, packageRelPath); // TODO move this to the PackageLocation api
-        result.projectPath = packageDir;
 
         String labelPath = packageRelPath.replaceAll(FSPathHelper.WINDOWS_BACKSLASH_REGEX, "/");
         BazelLabel packageLabel = new BazelLabel(labelPath, BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR);
 
         // execute the expensive query, this will take a few seconds to run at least
-        Collection<String> results = runBazelQueryForSourceFiles(workspaceRootDir, packageLabel, commandRunner);
+        Collection<String> queryResults = runBazelQueryForSourceFiles(workspaceRootDir, packageLabel, commandRunner);
 
-        if ((results != null) && (results.size() > 0)) {
+        ProjectStructure structure = processQueryResults(packageRelPath, packageDir, packageLabel, queryResults);
+
+        return structure;
+    }
+
+    // INTERNALS
+
+    protected ProjectStructure processQueryResults(String packageRelPath, File packageDir, BazelLabel packageLabel,
+            Collection<String> queryResults) {
+        ProjectStructure structure = new ProjectStructure();
+        structure.projectPath = packageDir;
+
+        if ((queryResults != null) && (queryResults.size() > 0)) {
             // the results will contain paths like this:
             //   source/dev/com/salesforce/foo/Bar.java
             // but it can also have non-java source files, so we need to check for that
@@ -84,9 +95,8 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
             Set<String> alreadySeenBasePaths = new HashSet<>();
             FSTree resourceFileStructure = new FSTree();
 
-            for (String srcPath : results) {
-                File sourceFile = new File(packageDir, srcPath);
-                if (!sourceFile.exists()) {
+            for (String srcPath : queryResults) {
+                if (doIgnoreFile(packageDir, srcPath)) {
                     // this file is coming from a package outside of our package from somewhere else in the
                     // Bazel workspace, so we don't consider it for our project source paths
                     continue;
@@ -96,14 +106,15 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
                 // so try to bail out here early if we have already seen the directory this source file is in
                 boolean alreadySeen = false;
                 for (String alreadySeenBasePath : alreadySeenBasePaths) {
-                    if (srcPath.startsWith(alreadySeenBasePath)) {
+                    // be careful with startsWith: source/dev and source/dev2 might be two distinct paths
+                    if (srcPath.startsWith(alreadySeenBasePath + File.separator)) {
                         alreadySeen = true;
                         break;
                     }
                 }
 
                 if (!alreadySeen) {
-                    if (srcPath.endsWith(".java")) {
+                    if (BazelSourceFile.hasSourceFileExtension(srcPath)) {
                         // splits the path into two segments:
                         // 1) projects/libs/foo/src/main/java  2) com/salesforce/foo/Foo.java
                         SplitSourcePath srcPathObj = splitSourcePath(packageDir, srcPath);
@@ -115,9 +126,9 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
                             boolean isTestPath = FSPathHelper.doesPathContainNamedResource(
                                 srcPathObj.sourceDirectoryPath, testSourceCodeFolderMarkers);
                             if (isTestPath) {
-                                result.testSourceDirFSPaths.add(packageRelPathToFile);
+                                structure.testSourceDirFSPaths.add(packageRelPathToFile);
                             } else {
-                                result.mainSourceDirFSPaths.add(packageRelPathToFile);
+                                structure.mainSourceDirFSPaths.add(packageRelPathToFile);
                             }
                             alreadySeenBasePaths.add(srcPathObj.sourceDirectoryPath);
                             LOG.info("Found source path {} for package {}", srcPathObj.sourceDirectoryPath,
@@ -131,28 +142,36 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
                         // this is a resource file, like xyz.properties or abc.xml
                         LOG.info("Found resource file with source path {} for package {}", srcPath,
                             packageRelPath);
-                        FSTree.addNode(resourceFileStructure, srcPath, File.separator, true);
+                        FSTree.addNode(resourceFileStructure, srcPath, FSPathHelper.osSepRegex(), true);
                     }
                 }
             }
 
             // now figure out a reasonable way to represent the source paths of resource files
-            computeResourceDirectories(packageRelPath, result, resourceFileStructure);
+            computeResourceDirectories(packageRelPath, structure, resourceFileStructure);
 
-            // NOTE: the order of source paths in the lists is important. Eclipse
-            // will honor that order in the project explorer. Because we don't know the proper order
-            // based on folder names (e.g. main, test) we just sort alphabetically.
-            Collections.sort(result.mainSourceDirFSPaths);
-            Collections.sort(result.testSourceDirFSPaths);
+            // NOTE: the order of source paths in the lists is important. We want the main
+            // resources to appear before the test resources. Eclipse will honor that order in
+            // the project explorer.
+            Collections.sort(structure.mainSourceDirFSPaths);
+            Collections.sort(structure.testSourceDirFSPaths);
         } else {
             LOG.info("Did not find any source files for package [{}], ignoring for import.", packageLabel);
-            result = null;
+            structure = null;
         }
 
-        return result;
+        return structure;
     }
 
-    // INTERNALS
+    protected boolean doIgnoreFile(File packageDir, String srcPath) {
+        File sourceFile = new File(packageDir, srcPath);
+        if (!sourceFile.exists()) {
+            // this file is coming from a package outside of our package from somewhere else in the
+            // Bazel workspace, so we don't consider it for our project source paths
+            return true;
+        }
+        return false;
+    }
 
     protected Collection<String> runBazelQueryForSourceFiles(File workspaceRootDir, BazelLabel packageLabel,
             BazelWorkspaceCommandRunner commandRunner) {
@@ -165,6 +184,10 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
         return results;
     }
 
+    /**
+     * Splits the source path into the basePath and relativeSrcPath. src/main/java/com/salesforce/foo => src/main/java,
+     * com/salesforce/foo
+     */
     protected SplitSourcePath splitSourcePath(File packageDir, String srcPath) {
         SplitSourcePath result = null;
         SourcePathSplitterStrategy splitter = SourcePathSplitterStrategy.getSplitterForFilePath(srcPath);
@@ -175,8 +198,11 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
         return result;
     }
 
-
-    private static void computeResourceDirectories(String bazelPackageFSRelativePath, ProjectStructure result,
+    /**
+     * Add interesting directories as resource directories. These directories contain files that appeared in the source
+     * file query but were not identified as source code.
+     */
+    protected void computeResourceDirectories(String bazelPackageFSRelativePath, ProjectStructure result,
             FSTree otherSourcePaths) {
 
         // this is not an exact science, see the FSTree class for the algorithm for identifying directories that would
@@ -184,7 +210,11 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
         List<String> resourceDirectoryPaths = FSTree.computeMeaningfulDirectories(otherSourcePaths, File.separator);
         for (String resourceDirectoryPath : resourceDirectoryPaths) {
             String path = bazelPackageFSRelativePath + File.separator + resourceDirectoryPath;
-            result.mainSourceDirFSPaths.add(path);
+            if (FSPathHelper.doesPathContainNamedResource(resourceDirectoryPath, testSourceCodeFolderMarkers)) {
+                result.testSourceDirFSPaths.add(path);
+            } else {
+                result.mainSourceDirFSPaths.add(path);
+            }
         }
     }
 

@@ -128,8 +128,8 @@ public class FSTree implements Comparable<FSTree> {
     /**
      * Adds a node to an existing FSTree and wires it up to the correct parent node.
      */
-    public static void addNode(FSTree rootNode, String path, String delimiter, boolean isFile) {
-        String[] pathTokens = path.split(delimiter);
+    public static void addNode(FSTree rootNode, String path, String delimiterRegex, boolean isFile) {
+        String[] pathTokens = path.split(delimiterRegex);
 
         FSTree currentNode = rootNode;
         for (String pathToken : pathTokens) {

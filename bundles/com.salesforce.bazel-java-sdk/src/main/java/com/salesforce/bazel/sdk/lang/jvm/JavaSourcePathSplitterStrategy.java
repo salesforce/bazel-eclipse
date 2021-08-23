@@ -73,12 +73,11 @@ public class JavaSourcePathSplitterStrategy extends SourcePathSplitterStrategy {
         }
 
         // We expect the package name, like: com.salesforce.foo
-        if (packageName == null) {
-            // not enough information to split the path correctly
-            return null;
+        String namespacePath = "";
+        if (packageName != null) {
+            // convert 'com.salesforce.foo' to 'com/salesforce/foo'
+            namespacePath = packageName.replace(".", File.separator);
         }
-        // convert 'com.salesforce.foo' to 'com/salesforce/foo'
-        String namespacePath = packageName.replace(".", File.separator);
 
         // split it
         SplitSourcePath sourcePath = SplitSourcePath.splitNamespacedPath(relativePathToSourceFile, namespacePath,
