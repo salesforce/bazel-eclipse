@@ -37,12 +37,15 @@ import com.salesforce.bazel.sdk.aspect.AspectTargetInfoFactory;
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfoFactoryProvider;
 import com.salesforce.bazel.sdk.lang.jvm.JavaSourcePathSplitterStrategy;
 import com.salesforce.bazel.sdk.lang.jvm.MavenProjectStructureStrategy;
+import com.salesforce.bazel.sdk.model.BazelSourceFile;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.path.SourcePathSplitterStrategy;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructureStrategy;
 
 /**
  * Initializer to install support for Java rules into the SDK. Call initialize() once at startup.
+ * <p>
+ * This will eventually support other JVM langs like Kotlin and Scala.
  */
 public class JvmRuleInit {
 
@@ -69,6 +72,9 @@ public class JvmRuleInit {
     public static void initialize() {
         // Provider that can parse the JVM specific bits out of the Aspect data files
         AspectTargetInfoFactory.addProvider(new JVMAspectTargetInfoFactoryProvider());
+
+        // Identify .java files as source code files
+        BazelSourceFile.sourceFileExtensions.add(".java");
 
         // Strategy impl for short cutting our computation of source folders if we detect that the project layout
         // follows Maven conventions

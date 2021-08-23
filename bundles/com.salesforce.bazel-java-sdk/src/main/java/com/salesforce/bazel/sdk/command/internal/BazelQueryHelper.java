@@ -235,6 +235,7 @@ public class BazelQueryHelper {
                 String sourcePath = resultLine.substring(colonIndex + 1);
                 if (!BazelBuildFile.isBuildFile(sourcePath)) {
                     sourceFilePaths.add(sourcePath);
+                    LOG.info("  {}", sourcePath);
                 }
             }
         }
