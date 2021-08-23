@@ -43,12 +43,14 @@ import java.nio.charset.Charset;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
 import com.salesforce.bazel.sdk.init.JvmRuleInit;
 
 public class BuildFileSupportTest {
 
     @Before
     public void setup() {
+        BazelJavaSDKInit.initialize("BuildFileSupportTest", "test-");
         JvmRuleInit.initialize();
     }
 
