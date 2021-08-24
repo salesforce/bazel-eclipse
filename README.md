@@ -1,4 +1,4 @@
-# Bazel Eclipse Feature (BEF) and Bazel Java Language Server
+# Bazel Eclipse Feature (BEF) and Bazel Java Language Server (BJLS)
 
 This Git repository contains two [Bazel](http://bazel.io) IDE projects.
 They share a large amount of code and therefore live together here.
@@ -8,7 +8,7 @@ Both provide IDE integrations for projects built by the [Bazel](http://bazel.io)
 
 These projects are supported by Salesforce.
 
-### Bazel Eclipse Feature ![BEF Logo](docs/logos/bef_logo_small.png)
+### BEF: Bazel Eclipse Feature ![BEF Logo](docs/logos/bef_logo_small.png)
 
 This is the Eclipse Feature for developing [Bazel](http://bazel.io) projects in Eclipse.
 The Bazel Eclipse Feature supports importing, building, and testing Java projects that are built using the Bazel build system.
@@ -16,7 +16,7 @@ The Bazel Eclipse Feature supports importing, building, and testing Java project
 Full documentation is available here:
 - [Bazel Eclipse Feature docs](docs/bef/README.md)
 
-### Bazel Java Language Server ![BEF Logo](docs/logos/bjls_logo_small.jpeg)
+### BJLS: Bazel Java Language Server ![BEF Logo](docs/logos/bjls_logo_small.jpeg)
 
 This is a [Language Server](https://microsoft.github.io/language-server-protocol/) implementation for Java projects built by Bazel.
 This enables IDEs such as [Visual Studio Code](https://code.visualstudio.com/) to be used to develop the project.
