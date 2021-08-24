@@ -195,6 +195,8 @@ public class BazelJvmClasspath implements JvmClasspath {
                         // java_test aspect should be analyzed for implicit dependencies
                         if ("java_test".equals(jvmTargetInfo.getKind())) {
                             implicitDeps = implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, jvmTargetInfo);
+                            // there is no need to process test jar further
+                            continue;
                         }
                         // else in some cases, the target is local, but we still want to proceed to process it below. the expected
                         // example here are java_import targets in the BUILD file that directly load jars from the file system
