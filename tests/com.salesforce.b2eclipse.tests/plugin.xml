@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="com.salesforce.bazel.eclipse.bazelNature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="com.salesforce.b2eclipse.BazelNature">
+         </run>
+      </runtime>
+   </extension>
+</plugin>
