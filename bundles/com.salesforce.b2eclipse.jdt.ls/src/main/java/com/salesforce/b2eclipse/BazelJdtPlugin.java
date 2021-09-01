@@ -39,6 +39,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 import com.google.common.base.Throwables;
@@ -56,10 +57,14 @@ import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -115,6 +120,7 @@ public class BazelJdtPlugin extends Plugin {
 	 */
 	private static JavaCoreHelper javaCoreHelper;
 	
+    
     /**
      * ProjectManager manages all of the imported projects
      */
@@ -172,6 +178,7 @@ public class BazelJdtPlugin extends Plugin {
         BazelProjectManager projectMgr = new EclipseBazelProjectManager(eclipseResourceHelper, eclipseJavaCoreHelper);
 
 		startInternal(aspectLocation, commandBuilder, consoleFactory, eclipseResourceHelper, eclipseJavaCoreHelper, osEnvStrategy, projectMgr);
+		reloadExistingProjects();
 	}
 
 	/**
@@ -352,6 +359,7 @@ public class BazelJdtPlugin extends Plugin {
 		return bazelWorkspaceCommandRunner;
 	}
 	
+    
     /**
      * Returns the manager for imported projects
      *
@@ -420,4 +428,20 @@ public class BazelJdtPlugin extends Plugin {
 			log(new Status(IStatus.ERROR, context.getBundle().getSymbolicName(), message, ex));
 		}
 	}
+
+    private static void reloadExistingProjects() {
+        IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+        IProject[] projects = workspaceRoot.getProjects();
+        Arrays.stream(projects)//
+                .filter(IProject::isOpen)//
+                .filter(project -> {
+                    try {
+                        return project.hasNature(BazelNature.BAZEL_NATURE_ID);
+                    } catch (CoreException e) {
+                        return false;
+                    }
+                })//
+                .map(project -> new BazelProject(project.getName(), project))//
+                .forEachOrdered(getBazelProjectManager()::addProject);
+    }
 }

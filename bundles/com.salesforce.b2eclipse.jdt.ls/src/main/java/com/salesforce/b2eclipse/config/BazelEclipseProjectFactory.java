@@ -658,7 +658,7 @@ public final class BazelEclipseProjectFactory {
 				createdEclipseProject = null;
 			}
 		} else {
-			BazelJdtPlugin.logError("Project [" + eclipseProjectName
+			BazelJdtPlugin.logInfo("Project [" + eclipseProjectName
 					+ "] already exists, which is unexpected. Project initialization will not occur.");
 			createdEclipseProject = newEclipseProject;
 		}
