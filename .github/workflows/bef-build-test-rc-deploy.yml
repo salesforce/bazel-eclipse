@@ -43,7 +43,7 @@ jobs:
           BUILD_ID: "${{ steps.time.outputs.time }}"
           BUILD_TYPE: "S"
           BUILD_LABEL: "CI ${{ steps.time.outputs.time }} (${{ steps.branch_name.outputs.branch }})"
-        run: mvn --batch-mode clean verify
+        run: mvn --batch-mode clean verify "-Dtest=\!com.salesforce.b2eclipse.*"
 
       - name: Create the update-site-release-candidate layout on the filesystem
         id: create_layout
