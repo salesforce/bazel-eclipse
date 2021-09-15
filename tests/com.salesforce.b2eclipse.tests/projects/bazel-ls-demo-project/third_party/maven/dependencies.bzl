@@ -11,3 +11,10 @@ def maven_dependencies(
         server_urls = maven_servers,
     )
 
+    jvm_maven_import_external(
+        name = "junit",
+        artifact = "junit:junit:4.13",
+        artifact_sha256 = "4b8532f63bdc0e0661507f947eb324a954d1dbac631ad19c8aa9a00feed1d863",
+        licenses = ["notice"],
+        server_urls = maven_servers,
+    )

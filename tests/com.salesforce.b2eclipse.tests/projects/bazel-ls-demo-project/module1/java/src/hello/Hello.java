@@ -18,7 +18,7 @@ public class Hello {
         Logger.logDebug("Hello.main");
 
     	  Greeting greeter = new Greeting();
-        System.out.println(new mybuilder_sample_generation.MybuilderSampleGeneration());
+        System.out.println(new mybuilder_sources.MybuilderSources());
 
         List<String> modules = Lists.newArrayList("module1", "module2");
 

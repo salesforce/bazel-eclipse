@@ -1,25 +1,41 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("@salesforce_rules_mybuilder//mybuilder:defs.bzl", "mybuilder_gen")
+load("@salesforce_rules_mybuilder//mybuilder:defs.bzl", "mybuilder_gen_java_library")
 
-mybuilder_gen(
-    name = "mybuilder_sample_generation",
+filegroup(
+    name = "mybuilder_input",
     srcs = glob(
-        ["java/resources/**/*.txt"],
+        [
+            "java/resources/**/*.txt",
+        ],
     ),
-    srcjar = "mybuilder_generated.srcjar",
-    gendir = "mybuilder_generated",
 )
+
+filegroup(
+    name = "module1_sources",
+    srcs = glob(
+        [
+            "java/src/**/*.java",
+        ],
+    ),
+)
+
+mybuilder_gen_java_library(
+    name = "mybuilder_sources",
+    srcs = [":mybuilder_input"],
+)
+
 
 java_binary(
     name = "module1",
-    srcs = glob(["java/src/**/*.java"]) + [":mybuilder_sample_generation"],
-    resources = glob(
-        ["java/resources/**/*.txt"],
-    ),
+    srcs = [
+        "module1_sources",
+    ],
+    resources = [":mybuilder_input"],
     deps = [
       "//module2",
       "//module3",
       "@com_google_guava//jar",
+      "mybuilder_sources",
     ],
     main_class = "hello.Hello",
 )

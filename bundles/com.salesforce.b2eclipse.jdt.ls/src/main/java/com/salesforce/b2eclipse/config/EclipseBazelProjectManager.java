@@ -23,6 +23,7 @@ import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
@@ -99,7 +100,11 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
                 if ((projectLocation != null) && !projectLocation.isEmpty()) {
                     String canonicalProjectRoot =
                             FSPathHelper.getCanonicalPathStringSafely(projectLocation.toOSString());
-                    if (canonicalSourcePathString.startsWith(canonicalProjectRoot)) {
+
+                    String osDependentProjectRoot = SystemUtils.IS_OS_WINDOWS ? canonicalProjectRoot.replaceAll("\\\\", "/") : canonicalProjectRoot;
+                    String osDependentSourcePath = SystemUtils.IS_OS_WINDOWS ? canonicalSourcePathString.replaceAll("\\\\", "/") : canonicalSourcePathString;
+                        
+                    if (osDependentSourcePath.startsWith(osDependentProjectRoot)) {
                         IPath[] inclusionPatterns = entry.getInclusionPatterns();
                         IPath[] exclusionPatterns = entry.getExclusionPatterns();
                         if (!matchPatterns(canonicalSourcePath, exclusionPatterns)) {
