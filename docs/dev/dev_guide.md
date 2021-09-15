@@ -115,6 +115,13 @@ You can set breakpoints in the plugin code as needed.
 
 :fire: If you get an error about *UnsupportedClassVersionError* see the [dev issues](dev_issues.md) page.
 
+### Writing Tests
+
+Your code should be tested by unit tests, as with all projects.
+In addition, BEF and the Bazel SDK have several test frameworks to make writing functional tests possible.
+These frameworks are covered by the testing guide:
+- [SDK and BEF testing guide](test.md)
+
 ### How to Build and Run the Feature Tests on the Maven Command Line
 
 The Bazel Eclipse Feature uses Maven as its command line build system.
