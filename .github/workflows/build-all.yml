@@ -21,8 +21,8 @@ jobs:
             os: ubuntu-latest
           - displayTargetName: macos
             os: macos-latest
-#          - displayTargetName: windows
-#            os: windows-latest
+          - displayTargetName: windows
+            os: windows-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -74,7 +74,15 @@ jobs:
           export PATH="$PATH:$HOME/bin"
           bazel --version
 
-      - name: Build
+      - name: Install Bazel (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir c:\bazel
+          cd c:\bazel
+          curl -fLO "https://github.com/bazelbuild/bazel/releases/download/4.2.1/bazel-4.2.1-windows-x86_64.exe"
+          copy bazel-4.2.1-windows-x86_64.exe C:\npm\prefix\bazel
+
+      - name: Build with tests
         env:
           BUILD_ID: "${{ steps.time.outputs.time }}"
           BUILD_TYPE: "S"
