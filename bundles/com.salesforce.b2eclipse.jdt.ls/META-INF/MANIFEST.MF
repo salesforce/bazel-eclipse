@@ -17,6 +17,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jdt.ls.core,
  org.apache.commons.lang3;bundle-version="3.1.0",
  com.salesforce.bazel-java-sdk
+Export-Package: com.salesforce.b2eclipse.managers
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: bin/,

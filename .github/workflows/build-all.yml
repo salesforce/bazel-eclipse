@@ -19,10 +19,10 @@ jobs:
         include:
           - displayTargetName: ubuntu
             os: ubuntu-latest
+          - displayTargetName: macos
+            os: macos-latest
           - displayTargetName: windows
             os: windows-latest
-          - displayTargetName: mac
-            os: macos-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -52,7 +52,39 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
-      - name: Build
+      - name: Install Bazel (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt install curl gnupg -y
+          curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
+          sudo mv bazel.gpg /etc/apt/trusted.gpg.d/
+          echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+          sudo apt update
+          sudo apt install bazel-4.2.1 -y
+          sudo ln -sfn /usr/bin/bazel-4.2.1 /usr/local/bin/bazel
+          bazel --version
+
+      - name: Install Bazel (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          export BAZEL_VERSION=4.2.1
+          curl -fLO "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-darwin-x86_64.sh"
+          chmod +x "bazel-${BAZEL_VERSION}-installer-darwin-x86_64.sh"
+          ./bazel-${BAZEL_VERSION}-installer-darwin-x86_64.sh --user
+          export PATH="$PATH:$HOME/bin"
+          bazel --version
+
+      - name: Install Bazel (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir c:\bazel
+          cd c:\bazel
+          curl -fLO "https://github.com/bazelbuild/bazel/releases/download/4.2.1/bazel-4.2.1-windows-x86_64.exe"
+          # Windows environment has pre-installed nmp\prefix\bazel*, which is taken as default in BJLS tests, but
+          # it doesn't a real Bazel. Therefore, it is required to replace pre-installed file with an actual Bazel
+          copy bazel-4.2.1-windows-x86_64.exe C:\npm\prefix\bazel
+
+      - name: Build with tests
         env:
           BUILD_ID: "${{ steps.time.outputs.time }}"
           BUILD_TYPE: "S"
