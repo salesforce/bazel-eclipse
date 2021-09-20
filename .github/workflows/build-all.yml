@@ -80,6 +80,8 @@ jobs:
           mkdir c:\bazel
           cd c:\bazel
           curl -fLO "https://github.com/bazelbuild/bazel/releases/download/4.2.1/bazel-4.2.1-windows-x86_64.exe"
+          # Windows environment has pre-installed nmp\prefix\bazel*, which is taken as default in BJLS tests, but
+          # it doesn't a real Bazel. Therefore, it is required to replace pre-installed file with an actual Bazel
           copy bazel-4.2.1-windows-x86_64.exe C:\npm\prefix\bazel
 
       - name: Build with tests
