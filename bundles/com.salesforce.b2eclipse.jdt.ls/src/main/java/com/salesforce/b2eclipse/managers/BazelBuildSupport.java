@@ -161,9 +161,11 @@ public class BazelBuildSupport implements IBuildSupport {
     
     public static void calculateExcludedFilePatterns(String bazelWorkspaceRootDirectoryPath) {
         if (calculatedExcludedFilePatterns.isEmpty()) {
-            calculatedExcludedFilePatterns.addAll(EXCLUDED_FILE_PATTERN.stream()
-                .map(path -> StringUtils.join("**" + bazelWorkspaceRootDirectoryPath, path))
-                .collect(Collectors.toList()));
+            
+            EXCLUDED_FILE_PATTERN.stream()
+            .map(path -> StringUtils.join("**" + bazelWorkspaceRootDirectoryPath, path))
+            .forEach(calculatedExcludedFilePatterns::add);
+
         }
     }
 
