@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Eclipse-BundleShape: dir
+Bundle-ManifestVersion: 2
+Bundle-Name: Bazel Eclipse Common Plugin
+Automatic-Module-Name: com.salesforce.bazel.eclipse.common
+Bundle-SymbolicName: com.salesforce.bazel.eclipse.common;singleton:=true
+Bundle-Version: 1.5.0.qualifier
+Bundle-Activator: com.salesforce.bazel.eclipse.Activator
+Bundle-Vendor: Salesforce
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.jdt.core,
+ org.eclipse.core.resources,
+ org.eclipse.debug.core,
+ org.eclipse.jdt.launching,
+ org.apache.commons.lang3;bundle-version="3.1.0",
+ com.salesforce.bazel-java-sdk
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: bin/,
+ .
