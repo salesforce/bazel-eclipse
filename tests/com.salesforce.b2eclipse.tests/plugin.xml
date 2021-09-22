@@ -6,7 +6,7 @@
          point="org.eclipse.core.resources.natures">
       <runtime>
          <run
-               class="com.salesforce.b2eclipse.BazelNature">
+               class="com.salesforce.bazel.eclipse.BazelNature">
          </run>
       </runtime>
    </extension>

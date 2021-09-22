@@ -46,8 +46,8 @@ import org.eclipse.debug.core.model.IProcess;
 import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.BazelNature;
 import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;

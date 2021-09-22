@@ -24,7 +24,7 @@ import org.eclipse.jdt.ls.core.internal.managers.IBuildSupport;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager.CHANGE_TYPE;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.BazelNature;
+import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 

@@ -13,8 +13,8 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.BazelNature;
 import com.salesforce.b2eclipse.config.BazelEclipseProjectSupport;
+import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;

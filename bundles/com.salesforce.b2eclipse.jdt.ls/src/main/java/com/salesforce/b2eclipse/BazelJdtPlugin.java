@@ -60,6 +60,7 @@ import com.salesforce.b2eclipse.config.EclipseBazelProjectManager;
 import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
 import com.salesforce.b2eclipse.runtime.impl.EclipseJavaCoreHelper;
 import com.salesforce.b2eclipse.runtime.impl.EclipseResourceHelper;
+import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;

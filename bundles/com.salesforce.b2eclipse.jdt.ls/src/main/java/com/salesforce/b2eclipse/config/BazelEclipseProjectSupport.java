@@ -45,7 +45,7 @@ import org.osgi.service.prefs.Preferences;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.BazelNature;
+import com.salesforce.bazel.eclipse.BazelNature;
 
 /**
  * Support class that provides interaction methods for existing Eclipse Bazel projects.

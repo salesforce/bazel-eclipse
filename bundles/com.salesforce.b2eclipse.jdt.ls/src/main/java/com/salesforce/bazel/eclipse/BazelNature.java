@@ -34,7 +34,7 @@
  *
  */
 
-package com.salesforce.b2eclipse;
+package com.salesforce.bazel.eclipse;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectNature;
@@ -44,7 +44,7 @@ import org.eclipse.core.runtime.CoreException;
  * Project nature for Bazel Eclipse plugin.
  */
 public class BazelNature implements IProjectNature {
-    public static final String BAZEL_NATURE_ID = "com.salesforce.b2eclipse.bazelNature"; //$NON-NLS-1$
+    public static final String BAZEL_NATURE_ID = "com.salesforce.bazel.eclipse.bazelNature"; //$NON-NLS-1$
     private IProject project;
 
     /**
