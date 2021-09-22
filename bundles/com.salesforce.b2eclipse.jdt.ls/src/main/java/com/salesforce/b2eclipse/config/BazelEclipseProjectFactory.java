@@ -55,6 +55,7 @@ import com.salesforce.b2eclipse.builder.BazelBuilder;
 import com.salesforce.b2eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.b2eclipse.classpath.BazelClasspathContainerInitializer;
 import com.salesforce.b2eclipse.managers.B2EPreferncesManager;
+import com.salesforce.b2eclipse.managers.BazelBuildSupport;
 import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
 import com.salesforce.b2eclipse.util.BazelEclipseProjectUtils;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
@@ -191,6 +192,8 @@ public final class BazelEclipseProjectFactory {
 
 		BazelJdtPlugin.setBazelWorkspaceRootDirectory(BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspaceRoot),
 				bazelWorkspaceRootDirectory);
+		
+		BazelBuildSupport.calculateExcludedFilePatterns(bazelWorkspaceRootDirectory.getAbsolutePath());
 
 		// Set the flag that an import is in progress
 		importInProgress.set(true);

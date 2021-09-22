@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Assert;
@@ -35,6 +37,9 @@ public class BazelBuildSupport implements IBuildSupport {
     private static final List<String> WATCH_FILE_PATTERNS = Arrays.asList("**/" + BUILD_FILE_NAME,
         "**/" + WORKSPACE_FILE_NAME, "**/*" + BAZELPROJECT_FILE_NAME_SUFIX, "**/*" + BAZEL_FILE_NAME_SUFIX);
     private static final String BUILD_TOOL_NAME = "Bazel";
+    private static final List<String> EXCLUDED_FILE_PATTERN = Arrays.asList("/bazel-*/**");
+
+    private static List<String> calculatedExcludedFilePatterns = new ArrayList<>();
 
     @Override
     public boolean applies(IProject project) {
@@ -106,6 +111,11 @@ public class BazelBuildSupport implements IBuildSupport {
     }
 
     @Override
+    public List<String> getExcludedFilePatterns() {
+        return calculatedExcludedFilePatterns;
+    }
+    
+    @Override
     public boolean fileChanged(IResource resource, CHANGE_TYPE changeType, IProgressMonitor monitor)
             throws CoreException {
         if (resource == null || !applies(resource.getProject())) {
@@ -146,6 +156,16 @@ public class BazelBuildSupport implements IBuildSupport {
                     }
                 }
             }
+        }
+    }
+    
+    public static void calculateExcludedFilePatterns(String bazelWorkspaceRootDirectoryPath) {
+        if (calculatedExcludedFilePatterns.isEmpty()) {
+            
+            EXCLUDED_FILE_PATTERN.stream()
+            .map(path -> StringUtils.join("**" + bazelWorkspaceRootDirectoryPath, path))
+            .forEach(calculatedExcludedFilePatterns::add);
+
         }
     }
 
