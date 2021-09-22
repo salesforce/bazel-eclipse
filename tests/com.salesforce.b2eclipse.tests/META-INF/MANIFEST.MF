@@ -6,6 +6,7 @@ Bundle-Version: 0.1.0.qualifier
 Bundle-Activator: com.salesforce.b2eclipse.B2eclipseTestPlugin
 Bundle-Vendor: %Bundle-Vendor
 Require-Bundle: com.salesforce.b2eclipse.jdt.ls,
+ com.salesforce.bazel.eclipse.common,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.eclipse.jdt.core,

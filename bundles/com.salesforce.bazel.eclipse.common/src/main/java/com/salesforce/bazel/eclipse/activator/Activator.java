@@ -33,7 +33,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.eclipse;
+package com.salesforce.bazel.eclipse.activator;
 
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;

@@ -52,16 +52,6 @@
    
    
    <extension
-         id="com.salesforce.bazel.eclipse.bazelNature"
-         point="org.eclipse.core.resources.natures">
-      <runtime>
-         <run
-               class="com.salesforce.bazel.eclipse.BazelNature">
-         </run>
-      </runtime>
-   </extension>
-   
-   <extension
          point="org.eclipse.ui.preferencePages">
       <page
             class="com.salesforce.bazel.eclipse.preferences.BazelPreferencePage"

@@ -2,15 +2,6 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         id="com.salesforce.bazel.eclipse.bazelNature"
-         point="org.eclipse.core.resources.natures">
-      <runtime>
-         <run
-               class="com.salesforce.bazel.eclipse.BazelNature">
-         </run>
-      </runtime>
-   </extension>
-   <extension
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
             class="com.salesforce.b2eclipse.classpath.BazelClasspathContainerInitializer"
