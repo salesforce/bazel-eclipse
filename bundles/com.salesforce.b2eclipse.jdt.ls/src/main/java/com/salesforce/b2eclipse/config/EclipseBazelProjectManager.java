@@ -13,16 +13,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import com.salesforce.b2eclipse.runtime.api.JavaCoreHelper;
-import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.path.FSPathHelper;
-import com.salesforce.bazel.sdk.project.BazelProject;
-import com.salesforce.bazel.sdk.project.BazelProjectManager;
-import com.salesforce.bazel.sdk.project.BazelProjectTargets;
-
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -32,6 +22,16 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
+
+import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
+import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 public class EclipseBazelProjectManager extends BazelProjectManager {
     /**

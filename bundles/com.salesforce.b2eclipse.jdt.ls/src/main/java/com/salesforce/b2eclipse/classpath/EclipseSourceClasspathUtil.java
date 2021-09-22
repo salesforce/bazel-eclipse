@@ -39,14 +39,6 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.runtime.api.JavaCoreHelper;
-import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.path.FSPathHelper;
-import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
-import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
-
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -55,6 +47,14 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+
+import com.salesforce.b2eclipse.BazelJdtPlugin;
+import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
+import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
+import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 
 /**
  * Utility class for constructing the Source file classpath based on the structure of the source code on the file

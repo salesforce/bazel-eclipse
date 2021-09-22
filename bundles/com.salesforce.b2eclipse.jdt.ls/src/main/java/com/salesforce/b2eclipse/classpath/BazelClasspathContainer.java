@@ -40,6 +40,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.ObjectUtils;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.JavaModelException;
+import org.osgi.service.prefs.BackingStoreException;
+
 import com.google.common.base.Predicate;
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
@@ -47,12 +53,6 @@ import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationExcepti
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.DynamicBazelJvmClasspath;
-
-import org.apache.commons.lang3.ObjectUtils;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.JavaModelException;
-import org.osgi.service.prefs.BackingStoreException;
 
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";

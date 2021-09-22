@@ -42,8 +42,8 @@ import org.eclipse.jdt.core.JavaModelException;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.b2eclipse.BazelNature;
-import com.salesforce.b2eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 
 /**
  * Facade for the Eclipse JavaCore singleton.

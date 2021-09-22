@@ -42,9 +42,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IClasspathContainer;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.JavaModelException;
+import org.osgi.service.prefs.BackingStoreException;
+
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
@@ -54,13 +61,6 @@ import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
-
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.IClasspathContainer;
-import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.JavaModelException;
-import org.osgi.service.prefs.BackingStoreException;
 
 /**
  * Computes the classpath for a Bazel package and provides it to the JDT tooling in Eclipse.

@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.IJavaProject;
+
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.b2eclipse.BazelNature;
 import com.salesforce.b2eclipse.config.BazelEclipseProjectSupport;
@@ -16,9 +19,6 @@ import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-
-import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.IJavaProject;
 
 public class BazelEclipseProjectUtils {
 

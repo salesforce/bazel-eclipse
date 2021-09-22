@@ -42,13 +42,25 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Plugin;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.prefs.Preferences;
+
 import com.google.common.base.Throwables;
 import com.salesforce.b2eclipse.config.DefaultEclipseAspectLocationImpl;
 import com.salesforce.b2eclipse.config.EclipseBazelProjectManager;
-import com.salesforce.b2eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
 import com.salesforce.b2eclipse.runtime.impl.EclipseJavaCoreHelper;
 import com.salesforce.b2eclipse.runtime.impl.EclipseResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -61,18 +73,6 @@ import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
-
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Plugin;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.prefs.Preferences;
 
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle

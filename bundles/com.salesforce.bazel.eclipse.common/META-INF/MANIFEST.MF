@@ -18,3 +18,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: bin/,
  .
+Export-Package: com.salesforce.bazel.eclipse.runtime.api

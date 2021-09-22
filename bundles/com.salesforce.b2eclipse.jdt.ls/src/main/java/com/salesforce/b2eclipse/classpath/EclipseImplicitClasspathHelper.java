@@ -39,15 +39,15 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IClasspathEntry;
+
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.lang.jvm.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.IClasspathEntry;
 
 /**
  * Bazel generally requires BUILD file authors to list all dependencies explicitly. However, there are a few legacy
