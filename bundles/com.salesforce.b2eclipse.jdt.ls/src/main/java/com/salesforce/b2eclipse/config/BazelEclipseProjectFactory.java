@@ -70,7 +70,6 @@ import org.osgi.service.prefs.Preferences;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.builder.BazelBuilder;
 import com.salesforce.b2eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.b2eclipse.classpath.BazelClasspathContainerInitializer;
 import com.salesforce.b2eclipse.managers.B2EPreferncesManager;
@@ -78,6 +77,7 @@ import com.salesforce.b2eclipse.managers.BazelBuildSupport;
 import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
 import com.salesforce.b2eclipse.util.BazelEclipseProjectUtils;
 import com.salesforce.bazel.eclipse.BazelNature;
+import com.salesforce.bazel.eclipse.builder.BazelBuilder;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;

@@ -33,7 +33,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.b2eclipse.builder;
+package com.salesforce.bazel.eclipse.builder;
 
 import java.io.IOException;
 import java.util.ArrayList;

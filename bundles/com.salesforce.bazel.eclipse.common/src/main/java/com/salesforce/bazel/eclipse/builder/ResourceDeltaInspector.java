@@ -49,11 +49,11 @@ import com.salesforce.bazel.sdk.util.BazelConstants;
 /**
  * Convenience methods for looking into a IResourceDelta.
  */
-class ResourceDeltaInspector {
+public class ResourceDeltaInspector {
 
     private static final LogHelper LOG = LogHelper.log(ResourceDeltaInspector.class);
 
-    static boolean deltaHasChangedBuildFiles(IResourceDelta delta) {
+    public static boolean deltaHasChangedBuildFiles(IResourceDelta delta) {
         return hasChangedFiles(delta, BazelConstants.BUILD_FILE_NAMES);
     }
 
