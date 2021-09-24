@@ -38,19 +38,29 @@ package com.salesforce.bazel.eclipse.activator;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 
+import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
  */
 public class Activator extends Plugin {
-    private static BundleContext context;
+    private static Activator plugin;
 
     // The plug-in ID
     public static final String PLUGIN_ID = "com.salesforce.bazel.eclipse.common"; //$NON-NLS-1$
 
+    private BaseResourceHelper resourceHelper;
+    private BazelProjectManager projectManager;
+    private JavaCoreHelper javaCoreHelper;
+
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
-        context = bundleContext;
+        plugin = this;
+        var bazelProjectManager = BazelExtensionPointManager.getInstance().bazelProjectManager();
+        System.out.println(bazelProjectManager);
     }
 
     @Override
@@ -58,7 +68,28 @@ public class Activator extends Plugin {
         super.stop(context);
     }
 
-    public static BundleContext getContext() {
-        return context;
-    }   
+    public static Activator getDefault() {
+        return plugin;
+    }
+
+    public synchronized BaseResourceHelper getResourceHelper() {
+        if (resourceHelper == null) {
+            resourceHelper = BazelExtensionPointManager.getInstance().bazelEclipseResourceHelper();
+        }
+        return resourceHelper;
+    }
+
+    public synchronized JavaCoreHelper getJavaCoreHelper() {
+        if (javaCoreHelper == null) {
+            javaCoreHelper = BazelExtensionPointManager.getInstance().javaCoreHelper();
+        }
+        return javaCoreHelper;
+    }
+
+    public synchronized BazelProjectManager getProjectManager() {
+        if (projectManager == null) {
+            projectManager = BazelExtensionPointManager.getInstance().bazelProjectManager();
+        }
+        return projectManager;
+    }
 }

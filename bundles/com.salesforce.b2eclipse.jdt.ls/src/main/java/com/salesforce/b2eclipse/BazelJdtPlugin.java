@@ -84,9 +84,6 @@ public class BazelJdtPlugin extends Plugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.salesforce.b2eclipse.jdt.ls"; //$NON-NLS-1$
 
-	// The preference key for the bazel workspace root path
-	public static final String BAZEL_WORKSPACE_PATH_PREF_NAME = "bazel.workspace.root";
-
 	// GLOBAL COLLABORATORS
 	// TODO move the collaborators to some other place, perhaps a dedicated static context object
 
@@ -176,7 +173,7 @@ public class BazelJdtPlugin extends Plugin {
 		JavaCoreHelper eclipseJavaCoreHelper = new EclipseJavaCoreHelper();
 		OperatingEnvironmentDetectionStrategy osEnvStrategy = new RealOperatingEnvironmentDetectionStrategy();
 		
-        BazelProjectManager projectMgr = new EclipseBazelProjectManager(eclipseResourceHelper, eclipseJavaCoreHelper);
+        BazelProjectManager projectMgr = new EclipseBazelProjectManager();
 
 		startInternal(aspectLocation, commandBuilder, consoleFactory, eclipseResourceHelper, eclipseJavaCoreHelper, osEnvStrategy, projectMgr);
 		reloadExistingProjects();

@@ -66,32 +66,6 @@ import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 public class EclipseBazelProjectManager extends BazelProjectManager {
-    /**
-     * Absolute path of the Bazel workspace root
-     */
-    private static final String BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY = "bazel.workspace.root";
-
-    /**
-     * The label that identifies the Bazel package that represents this Eclipse project. This will be the 'module' label
-     * when we start supporting multiple BUILD files in a single 'module'.
-     * <p>
-     * Example: //projects/libs/foo ($SLASH_OK bazel path) See https://github.com/salesforce/bazel-eclipse/issues/24
-     * ($SLASH_OK url)
-     */
-    private static final String PROJECT_PACKAGE_LABEL = "bazel.package.label";
-
-    /**
-     * After import, the activated target is a single line, like: bazel.activated.target0=//projects/libs/foo:*
-     * ($SLASH_OK bazel path) which activates all targets by use of the wildcard. But users may wish to activate a
-     * subset of the targets for builds, in which the prefs lines will look like:
-     * bazel.activated.target0=//projects/libs/foo:barlib bazel.activated.target1=//projects/libs/foo:bazlib
-     */
-    private static final String TARGET_PROPERTY_PREFIX = "bazel.activated.target";
-
-    /**
-     * Property that allows a user to set project specific build flags that get passed to the Bazel executable.
-     */
-    private static final String BUILDFLAG_PROPERTY_PREFIX = "bazel.build.flag";
 
     private final ResourceHelper resourceHelper;
     private final JavaCoreHelper javaCoreHelper;
@@ -215,7 +189,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     public String getBazelLabelForProject(BazelProject bazelProject) {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
         Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
-        return eclipseProjectBazelPrefs.get(PROJECT_PACKAGE_LABEL, null);
+        return eclipseProjectBazelPrefs.get(IEclipseBazelProjectSettings.PROJECT_PACKAGE_LABEL, null);
     }
 
     /**
@@ -251,6 +225,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     public BazelProjectTargets getConfiguredBazelTargets(BazelProject bazelProject, boolean addWildcardIfNoTargets) {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
         Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
+<<<<<<< HEAD
         String projectLabel = eclipseProjectBazelPrefs.get(PROJECT_PACKAGE_LABEL, null);
         BazelProjectTargets activatedTargets = null;
 
@@ -267,13 +242,21 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
             // TODO
             return null;
         }
+=======
+        String projectLabel = eclipseProjectBazelPrefs.get(IEclipseBazelProjectSettings.PROJECT_PACKAGE_LABEL, null);
+>>>>>>> 521fa92 (1. extension point for BazelProjectManager)
 
         activatedTargets = new BazelProjectTargets(bazelProject, projectLabel);
         boolean addedTarget = false;
         Set<String> activeTargets = new TreeSet<>();
+<<<<<<< HEAD
         String[] prefNames = getKeys(eclipseProjectBazelPrefs);
         for (String propertyName : prefNames) {
             if (propertyName.startsWith(TARGET_PROPERTY_PREFIX)) {
+=======
+        for (String propertyName : getKeys(eclipseProjectBazelPrefs)) {
+            if (propertyName.startsWith(IEclipseBazelProjectSettings.TARGET_PROPERTY_PREFIX)) {
+>>>>>>> 521fa92 (1. extension point for BazelProjectManager)
                 String target = eclipseProjectBazelPrefs.get(propertyName, "");
                 if (!target.isEmpty()) {
                     BazelLabel label = new BazelLabel(target);
@@ -311,7 +294,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
         List<String> listBuilder = new ArrayList<>();
         for (String property : getKeys(eclipseProjectBazelPrefs)) {
-            if (property.startsWith(BUILDFLAG_PROPERTY_PREFIX)) {
+            if (property.startsWith(IEclipseBazelProjectSettings.BUILDFLAG_PROPERTY_PREFIX)) {
                 listBuilder.add(eclipseProjectBazelPrefs.get(property, ""));
             }
         }
@@ -325,7 +308,8 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
         Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
 
-        eclipseProjectBazelPrefs.put(BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspaceRoot);
+        eclipseProjectBazelPrefs.put(IEclipseBazelProjectSettings.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY,
+            bazelWorkspaceRoot);
 
         // convert file system path to bazel path; for linux/macos the slashes are already fine,
         // this is only a thing for windows
@@ -334,16 +318,17 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
         if (!bazelPackagePath.startsWith("//")) {
             bazelPackagePath = "//" + bazelPackagePath;
         }
-        eclipseProjectBazelPrefs.put(PROJECT_PACKAGE_LABEL, bazelPackagePath);
+        eclipseProjectBazelPrefs.put(IEclipseBazelProjectSettings.PROJECT_PACKAGE_LABEL, bazelPackagePath);
 
         int i = 0;
         for (BazelLabel bazelTarget : bazelTargets) {
-            eclipseProjectBazelPrefs.put(TARGET_PROPERTY_PREFIX + i, bazelTarget.getLabelPath());
+            eclipseProjectBazelPrefs.put(IEclipseBazelProjectSettings.TARGET_PROPERTY_PREFIX + i,
+                bazelTarget.getLabelPath());
             i++;
         }
         i = 0;
         for (String bazelBuildFlag : bazelBuildFlags) {
-            eclipseProjectBazelPrefs.put(BUILDFLAG_PROPERTY_PREFIX + i, bazelBuildFlag);
+            eclipseProjectBazelPrefs.put(IEclipseBazelProjectSettings.BUILDFLAG_PROPERTY_PREFIX + i, bazelBuildFlag);
             i++;
         }
         try {

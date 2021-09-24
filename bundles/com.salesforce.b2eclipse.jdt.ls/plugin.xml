@@ -24,4 +24,22 @@
          	order="500"
          	class="com.salesforce.b2eclipse.managers.BazelBuildSupport" />
    </extension>
+   <extension
+         point="com.salesforce.bazel.projectmanager">
+      <projectManager
+            class="com.salesforce.b2eclipse.config.EclipseBazelProjectManager">
+      </projectManager>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.resourcehelper">
+      <resourceHelper
+            class="com.salesforce.b2eclipse.runtime.impl.EclipseResourceHelper">
+      </resourceHelper>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.javacorehelper">
+      <javaCoreHelper
+            class="com.salesforce.b2eclipse.runtime.impl.EclipseJavaCoreHelper">
+      </javaCoreHelper>
+   </extension>
 </plugin>
