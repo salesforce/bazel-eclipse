@@ -33,7 +33,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.b2eclipse.config;
+package com.salesforce.bazel.eclipse.runtime.impl;
 
 import java.io.File;
 import java.io.IOException;

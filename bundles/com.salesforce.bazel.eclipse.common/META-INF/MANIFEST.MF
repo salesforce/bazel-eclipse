@@ -21,4 +21,6 @@ Bundle-ClassPath: bin/,
 Export-Package: com.salesforce.bazel.eclipse,
  com.salesforce.bazel.eclipse.builder,
  com.salesforce.bazel.eclipse.config,
- com.salesforce.bazel.eclipse.runtime.api
+ com.salesforce.bazel.eclipse.runtime.api,
+ com.salesforce.bazel.eclipse.runtime.impl,
+ com.salesforce.bazel.eclipse.utils

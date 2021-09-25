@@ -50,7 +50,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
@@ -81,7 +81,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
         this(eclipseProject, BazelJdtPlugin.getResourceHelper());
     }
 
-    BaseBazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
+    BaseBazelClasspathContainer(IProject eclipseProject, BaseResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
         bazelWorkspace = BazelJdtPlugin.getBazelWorkspace();

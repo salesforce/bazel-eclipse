@@ -35,9 +35,18 @@
  */
 package com.salesforce.bazel.eclipse.activator;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Plugin;
+import org.eclipse.core.runtime.Status;
 import org.osgi.framework.BundleContext;
 
+import com.salesforce.bazel.eclipse.config.JavaCoreHelperComponentFacade;
+import com.salesforce.bazel.eclipse.config.ProjectManagerComponentFacade;
+import com.salesforce.bazel.eclipse.config.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -51,16 +60,10 @@ public class Activator extends Plugin {
     // The plug-in ID
     public static final String PLUGIN_ID = "com.salesforce.bazel.eclipse.common"; //$NON-NLS-1$
 
-    private BaseResourceHelper resourceHelper;
-    private BazelProjectManager projectManager;
-    private JavaCoreHelper javaCoreHelper;
-
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
         plugin = this;
-        var bazelProjectManager = BazelExtensionPointManager.getInstance().bazelProjectManager();
-        System.out.println(bazelProjectManager);
     }
 
     @Override
@@ -72,24 +75,49 @@ public class Activator extends Plugin {
         return plugin;
     }
 
-    public synchronized BaseResourceHelper getResourceHelper() {
-        if (resourceHelper == null) {
-            resourceHelper = BazelExtensionPointManager.getInstance().bazelEclipseResourceHelper();
-        }
-        return resourceHelper;
+    public BaseResourceHelper getResourceHelper() {
+        return ResourceHelperComponentFacade.getInstance().getComponent();
     }
 
-    public synchronized JavaCoreHelper getJavaCoreHelper() {
-        if (javaCoreHelper == null) {
-            javaCoreHelper = BazelExtensionPointManager.getInstance().javaCoreHelper();
-        }
-        return javaCoreHelper;
+    public JavaCoreHelper getJavaCoreHelper() {
+        return JavaCoreHelperComponentFacade.getInstance().getComponent();
     }
 
-    public synchronized BazelProjectManager getProjectManager() {
-        if (projectManager == null) {
-            projectManager = BazelExtensionPointManager.getInstance().bazelProjectManager();
+    public BazelProjectManager getProjectManager() {
+        return ProjectManagerComponentFacade.getInstance().getComponent();
+    }
+
+    public void log(IStatus status) {
+        getLog().log(status);
+    }
+
+    public void log(CoreException e) {
+        log(e.getStatus());
+    }
+
+    public void logError(String message) {
+        log(new Status(IStatus.ERROR, getBundle().getSymbolicName(), message));
+    }
+
+    public void logInfo(String message) {
+        log(new Status(IStatus.INFO, getBundle().getSymbolicName(), message));
+    }
+
+    public void logWarning(String message) {
+        log(new Status(IStatus.WARNING, getBundle().getSymbolicName(), message));
+    }
+
+    public void logException(Throwable ex) {
+        String message = ex.getMessage();
+        if (message == null) {
+            StringWriter stringWriter = new StringWriter();
+            ex.printStackTrace(new PrintWriter(stringWriter));
+            message = stringWriter.toString();
         }
-        return projectManager;
+        logException(message, ex);
+    }
+
+    public void logException(String message, Throwable ex) {
+        log(new Status(IStatus.ERROR, getBundle().getSymbolicName(), message, ex));
     }
 }

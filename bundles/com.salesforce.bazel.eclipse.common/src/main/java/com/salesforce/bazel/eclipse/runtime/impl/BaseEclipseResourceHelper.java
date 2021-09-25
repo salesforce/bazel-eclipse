@@ -1,27 +1,4 @@
-/**
- * Copyright (c) 2020, Salesforce.com, Inc. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
- * following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
- * disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
- * following disclaimer in the documentation and/or other materials provided with the distribution.
- *
- * 3. Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
- * derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-package com.salesforce.b2eclipse.runtime.impl;
+package com.salesforce.bazel.eclipse.runtime.impl;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -45,19 +22,12 @@ import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IProcess;
 import org.osgi.service.prefs.Preferences;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.sdk.command.BazelCommandManager;
-import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.eclipse.activator.Activator;
+import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
-/**
- * Resource helper implementation used when running in a live Eclipse runtime.
- */
-public class EclipseResourceHelper implements ResourceHelper {
-    private static final LogHelper LOG = LogHelper.log(EclipseResourceHelper.class);
+public class BaseEclipseResourceHelper implements BaseResourceHelper {
 
     /**
      * Returns the IProject reference for the named project.
@@ -107,17 +77,18 @@ public class EclipseResourceHelper implements ResourceHelper {
      * Deletes the specified project.
      */
     @Override
+    //TODO implement method
     public void deleteProject(IProject project, IProgressMonitor monitor) throws CoreException {
-        if (!isBazelRootProject(project)) {
-            // clear the cached data for this project
-            BazelWorkspace bzlWs = BazelJdtPlugin.getBazelWorkspace();
-            BazelCommandManager bzlCmdMgr = BazelJdtPlugin.getBazelCommandManager();
-            BazelWorkspaceCommandRunner bzlWsCmdRunner = bzlCmdMgr.getWorkspaceCommandRunner(bzlWs);
-            BazelJdtPlugin.getBazelProjectManager().flushCaches(project.getName(), bzlWsCmdRunner);
-        }
-        boolean deleteContent = true; // delete metadata also, under the Eclipse Workspace directory
-        boolean force = true;
-        project.getProject().delete(deleteContent, force, monitor);
+        //        if (!isBazelRootProject(project)) {
+        //            // clear the cached data for this project
+        //            BazelWorkspace bzlWs = BazelJdtPlugin.getBazelWorkspace();
+        //            BazelCommandManager bzlCmdMgr = BazelJdtPlugin.getBazelCommandManager();
+        //            BazelWorkspaceCommandRunner bzlWsCmdRunner = bzlCmdMgr.getWorkspaceCommandRunner(bzlWs);
+        //            projectManager.flushCaches(project.getName(), bzlWsCmdRunner);
+        //        }
+        //        boolean deleteContent = true; // delete metadata also, under the Eclipse Workspace directory
+        //        boolean force = true;
+        //        project.getProject().delete(deleteContent, force, monitor);
     }
 
     /**
@@ -131,10 +102,11 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public Preferences getProjectBazelPreferences(IProject project) {
         IScopeContext eclipseProjectScope = new ProjectScope(project);
-        Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(BazelJdtPlugin.PLUGIN_ID);
+        Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(Activator.PLUGIN_ID);
 
         if (eclipseProjectPrefs == null) {
-            LOG.error("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
+            Activator.getDefault().logInfo(String.format(
+                "Could not find the Preferences node for the Bazel plugin for project [%s]", project.getName()));
         }
 
         return eclipseProjectPrefs;
@@ -180,8 +152,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public IResource findMemberInWorkspace(IPath path) {
         IResource resource = getEclipseWorkspaceRoot().findMember(path);
-        LOG.debug("findMemberInWorkspace: path=" + path.toOSString() + " member.location="
-                + getResourceAbsolutePath(resource));
+        Activator.getDefault().logInfo(String.format("findMemberInWorkspace: path=%s member.location= %s",
+            path.toOSString(), getResourceAbsolutePath(resource)));
         return resource;
     }
 
@@ -219,7 +191,8 @@ public class EclipseResourceHelper implements ResourceHelper {
         } catch (Exception ex) {
             // this is likely an issue with the resource tree being locked, so we have to defer this update
             // but it works for any type of issue
-            LOG.info("Deferring updates to project [{}] because workspace is locked.", project.getName());
+            Activator.getDefault().logInfo(
+                String.format("Deferring updates to project [%s] because workspace is locked.", project.getName()));
             deferredProjectDescriptionUpdates.add(new DeferredProjectDescriptionUpdate(project, description));
             needsDeferredApplication = true;
         }
@@ -260,8 +233,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     public void createFileLink(IFile thisFile, IPath bazelWorkspaceLocation, int updateFlags,
             IProgressMonitor monitor) {
         try {
-            LOG.debug("createFileLink: thisFile=" + thisFile.getLocation().toOSString() + " bazelWorkspaceLocation="
-                    + bazelWorkspaceLocation.toOSString());
+            Activator.getDefault().logInfo(String.format("createFileLink: thisFile=%s bazelWorkspaceLocation=%s",
+                thisFile.getLocation().toOSString(), bazelWorkspaceLocation.toOSString()));
             thisFile.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);
@@ -272,8 +245,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     public void createFolderLink(IFolder thisFolder, IPath bazelWorkspaceLocation, int updateFlags,
             IProgressMonitor monitor) {
         try {
-            LOG.debug("createFolderLink: thisFolder=" + thisFolder.getLocation().toOSString()
-                    + " bazelWorkspaceLocation=" + bazelWorkspaceLocation.toOSString());
+            Activator.getDefault().logInfo(String.format("createFolderLink: thisFolder=%s bazelWorkspaceLocation=%s",
+                thisFolder.getLocation().toOSString(), bazelWorkspaceLocation.toOSString()));
             thisFolder.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);

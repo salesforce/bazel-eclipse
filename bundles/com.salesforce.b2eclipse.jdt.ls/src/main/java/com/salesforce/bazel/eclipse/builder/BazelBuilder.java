@@ -57,8 +57,8 @@ import org.eclipse.jdt.core.JavaCore;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.b2eclipse.classpath.BazelClasspathContainer;
-import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
+import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -95,7 +95,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         BazelCommandManager bazelCommandManager = BazelJdtPlugin.getBazelCommandManager();
         JavaCoreHelper javaCoreHelper = BazelJdtPlugin.getJavaCoreHelper();
         BazelWorkspace bazelWorkspace = BazelJdtPlugin.getBazelWorkspace();
-        ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
+        BaseResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
         if (bazelWorkspace == null) {
             return new IProject[] {};
         }

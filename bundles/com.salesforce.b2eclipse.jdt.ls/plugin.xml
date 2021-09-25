@@ -27,19 +27,25 @@
    <extension
          point="com.salesforce.bazel.projectmanager">
       <projectManager
-            class="com.salesforce.b2eclipse.config.EclipseBazelProjectManager">
+            class="com.salesforce.bazel.eclipse.config.BaseEclipseBazelProjectManager">
       </projectManager>
    </extension>
    <extension
          point="com.salesforce.bazel.resourcehelper">
       <resourceHelper
-            class="com.salesforce.b2eclipse.runtime.impl.EclipseResourceHelper">
+            class="com.salesforce.bazel.eclipse.runtime.impl.BaseEclipseResourceHelper">
       </resourceHelper>
    </extension>
    <extension
          point="com.salesforce.bazel.javacorehelper">
       <javaCoreHelper
-            class="com.salesforce.b2eclipse.runtime.impl.EclipseJavaCoreHelper">
+            class="com.salesforce.bazel.eclipse.runtime.impl.EclipseJavaCoreHelper">
       </javaCoreHelper>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.aspectlocation">
+      <bazelAspectLocation
+            class="com.salesforce.bazel.eclipse.runtime.impl.DefaultEclipseAspectLocationImpl">
+      </bazelAspectLocation>
    </extension>
 </plugin>

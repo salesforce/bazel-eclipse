@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.b2eclipse.runtime.impl;
+package com.salesforce.bazel.eclipse.runtime.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,9 +40,9 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.BazelNature;
+import com.salesforce.bazel.eclipse.config.ResourceHelperComponentFacade;
+import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 
 /**
@@ -129,7 +129,7 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
     @Override
     public IJavaProject[] getAllBazelJavaProjects(boolean includeBazelWorkspaceRootProject) {
         // cache all of this?
-        ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
+        BaseResourceHelper resourceHelper = ResourceHelperComponentFacade.getInstance().getComponent();
         IWorkspaceRoot eclipseWorkspaceRoot = resourceHelper.getEclipseWorkspaceRoot();
         try {
             IJavaModel eclipseWorkspaceJavaModel = this.getJavaModelForWorkspace(eclipseWorkspaceRoot);

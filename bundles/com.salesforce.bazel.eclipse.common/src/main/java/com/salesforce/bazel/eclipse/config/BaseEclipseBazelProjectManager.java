@@ -9,9 +9,6 @@ import java.util.stream.Collectors;
 import org.eclipse.core.resources.IProject;
 import org.osgi.service.prefs.Preferences;
 
-import com.salesforce.bazel.eclipse.activator.Activator;
-import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
-import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.utils.BazelProjectSettingsUtils;
 import com.salesforce.bazel.eclipse.utils.EclipseProjectSettingsUtils;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -22,20 +19,16 @@ import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 public class BaseEclipseBazelProjectManager extends BazelProjectManager {
-    protected final BaseResourceHelper resourceHelper;
-    protected final JavaCoreHelper javaCoreHelper;
 
-    public BaseEclipseBazelProjectManager() {
-        resourceHelper = Activator.getDefault().getResourceHelper();
-        javaCoreHelper = Activator.getDefault().getJavaCoreHelper();
-    }
+    public BaseEclipseBazelProjectManager() {}
 
     @Override
     public BazelProject getOwningProjectForSourcePath(BazelWorkspace bazelWorkspace, String sourcePath) {
         return EclipseProjectSettingsUtils.getOwningProjectForSourcePath(bazelWorkspace, sourcePath, getAllProjects(),
-            resourceHelper, javaCoreHelper);
+            ResourceHelperComponentFacade.getInstance().getComponent(),
+            JavaCoreHelperComponentFacade.getInstance().getComponent());
     }
-    
+
     /**
      * The label that identifies the Bazel package that represents this Eclipse project. This will be the 'module' label
      * when we start supporting multiple BUILD files in a single 'module'. Example: //projects/libs/foo See
@@ -44,7 +37,8 @@ public class BaseEclipseBazelProjectManager extends BazelProjectManager {
     @Override
     public String getBazelLabelForProject(BazelProject bazelProject) {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
-        Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
+        Preferences eclipseProjectBazelPrefs =
+                ResourceHelperComponentFacade.getInstance().getComponent().getProjectBazelPreferences(eclipseProject);
         return eclipseProjectBazelPrefs.get(IEclipseBazelProjectSettings.PROJECT_PACKAGE_LABEL, null);
     }
 
@@ -69,8 +63,8 @@ public class BaseEclipseBazelProjectManager extends BazelProjectManager {
 
     @Override
     public BazelProjectTargets getConfiguredBazelTargets(BazelProject bazelProject, boolean addWildcardIfNoTargets) {
-        return BazelProjectSettingsUtils.getConfiguredBazelTargets(resourceHelper, bazelProject,
-            addWildcardIfNoTargets);
+        return BazelProjectSettingsUtils.getConfiguredBazelTargets(
+            ResourceHelperComponentFacade.getInstance().getComponent(), bazelProject, addWildcardIfNoTargets);
     }
 
     @Override
@@ -78,7 +72,8 @@ public class BaseEclipseBazelProjectManager extends BazelProjectManager {
             List<BazelLabel> bazelTargets, List<String> bazelBuildFlags) {
 
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
-        Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
+        Preferences eclipseProjectBazelPrefs =
+                ResourceHelperComponentFacade.getInstance().getComponent().getProjectBazelPreferences(eclipseProject);
 
         eclipseProjectBazelPrefs.put(IEclipseBazelProjectSettings.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY,
             bazelWorkspaceRoot);
@@ -112,11 +107,13 @@ public class BaseEclipseBazelProjectManager extends BazelProjectManager {
      */
     @Override
     public List<String> getBazelBuildFlagsForProject(BazelProject bazelProject) {
-        return BazelProjectSettingsUtils.getBazelBuildFlagsForProject(resourceHelper, bazelProject);
+        return BazelProjectSettingsUtils
+                .getBazelBuildFlagsForProject(ResourceHelperComponentFacade.getInstance().getComponent(), bazelProject);
     }
 
     @Override
     public void setProjectReferences(BazelProject thisProject, List<BazelProject> updatedRefList) {
-        EclipseProjectSettingsUtils.setProjectReferences(resourceHelper, thisProject, updatedRefList);
+        EclipseProjectSettingsUtils.setProjectReferences(ResourceHelperComponentFacade.getInstance().getComponent(),
+            thisProject, updatedRefList);
     }
 }
