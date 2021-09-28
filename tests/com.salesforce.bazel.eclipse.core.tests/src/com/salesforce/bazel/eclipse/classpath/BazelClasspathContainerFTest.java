@@ -88,7 +88,7 @@ public class BazelClasspathContainerFTest {
         // javalib1 is the second Java library created by our test harness, and it is made to depend on javalib0
         boolean explicitJavaTestDeps = false;
 
-        setupMockEnvironmentForClasspathTest("tcpbjp_im", explicitJavaTestDeps, false, false);
+        setupMockEnvironmentForClasspathTest("tcpbjp_im", explicitJavaTestDeps, false, false, false);
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
         // NOTE: classpath entries are ordered lists so they should always be in the same positions
@@ -141,7 +141,7 @@ public class BazelClasspathContainerFTest {
         // javalib1 is the second Java library created by our test harness, and it is made to depend on javalib0
         boolean explicitJavaTestDeps = true;
 
-        setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, false, false);
+        setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, false, false, false);
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
         // NOTE: classpath entries are ordered lists so they should always be in the same positions
@@ -197,9 +197,10 @@ public class BazelClasspathContainerFTest {
         boolean explicitJavaTestDeps = true;
         boolean nonstandardlayout = true;
         boolean nonstandardlayout_multipledirs = false;
+        boolean addJavaImport = false;
 
         setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, nonstandardlayout,
-            nonstandardlayout_multipledirs);
+            nonstandardlayout_multipledirs, addJavaImport);
 
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
@@ -231,9 +232,10 @@ public class BazelClasspathContainerFTest {
         boolean explicitJavaTestDeps = true;
         boolean nonstandardlayout = true;
         boolean nonstandardlayout_multipledirs = true;
+        boolean addJavaImport = false;
 
         setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, nonstandardlayout,
-            nonstandardlayout_multipledirs);
+            nonstandardlayout_multipledirs, addJavaImport);
 
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
@@ -251,13 +253,47 @@ public class BazelClasspathContainerFTest {
     }
 
     /**
+     * We create an Eclipse project for the Bazel Workspace with a Java project.
+     * <p>
+     * Variant: this java package has a java_import to bring in a jar file from the file system
+     */
+    @Test
+    public void testClasspath_BazelJavaProject_javaimport() throws Exception {
+        // SETUP
+        // javalib0 is the base Java library created by our test harness
+        // javalib1 is the second Java library created by our test harness, and it is made to depend on javalib0
+
+        boolean explicitJavaTestDeps = true;
+        boolean nonstandardlayout = false;
+        boolean nonstandardlayout_multipledirs = false;
+        boolean addJavaImport = true;
+
+        setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, nonstandardlayout,
+            nonstandardlayout_multipledirs, addJavaImport);
+
+        JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
+
+        // NOTE: classpath entries are ordered lists so they should always be in the same positions
+
+        // FIRST check that the project raw classpath has 4 entries for javalib0:
+        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
+        // javalib0/source/dev/java
+        // javalib0/sources/test/java
+        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8
+        IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
+        assertNotNull(entries);
+        printClasspathEntries("testClasspath_BazelJavaProject_javaimport", entries);
+
+    }
+
+    /**
      * We create an Eclipse project for the Bazel Workspace as a container, make sure we return empty results for
      * classpath entries for the Workspace project.
      */
     @Test
     public void testClasspath_BazelWorkspaceProject() throws Exception {
         boolean explicitJavaTestDeps = false;
-        setupMockEnvironmentForClasspathTest("tcpbwp", explicitJavaTestDeps, false, false);
+        setupMockEnvironmentForClasspathTest("tcpbwp", explicitJavaTestDeps, false, false, false);
         ResourceHelper resourceHelper = mock(ResourceHelper.class);
         when(resourceHelper.isBazelRootProject(workspace_IProject)).thenReturn(true);
 
@@ -271,7 +307,7 @@ public class BazelClasspathContainerFTest {
     // HELPERS
 
     private MockEclipse setupMockEnvironmentForClasspathTest(String testName, boolean explicitJavaTestDeps,
-            boolean nonstandardLayout, boolean nonstandardMultipleDirs)
+            boolean nonstandardLayout, boolean nonstandardMultipleDirs, boolean addJavaImport)
                     throws Exception {
         File testDir = tmpFolder.newFolder();
         File testTempDir = new File(testDir, testName);
@@ -285,11 +321,7 @@ public class BazelClasspathContainerFTest {
 
         TestOptions testOptions = new TestOptions().numberOfJavaPackages(2).computeClasspaths(true)
                 .explicitJavaTestDeps(explicitJavaTestDeps).nonStandardJavaLayout_enabled(nonstandardLayout)
-                .nonStandardJavaLayout_multipledirs(nonstandardMultipleDirs);
-
-        if (nonstandardLayout) {
-
-        }
+                .nonStandardJavaLayout_multipledirs(nonstandardMultipleDirs).addJavaImportRule(addJavaImport);
 
         MockEclipse mockEclipse =
                 EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,

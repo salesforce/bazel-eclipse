@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
+import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 public class TestJavaRuleCreator {
@@ -11,13 +12,21 @@ public class TestJavaRuleCreator {
             TestBazelPackageDescriptor packageDescriptor) throws Exception {
         try (PrintStream out = new PrintStream(new FileOutputStream(buildFile))) {
 
-            String build_java_library = createJavaLibraryRule(packageDescriptor.packageName);
+            String build_java_import = "";
+            String java_import_dep = null;
+            if (workspaceDescriptor.testOptions.addJavaImport) {
+                build_java_import = createJavaImportRule(packageDescriptor.packageName, "libs", "banana", "libbanana");
+                new TestBazelTargetDescriptor(packageDescriptor, "banana", "java_import");
+                java_import_dep = BazelLabel.BAZEL_COLON + "banana";
+            }
+
+            String build_java_library = createJavaLibraryRule(packageDescriptor.packageName, java_import_dep);
             new TestBazelTargetDescriptor(packageDescriptor, packageDescriptor.packageName, "java_library");
 
             String build_java_test = createJavaTestRule(packageDescriptor.packageName, workspaceDescriptor.testOptions);
             new TestBazelTargetDescriptor(packageDescriptor, packageDescriptor.packageName + "Test", "java_test");
 
-            out.print(build_java_library + "\n\n" + build_java_test);
+            out.print(build_java_import + "\n\n" + build_java_library + "\n\n" + build_java_test);
         }
     }
 
@@ -38,13 +47,29 @@ public class TestJavaRuleCreator {
         return sb.toString();
     }
 
-    private static String createJavaLibraryRule(String packageName) {
+    private static String createJavaLibraryRule(String packageName, String dep) {
         String main = FSPathHelper.osSeps("src/main/java/**/*.java"); // $SLASH_OK
         StringBuffer sb = new StringBuffer();
         sb.append("java_library(\n   name=\""); // $SLASH_OK: escape char
         sb.append(packageName);
         sb.append("\",\n"); // $SLASH_OK: line continue
         sb.append("   srcs = glob([\"" + main + "\"]),\n");
+        if (dep != null) {
+            sb.append("   deps = [\"" + dep + "\"],\n");
+        }
+        sb.append("   visibility = [\"//visibility:public\"],\n"); // $SLASH_OK: escape char
+        sb.append(")");
+        return sb.toString();
+    }
+
+    private static String createJavaImportRule(String packageName, String importRelativeDir, String targetName,
+            String jarNameNoSuffix) {
+        String libPath = FSPathHelper.osSeps(importRelativeDir + FSPathHelper.UNIX_SLASH + jarNameNoSuffix + ".jar");
+        StringBuffer sb = new StringBuffer();
+        sb.append("java_import(\n   name=\""); // $SLASH_OK: escape char
+        sb.append(targetName);
+        sb.append("\",\n"); // $SLASH_OK: line continue
+        sb.append("   jars = [\"" + libPath + "\"],\n");
         sb.append("   visibility = [\"//visibility:public\"],\n"); // $SLASH_OK: escape char
         sb.append(")");
         return sb.toString();

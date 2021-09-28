@@ -79,6 +79,14 @@ public class TestOptions extends HashMap<String, String> {
         return this;
     }
 
+    // add a java_import rule to the generated java projects
+    public boolean addJavaImport = false;
+
+    public TestOptions addJavaImportRule(boolean addImport) {
+        addJavaImport = addImport;
+        return this;
+    }
+
     // just throw a random nested workspace in the mix, to test that we ignore it (see bef issue #25)
     // when we start to support nestedWorkspaces, this should default to false and only some tests will
     // test the nested workspace
@@ -97,5 +105,6 @@ public class TestOptions extends HashMap<String, String> {
         failTestForUnknownTarget = fail;
         return this;
     }
+
 
 }
