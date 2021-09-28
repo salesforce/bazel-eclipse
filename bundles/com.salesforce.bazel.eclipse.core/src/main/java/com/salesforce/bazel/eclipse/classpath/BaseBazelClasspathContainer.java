@@ -35,10 +35,10 @@
  */
 package com.salesforce.bazel.eclipse.classpath;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -190,18 +190,27 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
             return null;
         }
 
-        Path filePath = Paths.get(filePathStr);
+        File filePathFile = new File(filePathStr);
         Path absolutePath = null;
-        if (filePath.isAbsolute()) {
-            absolutePath = filePath;
+        if (filePathFile.isAbsolute()) {
+            absolutePath = filePathFile.toPath();
         } else {
-            String bazelExecRoot = bazelWorkspace.getBazelExecRootDirectory().getAbsolutePath();
-            absolutePath = Paths.get(bazelExecRoot, filePathStr);
-            if (!Files.exists(absolutePath)) {
-                String bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory().getAbsolutePath();
-                absolutePath = Paths.get(bazelOutputBase, filePathStr);
-                logger.info("The path retrieved from the aspect was rooted in outputbase, which is unexpected: {}",
-                    filePathStr);
+            File bazelExecRootDir = bazelWorkspace.getBazelExecRootDirectory();
+            filePathFile = new File(bazelExecRootDir, filePathStr);
+            if (filePathFile.exists()) {
+                absolutePath = filePathFile.toPath();
+            } else {
+                File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
+                filePathFile = new File(bazelOutputBase, filePathStr);
+                if (!filePathFile.exists()) {
+                    // TODO this can happen if someone does a 'bazel clean' using the command line #113
+                    // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
+                    String msg = "Problem adding jar to project [" + bazelProject.name
+                            + "] because it does not exist on the filesystem(2): " + filePathStr;
+                    logger.error(msg);
+                    continueOrThrow(new IllegalArgumentException(msg));
+                }
+                absolutePath = filePathFile.toPath();
             }
         }
 
@@ -214,17 +223,10 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
             } catch (IOException ex) {
                 // TODO this can happen if someone does a 'bazel clean' using the command line #113
                 // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
-                logger.error("Problem adding jar to project [" + bazelProject.name
-                    + "] because it does not exist on the filesystem: " + absolutePath);
-                continueOrThrow(ex);
-            }
-        } else {
-            // it is a normal path, check for existence
-            if (!Files.exists(absolutePath)) {
-                // TODO this can happen if someone does a 'bazel clean' using the command line #113
-                // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
-                logger.error("Problem adding jar to project [" + bazelProject.name
-                    + "] because it does not exist on the filesystem: " + absolutePath);
+                String msg = "Problem adding jar to project [" + bazelProject.name
+                        + "] because it does not exist on the filesystem(1): " + absolutePath;
+                logger.error(msg);
+                continueOrThrow(new IllegalArgumentException(msg, ex));
             }
         }
         return org.eclipse.core.runtime.Path.fromOSString(absolutePath.toString());

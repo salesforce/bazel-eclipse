@@ -89,7 +89,7 @@ public class TestJavaRuleCreator {
         sb.append("   visibility = [\"//visibility:public\"],\n"); // $SLASH_OK: escape char
         if (explicitJavaTestDeps) {
             // see ImplicitDependencyHelper.java for more details about this block
-            sb.append("   deps = [ \"@junit_junit//jar\", \"@org_hamcrest_hamcrest_core//jar\", ],\n"); // $SLASH_OK: escape char
+            sb.append("   deps = [ \"@maven//:junit_junit\", \"@maven//:org_hamcrest_hamcrest_core\", ],\n"); // $SLASH_OK: escape char
         }
         sb.append(")");
         return sb.toString();

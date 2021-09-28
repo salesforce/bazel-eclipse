@@ -78,14 +78,14 @@ public final class FSPathHelper {
 
     // Slash character for file paths in jar files
     public static final String JAR_SLASH = "/";
-
+    
     private FSPathHelper() {
 
     }
 
     /**
      * Primary feature toggle. isUnix is true for all platforms except Windows. TODO this needs to be reworked in SDK
-     * Issue #32
+     * Issue #32. Only should be tweaked manually for tests
      */
     public static boolean isUnix = true;
     static {
@@ -169,7 +169,19 @@ public final class FSPathHelper {
     public static String osSepsEscaped(String unixStylePath) {
         String path = unixStylePath;
         if (!isUnix) {
-            path = unixStylePath.replace(UNIX_SLASH, WINDOWS_BACKSLASH);
+            // Basic case: a/b/c => a\\b\\c
+            
+            // Variants
+            // 1. we need to handle the case where a path has been converted already slash->backslash, and then is passed into
+            // this method, which then needs to escape each backslash in addition to converting any new slashes
+            // a/b\c => a\\b\\c
+            // 2. we need to handle the case where a path has been converted and escaped already slash->backslash+backslash, 
+            // and then is passed into this method, which then needs to escape each backslash in addition to converting any new slashes
+            // a/b\\c\d => a\\b\\c\\d
+            
+            path = unixStylePath.replace(WINDOWS_BACKSLASH + WINDOWS_BACKSLASH, WINDOWS_BACKSLASH);
+            path = path.replace(UNIX_SLASH, WINDOWS_BACKSLASH);
+            path = path.replace(WINDOWS_BACKSLASH, WINDOWS_BACKSLASH + WINDOWS_BACKSLASH);
         }
         return path;
     }

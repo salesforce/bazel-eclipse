@@ -27,6 +27,9 @@ public class MockInfoCommand extends MockCommand {
         } else if ("execution_root".equals(commandTokens.get(2))) {
             addSimulatedOutputToCommandStdOut(testWorkspaceFactory.workspaceDescriptor.dirExecRoot.getAbsolutePath());
         } else if ("output_base".equals(commandTokens.get(2))) {
+            addSimulatedOutputToCommandStdOut(
+                testWorkspaceFactory.workspaceDescriptor.outputBaseDirectory.getAbsolutePath());
+        } else if ("output_path".equals(commandTokens.get(2))) {
             addSimulatedOutputToCommandStdOut(testWorkspaceFactory.workspaceDescriptor.dirOutputPath.getAbsolutePath());
         } else if ("bazel-bin".equals(commandTokens.get(2))) {
             addSimulatedOutputToCommandStdOut(testWorkspaceFactory.workspaceDescriptor.dirBazelBin.getAbsolutePath());

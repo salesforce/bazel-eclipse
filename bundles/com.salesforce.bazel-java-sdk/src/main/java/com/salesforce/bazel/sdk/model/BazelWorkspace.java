@@ -57,6 +57,14 @@ public class BazelWorkspace {
     private File bazelOutputBaseDirectory;
 
     /**
+     * The internal location on disk for Bazel's 'output path' for this workspace. E.g.
+     * <i>/private/var/tmp/_bazel_plaird/edb34c7f4bfffeb66012c4fc6aaab239/execroot/bazel_demo_simplejava/bazel-out</i>
+     * <p>
+     * Determined by running this command line: <i>bazel info output_path</i>
+     */
+    private File bazelOutputPathDirectory;
+    
+    /**
      * The internal location on disk for Bazel's 'bazel-bin' for this workspace. E.g.
      * <i>/private/var/tmp/_bazel_plaird/f521799c9882dcc6330b57416b13ba81/execroot/bazel_eclipse_feature/bazel-out/darwin-fastbuild/bin</i>
      * <p>
@@ -136,6 +144,9 @@ public class BazelWorkspace {
     public File getBazelExecRootDirectory() {
         if ((bazelExecRootDirectory == null) && (metadataStrategy != null)) {
             bazelExecRootDirectory = metadataStrategy.computeBazelWorkspaceExecRoot();
+            if (bazelExecRootDirectory != null) {
+                bazelOutputPathDirectory = new File(bazelExecRootDirectory, "bazel-out");
+            }
         }
         return bazelExecRootDirectory;
     }
@@ -147,6 +158,14 @@ public class BazelWorkspace {
         return bazelOutputBaseDirectory;
     }
 
+    public File getBazelOutputPathDirectory() {
+        if (bazelOutputPathDirectory == null) {
+            // since output path dir is a direct descendant of exec root, we just rely on that method to compute it
+            bazelExecRootDirectory = getBazelExecRootDirectory();
+        }
+        return bazelOutputPathDirectory;
+    }
+    
     public List<String> getTargetsForBazelQuery(String query) {
         List<String> results = new ArrayList<String>();
         for (String line : metadataStrategy.computeBazelQuery(query)) {

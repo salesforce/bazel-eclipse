@@ -271,14 +271,18 @@ public class TestBazelWorkspaceFactory {
         packageAspectFiles.add(aspectFilePath_mainsource);
 
         // add aspects for maven jars (just picked a couple of typical maven jars to use)
+        JarPathBundle jarPathBundle = createFakeExternalJar(workspaceDescriptor.outputBaseDirectory,
+            FSPathHelper.osSeps("org/slf4j/slf4j-api/1.7.25"), "slf4j-api-1.7.25");
         String aspectFilePath_slf4j = TestAspectFileCreator.createJavaAspectFileForMavenJar(
-            workspaceDescriptor.outputBaseDirectory, "org_slf4j_slf4j_api", "slf4j-api-1.7.25");
+            workspaceDescriptor.outputBaseDirectory, "org_slf4j_slf4j_api", jarPathBundle.jarRelativePath,
+            jarPathBundle.srcJarRelativePath);
         packageAspectFiles.add(aspectFilePath_slf4j);
-        createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "org_slf4j_slf4j_api", "slf4j-api-1.7.25");
+        jarPathBundle = createFakeExternalJar(workspaceDescriptor.outputBaseDirectory,
+            FSPathHelper.osSeps("com/google/guava/guava/20.0"), "guava-20.0");
         String aspectFilePath_guava = TestAspectFileCreator.createJavaAspectFileForMavenJar(
-            workspaceDescriptor.outputBaseDirectory, "com_google_guava_guava", "guava-20.0");
+            workspaceDescriptor.outputBaseDirectory, "com_google_guava_guava", jarPathBundle.jarRelativePath,
+            jarPathBundle.srcJarRelativePath);
         packageAspectFiles.add(aspectFilePath_guava);
-        createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "com_google_guava_guava", "guava-20.0");
 
         // test source
         List<String> testSourceFiles = new ArrayList<>();
@@ -332,15 +336,21 @@ public class TestBazelWorkspaceFactory {
 
         // add aspects for test maven jars if we have explicit java test deps mode enabled
         if (explicitJavaTestDeps) {
+            jarPathBundle =
+                    createFakeExternalJar(workspaceDescriptor.outputBaseDirectory,
+                        FSPathHelper.osSeps("junit/junit/4.12"), "junit-4.12");
             String aspectFilePath_junit = TestAspectFileCreator.createJavaAspectFileForMavenJar(
-                workspaceDescriptor.outputBaseDirectory, "junit_junit", "junit-4.12");
+                workspaceDescriptor.outputBaseDirectory, "junit_junit", jarPathBundle.jarRelativePath,
+                jarPathBundle.srcJarRelativePath);
             packageAspectFiles.add(aspectFilePath_junit);
-            createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "junit_junit", "junit-4.12");
-            String aspectFilePath_hamcrest = TestAspectFileCreator.createJavaAspectFileForMavenJar(
-                workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core", "hamcrest-core-1.3");
-            packageAspectFiles.add(aspectFilePath_hamcrest);
-            createFakeExternalJars(workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core",
+
+            jarPathBundle = createFakeExternalJar(workspaceDescriptor.outputBaseDirectory,
+                FSPathHelper.osSeps("org/hamcrest/hamcrest-core/1.3"),
                     "hamcrest-core-1.3");
+            String aspectFilePath_hamcrest = TestAspectFileCreator.createJavaAspectFileForMavenJar(
+                workspaceDescriptor.outputBaseDirectory, "org_hamcrest_hamcrest_core", jarPathBundle.jarRelativePath,
+                jarPathBundle.srcJarRelativePath);
+            packageAspectFiles.add(aspectFilePath_hamcrest);
         }
 
         // java_import
@@ -356,8 +366,8 @@ public class TestBazelWorkspaceFactory {
                     FSPathHelper.osSeps(packageRelativeFilePath + FSPathHelper.UNIX_SLASH + packageLibsDirName);
 
             String aspectFilePath_import = TestAspectFileCreator
-                    .createJavaAspectFileForImportJar(workspaceDescriptor.outputBaseDirectory, packageRelativeBazelPath,
-                        relativeImportLibsDir, "banana", "libbanana");
+                    .createJavaAspectFileForImportLocalJar(workspaceDescriptor.outputBaseDirectory,
+                        packageRelativeBazelPath, relativeImportLibsDir, "banana", "libbanana");
             packageAspectFiles.add(aspectFilePath_import);
             createFakeImportJar(importLibsDir, "libbanana");
 
@@ -387,15 +397,31 @@ public class TestBazelWorkspaceFactory {
         }
     }
 
-    private void createFakeExternalJars(File dirOutputBase, String foldername, String jarname) throws IOException {
-        String fakeJarPath = FSPathHelper.osSeps("external/" + foldername + "/jar/" + jarname + ".jar"); // $SLASH_OK
-        File fakeJar = new File(dirOutputBase, fakeJarPath);
-        fakeJar.createNewFile();
+    private JarPathBundle createFakeExternalJar(File dirOutputBase, String folderPath, String jarname)
+            throws IOException {
+        JarPathBundle jarBundle = new JarPathBundle();
+        jarBundle.jarFileName = jarname + ".jar";
 
-        String fakeSourceJarPath =
-                FSPathHelper.osSeps("external/" + foldername + "/jar/" + jarname + "-sources.jar"); // $SLASH_OK
-        File fakeSourceJar = new File(dirOutputBase, fakeSourceJarPath);
+        // create the relative dir path from output base
+        String maveninstallPath = FSPathHelper.osSeps("external/maven/v1/https/repo1.maven.org/maven2/");
+        File jarDir = new File(dirOutputBase, maveninstallPath + folderPath);
+        jarDir.mkdirs();
+
+        // create the jar
+        jarBundle.jarRelativePath = FSPathHelper.osSeps(maveninstallPath + folderPath + "/" + jarBundle.jarFileName); // $SLASH_OK
+        File fakeJar = new File(dirOutputBase, jarBundle.jarRelativePath);
+        fakeJar.createNewFile();
+        jarBundle.jarAbsolutePath = fakeJar.getAbsolutePath();
+        System.out.println("Created fake jar file: " + fakeJar.getCanonicalPath());
+
+        // create the source jar
+        jarBundle.srcJarRelativePath =
+                FSPathHelper.osSeps(maveninstallPath + folderPath + "/" + jarname + "-sources.jar"); // $SLASH_OK
+        File fakeSourceJar = new File(dirOutputBase, jarBundle.srcJarRelativePath);
         fakeSourceJar.createNewFile();
+        jarBundle.srcJarAbsolutePath = fakeSourceJar.getAbsolutePath();
+
+        return jarBundle;
     }
 
     private void createFakeImportJar(File libDir, String jarname) throws IOException {
@@ -403,30 +429,41 @@ public class TestBazelWorkspaceFactory {
         fakeJar.createNewFile();
     }
 
-    private void createFakeProjectJars(String packageRelativePath, String packageName) throws IOException {
+    private JarPathBundle createFakeProjectJars(String packageRelativePath, String packageName) throws IOException {
         File packageBinDir = new File(workspaceDescriptor.dirBazelBin, packageRelativePath);
-        packageBinDir.mkdirs();
+        packageBinDir.mkdirs(); // execroot/bazel_demo_simplejava_mvninstall/bazel-out/darwin-fastbuild/bin/projects/services/fruit-salad-service/fruit-salad
+        JarPathBundle jarBundle = new JarPathBundle();
 
-        String jar = "lib" + packageName + ".jar";
-        File fakeJar = new File(packageBinDir, jar);
+        jarBundle.jarFileName = "lib" + packageName + ".jar";
+        File fakeJar = new File(packageBinDir, jarBundle.jarFileName);
+        jarBundle.jarRelativePath =
+                FSPathHelper.osSeps(packageRelativePath + FSPathHelper.UNIX_SLASH + jarBundle.jarFileName);
         fakeJar.createNewFile();
+        jarBundle.jarAbsolutePath = fakeJar.getAbsolutePath();
         System.out.println("Created fake jar file: " + fakeJar.getCanonicalPath());
 
         String interfacejar = "lib" + packageName + "-hjar.jar";
         fakeJar = new File(packageBinDir, interfacejar);
         fakeJar.createNewFile();
+        jarBundle.interfaceJarAbsolutePath = fakeJar.getAbsolutePath();
 
         String sourcejar = "lib" + packageName + "-src.jar";
         fakeJar = new File(packageBinDir, sourcejar);
+        jarBundle.srcJarRelativePath = FSPathHelper.osSeps(packageRelativePath + FSPathHelper.UNIX_SLASH + sourcejar);
         fakeJar.createNewFile();
+        jarBundle.srcJarAbsolutePath = fakeJar.getAbsolutePath();
 
         String testjar = "lib" + packageName + "-test.jar";
         fakeJar = new File(packageBinDir, testjar);
         fakeJar.createNewFile();
+        jarBundle.testJarAbsolutePath = fakeJar.getAbsolutePath();
 
         String testsourcejar = "lib" + packageName + "-test-src.jar";
         fakeJar = new File(packageBinDir, testsourcejar);
         fakeJar.createNewFile();
+        jarBundle.srcTestJarAbsolutePath = fakeJar.getAbsolutePath();
+
+        return jarBundle;
     }
 
     /**
@@ -450,4 +487,19 @@ public class TestBazelWorkspaceFactory {
             addJavaImport, false);
     }
 
+    @SuppressWarnings("unused")
+    private static class JarPathBundle {
+        public String jarFileName; // slf4j-api-1.7.25.jar or libapple.jar
+
+        public String jarAbsolutePath;
+        public String jarRelativePath; // execroot/bazel_demo_simplejava_mvninstall/bazel-out/darwin-fastbuild/bin/projects/services/fruit-salad-service/fruit-salad/fruit-salad.jar
+
+        public String srcJarAbsolutePath;
+        public String srcJarRelativePath; // execroot/bazel_demo_simplejava_mvninstall/bazel-out/darwin-fastbuild/bin/projects/services/fruit-salad-service/fruit-salad/fruit-salad-src.jar
+
+        // for workspace built jars, Bazel will generate these extra jars
+        public String interfaceJarAbsolutePath; // libapple-hjar.jar
+        public String testJarAbsolutePath; // apple-test.jar
+        public String srcTestJarAbsolutePath; // apple-test-src.jar
+    }
 }

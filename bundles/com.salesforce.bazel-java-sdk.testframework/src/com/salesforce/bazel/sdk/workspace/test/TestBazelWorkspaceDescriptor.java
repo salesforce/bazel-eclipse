@@ -27,7 +27,7 @@ public class TestBazelWorkspaceDescriptor {
 
     // BUILT FIELDS (filled in after the workspace is built on disk)
 
-    // directories
+    // computed directories
     public File dirOutputBaseExternal; // [outputbase]/external
     public File dirExecRootParent; // [outputbase]/execroot
     public File dirExecRoot; // [outputbase]/execroot/test_workspace
