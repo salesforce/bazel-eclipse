@@ -183,10 +183,13 @@ public class BazelJvmClasspath implements JvmClasspath {
                     }
                     JVMAspectTargetInfo jvmTargetInfo = (JVMAspectTargetInfo) targetInfo;
                     String targetInfoLabelPath = jvmTargetInfo.getLabelPath();
+                    String kind = jvmTargetInfo.getKind();
+                    if ("java_import".equals(kind)) {
+                        logger.info("Found java_import rule");
+                    }
 
                     if (actualActivatedTargets.contains(targetInfoLabelPath)) {
-                        if ("java_library".equals(jvmTargetInfo.getKind())
-                                || "java_binary".equals(jvmTargetInfo.getKind())) {
+                        if ("java_library".equals(kind) || "java_binary".equals(kind)) {
                             // this info describes a java_library target in the current package; don't add it to the classpath
                             // as all java_library targets in this package are assumed to be represented by source code entries
                             continue;

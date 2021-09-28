@@ -52,7 +52,7 @@ public final class JVMAspectOutputJarSet {
         if (jarObj != null) {
             String relPath = (String) jarObj.get("relative_path");
             String base = (String) jarObj.get("root_execution_path_fragment");
-            if (base != null) {
+            if (base != null && !base.isEmpty()) {
                 jar = base + File.separator + relPath;
             } else {
                 jar = relPath;
@@ -62,7 +62,7 @@ public final class JVMAspectOutputJarSet {
         if (ijarObj != null) {
             String base = (String) ijarObj.get("root_execution_path_fragment");
             String relPath = (String) ijarObj.get("relative_path");
-            if (base != null) {
+            if (base != null && !base.isEmpty()) {
                 ijar = base + File.separator + relPath;
             } else {
                 ijar = relPath;
@@ -72,7 +72,7 @@ public final class JVMAspectOutputJarSet {
         if (sjarObj != null) {
             String base = (String) sjarObj.get("root_execution_path_fragment");
             String relPath = (String) sjarObj.get("relative_path");
-            if (base != null) {
+            if (base != null && !base.isEmpty()) {
                 srcjar = base + File.separator + relPath;
             } else {
                 srcjar = relPath;
