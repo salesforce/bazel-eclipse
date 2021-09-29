@@ -75,10 +75,10 @@ public class BazelRuntimeClasspathProviderTest {
     + FSPathHelper.osSeps("bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/libbanana-api.jar") // $SLASH_OK
     + ",//projects/libs/banana/banana-api:banana-api\n"
     + FSPathHelper.osSeps("external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar") // $SLASH_OK
-    + ",@@org_slf4j_slf4j_api//jar:slf4j-api-1.7.25.jar\n"
+            + ",@@maven//:org_slf4j_slf4j_api:slf4j-api-1.7.25.jar\n"
     + FSPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0.jar") // $SLASH_OK
-    + ",@@com_google_guava_guava//jar:guava-20.0.jar\n"
-    + FSPathHelper.osSeps("external/junit_junit/jar/junit-4.12.jar") + ",@@junit_junit//jar:junit-4.12.jar\n" // $SLASH_OK
+            + ",@@maven//:com_google_guava_guava:guava-20.0.jar\n"
+            + FSPathHelper.osSeps("external/junit_junit/jar/junit-4.12.jar") + ",@@maven//:junit_junit:junit-4.12.jar\n" // $SLASH_OK
     + FSPathHelper.osSeps("external/remote_java_tools/java_tools/Runner_deploy.jar") // $SLASH_OK
     + ",@@remote_java_tools//:java_tools/Runner_deploy.jar\n"
     + FSPathHelper.osSeps(
