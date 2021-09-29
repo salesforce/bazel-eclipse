@@ -54,7 +54,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@4.1.5
         with:
           branch: gh-pages
-          folder: bjls-update-site-release-candidate
+          folder: bjls-rc-staging
           clean: false
           commit-message: bjls-release-candidate
           ssh-key: ${{ secrets.DEPLOY_KEY }}
