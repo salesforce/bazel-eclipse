@@ -74,6 +74,26 @@ Note that the feature may not work for all use cases.
 See the [Global Search Classpath](https://github.com/salesforce/bazel-eclipse/issues/161) issue for status
   and open issues.
 
+### Implicit Java Test Dependencies
+
+Bazel has an unfortunate default classpath setting for Java packages: _explicit_java_test_deps=false_
+This setting runs contrary to the design of Bazel in that all dependencies should be explicit.
+Most Bazel users are unaware of this setting, and come to rely on it.
+
+What this setting does (when _false_) is implicitly add bundled versions of _junit_ and _hamcrest-core_ to your test classpaths.
+It is better to configure this settings as _true_ and explicitly add the version of _junit_ and _hamcrest-core_ that you want.
+But, BEF has a feature to intelligently handle this case so that your BEF classpath is correct regardless of this setting.
+
+**BEF Behavior:**
+- If _explicit_java_test_deps=true_, BEF will NOT add the implicit test runner jar (with bundled _junit_ and _hamcrest-core_ classes) to the Eclipse JDT classpath
+- If _explicit_java_test_deps=false_ (or unspecified, false is the default), BEF will add the implicit test runner jar (Runner_deploy-ijar.jar) to the Eclipse JDT classpath. This will prevent JDT from adding red squigglies to your test classes where junit/hamcrest classes are referenced.
+
+To see what entries BEF has supplied to the JDT classpath for a project, do the following:
+- Open your imported project's node in the _Package Explorer_
+- Open the _Bazel Classpath Container_ node
+- You will see the list of jars added to the JDT classpath below that node
+
+
 ### Next Topic: Launching binaries and tests from Eclipse
 
 The next page in our guide discusses the [Launchers](using_the_feature_launching.md) with the Bazel Eclipse Feature.
