@@ -69,13 +69,12 @@ public class DetermineTargetsFlow implements ImportFlow {
             List<BazelLabel> targets = packageLocation.getBazelTargets();
             if (targets == null) {
                 ProjectStructure structure = ctx.getProjectStructure(packageLocation);
-                if (structure != null) {
-                    targets = structure.getBazelTargets();
-                } else {
-                    LOG.warn("Could not determine the project structure of package {}. Ignoring...",
+                if (structure == null) {
+                    LOG.warn("Could not determine the project structure of package [{}]. Ignoring...",
                         packageLocation.getBazelPackageFSRelativePath());
                     continue;
                 }
+                targets = structure.getBazelTargets();
             }
             packageLocationToTargets.put(packageLocation, Collections.unmodifiableList(targets));
             LOG.info("Configured targets for " + packageLocation.getBazelPackageFSRelativePath() + ": " + targets);

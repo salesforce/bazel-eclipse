@@ -45,15 +45,28 @@ public class BazelOutputDirectoryBuilderTest {
     private final BazelOutputDirectoryBuilder builder = new BazelOutputDirectoryBuilder();
 
     @Test
-    public void testGetRunScriptPath() {
+    public void testGetRunScriptPath_withBazelBin() {
         BazelLabel label = new BazelLabel("//projects/services/apple:projects/services/apple_apprun"); // $SLASH_OK bazel path
-        String path = builder.getRunScriptPath(label);
+        String path = builder.getRunScriptPath(label, true);
         String osPath = FSPathHelper.osSeps("bazel-bin/projects/services/apple/projects/services/apple_apprun"); // $SLASH_OK
         assertEquals(osPath, path);
 
         label = new BazelLabel("//projects/services/apple:test"); // $SLASH_OK bazel path
-        path = builder.getRunScriptPath(label);
+        path = builder.getRunScriptPath(label, true);
         osPath = FSPathHelper.osSeps("bazel-bin/projects/services/apple/test"); // $SLASH_OK
+        assertEquals(osPath, path);
+    }
+
+    @Test
+    public void testGetRunScriptPath_withoutBazelBin() {
+        BazelLabel label = new BazelLabel("//projects/services/apple:projects/services/apple_apprun"); // $SLASH_OK bazel path
+        String path = builder.getRunScriptPath(label, false);
+        String osPath = FSPathHelper.osSeps("projects/services/apple/projects/services/apple_apprun"); // $SLASH_OK
+        assertEquals(osPath, path);
+
+        label = new BazelLabel("//projects/services/apple:test"); // $SLASH_OK bazel path
+        path = builder.getRunScriptPath(label, false);
+        osPath = FSPathHelper.osSeps("projects/services/apple/test"); // $SLASH_OK
         assertEquals(osPath, path);
     }
 }

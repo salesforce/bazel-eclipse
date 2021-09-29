@@ -87,6 +87,15 @@ public class TestOptions extends HashMap<String, String> {
         return this;
     }
 
+    // add a java_binary rule to the generated java projects
+    public boolean addJavaBinary = false;
+    public static final String JAVA_BINARY_TARGET_NAME = "thejavabinary";
+
+    public TestOptions addJavaBinaryRule(boolean addBinary) {
+        addJavaBinary = addBinary;
+        return this;
+    }
+
     // just throw a random nested workspace in the mix, to test that we ignore it (see bef issue #25)
     // when we start to support nestedWorkspaces, this should default to false and only some tests will
     // test the nested workspace

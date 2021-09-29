@@ -46,10 +46,15 @@ public class BazelOutputDirectoryBuilder {
      *
      * This method returns the filesystem path to that shell script, relative to the Bazel WORKSPACE root.
      */
-    public String getRunScriptPath(BazelLabel label) {
+    public String getRunScriptPath(BazelLabel label, boolean includeBazelBin) {
         StringBuilder sb = new StringBuilder();
-        sb.append("bazel-bin");
-        sb.append(FSPathHelper.UNIX_SLASH);
+        
+        if (includeBazelBin) {
+            // if you want to generate the path from the root of the workspace, and dont mind using the bazel-bin
+            // convenience soft link, passing true for includeBazelBin will do that
+            sb.append("bazel-bin");
+            sb.append(FSPathHelper.UNIX_SLASH);
+        }
         sb.append(label.getPackagePath());
         sb.append(FSPathHelper.UNIX_SLASH);
         sb.append(label.getTargetName());

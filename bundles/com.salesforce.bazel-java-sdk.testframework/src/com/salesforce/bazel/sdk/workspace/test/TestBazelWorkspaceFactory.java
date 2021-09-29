@@ -70,6 +70,7 @@ public class TestBazelWorkspaceFactory {
         boolean explicitJavaTestDeps = workspaceDescriptor.testOptions.explicitJavaTestDeps;
         boolean doCreateJavaImport = workspaceDescriptor.testOptions.addJavaImport;
         boolean doCreateNestedWorkspace = workspaceDescriptor.testOptions.addFakeNestedWorkspace;
+        boolean doCreateJavaBinary = workspaceDescriptor.testOptions.addJavaBinary;
 
         int numJavaPackages = workspaceDescriptor.testOptions.numberOfJavaPackages;
         if (numJavaPackages > 0) {
@@ -99,7 +100,7 @@ public class TestBazelWorkspaceFactory {
                 String packageName = "javalib" + i;
                 File javaPackageDir = new File(libsDir, packageName);
                 createFakeJavaPackage(packageName, libsRelativeBazelPath, javaPackageDir, i, explicitJavaTestDeps,
-                    doCreateJavaImport, true);
+                    doCreateJavaImport, doCreateJavaBinary, true);
 
                 // simulate a nested workspace to make sure we just ignore it for now (see BEF issue #25)
                 // this nested workspace appears in this java package, because in Bazel nested workspaces
@@ -158,6 +159,7 @@ public class TestBazelWorkspaceFactory {
 
         workspaceDescriptor.dirBazelBin = new File(workspaceDescriptor.dirOutputPathPlatform, "bin"); // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild/bin
         workspaceDescriptor.dirBazelBin.mkdirs();
+
         workspaceDescriptor.dirBazelTestLogs = new File(workspaceDescriptor.dirOutputPathPlatform, "testlogs"); // [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild/testlogs
         workspaceDescriptor.dirBazelTestLogs.mkdirs();
 
@@ -194,7 +196,8 @@ public class TestBazelWorkspaceFactory {
     // JAVA
 
     private void createFakeJavaPackage(String packageName, String packageRelativePath, File javaPackageDir, int index,
-            boolean explicitJavaTestDeps, boolean addJavaImport, boolean trackState) throws Exception {
+            boolean explicitJavaTestDeps, boolean addJavaImport, boolean addJavaBinary, boolean trackState)
+                    throws Exception {
         String packageRelativeBazelPath = packageRelativePath + "/" + packageName; // $SLASH_OK bazel path
         String packageRelativeFilePath = FSPathHelper.osSeps(packageRelativeBazelPath);
         javaPackageDir.mkdir();
@@ -373,6 +376,19 @@ public class TestBazelWorkspaceFactory {
 
         }
 
+        // java_binary
+        if (addJavaBinary) {
+            File binaryDir = new File(workspaceDescriptor.dirBazelBin, FSPathHelper.osSeps(packageRelativeBazelPath));
+            binaryDir.mkdirs();
+            String binaryFilename = TestOptions.JAVA_BINARY_TARGET_NAME;
+            if (!FSPathHelper.isUnix) {
+                binaryFilename = TestOptions.JAVA_BINARY_TARGET_NAME + ".exe";
+            }
+            File javaBinaryFile = new File(binaryDir, binaryFilename);
+            javaBinaryFile.createNewFile();
+            System.out.println("Created fake java_binary file: " + javaBinaryFile.getCanonicalPath());
+        }
+
         // write fake jar files to the filesystem for this project
         createFakeProjectJars(packageRelativeFilePath, packageName);
 
@@ -484,7 +500,7 @@ public class TestBazelWorkspaceFactory {
         nestedLibDir.mkdir();
         File nestedJavaPackage = new File(nestedLibDir, packageName);
         createFakeJavaPackage(packageName, packageRelativePath, nestedJavaPackage, 99, explicitJavaTestDeps,
-            addJavaImport, false);
+            addJavaImport, false, false);
     }
 
     @SuppressWarnings("unused")
