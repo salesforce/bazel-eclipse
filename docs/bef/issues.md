@@ -46,6 +46,17 @@ In the meantime, there are two workarounds:
 All Windows platform issues are documented on a dedicated page.
 See our dedicated [Windows Guide](windows.md) for more details.
 
+### The type [sometype] cannot be resolved. It is indirectly referenced from required .class files
+
+Eclipse is greedy at traversing the classpath for all transitively referenced classes.
+In some cases, you may not need a dependency at runtime (perhaps it is an optional feature of a library)
+   so your target does not include it as a dep.
+But Eclipse will see that you might *possibly* need it, and will complain.
+
+The workaround is to add the dependency, even if your target may not need it.
+There is also a [specific case of this for gRPC](https://github.com/salesforce/bazel-eclipse/issues/325),
+   which has a particular workaround.
+
 ### Eclipse Titlebar Shows the IntelliJ Icon (Mac)
 
 On Mac, when a file is open in an editor, Eclipse displays the icon for that
