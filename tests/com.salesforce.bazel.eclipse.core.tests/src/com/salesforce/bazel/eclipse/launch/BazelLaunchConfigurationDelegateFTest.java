@@ -57,12 +57,13 @@ public class BazelLaunchConfigurationDelegateFTest {
     public void testHappyRunLaunch() throws Exception {
         // setup functional test env
         MockEclipse mockEclipse = createMockEnvironment();
-        ILaunchConfiguration launchConfig = createLaunchConfiguration("run");
+        ILaunchConfiguration launchConfig = createLaunchConfiguration("run", TestOptions.JAVA_BINARY_TARGET_NAME);
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
         // on Windows, the launcher is an .exe file extension
         addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 0,
-            FSPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0.*"), "bazel run result"); // $SLASH_OK
+            FSPathHelper.osSeps(".*bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME + ".*"),
+                "bazel run result"); // $SLASH_OK
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
 
         // method under test
@@ -71,7 +72,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         // verify
         MockResourceHelper mockResourceHelper = mockEclipse.getMockResourceHelper();
         String[] cmdLine = mockResourceHelper.lastExecCommandLine;
-        String expectedExec = FSPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
+        String expectedExec = FSPathHelper.osSeps("bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME); // $SLASH_OK
         String actualExec = cmdLine[0];
 
         //System.out.println("testHappyRunLaunch expectedExec = " + expectedExec + " actualPath = " + actualExec);
@@ -87,7 +88,7 @@ public class BazelLaunchConfigurationDelegateFTest {
     public void testHappyTestLaunch() throws Exception {
         // setup functional test env
         MockEclipse mockEclipse = createMockEnvironment();
-        ILaunchConfiguration launchConfig = createLaunchConfiguration("test");
+        ILaunchConfiguration launchConfig = createLaunchConfiguration("test", "javalib0Test");
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
         addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 1, "test", "bazel test result");
@@ -107,14 +108,14 @@ public class BazelLaunchConfigurationDelegateFTest {
         assertTrue(cmdLine[9].contains("testvalue2"));
         assertTrue(cmdLine[10].contains("testvalue3"));
         assertEquals("--", cmdLine[11]);
-        assertEquals("//projects/libs/javalib0", cmdLine[12]); // $SLASH_OK: bazel path
+        assertEquals("//projects/libs/javalib0:javalib0Test", cmdLine[12]); // $SLASH_OK: bazel path
     }
 
     @Test
     public void testHappySeleniumLaunch() throws Exception {
         // setup functional test env
         MockEclipse mockEclipse = createMockEnvironment();
-        ILaunchConfiguration launchConfig = createLaunchConfiguration("selenium");
+        ILaunchConfiguration launchConfig = createLaunchConfiguration("selenium", "javalib0Test");
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
         addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 1, "test", "bazel test result");
@@ -134,7 +135,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         assertTrue(cmdLine[9].contains("testvalue2"));
         assertTrue(cmdLine[10].contains("testvalue3"));
         assertEquals("--", cmdLine[11]);
-        assertEquals("//projects/libs/javalib0", cmdLine[12]); // $SLASH_OK: bazel path
+        assertEquals("//projects/libs/javalib0:javalib0Test", cmdLine[12]); // $SLASH_OK: bazel path
     }
 
     // HELPERS
@@ -147,7 +148,8 @@ public class BazelLaunchConfigurationDelegateFTest {
         //testTempDir.mkdirs();
 
         TestOptions testOptions =
-                new TestOptions().numberOfJavaPackages(1).computeClasspaths(true).explicitJavaTestDeps(false);
+                new TestOptions().numberOfJavaPackages(1).computeClasspaths(true).explicitJavaTestDeps(false)
+                .addJavaBinaryRule(true);
 
         MockEclipse mockEclipse =
                 EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
@@ -156,10 +158,11 @@ public class BazelLaunchConfigurationDelegateFTest {
         return mockEclipse;
     }
 
-    private MockILaunchConfiguration createLaunchConfiguration(String verb) {
+    private MockILaunchConfiguration createLaunchConfiguration(String verb, String targetName) {
         MockILaunchConfiguration testConfig = new MockILaunchConfiguration();
         testConfig.attributes.put(BazelLaunchConfigAttributes.PROJECT.getAttributeName(), "javalib0");
-        testConfig.attributes.put(BazelLaunchConfigAttributes.LABEL.getAttributeName(), "//projects/libs/javalib0"); // $SLASH_OK: bazel path
+        testConfig.attributes.put(BazelLaunchConfigAttributes.LABEL.getAttributeName(),
+            "//projects/libs/javalib0:" + targetName); // $SLASH_OK: bazel path
         if ("test".equals(verb)) {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_test");
         } else if ("run".equals(verb)) {

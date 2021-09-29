@@ -132,7 +132,7 @@ public class BazelLauncherBuilder {
     private Command getBazelRunCommand(BazelLabel bazelTarget, boolean isDebugMode, List<String> extraArgs)
             throws IOException, BazelCommandLineToolConfigurationException {
 
-        File workspaceDirectory = bazelCommandRunner.getBazelWorkspaceRootDirectory();
+        File bazelBinDirectory = bazelCommandRunner.computeBazelWorkspaceBin();
 
         // Unixy Platforms:
         // Instead of calling bazel run, we directly call the shell script that bazel run
@@ -140,13 +140,14 @@ public class BazelLauncherBuilder {
         // actually care about - see https://github.com/salesforce/bazel-eclipse/issues/94)
         // Windows Platforms:
         // Bazel builds an .exe file to run.
-        String appPath = outputDirectoryBuilder.getRunScriptPath(bazelTarget);
-        if (System.getProperty("os.name").contains("Win")) {
+        String appPath = outputDirectoryBuilder.getRunScriptPath(bazelTarget, false);
+        if (System.getProperty("os.name").contains("Win")) { // TODO need to look up platform the right way
             appPath = appPath + ".exe";
         }
-        File appFile = new File(workspaceDirectory, appPath);
+        File appFile = new File(bazelBinDirectory, appPath);
         if (!appFile.exists()) {
             LOG.error("ERROR: Launch executable does not exist: {}", appFile.getAbsolutePath());
+            throw new IllegalStateException();
         } else {
             LOG.info("Launch executable: {}", appFile.getAbsolutePath());
         }
@@ -162,9 +163,9 @@ public class BazelLauncherBuilder {
 
         WorkProgressMonitor progressMonitor = null;
 
-        String consoleName = ConsoleType.WORKSPACE.getConsoleName(workspaceDirectory);
+        String consoleName = ConsoleType.WORKSPACE.getConsoleName(bazelBinDirectory);
 
-        return commandBuilder.setConsoleName(consoleName).setDirectory(workspaceDirectory)
+        return commandBuilder.setConsoleName(consoleName).setDirectory(bazelBinDirectory)
                 .addArguments(Collections.unmodifiableList(args)).setProgressMonitor(progressMonitor).build();
     }
 

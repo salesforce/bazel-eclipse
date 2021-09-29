@@ -55,7 +55,7 @@ public class BazelLauncherBuilderTest {
     @Test
     public void testBuildRunCommand() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
-        BazelLabel label = new BazelLabel("//projects/libs/javalib0"); // $SLASH_OK bazel path
+        BazelLabel label = new BazelLabel("//projects/libs/javalib0:" + TestOptions.JAVA_BINARY_TARGET_NAME); // $SLASH_OK bazel path
         BazelTargetKind targetKind = JvmRuleInit.KIND_JAVA_BINARY;
 
         BazelLauncherBuilder launcherBuilder = env.bazelWorkspaceCommandRunner.getBazelLauncherBuilder();
@@ -63,13 +63,15 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setTargetKind(targetKind);
         launcherBuilder.setArgs(Collections.emptyList());
 
-        addBazelCommandOutput(env, 0, FSPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0.*"), // $SLASH_OK
+        addBazelCommandOutput(env, 0,
+            FSPathHelper.osSeps(".*bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME + ".*"), // $SLASH_OK
                 "fake bazel launcher script result");
 
         Command command = launcherBuilder.build();
         BazelProcessBuilder processBuilder = command.getProcessBuilder();
         List<String> cmdTokens = processBuilder.command();
-        String filesystemPath = FSPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
+        String filesystemPath =
+                FSPathHelper.osSeps("bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME); // $SLASH_OK
         String commandStr = cmdTokens.get(0);
         assertTrue(commandStr.endsWith(filesystemPath) || commandStr.endsWith(filesystemPath+".exe"));
         assertFalse(cmdTokens.contains("debug"));
@@ -78,7 +80,7 @@ public class BazelLauncherBuilderTest {
     @Test
     public void testBuildRunCommandWithDebug() throws Exception {
         TestBazelCommandEnvironmentFactory env = createEnv();
-        BazelLabel label = new BazelLabel("//projects/libs/javalib0"); // $SLASH_OK bazel path
+        BazelLabel label = new BazelLabel("//projects/libs/javalib0:" + TestOptions.JAVA_BINARY_TARGET_NAME); // $SLASH_OK bazel path
         BazelTargetKind targetKind = JvmRuleInit.KIND_JAVA_BINARY;
 
         BazelLauncherBuilder launcherBuilder = env.bazelWorkspaceCommandRunner.getBazelLauncherBuilder();
@@ -87,12 +89,14 @@ public class BazelLauncherBuilderTest {
         launcherBuilder.setArgs(Collections.emptyList());
         launcherBuilder.setDebugMode(true, "localhost", DEBUG_PORT);
 
-        addBazelCommandOutput(env, 0, FSPathHelper.osSeps(".*bazel-bin/projects/libs/javalib0/javalib0.*"), // $SLASH_OK
+        addBazelCommandOutput(env, 0,
+            FSPathHelper.osSeps(".*bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME + ".*"), // $SLASH_OK
                 "fake bazel launcher script result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
-        String filesystemPath = FSPathHelper.osSeps("bazel-bin/projects/libs/javalib0/javalib0"); // $SLASH_OK
+        String filesystemPath =
+                FSPathHelper.osSeps("bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME); // $SLASH_OK
         String command = cmdTokens.get(0);
         assertTrue(command.endsWith(filesystemPath) || command.endsWith(filesystemPath+".exe"));
         assertFalse(cmdTokens.contains("debug=" + DEBUG_PORT));
@@ -196,7 +200,7 @@ public class BazelLauncherBuilderTest {
         File outputbaseDir = new File(testDir, "outputbase");
         outputbaseDir.mkdirs();
 
-        TestOptions testOptions = new TestOptions().numberOfJavaPackages(3);
+        TestOptions testOptions = new TestOptions().numberOfJavaPackages(3).addJavaBinaryRule(true);
 
         TestBazelWorkspaceDescriptor descriptor =
                 new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).testOptions(testOptions);
