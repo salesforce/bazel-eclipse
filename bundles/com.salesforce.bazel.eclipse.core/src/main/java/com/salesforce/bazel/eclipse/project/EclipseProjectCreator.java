@@ -80,24 +80,24 @@ public class EclipseProjectCreator {
         ProjectStructure structure = ctx.getProjectStructure(packageLocation);
         String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
         if (bazelTargets == null) {
-            LOG.error("There were no Bazel targets found for package {}, ignoring...",
+            LOG.warn(
+                "There were no supported Bazel targets found for package [{}], the package will not be imported as a project.",
                 packageLocation.getBazelPackageFSRelativePath());
             return null;
         }
         List<BazelLabel> targets = Objects.requireNonNull(bazelTargets);
-        IProject project = null;
+        IProject project;
 
-        if (BazelDirectoryStructureUtil.isBazelPackage(bazelWorkspaceRootDirectory, packageFSPath)) {
-            // create the project
-            project = createProject(projectName, packageFSPath, structure, targets);
-
-            // link all files in the package root into the Eclipse project
-            linkFilesInPackageDirectory(fileLinker, project, packageFSPath,
-                new File(bazelWorkspaceRootDirectory, packageFSPath), null);
-        } else {
+        if (!BazelDirectoryStructureUtil.isBazelPackage(bazelWorkspaceRootDirectory, packageFSPath)) {
             LOG.error("Could not find BUILD file for package {}", packageLocation.getBazelPackageFSRelativePath());
             return null;
         }
+        // create the project
+        project = createProject(projectName, packageFSPath, structure, targets);
+
+        // link all files in the package root into the Eclipse project
+        linkFilesInPackageDirectory(fileLinker, project, packageFSPath,
+            new File(bazelWorkspaceRootDirectory, packageFSPath), null);
         return project;
     }
 
@@ -131,10 +131,8 @@ public class EclipseProjectCreator {
         for (File pkgFile : pkgFiles) {
             if (pkgFile.isFile()) {
                 String name = pkgFile.getName();
-                if (fileExtension != null) {
-                    if (!name.endsWith(fileExtension)) {
-                        continue;
-                    }
+                if ((fileExtension != null) && !name.endsWith(fileExtension)) {
+                    continue;
                 }
                 fileLinker.link(packageFSPath, project, name);
             }
