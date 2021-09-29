@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 import org.eclipse.core.runtime.Platform;
 
 import com.salesforce.bazel.eclipse.activator.Activator;
-import com.salesforce.bazel.eclipse.config.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class BazelCompilerUtils {

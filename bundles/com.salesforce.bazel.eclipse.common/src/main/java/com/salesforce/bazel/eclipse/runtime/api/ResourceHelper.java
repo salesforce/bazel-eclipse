@@ -54,7 +54,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * Since these methods represent major integration points between the Bazel Eclipse Feature and the Eclipse SDK, you can
  * best observe the integration by instrumenting the implementation of this interface.
  */
-public interface BaseResourceHelper {
+public interface ResourceHelper {
 
     /**
      * Returns the IProject reference for the named project.

@@ -10,7 +10,7 @@ import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.bazel.eclipse.config.IEclipseBazelProjectSettings;
-import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
@@ -20,7 +20,7 @@ public class BazelProjectSettingsUtils {
     /**
      * List of Bazel build flags for this Eclipse project, taken from the project configuration
      */
-    public static List<String> getBazelBuildFlagsForProject(BaseResourceHelper resourceHelper,
+    public static List<String> getBazelBuildFlagsForProject(ResourceHelper resourceHelper,
             BazelProject bazelProject) {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
         Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
@@ -44,7 +44,7 @@ public class BazelProjectSettingsUtils {
      * By contract, this method will return only one target if the there is a wildcard target, even if the user does
      * funny things in their prefs file and sets multiple targets along with the wildcard target.
      */
-    public static BazelProjectTargets getConfiguredBazelTargets(BaseResourceHelper resourceHelper,
+    public static BazelProjectTargets getConfiguredBazelTargets(ResourceHelper resourceHelper,
             BazelProject bazelProject, boolean addWildcardIfNoTargets) {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
         Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);

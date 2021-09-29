@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
+ * Copyright (c) 2020, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -41,14 +41,13 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
 /**
  * Facade for the Eclipse JavaCore singleton.
  */
-public class EclipseJavaCoreHelper implements JavaCoreHelper {
+public abstract class AbstractJavaCoreHelper implements JavaCoreHelper {
 
     @Override
     public void setClasspathContainer(IPath containerPath, IJavaProject[] affectedProjects,
@@ -129,8 +128,7 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
     @Override
     public IJavaProject[] getAllBazelJavaProjects(boolean includeBazelWorkspaceRootProject) {
         // cache all of this?
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-        IWorkspaceRoot eclipseWorkspaceRoot = resourceHelper.getEclipseWorkspaceRoot();
+        IWorkspaceRoot eclipseWorkspaceRoot = getResourceHelper().getEclipseWorkspaceRoot();
         try {
             IJavaModel eclipseWorkspaceJavaModel = this.getJavaModelForWorkspace(eclipseWorkspaceRoot);
             IJavaProject[] javaProjects = eclipseWorkspaceJavaModel.getJavaProjects();
@@ -138,7 +136,7 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
             for (IJavaProject candidate : javaProjects) {
                 IProject p = candidate.getProject();
                 if (p.getNature(BazelNature.BAZEL_NATURE_ID) != null) {
-                    if (includeBazelWorkspaceRootProject || !resourceHelper.isBazelRootProject(p)) {
+                    if (includeBazelWorkspaceRootProject || !getResourceHelper().isBazelRootProject(p)) {
                         bazelProjects.add(candidate);
                     }
                 }
@@ -148,4 +146,6 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
             throw new IllegalStateException(ex);
         }
     }
+
+    protected abstract ResourceHelper getResourceHelper();
 }

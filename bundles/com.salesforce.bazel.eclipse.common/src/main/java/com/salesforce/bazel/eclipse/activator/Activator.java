@@ -44,10 +44,10 @@ import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
 import org.osgi.framework.BundleContext;
 
-import com.salesforce.bazel.eclipse.config.JavaCoreHelperComponentFacade;
-import com.salesforce.bazel.eclipse.config.ProjectManagerComponentFacade;
-import com.salesforce.bazel.eclipse.config.ResourceHelperComponentFacade;
-import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
+import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
+import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
@@ -75,7 +75,7 @@ public class Activator extends Plugin {
         return plugin;
     }
 
-    public BaseResourceHelper getResourceHelper() {
+    public ResourceHelper getResourceHelper() {
         return ResourceHelperComponentFacade.getInstance().getComponent();
     }
 

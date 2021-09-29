@@ -27,13 +27,13 @@
    <extension
          point="com.salesforce.bazel.projectmanager">
       <projectManager
-            class="com.salesforce.bazel.eclipse.config.BaseEclipseBazelProjectManager">
+            class="com.salesforce.bazel.eclipse.config.EclipseBazelProjectManager">
       </projectManager>
    </extension>
    <extension
          point="com.salesforce.bazel.resourcehelper">
       <resourceHelper
-            class="com.salesforce.bazel.eclipse.runtime.impl.BaseEclipseResourceHelper">
+            class="com.salesforce.bazel.eclipse.runtime.impl.EclipseResourceHelper">
       </resourceHelper>
    </extension>
    <extension

@@ -24,10 +24,10 @@ import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.activator.Activator;
-import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
-public class BaseEclipseResourceHelper implements BaseResourceHelper {
+public class EclipseResourceHelper implements ResourceHelper {
 
     /**
      * Returns the IProject reference for the named project.

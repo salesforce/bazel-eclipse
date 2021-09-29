@@ -211,4 +211,28 @@
             name="ProjectView">
       </editor>
    </extension>
+   <extension
+         point="com.salesforce.bazel.javacorehelper">
+      <javaCoreHelper
+            class="com.salesforce.bazel.eclipse.runtime.impl.EclipseJavaCoreHelper">
+      </javaCoreHelper>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.resourcehelper">
+      <resourceHelper
+            class="com.salesforce.bazel.eclipse.runtime.impl.CoreEclipeResourceHelper">
+      </resourceHelper>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.aspectlocation">
+      <bazelAspectLocation
+            class="com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl">
+      </bazelAspectLocation>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.projectmanager">
+      <projectManager
+            class="com.salesforce.bazel.eclipse.config.EclipseBazelProjectManager">
+      </projectManager>
+   </extension>
 </plugin>

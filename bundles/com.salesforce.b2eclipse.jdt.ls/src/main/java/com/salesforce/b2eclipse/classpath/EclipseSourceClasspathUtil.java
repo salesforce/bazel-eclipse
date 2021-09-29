@@ -49,7 +49,7 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
@@ -123,7 +123,7 @@ public final class EclipseSourceClasspathUtil {
     private static void buildSourceClasspathEntries(IPath bazelWorkspacePath, IJavaProject javaProject,
             String bazelPackageFSPath, List<String> pkgSrcPaths, boolean isTestSource,
             List<IClasspathEntry> classpathEntries) {
-        BaseResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
+        ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
         JavaCoreHelper javaCoreHelper = BazelJdtPlugin.getJavaCoreHelper();
 
         IPath outputDir = null; // null is a legal value, it means use the default

@@ -77,7 +77,7 @@ import com.salesforce.b2eclipse.managers.BazelBuildSupport;
 import com.salesforce.b2eclipse.util.BazelEclipseProjectUtils;
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.builder.BazelBuilder;
-import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -409,7 +409,7 @@ public final class BazelEclipseProjectFactory {
 
 	private static void linkFiles(String bazelWorkspaceRoot, String packageFSPath, IProject eclipseProject,
 			String... fileNames) {
-		BaseResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
+		ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
 
 		for (String fileName : fileNames) {
 			File f = new File(new File(bazelWorkspaceRoot, packageFSPath), fileName);
@@ -462,7 +462,7 @@ public final class BazelEclipseProjectFactory {
 
 	private static void buildLinkedResources(IPath bazelWorkspacePath, String bazelPackageFSPath,
 			List<String> generatedSources, IJavaProject eclipseJavaProject, List<IClasspathEntry> classpathEntries) {
-		BaseResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
+		ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
 
 		if (!eclipseJavaProject.getProject().getName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME)) {
 			IFolder linkHiddenFolder = eclipseJavaProject.getProject().getFolder(ProjectUtils.WORKSPACE_LINK);
@@ -498,7 +498,7 @@ public final class BazelEclipseProjectFactory {
 			List<String> packageSourceCodeFSRelativePaths, List<String> testSrcPaths, List<String> generatedSources,
 			IJavaProject eclipseProject, int javaLanguageLevel, AspectTargetInfos aspects) throws CoreException {
 		List<IClasspathEntry> classpathEntries = new LinkedList<>();
-		BaseResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
+		ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
 
 		Predicate<String> isTestPath = path -> path.endsWith("src/test/java");
 		packageSourceCodeFSRelativePaths.stream().filter(isTestPath).forEachOrdered(testSrcPaths::add);
@@ -636,7 +636,7 @@ public final class BazelEclipseProjectFactory {
 
 	private static IProject createBaseEclipseProject(String eclipseProjectName, URI location,
 			String bazelWorkspaceRoot) {
-		BaseResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
+		ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
 		IProgressMonitor progressMonitor = null;
 
 		// Request the project by name, which will create a new shell IProject instance
@@ -684,7 +684,7 @@ public final class BazelEclipseProjectFactory {
 	// TODO this code also exists in BazelProjectConfigurator, dedupe
 	static void addNatureToEclipseProject(IProject eclipseProject, String nature) throws CoreException {
 		if (!eclipseProject.hasNature(nature)) {
-			BaseResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
+			ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
 
 			IProjectDescription eclipseProjectDescription = resourceHelper.getProjectDescription(eclipseProject);
 			String[] prevNatures = eclipseProjectDescription.getNatureIds();

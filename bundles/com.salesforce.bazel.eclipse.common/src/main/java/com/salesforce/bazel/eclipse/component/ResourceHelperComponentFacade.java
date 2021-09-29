@@ -1,9 +1,9 @@
-package com.salesforce.bazel.eclipse.config;
+package com.salesforce.bazel.eclipse.component;
 
 import com.salesforce.bazel.eclipse.activator.BazelEclipseExtensionPointDefinition;
-import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
-public class ResourceHelperComponentFacade extends AbstractExtensionPointComponentFacade<BaseResourceHelper> {
+public class ResourceHelperComponentFacade extends AbstractExtensionPointComponentFacade<ResourceHelper> {
     private static ResourceHelperComponentFacade instance;
 
     private ResourceHelperComponentFacade() {

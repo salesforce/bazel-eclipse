@@ -15,7 +15,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 
-import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -25,7 +25,7 @@ import com.salesforce.bazel.sdk.project.BazelProject;
 public class EclipseProjectSettingsUtils {
     private final static LogHelper logger = LogHelper.log(EclipseProjectSettingsUtils.class);
 
-    public static void setProjectReferences(BaseResourceHelper resourceHelper, BazelProject project,
+    public static void setProjectReferences(ResourceHelper resourceHelper, BazelProject project,
             List<BazelProject> references) {
         IProject thisEclipseProject = (IProject) project.getProjectImpl();
         IProjectDescription projectDescription = resourceHelper.getProjectDescription(thisEclipseProject);
@@ -48,7 +48,7 @@ public class EclipseProjectSettingsUtils {
     }
 
     public static BazelProject getOwningProjectForSourcePath(BazelWorkspace bazelWorkspace, String sourcePath,
-            Collection<BazelProject> bazelProjects, BaseResourceHelper resourceHelper, JavaCoreHelper javaCoreHelper) {
+            Collection<BazelProject> bazelProjects, ResourceHelper resourceHelper, JavaCoreHelper javaCoreHelper) {
         String canonicalSourcePathString =
                 FSPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory())
                         + File.separator + sourcePath;
@@ -63,7 +63,7 @@ public class EclipseProjectSettingsUtils {
         return null;
     }
 
-    private static boolean checkProject(BazelProject candidateProject, BaseResourceHelper resourceHelper,
+    private static boolean checkProject(BazelProject candidateProject, ResourceHelper resourceHelper,
             JavaCoreHelper javaCoreHelper, String canonicalSourcePathString, Path canonicalSourcePath) {
         IProject iProject = (IProject) candidateProject.getProjectImpl();
         IJavaProject jProject = javaCoreHelper.getJavaProjectForProject(iProject);

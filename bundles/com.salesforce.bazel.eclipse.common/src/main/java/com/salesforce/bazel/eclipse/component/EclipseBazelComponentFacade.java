@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.config;
+package com.salesforce.bazel.eclipse.component;
 
 import java.util.Objects;
 

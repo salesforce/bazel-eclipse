@@ -46,10 +46,10 @@ import org.mockito.Mockito;
 import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.CoreResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
-public class MockResourceHelper implements ResourceHelper {
+public class MockResourceHelper implements CoreResourceHelper {
 
     /**
      * List of mock projects that will be used during the test. Your test might add projects that will be retrieved
@@ -79,8 +79,8 @@ public class MockResourceHelper implements ResourceHelper {
 
     private MockIWorkspace workspace = null;
     private MockIWorkspaceRoot workspaceRoot = null;
-    private File eclipseWorkspaceDir;
-    private MockEclipse mockEclipse;
+    private final File eclipseWorkspaceDir;
+    private final MockEclipse mockEclipse;
 
     public MockResourceHelper(File eclipseWorkspaceDir, MockEclipse mockEclipse) {
         this.eclipseWorkspaceDir = eclipseWorkspaceDir;
@@ -93,7 +93,7 @@ public class MockResourceHelper implements ResourceHelper {
 
         if (project == null) {
             project = new MockIProjectFactory().buildGenericIProject(projectName,
-                this.eclipseWorkspaceDir.getAbsolutePath(), null);
+                eclipseWorkspaceDir.getAbsolutePath(), null);
         }
 
         return project;
@@ -139,6 +139,7 @@ public class MockResourceHelper implements ResourceHelper {
         Mockito.when(project.isOpen()).thenReturn(true);
     }
 
+    @Override
     public IWorkspace getEclipseWorkspace() {
         if (workspace == null) {
             workspace = new MockIWorkspace(this);
@@ -146,6 +147,7 @@ public class MockResourceHelper implements ResourceHelper {
         return workspace;
     }
 
+    @Override
     public IWorkspaceRoot getEclipseWorkspaceRoot() {
         if (workspaceRoot == null) {
             workspaceRoot = new MockIWorkspaceRoot(mockEclipse, eclipseWorkspaceDir);
@@ -189,7 +191,7 @@ public class MockResourceHelper implements ResourceHelper {
     public IProjectDescription createProjectDescription(IProject project) {
         if (mockDescriptions.containsKey(project.getName())) {
             System.err.println(
-                "Bazel Eclipse Feature is creating a new description for a project, but the project already has one.");
+                    "Bazel Eclipse Feature is creating a new description for a project, but the project already has one.");
         }
 
         IProjectDescription description = new MockIProjectDescription();
@@ -301,7 +303,7 @@ public class MockResourceHelper implements ResourceHelper {
     @Override
     public Process exec(String[] cmdLine, File workingDirectory) throws CoreException {
         // just return a simple Mock here, as it normally is used as an opaque object
-        this.lastExecCommandLine = cmdLine;
+        lastExecCommandLine = cmdLine;
         return Mockito.mock(Process.class);
     }
 

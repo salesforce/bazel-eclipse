@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Copyright 2016 The Bazel Authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -41,7 +41,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.CoreResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 
@@ -51,21 +51,21 @@ public class EclipseBazelConfigurationManager implements BazelConfigurationManag
      */
     private static final String BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY = "bazel.workspace.root";
 
-    private final ResourceHelper resourceHelper;
+    private final CoreResourceHelper resourceHelper;
 
-    public EclipseBazelConfigurationManager(ResourceHelper resourceHelper) {
+    public EclipseBazelConfigurationManager(CoreResourceHelper resourceHelper) {
         this.resourceHelper = resourceHelper;
     }
 
     @Override
     public String getBazelExecutablePath() {
-        IPreferenceStore prefsStore = this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
+        IPreferenceStore prefsStore = resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
         return prefsStore.getString(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME);
     }
 
     @Override
     public void setBazelExecutablePathListener(BazelCommandManager bazelCommandManager) {
-        IPreferenceStore prefsStore = this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
+        IPreferenceStore prefsStore = resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
         prefsStore.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent event) {
@@ -78,13 +78,13 @@ public class EclipseBazelConfigurationManager implements BazelConfigurationManag
 
     @Override
     public String getBazelWorkspacePath() {
-        IPreferenceStore prefsStore = this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
+        IPreferenceStore prefsStore = resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
         return prefsStore.getString(EclipseBazelConfigurationManager.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY);
     }
 
     @Override
     public void setBazelWorkspacePath(String bazelWorkspacePath) {
-        IPreferenceStore prefsStore = this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
+        IPreferenceStore prefsStore = resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
         prefsStore.setValue(EclipseBazelConfigurationManager.BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY, bazelWorkspacePath);
     }
 
@@ -94,7 +94,7 @@ public class EclipseBazelConfigurationManager implements BazelConfigurationManag
      */
     @Override
     public boolean isGlobalClasspathSearchEnabled() {
-        IPreferenceStore prefsStore = this.resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
+        IPreferenceStore prefsStore = resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
         return prefsStore.getBoolean(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME);
     }
 

@@ -31,6 +31,7 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
@@ -66,6 +67,7 @@ public class MockIProjectFactory {
         // lifecycle
         Mockito.when(mockProject.exists()).thenReturn(bom.exists);
         Mockito.when(mockProject.isOpen()).thenReturn(bom.isOpen);
+        Mockito.when(mockProject.getType()).thenReturn(IResource.PROJECT);
 
         // description
         IProjectDescription description = new MockIProjectDescription();

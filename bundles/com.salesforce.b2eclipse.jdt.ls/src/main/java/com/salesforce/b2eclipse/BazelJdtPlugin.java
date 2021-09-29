@@ -52,11 +52,11 @@ import org.osgi.service.prefs.Preferences;
 
 import com.google.common.base.Throwables;
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.config.EclipseBazelComponentFacade;
-import com.salesforce.bazel.eclipse.config.JavaCoreHelperComponentFacade;
-import com.salesforce.bazel.eclipse.config.ProjectManagerComponentFacade;
-import com.salesforce.bazel.eclipse.config.ResourceHelperComponentFacade;
-import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
+import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
+import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
+import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.DefaultEclipseAspectLocationImpl;
 import com.salesforce.bazel.eclipse.utils.BazelCompilerUtils;
@@ -179,7 +179,7 @@ public class BazelJdtPlugin extends Plugin {
      * collaborators are all the real ones, when running mock tests the collaborators are mocks.
      */
     public static void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
-            CommandConsoleFactory consoleFactory, BaseResourceHelper rh, JavaCoreHelper javac,
+            CommandConsoleFactory consoleFactory, ResourceHelper rh, JavaCoreHelper javac,
             OperatingEnvironmentDetectionStrategy osEnv, BazelProjectManager projectMgr) {
         // reset internal state (this is so tests run in a clean env)
         bazelWorkspace = null;
@@ -295,7 +295,7 @@ public class BazelJdtPlugin extends Plugin {
      * Returns the unique instance of {@link ResourceHelper}, this helper helps retrieve workspace and project objects
      * from the environment
      */
-    public static BaseResourceHelper getResourceHelper() {
+    public static ResourceHelper getResourceHelper() {
         return ResourceHelperComponentFacade.getInstance().getComponent();
     }
 

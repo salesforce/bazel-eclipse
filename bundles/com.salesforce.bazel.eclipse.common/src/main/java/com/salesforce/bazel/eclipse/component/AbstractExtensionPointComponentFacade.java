@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.config;
+package com.salesforce.bazel.eclipse.component;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.Objects;
@@ -11,16 +11,15 @@ import org.eclipse.core.runtime.Platform;
 import com.salesforce.bazel.eclipse.activator.BazelEclipseExtensionPointDefinition;
 
 public abstract class AbstractExtensionPointComponentFacade<C> {
-    private final C component;
+    private C component;
 
-    protected AbstractExtensionPointComponentFacade() {
-        component = instantiateExtensionPoint(getComponentClass(), getExtensionPointDefinition());
-    }
-
-    public C getComponent() {
+    public synchronized C getComponent() {
+        if (component == null) {
+            component = instantiateExtensionPoint(getComponentClass(), getExtensionPointDefinition());
+        }
         return component;
     }
-    
+
     protected abstract BazelEclipseExtensionPointDefinition getExtensionPointDefinition();
 
     @SuppressWarnings("unchecked")
@@ -37,7 +36,10 @@ public abstract class AbstractExtensionPointComponentFacade<C> {
                     "At-least one extenstion for " + executableClass.getName() + " should be defined");
         }
         IConfigurationElement[] configs = extensionPoint.getConfigurationElements();
-        if (configs.length != 1) {
+        if (configs.length == 0) {
+            throw new IllegalArgumentException(
+                    "At-least one extenstion for " + executableClass.getName() + " should be defined");
+        } else if (configs.length > 1) {
             throw new IllegalArgumentException("There should be only one " + executableClass.getName() + " defined");
         }
         try {

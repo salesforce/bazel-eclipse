@@ -48,7 +48,7 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.common.base.Predicate;
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.bazel.eclipse.runtime.api.BaseResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
@@ -72,7 +72,7 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
         this(eclipseProject, BazelJdtPlugin.getResourceHelper());
     }
 
-    public BazelClasspathContainer(IProject eclipseProject, BaseResourceHelper resourceHelper)
+    public BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper);

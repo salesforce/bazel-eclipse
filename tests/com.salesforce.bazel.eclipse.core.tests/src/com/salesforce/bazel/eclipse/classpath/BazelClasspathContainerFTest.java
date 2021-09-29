@@ -60,6 +60,8 @@ import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.impl.AbstractJavaCoreHelper;
+import com.salesforce.bazel.eclipse.runtime.impl.EclipseResourceHelper;
 import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 public class BazelClasspathContainerFTest {
@@ -149,7 +151,14 @@ public class BazelClasspathContainerFTest {
         boolean explicitJavaTestDeps = true;
 
         setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, false, false, false);
-        JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
+        JavaCoreHelper javaHelper = new AbstractJavaCoreHelper() {
+            private final EclipseResourceHelper eclipseResourceHelper = new EclipseResourceHelper();
+
+            @Override
+            protected ResourceHelper getResourceHelper() {
+                return eclipseResourceHelper;
+            }
+        };
 
         // FIRST check that the project raw classpath has 6 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
@@ -348,9 +357,8 @@ public class BazelClasspathContainerFTest {
                 .explicitJavaTestDeps(explicitJavaTestDeps).nonStandardJavaLayout_enabled(nonstandardLayout)
                 .nonStandardJavaLayout_multipledirs(nonstandardMultipleDirs).addJavaImportRule(addJavaImport);
 
-        MockEclipse mockEclipse =
-                EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
-                    testOptions);
+        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
+                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions);
 
         workspace_IProject =
                 mockEclipse.getImportedProject("Bazel Workspace (" + MockEclipse.BAZEL_WORKSPACE_NAME + ")");

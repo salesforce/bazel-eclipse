@@ -31,7 +31,6 @@ import org.eclipse.core.resources.IProject;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
-import com.salesforce.bazel.eclipse.config.EclipseBazelProjectManager;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationDelegate;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 import com.salesforce.bazel.sdk.command.test.MockBazelAspectLocation;
@@ -123,7 +122,7 @@ public class MockEclipse {
         pluginActivator = new BazelPluginActivator();
         launchDelegate = new BazelLaunchConfigurationDelegate();
         configManager = new EclipseBazelConfigurationManager(mockResourceHelper);
-        projectManager = new EclipseBazelProjectManager(mockResourceHelper, mockJavaCoreHelper);
+        projectManager = new MockBazelProjectManager(mockResourceHelper, mockJavaCoreHelper);
         externalJarRuleManager = new BazelExternalJarRuleManager(mockOsEnvStrategy);
 
         // initialize our plugins/feature with all the mock infrastructure
