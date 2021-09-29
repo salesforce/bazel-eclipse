@@ -54,7 +54,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@4.1.5
         with:
           branch: gh-pages
-          folder: update-site-release-candidate
+          folder: bef-rc-staging
           clean: false
           commit-message: bef-release-candidate
           ssh-key: ${{ secrets.DEPLOY_KEY }}
