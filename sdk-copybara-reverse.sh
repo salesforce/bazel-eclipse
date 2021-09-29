@@ -24,6 +24,10 @@ if [ -z "${SDK_DIR+xxx}" ]; then
 fi
 sdk_root=$SDK_DIR
 
+echo "CAUTION! Do you have any uncommitted work in the SDK workspace?"
+echo "If you do, you need to stash/commit it before continuing, otherwise you will"
+echo "lose your work as this script will copy over your SDK files. Continue?"
+read HEREWEGO
 
 # SDK
 # sdk
