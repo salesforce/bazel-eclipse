@@ -241,7 +241,7 @@ public class TestBazelWorkspaceFactory {
         // Apple.java
         String classname1 = "Apple" + index;
         String javaPackageName = "com.salesforce.fruit" + index;
-        File javaFile1 = new File(javaSrcMainDir1, classname1);
+        File javaFile1 = new File(javaSrcMainDir1, classname1 + ".java");
         TestJavaFileCreator.createJavaSourceFile(javaFile1, javaPackageName, classname1);
         System.out.println("Created java file: " + javaFile1.getAbsolutePath());
         String appleSrc =
