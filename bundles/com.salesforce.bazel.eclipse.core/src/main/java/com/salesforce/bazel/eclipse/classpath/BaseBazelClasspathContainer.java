@@ -143,6 +143,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
                 if (entry.pathToJar != null) {
                     IPath jarPath = getIPathOnDisk(bazelWorkspace, entry.pathToJar);
                     if (jarPath != null) {
+                        // srcJarPath must be relative to the workspace, by order of Eclipse
                         IPath srcJarPath = getIPathOnDisk(bazelWorkspace, entry.pathToSourceJar);
                         IPath srcJarRootPath = null;
                         eclipseClasspathEntries.add(
@@ -191,28 +192,39 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
         }
 
         File filePathFile = new File(filePathStr);
-        Path absolutePath = null;
-        if (filePathFile.isAbsolute()) {
-            absolutePath = filePathFile.toPath();
-        } else {
+        Path absolutePath;
+        if (!filePathFile.isAbsolute()) {
+            // need to figure out where this relative path is on disk
+            // TODO this hunting around for the right root of the relative path indicates we need to rework this
             File bazelExecRootDir = bazelWorkspace.getBazelExecRootDirectory();
             filePathFile = new File(bazelExecRootDir, filePathStr);
-            if (filePathFile.exists()) {
-                absolutePath = filePathFile.toPath();
-            } else {
+            if (!filePathFile.exists()) {
                 File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
                 filePathFile = new File(bazelOutputBase, filePathStr);
                 if (!filePathFile.exists()) {
-                    // TODO this can happen if someone does a 'bazel clean' using the command line #113
-                    // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
-                    String msg = "Problem adding jar to project [" + bazelProject.name
-                            + "] because it does not exist on the filesystem(2): " + filePathStr;
-                    logger.error(msg);
-                    continueOrThrow(new IllegalArgumentException(msg));
+                    // java_import locations are resolved here
+                    File bazelWorkspaceDir = bazelWorkspace.getBazelWorkspaceRootDirectory();
+                    filePathFile = new File(bazelWorkspaceDir, filePathStr);
+                    if (!filePathFile.exists()) {
+                        // give up
+                        filePathFile = null;
+                    }
                 }
-                absolutePath = filePathFile.toPath();
             }
         }
+
+        if (filePathFile == null) {
+            // this can happen if someone does a 'bazel clean' using the command line #113
+            // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
+            String msg = "Problem adding jar to project [" + bazelProject.name
+                    + "] because it does not exist on the filesystem(2): " + filePathStr;
+            logger.error(msg);
+            continueOrThrow(new IllegalArgumentException(msg));
+            return null;
+        }
+
+        // we now can derive our absolute path
+        absolutePath = filePathFile.toPath();
 
         // We have had issues with Eclipse complaining about symlinks in the Bazel output directories not being real,
         // so we resolve them before handing them back to Eclipse.

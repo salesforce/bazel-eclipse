@@ -341,9 +341,14 @@ public class BazelWorkspaceAspectProcessor {
                 }
             }
         }
+        
+        // now add this aspect to the transitive closure if test or import (TODO why?) 
         if ("java_test".equals(aspectTargetInfo.getKind())) {
-            allDeps.add(aspectTargetInfo); //add aspect itself and filter out on the level of classpath container
+            allDeps.add(aspectTargetInfo); 
+        } else if ("java_import".equals(aspectTargetInfo.getKind())) {
+            allDeps.add(aspectTargetInfo); 
         }
+        
         return Collections.unmodifiableSet(allDeps);
     }
 

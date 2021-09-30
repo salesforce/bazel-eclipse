@@ -110,7 +110,7 @@ public class MockJavaCoreHelper implements JavaCoreHelper {
     @Override
     public IClasspathEntry newLibraryEntry(IPath path, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath,
             boolean isTestLib) {
-        return new MockIClasspathEntry(IClasspathEntry.CPE_LIBRARY, path);
+        return new MockIClasspathEntry(IClasspathEntry.CPE_LIBRARY, path, sourceAttachmentPath);
     }
 
     // UNIMPLEMENTED METHODS

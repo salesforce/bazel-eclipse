@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 package com.salesforce.bazel.eclipse.mock;
 
@@ -38,13 +38,14 @@ public class MockIClasspathEntry implements IClasspathEntry {
 
     private final int entryKind;
     private final IPath sourcePath;
+    private IPath sourceAttachmentPath;
     private IPath outputLocation;
 
     // TODO need to test behaviors related to inclusion/exclusion patterns, right now we assume they aren't set, which is the default behavior
-    private IPath[] exclusionPatterns = new IPath[] {};
-    private IPath[] inclusionPatterns = new IPath[] {};
+    private final IPath[] exclusionPatterns = new IPath[] {};
+    private final IPath[] inclusionPatterns = new IPath[] {};
 
-    private List<IClasspathAttribute> extraAttributes = new ArrayList<>();
+    private final List<IClasspathAttribute> extraAttributes = new ArrayList<>();
 
     /*
      * Kinds
@@ -56,23 +57,29 @@ public class MockIClasspathEntry implements IClasspathEntry {
      */
 
     public MockIClasspathEntry(int ekind, IPath path) {
-        this.entryKind = ekind;
-        this.sourcePath = path;
+        entryKind = ekind;
+        sourcePath = path;
+    }
+
+    public MockIClasspathEntry(int ekind, IPath path, IPath srcAttachmentPath) {
+        entryKind = ekind;
+        sourcePath = path;
+        sourceAttachmentPath = srcAttachmentPath;
     }
 
     public void addExtraAttribute(IClasspathAttribute attr) {
-        this.extraAttributes.add(attr);
+        extraAttributes.add(attr);
     }
 
     public void setOutputLocation(IPath out) {
-        this.outputLocation = out;
+        outputLocation = out;
     }
 
     // API
 
     @Override
     public int getEntryKind() {
-        return this.entryKind;
+        return entryKind;
     }
 
     @Override
@@ -82,7 +89,7 @@ public class MockIClasspathEntry implements IClasspathEntry {
 
     @Override
     public IClasspathAttribute[] getExtraAttributes() {
-        return this.extraAttributes.toArray(new IClasspathAttribute[] {});
+        return extraAttributes.toArray(new IClasspathAttribute[] {});
     }
 
     @Override
@@ -92,12 +99,17 @@ public class MockIClasspathEntry implements IClasspathEntry {
 
     @Override
     public IPath getOutputLocation() {
-        return this.outputLocation;
+        return outputLocation;
     }
 
     @Override
     public IPath getPath() {
         return sourcePath;
+    }
+
+    @Override
+    public IPath getSourceAttachmentPath() {
+        return sourceAttachmentPath;
     }
 
     // UNIMPLEMENTED METHODS
@@ -115,11 +127,6 @@ public class MockIClasspathEntry implements IClasspathEntry {
 
     @Override
     public IAccessRule[] getAccessRules() {
-        throw new UnsupportedOperationException(UOE_MSG);
-    }
-
-    @Override
-    public IPath getSourceAttachmentPath() {
         throw new UnsupportedOperationException(UOE_MSG);
     }
 
