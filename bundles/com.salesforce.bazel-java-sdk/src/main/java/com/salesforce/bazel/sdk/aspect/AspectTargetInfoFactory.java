@@ -144,7 +144,7 @@ package com.salesforce.bazel.sdk.aspect;
          try {
              List<String> deps = loadDeps(aspectObject);
 
-             String build_file_artifact_location = "test";//aspectObject.getString("build_file_artifact_location");
+             String build_file_artifact_location = "test";//aspectObject.getString("build_file_artifact_location"); // TODO this field should be parsed correctly
              String kind = (String) aspectObject.get("kind_string");
              if (kind == null) {
                  LOG.error(

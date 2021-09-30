@@ -92,7 +92,8 @@ public class TestAspectFileCreator {
         String kind = "java_import";
         String jar = FSPathHelper.osSepsEscaped(importDirFSRelativePath + "/" + actualJarNameNoSuffix + ".jar"); // $SLASH_OK
         String interfacejar = null;
-        String sourcejar = null;
+        String sourcejar =
+                FSPathHelper.osSepsEscaped(importDirFSRelativePath + "/" + actualJarNameNoSuffix + "-src.jar"); // $SLASH_OK
         String buildFile = FSPathHelper.osSepsEscaped(importDirFSRelativePath + "/BUILD");
 
         String json = createAspectJsonForJavaArtifact(buildFile, false, dependencies, sources, mainClass, label, kind,

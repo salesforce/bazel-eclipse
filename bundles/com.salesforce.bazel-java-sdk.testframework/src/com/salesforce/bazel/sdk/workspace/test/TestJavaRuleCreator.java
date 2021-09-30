@@ -15,9 +15,9 @@ public class TestJavaRuleCreator {
             String build_java_import = "";
             String java_import_dep = null;
             if (workspaceDescriptor.testOptions.addJavaImport) {
-                build_java_import = createJavaImportRule(packageDescriptor.packageName, "libs", "banana", "libbanana");
-                new TestBazelTargetDescriptor(packageDescriptor, "banana", "java_import");
-                java_import_dep = BazelLabel.BAZEL_COLON + "banana";
+                build_java_import = createJavaImportRule(packageDescriptor.packageName, "libs", "orange", "liborange");
+                new TestBazelTargetDescriptor(packageDescriptor, "orange", "java_import");
+                java_import_dep = BazelLabel.BAZEL_COLON + "orange";
             }
 
             String build_java_library = createJavaLibraryRule(packageDescriptor.packageName, java_import_dep);
@@ -64,12 +64,13 @@ public class TestJavaRuleCreator {
 
     private static String createJavaImportRule(String packageName, String importRelativeDir, String targetName,
             String jarNameNoSuffix) {
-        String libPath = FSPathHelper.osSeps(importRelativeDir + FSPathHelper.UNIX_SLASH + jarNameNoSuffix + ".jar");
+        String libPath = FSPathHelper.osSeps(importRelativeDir + FSPathHelper.UNIX_SLASH + jarNameNoSuffix);
         StringBuffer sb = new StringBuffer();
         sb.append("java_import(\n   name=\""); // $SLASH_OK: escape char
         sb.append(targetName);
         sb.append("\",\n"); // $SLASH_OK: line continue
-        sb.append("   jars = [\"" + libPath + "\"],\n");
+        sb.append("   jars = [\"" + libPath + ".jar\"],\n");
+        sb.append("   srcjar = \"" + libPath + "-src.jar\",\n");
         sb.append("   visibility = [\"//visibility:public\"],\n"); // $SLASH_OK: escape char
         sb.append(")");
         return sb.toString();

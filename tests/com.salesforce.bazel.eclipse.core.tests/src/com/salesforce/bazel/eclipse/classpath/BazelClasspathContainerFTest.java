@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.junit.Rule;
@@ -93,40 +94,36 @@ public class BazelClasspathContainerFTest {
         setupMockEnvironmentForClasspathTest("tcpbjp_im", explicitJavaTestDeps, false, false, false);
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
-        // NOTE: classpath entries are ordered lists so they should always be in the same positions
-
         // FIRST check that the project raw classpath has 4 entries for javalib0:
-        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
-        // javalib0/main/java
-        // javalib0/test/java
-        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
         assertNotNull(entries);
-        //printClasspathEntries("tcpbjp_im RAW", entries);
+        printClasspathEntries("tcpbjp_im RAW", entries);
+        assertContainsEntry(entries, "javalib0/src/main/java", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "javalib0/src/main/resources", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "javalib0/src/test/java", EXACT, TESTCP);
+        assertContainsEntry(entries, "javalib0/src/test/resources", EXACT, TESTCP);
+        assertContainsEntry(entries, "com.salesforce.bazel.eclipse.BAZEL_CONTAINER", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "JavaSE-11", CONTAINS, NOTTESTSRC);
 
         // SECOND check that the resolved classpath has 3 entries for javalib0: (TestRunner comes from implicit deps)
-        // bazel-output-base/execroot/test_workspace/bazel-out/darwin-fastbuild/bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools/Runner_deploy-ijar.jar
-        // bazel-output-base/execroot/mock_workspace/external/com_google_guava_guava/jar/guava-20.0.jar
-        // bazel-output-base/execroot/mock_workspace/external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar
         entries = javaHelper.getResolvedClasspath(javalib0_IJavaProject, false);
         assertNotNull(entries);
         printClasspathEntries("tcpbjp_im RESOLVED0", entries);
         assertEquals(3, entries.length);
-        assertTrue(entries[0].getPath().toString().contains("guava"));
-        assertTrue(entries[1].getPath().toString().contains("slf4j"));
-        assertTrue(entries[2].getPath().toString().contains("Runner")); // this is the magical implicit dep TestRunner jar that adds hamcrest, junit, javax.annotation to cp
+        assertContainsEntry(entries, "guava", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "slf4j", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "Runner", CONTAINS, NOTTESTSRC); // this is the magical implicit dep TestRunner jar that adds hamcrest, junit, javax.annotation to cp
 
         // THIRD check that the resolved classpath has 3 entries for javalib1: (TestRunner comes from implicit deps)
-        // bazel-output-base/execroot/test_workspace/bazel-out/darwin-fastbuild/bin/external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools/Runner_deploy-ijar.jar
-        // bazel-output-base/execroot/mock_workspace/external/com_google_guava_guava/jar/guava-20.0.jar
-        // bazel-output-base/execroot/mock_workspace/external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar
-        // javalib0
         entries = javaHelper.getResolvedClasspath(javalib1_IJavaProject, false);
         assertNotNull(entries);
         printClasspathEntries("tcpbjp_im RESOLVED1", entries);
         assertEquals(4, entries.length);
+        assertContainsEntry(entries, "guava", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "slf4j", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "Runner", CONTAINS, NOTTESTSRC);
         // make sure we picked up the inter-project dep (javalib1 depends on javalib0)
-        assertEquals("javalib0", entries[2].getPath().toString());
+        assertContainsEntry(entries, "javalib0", EXACT, NOTTESTSRC);
     }
 
     /**
@@ -146,43 +143,39 @@ public class BazelClasspathContainerFTest {
         setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, false, false, false);
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
-        // NOTE: classpath entries are ordered lists so they should always be in the same positions
-
-        // FIRST check that the project raw classpath has 4 entries for javalib0:
-        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
-        // javalib0/main/java
-        // javalib0/test/java
-        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8
+        // FIRST check that the project raw classpath has 6 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
         assertNotNull(entries);
-        //printClasspathEntries(entries);
+        printClasspathEntries("tcpbjp_ex1", entries);
+        assertEquals(6, entries.length);
+        assertContainsEntry(entries, "javalib0/src/main/java", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "javalib0/src/main/resources", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "javalib0/src/test/java", EXACT, TESTCP);
+        assertContainsEntry(entries, "javalib0/src/test/resources", EXACT, TESTCP);
+        assertContainsEntry(entries, "com.salesforce.bazel.eclipse.BAZEL_CONTAINER", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "JavaSE-11", CONTAINS, NOTTESTSRC);
 
         // SECOND check that the resolved classpath has 4 entries for javalib0:
-        // bazel-output-base/execroot/mock_workspace/external/com_google_guava_guava/jar/guava-20.0.jar
-        // bazel-output-base/execroot/mock_workspace/external/junit_junit/jar/junit-4.12.jar
-        // bazel-output-base/execroot/mock_workspace/external/org_hamcrest_hamcrest_core/jar/hamcrest-core-1.3.jar
-        // bazel-output-base/execroot/mock_workspace/external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar
         entries = javaHelper.getResolvedClasspath(javalib0_IJavaProject, false);
         assertNotNull(entries);
-        //printClasspathEntries("tcpbjp_ex", entries);
+        printClasspathEntries("tcpbjp_ex2", entries);
         assertEquals(4, entries.length);
-        assertTrue(entries[0].getPath().toString().contains("guava"));
-        assertTrue(entries[1].getPath().toString().contains("slf4j"));
-        assertTrue(entries[2].getPath().toString().contains("junit"));
-        assertTrue(entries[3].getPath().toString().contains("hamcrest"));
+        assertContainsEntry(entries, "guava", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "slf4j", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "junit", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "hamcrest", CONTAINS, NOTTESTSRC);
 
         // THIRD check that the resolved classpath has 5 entries for javalib1:
-        // bazel-output-base/execroot/mock_workspace/external/com_google_guava_guava/jar/guava-20.0.jar
-        // bazel-output-base/execroot/mock_workspace/external/junit_junit/jar/junit-4.12.jar
-        // bazel-output-base/execroot/mock_workspace/external/org_hamcrest_hamcrest_core/jar/hamcrest-core-1.3.jar
-        // bazel-output-base/execroot/mock_workspace/external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar
-        // javalib0
         entries = javaHelper.getResolvedClasspath(javalib1_IJavaProject, false);
         assertNotNull(entries);
-        //printClasspathEntries("tcpbjp_ex", entries);
+        printClasspathEntries("tcpbjp_ex3", entries);
         assertEquals(5, entries.length);
+        assertContainsEntry(entries, "guava", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "slf4j", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "junit", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "hamcrest", CONTAINS, NOTTESTSRC);
         // make sure we picked up the inter-project dep (javalib1 depends on javalib0)
-        assertEquals("javalib0", entries[2].getPath().toString());
+        assertContainsEntry(entries, "javalib0", EXACT, NOTTESTSRC);
     }
 
     /**
@@ -206,40 +199,18 @@ public class BazelClasspathContainerFTest {
 
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
-        // NOTE: classpath entries are ordered lists so they should always be in the same positions
-
-        // FIRST check that the project raw classpath has 4 entries for javalib0:
-        // javalib0/source/dev/java
-        // javalib0/sources/test/java
-        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
-        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11
+        // Check that the project raw classpath has 4 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
-        printClasspathEntries("testClasspath_BazelJavaProject_nonstandardLayout", entries);
         assertNotNull(entries);
+        printClasspathEntries("testClasspath_BazelJavaProject_nonstandardLayout", entries);
+
         assertEquals(4, entries.length);
-
-        assertContainsEntry(entries, "javalib0/source/dev/java", false, false);
-        assertContainsEntry(entries, "javalib0/source/test/java", false, true);
+        assertContainsEntry(entries, "javalib0/source/dev/java", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "javalib0/source/test/java", EXACT, TESTCP);
+        assertContainsEntry(entries, "com.salesforce.bazel.eclipse.BAZEL_CONTAINER", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "JavaSE-11", CONTAINS, NOTTESTSRC);
     }
 
-    private void assertContainsEntry(IClasspathEntry[] entries, String path, boolean containsMatch, boolean isTest) {
-        for (IClasspathEntry entry : entries) {
-            // NOTE: classpath paths dont need to be Windows escaped, they are already converted to unix style paths
-            String epath = entry.getPath().toString();
-            boolean match = (containsMatch && epath.contains(path)) || (!containsMatch && epath.equals(path));
-            if (match) {
-                if (isTest) {
-                    assertTrue(entry.isTest());
-                    assertTrue(entry.getOutputLocation().toOSString().endsWith("testbin"));
-                } else {
-                    assertFalse(entry.isTest());
-                }
-                return;
-            }
-        }
-        fail("Entry " + path + " was not found in the classpath.");
-
-    }
 
     /**
      * We create an Eclipse project for the Bazel Workspace with a Java project.
@@ -263,24 +234,18 @@ public class BazelClasspathContainerFTest {
 
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
-        // NOTE: classpath entries are ordered lists so they should always be in the same positions
-
-        // FIRST check that the project raw classpath has 6 entries for javalib0:
-        // javalib0/source/dev/java
-        // javalib0/source/dev2/java
-        // javalib0/source/test/java
-        // javalib0/source/test2/java
-        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
-        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11
+        // Check that the project raw classpath has 6 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
         assertNotNull(entries);
         printClasspathEntries("testClasspath_BazelJavaProject_nonstandardLayout_multiple", entries);
-        assertEquals(6, entries.length);
 
-        assertContainsEntry(entries, "javalib0/source/dev/java", false, false);
-        assertContainsEntry(entries, "javalib0/source/dev2/java", false, false);
-        assertContainsEntry(entries, "javalib0/source/test/java", false, true);
-        assertContainsEntry(entries, "javalib0/source/test2/java", false, true);
+        assertEquals(6, entries.length);
+        assertContainsEntry(entries, "javalib0/source/dev/java", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "javalib0/source/dev2/java", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "javalib0/source/test/java", EXACT, TESTCP);
+        assertContainsEntry(entries, "javalib0/source/test2/java", EXACT, TESTCP);
+        assertContainsEntry(entries, "com.salesforce.bazel.eclipse.BAZEL_CONTAINER", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "JavaSE-11", CONTAINS, NOTTESTSRC);
     }
 
     /**
@@ -304,17 +269,33 @@ public class BazelClasspathContainerFTest {
 
         JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
-        // NOTE: classpath entries are ordered lists so they should always be in the same positions
-
-        // FIRST check that the project raw classpath has 4 entries for javalib0:
-        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
-        // javalib0/source/dev/java
-        // javalib0/sources/test/java
-        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8
+        // FIRST heck that the project raw classpath has 6 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
         assertNotNull(entries);
-        printClasspathEntries("testClasspath_BazelJavaProject_javaimport", entries);
+        printClasspathEntries("testClasspath_BazelJavaProject_javaimport1", entries);
+        assertContainsEntry(entries, "javalib0/src/main/java", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "javalib0/src/main/resources", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "javalib0/src/test/java", EXACT, TESTCP);
+        assertContainsEntry(entries, "javalib0/src/test/resources", EXACT, TESTCP);
+        assertContainsEntry(entries, "com.salesforce.bazel.eclipse.BAZEL_CONTAINER", EXACT, NOTTESTSRC);
+        assertContainsEntry(entries, "JavaSE-11", CONTAINS, NOTTESTSRC);
 
+        // SECOND check that the resolved classpath has 5 entries for javalib0:
+        entries = javaHelper.getResolvedClasspath(javalib0_IJavaProject, false);
+        assertNotNull(entries);
+        printClasspathEntries("testClasspath_BazelJavaProject_javaimport2", entries);
+        assertEquals(5, entries.length);
+        assertContainsEntry(entries, "guava", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "slf4j", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "junit", CONTAINS, NOTTESTSRC);
+        assertContainsEntry(entries, "hamcrest", CONTAINS, NOTTESTSRC);
+
+        // the java_import rule brings in liborange.jar to the classpath
+        IClasspathEntry importEntry = assertContainsEntry(entries, "liborange.jar", CONTAINS, NOTTESTSRC);
+        // the test workspace factory also adds a source jar to the java_import rule
+        IPath importSourcePath = importEntry.getSourceAttachmentPath();
+        assertNotNull(importSourcePath);
+        assertTrue(importSourcePath.toOSString().endsWith("liborange-src.jar"));
     }
 
     /**
@@ -372,6 +353,31 @@ public class BazelClasspathContainerFTest {
 
     // HELPERS
 
+    private static final boolean EXACT = false;
+    private static final boolean CONTAINS = true;
+    private static final boolean NOTTESTSRC = false;
+    private static final boolean TESTCP = true;
+
+    private IClasspathEntry assertContainsEntry(IClasspathEntry[] entries, String path, boolean containsMatch,
+            boolean isTestSourceDir) {
+        for (IClasspathEntry entry : entries) {
+            // NOTE: classpath paths dont need to be Windows escaped, they are already converted to unix style paths
+            String epath = entry.getPath().toString();
+            boolean match = (containsMatch && epath.contains(path)) || (!containsMatch && epath.equals(path));
+            if (match) {
+                if (isTestSourceDir) {
+                    assertTrue(entry.isTest());
+                    assertTrue(entry.getOutputLocation().toOSString().endsWith("testbin"));
+                } else {
+                    assertFalse(entry.isTest());
+                }
+                return entry;
+            }
+        }
+        fail("Entry " + path + " was not found in the classpath.");
+        return null;
+    }
+
     /**
      * Print the sorted list of classpath entries, useful during test development
      */
@@ -379,7 +385,12 @@ public class BazelClasspathContainerFTest {
     private void printClasspathEntries(String testName, IClasspathEntry[] entries) {
         int index = 0;
         for (IClasspathEntry entry : entries) {
-            System.err.println("CP[" + index++ + "] [" + testName + "]: " + entry.getPath());
+            String path = entry.getPath().toOSString();
+            int ob = path.indexOf("outputbase");
+            if (ob > 0) {
+                path = "..." + path.substring(ob);
+            }
+            System.err.println("CP[" + index++ + "] [" + testName + "]: " + path + " (testCP=" + entry.isTest() + ")");
         }
 
     }
