@@ -36,8 +36,10 @@
 package com.salesforce.bazel.eclipse.classpath;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -207,13 +209,35 @@ public class BazelClasspathContainerFTest {
         // NOTE: classpath entries are ordered lists so they should always be in the same positions
 
         // FIRST check that the project raw classpath has 4 entries for javalib0:
-        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
         // javalib0/source/dev/java
         // javalib0/sources/test/java
-        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8
+        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
+        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
-        assertNotNull(entries);
         printClasspathEntries("testClasspath_BazelJavaProject_nonstandardLayout", entries);
+        assertNotNull(entries);
+        assertEquals(4, entries.length);
+
+        assertContainsEntry(entries, "javalib0/source/dev/java", false, false);
+        assertContainsEntry(entries, "javalib0/source/test/java", false, true);
+    }
+
+    private void assertContainsEntry(IClasspathEntry[] entries, String path, boolean containsMatch, boolean isTest) {
+        for (IClasspathEntry entry : entries) {
+            // NOTE: classpath paths dont need to be Windows escaped, they are already converted to unix style paths
+            String epath = entry.getPath().toString();
+            boolean match = (containsMatch && epath.contains(path)) || (!containsMatch && epath.equals(path));
+            if (match) {
+                if (isTest) {
+                    assertTrue(entry.isTest());
+                    assertTrue(entry.getOutputLocation().toOSString().endsWith("testbin"));
+                } else {
+                    assertFalse(entry.isTest());
+                }
+                return;
+            }
+        }
+        fail("Entry " + path + " was not found in the classpath.");
 
     }
 
@@ -241,15 +265,22 @@ public class BazelClasspathContainerFTest {
 
         // NOTE: classpath entries are ordered lists so they should always be in the same positions
 
-        // FIRST check that the project raw classpath has 4 entries for javalib0:
-        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
+        // FIRST check that the project raw classpath has 6 entries for javalib0:
         // javalib0/source/dev/java
+        // javalib0/source/dev2/java
         // javalib0/source/test/java
-        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8
+        // javalib0/source/test2/java
+        // com.salesforce.bazel.eclipse.BAZEL_CONTAINER
+        // org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
         assertNotNull(entries);
         printClasspathEntries("testClasspath_BazelJavaProject_nonstandardLayout_multiple", entries);
+        assertEquals(6, entries.length);
 
+        assertContainsEntry(entries, "javalib0/source/dev/java", false, false);
+        assertContainsEntry(entries, "javalib0/source/dev2/java", false, false);
+        assertContainsEntry(entries, "javalib0/source/test/java", false, true);
+        assertContainsEntry(entries, "javalib0/source/test2/java", false, true);
     }
 
     /**

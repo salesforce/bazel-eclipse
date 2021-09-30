@@ -123,13 +123,17 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
                             String packageRelPathToFile =
                                     packageRelPath + File.separator + srcPathObj.sourceDirectoryPath;
 
+                            // TODO this is really fragile; we expect the user to put test code in a folder 
+                            // structure that contains a directory that starts with the word 'test'
                             boolean isTestPath = FSPathHelper.doesPathContainNamedResource(
-                                srcPathObj.sourceDirectoryPath, testSourceCodeFolderMarkers);
+                                srcPathObj.sourceDirectoryPath, testSourceCodeFolderMarkers, true);
+                            
                             if (isTestPath) {
                                 structure.testSourceDirFSPaths.add(packageRelPathToFile);
                             } else {
                                 structure.mainSourceDirFSPaths.add(packageRelPathToFile);
                             }
+                            
                             alreadySeenBasePaths.add(srcPathObj.sourceDirectoryPath);
                             LOG.info("Found source path {} for package {}", srcPathObj.sourceDirectoryPath,
                                 packageRelPath);
@@ -210,7 +214,7 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
         List<String> resourceDirectoryPaths = FSTree.computeMeaningfulDirectories(otherSourcePaths, File.separator);
         for (String resourceDirectoryPath : resourceDirectoryPaths) {
             String path = bazelPackageFSRelativePath + File.separator + resourceDirectoryPath;
-            if (FSPathHelper.doesPathContainNamedResource(resourceDirectoryPath, testSourceCodeFolderMarkers)) {
+            if (FSPathHelper.doesPathContainNamedResource(resourceDirectoryPath, testSourceCodeFolderMarkers, true)) {
                 result.testSourceDirFSPaths.add(path);
             } else {
                 result.mainSourceDirFSPaths.add(path);

@@ -192,11 +192,17 @@ public final class FSPathHelper {
      * <p>
      * An example use case is looking for a directory named 'test' or 'tests' in a file system path.
      */
-    public static boolean doesPathContainNamedResource(String filesystemPath, Set<String> targetNames) {
+    public static boolean doesPathContainNamedResource(String filesystemPath, Set<String> targetNames, boolean allowStartsWith) {
         String[] pathElements = filesystemPath.split(osSepRegex());
 
         for (String element : pathElements) {
-            if (targetNames.contains(element)) {
+            if (allowStartsWith) {
+                for (String targetName : targetNames) {
+                    if (element.startsWith(targetName)) {
+                        return true;
+                    }
+                }
+            } else if (targetNames.contains(element)) {
                 return true;
             }
         }
