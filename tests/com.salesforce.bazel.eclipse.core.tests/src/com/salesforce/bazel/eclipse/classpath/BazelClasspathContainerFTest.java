@@ -60,8 +60,6 @@ import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.eclipse.runtime.impl.AbstractJavaCoreHelper;
-import com.salesforce.bazel.eclipse.runtime.impl.EclipseResourceHelper;
 import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 public class BazelClasspathContainerFTest {
@@ -151,14 +149,7 @@ public class BazelClasspathContainerFTest {
         boolean explicitJavaTestDeps = true;
 
         setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, false, false, false);
-        JavaCoreHelper javaHelper = new AbstractJavaCoreHelper() {
-            private final EclipseResourceHelper eclipseResourceHelper = new EclipseResourceHelper();
-
-            @Override
-            protected ResourceHelper getResourceHelper() {
-                return eclipseResourceHelper;
-            }
-        };
+        JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
 
         // FIRST check that the project raw classpath has 6 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
@@ -232,7 +223,6 @@ public class BazelClasspathContainerFTest {
         assertContainsEntry(entries, "com.salesforce.bazel.eclipse.BAZEL_CONTAINER", EXACT, MAINCP);
         assertContainsEntry(entries, "JavaSE-11", CONTAINS, MAINCP);
     }
-
 
     /**
      * We create an Eclipse project for the Bazel Workspace with a Java project.
@@ -341,8 +331,7 @@ public class BazelClasspathContainerFTest {
     // HELPERS
 
     private MockEclipse setupMockEnvironmentForClasspathTest(String testName, boolean explicitJavaTestDeps,
-            boolean nonstandardLayout, boolean nonstandardMultipleDirs, boolean addJavaImport)
-                    throws Exception {
+            boolean nonstandardLayout, boolean nonstandardMultipleDirs, boolean addJavaImport) throws Exception {
         File testDir = tmpFolder.newFolder();
         File testTempDir = new File(testDir, testName);
         testTempDir.mkdirs();

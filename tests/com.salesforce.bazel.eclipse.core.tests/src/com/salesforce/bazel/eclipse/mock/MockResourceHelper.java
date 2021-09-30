@@ -41,15 +41,13 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IProcess;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.mockito.Mockito;
 import org.osgi.service.prefs.Preferences;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.runtime.api.CoreResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
-public class MockResourceHelper implements CoreResourceHelper {
+public class MockResourceHelper implements ResourceHelper {
 
     /**
      * List of mock projects that will be used during the test. Your test might add projects that will be retrieved
@@ -180,11 +178,6 @@ public class MockResourceHelper implements CoreResourceHelper {
     @Override
     public IResource findMemberInWorkspace(IPath path) {
         return workspaceRoot.findMember(path);
-    }
-
-    @Override
-    public IPreferenceStore getPreferenceStore(BazelPluginActivator activator) {
-        return mockEclipse.getMockPrefsStore();
     }
 
     @Override

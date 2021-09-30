@@ -32,7 +32,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
-import com.salesforce.bazel.eclipse.runtime.api.CoreResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.lang.jvm.JavaLanguageLevelHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -116,7 +116,7 @@ public class InitImportFlow implements ImportFlow {
         // we support pluggable project structure strategies to optimize import performance
         // this will use knowledge of common patterns like Maven to quickly locate source directories
         // but if a strategy gets this wrong it can cause problems
-        CoreResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
+        PreferenceStoreResourceHelper resourceHelper = BazelPluginActivator.getCoreResourceHelper();
         IPreferenceStore prefsStore = resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
         boolean enabledStructureStrategies =
                 prefsStore.getBoolean(BazelPreferenceKeys.PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME);

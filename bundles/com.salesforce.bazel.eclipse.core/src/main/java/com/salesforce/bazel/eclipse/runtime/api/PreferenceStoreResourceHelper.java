@@ -4,7 +4,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 
-public interface CoreResourceHelper extends ResourceHelper {
+public interface PreferenceStoreResourceHelper {
 
     /**
      * Gets the preference store for the Core plugin.

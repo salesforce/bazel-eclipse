@@ -12,11 +12,12 @@ import com.salesforce.bazel.eclipse.activator.BazelEclipseExtensionPointDefiniti
 
 public abstract class AbstractExtensionPointComponentFacade<C> {
     private C component;
+    
+    public AbstractExtensionPointComponentFacade() {
+        component = instantiateExtensionPoint(getComponentClass(), getExtensionPointDefinition());
+    }
 
-    public synchronized C getComponent() {
-        if (component == null) {
-            component = instantiateExtensionPoint(getComponentClass(), getExtensionPointDefinition());
-        }
+    public C getComponent() {
         return component;
     }
 

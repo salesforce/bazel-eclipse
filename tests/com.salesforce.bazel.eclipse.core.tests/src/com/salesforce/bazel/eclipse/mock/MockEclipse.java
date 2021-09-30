@@ -62,6 +62,7 @@ public class MockEclipse {
     private MockIProjectFactory mockIProjectFactory;
     private MockIPreferenceStore mockPrefsStore;
     private MockResourceHelper mockResourceHelper;
+    private MockCoreResourceHelper mockCoreResourceHelper;
     private MockJavaCoreHelper mockJavaCoreHelper;
     private final OperatingEnvironmentDetectionStrategy mockOsEnvStrategy =
             new MockOperatingEnvironmentDetectionStrategy();
@@ -110,6 +111,7 @@ public class MockEclipse {
         eclipseWorkspaceRoot.mkdir();
 
         mockResourceHelper = new MockResourceHelper(eclipseWorkspaceRoot, this);
+        mockCoreResourceHelper = new MockCoreResourceHelper(this);
         mockPrefs = new MockIEclipsePreferences();
         mockPrefsStore = new MockIPreferenceStore();
         mockIProjectFactory = new MockIProjectFactory();
@@ -121,7 +123,7 @@ public class MockEclipse {
         // feature collaborators
         pluginActivator = new BazelPluginActivator();
         launchDelegate = new BazelLaunchConfigurationDelegate();
-        configManager = new EclipseBazelConfigurationManager(mockResourceHelper);
+        configManager = new EclipseBazelConfigurationManager(mockCoreResourceHelper);
         projectManager = new MockBazelProjectManager(mockResourceHelper, mockJavaCoreHelper);
         externalJarRuleManager = new BazelExternalJarRuleManager(mockOsEnvStrategy);
 
@@ -129,7 +131,8 @@ public class MockEclipse {
         // this simulates how our feature starts up when run inside of Eclipse
         pluginActivator.startInternal(bazelCommandEnvironment.bazelAspectLocation,
             bazelCommandEnvironment.commandBuilder, bazelCommandEnvironment.commandConsole, projectManager,
-            mockResourceHelper, mockJavaCoreHelper, mockOsEnvStrategy, configManager, externalJarRuleManager);
+            mockResourceHelper, mockCoreResourceHelper, mockJavaCoreHelper, mockOsEnvStrategy, configManager,
+            externalJarRuleManager);
 
         // At this point our plugins are wired up, the Bazel workspace is created, but the user
         // has not run a Bazel Import... wizard yet. See EclipseFunctionalTestEnvironmentFactory

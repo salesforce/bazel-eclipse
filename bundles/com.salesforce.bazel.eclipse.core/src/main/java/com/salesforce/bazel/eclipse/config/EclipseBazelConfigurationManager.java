@@ -41,7 +41,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
-import com.salesforce.bazel.eclipse.runtime.api.CoreResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 
@@ -51,9 +51,9 @@ public class EclipseBazelConfigurationManager implements BazelConfigurationManag
      */
     private static final String BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY = "bazel.workspace.root";
 
-    private final CoreResourceHelper resourceHelper;
+    private final PreferenceStoreResourceHelper resourceHelper;
 
-    public EclipseBazelConfigurationManager(CoreResourceHelper resourceHelper) {
+    public EclipseBazelConfigurationManager(PreferenceStoreResourceHelper resourceHelper) {
         this.resourceHelper = resourceHelper;
     }
 
