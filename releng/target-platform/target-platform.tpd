@@ -2,7 +2,7 @@ target "bazel-eclipse-feature-target-platform" with source configurePhase requir
 
 environment JavaSE-11
 
-location "https://download.eclipse.org/eclipse/updates/4.20/R-4.20-202106111600/" {
+location "https://download.eclipse.org/eclipse/updates/4.21/R-4.21-202109060500/" {
     org.eclipse.e4.rcp.feature.group
     org.eclipse.ecf.core.feature.feature.group
     org.eclipse.ecf.core.ssl.feature.feature.group
@@ -30,7 +30,7 @@ location "https://download.eclipse.org/eclipse/updates/4.20/R-4.20-202106111600/
     org.eclipse.sdk.feature.group
 }
 
-location "https://download.eclipse.org/tools/orbit/downloads/drops/R20210223232630/repository/" {
+location "https://download.eclipse.org/tools/orbit/downloads/drops/R20210825222808/repository/" {
 	com.google.gson
 	com.google.guava
 	com.google.javascript
@@ -46,9 +46,13 @@ location "https://download.eclipse.org/tools/orbit/downloads/drops/R202102232326
 	javax.xml.soap
 }
 
+location "https://download.eclipse.org/jdtls/milestones/1.4.0/repository/" {
+	org.eclipse.jdt.ls.core
+}
+
 // locations below taken from eclipse.jdt.ls project (to allow building the JDT LS in same workspace)
 
-location "https://download.eclipse.org/releases/2021-06/202104161000/" {
+location "https://download.eclipse.org/releases/2021-09/202109151000/" {
 	// this location needs to match with the Eclipse version above, otherwise EMF will fail to resolve
     org.eclipse.xtend.sdk.feature.group
     org.eclipse.xtext.sdk.feature.group
@@ -62,7 +66,15 @@ location "https://download.eclipse.org/lsp4j/updates/releases/0.12.0/" {
 	org.eclipse.lsp4j.sdk.feature.group
 }
 
-location "https://download.eclipse.org/technology/m2e/milestones/1.17/1.17.0.20201112-0751/" {
+location "https://download.eclipse.org/technology/m2e/releases/1.18.1/" {
 	org.eclipse.m2e.feature.feature.group
 	org.eclipse.m2e.logback.feature.feature.group
+}
+
+location "https://download.jboss.org/jbosstools/updates/m2e-extensions/m2e-apt/1.5.3-2019-11-08_11-04-22-H22/" {
+	org.jboss.tools.maven.apt.core
+}
+
+location "https://download.eclipse.org/buildship/updates/e420/snapshots/3.x/3.1.6.v20210909-1001-s/" {
+	org.eclipse.buildship.feature.group
 }
