@@ -36,12 +36,14 @@ package com.salesforce.bazel.sdk.command;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 
 /**
  * Parses Bazel output.
  */
 public class BazelOutputParser {
+    private static final LogHelper LOG = LogHelper.log(BazelOutputParser.class);
 
     private static final String JAVA_FILE_PATH_SUFFX = ".java";
     private boolean parsingErrors = false;
@@ -105,6 +107,13 @@ public class BazelOutputParser {
         errorSourcePathLine = null;
         moreDetailsLine = null;
         List<BazelProblem> errors = new ArrayList<>();
+
+//        LOG.info("START Bazel Command Output");
+//        for (String line : lines) {
+//            LOG.info("  > "+line);
+//        }
+//        LOG.info("END Bazel Command Output");
+        
         for (String line : lines) {
             List<BazelProblem> bazelMarkerDetails = getErrorBazelMarkerDetails(line);
             errors.addAll(bazelMarkerDetails);
@@ -139,7 +148,7 @@ public class BazelOutputParser {
             // BUILD file update error TODO
             // errorSourcePathLine: ERROR: /Users/plaird/dev/myrepo/a/b/c/BUILD:81:1: Target '//a/b/c:src/main/java/com/salesforce/jetty/Foo.java' contains an error and its package is in error and referenced by '//a/b/d:f'
             // moreDetailsLine: null
-            System.err.println("Failed to parse line: " + errorSourcePathLine + " with details: " + moreDetailsLine);
+            LOG.error("Failed to parse line: " + errorSourcePathLine + " with details: " + moreDetailsLine);
             description = "BUILD file error";
         }
         return BazelProblem.createError(sourcePath, lineNumber, description);

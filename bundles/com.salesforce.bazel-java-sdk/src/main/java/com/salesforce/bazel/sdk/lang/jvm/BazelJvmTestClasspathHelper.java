@@ -229,8 +229,9 @@ public class BazelJvmTestClasspathHelper {
         // we can now sanity check the request - does this test class even have java_test target?
         if (labels.size() == 0) {
             // no, this is a dangling test class without a java_test rule
-            LOG.error("The test class {} does not have a target defined in the BUILD file.", className);
-            return paramFiles;
+            String message = "The test class "+className+" does not have a java_test target defined in the BUILD file.";
+            LOG.error(message);
+            throw new IllegalStateException(message);
         }
 
         // TODO we can have multiple labels if the same test class is used multiple times in a BUILD file? perhaps with different resource files to test different cases? figure this out
