@@ -236,6 +236,13 @@ public class TestBazelWorkspaceFactory {
             packageAspectFiles.add(aspectFilePath_import);
             createFakeImportJars(importLibsDir, "liborange");
             extraDeps.add(":orange");
+
+            // create an unused java_import (nothing depends on it) to see how that affects the classpath (it shouldn't)
+            aspectFilePath_import =
+                    TestAspectFileCreator.createJavaAspectFileForImportLocalJar(workspaceDescriptor.outputBaseDirectory,
+                        packageRelativeBazelPath, relativeImportLibsDir, "unsed", "libunused");
+            packageAspectFiles.add(aspectFilePath_import);
+            createFakeImportJars(importLibsDir, "libunused");
         }
 
         // main source

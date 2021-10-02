@@ -40,6 +40,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 
 /**
  * Plug point into the Eclipse JUnit launcher call chain; allows us to inject the Bazel runtime classpath provider so
@@ -60,7 +62,20 @@ public class BazelJunitLaunchConfigurationDelegate extends JUnitLaunchConfigurat
         BazelTestClasspathProvider.enable(configuration);
         BazelTestClasspathProvider.canOpenErrorDialog.set(true);
 
-        super.launch(configuration, mode, launch, monitor);
+        try {
+            super.launch(configuration, mode, launch, monitor);
+        } catch (Exception anyE) {
+            if (BazelTestClasspathProvider.canOpenErrorDialog.get()) {
+                BazelTestClasspathProvider.canOpenErrorDialog.set(false);
+                String message = anyE.getMessage();
+                Display.getDefault().syncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        MessageDialog.openError(Display.getDefault().getActiveShell(), "Failed Test Launch", message);
+                    }
+                });
+            }
+        }
     }
 
 }

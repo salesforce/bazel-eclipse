@@ -151,16 +151,14 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         IResourceDelta delta = getDelta(project);
         if (delta == null) {
             // arguably we should refresh the classpath container by default in this case (?)
-        } else {
-            if (ResourceDeltaInspector.deltaHasChangedBuildFiles(delta)) {
-                // we request a classpath container update only if detect a BUILD file change
-                // this should also consider added or removed BUILD files (?)
-                IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
-                ClasspathContainerInitializer cpInit =
-                        JavaCore.getClasspathContainerInitializer(BazelClasspathContainer.CONTAINER_NAME);
-                cpInit.requestClasspathContainerUpdate(Path.fromPortableString(BazelClasspathContainer.CONTAINER_NAME),
-                    javaProject, null);
-            }
+        } else if (ResourceDeltaInspector.deltaHasChangedBuildFiles(delta)) {
+            // we request a classpath container update only if detect a BUILD file change
+            // this should also consider added or removed BUILD files (?)
+            IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
+            ClasspathContainerInitializer cpInit =
+                    JavaCore.getClasspathContainerInitializer(BazelClasspathContainer.CONTAINER_NAME);
+            cpInit.requestClasspathContainerUpdate(Path.fromPortableString(BazelClasspathContainer.CONTAINER_NAME),
+                javaProject, null);
         }
     }
 
@@ -207,17 +205,16 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
         if (bazelTargets.isEmpty()) {
             return true;
-        } else {
-            List<String> bazelBuildFlags = getAllBazelBuildFlags(projects);
-            List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, bazelBuildFlags, progressMonitor);
-            // publish errors (even if no errors, this must run so that previous errors are cleared)
-            Map<BazelLabel, BazelProject> labelToProject = bazelProjectManager.getBazelLabelToProjectMap(bazelProjects);
-            BazelErrorPublisher errorPublisher = new BazelErrorPublisher(rootProject, projects, labelToProject);
-            errorPublisher.publish(errors, monitor);
-            // also publish warnings
-            warningPublisher.publish(projects, monitor);
-            return errors.isEmpty();
         }
+        List<String> bazelBuildFlags = getAllBazelBuildFlags(projects);
+        List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, bazelBuildFlags, progressMonitor);
+        // publish errors (even if no errors, this must run so that previous errors are cleared)
+        Map<BazelLabel, BazelProject> labelToProject = bazelProjectManager.getBazelLabelToProjectMap(bazelProjects);
+        BazelErrorPublisher errorPublisher = new BazelErrorPublisher(rootProject, projects, labelToProject);
+        errorPublisher.publish(errors, monitor);
+        // also publish warnings
+        warningPublisher.publish(projects, monitor);
+        return errors.isEmpty();
     }
 
     private static List<String> getAllBazelBuildFlags(Collection<IProject> projects) {
