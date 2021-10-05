@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -79,28 +80,33 @@ class BazelErrorPublisher {
     static Map<IProject, List<BazelProblem>> assignErrorsToOwningProject(List<BazelProblem> errors,
             Map<BazelLabel, BazelProject> labelToProject, IProject rootProject) {
         Map<IProject, List<BazelProblem>> projectToErrors = new HashMap<>();
+        if (errors.size() == 0) {
+            return projectToErrors;
+        }
+
         List<BazelProblem> remainingErrors = new LinkedList<>(errors);
         for (BazelProblem error : errors) {
             BazelLabel owningLabel = error.getOwningLabel(labelToProject.keySet());
             if (owningLabel != null) {
                 BazelProject project = labelToProject.get(owningLabel);
                 IProject eclipseProject = (IProject) project.getProjectImpl();
-                mapProblemToProject(error.toErrorWithRelativizedResourcePath(owningLabel), eclipseProject,
-                    projectToErrors);
+                BazelProblem problem = error.toErrorWithRelativizedResourcePath(owningLabel);
+                mapProblemToProject(problem, eclipseProject, projectToErrors);
                 remainingErrors.remove(error);
             }
         }
         if (!remainingErrors.isEmpty()) {
-            if (rootProject != null) {
-                for (BazelProblem error : remainingErrors) {
-                    mapProblemToProject(error.toGenericWorkspaceLevelError(UNKNOWN_PROJECT_ERROR_MSG_PREFIX),
-                        rootProject, projectToErrors);
-                }
-            } else {
-                // getting here is a bug - at least log the errors we didn't assign to any project
-                for (BazelProblem error : remainingErrors) {
-                    LOG.error("Unhandled error: " + error);
-                }
+            if (rootProject == null) {
+                // getting here is a bug - this is going to be ugly but blow up with as much info as we have
+                String concatErrors =
+                        remainingErrors.stream().map(p -> p.getDescription() + "\n")
+                        .collect(Collectors.joining(", "));
+                LOG.error("Unhandled errors: " + concatErrors);
+                throw new IllegalStateException(concatErrors);
+            }
+            for (BazelProblem error : remainingErrors) {
+                mapProblemToProject(error.toGenericWorkspaceLevelError(UNKNOWN_PROJECT_ERROR_MSG_PREFIX),
+                    rootProject, projectToErrors);
             }
         }
         return projectToErrors;

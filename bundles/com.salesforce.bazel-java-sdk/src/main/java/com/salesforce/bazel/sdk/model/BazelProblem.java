@@ -72,14 +72,20 @@ public class BazelProblem {
 
     /**
      * Returns the matching BazelLabel for this problem's resourcePath.
-     *
+     * TODO this should be moved to a more general location, like BazelLabel or FSPathHelper
+     * 
      * @param labels
      *            all BazelLabel instances to consider
      * @return the matching BazelLabel, null if no match is found
      */
     public BazelLabel getOwningLabel(Collection<BazelLabel> labels) {
+        if (labels.size() == 0) {
+            return null;
+        }
+        
         String shortestRelativeResourcePath = null;
         BazelLabel bestMatch = null;
+        
         for (BazelLabel label : labels) {
             String relativeResourcePath = getRelativeResourcePath(label);
             if (relativeResourcePath != null) {
@@ -90,6 +96,7 @@ public class BazelProblem {
                 }
             }
         }
+        
         return bestMatch;
     }
 
@@ -142,11 +149,20 @@ public class BazelProblem {
         return (isError ? "ERROR: " : "WARNING: ") + getResourcePath() + ":" + lineNumber + " " + getDescription();
     }
 
+    // TODO this should be in a more reusable location, like BazelLabel or FSPathHelper 
     private String getRelativeResourcePath(BazelLabel label) {
         String bazelPackagePath = label.getPackagePath();
         String relativeFilePath = FSPathHelper.osSeps(bazelPackagePath + FSPathHelper.UNIX_SLASH);
         if (resourcePath.startsWith(relativeFilePath) && (resourcePath.length() > (relativeFilePath.length()))) {
             return File.separator + resourcePath.substring(relativeFilePath.length());
+        } else {
+            File resourceFile = new File(resourcePath);
+            if (resourceFile.isAbsolute() && resourcePath.contains(bazelPackagePath+File.separator)) {
+                // absolute path
+                int index = resourcePath.indexOf(bazelPackagePath);
+                String relResourcePath= resourcePath.substring(index);
+                return File.separator + relResourcePath.substring(relativeFilePath.length());
+            }
         }
         return null;
     }

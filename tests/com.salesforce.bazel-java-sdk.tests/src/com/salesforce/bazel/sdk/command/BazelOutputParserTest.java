@@ -44,7 +44,34 @@ import com.salesforce.bazel.sdk.model.BazelProblem;
 
 public class BazelOutputParserTest {
 
-    // TODO windows
+    // BUILD ERRORS
+
+    @Test
+    public void testSingleBuildFileError() {
+        BazelOutputParser p = new BazelOutputParser();
+        List<String> lines = Arrays.asList(
+            "ERROR: /Users/mbenioff/simplejava-mvninstall/projects/libs/apple/apple-api/BUILD:16:5: positional argument may not follow keyword argument",
+            "ERROR: /Users/mbenioff/simplejava-mvninstall/projects/libs/apple/apple-api/BUILD:18: name 'xyx' is not defined",
+            "ERROR: /Users/mbenioff/simplejava-mvninstall/projects/libs/apple/apple-api/BUILD: elvis has left the building",
+                "ERROR: error loading package 'projects/libs/apple/apple-api': Package 'projects/libs/apple/apple-api' contains errors");
+
+        List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
+
+        assertEquals(3, errors.size());
+
+        assertEquals("/Users/mbenioff/simplejava-mvninstall/projects/libs/apple/apple-api/BUILD",
+            errors.get(0).getResourcePath());
+        assertEquals(16, errors.get(0).getLineNumber());
+        assertEquals("positional argument may not follow keyword argument", errors.get(0).getDescription());
+
+        // lines with missing information (I havent seen this, just testing our degradation logic just in case)
+        assertEquals(18, errors.get(1).getLineNumber());
+        assertEquals("name 'xyx' is not defined", errors.get(1).getDescription());
+        assertEquals(1, errors.get(2).getLineNumber());
+        assertEquals("elvis has left the building", errors.get(2).getDescription());
+    }
+
+    // JAVA ERRORS
 
     @Test
     public void testSingleJavaError() {
@@ -52,9 +79,9 @@ public class BazelOutputParserTest {
         List<String> lines = Arrays.asList(
             "ERROR: /Users/stoens/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building libbanana-api.jar (2 source files) failed (Exit 1)",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:50: error: cannot find symbol",
-            "    this.numSeeds = numSeeds;");
+                "    this.numSeeds = numSeeds;");
 
-        List<BazelProblem> errors = p.getErrors(lines);
+        List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
 
         assertEquals(1, errors.size());
         assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java",
@@ -72,9 +99,9 @@ public class BazelOutputParserTest {
             "             ^",
             "ERROR: /Users/stoens/bazel-build-example-for-eclipse/sayhello/BUILD:1:1: Building sayhello/libsayhello.jar (2 source files) failed (Exit 1)",
             "sayhello/src/main/java/com/blah/foo/hello/Main.java:17: error: cannot find symbols",
-            "INFO: Elapsed time: 0.196s, Critical Path: 0.03s");
+                "INFO: Elapsed time: 0.196s, Critical Path: 0.03s");
 
-        List<BazelProblem> errors = p.getErrors(lines);
+        List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
 
         assertEquals(2, errors.size());
         assertEquals("sayhello/src/main/java/com/blah/foo/hello/Main.java", errors.get(0).getResourcePath());
@@ -96,7 +123,7 @@ public class BazelOutputParserTest {
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:42: error: ';' expected\n",
             "  private String species\n", "                        ^");
 
-        List<BazelProblem> errors = p.getErrors(lines);
+        List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
 
         assertEquals(2, errors.size());
         assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java",
@@ -120,7 +147,7 @@ public class BazelOutputParserTest {
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:45: error: ';' expected\n",
             "    this.species = species", "                        ^");
 
-        List<BazelProblem> errors = p.getErrors(lines);
+        List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
 
         assertEquals(3, errors.size());
         assertEquals("projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java",
@@ -141,10 +168,12 @@ public class BazelOutputParserTest {
     public void testUnformattedError() {
         BazelOutputParser p = new BazelOutputParser();
         List<String> lines =
-                Arrays.asList("ERROR: this is just a string that we should probably handle but we don't right now");
+                Arrays.asList("ERROR: some unknown error");
 
-        List<BazelProblem> errors = p.getErrors(lines);
+        List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
 
-        assertEquals(0, errors.size());
+        // we create a synthetic error when we dont recognize the error
+        assertEquals(1, errors.size());
+        assertEquals("ERROR: some unknown error", errors.get(0).getDescription());
     }
 }

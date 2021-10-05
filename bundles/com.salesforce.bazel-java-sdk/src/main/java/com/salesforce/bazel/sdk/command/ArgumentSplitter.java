@@ -34,7 +34,7 @@
 package com.salesforce.bazel.sdk.command;
 
  import java.util.ArrayList;
- import java.util.List;
+import java.util.List;
 
  public class ArgumentSplitter {
 
@@ -49,4 +49,5 @@ package com.salesforce.bazel.sdk.command;
          }
          return args;
      }
- }
+
+}

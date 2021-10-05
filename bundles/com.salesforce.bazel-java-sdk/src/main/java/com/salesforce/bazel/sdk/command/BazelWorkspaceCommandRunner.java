@@ -429,20 +429,21 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         extraArgsList.add("--");
         extraArgsList.addAll(bazelTargets);
 
-        List<String> output = bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory,
+        // run the build
+        List<String> stderrOutput = bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory,
             progressMonitor, extraArgsList, new ErrorOutputSelector(), BazelCommandExecutor.TIMEOUT_INFINITE);
-        if (output.isEmpty()) {
+        
+        
+        if (stderrOutput.isEmpty()) {
+            // the build was a success
             return Collections.emptyList();
         }
+        
+        // there was an error(s) in the build, parse them as BazelProblem objects
         BazelOutputParser outputParser = new BazelOutputParser();
-        List<BazelProblem> errors = outputParser.getErrors(output);
-        logErrors(errors);
+        List<BazelProblem> errors = outputParser.convertErrorOutputToProblems(stderrOutput);
+        
         return errors;
-    }
-
-    private void logErrors(List<BazelProblem> errors) {
-        List<String> errorStrs = errors.stream().map(BazelProblem::toString).collect(Collectors.toList());
-        getLogger().debug(getClass(), "\n" + String.join("\n", errorStrs) + "\n");
     }
 
     // ASPECT OPERATIONS
