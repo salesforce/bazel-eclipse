@@ -1,4 +1,4 @@
-package com.salesforce.b2eclipse.classpath;
+package com.salesforce.bazel.eclipse.classpath;
 
 public enum CallSource {
     RUN_DEBUG, JUNIT, UNDEFINED;

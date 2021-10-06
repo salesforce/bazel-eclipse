@@ -45,7 +45,7 @@
    <extension
          point="com.salesforce.bazel.aspectlocation">
       <bazelAspectLocation
-            class="com.salesforce.bazel.eclipse.runtime.impl.DefaultEclipseAspectLocationImpl">
+            class="com.salesforce.b2eclipse.config.DefaultEclipseAspectLocationImpl">
       </bazelAspectLocation>
    </extension>
 </plugin>

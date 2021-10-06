@@ -49,9 +49,11 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
+import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
@@ -76,19 +78,14 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     protected final LogHelper logger;
     protected IClasspathEntry[] lastComputedClasspath = null;
 
-    public BaseBazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
-        this(eclipseProject, BazelJdtPlugin.getResourceHelper());
-    }
-
     BaseBazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
-        bazelWorkspace = BazelJdtPlugin.getBazelWorkspace();
-        bazelProjectManager = BazelJdtPlugin.getBazelProjectManager();
+        bazelWorkspace = EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
+        bazelProjectManager = ProjectManagerComponentFacade.getInstance().getComponent();
         eclipseProjectPath = eclipseProject.getLocation();
         eclipseProjectIsRoot = resourceHelper.isBazelRootProject(eclipseProject);
-        osDetector = BazelJdtPlugin.getOperatingEnvironmentDetectionStrategy();
+        osDetector = EclipseBazelComponentFacade.getInstance().getOsDetectionStrategy();
 
         bazelProject = bazelProjectManager.getProject(eclipseProject.getName());
         if (bazelProject == null) {
@@ -96,7 +93,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
             bazelProjectManager.addProject(bazelProject);
         }
 
-        javaCoreHelper = BazelJdtPlugin.getJavaCoreHelper();
+        javaCoreHelper = JavaCoreHelperComponentFacade.getInstance().getComponent();
         logger = LogHelper.log(this.getClass());
 
     }
@@ -143,6 +140,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
                 if (entry.pathToJar != null) {
                     IPath jarPath = getIPathOnDisk(bazelWorkspace, entry.pathToJar);
                     if (jarPath != null) {
+                        // srcJarPath must be relative to the workspace, by order of Eclipse
                         IPath srcJarPath = getIPathOnDisk(bazelWorkspace, entry.pathToSourceJar);
                         IPath srcJarRootPath = null;
                         eclipseClasspathEntries.add(

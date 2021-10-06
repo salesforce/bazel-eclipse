@@ -70,13 +70,14 @@ import org.osgi.service.prefs.Preferences;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.b2eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.b2eclipse.classpath.BazelClasspathContainerInitializer;
 import com.salesforce.b2eclipse.managers.B2EPreferncesManager;
 import com.salesforce.b2eclipse.managers.BazelBuildSupport;
 import com.salesforce.b2eclipse.util.BazelEclipseProjectUtils;
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.builder.BazelBuilder;
+import com.salesforce.bazel.eclipse.classpath.IClasspathContainerConstants;
+import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
@@ -110,10 +111,6 @@ public final class BazelEclipseProjectFactory {
 	 * project.
 	 */
 	private static final int JAVA_LANG_VERSION = 8;
-	/**
-	 * Absolute path of the Bazel workspace root
-	 */
-	private static final String BAZEL_WORKSPACE_ROOT_ABSPATH_PROPERTY = "bazel.workspace.root";
 
 	/**
 	 * The label that identifies the Bazel package that represents this Eclipse
@@ -190,7 +187,7 @@ public final class BazelEclipseProjectFactory {
 		// it in an accessible global location
 		// currently we only support one Bazel workspace in an Eclipse workspace
 
-		BazelJdtPlugin.setBazelWorkspaceRootDirectory(BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspaceRoot),
+		EclipseBazelComponentFacade.getInstance().setBazelWorkspaceRootDirectory(BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspaceRoot),
 				bazelWorkspaceRootDirectory);
 		
 		BazelBuildSupport.calculateExcludedFilePatterns(bazelWorkspaceRootDirectory.getAbsolutePath());
@@ -433,7 +430,8 @@ public final class BazelEclipseProjectFactory {
 	}
 
     private static void buildBinLinkFolder(IJavaProject eclipseJavaProject, BazelLabel bazelLabel) {
-        String projectMainOutputPath = BazelJdtPlugin.getWorkspaceCommandRunner().getProjectOutputPath(bazelLabel);
+        String projectMainOutputPath =
+                EclipseBazelComponentFacade.getInstance().getWorkspaceCommandRunner().getProjectOutputPath(bazelLabel);
 
         IPath projectOutputPath = Optional.ofNullable(projectMainOutputPath).map(Path::fromOSString).orElse(null);
         if (projectOutputPath != null) {
@@ -447,7 +445,8 @@ public final class BazelEclipseProjectFactory {
     }
 
     private static void buildTestBinLinkFolder(IJavaProject eclipseJavaProject, BazelLabel bazelLabel) {
-        String projectTestOutputPath = BazelJdtPlugin.getWorkspaceCommandRunner().getProjectOutputPath(bazelLabel);
+        String projectTestOutputPath =
+                EclipseBazelComponentFacade.getInstance().getWorkspaceCommandRunner().getProjectOutputPath(bazelLabel);
         IPath projectOutputPath = Optional.ofNullable(projectTestOutputPath).map(Path::fromOSString).orElse(null);
         if (projectOutputPath != null) {
             try {
@@ -570,7 +569,7 @@ public final class BazelEclipseProjectFactory {
 		}
 
 		IClasspathEntry bazelClasspathContainerEntry = BazelJdtPlugin.getJavaCoreHelper()
-				.newContainerEntry(new Path(BazelClasspathContainer.CONTAINER_NAME));
+				.newContainerEntry(new Path(IClasspathContainerConstants.CONTAINER_NAME));
 		classpathEntries.add(bazelClasspathContainerEntry);
 
 		// add in a JDK to the classpath
@@ -772,9 +771,9 @@ public final class BazelEclipseProjectFactory {
 	 */
 	private static AspectTargetInfos precomputeBazelAspectsForWorkspace(IProject rootEclipseProject,
 			List<BazelPackageLocation> selectedBazelPackages, WorkProgressMonitor progressMonitor) {
-		BazelCommandManager bazelCommandManager = BazelJdtPlugin.getBazelCommandManager();
-		BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager
-				.getWorkspaceCommandRunner(BazelJdtPlugin.getBazelWorkspace());
+        BazelCommandManager bazelCommandManager = EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
+        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager
+                .getWorkspaceCommandRunner(EclipseBazelComponentFacade.getInstance().getBazelWorkspace());
 
 		// figure out which Bazel targets will be imported, and generated
 		// AspectPackageInfos for each

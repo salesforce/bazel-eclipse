@@ -48,6 +48,10 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.common.base.Predicate;
 import com.salesforce.b2eclipse.BazelJdtPlugin;
+import com.salesforce.bazel.eclipse.classpath.CallSource;
+import com.salesforce.bazel.eclipse.classpath.EclipseImplicitClasspathHelper;
+import com.salesforce.bazel.eclipse.classpath.IClasspathContainerConstants;
+import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
@@ -55,9 +59,6 @@ import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.DynamicBazelJvmClasspath;
 
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
-    public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
-    private static final String JAVA_DEBUG_DELEGATE_CMD_HANDLER = "JavaDebugDelegateCommandHandler";
-    private static final String JUNIT_LAUNCH_CONFIGURATION_DELEGATE = "JUnitLaunchConfigurationDelegate";
 
     protected final BazelJvmClasspath bazelClasspath;
     private CallSource lastCallSource = CallSource.UNDEFINED;
@@ -79,10 +80,12 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
 
         if (USE_DYNAMIC_CP) {
             bazelClasspath = new DynamicBazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                    new EclipseImplicitClasspathHelper(), osDetector, BazelJdtPlugin.getBazelCommandManager(), null);
+                    new EclipseImplicitClasspathHelper(), osDetector,
+                    EclipseBazelComponentFacade.getInstance().getBazelCommandManager(), null);
         } else {
             bazelClasspath = new BazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                    new EclipseImplicitClasspathHelper(), osDetector, BazelJdtPlugin.getBazelCommandManager());
+                    new EclipseImplicitClasspathHelper(), osDetector,
+                    EclipseBazelComponentFacade.getInstance().getBazelCommandManager());
         }
         instances.add(bazelClasspath);
     }
@@ -130,10 +133,10 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     private CallSource getCallSource(StackTraceElement[] stack) {
         for (StackTraceElement elem : stack) {
             String classname = elem.getClassName();
-            if (classname.endsWith(JAVA_DEBUG_DELEGATE_CMD_HANDLER)) {
+            if (classname.endsWith(IClasspathContainerConstants.JAVA_DEBUG_DELEGATE_CMD_HANDLER)) {
                 return CallSource.RUN_DEBUG;
             }
-            if (classname.endsWith(JUNIT_LAUNCH_CONFIGURATION_DELEGATE)) {
+            if (classname.endsWith(IClasspathContainerConstants.JUNIT_LAUNCH_CONFIGURATION_DELEGATE)) {
                 return CallSource.JUNIT;
             }
         }

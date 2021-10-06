@@ -52,22 +52,18 @@ import org.osgi.service.prefs.Preferences;
 
 import com.google.common.base.Throwables;
 import com.salesforce.bazel.eclipse.BazelNature;
+import com.salesforce.bazel.eclipse.component.BazelAspectLocationComponentFacade;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
 import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
-import com.salesforce.bazel.eclipse.runtime.impl.DefaultEclipseAspectLocationImpl;
-import com.salesforce.bazel.eclipse.utils.BazelCompilerUtils;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
-import com.salesforce.bazel.sdk.command.BazelCommandManager;
-import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory;
-import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
@@ -88,42 +84,6 @@ public class BazelJdtPlugin extends Plugin {
 
     private static Preferences pluginPreferences =
             Platform.getPreferencesService().getRootNode().node(InstanceScope.SCOPE).node(PLUGIN_ID);
-
-    /**
-     * Facade that enables the plugin to execute the bazel command line tool outside of a workspace
-     */
-    private static BazelCommandManager bazelCommandManager;
-
-    /**
-     * Runs bazel commands in the loaded workspace.
-     */
-    private static BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
-
-    //	/**
-    //	 * ResourceHelper is a useful singleton for looking up workspace/projects from the Eclipse environment
-    //	 */
-    //	private static ResourceHelper resourceHelper;
-
-    //	/**
-    //	 * JavaCoreHelper is a useful singleton for working with Java projects in the Eclipse workspace
-    //	 */
-    //	private static JavaCoreHelper javaCoreHelper;
-
-    //    /**
-    //     * ProjectManager manages all of the imported projects
-    //     */
-    //    private static BazelProjectManager bazelProjectManager;
-
-    //	/**
-    //	 * Looks up the operating environment (e.g. OS type)
-    //	 */
-    //	private static OperatingEnvironmentDetectionStrategy osEnvStrategy;
-
-    /**
-     * The Bazel workspace that is in scope. Currently, we only support one Bazel workspace in an Eclipse workspace so
-     * this is a static singleton.
-     */
-    private static BazelWorkspace bazelWorkspace = null;
 
     // Command to find bazel path on windows
     public static final String WIN_BAZEL_FINDE_COMMAND = "where bazel";
@@ -154,16 +114,10 @@ public class BazelJdtPlugin extends Plugin {
 
         BazelJdtPlugin.context = bundleContext;
 
-        BazelAspectLocation aspectLocation = new DefaultEclipseAspectLocationImpl();
+        BazelAspectLocation aspectLocation = BazelAspectLocationComponentFacade.getInstance().getComponent();
 
         CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
         CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
-
-        //		ResourceHelper eclipseResourceHelper = new EclipseResourceHelper();
-        //		JavaCoreHelper eclipseJavaCoreHelper = new EclipseJavaCoreHelper();
-        //		OperatingEnvironmentDetectionStrategy osEnvStrategy = new RealOperatingEnvironmentDetectionStrategy();
-
-        //        BazelProjectManager projectMgr = new EclipseBazelProjectManager();
 
         startInternal(aspectLocation, commandBuilder, consoleFactory,
             ResourceHelperComponentFacade.getInstance().getComponent(),
@@ -181,17 +135,7 @@ public class BazelJdtPlugin extends Plugin {
     public static void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
             CommandConsoleFactory consoleFactory, ResourceHelper rh, JavaCoreHelper javac,
             OperatingEnvironmentDetectionStrategy osEnv, BazelProjectManager projectMgr) {
-        // reset internal state (this is so tests run in a clean env)
-        bazelWorkspace = null;
-        // global collaborators
-        //		resourceHelper = rh;
-        //		javaCoreHelper = javac;
-        //		osEnvStrategy = osEnv;
-        //		bazelProjectManager = projectMgr;
-
-        File bazelPathFile = new File(BazelCompilerUtils.getBazelPath());
-        bazelCommandManager = new BazelCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelPathFile);
-
+        EclipseBazelComponentFacade.getInstance().setCommandManager(aspectLocation, commandBuilder, consoleFactory);
     }
 
     public static String getEnvBazelPath() {
@@ -208,78 +152,9 @@ public class BazelJdtPlugin extends Plugin {
     // COLLABORATORS
     // TODO move the collaborators to some other place, perhaps a dedicated static context object
 
-    /**
-     * Returns the model abstraction for the Bazel workspace
-     */
-    public static BazelWorkspace getBazelWorkspace() {
-        return bazelWorkspace;
-    }
-
-    /**
-     * Has the Bazel workspace location been imported/loaded? This is a good sanity check before doing any operation
-     * related to Bazel or Bazel Java projects.
-     */
-    public static boolean hasBazelWorkspaceRootDirectory() {
-        return bazelWorkspace.hasBazelWorkspaceRootDirectory();
-    }
-
     public static File getBazelWorkspaceRootDirectoryOnStart() {
         String path = pluginPreferences.get(PREFERENCE_WORKSPACE_ROOT_DIRECTORY, null);
         return path != null ? new File(path) : null;
-    }
-
-    /**
-     * Returns the location on disk where the Bazel workspace is located. There must be a WORKSPACE file in this
-     * location. Prior to importing/opening a Bazel workspace, this location will be null
-     */
-    public static File getBazelWorkspaceRootDirectory() {
-        return bazelWorkspace.getBazelWorkspaceRootDirectory();
-    }
-
-    /**
-     * Sets the location on disk where the Bazel workspace is located. There must be a WORKSPACE file in this location.
-     * Changing this location is a big deal, so use this method only during setup/import.
-     */
-    public static void setBazelWorkspaceRootDirectory(String workspaceName, File rootDirectory) {
-        File workspaceFile = new File(rootDirectory, "WORKSPACE");
-        if (!workspaceFile.exists()) {
-            workspaceFile = new File(rootDirectory, "WORKSPACE.bazel");
-            if (!workspaceFile.exists()) {
-                new IllegalArgumentException();
-                logError(
-                    "BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: "
-                            + rootDirectory.getAbsolutePath());
-                return;
-            }
-        }
-        bazelWorkspace = new BazelWorkspace(workspaceName, rootDirectory,
-                EclipseBazelComponentFacade.getInstance().getOsDetectionStrategy());
-        BazelWorkspaceCommandRunner commandRunner = getWorkspaceCommandRunner();
-        bazelWorkspace.setBazelWorkspaceMetadataStrategy(commandRunner);
-        bazelWorkspace.setBazelWorkspaceCommandRunner(commandRunner);
-    }
-
-    /**
-     * Returns the unique instance of {@link BazelCommandManager}, the facade enables the plugin to execute the bazel
-     * command line tool.
-     */
-    public static BazelCommandManager getBazelCommandManager() {
-        return bazelCommandManager;
-    }
-
-    /**
-     * Once the workspace is set, the workspace command runner is available. Otherwise returns null
-     */
-    public static BazelWorkspaceCommandRunner getWorkspaceCommandRunner() {
-        if (bazelWorkspaceCommandRunner == null) {
-            if (bazelWorkspace == null) {
-                return null;
-            }
-            if (bazelWorkspace.hasBazelWorkspaceRootDirectory()) {
-                bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
-            }
-        }
-        return bazelWorkspaceCommandRunner;
     }
 
     /**

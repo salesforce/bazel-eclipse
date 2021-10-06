@@ -57,9 +57,13 @@ import org.eclipse.jdt.core.JavaCore;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.b2eclipse.classpath.BazelClasspathContainer;
+import com.salesforce.bazel.eclipse.classpath.IClasspathContainerConstants;
+import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
+import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -92,10 +96,10 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         IProject project = getProject();
         progressMonitor.beginTask("Bazel build", 1);
 
-        BazelCommandManager bazelCommandManager = BazelJdtPlugin.getBazelCommandManager();
-        JavaCoreHelper javaCoreHelper = BazelJdtPlugin.getJavaCoreHelper();
-        BazelWorkspace bazelWorkspace = BazelJdtPlugin.getBazelWorkspace();
-        ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
+        BazelCommandManager bazelCommandManager = EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
+        JavaCoreHelper javaCoreHelper = JavaCoreHelperComponentFacade.getInstance().getComponent();
+        BazelWorkspace bazelWorkspace = EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
+        ResourceHelper resourceHelper = ResourceHelperComponentFacade.getInstance().getComponent();
         if (bazelWorkspace == null) {
             return new IProject[] {};
         }
@@ -139,8 +143,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 // this should also consider added or removed BUILD files (?)
                 IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
                 ClasspathContainerInitializer cpInit =
-                        JavaCore.getClasspathContainerInitializer(BazelClasspathContainer.CONTAINER_NAME);
-                cpInit.requestClasspathContainerUpdate(Path.fromPortableString(BazelClasspathContainer.CONTAINER_NAME),
+                        JavaCore.getClasspathContainerInitializer(IClasspathContainerConstants.CONTAINER_NAME);
+                cpInit.requestClasspathContainerUpdate(Path.fromPortableString(IClasspathContainerConstants.CONTAINER_NAME),
                     javaProject, null);
             }
         }
@@ -152,8 +156,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         // this may not have a severe performance impact as bazel handles it efficiently but we may want to revisit
         // TODO: revisit if we want to clean only once when multiple targets are selected
 
-        BazelCommandManager bazelCommandManager = BazelJdtPlugin.getBazelCommandManager();
-        BazelWorkspace bazelWorkspace = BazelJdtPlugin.getBazelWorkspace();
+        BazelCommandManager bazelCommandManager = EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
+        BazelWorkspace bazelWorkspace = EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 

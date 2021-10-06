@@ -33,7 +33,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.b2eclipse.classpath;
+package com.salesforce.bazel.eclipse.classpath;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -48,9 +48,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
@@ -81,25 +80,28 @@ public final class EclipseSourceClasspathUtil {
      *            the IJavaProject instance that is associated with the Bazel package
      * @param javaLanguageLevel
      *            the workspace Java language level
+     * @param resourceHelper
+     *            the actual implementation of {@link ResourceHelper}
+     * @param javaCoreHelper
+     *            the actual implementation of {@link JavaCoreHelper}
      */
-    public static void createClasspath(IPath bazelWorkspacePath, String bazelPackageFSPath,
-            ProjectStructure structure, IJavaProject javaProject, int javaLanguageLevel)
-                    throws CoreException {
+    public static void createClasspath(IPath bazelWorkspacePath, String bazelPackageFSPath, ProjectStructure structure,
+            IJavaProject javaProject, int javaLanguageLevel, ResourceHelper resourceHelper,
+            JavaCoreHelper javaCoreHelper) throws CoreException {
         List<IClasspathEntry> classpathEntries = new LinkedList<>();
-        JavaCoreHelper javaCoreHelper = BazelJdtPlugin.getJavaCoreHelper();
 
         long startTimeMS = System.currentTimeMillis();
         buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath,
             structure.mainSourceDirFSPaths, false,
-            classpathEntries);
+            classpathEntries, resourceHelper, javaCoreHelper);
         buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath,
             structure.testSourceDirFSPaths, true,
-            classpathEntries);
+            classpathEntries, resourceHelper, javaCoreHelper);
         SimplePerfRecorder.addTime("import_createprojects_sourcecp_1", startTimeMS);
 
         startTimeMS = System.currentTimeMillis();
         IClasspathEntry bazelClasspathContainerEntry = javaCoreHelper
-                .newContainerEntry(new Path(BazelClasspathContainer.CONTAINER_NAME));
+                .newContainerEntry(new Path(IClasspathContainerConstants.CONTAINER_NAME));
         classpathEntries.add(bazelClasspathContainerEntry);
 
         // add in a JDK to the classpath
@@ -122,9 +124,7 @@ public final class EclipseSourceClasspathUtil {
 
     private static void buildSourceClasspathEntries(IPath bazelWorkspacePath, IJavaProject javaProject,
             String bazelPackageFSPath, List<String> pkgSrcPaths, boolean isTestSource,
-            List<IClasspathEntry> classpathEntries) {
-        ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
-        JavaCoreHelper javaCoreHelper = BazelJdtPlugin.getJavaCoreHelper();
+            List<IClasspathEntry> classpathEntries, ResourceHelper resourceHelper, JavaCoreHelper javaCoreHelper) {
 
         IPath outputDir = null; // null is a legal value, it means use the default
         if (isTestSource) {

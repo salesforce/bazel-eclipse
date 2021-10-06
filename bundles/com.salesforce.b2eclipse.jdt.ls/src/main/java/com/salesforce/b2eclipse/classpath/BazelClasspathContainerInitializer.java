@@ -49,6 +49,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
+import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
+import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 
@@ -78,7 +80,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     }
 
     private void undo(IProject project) {
-        if (BazelJdtPlugin.getResourceHelper().getEclipseWorkspace().isTreeLocked()) {
+        if (ResourceHelperComponentFacade.getInstance().getComponent().getEclipseWorkspace().isTreeLocked()) {
             return;
         }
 
@@ -100,7 +102,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
 
     private static void setClasspathContainerForProject(IPath projectPath, IJavaProject project,
             IClasspathContainer container, IProgressMonitor monitor) throws JavaModelException {
-        JavaCoreHelper ch = BazelJdtPlugin.getJavaCoreHelper();
+        JavaCoreHelper ch = JavaCoreHelperComponentFacade.getInstance().getComponent();
         ch.setClasspathContainer(projectPath, new IJavaProject[] { project }, new IClasspathContainer[] { container },
             monitor);
     }

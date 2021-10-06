@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
+ * Copyright (c) 2020, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -33,14 +33,16 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.eclipse.config;
+package com.salesforce.b2eclipse.config;
 
 import java.net.URL;
 
 import org.eclipse.core.runtime.FileLocator;
 
+import com.salesforce.bazel.eclipse.config.AbstractEclipseAspectLocation;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+
 
 /**
  * Implementation of {@link BazelAspectLocation} using Eclipse OSGi Bundle locations.
@@ -48,10 +50,10 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
  * The Bazel Eclipse plugin uses a Bazel Aspect to introspect build data, such as dependencies. See
  * {@link BazelWorkspaceCommandRunner} for details on how this aspect is wired into the build.
  */
-public class BazelAspectLocationImpl extends AbstractEclipseAspectLocation {
+public class DefaultEclipseAspectLocationImpl extends AbstractEclipseAspectLocation {
 
     @Override
     protected URL getResolvedPath(URL url) throws Exception {
-        return FileLocator.resolve(url);
+        return FileLocator.toFileURL(url);
     }
 }

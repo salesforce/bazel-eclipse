@@ -116,7 +116,7 @@ public class InitImportFlow implements ImportFlow {
         // we support pluggable project structure strategies to optimize import performance
         // this will use knowledge of common patterns like Maven to quickly locate source directories
         // but if a strategy gets this wrong it can cause problems
-        PreferenceStoreResourceHelper resourceHelper = BazelPluginActivator.getCoreResourceHelper();
+        PreferenceStoreResourceHelper resourceHelper = BazelPluginActivator.getPreferenceStoreResourceHelper();
         IPreferenceStore prefsStore = resourceHelper.getPreferenceStore(BazelPluginActivator.getInstance());
         boolean enabledStructureStrategies =
                 prefsStore.getBoolean(BazelPreferenceKeys.PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME);

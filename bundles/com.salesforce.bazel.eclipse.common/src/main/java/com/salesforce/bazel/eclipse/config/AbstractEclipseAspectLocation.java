@@ -33,10 +33,9 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.eclipse.runtime.impl;
+package com.salesforce.bazel.eclipse.config;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.FileLocator;
@@ -48,15 +47,25 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
-
 /**
- * Implementation of {@link BazelAspectLocation} using Eclipse OSGi Bundle locations.
+ * An abstract implementation of {@link BazelAspectLocation} using Eclipse OSGi Bundle locations.
  * <p>
  * The Bazel Eclipse plugin uses a Bazel Aspect to introspect build data, such as dependencies. See
  * {@link BazelWorkspaceCommandRunner} for details on how this aspect is wired into the build.
  */
-public class DefaultEclipseAspectLocationImpl implements BazelAspectLocation {
+public abstract class AbstractEclipseAspectLocation implements BazelAspectLocation {
     public static final String SDK_PLUGIN_ID = "com.salesforce.bazel-java-sdk"; //$NON-NLS-1$
+
+    /**
+     * This method resolves the given url into a required protocol-specififc URL (i.e. file protocol with files
+     * extraction like {@link FileLocator#toFileURL} or protocol that is nativve to the Java class library like
+     * {@link FileLocator#resolve}
+     * 
+     * @param url
+     *            - initial {@link URL}
+     * @return - resolved {@link URL}
+     */
+    protected abstract URL getResolvedPath(URL url) throws Exception;
 
     /**
      * Returns the path of the Aspect file(s) from the SDK plugin, which needs to be extracted on the filesystem.
@@ -71,19 +80,17 @@ public class DefaultEclipseAspectLocationImpl implements BazelAspectLocation {
      * problem. This type of problem should never make it out of the lab because it is a serious packaging error if this
      * happens.
      */
-    private static File getAspectWorkspace() {
-        LogHelper logger = LogHelper.log(DefaultEclipseAspectLocationImpl.class);
+    private File getAspectWorkspace() {
+        LogHelper logger = LogHelper.log(AbstractEclipseAspectLocation.class);
         try {
             Bundle bazelSDKPlugin = Platform.getBundle(SDK_PLUGIN_ID);
             if (bazelSDKPlugin == null) {
-                logger.error(
-                    "Eclipse OSGi subsystem could not find the Bazel SDK plugin [" + SDK_PLUGIN_ID
-                    + "]");
-                throw new IllegalStateException("Eclipse OSGi subsystem could not find the Bazel SDK plugin ["
-                        + SDK_PLUGIN_ID + "]");
+                logger.error("Eclipse OSGi subsystem could not find the Bazel SDK plugin [" + SDK_PLUGIN_ID + "]");
+                throw new IllegalStateException(
+                        "Eclipse OSGi subsystem could not find the Bazel SDK plugin [" + SDK_PLUGIN_ID + "]");
             }
             URL url = bazelSDKPlugin.getEntry("aspect");
-            URL resolved = FileLocator.toFileURL(url);
+            URL resolved = getResolvedPath(url);
             if (resolved == null) {
                 logger.error("Could not load BEF Aspect location [" + url + "]");
                 throw new IllegalStateException("Could not load BEF Aspect location [" + url + "]");
@@ -96,32 +103,38 @@ public class DefaultEclipseAspectLocationImpl implements BazelAspectLocation {
             if (!aspectWorkspaceDirFile.exists()) {
                 File canonicalFile = FSPathHelper.getCanonicalFileSafely(new File(aspectPath));
                 if (!canonicalFile.exists()) {
-                    if (!aspectPath.contains("com.salesforce.bazel-java-sdk"+File.separator+"target")) {
+                    if (aspectPath.contains("com.salesforce.bazel-java-sdk" + File.separator + "target")) {
+                        // this is a test bundle for unit tests, it is ok that we cant load the aspect because it is not
+                        // properly packaged as a feature
+                        logger.info(
+                            "Detected running as test bundle, the aspect files are not available but this is expected: ["
+                                    + aspectPath + "]");
+                    } else {
                         // This is a critical piece of validation. If the packaging breaks and the Aspect is no longer
                         // on the filesystem, we need to fail. The Aspect is critical to the computation of the classpath,
                         // so nothing will work without it. Fail hard if it is missing.
-                        logger.error(
-                            "The BEF Aspect file is not found on disk: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
-                        throw new IllegalStateException(
-                            "Could not load the BEF Aspect on disk [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
+                        logger.error("The BEF Aspect file is not found on disk: ["
+                                + aspectWorkspaceDirFile.getAbsolutePath() + "]");
+                        throw new IllegalStateException("Could not load the BEF Aspect on disk ["
+                                + aspectWorkspaceDirFile.getAbsolutePath() + "]");
                     }
-                    // this is a test bundle for unit tests, it is ok that we cant load the aspect because it is not
-                    // properly packaged as a feature
-                    logger.info("Detected running as test bundle, the aspect files are not available but this is expected: ["+aspectPath+"]");
                 }
             }
             logger.info("BEF Aspect location: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
 
             return aspectWorkspaceDirFile;
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static File WORKSPACE_DIRECTORY = getAspectWorkspace();
+    private File WORKSPACE_DIRECTORY;
 
     @Override
-    public File getAspectDirectory() {
+    public synchronized File getAspectDirectory() {
+        if (WORKSPACE_DIRECTORY == null) {
+            WORKSPACE_DIRECTORY = getAspectWorkspace();
+        }
         return WORKSPACE_DIRECTORY;
     }
 

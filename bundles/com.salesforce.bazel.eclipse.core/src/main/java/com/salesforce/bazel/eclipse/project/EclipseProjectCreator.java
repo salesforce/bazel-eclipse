@@ -110,8 +110,10 @@ public class EclipseProjectCreator {
         IProject eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation, structure);
         BazelProject bazelProject = bazelProjectManager.getProject(projectName);
         try {
-            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID);
-            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID);
+            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID,
+                BazelPluginActivator.getResourceHelper());
+            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID,
+                BazelPluginActivator.getResourceHelper());
             BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
             projMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), packageFSPath,
                 bazelTargets, new ArrayList<>()); // TODO pass buildFlags

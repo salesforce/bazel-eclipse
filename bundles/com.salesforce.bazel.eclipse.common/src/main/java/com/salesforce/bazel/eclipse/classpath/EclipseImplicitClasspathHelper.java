@@ -33,7 +33,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.b2eclipse.classpath;
+package com.salesforce.bazel.eclipse.classpath;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -43,7 +43,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
+import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.lang.jvm.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
@@ -79,7 +79,7 @@ public class EclipseImplicitClasspathHelper extends ImplicitClasspathHelper {
                 IPath sourceAttachmentPath = null;
                 IPath sourceAttachmentRootPath = null;
                 boolean isTestLib = generic_dep.isTestJar;
-                IClasspathEntry runnerJarEntry = BazelJdtPlugin.getJavaCoreHelper().newLibraryEntry(runnerJarPath,
+                IClasspathEntry runnerJarEntry = JavaCoreHelperComponentFacade.getInstance().getComponent().newLibraryEntry(runnerJarPath,
                     sourceAttachmentPath, sourceAttachmentRootPath, isTestLib);
                 deps.add(runnerJarEntry);
             }

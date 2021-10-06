@@ -38,12 +38,13 @@ package com.salesforce.bazel.eclipse;
 import java.io.File;
 
 import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import com.salesforce.bazel.eclipse.component.BazelAspectLocationComponentFacade;
 import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
-import com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl;
 import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
 import com.salesforce.bazel.eclipse.project.BazelPluginResourceChangeListener;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
@@ -107,13 +108,13 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     private static BazelProjectManager bazelProjectManager;
 
     /**
-     * IResourceHelper is a useful singleton for looking up workspace/projects from the Eclipse environment
+     * ResourceHelper is a useful singleton for looking up workspace/projects from the Eclipse environment
      */
     private static ResourceHelper resourceHelper;
     /**
-     * IResourceHelper is a useful singleton for looking up workspace/projects from the Eclipse environment
+     * PreferenceStoreResourceHelper to access {@link IPreferenceStore}
      */
-    private static PreferenceStoreResourceHelper coreResourceHelper;
+    private static PreferenceStoreResourceHelper preferenceStoreResourceHelper;
 
     /**
      * JavaCoreHelper is a useful singleton for working with Java projects in the Eclipse workspace
@@ -149,7 +150,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     public void start(BundleContext context) throws Exception {
         EclipseLoggerFacade.install(context.getBundle());
         super.start(context);
-        BazelAspectLocation aspectLocation = new BazelAspectLocationImpl();
+        BazelAspectLocation aspectLocation = BazelAspectLocationComponentFacade.getInstance().getComponent();
         CommandConsoleFactory consoleFactory = new EclipseConsole();
         CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
         PreferenceStoreResourceHelper eclipseResourceHelper = new PreferenceStoreEclipeResourceHelper();
@@ -175,16 +176,15 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      */
     public void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
             CommandConsoleFactory consoleFactory, BazelProjectManager projectMgr, ResourceHelper rh,
-            PreferenceStoreResourceHelper crh,
-            JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv, BazelConfigurationManager configMgr,
-            BazelExternalJarRuleManager externalJarRuleMgr) throws Exception {
+            PreferenceStoreResourceHelper crh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv,
+            BazelConfigurationManager configMgr, BazelExternalJarRuleManager externalJarRuleMgr) throws Exception {
         // reset internal state (this is so tests run in a clean env)
         bazelWorkspace = null;
         bazelWorkspaceCommandRunner = null;
 
         // global collaborators
         resourceHelper = rh;
-        coreResourceHelper = crh;
+        preferenceStoreResourceHelper = crh;
         plugin = this;
         javaCoreHelper = javac;
         osEnvStrategy = osEnv;
@@ -317,15 +317,15 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     }
 
     /**
-     * Returns the unique instance of {@link IResourceHelper}, this helper helps retrieve workspace and project objects
+     * Returns the unique instance of {@link ResourceHelper}, this helper helps retrieve workspace and project objects
      * from the environment
      */
     public static ResourceHelper getResourceHelper() {
         return resourceHelper;
     }
 
-    public static PreferenceStoreResourceHelper getCoreResourceHelper() {
-        return coreResourceHelper;
+    public static PreferenceStoreResourceHelper getPreferenceStoreResourceHelper() {
+        return preferenceStoreResourceHelper;
     }
 
     /**
@@ -370,7 +370,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     // TEST ONLY
 
     /**
-     * For some partial mocked tests, setting the IResourceHelper (which is used widely) without fully initializing the
+     * For some partial mocked tests, setting the ResourceHelper (which is used widely) without fully initializing the
      * plugin can be faster, and less code. Do NOT use this method otherwise.
      */
     public static void setResourceHelperForTests(ResourceHelper rh) {

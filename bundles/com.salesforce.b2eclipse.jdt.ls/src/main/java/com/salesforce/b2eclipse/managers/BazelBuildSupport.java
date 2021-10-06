@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.IProject;
@@ -25,6 +24,7 @@ import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager.CHANGE_TYPE;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.bazel.eclipse.BazelNature;
+import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 
@@ -77,11 +77,11 @@ public class BazelBuildSupport implements IBuildSupport {
 
         final IProjectImporter importer = obtainBazelImporter();
 
-        importer.initialize(BazelJdtPlugin.getBazelWorkspaceRootDirectory());
+        importer.initialize(EclipseBazelComponentFacade.getInstance().getBazelWorkspaceRootDirectory());
 
-        BazelCommandManager bazelCommandManager = BazelJdtPlugin.getBazelCommandManager();
-        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
-                bazelCommandManager.getWorkspaceCommandRunner(BazelJdtPlugin.getBazelWorkspace());
+        BazelCommandManager bazelCommandManager = EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
+        BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager
+                .getWorkspaceCommandRunner(EclipseBazelComponentFacade.getInstance().getBazelWorkspace());
 
         bazelWorkspaceCmdRunner.flushAspectInfoCache();
 

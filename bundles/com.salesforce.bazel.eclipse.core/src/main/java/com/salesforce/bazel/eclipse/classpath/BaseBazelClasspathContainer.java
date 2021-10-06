@@ -75,11 +75,6 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     protected final LogHelper logger;
     protected IClasspathEntry[] lastComputedClasspath = null;
 
-    public BaseBazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
-        this(eclipseProject, BazelPluginActivator.getResourceHelper());
-    }
-
     BaseBazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {

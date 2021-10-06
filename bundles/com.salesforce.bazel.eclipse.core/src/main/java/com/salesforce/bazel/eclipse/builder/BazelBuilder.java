@@ -59,6 +59,7 @@ import org.eclipse.jdt.core.JavaCore;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
+import com.salesforce.bazel.eclipse.classpath.IClasspathContainerConstants;
 import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
@@ -162,8 +163,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             // this should also consider added or removed BUILD files (?)
             IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
             ClasspathContainerInitializer cpInit =
-                    JavaCore.getClasspathContainerInitializer(BazelClasspathContainer.CONTAINER_NAME);
-            cpInit.requestClasspathContainerUpdate(Path.fromPortableString(BazelClasspathContainer.CONTAINER_NAME),
+                    JavaCore.getClasspathContainerInitializer(IClasspathContainerConstants.CONTAINER_NAME);
+            cpInit.requestClasspathContainerUpdate(Path.fromPortableString(IClasspathContainerConstants.CONTAINER_NAME),
                 javaProject, null);
         }
     }

@@ -43,7 +43,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
@@ -117,10 +116,8 @@ public class EclipseProjectUtils {
         return false;
     }
 
-    public static void addNatureToEclipseProject(IProject eclipseProject, String nature) throws CoreException {
+    public static void addNatureToEclipseProject(IProject eclipseProject, String nature, ResourceHelper resourceHelper) throws CoreException {
         if (!eclipseProject.hasNature(nature)) {
-            ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-
             IProjectDescription eclipseProjectDescription = resourceHelper.getProjectDescription(eclipseProject);
             String[] prevNatures = eclipseProjectDescription.getNatureIds();
             String[] newNatures = new String[prevNatures.length + 1];
