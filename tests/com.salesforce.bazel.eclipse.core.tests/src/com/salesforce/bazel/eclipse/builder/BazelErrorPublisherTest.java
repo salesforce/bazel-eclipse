@@ -58,14 +58,15 @@ public class BazelErrorPublisherTest {
 
     @Test
     public void testUnassignedErrors() throws Exception {
+        IProject rootProject = getMockedProject("ROOT").getProject();
         IProject project1 = getMockedProject("P1").getProject();
         BazelLabel l1 = new BazelLabel("projects/libs/lib1:*"); // $SLASH_OK: bazel path
+        Map<BazelLabel, BazelProject> labelToProject = Collections.singletonMap(l1, new BazelProject("P1", project1));
+
         BazelProblem error1 =
                 BazelProblem.createError(FSPathHelper.osSeps("projects/libs/lib1/src/Test.java"), 21, "foo"); // $SLASH_OK
-        Map<BazelLabel, BazelProject> labelToProject = Collections.singletonMap(l1, new BazelProject("P1", project1));
         BazelProblem error2 =
                 BazelProblem.createError(FSPathHelper.osSeps("projects/libs/lib2/src/Test2.java"), 22, "blah"); // $SLASH_OK
-        IProject rootProject = getMockedProject("ROOT").getProject();
 
         Map<IProject, List<BazelProblem>> projectToErrors = BazelErrorPublisher
                 .assignErrorsToOwningProject(Arrays.asList(error1, error2), labelToProject, rootProject);
