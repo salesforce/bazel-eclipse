@@ -41,6 +41,7 @@ import java.util.List;
 import org.junit.Test;
 
 import com.salesforce.bazel.sdk.model.BazelProblem;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 public class BazelOutputParserTest {
 
@@ -49,18 +50,21 @@ public class BazelOutputParserTest {
     @Test
     public void testSingleBuildFileError() {
         BazelOutputParser p = new BazelOutputParser();
+        String buildFilePath = "/Users/mbenioff/simplejava-mvninstall/projects/libs/apple/apple-api/BUILD";
+        if (!FSPathHelper.isUnix) {
+            buildFilePath = "C:\\mbenioff\\simplejava-mvninstall\\projects\\libs\\apple\\apple-api\\BUILD";
+        }
         List<String> lines = Arrays.asList(
-            "ERROR: /Users/mbenioff/simplejava-mvninstall/projects/libs/apple/apple-api/BUILD:16:5: positional argument may not follow keyword argument",
-            "ERROR: /Users/mbenioff/simplejava-mvninstall/projects/libs/apple/apple-api/BUILD:18: name 'xyx' is not defined",
-            "ERROR: /Users/mbenioff/simplejava-mvninstall/projects/libs/apple/apple-api/BUILD: elvis has left the building",
+            "ERROR: " + buildFilePath + ":16:5: positional argument may not follow keyword argument",
+            "ERROR: " + buildFilePath + ":18: name 'xyx' is not defined",
+            "ERROR: " + buildFilePath + ": elvis has left the building",
                 "ERROR: error loading package 'projects/libs/apple/apple-api': Package 'projects/libs/apple/apple-api' contains errors");
 
         List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
 
         assertEquals(3, errors.size());
 
-        assertEquals("/Users/mbenioff/simplejava-mvninstall/projects/libs/apple/apple-api/BUILD",
-            errors.get(0).getResourcePath());
+        assertEquals(buildFilePath, errors.get(0).getResourcePath());
         assertEquals(16, errors.get(0).getLineNumber());
         assertEquals("positional argument may not follow keyword argument", errors.get(0).getDescription());
 
