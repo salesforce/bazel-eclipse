@@ -38,6 +38,7 @@ import java.util.List;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelProblem;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Parses Bazel output. 
@@ -128,11 +129,15 @@ public class BazelOutputParser {
 
         // isolate filename
         int colon = line.indexOf(":");
+        if (!FSPathHelper.isUnix && colon == 1) {
+            // windows path, found the drive discriminator (C:), search again
+            colon = line.indexOf(":", colon+1);
+        }
         if (colon == -1) {
             problemList.add(BazelProblem.createError("", 1, line.trim()));
             return;
         }
-        String filename = line.substring(0, colon);
+        String filename = FSPathHelper.osSeps(line.substring(0, colon));
         
         // isolate line number
         line = line.substring(colon+1);

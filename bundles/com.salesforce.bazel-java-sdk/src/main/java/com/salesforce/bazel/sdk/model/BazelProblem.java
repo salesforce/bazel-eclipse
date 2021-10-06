@@ -157,9 +157,9 @@ public class BazelProblem {
             return File.separator + resourcePath.substring(relativeFilePath.length());
         } else {
             File resourceFile = new File(resourcePath);
-            if (resourceFile.isAbsolute() && resourcePath.contains(bazelPackagePath+File.separator)) {
+            if (resourceFile.isAbsolute() && resourcePath.contains(relativeFilePath)) {
                 // absolute path
-                int index = resourcePath.indexOf(bazelPackagePath);
+                int index = resourcePath.indexOf(relativeFilePath);
                 String relResourcePath= resourcePath.substring(index);
                 return File.separator + relResourcePath.substring(relativeFilePath.length());
             }
