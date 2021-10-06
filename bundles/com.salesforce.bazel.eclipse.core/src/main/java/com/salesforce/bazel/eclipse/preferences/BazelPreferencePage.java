@@ -67,7 +67,7 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
         @Override
         public boolean isValid() {
             try {
-                String bazelPath = getStringValue();
+                String bazelPath = getStringValue().trim();
                 File bazelExecutable = new File(bazelPath);
                 if (!bazelExecutable.exists()) {
                     setErrorMessage(bazelPath + " does not exist");
