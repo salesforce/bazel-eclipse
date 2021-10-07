@@ -94,6 +94,7 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
 
             Set<String> alreadySeenBasePaths = new HashSet<>();
             FSTree resourceFileStructure = new FSTree();
+            FSTree testResourceFileStructure = new FSTree();
 
             for (String srcPath : queryResults) {
                 if (doIgnoreFile(packageDir, srcPath)) {
@@ -146,13 +147,19 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
                         // this is a resource file, like xyz.properties or abc.xml
                         LOG.info("Found resource file with source path {} for package {}", srcPath,
                             packageRelPath);
-                        FSTree.addNode(resourceFileStructure, srcPath, FSPathHelper.osSepRegex(), true);
+                        boolean isTest = FSPathHelper.doesPathContainNamedResource(srcPath, testSourceCodeFolderMarkers, true);
+                        if (isTest) {
+                            FSTree.addNode(testResourceFileStructure, srcPath, FSPathHelper.osSepRegex(), true);
+                        } else {
+                            FSTree.addNode(resourceFileStructure, srcPath, FSPathHelper.osSepRegex(), true);
+                        }
                     }
                 }
             }
 
             // now figure out a reasonable way to represent the source paths of resource files
             computeResourceDirectories(packageRelPath, structure, resourceFileStructure);
+            computeResourceDirectories(packageRelPath, structure, testResourceFileStructure);
 
             // NOTE: the order of source paths in the lists is important. We want the main
             // resources to appear before the test resources. Eclipse will honor that order in

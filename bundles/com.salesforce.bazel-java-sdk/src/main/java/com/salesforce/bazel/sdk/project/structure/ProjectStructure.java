@@ -40,7 +40,7 @@ public class ProjectStructure {
      * The relative file system paths, starting at the root of the workspace, to the directories containing the main
      * source files. For languages like Java that use directories to organize files by Java package
      * (com.salesforce.foo), the path will be to the base of the package (the directory that contains the "com"
-     * directory).
+     * directory). This will also include resource directories.
      * <p>
      * Example: projects/libs/apple/apple-api/src/main/java
      */
@@ -50,7 +50,7 @@ public class ProjectStructure {
      * The relative file system paths, starting at the root of the workspace, to the directories containing the test
      * source files. For languages like Java that use directories to organize files by Java package
      * (com.salesforce.foo), the path will be to the base of the package (the directory that contains the "com"
-     * directory).
+     * directory). This will also include resource directories.
      * <p>
      * Example: projects/libs/apple/apple-api/src/test/java
      */
