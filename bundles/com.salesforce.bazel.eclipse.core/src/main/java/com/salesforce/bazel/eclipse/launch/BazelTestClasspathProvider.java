@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -81,6 +82,9 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
 
     private static final Bundle BUNDLE = FrameworkUtil.getBundle(BazelTestClasspathProvider.class);
 
+    // suppresses a common error dialog
+    private static int javaTestDialogSkipCount = 0;
+
     // computeUnresolvedClassPathEntries() is called multiple times while trying to run a single test,
     // we need this variable to keep track of when to open the error dialog
     public static AtomicBoolean canOpenErrorDialog = new AtomicBoolean(true);
@@ -104,14 +108,10 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
 
         for (IRuntimeClasspathEntry entry : entries) {
             IRuntimeClasspathEntry[] resolved = JavaRuntime.resolveRuntimeClasspathEntry(entry, configuration);
-            for (IRuntimeClasspathEntry resolvedEntry : resolved) {
-                result.add(resolvedEntry);
-            }
+            Collections.addAll(result, resolved);
         }
 
-        for (IRuntimeClasspathEntry entry : JavaRuntime.resolveSourceLookupPath(entries, configuration)) {
-            result.add(entry);
-        }
+        Collections.addAll(result, JavaRuntime.resolveSourceLookupPath(entries, configuration));
 
         IRuntimeClasspathEntry[] resolvedClasspath = result.toArray(new IRuntimeClasspathEntry[result.size()]);
         LOG.info("Test classpath: {}", (Object[]) resolvedClasspath);
@@ -178,16 +178,30 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    // TODO create a pref for a user to be able to ignore these errors; often the user will
-                    // be "yeah yeah, just run the tests that you can find" when this happens
                     if (canOpenErrorDialog.get()) {
                         canOpenErrorDialog.set(false);
+
+                        // only present the dialog once every ~10 times; often the user will
+                        // be "yeah yeah, just run the tests that you can find" when this happens
+                        // because if they run the tests over a project this can happen every time
+                        // TODO create a pref for a user to be able to ignore these errors
+                        javaTestDialogSkipCount++;
+                        if (javaTestDialogSkipCount > 1) {
+                            if (javaTestDialogSkipCount > 10) {
+                                // trigger it next time
+                                javaTestDialogSkipCount = 0;
+                            }
+                            return;
+                        }
+
                         Display.getDefault().syncExec(new Runnable() {
                             @Override
                             public void run() {
                                 MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target",
                                     "One or more of the targets being executed are not part of a Bazel java_test target ( "
-                                            + unrunnableLabelsString + "). The target(s) will be ignored.");
+                                            + unrunnableLabelsString + "). The target(s) will be ignored.\n\n"
+                                            + "Since this might be a common issue for your workspace, this dialog "
+                                            + "will only be presented periodically when this happens.");
                             }
                         });
                     }
