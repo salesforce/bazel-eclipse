@@ -89,12 +89,19 @@ public final class EclipseSourceClasspathUtil {
         JavaCoreHelper javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
 
         long startTimeMS = System.currentTimeMillis();
+
+        // main source paths
+        buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath, structure.mainSourceDirFSPaths,
+            false, classpathEntries);
         buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath,
-            structure.mainSourceDirFSPaths, false,
-            classpathEntries);
+            structure.mainResourceDirFSPaths, false, classpathEntries);
+
+        // test source oaths
         buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath,
-            structure.testSourceDirFSPaths, true,
-            classpathEntries);
+            structure.testSourceDirFSPaths, true, classpathEntries);
+        buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath,
+            structure.testResourceDirFSPaths, true, classpathEntries);
+
         SimplePerfRecorder.addTime("import_createprojects_sourcecp_1", startTimeMS);
 
         startTimeMS = System.currentTimeMillis();

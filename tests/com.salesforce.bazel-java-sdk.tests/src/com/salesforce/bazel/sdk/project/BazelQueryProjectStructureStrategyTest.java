@@ -78,9 +78,9 @@ public class BazelQueryProjectStructureStrategyTest {
         // validate
         assertNotNull(structure);
         assertContains(structure.mainSourceDirFSPaths, "projects/libs/apple/source/main/java");
-        assertContains(structure.mainSourceDirFSPaths, "projects/libs/apple/source/main/resources");
+        assertContains(structure.mainResourceDirFSPaths, "projects/libs/apple/source/main/resources");
         assertContains(structure.testSourceDirFSPaths, "projects/libs/apple/source/test/java");
-        assertContains(structure.testSourceDirFSPaths, "projects/libs/apple/source/test/resources");
+        assertContains(structure.testResourceDirFSPaths, "projects/libs/apple/source/test/resources");
     }
 
     @Test
@@ -115,11 +115,11 @@ public class BazelQueryProjectStructureStrategyTest {
         assertNotNull(structure);
         assertContains(structure.mainSourceDirFSPaths, "projects/libs/apple/source/dev/java");
         assertContains(structure.mainSourceDirFSPaths, "projects/libs/apple/source/dev2/java");
-        assertContains(structure.mainSourceDirFSPaths, "projects/libs/apple/source/dev/resources/fruit");
-        assertContains(structure.mainSourceDirFSPaths, "projects/libs/apple/source/dev2/resources");
+        assertContains(structure.mainResourceDirFSPaths, "projects/libs/apple/source/dev/resources/fruit");
+        assertContains(structure.mainResourceDirFSPaths, "projects/libs/apple/source/dev2/resources");
         assertContains(structure.testSourceDirFSPaths, "projects/libs/apple/source/test/java");
         assertContains(structure.testSourceDirFSPaths, "projects/libs/apple/src/test/java");
-        assertContains(structure.testSourceDirFSPaths, "projects/libs/apple/source/test/resources");
+        assertContains(structure.testResourceDirFSPaths, "projects/libs/apple/source/test/resources");
     }
 
     // INTERNALS
@@ -197,8 +197,8 @@ public class BazelQueryProjectStructureStrategyTest {
         protected void computeResourceDirectories(String bazelPackageFSRelativePath, ProjectStructure structure,
                 FSTree otherSourcePaths) {
             // computing resource directories is tested elsewhere, just simulate response here
-            structure.mainSourceDirFSPaths.addAll(mainResourcePathsForThisTest);
-            structure.testSourceDirFSPaths.addAll(testResourcePathsForThisTest);
+            structure.mainResourceDirFSPaths.addAll(mainResourcePathsForThisTest);
+            structure.testResourceDirFSPaths.addAll(testResourcePathsForThisTest);
         }
     }
 }

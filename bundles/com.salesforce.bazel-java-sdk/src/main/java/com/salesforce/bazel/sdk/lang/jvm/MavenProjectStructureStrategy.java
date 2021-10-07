@@ -72,7 +72,7 @@ public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
                 packageRelPath + File.separator + "src" + File.separator + "main" + File.separator + "resources";
         File mainResourcesDir = new File(workspaceRootDir, mainResourcesRelPath);
         if (mainResourcesDir.exists()) {
-            result.mainSourceDirFSPaths.add(mainResourcesRelPath);
+            result.mainResourceDirFSPaths.add(mainResourcesRelPath);
         }
 
         // MAVEN TEST SRC
@@ -92,7 +92,7 @@ public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
                 packageRelPath + File.separator + "src" + File.separator + "test" + File.separator + "resources";
         File testResourcesDir = new File(workspaceRootDir, testResourcesRelPath);
         if (testResourcesDir.exists()) {
-            result.testSourceDirFSPaths.add(testResourcesRelPath);
+            result.testResourceDirFSPaths.add(testResourcesRelPath);
         }
 
         return result;
