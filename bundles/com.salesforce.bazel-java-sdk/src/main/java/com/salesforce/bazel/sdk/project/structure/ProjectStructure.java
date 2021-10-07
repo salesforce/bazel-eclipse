@@ -40,12 +40,20 @@ public class ProjectStructure {
      * The relative file system paths, starting at the root of the workspace, to the directories containing the main
      * source files. For languages like Java that use directories to organize files by Java package
      * (com.salesforce.foo), the path will be to the base of the package (the directory that contains the "com"
-     * directory). This will also include resource directories.
+     * directory).
      * <p>
      * Example: projects/libs/apple/apple-api/src/main/java
      */
     public List<String> mainSourceDirFSPaths = new ArrayList<>();
 
+    /**
+     * The relative file system paths, starting at the root of the workspace, to the directories containing the main
+     * resource files. 
+     * <p>
+     * Example: projects/libs/apple/apple-api/src/main/resources
+     */
+    public List<String> mainResourceDirFSPaths = new ArrayList<>();
+    
     /**
      * The relative file system paths, starting at the root of the workspace, to the directories containing the test
      * source files. For languages like Java that use directories to organize files by Java package
@@ -56,6 +64,14 @@ public class ProjectStructure {
      */
     public List<String> testSourceDirFSPaths = new ArrayList<>();
 
+    /**
+     * The relative file system paths, starting at the root of the workspace, to the directories containing the test
+     * resource files. 
+     * <p>
+     * Example: projects/libs/apple/apple-api/src/test/resources
+     */
+    public List<String> testResourceDirFSPaths = new ArrayList<>();
+    
     public ProjectStructure() {
 
     }
@@ -68,8 +84,16 @@ public class ProjectStructure {
         return mainSourceDirFSPaths;
     }
 
+    public List<String> getMainResourceDirFSPaths() {
+        return mainResourceDirFSPaths;
+    }
+    
     public List<String> getTestSourceDirFSPaths() {
         return testSourceDirFSPaths;
+    }
+
+    public List<String> getTestResourceDirFSPaths() {
+        return testResourceDirFSPaths;
     }
 
     /**
@@ -85,13 +109,23 @@ public class ProjectStructure {
         } else {
             mainSourceDirFSPaths = olderStructure.mainSourceDirFSPaths;
         }
+        if (mainResourceDirFSPaths.size() > 0) {
+            olderStructure.mainResourceDirFSPaths = mainResourceDirFSPaths;
+        } else {
+            mainResourceDirFSPaths = olderStructure.mainResourceDirFSPaths;
+        }
         if (testSourceDirFSPaths.size() > 0) {
             olderStructure.testSourceDirFSPaths = testSourceDirFSPaths;
         } else {
             testSourceDirFSPaths = olderStructure.testSourceDirFSPaths;
         }
+        if (testResourceDirFSPaths.size() > 0) {
+            olderStructure.testResourceDirFSPaths = testResourceDirFSPaths;
+        } else {
+            testResourceDirFSPaths = olderStructure.testResourceDirFSPaths;
+        }
     }
-
+    
     // DEPRECATED
 
     /**

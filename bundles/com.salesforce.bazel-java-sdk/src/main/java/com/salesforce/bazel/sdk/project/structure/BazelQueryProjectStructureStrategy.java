@@ -162,10 +162,12 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
             computeResourceDirectories(packageRelPath, structure, testResourceFileStructure);
 
             // NOTE: the order of source paths in the lists is important. We want the main
-            // resources to appear before the test resources. Eclipse will honor that order in
+            // directories to appear before the test directories. Eclipse will honor that order in
             // the project explorer.
             Collections.sort(structure.mainSourceDirFSPaths);
+            Collections.sort(structure.mainResourceDirFSPaths);
             Collections.sort(structure.testSourceDirFSPaths);
+            Collections.sort(structure.testResourceDirFSPaths);
         } else {
             LOG.info("Did not find any source files for package [{}], ignoring for import.", packageLabel);
             structure = null;
@@ -222,9 +224,9 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
         for (String resourceDirectoryPath : resourceDirectoryPaths) {
             String path = bazelPackageFSRelativePath + File.separator + resourceDirectoryPath;
             if (FSPathHelper.doesPathContainNamedResource(resourceDirectoryPath, testSourceCodeFolderMarkers, true)) {
-                result.testSourceDirFSPaths.add(path);
+                result.testResourceDirFSPaths.add(path);
             } else {
-                result.mainSourceDirFSPaths.add(path);
+                result.mainResourceDirFSPaths.add(path);
             }
         }
     }

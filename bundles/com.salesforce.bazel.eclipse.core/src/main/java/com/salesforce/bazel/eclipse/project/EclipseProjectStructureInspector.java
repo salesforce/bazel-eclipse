@@ -48,7 +48,7 @@ public class EclipseProjectStructureInspector {
     // be all done in the SDK
 
     public static ProjectStructure computePackageSourceCodePaths(BazelPackageLocation packageNode) {
-        ProjectStructure result = null;
+        ProjectStructure result;
 
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         BazelWorkspaceCommandRunner commandRunner =
@@ -70,7 +70,7 @@ public class EclipseProjectStructureInspector {
             // eventually we should use bazel query for these as well
             // TODO I don't think we need this anymore, we now surface all files in the root of package automatically
             if (packageDir.list(new ProtoFileFilter()).length > 0) {
-                result.mainSourceDirFSPaths.add(packageNode.getBazelPackageFSRelativePath());
+                result.mainResourceDirFSPaths.add(packageNode.getBazelPackageFSRelativePath());
             }
 
             // TODO derive the list of active targets, this isnt right, we should be honoring the list we already have,
