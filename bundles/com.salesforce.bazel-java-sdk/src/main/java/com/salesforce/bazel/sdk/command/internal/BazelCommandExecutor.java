@@ -45,12 +45,15 @@ import java.util.function.Function;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Utility class that understands how to run Command objects and collect output from them.
  */
 public class BazelCommandExecutor {
+    static final LogHelper LOG = LogHelper.log(BazelCommandExecutor.class);
+
     private final File bazelExecutable;
     private final CommandBuilder commandBuilder;
     public static final long TIMEOUT_INFINITE = 0L;
@@ -82,9 +85,11 @@ public class BazelCommandExecutor {
                 getConfiguredCommandBuilder(consoleType, workingDirectory, progressMonitor, args, timeoutMS);
         Command command = builder.setStdoutLineSelector(selector).build();
 
-        if (command.run() == 0) {
+        int exitCode = command.run();
+        if (exitCode == 0) {
             return command.getSelectedOutputLines();
         }
+        LOG.error("Command [{}] failed with this exit code: {}", args, exitCode);
         return new ArrayList<>();
     }
 
@@ -108,10 +113,11 @@ public class BazelCommandExecutor {
 
         CommandBuilder builder = getConfiguredCommandBuilder(consoleType, directory, progressMonitor, args, timeoutMS);
         Command command = builder.setStderrLineSelector(selector).build();
-        if (command.run() == 0) {
+        int exitCode = command.run();
+        if (exitCode == 0) {
             return command.getSelectedErrorLines();
         }
-
+        LOG.error("Command [{}] failed with this exit code: {}", args, exitCode);
         return new ArrayList<>();
     }
 
