@@ -348,8 +348,10 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * initial state, but hard to guarantee that this will be perfect. If the user does NOT also delete the Bazel
      * workspace code projects, there could be trouble.
      */
-    public static void closeBazelWorkspace() {
+    public void closeBazelWorkspace() {
+        // now forget about the workspace
         bazelWorkspace = null;
+        bazelWorkspaceCommandRunner = null;
         configurationManager.setBazelWorkspacePath(null);
     }
 

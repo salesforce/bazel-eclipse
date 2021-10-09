@@ -50,6 +50,7 @@ import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationExcepti
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.DynamicBazelJvmClasspath;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
@@ -70,6 +71,8 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper);
+
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
 
         if (USE_DYNAMIC_CP) {
             bazelClasspath = new DynamicBazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,

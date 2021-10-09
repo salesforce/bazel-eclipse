@@ -56,6 +56,7 @@ import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
@@ -67,14 +68,18 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * Workspace, plus all of the types built within the workspace, and adding them to this synthetic classpath container
  * attached to the 'Bazel Workspace' project in Eclipse. If the Bazel Workspace has an enormous set of dependencies,
  * this may make type search slow so we allow the user to disable it in the Bazel preferences.
+ * <p>
+ * This needs to be reconfigurable, if the user deletes the Bazel Workspace from the Eclipse Workspace, and loads
+ * another.
  */
 public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathContainer {
     private static final LogHelper LOG = LogHelper.log(BazelGlobalSearchClasspathContainer.class);
 
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER";
 
+    protected String bazelWorkspaceName = null;
     protected final BazelConfigurationManager config;
-    protected final BazelJvmIndexClasspath bazelJvmIndexClasspath;
+    protected BazelJvmIndexClasspath bazelJvmIndexClasspath;
 
     private static List<BazelJvmIndexClasspath> instances = new ArrayList<>();
 
@@ -87,19 +92,8 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper);
-
         BazelPluginActivator activator = BazelPluginActivator.getInstance();
         config = activator.getConfigurationManager();
-
-        OperatingEnvironmentDetectionStrategy os = activator.getOperatingEnvironmentDetectionStrategy();
-        BazelExternalJarRuleManager externalJarManager = activator.getBazelExternalJarRuleManager();
-
-        // check if the user has provided an additional location to look for jars
-        List<File> additionalJarLocations = loadAdditionalLocations();
-
-        bazelJvmIndexClasspath =
-                new BazelJvmIndexClasspath(bazelWorkspace, os, externalJarManager, additionalJarLocations);
-        instances.add(bazelJvmIndexClasspath);
     }
 
     @Override
@@ -115,9 +109,23 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
 
     @Override
     public BazelJvmClasspathResponse computeClasspath() {
-        if (!config.isGlobalClasspathSearchEnabled()) {
-            // user has disabled the global search feature
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        if (!config.isGlobalClasspathSearchEnabled() || (bazelWorkspace == null)) {
+            // user has disabled the global search feature, or hasnt imported a bazel workspace yet
             return new BazelJvmClasspathResponse();
+        }
+
+        if (!bazelWorkspace.getName().equals(bazelWorkspaceName)) {
+            // this is the first time with this Bazel Workspace, load our collaborators
+            BazelPluginActivator activator = BazelPluginActivator.getInstance();
+            OperatingEnvironmentDetectionStrategy os = activator.getOperatingEnvironmentDetectionStrategy();
+            BazelExternalJarRuleManager externalJarManager = activator.getBazelExternalJarRuleManager();
+
+            // check if the user has provided an additional location to look for jars
+            List<File> additionalJarLocations = loadAdditionalLocations();
+            bazelJvmIndexClasspath =
+                    new BazelJvmIndexClasspath(bazelWorkspace, os, externalJarManager, additionalJarLocations);
+            instances.add(bazelJvmIndexClasspath);
         }
 
         // the Java SDK will produce a list of logical classpath entries

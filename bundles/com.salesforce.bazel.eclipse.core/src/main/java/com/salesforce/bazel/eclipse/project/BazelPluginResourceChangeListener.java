@@ -30,11 +30,13 @@ import org.eclipse.core.resources.IResourceChangeListener;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Global change listener for Bazel plugin for Eclipse Workspaces.
  */
 public class BazelPluginResourceChangeListener implements IResourceChangeListener {
+    static final LogHelper LOG = LogHelper.log(BazelPluginResourceChangeListener.class);
 
     @Override
     public void resourceChanged(IResourceChangeEvent event) {
@@ -48,7 +50,8 @@ public class BazelPluginResourceChangeListener implements IResourceChangeListene
             String name = project.getName();
             if (name.startsWith(BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME)
                     && (event.getType() == IResourceChangeEvent.PRE_DELETE)) {
-                BazelPluginActivator.closeBazelWorkspace();
+                LOG.info("User is deleting the Bazel Workspace project {} from the Eclipse workspace", name);
+                BazelPluginActivator.getInstance().closeBazelWorkspace();
             }
         }
     }

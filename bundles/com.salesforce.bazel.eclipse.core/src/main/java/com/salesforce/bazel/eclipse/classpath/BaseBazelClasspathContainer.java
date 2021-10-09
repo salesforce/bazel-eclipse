@@ -66,7 +66,6 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * Computes the classpath for a Bazel package and provides it to the JDT tooling in Eclipse.
  */
 public abstract class BaseBazelClasspathContainer implements IClasspathContainer {
-    protected final BazelWorkspace bazelWorkspace;
     protected final BazelProjectManager bazelProjectManager;
     protected BazelProject bazelProject;
     protected final IPath eclipseProjectPath;
@@ -84,7 +83,6 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     BaseBazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
             throws IOException, InterruptedException, BackingStoreException, JavaModelException,
             BazelCommandLineToolConfigurationException {
-        bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
         eclipseProjectPath = eclipseProject.getLocation();
         eclipseProjectIsRoot = resourceHelper.isBazelRootProject(eclipseProject);
@@ -104,6 +102,8 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     @Override
     public IClasspathEntry[] getClasspathEntries() {
         long startTimeMillis = System.currentTimeMillis();
+        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+
         // Fast exit - check the caller of this method to decide if we need to incur the expense of a full classpath compute
         // The saveContainers() caller is useful if we were persisting classpath data to disk for faster restarts later
         // but currently we feel that is riskier than just recomputing the classpath on restart.
@@ -193,19 +193,23 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
 
         File filePathFile = new File(filePathStr);
         Path absolutePath;
+        String searchedLocations = "";
         if (!filePathFile.isAbsolute()) {
             // need to figure out where this relative path is on disk
             // TODO this hunting around for the right root of the relative path indicates we need to rework this
             File bazelExecRootDir = bazelWorkspace.getBazelExecRootDirectory();
             filePathFile = new File(bazelExecRootDir, filePathStr);
             if (!filePathFile.exists()) {
+                searchedLocations = filePathFile.getAbsolutePath();
                 File bazelOutputBase = bazelWorkspace.getBazelOutputBaseDirectory();
                 filePathFile = new File(bazelOutputBase, filePathStr);
                 if (!filePathFile.exists()) {
+                    searchedLocations = searchedLocations + ", " + filePathFile.getAbsolutePath();
                     // java_import locations are resolved here
                     File bazelWorkspaceDir = bazelWorkspace.getBazelWorkspaceRootDirectory();
                     filePathFile = new File(bazelWorkspaceDir, filePathStr);
                     if (!filePathFile.exists()) {
+                        searchedLocations = searchedLocations + ", " + filePathFile.getAbsolutePath();
                         // give up
                         filePathFile = null;
                     }
@@ -217,7 +221,8 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
             // this can happen if someone does a 'bazel clean' using the command line #113
             // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
             String msg = "Problem adding jar to project [" + bazelProject.name
-                    + "] because it does not exist on the filesystem(2): " + filePathStr;
+                    + "] because it does not exist on the filesystem(2), searched paths: " + searchedLocations
+                    + " classpath impl: " + this.getClass().getName();
             logger.error(msg);
             continueOrThrow(new IllegalArgumentException(msg));
             return null;
