@@ -25,6 +25,8 @@ package com.salesforce.bazel.eclipse.mock;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.internal.resources.ProjectDescription;
@@ -59,7 +61,8 @@ public class MockIWorkspace implements IWorkspace {
     private static final String UOE_MSG =
             "MockIWorkspace is pay as you go, you have hit a method that is not implemented.";
 
-    private MockResourceHelper resourceHelper;
+    private final MockResourceHelper resourceHelper;
+    private final List<IResourceChangeListener> changeListeners = new ArrayList<>();
 
     public MockIWorkspace(MockResourceHelper resourceHelper) {
         this.resourceHelper = resourceHelper;
@@ -80,21 +83,21 @@ public class MockIWorkspace implements IWorkspace {
         return desc;
     }
 
+    @Override
+    public void addResourceChangeListener(IResourceChangeListener listener) {
+        changeListeners.add(listener);
+    }
+
+    @Override
+    public void addResourceChangeListener(IResourceChangeListener listener, int eventMask) {
+        changeListeners.add(listener);
+    }
+
     // UNIMPLEMENTED METHODS
     // Please move implemented methods, in alphabetical order, above this line if you implement a method.
 
     @Override
     public <T> T getAdapter(Class<T> adapter) {
-        throw new UnsupportedOperationException(UOE_MSG);
-    }
-
-    @Override
-    public void addResourceChangeListener(IResourceChangeListener listener) {
-        throw new UnsupportedOperationException(UOE_MSG);
-    }
-
-    @Override
-    public void addResourceChangeListener(IResourceChangeListener listener, int eventMask) {
         throw new UnsupportedOperationException(UOE_MSG);
     }
 

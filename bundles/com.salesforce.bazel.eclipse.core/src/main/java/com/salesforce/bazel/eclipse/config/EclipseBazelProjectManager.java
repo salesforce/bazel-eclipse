@@ -135,11 +135,9 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
                     if (canonicalSourcePathString.startsWith(canonicalProjectRoot)) {
                         IPath[] inclusionPatterns = entry.getInclusionPatterns();
                         IPath[] exclusionPatterns = entry.getExclusionPatterns();
-                        if (!matchPatterns(canonicalSourcePath, exclusionPatterns)) {
-                            if ((inclusionPatterns == null) || (inclusionPatterns.length == 0)
-                                    || matchPatterns(canonicalSourcePath, inclusionPatterns)) {
-                                return candidateProject;
-                            }
+                        if (!matchPatterns(canonicalSourcePath, exclusionPatterns) && ((inclusionPatterns == null) || (inclusionPatterns.length == 0)
+                                || matchPatterns(canonicalSourcePath, inclusionPatterns))) {
+                            return candidateProject;
                         }
                     }
                 }
@@ -259,7 +257,8 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
         boolean addedTarget = false;
         Set<String> activeTargets = new TreeSet<>();
-        for (String propertyName : getKeys(eclipseProjectBazelPrefs)) {
+        String[] prefNames = getKeys(eclipseProjectBazelPrefs);
+        for (String propertyName : prefNames) {
             if (propertyName.startsWith(TARGET_PROPERTY_PREFIX)) {
                 String target = eclipseProjectBazelPrefs.get(propertyName, "");
                 if (!target.isEmpty()) {

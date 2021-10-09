@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
+ * Copyright (c) 2021, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -20,49 +20,37 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Copyright 2016 The Bazel Authors. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- *
  */
-
-package com.salesforce.bazel.eclipse;
+package com.salesforce.bazel.eclipse.project;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IProjectNature;
-import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceChangeEvent;
+import org.eclipse.core.resources.IResourceChangeListener;
+
+import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
 
 /**
- * Project nature for Bazel Eclipse plugin.
+ * Global change listener for Bazel plugin for Eclipse Workspaces.
  */
-public class BazelNature implements IProjectNature {
-    public static final String BAZEL_NATURE_ID = "com.salesforce.bazel.eclipse.bazelNature"; //$NON-NLS-1$
-    private IProject project;
+public class BazelPluginResourceChangeListener implements IResourceChangeListener {
 
     @Override
-    public void configure() throws CoreException {
-        // TODO we aren't doing anything right now for BazelNature configure hook, seems like it should be used for something
-        //BazelPluginActivator.info("BazelNature configure hook called.");
+    public void resourceChanged(IResourceChangeEvent event) {
+        IResource resource = event.getResource();
+        if (resource == null) {
+            return;
+        }
+
+        if (resource instanceof IProject) {
+            IProject project = (IProject) resource;
+            String name = project.getName();
+            if (name.startsWith(BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME)
+                    && (event.getType() == IResourceChangeEvent.PRE_DELETE)) {
+                BazelPluginActivator.closeBazelWorkspace();
+            }
+        }
     }
 
-    @Override
-    public void deconfigure() throws CoreException {}
-
-    @Override
-    public IProject getProject() {
-        return project;
-    }
-
-    @Override
-    public void setProject(IProject project) {
-        this.project = project;
-    }
 }
