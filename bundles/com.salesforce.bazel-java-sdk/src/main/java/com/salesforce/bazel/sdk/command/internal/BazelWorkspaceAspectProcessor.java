@@ -391,8 +391,23 @@ public class BazelWorkspaceAspectProcessor {
             // Line must start with >>> and end with the aspect file suffix
             LOG.info("Running command to generate aspect file for labels indexed [" + startTargetIndex + "] through ["
                     + (startTargetIndex + 25) + "] out of the total [" + (lastValidTargetIndex + 1) + "]");
-            Function<String, String> filter = t -> t.startsWith(">>>")
-                    ? (t.endsWith(AspectTargetInfoFactory.ASPECT_FILENAME_SUFFIX) ? t.substring(3) : "") : null;
+            Function<String, String> filter = (t) -> {
+                LOG.info("Aspect output line: "+t);
+                String r = null;
+                if (t.startsWith(">>>")) {
+                    if (t.endsWith(AspectTargetInfoFactory.ASPECT_FILENAME_SUFFIX)) {
+                        LOG.info("  Aspect output (json file): {}", t);
+                        r = t.substring(3);
+                    } else {
+                        LOG.info("  Aspect output (ignored): {}", t);
+                        r = null;
+                    } 
+                } else {
+                    LOG.info("  Aspect output (ignored): {}", t);
+                    r = null;
+                }
+                return r;
+            };
 
             List<String> partialListOfGeneratedFilePaths =
                     bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE, bazelWorkspaceRootDirectory,
@@ -408,11 +423,19 @@ public class BazelWorkspaceAspectProcessor {
 
     public static Map<BazelLabel, AspectTargetInfo> loadAspectFilePaths(List<String> aspectFilePaths)
             throws IOException, InterruptedException {
+        Map<BazelLabel, AspectTargetInfo> bzToAtis = new HashMap<>();
+        
+        if (aspectFilePaths.size() == 0) {
+            LOG.error("No results returned from running aspects. This normally means there is a build error in the BUILD file. "+
+                    "Please run 'bazel build //...' to verify that the workspace is valid. ");
+            return bzToAtis;
+        }
+        
         Map<String, AspectTargetInfo> lToAtis = AspectTargetInfoFactory.loadAspectFilePaths(aspectFilePaths);
         if (lToAtis.isEmpty()) {
-            LOG.error("No results returned from running aspects. This normally means there is a build error in the BUILD file. Please run 'bazel build //...' to verify that the workspace is valid.");
+            LOG.error("No aspect files were parsed successfully. Aspect file list size: "+aspectFilePaths.size());
+            return bzToAtis;
         }
-        Map<BazelLabel, AspectTargetInfo> bzToAtis = new HashMap<>(lToAtis.size());
         for (Map.Entry<String, AspectTargetInfo> e : lToAtis.entrySet()) {
             String key = e.getKey();
             if (key == null) {

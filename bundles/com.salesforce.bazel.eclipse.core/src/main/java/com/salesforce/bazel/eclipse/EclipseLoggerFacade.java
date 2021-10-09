@@ -35,23 +35,43 @@
  */
 package com.salesforce.bazel.eclipse;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+import org.slf4j.helpers.MessageFormatter;
 
 import com.salesforce.bazel.sdk.logging.BasicLoggerFacade;
 import com.salesforce.bazel.sdk.logging.LoggerFacade;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
- * Add Eclipse Platform logging to WARN and ERROR log messages as well as slf4j logging api.
+ * Add Eclipse Platform logging to WARN and ERROR log messages.
  * <p>
- * TODO we will revisit this logging feature later, see https://github.com/salesforce/bazel-eclipse/issues/10
+ * After years of frustration in asking "where are the logs", this logger now creates a log file at /tmp/bef.log (on
+ * Unix platforms) if /tmp exists. It sends the log messages both to the official logger but also to this file which we
+ * fully control.
  */
 public class EclipseLoggerFacade extends BasicLoggerFacade {
-    //private static final Bundle BUNDLE = FrameworkUtil.getBundle(EclipseLoggerFacade.class);
-    // private static final ILog LOG = Platform.getLog(BUNDLE);
+    private static final Bundle BUNDLE = FrameworkUtil.getBundle(EclipseLoggerFacade.class);
+    private static final ILog ECLIPSELOGGER = Platform.getLog(BUNDLE);
+
+    // we have had issues with hard to find logs, missing log lines, etc
+    // for Unix platorms, we create a custom log file in /tmp/bef.log to make sure we get our lines
+    private static BufferedWriter befLogWriter = null;
+    private static SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy-HH:mm:ss");
 
     /**
      * Install the facade as the singleton and configure logging system
-     * 
+     *
      * @param bundle
      * @throws Exception
      */
@@ -59,6 +79,15 @@ public class EclipseLoggerFacade extends BasicLoggerFacade {
         EclipseLoggerFacade instance = new EclipseLoggerFacade();
         LoggerFacade.setInstance(instance);
         //instance.configureLogging(bundle);
+
+        if (FSPathHelper.isUnix) {
+            File tmpDir = new File("/tmp");
+            if (tmpDir.exists()) {
+                FileWriter writer = new FileWriter("/tmp/bef.log", false);
+                befLogWriter = new BufferedWriter(writer);
+                writeTmpLog("Starting BEF Plugin");
+            }
+        }
     }
 
     /**
@@ -69,31 +98,57 @@ public class EclipseLoggerFacade extends BasicLoggerFacade {
     @Override
     public void error(Class<?> from, String message, Object... args) {
         super.error(from, message, args);
-        //String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
-        //LOG.log(new Status(Status.ERROR, BUNDLE.getSymbolicName(), resolved));
+        String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
+
+        ECLIPSELOGGER.log(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(), resolved));
+        writeTmpLog("ERROR: " + resolved);
     }
 
     @Override
     public void error(Class<?> from, String message, Throwable exception, Object... args) {
         super.error(from, message, exception, args);
-        //String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
-        //LOG.log(new Status(Status.ERROR, BUNDLE.getSymbolicName(), resolved, exception));
+        String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
+        ECLIPSELOGGER.log(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(), resolved, exception));
+        writeTmpLog("ERROR: " + resolved);
     }
 
     @Override
     public void warn(Class<?> from, String message, Object... args) {
         super.warn(from, message, args);
-        //String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
-        //LOG.log(new Status(Status.INFO, BUNDLE.getSymbolicName(), resolved));
+        String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
+        ECLIPSELOGGER.log(new Status(IStatus.INFO, BUNDLE.getSymbolicName(), resolved));
+        writeTmpLog("WARN: " + resolved);
+    }
+
+    @Override
+    public void info(Class<?> from, String message, Object... args) {
+        super.info(from, message, args);
+        String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
+        ECLIPSELOGGER.log(new Status(IStatus.INFO, BUNDLE.getSymbolicName(), resolved));
+        writeTmpLog("INFO: " + resolved);
+    }
+
+    private static synchronized void writeTmpLog(String message) {
+        try {
+            if (befLogWriter != null) {
+                String date = formatter.format(new Date());
+                befLogWriter.write(date + " " + message + "\n");
+                befLogWriter.flush();
+            }
+        } catch (Exception anyE) {
+            // out of disk space, someone deleted /tmp/bef.log, etc
+        }
+
     }
 
     /**
      * Configure slf4j and logback back using logback.xml at the top level directory
-     * 
+     *
      * @param bundle
      * @throws JoranException
      * @throws IOException
      */
+    // WE WILL LEAVE THIS HERE FOR ANOTHER YEAR JUST IN CASE, BUT FEEL FREE TO DELETE AFTER 2022
     //    private void configureLogging(Bundle bundle) throws JoranException, IOException {
     // capture the logger context, but guard against:
     // org.slf4j.helpers.NOPLoggerFactory cannot be cast to ch.qos.logback.classic.LoggerContext
@@ -117,9 +172,9 @@ public class EclipseLoggerFacade extends BasicLoggerFacade {
     //            }
     //            jc.doConfigure(logbackConfig);
     //        } else {
-    //            // Logback was missing from the classpath when logging was initialized for some reason 
+    //            // Logback was missing from the classpath when logging was initialized for some reason
     //
-    //            // check classloader to see if it is there now (if it is, there must be a load order issue?) 
+    //            // check classloader to see if it is there now (if it is, there must be a load order issue?)
     //            String isLoggerContextIsInClasspathStr =
     //                    "The class ch.qos.logback.classic.LoggerContext is not present in the classpath which means the plugin never imported it.";
     //            try {
