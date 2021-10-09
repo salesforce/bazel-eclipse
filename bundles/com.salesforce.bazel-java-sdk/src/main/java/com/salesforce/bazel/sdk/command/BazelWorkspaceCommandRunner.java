@@ -56,7 +56,6 @@ import com.salesforce.bazel.sdk.command.internal.BazelVersionChecker;
 import com.salesforce.bazel.sdk.command.internal.BazelWorkspaceAspectProcessor;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.logging.LoggerFacade;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
@@ -639,10 +638,6 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             LOG.error("Error locating path on file system: [{}]", ioe, directory.getAbsolutePath());
         }
         return directory;
-    }
-
-    private LoggerFacade getLogger() {
-        return LoggerFacade.instance();
     }
 
 }

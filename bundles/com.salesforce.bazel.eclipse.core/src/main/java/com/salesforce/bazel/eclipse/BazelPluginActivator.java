@@ -37,12 +37,14 @@ package com.salesforce.bazel.eclipse;
 
 import java.io.File;
 
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl;
 import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
 import com.salesforce.bazel.eclipse.config.EclipseBazelProjectManager;
+import com.salesforce.bazel.eclipse.project.BazelPluginResourceChangeListener;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseConsole;
@@ -201,6 +203,11 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             LOG.info(
                     "The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
         }
+
+        // insert our global resource listener into the workspace
+        IWorkspace eclipseWorkspace = resourceHelper.getEclipseWorkspace();
+        BazelPluginResourceChangeListener resourceChangeListener = new BazelPluginResourceChangeListener();
+        eclipseWorkspace.addResourceChangeListener(resourceChangeListener);
     }
 
     @Override
@@ -332,6 +339,18 @@ public class BazelPluginActivator extends AbstractUIPlugin {
 
     public BazelExternalJarRuleManager getBazelExternalJarRuleManager() {
         return externalJarRuleManager;
+    }
+
+    // DANGER ZONE
+
+    /**
+     * User is deleting the Bazel Workspace project from the Eclipse workspace. Do what we can here. To reset back to
+     * initial state, but hard to guarantee that this will be perfect. If the user does NOT also delete the Bazel
+     * workspace code projects, there could be trouble.
+     */
+    public static void closeBazelWorkspace() {
+        bazelWorkspace = null;
+        configurationManager.setBazelWorkspacePath(null);
     }
 
     // TEST ONLY
