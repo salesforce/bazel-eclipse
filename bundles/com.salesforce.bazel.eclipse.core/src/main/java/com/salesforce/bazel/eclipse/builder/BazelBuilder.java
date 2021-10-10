@@ -115,6 +115,12 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
         ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         if (bazelWorkspace == null) {
+            LOG.warn("Ignoring a Bazel build request, as the Bazel Workspace is not set.");
+            BazelProblem problem = BazelProblem.createError("BUILD", 1,
+                    "The Bazel Workspace project has been deleted from the Eclipse Workspace.");
+            List<BazelProblem> problems = Arrays.asList(problem);
+            BazelProblemMarkerManager markerManager = new BazelProblemMarkerManager("BazelBuilder");
+            markerManager.publish(problems, project, monitor);
             return new IProject[] {};
         }
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
