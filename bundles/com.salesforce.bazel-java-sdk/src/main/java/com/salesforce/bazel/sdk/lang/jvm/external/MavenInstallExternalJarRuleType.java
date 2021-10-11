@@ -48,12 +48,15 @@ package com.salesforce.bazel.sdk.lang.jvm.external;
   * <p>
   * The maven_install rule is a bit tricky, in that it is not reliable in where to find the downloaded jars. Also, the
   * source jars may not be there. This will be an evolving solution as we better understand how to make this more
-  * reliable.
+  * reliable. We look for the downloaded jars in two entirely different locations:
+  * bazel-outputbase/external/maven/v1/https/repo1.maven.org/maven2/com/google/guava/guava/20.0/guava-20.0-sources.jar
+  * bazel-bin/maven/v1/https/ourinternalrepo.com/path/public/com/google/guava/guava/30.1-jre/guava-30.1-jre.jar
   */
  public class MavenInstallExternalJarRuleType extends BazelExternalJarRuleType {
      // these options are expected to be driven by tool preferences
      public static boolean cachedJars_supplyCoursierCacheLocation = false;
      public static boolean cachedJars_supplyWorkspaceBazelBinLocations = true;
+     public static boolean cachedJars_supplyWorkspaceBazelOutputBaseLocations = true;
 
      // derived from the WORKSPACE file (or .bzl files included from the WORKSPACE)
      // each maven_install rule invocation must have a unique namespace, the default value is "maven"
@@ -90,6 +93,18 @@ package com.salesforce.bazel.sdk.lang.jvm.external;
              });
              isUsedInWorkspace = markerFiles.length > 0;
          }
+         if (!isUsedInWorkspace) {
+             File outputExternalDir = new File(bazelWorkspace.getBazelOutputBaseDirectory(), "external");
+             if (outputExternalDir.exists()) {
+                 File[] markerFiles = outputExternalDir.listFiles(new FilenameFilter() {
+                     @Override
+                     public boolean accept(File dir, String name) {
+                         return "maven".equals(name);
+                     }
+                 });
+                 isUsedInWorkspace = markerFiles.length > 0;
+             }
+         }
 
          return isUsedInWorkspace;
      }
@@ -121,6 +136,9 @@ package com.salesforce.bazel.sdk.lang.jvm.external;
          if (cachedJars_supplyWorkspaceBazelBinLocations) {
              addBazelBinLocations(bazelWorkspace, namespaces, localJarLocationsNew);
          }
+         if (cachedJars_supplyWorkspaceBazelOutputBaseLocations) {
+             addBazelOutputBaseLocations(bazelWorkspace, namespaces, localJarLocationsNew);
+         }
 
          // for thread safety, we build the list in a local var, and then switch at the end here
          downloadedJarLocations = localJarLocationsNew;
@@ -151,7 +169,7 @@ package com.salesforce.bazel.sdk.lang.jvm.external;
          //        maven_install(name = "deprecated", ...
          // TODO BazelWorkspace should have some parsing functions for retrieving rule data.
          // in this case, we need to find maven_install rule invocations, and pluck the list of name attributes.
-         // for our primary repo, this is complicated by the fact that the maven_install rules are actually in
+         // for our primary internal repo, this is complicated by the fact that the maven_install rules are actually in
          // .bzl files brought in by load() statements in the WORKSPACE
          namespaces.add("maven");
 
@@ -173,4 +191,20 @@ package com.salesforce.bazel.sdk.lang.jvm.external;
              localJarLocationsNew.add(rootMavenInstallDir);
          }
      }
- }
+
+     /**
+      * maven_install will download jars (and sometimes source jars) into directories such as:
+      * ROOT/bazel-bin/external/maven ROOT/bazel-bin/external/webtest if you have two maven_install rules with names
+      * 'maven' and 'webtest'
+      */
+     protected void addBazelOutputBaseLocations(BazelWorkspace bazelWorkspace, List<String> namespaces,
+             List<File> localJarLocationsNew) {
+         File bazeloutputbaseDir = bazelWorkspace.getBazelOutputBaseDirectory();
+         File externalDir = new File(bazeloutputbaseDir, "external");
+
+         for (String namespace : namespaces) {
+             File rootMavenInstallDir = new File(externalDir, namespace);
+             localJarLocationsNew.add(rootMavenInstallDir);
+         }
+     }
+}

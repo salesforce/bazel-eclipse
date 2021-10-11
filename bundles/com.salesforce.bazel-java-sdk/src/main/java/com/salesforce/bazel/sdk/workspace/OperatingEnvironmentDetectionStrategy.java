@@ -52,6 +52,8 @@ package com.salesforce.bazel.sdk.workspace;
          String operatingSystemFoldername = null;
          if (osName.contains("mac")) {
              operatingSystemFoldername = "darwin";
+         } else if (osName.contains("darwin")) {
+             operatingSystemFoldername = "darwin";
          } else if (osName.contains("win")) {
              operatingSystemFoldername = "windows";
          } else {

@@ -1,10 +1,13 @@
 package com.salesforce.bazel.sdk.model.test;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
@@ -29,44 +32,61 @@ public class MockBazelWorkspaceMetadataStrategy implements BazelWorkspaceMetadat
     public String binPath = null; // default: [outputbase]/execroot/test_workspace/bazel-out/darwin-fastbuild/bin
 
     /**
-     * The File passed as the workspace need not be populated. This mock impl will
-     * 
+     * The directories should be created already.
+     *
      * @param workspaceRootDir
      */
     public MockBazelWorkspaceMetadataStrategy(String testWorkspaceName, File workspaceRootDir, File outputBaseDir,
             OperatingEnvironmentDetectionStrategy os) {
         this.testWorkspaceName = testWorkspaceName;
         this.workspaceRootDir = workspaceRootDir;
+        if (!this.workspaceRootDir.exists()) {
+            this.workspaceRootDir.mkdir();
+            assertTrue(this.workspaceRootDir.exists());
+        }
         this.outputBaseDir = outputBaseDir;
+        if (!this.outputBaseDir.exists()) {
+            this.outputBaseDir.mkdir();
+            assertTrue(this.outputBaseDir.exists());
+        }
         this.os = os;
     }
 
     @Override
     public File computeBazelWorkspaceExecRoot() {
-        File er = null;
+        File execDir;
 
         if (execRootPath == null) {
             execRootPath = "execroot/" + testWorkspaceName;
         }
-        er = new File(outputBaseDir, execRootPath);
-        return er;
+        execDir = new File(outputBaseDir, execRootPath);
+        if (!execDir.exists()) {
+            execDir.mkdirs();
+            assertTrue(execDir.exists());
+        }
+        return execDir;
     }
 
     @Override
     public File computeBazelWorkspaceOutputBase() {
+        assertTrue(outputBaseDir.exists());
         return outputBaseDir;
     }
 
     @Override
     public File computeBazelWorkspaceBin() {
-        File wb = null;
+        File binDir;
 
         if (binPath == null) {
-            binPath = "execroot/" + testWorkspaceName + "/bazel-out/"
-                    + os.getOperatingSystemDirectoryName(os.getOperatingSystemName()) + "-fastbuild/bin";
+            binPath = FSPathHelper.osSeps("execroot/" + testWorkspaceName + "/bazel-out/"
+                    + os.getOperatingSystemDirectoryName(os.getOperatingSystemName()) + "-fastbuild/bin");
         }
-        wb = new File(outputBaseDir, binPath);
-        return wb;
+        binDir = new File(outputBaseDir, binPath);
+        if (!binDir.exists()) {
+            binDir.mkdirs();
+            assertTrue(binDir.exists());
+        }
+        return binDir;
     }
 
     private List<String> optionLines;
@@ -77,13 +97,13 @@ public class MockBazelWorkspaceMetadataStrategy implements BazelWorkspaceMetadat
 
     @Override
     public void populateBazelWorkspaceCommandOptions(BazelWorkspaceCommandOptions commandOptions) {
-        if (this.optionLines == null) {
-            this.optionLines = new ArrayList<>();
-            this.optionLines.add("Inherited 'common' options: --isatty=1 --terminal_columns=260");
-            this.optionLines.add(
-                "Inherited 'build' options: --javacopt=-source 8 -target 8 --host_javabase=//tools/jdk:my-linux-jdk11 --javabase=//tools/jdk:my-linux-jdk8 --stamp");
+        if (optionLines == null) {
+            optionLines = new ArrayList<>();
+            optionLines.add("Inherited 'common' options: --isatty=1 --terminal_columns=260");
+            optionLines.add(
+                    "Inherited 'build' options: --javacopt=-source 8 -target 8 --host_javabase=//tools/jdk:my-linux-jdk11 --javabase=//tools/jdk:my-linux-jdk8 --stamp");
         }
-        commandOptions.parseOptionsFromOutput(this.optionLines);
+        commandOptions.parseOptionsFromOutput(optionLines);
     }
 
     @Override
