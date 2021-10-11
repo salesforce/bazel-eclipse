@@ -130,8 +130,8 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
 
         // the Java SDK will produce a list of logical classpath entries
         long startTime = System.currentTimeMillis();
-        BazelJvmClasspathResponse computedClasspath =
-                bazelJvmIndexClasspath.getClasspathEntries(new EclipseWorkProgressMonitor(null));
+        EclipseWorkProgressMonitor monitor = new EclipseWorkProgressMonitor(null);
+        BazelJvmClasspathResponse computedClasspath = bazelJvmIndexClasspath.getClasspathEntries(monitor);
         long endTime = System.currentTimeMillis();
 
         LOG.info("completed indexing in [{}] milliseconds.", (endTime - startTime));

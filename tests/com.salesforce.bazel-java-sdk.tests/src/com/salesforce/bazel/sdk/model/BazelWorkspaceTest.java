@@ -3,6 +3,8 @@ package com.salesforce.bazel.sdk.model;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.junit.Test;
 
@@ -75,14 +77,16 @@ public class BazelWorkspaceTest {
     // HELPERS
 
     private BazelWorkspace createTestWorkspaceObject(String testName, String osName) throws Exception {
-        File testBazelRoot = File.createTempFile("bazel-java-sdk-" + testName + "-workspace", "");
-        File testBazelOutput = File.createTempFile("bazel-java-sdk-" + testName + "-outputdir", "");
+        Path testDir = Files.createTempDirectory("bzl-mvninstall-test-");
+        File workspaceDir = new File(testDir.toFile(), "bazel-java-sdk-" + testName + "-workspace");
+        File outputDir = new File(testDir.toFile(), "bazel-java-sdk-" + testName + "-outputdir");
+
         MockOperatingEnvironmentDetectionStrategy os = new MockOperatingEnvironmentDetectionStrategy(osName);
 
         // this mock simulates .bazelrc options
         MockBazelWorkspaceMetadataStrategy metadata =
-                new MockBazelWorkspaceMetadataStrategy(testName, testBazelRoot, testBazelOutput, os);
+                new MockBazelWorkspaceMetadataStrategy(testName, workspaceDir, outputDir, os);
 
-        return new BazelWorkspace(testName, testBazelRoot, os, metadata);
+        return new BazelWorkspace(testName, workspaceDir, os, metadata);
     }
 }
