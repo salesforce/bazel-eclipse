@@ -64,10 +64,9 @@ public class BazelImportWizardLocationControl {
     protected boolean doUnresolveWorkspaceFileSoftLink = true;
 
     protected Combo rootDirectoryCombo;
-    protected String rootDirectory;
 
-    protected List<String> locations = new ArrayList<>();
-    protected boolean showLocation = true;
+    private String rootDirectory;
+    protected List<String> rootDirHistoryList = new ArrayList<>();
 
     protected IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 
@@ -87,112 +86,119 @@ public class BazelImportWizardLocationControl {
     public void addLocationControl(Composite composite) {
         fieldsWithHistory = new HashMap<String, List<Combo>>();
 
-        if (showLocation || locations.isEmpty()) {
+        if (rootDirectoryCombo == null) {
             final Label selectRootDirectoryLabel = new Label(composite, SWT.NONE);
             selectRootDirectoryLabel.setLayoutData(new GridData());
             selectRootDirectoryLabel.setText("WORKSPACE File:");
-
             rootDirectoryCombo = new Combo(composite, SWT.NONE);
             rootDirectoryCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-            rootDirectoryCombo.setFocus();
             addFieldWithHistory("rootDirectory", rootDirectoryCombo); //$NON-NLS-1$
+        }
 
-            if ((locations != null) && (locations.size() == 1)) {
-                rootDirectoryCombo.setText(locations.get(0));
-                rootDirectory = locations.get(0);
-            }
+        if (!rootDirHistoryList.isEmpty()) {
+            rootDirectoryCombo.setText(rootDirHistoryList.get(0));
+            rootDirectory = rootDirHistoryList.get(0);
+        }
+        rootDirectoryCombo.setFocus();
 
-            final Button browseButton = new Button(composite, SWT.NONE);
-            browseButton.setText("Browse...");
-            browseButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-            browseButton.addSelectionListener(new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent e) {
-                    FileDialog dialog = new FileDialog(page.getShell());
-                    dialog.setFileName("WORKSPACE");
-                    dialog.setText("Locate the Bazel WORKSPACE file");
-                    String path = rootDirectoryCombo.getText();
-                    if (path.length() == 0) {
-                        path = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot().getLocation()
-                                .toPortableString();
-                    }
-                    dialog.setFilterPath(path);
-
-                    String selectedFile = dialog.open();
-                    if (selectedFile != null) {
-                        File workspaceFile = new File(selectedFile);
-                        if (!workspaceFile.isFile() || !hasWorkspaceFilename(workspaceFile)) {
-                            Display.getDefault().syncExec(new Runnable() {
-                                @Override
-                                public void run() {
-                                    MessageDialog.openError(page.getShell(), "Import WORKSPACE",
-                                        "You must select a Bazel WORKSPACE File");
-                                }
-                            });
-                        } else {
-                            workspaceFile = unresolveSoftLink(workspaceFile);
-                            rootDirectoryCombo.setText(workspaceFile.getParentFile().getAbsolutePath());
-                            if (rootDirectoryChanged()) {
-                                page.scanProjects();
-                            }
-                        }
-                    }
+        final Button browseButton = new Button(composite, SWT.NONE);
+        browseButton.setText("Browse...");
+        browseButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+        browseButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                FileDialog dialog = new FileDialog(page.getShell());
+                dialog.setFileName("WORKSPACE");
+                dialog.setText("Locate the Bazel WORKSPACE file");
+                String path = rootDirectoryCombo.getText();
+                if (path.length() == 0) {
+                    path = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot().getLocation()
+                            .toPortableString();
                 }
-            });
+                dialog.setFilterPath(path);
 
-            rootDirectoryCombo.addListener(SWT.Traverse, new Listener() {
-                @Override
-                public void handleEvent(Event e) {
-                    if ((e.keyCode == SWT.CR) && rootDirectoryChanged()) {
-                        //New location entered : don't finish the wizard
-                        if (e.detail == SWT.TRAVERSE_RETURN) {
-                            e.doit = false;
-                        }
-                        page.scanProjects();
-                    }
-                }
-            });
-
-            rootDirectoryCombo.addFocusListener(new FocusAdapter() {
-                @Override
-                public void focusLost(FocusEvent e) {
-                    if (rootDirectoryChanged()) {
-                        page.scanProjects();
-                    }
-                }
-            });
-            rootDirectoryCombo.addSelectionListener(new SelectionAdapter() {
-                @Override
-                public void widgetDefaultSelected(SelectionEvent e) {
-                    if (rootDirectoryChanged()) {
-                        page.scanProjects();
-                    }
-                }
-
-                @Override
-                public void widgetSelected(SelectionEvent e) {
-                    if (rootDirectoryChanged()) {
-                        //in runnable to have the combo popup collapse before disabling controls.
-                        Display.getDefault().asyncExec(new Runnable() {
+                String selectedFile = dialog.open();
+                if (selectedFile != null) {
+                    File workspaceFile = new File(selectedFile);
+                    if (!workspaceFile.isFile() || !hasWorkspaceFilename(workspaceFile)) {
+                        Display.getDefault().syncExec(new Runnable() {
                             @Override
                             public void run() {
-                                page.scanProjects();
+                                MessageDialog.openError(page.getShell(), "Import WORKSPACE",
+                                        "You must select a Bazel WORKSPACE File");
                             }
                         });
+                    } else {
+                        workspaceFile = unresolveSoftLink(workspaceFile);
+                        rootDirectoryCombo.setText(workspaceFile.getParentFile().getAbsolutePath());
+                        if (rootDirectoryChanged()) {
+                            page.scanProjects();
+                        }
                     }
                 }
-            });
-        }
+            }
+        });
 
-        if ((locations != null) && !locations.isEmpty()) {
-            page.scanProjects();
-        }
+        rootDirectoryCombo.addListener(SWT.Traverse, new Listener() {
+            @Override
+            public void handleEvent(Event e) {
+                if ((e.keyCode == SWT.CR) && rootDirectoryChanged()) {
+                    //New location entered : don't finish the wizard
+                    if (e.detail == SWT.TRAVERSE_RETURN) {
+                        e.doit = false;
+                    }
+                    page.scanProjects();
+                }
+            }
+        });
 
+        rootDirectoryCombo.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (rootDirectoryChanged()) {
+                    page.scanProjects();
+                }
+            }
+        });
+        rootDirectoryCombo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e) {
+                if (rootDirectoryChanged()) {
+                    page.scanProjects();
+                }
+            }
+
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                if (rootDirectoryChanged()) {
+                    //in runnable to have the combo popup collapse before disabling controls.
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            page.scanProjects();
+                        }
+                    });
+                }
+            }
+        });
     }
 
+    protected String getRootDirectory() {
+        return rootDirectory;
+    }
+
+    /**
+     * Detect if the directory has changed.
+     *
+     * @return true if the user has provided a new workspace directory, false if not
+     */
     protected boolean rootDirectoryChanged() {
-        String _rootDirectory = rootDirectory;
+        String previousRootDirectory = rootDirectory;
         rootDirectory = rootDirectoryCombo.getText().trim();
+        if ("".equals(rootDirectory) || (rootDirectory == null)) {
+            return false;
+        }
+
         IPath p = new Path(rootDirectory);
         if (p.isRoot()) {
             // This could theoretically be caused by the user entering a path into the text box manually, and forgetting
@@ -202,7 +208,13 @@ public class BazelImportWizardLocationControl {
                 "Path [" + rootDirectory + "] is incomplete. Please provide the full path to the Bazel workspace.");
             return false;
         }
-        return (_rootDirectory == null) || !_rootDirectory.equals(rootDirectory);
+
+        boolean hasRootDirectoryChanged = !rootDirectory.equals(previousRootDirectory);
+        if (hasRootDirectoryChanged) {
+            rootDirHistoryList.add(rootDirectory);
+        }
+
+        return hasRootDirectoryChanged;
     }
 
     /** Adds an input control to the list of fields to save. */
