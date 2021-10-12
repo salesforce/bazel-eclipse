@@ -49,6 +49,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -56,6 +57,7 @@ import org.junit.rules.TemporaryFolder;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
+import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.workspace.test.TestOptions;
@@ -69,6 +71,12 @@ public class BazelClasspathContainerFTest {
     private IJavaProject javalib0_IJavaProject;
     private IProject javalib1_IProject;
     private IJavaProject javalib1_IJavaProject;
+
+    @Before
+    public void setup() {
+        // reset this global flag because the import flow checks to make sure an import isnt already in progress
+        ProjectImporterFactory.importInProgress.set(false);
+    }
 
     /*
      * CLASSPATH README

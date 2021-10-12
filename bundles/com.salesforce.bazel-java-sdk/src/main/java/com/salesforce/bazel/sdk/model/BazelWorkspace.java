@@ -204,4 +204,33 @@ public class BazelWorkspace {
         }
         return commandOptions;
     }
+    
+    // EQUALITY
+    // We are using location on the file system of the WORKSPACE file as the sole input into hashcode/equals
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((bazelWorkspaceRootDirectory == null) ? 0 : bazelWorkspaceRootDirectory.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        BazelWorkspace other = (BazelWorkspace) obj;
+        if (bazelWorkspaceRootDirectory == null) {
+            if (other.bazelWorkspaceRootDirectory != null)
+                return false;
+        } else if (!bazelWorkspaceRootDirectory.equals(other.bazelWorkspaceRootDirectory))
+            return false;
+        return true;
+    }
+
 }

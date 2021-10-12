@@ -61,9 +61,15 @@ public class InitImportFlow implements ImportFlow {
 
     @Override
     public void run(ImportContext ctx, SubMonitor progressMonitor) {
+        if (ProjectImporterFactory.importInProgress.get()) {
+            throw new IllegalStateException(
+                    "A previous import failed without cleaning up properly. Please restart Eclpse before attempting another import. Please also consider filing an issue, thank you.");
+        }
         ProjectImporterFactory.importInProgress.set(true);
 
         File bazelWorkspaceRootDirectory = initContext(ctx);
+
+        validateInitialState(ctx, bazelWorkspaceRootDirectory);
 
         BazelWorkspace bazelWorkspace = initBazelWorkspace(bazelWorkspaceRootDirectory);
 
@@ -82,6 +88,20 @@ public class InitImportFlow implements ImportFlow {
         // later when creating projects
         bazelWorkspace.getBazelOutputBaseDirectory();
         bazelWorkspace.getBazelExecRootDirectory();
+    }
+
+    private static void validateInitialState(ImportContext ctx, File importBazelWorkspaceRootDirectory) {
+        BazelWorkspace existingBazelWorkspace = getExistingBazelWorkspace();
+
+        if (existingBazelWorkspace != null) {
+            File existingBazelWorkspaceRootDirectory = existingBazelWorkspace.getBazelWorkspaceRootDirectory();
+            if (!importBazelWorkspaceRootDirectory.equals(existingBazelWorkspaceRootDirectory)) {
+                // we do not currently support importing two Bazel Workspaces into an Eclipse workspace
+                // https://github.com/salesforce/bazel-eclipse/issues/25
+                throw new IllegalStateException(
+                        "Bazel Eclipse currently does not support importing multiple Bazel workspaces into a single Eclipse workspace.");
+            }
+        }
     }
 
     private static void initWorkspaceOptions(ImportContext ctx, BazelWorkspace bazelWorkspace) {
@@ -131,8 +151,26 @@ public class InitImportFlow implements ImportFlow {
             bazelWorkspaceName = bazelWorkspace.getName();
         }
 
-        bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        bazelWorkspace = getExistingBazelWorkspace();
 
         return bazelWorkspace;
+    }
+
+    // TEST INFRA
+    // With everything static, it makes it difficult to mock
+    // TODO make import Flow testable/mockable
+
+    // for tests only
+    static BazelWorkspace existingBazelWorkspace = null;
+
+    /**
+     * Returns the BazelWorkspace that has already been imported into the Eclipse workspace, if one exists. This method
+     * exists to make unit tests possible.
+     */
+    protected static BazelWorkspace getExistingBazelWorkspace() {
+        if (existingBazelWorkspace != null) {
+            return existingBazelWorkspace;
+        }
+        return BazelPluginActivator.getBazelWorkspace();
     }
 }

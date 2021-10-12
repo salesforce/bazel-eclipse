@@ -36,6 +36,7 @@ import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
+import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
@@ -93,8 +94,13 @@ public class FlowProjectImporter implements ProjectImporter {
                 subMonitor.setWorkRemaining((flows.length - i) + flow.getTotalWorkTicks(ctx));
                 flow.run(ctx, subMonitor);
                 subMonitor.worked(1);
+            } catch (RuntimeException runE) {
+                LOG.error("Failure during import", runE);
+                ProjectImporterFactory.importInProgress.set(false);
+                throw runE;
             } catch (Throwable th) {
-                LOG.error("failure during import", th);
+                LOG.error("Failure during import", th);
+                ProjectImporterFactory.importInProgress.set(false);
                 // this needs to be handled better - generally, error handing is still a mess
                 // this could call a cleanup method on each Flow instance already processed if we
                 // need to undo work done so far
