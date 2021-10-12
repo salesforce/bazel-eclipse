@@ -72,7 +72,7 @@ public class BazelImportWizardPage extends WizardPage {
 
         IPreferenceStore prefs = BazelPluginActivator.getInstance().getPreferenceStore();
         locationControl = new BazelImportWizardLocationControl(this, prefs);
-        locationControl.addLocationControl(composite);
+        boolean scanAfterBuild = locationControl.addLocationControl(composite);
 
         labelProvider = new BazelImportWizardLabelProvider(this);
 
@@ -84,6 +84,10 @@ public class BazelImportWizardPage extends WizardPage {
 
         advancedSettingsControl = new BazelImportWizardAdvancedSettingsControl(this);
         advancedSettingsControl.addAdvancedSettingsControl(composite);
+
+        if (scanAfterBuild) {
+            scanProjects();
+        }
     }
 
     /**
@@ -130,7 +134,7 @@ public class BazelImportWizardPage extends WizardPage {
                 }
             }
 
-            locationControl.rootDirHistoryList = newFilesystemLocations;
+            BazelImportWizardLocationControl.rootDirHistoryList = newFilesystemLocations;
 
             setPageComplete();
             setErrorMessage(null);
