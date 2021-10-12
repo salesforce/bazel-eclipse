@@ -60,6 +60,9 @@ public class BazelImportWizardPage extends WizardPage {
         setPageComplete(false);
     }
 
+    /**
+     * Called once each time the user picks the Bazel import wizard.
+     */
     @Override
     public void createControl(Composite parent) {
         LOG.info("BazelImportWizardPage.createControl");
@@ -106,9 +109,10 @@ public class BazelImportWizardPage extends WizardPage {
 
             // get the selected location
             // when the wizard is first opened, the location field is blank and we have a null root package
-            if (locationControl.rootDirectory != null) {
-                projectTree.setRootWorkspaceDirectory(locationControl.rootDirectory);
-                workspaceRootPackage = workspaceScanner.getPackages(locationControl.rootDirectory);
+            String currentRootDirectory = locationControl.getRootDirectory();
+            if (currentRootDirectory != null) {
+                projectTree.setRootWorkspaceDirectory(currentRootDirectory);
+                workspaceRootPackage = workspaceScanner.getPackages(currentRootDirectory);
                 if (workspaceRootPackage != null) {
                     // make sure the user chose a Bazel workspace
                     newEclipseProjects.add(workspaceRootPackage);
@@ -126,7 +130,7 @@ public class BazelImportWizardPage extends WizardPage {
                 }
             }
 
-            locationControl.locations = newFilesystemLocations;
+            locationControl.rootDirHistoryList = newFilesystemLocations;
 
             setPageComplete();
             setErrorMessage(null);
