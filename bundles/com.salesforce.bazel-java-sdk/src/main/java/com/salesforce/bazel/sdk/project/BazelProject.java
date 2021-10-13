@@ -90,6 +90,10 @@ public class BazelProject {
     public ProjectStructure getProjectStructure() {
         return projectStructure;
     }
+    
+    public List<BazelPackageInfo> getProjectPackages() {
+        return bazelPackages;
+    }
 
     /**
      * Merges this project with the passed project. For each element, this project will win out if it has meaningful
