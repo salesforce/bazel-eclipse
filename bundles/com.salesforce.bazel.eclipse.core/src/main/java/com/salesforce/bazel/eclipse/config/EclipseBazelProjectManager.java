@@ -252,9 +252,23 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
         Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
         String projectLabel = eclipseProjectBazelPrefs.get(PROJECT_PACKAGE_LABEL, null);
+        BazelProjectTargets activatedTargets = null;
 
-        BazelProjectTargets activatedTargets = new BazelProjectTargets(bazelProject, projectLabel);
+        if (projectLabel == null) {
+            // there are no preferences, so just pick the default target(s) for this project
+            // TODO this is a huge mess; we don't have the right abstractions for mapping packages to projects
+            List<BazelLabel> projectLabels = bazelProject.getProjectStructure().getBazelTargets();
+            if ((projectLabels != null) && (projectLabels.size() > 0)) {
+                activatedTargets =
+                        new BazelProjectTargets(bazelProject, projectLabels.get(0).getPackagePath());
+                activatedTargets.activateWildcardTarget(BazelLabel.BAZEL_WILDCARD_ALLTARGETS);
+                return activatedTargets;
+            }
+            // TODO
+            return null;
+        }
 
+        activatedTargets = new BazelProjectTargets(bazelProject, projectLabel);
         boolean addedTarget = false;
         Set<String> activeTargets = new TreeSet<>();
         String[] prefNames = getKeys(eclipseProjectBazelPrefs);

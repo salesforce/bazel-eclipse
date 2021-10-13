@@ -72,7 +72,7 @@ public class BazelImportWizardPage extends WizardPage {
 
         IPreferenceStore prefs = BazelPluginActivator.getInstance().getPreferenceStore();
         locationControl = new BazelImportWizardLocationControl(this, prefs);
-        boolean scanAfterBuild = locationControl.addLocationControl(composite);
+        boolean hasWorkspaceLocation = locationControl.addLocationControl(composite);
 
         labelProvider = new BazelImportWizardLabelProvider(this);
 
@@ -85,7 +85,9 @@ public class BazelImportWizardPage extends WizardPage {
         advancedSettingsControl = new BazelImportWizardAdvancedSettingsControl(this);
         advancedSettingsControl.addAdvancedSettingsControl(composite);
 
-        if (scanAfterBuild) {
+        if (hasWorkspaceLocation) {
+            // this dialog had been opened before, and a Bazel workspace path from history was
+            // loaded into the view; populate the dialog and mark the ones not already open for import
             scanProjects();
         }
     }

@@ -185,7 +185,7 @@ public class BazelJvmClasspath implements JvmClasspath {
                     String targetInfoLabelPath = jvmTargetInfo.getLabelPath();
                     String kind = jvmTargetInfo.getKind();
                     if ("java_import".equals(kind)) {
-                        logger.info("Found java_import rule");
+                        logger.info("Found java_import target with label {}", targetInfoLabelPath);
                     }
 
                     if (actualActivatedTargets.contains(targetInfoLabelPath)) {
