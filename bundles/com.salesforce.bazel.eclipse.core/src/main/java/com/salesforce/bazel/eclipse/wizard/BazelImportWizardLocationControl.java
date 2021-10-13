@@ -66,7 +66,7 @@ public class BazelImportWizardLocationControl {
     protected Combo rootDirectoryCombo;
 
     private String rootDirectory;
-    protected List<String> rootDirHistoryList = new ArrayList<>();
+    protected static List<String> rootDirHistoryList = new ArrayList<>();
 
     protected IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 
@@ -83,7 +83,8 @@ public class BazelImportWizardLocationControl {
         }
     }
 
-    public void addLocationControl(Composite composite) {
+    public boolean addLocationControl(Composite composite) {
+        boolean hasLocationOnCreate = false;
         fieldsWithHistory = new HashMap<String, List<Combo>>();
 
         if (rootDirectoryCombo == null) {
@@ -98,6 +99,7 @@ public class BazelImportWizardLocationControl {
         if (!rootDirHistoryList.isEmpty()) {
             rootDirectoryCombo.setText(rootDirHistoryList.get(0));
             rootDirectory = rootDirHistoryList.get(0);
+            hasLocationOnCreate = true;
         }
         rootDirectoryCombo.setFocus();
 
@@ -181,6 +183,8 @@ public class BazelImportWizardLocationControl {
                 }
             }
         });
+
+        return hasLocationOnCreate;
     }
 
     protected String getRootDirectory() {
