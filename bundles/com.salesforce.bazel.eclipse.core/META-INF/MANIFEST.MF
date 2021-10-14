@@ -4,7 +4,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Bazel Eclipse Core Plugin
 Automatic-Module-Name: com.salesforce.bazel.eclipse.core
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.core;singleton:=true
-Bundle-Version: 1.5.0.qualifier
+Bundle-Version: 1.5.1.qualifier
 Bundle-Activator: com.salesforce.bazel.eclipse.BazelPluginActivator
 Bundle-Vendor: Salesforce
 Require-Bundle: org.eclipse.ui.console;bundle-version="3.8.100.v20180821-1744",
