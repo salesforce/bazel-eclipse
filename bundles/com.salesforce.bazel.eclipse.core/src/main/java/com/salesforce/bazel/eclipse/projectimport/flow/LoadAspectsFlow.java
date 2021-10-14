@@ -86,11 +86,23 @@ public class LoadAspectsFlow implements ImportFlow {
         try {
             Map<BazelLabel, Set<AspectTargetInfo>> targetInfos =
                     bazelWorkspaceCmdRunner.getAspectTargetInfos(labels, "importWorkspace");
+
+            if (targetInfos.isEmpty()) {
+                BazelPluginActivator.getInstance().closeBazelWorkspace();
+                throw new IllegalStateException(
+                    "Bazel could not provide any information about the selected project(s). "
+                            + "This usually means there is a Bazel build error in the underlying packages being imported.\n\n"
+                            + "Please run a command line build for these packages to verify they build correctly.");
+            }
+
             List<AspectTargetInfo> allTargetInfos = new ArrayList<>();
             for (Set<AspectTargetInfo> targetTargetInfos : targetInfos.values()) {
                 allTargetInfos.addAll(targetTargetInfos);
             }
             ctx.setAspectTargetInfos(new AspectTargetInfos(allTargetInfos));
+        } catch (RuntimeException e) {
+            // the error dialog looks better if we dont wrap the exception, so dont do it unless we have to
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

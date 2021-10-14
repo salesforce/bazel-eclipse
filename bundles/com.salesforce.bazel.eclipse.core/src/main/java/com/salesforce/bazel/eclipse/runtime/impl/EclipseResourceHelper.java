@@ -44,6 +44,7 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
@@ -136,6 +137,12 @@ public class EclipseResourceHelper implements ResourceHelper {
 
         if (eclipseProjectPrefs == null) {
             LOG.error("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
+        }
+
+        try {
+            eclipseProjectPrefs.sync();
+        } catch (BackingStoreException bse) {
+            LOG.error("Could not read Eclipse preferences for project [{}]", project.getName(), bse);
         }
 
         return eclipseProjectPrefs;
@@ -279,7 +286,7 @@ public class EclipseResourceHelper implements ResourceHelper {
             IProgressMonitor monitor) {
         try {
             LOG.debug("createFolderLink: thisFolder=" + thisFolder.getLocation().toOSString()
-                    + " bazelWorkspaceLocation=" + bazelWorkspaceLocation.toOSString());
+                + " bazelWorkspaceLocation=" + bazelWorkspaceLocation.toOSString());
             thisFolder.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);

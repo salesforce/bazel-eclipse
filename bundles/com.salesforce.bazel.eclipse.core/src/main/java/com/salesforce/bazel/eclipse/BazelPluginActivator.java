@@ -352,7 +352,6 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         // now forget about the workspace
         bazelWorkspace = null;
         bazelWorkspaceCommandRunner = null;
-        configurationManager.setBazelWorkspacePath(null);
     }
 
     // TEST ONLY
