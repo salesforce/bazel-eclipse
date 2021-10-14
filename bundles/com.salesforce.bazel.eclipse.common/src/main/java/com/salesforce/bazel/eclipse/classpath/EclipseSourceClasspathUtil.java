@@ -91,17 +91,24 @@ public final class EclipseSourceClasspathUtil {
         List<IClasspathEntry> classpathEntries = new LinkedList<>();
 
         long startTimeMS = System.currentTimeMillis();
+
+        // main source paths
+        buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath, structure.mainSourceDirFSPaths,
+            false, classpathEntries, resourceHelper, javaCoreHelper);
         buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath,
-            structure.mainSourceDirFSPaths, false,
-            classpathEntries, resourceHelper, javaCoreHelper);
+            structure.mainResourceDirFSPaths, false, classpathEntries, resourceHelper, javaCoreHelper);
+
+        // test source oaths
+        buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath, structure.testSourceDirFSPaths,
+            true, classpathEntries, resourceHelper, javaCoreHelper);
         buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath,
-            structure.testSourceDirFSPaths, true,
-            classpathEntries, resourceHelper, javaCoreHelper);
+            structure.testResourceDirFSPaths, true, classpathEntries, resourceHelper, javaCoreHelper);
+
         SimplePerfRecorder.addTime("import_createprojects_sourcecp_1", startTimeMS);
 
         startTimeMS = System.currentTimeMillis();
-        IClasspathEntry bazelClasspathContainerEntry = javaCoreHelper
-                .newContainerEntry(new Path(IClasspathContainerConstants.CONTAINER_NAME));
+        IClasspathEntry bazelClasspathContainerEntry =
+                javaCoreHelper.newContainerEntry(new Path(IClasspathContainerConstants.CONTAINER_NAME));
         classpathEntries.add(bazelClasspathContainerEntry);
 
         // add in a JDK to the classpath
@@ -167,7 +174,7 @@ public final class EclipseSourceClasspathUtil {
         if (!sourceDirFSPath.startsWith(bazelPackageFSPath)) {
             // TODO reconsider blowing up import for this, perhaps alert the user and then soldier on here
             throw new IllegalStateException("src code path " + sourceDirFSPath
-                + " expected to be under bazel package path " + bazelPackageFSPath);
+                    + " expected to be under bazel package path " + bazelPackageFSPath);
         }
 
         IFolder currentFolder = null;

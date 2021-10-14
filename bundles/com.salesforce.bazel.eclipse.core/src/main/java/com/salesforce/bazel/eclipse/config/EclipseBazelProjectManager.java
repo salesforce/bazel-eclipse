@@ -225,8 +225,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     public BazelProjectTargets getConfiguredBazelTargets(BazelProject bazelProject, boolean addWildcardIfNoTargets) {
         IProject eclipseProject = (IProject) bazelProject.getProjectImpl();
         Preferences eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
-<<<<<<< HEAD
-        String projectLabel = eclipseProjectBazelPrefs.get(PROJECT_PACKAGE_LABEL, null);
+        String projectLabel = eclipseProjectBazelPrefs.get(IEclipseBazelProjectSettings.PROJECT_PACKAGE_LABEL, null);
         BazelProjectTargets activatedTargets = null;
 
         if (projectLabel == null) {
@@ -242,21 +241,13 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
             // TODO
             return null;
         }
-=======
-        String projectLabel = eclipseProjectBazelPrefs.get(IEclipseBazelProjectSettings.PROJECT_PACKAGE_LABEL, null);
->>>>>>> 521fa92 (1. extension point for BazelProjectManager)
 
         activatedTargets = new BazelProjectTargets(bazelProject, projectLabel);
         boolean addedTarget = false;
         Set<String> activeTargets = new TreeSet<>();
-<<<<<<< HEAD
         String[] prefNames = getKeys(eclipseProjectBazelPrefs);
         for (String propertyName : prefNames) {
-            if (propertyName.startsWith(TARGET_PROPERTY_PREFIX)) {
-=======
-        for (String propertyName : getKeys(eclipseProjectBazelPrefs)) {
             if (propertyName.startsWith(IEclipseBazelProjectSettings.TARGET_PROPERTY_PREFIX)) {
->>>>>>> 521fa92 (1. extension point for BazelProjectManager)
                 String target = eclipseProjectBazelPrefs.get(propertyName, "");
                 if (!target.isEmpty()) {
                     BazelLabel label = new BazelLabel(target);

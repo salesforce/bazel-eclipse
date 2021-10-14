@@ -4,7 +4,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Bazel Eclipse Common Plugin
 Automatic-Module-Name: com.salesforce.bazel.eclipse.common
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.common;singleton:=true
-Bundle-Version: 1.5.0.qualifier
+Bundle-Version: 1.5.1.qualifier
 Bundle-Activator: com.salesforce.bazel.eclipse.activator.Activator
 Bundle-Vendor: Salesforce
 Require-Bundle: org.eclipse.core.runtime,
