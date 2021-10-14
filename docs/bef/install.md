@@ -68,7 +68,9 @@ If you want to install the latest version of BEF, follow these steps to install 
 <!-- markdown-link-check-disable-next-line -->
 - For the location, enter: **https://opensource.salesforce.com/bazel-eclipse/update-site**
 - Give the location a name, like *Bazel-Eclipse updatesite*
-- Check the box next to the *Bazel Eclipse* item, then hit *Next*
+- In the tree control area, open the *Bazel Eclipse* node
+- Check the box next to the *Bazel Eclipse Feature* item, then hit *Next*
+  - Note: BEF users do not need the *BJLS Feature*. You should leave that unchecked.
 - Click *Next/Agree/Finish* until it completes.
 - Restart Eclipse
 
