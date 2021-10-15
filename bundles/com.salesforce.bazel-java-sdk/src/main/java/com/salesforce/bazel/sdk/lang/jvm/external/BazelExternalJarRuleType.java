@@ -36,7 +36,8 @@ package com.salesforce.bazel.sdk.lang.jvm.external;
  import java.io.File;
  import java.util.List;
 
- import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.index.jvm.jar.JarIdentifier;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
  import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
  /**
@@ -92,6 +93,22 @@ package com.salesforce.bazel.sdk.lang.jvm.external;
       * discard the work for all workspaces.
       */
      public void discardComputedWork(BazelWorkspace bazelWorkspace) {
-
      }
+     
+     /**
+      * Is the passed file path a file downloaded by this rule type?
+      */
+     public boolean doesBelongToRuleType(BazelWorkspace bazelWorkspace, String absoluteFilepath) {
+         return false;
+     }
+
+     /**
+      * Attempt to derive the Bazel label for this external jar file based solely on filepath.
+      * \@maven//:org_slf4j_slf4j_api
+      * This won't be possible in all cases; returning null is acceptable.
+      */
+     public String deriveBazelLabel(BazelWorkspace bazelWorkspace, String absoluteFilepath, JarIdentifier jarId) {
+         return null;
+     }
+
  }

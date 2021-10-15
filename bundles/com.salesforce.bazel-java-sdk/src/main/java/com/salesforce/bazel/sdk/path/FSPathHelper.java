@@ -221,6 +221,16 @@ public final class FSPathHelper {
         }
         return "";
     }
+    
+    /**
+     * Splits the passed absolute or relative path using the correct OS specific regex
+     */
+    public static String[] split(String filesystemPath) {
+        if (isUnix) {
+            return filesystemPath.split(UNIX_SLASH_REGEX);
+        }
+        return filesystemPath.split(WINDOWS_BACKSLASH_REGEX);
+    }
 
     /**
      * Utility to find all files in a tree with a particular extension.
