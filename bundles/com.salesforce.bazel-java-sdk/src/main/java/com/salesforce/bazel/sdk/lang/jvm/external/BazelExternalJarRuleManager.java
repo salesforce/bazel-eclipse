@@ -111,4 +111,15 @@ public class BazelExternalJarRuleManager {
         return inUseRuleTypes;
     }
 
+    /**
+     * Find the rule type that downloaded the passed file
+     */
+    public BazelExternalJarRuleType findOwningRuleType(BazelWorkspace bazelWorkspace, String absoluteFilepath) {
+        for (BazelExternalJarRuleType type : availableTypes.values()) {
+            if (type.doesBelongToRuleType(bazelWorkspace, absoluteFilepath)) {
+                return type;
+            }
+        }
+        return null;
+    }
 }

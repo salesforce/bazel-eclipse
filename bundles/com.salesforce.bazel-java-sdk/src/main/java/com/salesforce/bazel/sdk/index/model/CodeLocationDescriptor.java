@@ -32,7 +32,8 @@ import java.util.List;
  * form.
  */
 public class CodeLocationDescriptor {
-    public CodeLocationIdentifier id;
+    public CodeLocationIdentifier id; // e.g. org.slf4j:slf4j-api:1.3.4
+    public String bazelLabel; // e.g. @maven//:org_slf4j_slf4j_api
     public File locationOnDisk;
     public List<ClassIdentifier> containedClasses;
 
@@ -41,6 +42,12 @@ public class CodeLocationDescriptor {
         this.id = id;
     }
 
+    public CodeLocationDescriptor(File locationOnDisk, CodeLocationIdentifier id, String bazelLabel) {
+        this.locationOnDisk = locationOnDisk;
+        this.id = id;
+        this.bazelLabel = bazelLabel;
+    }
+    
     public void addClass(ClassIdentifier classId) {
         if (containedClasses == null) {
             containedClasses = new ArrayList<>(5);

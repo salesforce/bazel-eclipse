@@ -99,7 +99,7 @@ public class JvmCodeIndex extends CodeIndex {
 
         // now build the index
         for (File location : locations) {
-            processLocation(index, location, progressMonitor);
+            processLocation(bazelWorkspace, externalJarRuleManager, index, location, progressMonitor);
         }
 
         workspaceIndices.put(bazelWorkspace.getName(), index);
@@ -109,10 +109,11 @@ public class JvmCodeIndex extends CodeIndex {
 
     }
 
-    static void processLocation(JvmCodeIndex index, File location, WorkProgressMonitor progressMonitor) {
+    static void processLocation(BazelWorkspace bazelWorkspace, BazelExternalJarRuleManager externalJarRuleManager, JvmCodeIndex index, 
+            File location, WorkProgressMonitor progressMonitor) {
         if ((location != null) && location.exists()) {
             JarIdentiferResolver jarResolver = new JarIdentiferResolver();
-            JavaJarCrawler jarCrawler = new JavaJarCrawler(index, jarResolver);
+            JavaJarCrawler jarCrawler = new JavaJarCrawler(bazelWorkspace, index, jarResolver, externalJarRuleManager);
             jarCrawler.index(location, false);
         }
     }
