@@ -35,19 +35,12 @@
  */
 package com.salesforce.bazel.eclipse.config;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Platform;
-import org.osgi.framework.Bundle;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Implementation of {@link BazelAspectLocation} using Eclipse OSGi Bundle locations.
@@ -55,79 +48,10 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
  * The Bazel Eclipse plugin uses a Bazel Aspect to introspect build data, such as dependencies. See
  * {@link BazelWorkspaceCommandRunner} for details on how this aspect is wired into the build.
  */
-public class BazelAspectLocationImpl implements BazelAspectLocation {
-
-    /**
-     * Returns the path of the Aspect file(s) from the SDK plugin, which needs to be extracted on the filesystem.
-     * <p>
-     * This is easily broken by changes in Eclipse packaging, so be careful and validate the location. This
-     * implementation assumes this plugin was been installed 'unpacked' in the p2 cache. This takes some effort. See
-     * https://stackoverflow.com/questions/922230/how-do-i-force-an-eclipse-plug-in-to-be-unpacked ($SLASH_OK url) for
-     * some hints if this breaks.
-     * <p>
-     * Throws an exception if the Aspect cannot be located on the filesystem, which will prevent the plugin from
-     * loading. Make sure to log the reason(s) before throwing otherwise the user won't be able to troubleshoot the
-     * problem. This type of problem should never make it out of the lab because it is a serious packaging error if this
-     * happens.
-     */
-    private static File getAspectWorkspace() {
-        LogHelper logger = LogHelper.log(BazelAspectLocationImpl.class);
-        try {
-            Bundle bazelSDKPlugin = Platform.getBundle(BazelPluginActivator.SDK_PLUGIN_ID);
-            if (bazelSDKPlugin == null) {
-                logger.error(
-                    "Eclipse OSGi subsystem could not find the Bazel SDK plugin [" + BazelPluginActivator.SDK_PLUGIN_ID
-                    + "]");
-                throw new IllegalStateException("Eclipse OSGi subsystem could not find the Bazel SDK plugin ["
-                        + BazelPluginActivator.SDK_PLUGIN_ID + "]");
-            }
-            URL url = bazelSDKPlugin.getEntry("aspect");
-            URL resolved = FileLocator.resolve(url);
-            if (resolved == null) {
-                logger.error("Could not load BEF Aspect location [" + url + "]");
-                throw new IllegalStateException("Could not load BEF Aspect location [" + url + "]");
-            }
-
-            String aspectPath = resolved.getPath();
-            File aspectWorkspaceDirFile = new File(aspectPath);
-
-            // verify the aspect is available extractd on the file system
-            if (!aspectWorkspaceDirFile.exists()) {
-                File canonicalFile = FSPathHelper.getCanonicalFileSafely(new File(aspectPath));
-                if (!canonicalFile.exists()) {
-                    if (aspectPath.contains("com.salesforce.bazel-java-sdk"+File.separator+"target")) {
-                        // this is a test bundle for unit tests, it is ok that we cant load the aspect because it is not
-                        // properly packaged as a feature
-                        logger.info("Detected running as test bundle, the aspect files are not available but this is expected: ["+aspectPath+"]");
-                    } else {
-                        // This is a critical piece of validation. If the packaging breaks and the Aspect is no longer
-                        // on the filesystem, we need to fail. The Aspect is critical to the computation of the classpath,
-                        // so nothing will work without it. Fail hard if it is missing.
-                        logger.error(
-                            "The BEF Aspect file is not found on disk: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
-                        throw new IllegalStateException(
-                            "Could not load the BEF Aspect on disk [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
-                    }
-                }
-            }
-            logger.info("BEF Aspect location: [" + aspectWorkspaceDirFile.getAbsolutePath() + "]");
-
-            return aspectWorkspaceDirFile;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static File WORKSPACE_DIRECTORY = getAspectWorkspace();
+public class BazelAspectLocationImpl extends AbstractEclipseAspectLocation {
 
     @Override
-    public File getAspectDirectory() {
-        return WORKSPACE_DIRECTORY;
+    protected URL getResolvedPath(URL url) throws Exception {
+        return FileLocator.resolve(url);
     }
-
-    @Override
-    public String getAspectLabel() {
-        return "//:bzljavasdk_aspect.bzl%bzljavasdk_aspect";
-    }
-
 }

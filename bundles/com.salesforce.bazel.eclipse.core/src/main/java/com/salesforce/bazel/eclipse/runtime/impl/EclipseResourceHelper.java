@@ -43,7 +43,6 @@ import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IProcess;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
@@ -191,11 +190,6 @@ public class EclipseResourceHelper implements ResourceHelper {
         LOG.debug("findMemberInWorkspace: path=" + path.toOSString() + " member.location="
                 + getResourceAbsolutePath(resource));
         return resource;
-    }
-
-    @Override
-    public IPreferenceStore getPreferenceStore(BazelPluginActivator activator) {
-        return activator.getPreferenceStore();
     }
 
     @Override

@@ -53,8 +53,6 @@ import com.salesforce.bazel.sdk.lang.jvm.DynamicBazelJvmClasspath;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
-    public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
-
     protected final BazelJvmClasspath bazelClasspath;
 
     // TODO make this an Eclipse pref

@@ -224,7 +224,6 @@ public class BazelClasspathContainerFTest {
         assertContainsEntry(entries, "JavaSE-11", CONTAINS, MAINCP);
     }
 
-
     /**
      * We create an Eclipse project for the Bazel Workspace with a Java project.
      * <p>
@@ -332,8 +331,7 @@ public class BazelClasspathContainerFTest {
     // HELPERS
 
     private MockEclipse setupMockEnvironmentForClasspathTest(String testName, boolean explicitJavaTestDeps,
-            boolean nonstandardLayout, boolean nonstandardMultipleDirs, boolean addJavaImport)
-                    throws Exception {
+            boolean nonstandardLayout, boolean nonstandardMultipleDirs, boolean addJavaImport) throws Exception {
         File testDir = tmpFolder.newFolder();
         File testTempDir = new File(testDir, testName);
         testTempDir.mkdirs();
@@ -348,9 +346,8 @@ public class BazelClasspathContainerFTest {
                 .explicitJavaTestDeps(explicitJavaTestDeps).nonStandardJavaLayout_enabled(nonstandardLayout)
                 .nonStandardJavaLayout_multipledirs(nonstandardMultipleDirs).addJavaImportRule(addJavaImport);
 
-        MockEclipse mockEclipse =
-                EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
-                    testOptions);
+        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
+                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions);
 
         workspace_IProject =
                 mockEclipse.getImportedProject("Bazel Workspace (" + MockEclipse.BAZEL_WORKSPACE_NAME + ")");

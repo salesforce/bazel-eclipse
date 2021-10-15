@@ -52,16 +52,6 @@
    
    
    <extension
-         id="com.salesforce.bazel.eclipse.bazelNature"
-         point="org.eclipse.core.resources.natures">
-      <runtime>
-         <run
-               class="com.salesforce.bazel.eclipse.BazelNature">
-         </run>
-      </runtime>
-   </extension>
-   
-   <extension
          point="org.eclipse.ui.preferencePages">
       <page
             class="com.salesforce.bazel.eclipse.preferences.BazelPreferencePage"
@@ -220,5 +210,29 @@
             id="com.salesforce.bazel.eclipse.projectview"
             name="ProjectView">
       </editor>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.javacorehelper">
+      <javaCoreHelper
+            class="com.salesforce.bazel.eclipse.runtime.impl.EclipseJavaCoreHelper">
+      </javaCoreHelper>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.resourcehelper">
+      <resourceHelper
+            class="com.salesforce.bazel.eclipse.runtime.impl.EclipseResourceHelper">
+      </resourceHelper>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.aspectlocation">
+      <bazelAspectLocation
+            class="com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl">
+      </bazelAspectLocation>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.projectmanager">
+      <projectManager
+            class="com.salesforce.bazel.eclipse.config.EclipseBazelProjectManager">
+      </projectManager>
    </extension>
 </plugin>

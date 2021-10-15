@@ -71,7 +71,8 @@ public class SetupClasspathContainersFlow implements ImportFlow {
             // return value because the cp is set directly into the passed javaProject; this method also links in the
             // source directory IFolders into the project
             EclipseSourceClasspathUtil.createClasspath(bazelWorkspaceRootDirectory, packageFSPath, structure,
-                javaProject, ctx.getJavaLanguageLevel());
+                javaProject, ctx.getJavaLanguageLevel(), BazelPluginActivator.getResourceHelper(),
+                BazelPluginActivator.getJavaCoreHelper());
 
             progressSubMonitor.worked(1);
         }
