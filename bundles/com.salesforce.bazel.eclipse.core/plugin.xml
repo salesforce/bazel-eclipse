@@ -26,17 +26,17 @@
          </activeWhen>
       </projectConfigurator>
    </extension>
-   
+
    <extension point="org.eclipse.jdt.launching.classpathProviders">
-      <classpathProvider 
+      <classpathProvider
           id="com.salesforce.bazel.eclipse.launchconfig.classpathProvider"
           class="com.salesforce.bazel.eclipse.launch.BazelTestClasspathProvider"/>
-      <classpathProvider 
+      <classpathProvider
           id="com.salesforce.bazel.eclipse.launchconfig.sourcepathProvider"
           class="org.eclipse.jdt.launching.StandardSourcePathProvider"/>
    </extension>
-   
-   
+
+
    <extension point="org.eclipse.ui.importWizards">
      <category id="org.eclipse.ui.Basic" name="%category.general.name"/>
      <category id="org.eclipse.bazel" name="Bazel"/>
@@ -49,8 +49,8 @@
         <description>Import Bazel Workspace</description>
      </wizard>
    </extension>
-   
-   
+
+
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
@@ -59,20 +59,20 @@
             name="Bazel">
       </page>
    </extension>
-   
+
    <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
             class="com.salesforce.bazel.eclipse.preferences.BazelPreferenceInitializer">
       </initializer>
    </extension>
-   
+
    <extension id="com.salesforce.bazel.eclipse.bazelmarker"
          point="org.eclipse.core.resources.markers">
          <super type="org.eclipse.core.resources.problemmarker"/>
          <persistent value="false"/>
     </extension>
-   
+
    <extension
          id="com.salesforce.bazel.eclipse.builder"
          point="org.eclipse.core.resources.builders">
@@ -86,7 +86,7 @@
          </run>
       </builder>
    </extension>
-   
+
    <extension
          id="com.salesforce.bazel.eclipse.launch"
          point="org.eclipse.debug.core.launchConfigurationTypes">
@@ -97,7 +97,7 @@
             name="Bazel Target">
       </launchConfigurationType>
    </extension>
-   
+
    <extension
         point="org.eclipse.debug.ui.launchConfigurationTypeImages">
         <launchConfigurationTypeImage
@@ -105,8 +105,8 @@
                 configTypeID="com.salesforce.bazel.eclipse.launch"
                 icon="resources/bazelicon.gif">
         </launchConfigurationTypeImage>
-   </extension>   
-   
+   </extension>
+
    <extension
          id="com.salesforce.bazel.eclipse.launch.tab"
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
@@ -116,7 +116,7 @@
             type="com.salesforce.bazel.eclipse.launch">
       </launchConfigurationTabGroup>
    </extension>
-   
+
    <extension
     point="org.eclipse.debug.ui.launchShortcuts">
         <shortcut
@@ -140,7 +140,7 @@
             </contextualLaunch>
         </shortcut>
    </extension>
-    
+
    <extension
          point="org.eclipse.debug.core.launchDelegates">
       <launchDelegate
@@ -152,7 +152,7 @@
             id="bazel.junit.launcher">
       </launchDelegate>
    </extension>
-   
+
    <extension
          point="org.eclipse.jdt.junit.testRunListeners">
       <testRunListener
@@ -167,13 +167,13 @@
             id="com.salesforce.bazel.eclipse.launch.shortcut.run"/>
    </extension>
    <extension point="org.eclipse.ui.bindings">
-     <key 
+     <key
          sequence="M1+M3+X B"
          contextId="org.eclipse.ui.contexts.window"
          commandId="com.salesforce.bazel.eclipse.launch.shortcut.run"
          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
    </extension>
-   
+
    <extension point="org.eclipse.ui.commands">
       <command
             name="Bazel Target"
@@ -185,13 +185,13 @@
          find="M4"
          replace="M2"
          platforms="gtk,motif" />
-    <key 
+    <key
          sequence="M4+M1+M3+D B"
          contextId="org.eclipse.ui.contexts.window"
          commandId="com.salesforce.bazel.eclipse.launch.shortcut.debug"
          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
    </extension>
-   
+
    <extension point="org.eclipse.core.expressions.propertyTesters">
     <propertyTester
         id="org.eclipse.jdt.ui.IJavaElementTypeExtender"
@@ -234,5 +234,13 @@
       <projectManager
             class="com.salesforce.bazel.eclipse.config.EclipseBazelProjectManager">
       </projectManager>
+    </extension>
+    <extension
+         point="org.eclipse.jdt.ui.classpathFixProcessors">
+      <classpathFixProcessor
+            class="com.salesforce.bazel.eclipse.classpath.BazelClasspathFixProcessor"
+            id="com.salesforce.bazel.eclipse.core.bazelClasspathFixProcessor"
+            name="BazelClasspathFixProcessor">
+      </classpathFixProcessor>
    </extension>
 </plugin>

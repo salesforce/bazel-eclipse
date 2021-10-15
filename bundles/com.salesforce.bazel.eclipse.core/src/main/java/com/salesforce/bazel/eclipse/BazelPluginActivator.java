@@ -42,9 +42,11 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.component.BazelAspectLocationComponentFacade;
 import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
+import com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl;
 import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
 import com.salesforce.bazel.eclipse.project.BazelPluginResourceChangeListener;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
@@ -135,6 +137,11 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * Manager for working with external jars
      */
     private static BazelExternalJarRuleManager externalJarRuleManager;
+
+    /**
+     * Global search index of classes
+     */
+    private static BazelGlobalSearchClasspathContainer globalSearchContainer;
 
     // LIFECYCLE
 
@@ -352,6 +359,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
 
     public BazelExternalJarRuleManager getBazelExternalJarRuleManager() {
         return externalJarRuleManager;
+    }
+
+    public void setGlobalSearchClasspathContainer(BazelGlobalSearchClasspathContainer index) {
+        globalSearchContainer = index;
+    }
+
+    public BazelGlobalSearchClasspathContainer getGlobalSearchClasspathContainer() {
+        return globalSearchContainer;
     }
 
     // DANGER ZONE

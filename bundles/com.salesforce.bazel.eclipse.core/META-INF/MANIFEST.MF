@@ -16,6 +16,7 @@ Require-Bundle: org.eclipse.ui.console;bundle-version="3.8.100.v20180821-1744",
  org.eclipse.ui.ide;bundle-version="3.14.100.v20180828-1350",
  org.eclipse.jdt.core;bundle-version="3.15.0.v20180905-0317",
  org.eclipse.jdt;bundle-version="3.11.0.v20180827-1040",
+ org.eclipse.jdt.ui;bundle-version="3.24.0",
  org.eclipse.core.resources;bundle-version="3.13.100.v20180828-0158",
  org.eclipse.debug.core;bundle-version="3.13.0.v20180821-1744",
  org.eclipse.debug.ui;bundle-version="3.13.100.v20180827-0649",
@@ -29,7 +30,8 @@ Require-Bundle: org.eclipse.ui.console;bundle-version="3.8.100.v20180821-1744",
  org.slf4j.api;bundle-version="1.7.30",
  ch.qos.logback.core;bundle-version="1.2.3",
  ch.qos.logback.classic;bundle-version="1.2.3",
- com.salesforce.bazel.eclipse.common
+ com.salesforce.bazel.eclipse.common,
+ org.eclipse.ltk.core.refactoring
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: bin/,

@@ -227,7 +227,16 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     private static IClasspathContainer getClasspathContainer(IProject project, boolean isRootProject)
             throws JavaModelException, IOException, InterruptedException, BackingStoreException,
             BazelCommandLineToolConfigurationException {
-        return isRootProject ? new BazelGlobalSearchClasspathContainer(project) : new BazelClasspathContainer(project);
+
+        IClasspathContainer cp = null;
+        if (isRootProject) {
+            BazelGlobalSearchClasspathContainer searchIndex = new BazelGlobalSearchClasspathContainer(project);
+            BazelPluginActivator.getInstance().setGlobalSearchClasspathContainer(searchIndex);
+            cp = searchIndex;
+        } else {
+            cp = new BazelClasspathContainer(project);
+        }
+        return cp;
     }
 
     private static void setClasspathContainerForProject(IPath projectPath, IJavaProject project,

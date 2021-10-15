@@ -27,9 +27,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.salesforce.bazel.sdk.index.CodeIndex;
+import com.salesforce.bazel.sdk.index.CodeIndexEntry;
 import com.salesforce.bazel.sdk.index.jvm.jar.JarIdentiferResolver;
 import com.salesforce.bazel.sdk.index.jvm.jar.JavaJarCrawler;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
@@ -43,10 +45,13 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * types. This is useful for tools that need to have a full list of available JVM types. For example, a Bazel IDE will
  * want to be able to list all types imported by the workspace.
  * <p>
- * There are two parts to the index: the artifactDictionary and the typeDictionary.
+ * There are three parts to the index: the artifactDictionary, fileDictionary and the typeDictionary.
  * <p>
- * The artifactDictionary maps the Maven style artifactId to the one or more jar files found that contains that
- * artifactId. If your directories contains multiple versions of the same artifactId, this will be a list of artifacts.
+ * The artifactDictionary maps the Maven style artifactId (e.g. junit, hamcrest-core, slf4j-api) to the one or more jar 
+ * files found that contains that artifactId. If your directories contains multiple versions of the same artifactId, this 
+ * will be a list of artifacts.
+ * <p>
+ * The fileDictionary maps the filename (e.g. junit-4.12.jar) to the one or more locations where that filename was found.
  * <p>
  * The typeDictionary maps each found classname to the discovered location in jar files or raw source files.
  * <p>
@@ -56,8 +61,17 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 public class JvmCodeIndex extends CodeIndex {
     private static final LogHelper LOG = LogHelper.log(JvmCodeIndex.class);
 
+    /**
+     * Global collection of indices for each workspace
+     */
     protected static Map<String, JvmCodeIndex> workspaceIndices = new ConcurrentHashMap<>();
 
+    // See superclass for the collections
+    //public Map<String, CodeIndexEntry> artifactDictionary = new TreeMap<>();
+    //public Map<String, CodeIndexEntry> fileDictionary = new TreeMap<>();
+    //public Map<String, CodeIndexEntry> typeDictionary = new TreeMap<>();
+
+    
     public static JvmCodeIndex getWorkspaceIndex(BazelWorkspace bazelWorkspace) {
         return workspaceIndices.get(bazelWorkspace.getName());
     }

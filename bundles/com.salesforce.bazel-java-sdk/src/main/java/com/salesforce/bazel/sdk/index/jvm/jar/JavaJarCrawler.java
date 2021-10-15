@@ -109,10 +109,10 @@ public class JavaJarCrawler {
         }
     }
 
-    protected void foundJar(File gavRoot, File jarFile, ZipFile zipFile, boolean doIndexClasses) {
+    protected void foundJar(File gavRootDir, File jarFile, ZipFile zipFile, boolean doIndexClasses) {
         // precisely identify the jar file
         LOG.debug("found jar: [{}]", jarFile.getName());
-        JarIdentifier jarId = resolver.resolveJarIdentifier(gavRoot, jarFile, zipFile);
+        JarIdentifier jarId = resolver.resolveJarIdentifier(gavRootDir, jarFile, zipFile);
         if (jarId == null) {
             // this jar is not part of the typical dependencies (e.g. it is a jar used in the build toolchain); ignore
             return;
@@ -125,8 +125,10 @@ public class JavaJarCrawler {
         }
         CodeLocationDescriptor jarLocationDescriptor = new CodeLocationDescriptor(jarFile, jarId, bazelLabel);
 
-        // add to our index using artifact name
+        // add to our index using artifact name (eg. junit, hamcrest-core, slf4j-api) 
         index.addArtifactLocation(jarId.artifact, jarLocationDescriptor);
+        // add to our index using file name (eg. junit-4.12.jar) 
+        index.addFileLocation(jarFile.getName(), jarLocationDescriptor);
 
         // if we don't want an index of each class found in a jar, bail here and save a lot of work
         if (!doIndexClasses) {
