@@ -147,6 +147,14 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     }
 
     /**
+     * Returns a copy of the underlying index classpath. This is provided so the caller may do inquiries into the data.
+     * Callers are not expected to modify this index.
+     */
+    public BazelJvmIndexClasspath getIndexClasspath() {
+        return bazelJvmIndexClasspath;
+    }
+
+    /**
      * Uses the preference store in Eclipse to get additional locations in which to look for jars.
      */
     public static List<File> loadAdditionalLocations() {

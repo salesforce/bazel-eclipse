@@ -34,10 +34,12 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * a specific language (e.g. Java). This is useful for tools that need to have a full list of available types. For
  * example, a Bazel IDE will want to be able to list all types imported by the workspace.
  * <p>
- * There are two parts to the index: the artifactDictionary and the typeDictionary.
+ * There are three parts to the index: the artifactDictionary, fileDictionary and the typeDictionary.
  * <p>
- * The artifactDictionary maps the artifactId to the one or more archives found that contains that artifactId. If your
- * directories contains multiple versions of the same artifactId, this will be a list of artifacts.
+ * The artifactDictionary maps the artifactId (e.g. junit, hamcrest-core, slf4j-api) to the one or more archives found that contains 
+ * that artifactId. If your directories contains multiple versions of the same artifactId, this will be a list of artifacts.
+ * <p>
+ * The fileDictionary maps the filename (e.g. junit-4.12.jar) to the one or more locations where that filename was found.
  * <p>
  * The typeDictionary maps each found type name (e.g. the fully qualified Java classname) to the discovered location in
  * archive files or raw source files.
@@ -45,8 +47,10 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 public class CodeIndex {
     private static final LogHelper LOG = LogHelper.log(CodeIndex.class);
 
-    // map artifact name to entry(s)
+    // map artifact name (e.g. junit, hamcrest-core, slf4j-api) to entry(s) 
     public Map<String, CodeIndexEntry> artifactDictionary = new TreeMap<>();
+    // map artifact file (e.g. junit-4.12.jar) to entry(s) 
+    public Map<String, CodeIndexEntry> fileDictionary = new TreeMap<>();
     // map class name to entry(s)
     public Map<String, CodeIndexEntry> typeDictionary = new TreeMap<>();
 
@@ -60,6 +64,16 @@ public class CodeIndex {
         LOG.debug("add artifact ({}): {}", artifact, location.locationOnDisk.getPath());
     }
 
+    public void addFileLocation(String filename, CodeLocationDescriptor location) {
+        CodeIndexEntry indexEntry = fileDictionary.get(filename);
+        if (indexEntry == null) {
+            indexEntry = new CodeIndexEntry();
+        }
+        indexEntry.addLocation(location);
+        fileDictionary.put(filename, indexEntry);
+        LOG.debug("add file ({}): {}", filename, location.locationOnDisk.getPath());
+    }
+    
     public void addTypeLocation(String typeName, CodeLocationDescriptor location) {
         CodeIndexEntry indexEntry = typeDictionary.get(typeName);
         if (indexEntry == null) {
@@ -76,6 +90,12 @@ public class CodeIndex {
         println("----------------------------------------");
         for (String artifact : artifactDictionary.keySet()) {
             printArtifact(artifact, artifactDictionary.get(artifact));
+        }
+        println("");
+        println("FILE INDEX (" + fileDictionary.size() + " entries)");
+        println("----------------------------------------");
+        for (String filename : fileDictionary.keySet()) {
+            printArtifact(filename, fileDictionary.get(filename));
         }
         println("");
         println("TYPE INDEX (" + typeDictionary.size() + " entries)");
