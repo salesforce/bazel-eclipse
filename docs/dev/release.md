@@ -48,6 +48,11 @@ The build will write the built feature into the _releng/p2repository/target/_ di
 You can install from the archive zip in that location.
 Use the standard Eclipse _Help -> Install New Software..._ menu and choose to _Add_ an _Archive_.
 
+:fire: Due to a bug in Eclipse SDK, the _Export->Deployable Features_ approach to generating
+an update site from within the SDK IDE does NOT work. It mistakenly thinks that the
+_bazel-java-sdk_ plugin depends on the _bazel-java-sdk-tests_ plugin, which results in
+a circular dependency. This appears to be a bug in the SDK dependency resolution system.
+
 Make sure to run through an import of a decently complex Bazel workspace.
 Things to look for:
 - The Bazel Classpath is correct for each project
