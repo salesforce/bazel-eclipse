@@ -303,11 +303,11 @@ public class BazelClasspathContainerFTest {
         assertContainsEntry(entries, "hamcrest", CONTAINS, TESTCP);
 
         // the java_import rule brings in liborange.jar to the classpath
-        IClasspathEntry importEntry = assertContainsEntry(entries, "liborange.jar", CONTAINS, MAINCP);
+        IClasspathEntry importEntry = assertContainsEntry(entries, "orange-4.5.6.jar", CONTAINS, MAINCP);
         // the test workspace factory also adds a source jar to the java_import rule
         IPath importSourcePath = importEntry.getSourceAttachmentPath();
         assertNotNull(importSourcePath);
-        assertTrue(importSourcePath.toOSString().endsWith("liborange-src.jar"));
+        assertTrue(importSourcePath.toOSString().endsWith("orange-4.5.6-src.jar"));
     }
 
     /**
