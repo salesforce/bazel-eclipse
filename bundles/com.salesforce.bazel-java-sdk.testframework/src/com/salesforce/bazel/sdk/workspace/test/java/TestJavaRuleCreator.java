@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.workspace.test;
+package com.salesforce.bazel.sdk.workspace.test.java;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -6,6 +6,10 @@ import java.io.PrintStream;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
+import com.salesforce.bazel.sdk.workspace.test.TestBazelPackageDescriptor;
+import com.salesforce.bazel.sdk.workspace.test.TestBazelTargetDescriptor;
+import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
+import com.salesforce.bazel.sdk.workspace.test.TestOptions;
 
 public class TestJavaRuleCreator {
     public static void createJavaBuildFile(TestBazelWorkspaceDescriptor workspaceDescriptor, File buildFile,

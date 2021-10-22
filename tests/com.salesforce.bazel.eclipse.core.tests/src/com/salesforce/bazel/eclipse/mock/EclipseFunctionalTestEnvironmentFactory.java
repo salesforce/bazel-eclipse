@@ -66,9 +66,9 @@ public class EclipseFunctionalTestEnvironmentFactory {
         JvmRuleInit.initialize();
 
         // build out a Bazel workspace with specified number of Java packages, and a couple of genrules packages just to test that they get ignored
-        File wsDir = new File(testTempDir, MockEclipse.BAZEL_WORKSPACE_NAME);
+        File wsDir = new File(testTempDir, MockEclipse.BAZEL_WORKSPACE_NAME + "-" + testOptions.uniqueKey);
         wsDir.mkdirs();
-        File outputbaseDir = new File(testTempDir, "outputbase");
+        File outputbaseDir = new File(testTempDir, "obase-" + testOptions.uniqueKey);
         outputbaseDir.mkdirs();
 
         TestBazelWorkspaceDescriptor descriptor =

@@ -63,7 +63,7 @@ public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
             result.mainSourceDirFSPaths.add(mainSrcRelPath);
         } else {
             // by design, this strategy will only be ineffect if src/main/java exists
-            LOG.info("Package {} does not have src/main/java so is not a Maven-like project", packageRelPath);
+            LOG.info("Package [{}] does not have src/main/java so is not a Maven-like project", packageRelPath);
             return null;
         }
 

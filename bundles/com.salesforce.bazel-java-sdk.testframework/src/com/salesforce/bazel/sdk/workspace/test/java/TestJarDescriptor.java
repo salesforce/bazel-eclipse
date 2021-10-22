@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.workspace.test;
+package com.salesforce.bazel.sdk.workspace.test.java;
 
 public class TestJarDescriptor {
     public String bazelName; // org_slf4j_slf4j_api or apple

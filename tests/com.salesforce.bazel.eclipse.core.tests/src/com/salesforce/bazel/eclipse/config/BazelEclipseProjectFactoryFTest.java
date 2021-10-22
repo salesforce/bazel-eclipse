@@ -67,15 +67,15 @@ public class BazelEclipseProjectFactoryFTest {
         //testTempDir.mkdirs();
 
         // create the mock Eclipse runtime in the correct state, which is two java projects javalib0 and javalib1
-        TestOptions testOptions =
-                new TestOptions().numberOfJavaPackages(2).computeClasspaths(true)
+        TestOptions testOptions = new TestOptions().uniqueKey("imws").numberOfJavaPackages(2).computeClasspaths(true)
                 .explicitJavaTestDeps(false);
+        String wsName = MockEclipse.BAZEL_WORKSPACE_NAME + "-imws";
 
         MockEclipse mockEclipse =
                 EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
                     testOptions);
         workspace_IProject =
-                mockEclipse.getImportedProject("Bazel Workspace (" + MockEclipse.BAZEL_WORKSPACE_NAME + ")");
+                mockEclipse.getImportedProject("Bazel Workspace (" + wsName + ")");
         assertNotNull(workspace_IProject);
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");
         assertNotNull(javalib0_IProject);
@@ -91,7 +91,7 @@ public class BazelEclipseProjectFactoryFTest {
 
         // Eclipse project for the Bazel workspace
         assertNotNull(workspace_IProject);
-        assertEquals("Bazel Workspace (" + MockEclipse.BAZEL_WORKSPACE_NAME + ")", workspace_IProject.getName());
+        assertEquals("Bazel Workspace (" + wsName + ")", workspace_IProject.getName());
         // at some point we may drop the Java nature from the Bazel Workspace project, but until then...
         IProjectDescription workspace_description =
                 BazelPluginActivator.getResourceHelper().getProjectDescription(workspace_IProject);

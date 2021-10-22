@@ -16,4 +16,5 @@ Import-Package: org.json.simple;version="1.1.1"
 Export-Package: com.salesforce.bazel.sdk.command.test,
  com.salesforce.bazel.sdk.command.test.type,
  com.salesforce.bazel.sdk.model.test,
- com.salesforce.bazel.sdk.workspace.test
+ com.salesforce.bazel.sdk.workspace.test,
+ com.salesforce.bazel.sdk.workspace.test.java

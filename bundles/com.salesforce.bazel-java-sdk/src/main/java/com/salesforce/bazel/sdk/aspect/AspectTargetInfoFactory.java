@@ -117,7 +117,7 @@ package com.salesforce.bazel.sdk.aspect;
       * {@link JSONObject} and then converting that {@link JSONObject} to an {@link AspectTargetInfo} object.
       */
      public static AspectTargetInfo loadAspectFile(File aspectFile) {
-         AspectTargetInfo buildInfo = null;
+         AspectTargetInfo targetInfo = null;
          JSONParser jsonParser = new JSONParser();
 
          if (aspectFile.exists()) {
@@ -129,11 +129,14 @@ package com.salesforce.bazel.sdk.aspect;
                      aspectFile.getAbsolutePath());
                  throw new IllegalArgumentException(je);
              }
-             buildInfo = loadAspectFromJson(aspectFile, jsonObject, jsonParser);
+             targetInfo = loadAspectFromJson(aspectFile, jsonObject, jsonParser);
+             if (targetInfo != null) {
+                 LOG.info("Loaded aspect for target {} from file {}", targetInfo.label, targetInfo.aspectDataFile.getAbsolutePath());
+             }
          } else {
              LOG.error("Aspect JSON file {} is missing.", aspectFile.getAbsolutePath());
          }
-         return buildInfo;
+         return targetInfo;
      }
 
      // INTERNAL

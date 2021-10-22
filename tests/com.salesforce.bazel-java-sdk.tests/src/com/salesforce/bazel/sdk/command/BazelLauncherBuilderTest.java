@@ -54,7 +54,7 @@ public class BazelLauncherBuilderTest {
 
     @Test
     public void testBuildRunCommand() throws Exception {
-        TestBazelCommandEnvironmentFactory env = createEnv();
+        TestBazelCommandEnvironmentFactory env = createEnv("run");
         BazelLabel label = new BazelLabel("//projects/libs/javalib0:" + TestOptions.JAVA_BINARY_TARGET_NAME); // $SLASH_OK bazel path
         BazelTargetKind targetKind = JvmRuleInit.KIND_JAVA_BINARY;
 
@@ -79,7 +79,7 @@ public class BazelLauncherBuilderTest {
 
     @Test
     public void testBuildRunCommandWithDebug() throws Exception {
-        TestBazelCommandEnvironmentFactory env = createEnv();
+        TestBazelCommandEnvironmentFactory env = createEnv("debug");
         BazelLabel label = new BazelLabel("//projects/libs/javalib0:" + TestOptions.JAVA_BINARY_TARGET_NAME); // $SLASH_OK bazel path
         BazelTargetKind targetKind = JvmRuleInit.KIND_JAVA_BINARY;
 
@@ -104,7 +104,7 @@ public class BazelLauncherBuilderTest {
 
     @Test
     public void testBuildTestCommand() throws Exception {
-        TestBazelCommandEnvironmentFactory env = createEnv();
+        TestBazelCommandEnvironmentFactory env = createEnv("test");
         BazelLabel label = new BazelLabel("//projects/libs/javalib0"); // $SLASH_OK bazel path
         BazelTargetKind targetKind = JvmRuleInit.KIND_JAVA_TEST;
 
@@ -125,7 +125,7 @@ public class BazelLauncherBuilderTest {
 
     @Test
     public void testBuildSeleniumTestCommand() throws Exception {
-        TestBazelCommandEnvironmentFactory env = createEnv();
+        TestBazelCommandEnvironmentFactory env = createEnv("seln");
         BazelLabel label = new BazelLabel("//projects/libs/javalib0"); // $SLASH_OK bazel path
         BazelTargetKind targetKind = JvmRuleInit.KIND_SELENIUM_TEST;
 
@@ -146,7 +146,7 @@ public class BazelLauncherBuilderTest {
 
     @Test
     public void testBuildTestCommandWithFilter() throws Exception {
-        TestBazelCommandEnvironmentFactory env = createEnv();
+        TestBazelCommandEnvironmentFactory env = createEnv("filter");
         BazelLabel label = new BazelLabel("//projects/libs/javalib0"); // $SLASH_OK bazel path
         BazelTargetKind targetKind = JvmRuleInit.KIND_JAVA_TEST;
         List<String> bazelArgs =
@@ -170,7 +170,7 @@ public class BazelLauncherBuilderTest {
 
     @Test
     public void testBuildTestCommandWithDebugEnabled() throws Exception {
-        TestBazelCommandEnvironmentFactory env = createEnv();
+        TestBazelCommandEnvironmentFactory env = createEnv("dbge");
         BazelLabel label = new BazelLabel("//projects/libs/javalib0"); // $SLASH_OK bazel path
         BazelTargetKind targetKind = JvmRuleInit.KIND_JAVA_TEST;
 
@@ -193,11 +193,11 @@ public class BazelLauncherBuilderTest {
 
     // INTERNALS
 
-    private TestBazelCommandEnvironmentFactory createEnv() throws Exception {
+    private TestBazelCommandEnvironmentFactory createEnv(String key) throws Exception {
         File testDir = tmpFolder.newFolder();
-        File workspaceDir = new File(testDir, "bazel-workspace");
+        File workspaceDir = new File(testDir, "bazelws-"+key);
         workspaceDir.mkdirs();
-        File outputbaseDir = new File(testDir, "outputbase");
+        File outputbaseDir = new File(testDir, "obase"+key);
         outputbaseDir.mkdirs();
 
         TestOptions testOptions = new TestOptions().numberOfJavaPackages(3).addJavaBinaryRule(true);

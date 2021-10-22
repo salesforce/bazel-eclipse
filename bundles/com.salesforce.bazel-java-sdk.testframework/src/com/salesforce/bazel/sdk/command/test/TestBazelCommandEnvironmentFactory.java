@@ -57,14 +57,10 @@ public class TestBazelCommandEnvironmentFactory {
     public void createTestEnvironment(File tempDir, TestOptions testOptions) throws Exception {
         // the name of the directory that contains the bazel workspace is significant, as the Eclipse feature
         // will use it in the name of the Eclipse project
-        File workspaceDir = new File(tempDir, "bazel-workspace");
+        File workspaceDir = new File(tempDir, "bazel-ws-"+testOptions.uniqueKey);
         workspaceDir.mkdirs();
-        File outputBase = new File(tempDir, "outputbase");
+        File outputBase = new File(tempDir, "obase-"+testOptions.uniqueKey);
         outputBase.mkdirs();
-
-        if (testOptions == null) {
-            testOptions = new TestOptions();
-        }
 
         TestBazelWorkspaceDescriptor descriptor =
                 new TestBazelWorkspaceDescriptor(workspaceDir, outputBase, "bazel_command_executor_test");

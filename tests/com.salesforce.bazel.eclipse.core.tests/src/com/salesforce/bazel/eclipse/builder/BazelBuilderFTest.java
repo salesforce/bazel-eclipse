@@ -61,7 +61,7 @@ public class BazelBuilderFTest {
         //testTempDir = new File("/tmp/bef/bazelws");
         //testTempDir.mkdirs();
 
-        TestOptions testOptions = new TestOptions().numberOfJavaPackages(2).computeClasspaths(true)
+        TestOptions testOptions = new TestOptions().uniqueKey(testName).numberOfJavaPackages(2).computeClasspaths(true)
                 .explicitJavaTestDeps(explicitJavaTestDeps);
 
         MockEclipse mockEclipse =
