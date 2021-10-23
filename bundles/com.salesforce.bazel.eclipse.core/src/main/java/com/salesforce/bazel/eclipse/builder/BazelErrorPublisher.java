@@ -99,14 +99,13 @@ class BazelErrorPublisher {
             if (rootProject == null) {
                 // getting here is a bug - this is going to be ugly but blow up with as much info as we have
                 String concatErrors =
-                        remainingErrors.stream().map(p -> p.getDescription() + "\n")
-                        .collect(Collectors.joining(", "));
+                        remainingErrors.stream().map(p -> p.getDescription() + "\n").collect(Collectors.joining(", "));
                 LOG.error("Unhandled errors: " + concatErrors);
                 throw new IllegalStateException(concatErrors);
             }
             for (BazelProblem error : remainingErrors) {
-                mapProblemToProject(error.toGenericWorkspaceLevelError(UNKNOWN_PROJECT_ERROR_MSG_PREFIX),
-                    rootProject, projectToErrors);
+                mapProblemToProject(error.toGenericWorkspaceLevelError(UNKNOWN_PROJECT_ERROR_MSG_PREFIX), rootProject,
+                    projectToErrors);
             }
         }
         return projectToErrors;

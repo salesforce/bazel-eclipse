@@ -191,7 +191,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         if (labelsForSelectedProject == null) {
             labelsForSelectedProject = support.getLaunchableBazelTargetsForProject(project);
             labelsForSelectedProject
-            .sort((t1, t2) -> t1.getBazelLabel().getLabelPath().compareTo(t2.getBazelLabel().getLabelPath()));
+                    .sort((t1, t2) -> t1.getBazelLabel().getLabelPath().compareTo(t2.getBazelLabel().getLabelPath()));
         }
     }
 

@@ -124,7 +124,7 @@ public class BazelJvmClasspath implements JvmClasspath {
         }
 
         logger.info("Computing classpath for project " + bazelProject.name + " (cached entries: " + foundCachedEntries
-            + ", is import: " + isImport + ")");
+                + ", is import: " + isImport + ")");
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
@@ -197,7 +197,8 @@ public class BazelJvmClasspath implements JvmClasspath {
 
                         // java_test aspect should be analyzed for implicit dependencies
                         if ("java_test".equals(jvmTargetInfo.getKind())) {
-                            implicitDeps = implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, jvmTargetInfo);
+                            implicitDeps =
+                                    implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, jvmTargetInfo);
                             // there is no need to process test jar further
                             continue;
                         }
@@ -226,7 +227,7 @@ public class BazelJvmClasspath implements JvmClasspath {
                             } else {
                                 // there was a problem with the aspect computation, this might resolve itself if we recompute it
                                 bazelWorkspaceCmdRunner
-                                .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
+                                        .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
                             }
                         }
                         for (JVMAspectOutputJarSet jarSet : jvmTargetInfo.getJars()) {
@@ -237,12 +238,12 @@ public class BazelJvmClasspath implements JvmClasspath {
                             } else {
                                 // there was a problem with the aspect computation, this might resolve itself if we recompute it
                                 bazelWorkspaceCmdRunner
-                                .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
+                                        .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
                             }
                         }
                     } else { // otherProject != null
                         String otherBazelProjectName = otherProject.name;
-                        if (! bazelProject.name.equals(otherBazelProjectName)) {
+                        if (!bazelProject.name.equals(otherBazelProjectName)) {
                             // add the referenced project to the classpath, directly as a project classpath entry
                             if (!projectsAddedToClasspath.contains(otherBazelProjectName)) {
                                 BazelProject otherBazelProject = bazelProjectManager.getProject(otherBazelProjectName);
@@ -277,7 +278,8 @@ public class BazelJvmClasspath implements JvmClasspath {
 
         // cache the entries
         cachePutTimeMillis = System.currentTimeMillis();
-        response.jvmClasspathEntries = assembleClasspathEntries(mainClasspathEntryMap, testClasspathEntryMap, implicitDeps);
+        response.jvmClasspathEntries =
+                assembleClasspathEntries(mainClasspathEntryMap, testClasspathEntryMap, implicitDeps);
         cachedEntries = response;
         logger.debug("Cached the classpath for project " + bazelProject.name);
 

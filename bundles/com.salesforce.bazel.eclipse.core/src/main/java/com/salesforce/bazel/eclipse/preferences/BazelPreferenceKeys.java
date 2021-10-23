@@ -86,26 +86,23 @@ public class BazelPreferenceKeys {
         defaultValues.put(PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME, "true");
     }
 
-
     // *********************************************************************
     // BEF DEVELOPER PREFS (for efficient repetitive testing of BEF)
 
     // The import wizard will be populated by this path if set, which saves time during repetitive testing of imports
     public static final String BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME = "BAZEL_DEFAULT_WORKSPACE_PATH";
 
-
     // *********************************************************************
     // ARRAYS
     // Be sure to add your new pref name here, as that is how the global pref file gets loaded into Eclipse prefs
 
     // prefs that have string values
-    public static final String[] ALL_STRING_PREFS = new String[] { BAZEL_PATH_PREF_NAME,
-            EXTERNAL_JAR_CACHE_PATH_PREF_NAME, BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME,
-            PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME };
+    public static final String[] ALL_STRING_PREFS =
+            new String[] { BAZEL_PATH_PREF_NAME, EXTERNAL_JAR_CACHE_PATH_PREF_NAME,
+                    BAZEL_DEFAULT_WORKSPACE_PATH_PREF_NAME, PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME };
 
     // prefs that have boolean values
-    public static final String[] ALL_BOOLEAN_PREFS =
-            new String[] { GLOBALCLASSPATH_SEARCH_PREF_NAME, DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK,
-                    PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME };
+    public static final String[] ALL_BOOLEAN_PREFS = new String[] { GLOBALCLASSPATH_SEARCH_PREF_NAME,
+            DISABLE_UNRESOLVE_WORKSPACEFILE_SOFTLINK, PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME };
 
 }

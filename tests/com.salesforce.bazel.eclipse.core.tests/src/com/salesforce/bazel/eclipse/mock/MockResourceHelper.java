@@ -90,8 +90,8 @@ public class MockResourceHelper implements ResourceHelper {
         IProject project = mockProjects.get(projectName);
 
         if (project == null) {
-            project = new MockIProjectFactory().buildGenericIProject(projectName,
-                eclipseWorkspaceDir.getAbsolutePath(), null);
+            project = new MockIProjectFactory().buildGenericIProject(projectName, eclipseWorkspaceDir.getAbsolutePath(),
+                null);
         }
 
         return project;
@@ -184,7 +184,7 @@ public class MockResourceHelper implements ResourceHelper {
     public IProjectDescription createProjectDescription(IProject project) {
         if (mockDescriptions.containsKey(project.getName())) {
             System.err.println(
-                    "Bazel Eclipse Feature is creating a new description for a project, but the project already has one.");
+                "Bazel Eclipse Feature is creating a new description for a project, but the project already has one.");
         }
 
         IProjectDescription description = new MockIProjectDescription();

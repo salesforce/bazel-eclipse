@@ -159,7 +159,7 @@ public final class BazelPackageContentAssistProcessor implements IContentAssistP
     }
 
     private static final class Proposal implements ICompletionProposal, ICompletionProposalExtension,
-    ICompletionProposalExtension2, ICompletionProposalExtension3 {
+            ICompletionProposalExtension2, ICompletionProposalExtension3 {
         private final String fString;
         private final String fPrefix;
         private final int fOffset;
@@ -240,7 +240,7 @@ public final class BazelPackageContentAssistProcessor implements IContentAssistP
                 int prefixStart = fOffset - fPrefix.length();
                 return (offset >= fOffset) && (offset < (fOffset + fString.length()))
                         && document.get(prefixStart, offset - (prefixStart))
-                        .equals((fPrefix + fString).substring(0, offset - prefixStart));
+                                .equals((fPrefix + fString).substring(0, offset - prefixStart));
             } catch (BadLocationException x) {
                 return false;
             }

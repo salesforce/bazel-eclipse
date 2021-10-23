@@ -142,9 +142,8 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
         BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
 
         // look for the param files for the test classname and/or targets
-        BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult =
-                BazelJvmTestClasspathHelper.findParamFilesForTests(bazelWorkspace, bazelProject, isSource,
-                    testClassName, targets);
+        BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult = BazelJvmTestClasspathHelper
+                .findParamFilesForTests(bazelWorkspace, bazelProject, isSource, testClassName, targets);
 
         File base = bazelWorkspace.getBazelExecRootDirectory();
         for (File paramsFile : testParamFilesResult.paramFiles) {
@@ -153,7 +152,7 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
                 jarPaths = BazelJvmTestClasspathHelper.getClasspathJarsFromParamsFile(paramsFile);
             } catch (IOException e) {
                 throw new CoreException(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(),
-                    "Error parsing " + paramsFile.getAbsolutePath(), e));
+                        "Error parsing " + paramsFile.getAbsolutePath(), e));
             }
             if (jarPaths == null) {
                 // error has already been logged, just try to soldier on

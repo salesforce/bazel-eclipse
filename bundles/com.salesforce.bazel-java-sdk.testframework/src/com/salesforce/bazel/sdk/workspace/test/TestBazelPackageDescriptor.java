@@ -31,8 +31,8 @@ public class TestBazelPackageDescriptor {
         if (packagePath.contains(FSPathHelper.WINDOWS_BACKSLASH)) {
             // Windows bug, someone passed in a Windows path
             throw new IllegalArgumentException(
-                "Windows filesystem path passed to TestBazelPackageDescriptor instead of the Bazel package path: "
-                        + packagePath);
+                    "Windows filesystem path passed to TestBazelPackageDescriptor instead of the Bazel package path: "
+                            + packagePath);
         }
 
         parentWorkspaceDescriptor = parentWorkspace;

@@ -72,7 +72,6 @@ public class BazelPackageInfoTest {
         assertTrue(root.getChildPackageInfos().contains(child2));
     }
 
-
     // HELPERS
 
     private BazelPackageInfo getRootBazelPackageInfo(boolean useAltWsFilename) throws IOException {

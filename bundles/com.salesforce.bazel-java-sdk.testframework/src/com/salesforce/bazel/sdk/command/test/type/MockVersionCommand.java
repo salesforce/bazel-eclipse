@@ -19,6 +19,6 @@ public class MockVersionCommand extends MockCommand {
 
         addSimulatedOutputToCommandStdOut("Build label: " + testOptions.bazelVersion,
             "Build time: Thu Oct 10 10:19:27 2019 (1570702767)", "Build timestamp: 1570702767",
-                "Build timestamp as int: 1570702767");
+            "Build timestamp as int: 1570702767");
     }
 }

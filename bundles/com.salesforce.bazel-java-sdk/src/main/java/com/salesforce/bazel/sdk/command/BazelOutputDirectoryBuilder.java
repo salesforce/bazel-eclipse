@@ -48,7 +48,7 @@ public class BazelOutputDirectoryBuilder {
      */
     public String getRunScriptPath(BazelLabel label, boolean includeBazelBin) {
         StringBuilder sb = new StringBuilder();
-        
+
         if (includeBazelBin) {
             // if you want to generate the path from the root of the workspace, and dont mind using the bazel-bin
             // convenience soft link, passing true for includeBazelBin will do that

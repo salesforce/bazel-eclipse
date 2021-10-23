@@ -62,11 +62,12 @@ public class AspectTargetInfos {
 
     public AspectTargetInfos(Collection<AspectTargetInfo> aspectTargetInfos) {
         for (AspectTargetInfo aspectTargetInfo : aspectTargetInfos) {
-            AspectTargetInfo previousValue = labelToAspectTargetInfo.put(aspectTargetInfo.getLabelPath(), aspectTargetInfo);
+            AspectTargetInfo previousValue =
+                    labelToAspectTargetInfo.put(aspectTargetInfo.getLabelPath(), aspectTargetInfo);
             if (previousValue != null) {
                 if (!previousValue.toString().equals(aspectTargetInfo.toString())) {
-                    throw new IllegalStateException(
-                            "Did not expect a duplicate label with different contents: " + previousValue.getLabelPath());
+                    throw new IllegalStateException("Did not expect a duplicate label with different contents: "
+                            + previousValue.getLabelPath());
                 }
             }
         }

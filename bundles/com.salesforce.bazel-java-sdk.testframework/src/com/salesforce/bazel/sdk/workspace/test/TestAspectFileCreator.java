@@ -22,9 +22,9 @@ public class TestAspectFileCreator {
      *
      * @return the absolute File path to the file
      */
-    public static String createJavaLibraryAspectFile(File bazelOutputBase, String packageRelativePath, String packageName,
-            String targetName, List<String> extraDependencies, List<String> sources, boolean isJavaLibrary,
-            boolean explicitJavaTestDeps) {
+    public static String createJavaLibraryAspectFile(File bazelOutputBase, String packageRelativePath,
+            String packageName, String targetName, List<String> extraDependencies, List<String> sources,
+            boolean isJavaLibrary, boolean explicitJavaTestDeps) {
 
         String aspectJsonFilename = targetName + ".bzljavasdk-data.json";
 
@@ -110,9 +110,9 @@ public class TestAspectFileCreator {
 
         String json = createAspectJsonForJavaArtifact(buildFile, isExternalJar, dependencies, sources, mainClass, label,
             kind, jar, interfacejar, sourcejar);
-        File aspectJsonFile = createJavaAspectFileWithThisJson(bazelOutputBase,
-            FSPathHelper.osSepsEscaped(importDirFSRelativePath), jarDescriptor.bazelName + ".bzljavasdk-data.json",
-            json);
+        File aspectJsonFile =
+                createJavaAspectFileWithThisJson(bazelOutputBase, FSPathHelper.osSepsEscaped(importDirFSRelativePath),
+                    jarDescriptor.bazelName + ".bzljavasdk-data.json", json);
 
         printCreatedFilename(aspectJsonFile, "java_import");
         return aspectJsonFile.getAbsolutePath();
@@ -173,9 +173,8 @@ public class TestAspectFileCreator {
      *  "sources":["projects/libs/apple/apple-api/src/test/java/demo/apple/api/AppleTest2.java"]
      * }
      */
-    public static String createAspectJsonForJavaTestTarget(String packageRelativePath,
-            String libraryTargetName, String testTargetName, List<String> extraDependencies, List<String> sources,
-            boolean explicitJavaTestDeps) {
+    public static String createAspectJsonForJavaTestTarget(String packageRelativePath, String libraryTargetName,
+            String testTargetName, List<String> extraDependencies, List<String> sources, boolean explicitJavaTestDeps) {
         List<String> dependencies = new ArrayList<>();
         if (explicitJavaTestDeps) {
             // See ImplicitDependencyHelper.java

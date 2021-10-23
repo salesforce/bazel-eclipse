@@ -21,7 +21,6 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
 
-
 public class MavenInstallExternalJarRuleTypeTest {
 
     // we use a matrix build in CI to test Mac, Linux, and Windows so we can use a real OS here not a mock one
@@ -70,7 +69,6 @@ public class MavenInstallExternalJarRuleTypeTest {
         assertEquals("@deprecated//:com_google_guava_guava",
             classUnderTest.deriveBazelLabel(bazelWorkspace, jarPaths.guavaJarDeprecated.getAbsolutePath(), jarId));
     }
-
 
     // HELPERS
 

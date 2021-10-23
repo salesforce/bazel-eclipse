@@ -40,29 +40,37 @@ import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
- * Classpath loader that uses import data from the Java files to determine the actual classpath,
- * as opposed to the BazelClasspathContainer that uses the Bazel BUILD file.
+ * Classpath loader that uses import data from the Java files to determine the actual classpath, as opposed to the
+ * BazelClasspathContainer that uses the Bazel BUILD file.
  */
 public class DynamicBazelJvmClasspath extends BazelJvmClasspath {
     private static final LogHelper LOG = LogHelper.log(DynamicBazelJvmClasspath.class);
 
     protected BazelJvmIndexClasspath classIndex;
+
     /**
      *
-     * @param bazelWorkspace gateway to a number of workspace level features
-     * @param bazelProjectManager project manager is used to help build references to other projects
-     * @param bazelProject the project (aka a Bazel package that corresponds to the concept of a Maven module)
-     * @param implicitDependencyHelper helper utility that computes annoying implicit dependencies added by Bazel
-     * @param osDetector  use this when do OS specific work - this allows us to mock the OS in tests
-     * @param bazelCommandManager gateway object for running Bazel commands
-     * @param classIndex the index of jars in the workspace, and the classes that each contains
+     * @param bazelWorkspace
+     *            gateway to a number of workspace level features
+     * @param bazelProjectManager
+     *            project manager is used to help build references to other projects
+     * @param bazelProject
+     *            the project (aka a Bazel package that corresponds to the concept of a Maven module)
+     * @param implicitDependencyHelper
+     *            helper utility that computes annoying implicit dependencies added by Bazel
+     * @param osDetector
+     *            use this when do OS specific work - this allows us to mock the OS in tests
+     * @param bazelCommandManager
+     *            gateway object for running Bazel commands
+     * @param classIndex
+     *            the index of jars in the workspace, and the classes that each contains
      */
     public DynamicBazelJvmClasspath(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
             BazelProject bazelProject, ImplicitClasspathHelper implicitDependencyHelper,
             OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager,
             BazelJvmIndexClasspath classIndex) {
         super(bazelWorkspace, bazelProjectManager, bazelProject, implicitDependencyHelper, osDetector,
-            bazelCommandManager);
+                bazelCommandManager);
         this.classIndex = classIndex;
     }
 

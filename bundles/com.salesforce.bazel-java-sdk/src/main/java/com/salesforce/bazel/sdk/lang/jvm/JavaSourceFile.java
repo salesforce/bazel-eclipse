@@ -46,7 +46,8 @@ public class JavaSourceFile extends BazelSourceFile {
         this.sourceFile = javaFile;
 
         if (!absolutePath.endsWith(".java")) {
-            throw new IllegalArgumentException("Caller passed a non JavaFile to the constructor. Path: "+absolutePath);
+            throw new IllegalArgumentException(
+                    "Caller passed a non JavaFile to the constructor. Path: " + absolutePath);
         }
     }
 

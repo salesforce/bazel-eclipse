@@ -38,9 +38,9 @@ public class MockCustomCommand extends MockCommand {
                 commandPretty = commandPretty + token + " ";
             }
             throw new IllegalStateException(
-                "The MockCustomCommand does not have enough output to provide to simulate the Bazel command. There are "
-                        + simulatedOutputLinesProvidedByTest.size() + " outputs configured. Command as received:\n"
-                        + commandPretty);
+                    "The MockCustomCommand does not have enough output to provide to simulate the Bazel command. There are "
+                            + simulatedOutputLinesProvidedByTest.size() + " outputs configured. Command as received:\n"
+                            + commandPretty);
         }
 
     }

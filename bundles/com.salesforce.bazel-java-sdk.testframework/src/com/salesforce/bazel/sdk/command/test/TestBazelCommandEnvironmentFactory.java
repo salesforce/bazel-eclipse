@@ -57,9 +57,9 @@ public class TestBazelCommandEnvironmentFactory {
     public void createTestEnvironment(File tempDir, TestOptions testOptions) throws Exception {
         // the name of the directory that contains the bazel workspace is significant, as the Eclipse feature
         // will use it in the name of the Eclipse project
-        File workspaceDir = new File(tempDir, "bazel-ws-"+testOptions.uniqueKey);
+        File workspaceDir = new File(tempDir, "bazel-ws-" + testOptions.uniqueKey);
         workspaceDir.mkdirs();
-        File outputBase = new File(tempDir, "obase-"+testOptions.uniqueKey);
+        File outputBase = new File(tempDir, "obase-" + testOptions.uniqueKey);
         outputBase.mkdirs();
 
         TestBazelWorkspaceDescriptor descriptor =
@@ -89,7 +89,7 @@ public class TestBazelCommandEnvironmentFactory {
         commandBuilder = new MockCommandBuilder(commandConsole, testWorkspace, testOptions);
 
         BazelCommandManager bazelCommandManager = new BazelCommandManager(bazelAspectLocation, commandBuilder,
-            commandConsole, bazelExecutable.bazelExecutableFile);
+                commandConsole, bazelExecutable.bazelExecutableFile);
         bazelCommandManager.setBazelExecutablePath(bazelExecutable.bazelExecutableFile.getAbsolutePath());
 
         OperatingEnvironmentDetectionStrategy osStrategy = Mockito.mock(OperatingEnvironmentDetectionStrategy.class);

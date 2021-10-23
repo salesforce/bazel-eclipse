@@ -15,8 +15,7 @@ public class MockCommandSimulatedOutputMatcher {
         matchArgRegex = regex;
 
         if (matchArgRegex.contains(FSPathHelper.WINDOWS_BACKSLASH)) {
-            matchArgRegex =
-                    matchArgRegex.replace(FSPathHelper.WINDOWS_BACKSLASH, FSPathHelper.WINDOWS_BACKSLASH_REGEX);
+            matchArgRegex = matchArgRegex.replace(FSPathHelper.WINDOWS_BACKSLASH, FSPathHelper.WINDOWS_BACKSLASH_REGEX);
         }
     }
 }

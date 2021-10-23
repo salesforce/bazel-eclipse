@@ -105,8 +105,8 @@ public class SourceFileCrawler {
                         }
                         String childRelative = candidateFile.getName();
                         if (!relativePathToClosestArtifact.isEmpty()) {
-                            childRelative = relativePathToClosestArtifact + FSPathHelper.UNIX_SLASH
-                                    + candidateFile.getName();
+                            childRelative =
+                                    relativePathToClosestArtifact + FSPathHelper.UNIX_SLASH + candidateFile.getName();
                             // convert to Windows path if necessary
                             childRelative = FSPathHelper.osSeps(childRelative);
                         }

@@ -127,7 +127,7 @@ public class BazelImportWizardLocationControl {
                             @Override
                             public void run() {
                                 MessageDialog.openError(page.getShell(), "Import WORKSPACE",
-                                        "You must select a Bazel WORKSPACE File");
+                                    "You must select a Bazel WORKSPACE File");
                             }
                         });
                     } else {

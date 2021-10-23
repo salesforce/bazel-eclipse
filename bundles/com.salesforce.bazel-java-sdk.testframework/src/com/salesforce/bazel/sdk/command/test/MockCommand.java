@@ -154,7 +154,8 @@ public class MockCommand implements Command {
             returnFalseOrThrow(target);
         }
         // * ruleName is always valid, but if there is a specific rule we need to check
-        if (!ruleName.equals(BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR) && (testWorkspaceFactory.workspaceDescriptor.createdTargets.get(target) == null)) {
+        if (!ruleName.equals(BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR)
+                && (testWorkspaceFactory.workspaceDescriptor.createdTargets.get(target) == null)) {
             returnFalseOrThrow(target);
         }
 

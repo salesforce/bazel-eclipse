@@ -63,7 +63,7 @@ public class BazelWorkspace {
      * Determined by running this command line: <i>bazel info output_path</i>
      */
     private File bazelOutputPathDirectory;
-    
+
     /**
      * The internal location on disk for Bazel's 'bazel-bin' for this workspace. E.g.
      * <i>/private/var/tmp/_bazel_plaird/f521799c9882dcc6330b57416b13ba81/execroot/bazel_eclipse_feature/bazel-out/darwin-fastbuild/bin</i>
@@ -165,7 +165,7 @@ public class BazelWorkspace {
         }
         return bazelOutputPathDirectory;
     }
-    
+
     public List<String> getTargetsForBazelQuery(String query) {
         List<String> results = new ArrayList<String>();
         for (String line : metadataStrategy.computeBazelQuery(query)) {
@@ -204,7 +204,7 @@ public class BazelWorkspace {
         }
         return commandOptions;
     }
-    
+
     // EQUALITY
     // We are using location on the file system of the WORKSPACE file as the sole input into hashcode/equals
 

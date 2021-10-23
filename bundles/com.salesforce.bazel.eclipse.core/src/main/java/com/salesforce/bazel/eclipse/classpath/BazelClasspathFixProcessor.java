@@ -58,7 +58,8 @@ public class BazelClasspathFixProcessor extends DefaultClasspathFixProcessor {
     private static final LogHelper LOG = LogHelper.log(BazelClasspathFixProcessor.class);
 
     @Override
-    public ClasspathFixProposal[] getFixImportProposals(IJavaProject javaProject, String missingType) throws CoreException {
+    public ClasspathFixProposal[] getFixImportProposals(IJavaProject javaProject, String missingType)
+            throws CoreException {
         IProject iproject = javaProject.getProject();
         LOG.info("Invoked BazelClasspathFixProcessor for project {} and missingType {}", iproject.getName(),
             missingType);
@@ -107,9 +108,8 @@ public class BazelClasspathFixProcessor extends DefaultClasspathFixProcessor {
                         missingType);
                     BazelClasspathFixProposal newProposal = new BazelClasspathFixProposal(proposal);
                     newProposal.fRelevance = 1;
-                    newProposal.fName =
-                            "Bazel BUILD fix: add " + bazelLabel + " to the target in the [" + iproject.getName()
-                            + "] project.";
+                    newProposal.fName = "Bazel BUILD fix: add " + bazelLabel + " to the target in the ["
+                            + iproject.getName() + "] project.";
                     proposal = newProposal;
                 }
             }

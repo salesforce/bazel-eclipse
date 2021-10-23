@@ -59,7 +59,7 @@ public class MockIProjectFactory {
         IPath absolutePath = new Path(bom.absolutePathToEclipseProjectDirectory);
         Mockito.when(mockProject.getLocation()).thenReturn(absolutePath);
         Mockito.when(mockProject.getWorkspace())
-        .thenReturn(BazelPluginActivator.getResourceHelper().getEclipseWorkspace());
+                .thenReturn(BazelPluginActivator.getResourceHelper().getEclipseWorkspace());
         try {
             Mockito.when(mockProject.getReferencedProjects()).thenReturn(new IProject[] {});
         } catch (Exception anyE) {}
@@ -87,7 +87,7 @@ public class MockIProjectFactory {
         for (String natureId : bom.customNatures.keySet()) {
             try {
                 Mockito.when(mockProject.getNature(ArgumentMatchers.eq(natureId)))
-                .thenReturn(bom.customNatures.get(natureId));
+                        .thenReturn(bom.customNatures.get(natureId));
             } catch (Exception anyE) {}
         }
         description.setNatureIds(bom.customNatures.keySet().toArray(new String[] {}));

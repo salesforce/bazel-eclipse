@@ -138,10 +138,10 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
             if (proposedProjectView.equals(projectView)) {
                 // no change, nothing to do
                 LOG.info("The Bazel Packages in the " + ProjectViewConstants.PROJECT_VIEW_FILE_NAME
-                    + " file match the set of Eclipse Projects currently imported");
+                        + " file match the set of Eclipse Projects currently imported");
             } else {
-                boolean ok = MessageDialog.openConfirm(getSite().getShell(), "Update Imported Projects",
-                    CONFIRMATION_TEXT);
+                boolean ok =
+                        MessageDialog.openConfirm(getSite().getShell(), "Update Imported Projects", CONFIRMATION_TEXT);
                 if (ok) {
                     deleteProjects(importedProjects);
                     List<BazelPackageLocation> projectsToImport = proposedProjectView.getDirectories();

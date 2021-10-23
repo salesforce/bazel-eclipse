@@ -128,26 +128,25 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
                             // structure that contains a directory that starts with the word 'test'
                             boolean isTestPath = FSPathHelper.doesPathContainNamedResource(
                                 srcPathObj.sourceDirectoryPath, testSourceCodeFolderMarkers, true);
-                            
+
                             if (isTestPath) {
                                 structure.testSourceDirFSPaths.add(packageRelPathToFile);
                             } else {
                                 structure.mainSourceDirFSPaths.add(packageRelPathToFile);
                             }
-                            
+
                             alreadySeenBasePaths.add(srcPathObj.sourceDirectoryPath);
                             LOG.info("Found source path {} for package {}", srcPathObj.sourceDirectoryPath,
                                 packageRelPath);
                         } else {
                             // the path could not be split for some reason
-                            LOG.info("Could not derive source path from {} for package {}", srcPath,
-                                packageRelPath);
+                            LOG.info("Could not derive source path from {} for package {}", srcPath, packageRelPath);
                         }
                     } else {
                         // this is a resource file, like xyz.properties or abc.xml
-                        LOG.info("Found resource file with source path {} for package {}", srcPath,
-                            packageRelPath);
-                        boolean isTest = FSPathHelper.doesPathContainNamedResource(srcPath, testSourceCodeFolderMarkers, true);
+                        LOG.info("Found resource file with source path {} for package {}", srcPath, packageRelPath);
+                        boolean isTest =
+                                FSPathHelper.doesPathContainNamedResource(srcPath, testSourceCodeFolderMarkers, true);
                         if (isTest) {
                             FSTree.addNode(testResourceFileStructure, srcPath, FSPathHelper.osSepRegex(), true);
                         } else {

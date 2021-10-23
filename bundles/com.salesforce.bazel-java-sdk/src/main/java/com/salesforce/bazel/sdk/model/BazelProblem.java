@@ -71,8 +71,8 @@ public class BazelProblem {
     }
 
     /**
-     * Returns the matching BazelLabel for this problem's resourcePath.
-     * TODO this should be moved to a more general location, like BazelLabel or FSPathHelper
+     * Returns the matching BazelLabel for this problem's resourcePath. TODO this should be moved to a more general
+     * location, like BazelLabel or FSPathHelper
      * 
      * @param labels
      *            all BazelLabel instances to consider
@@ -82,10 +82,10 @@ public class BazelProblem {
         if (labels.size() == 0) {
             return null;
         }
-        
+
         String shortestRelativeResourcePath = null;
         BazelLabel bestMatch = null;
-        
+
         for (BazelLabel label : labels) {
             String relativeResourcePath = getRelativeResourcePath(label);
             if (relativeResourcePath != null) {
@@ -96,7 +96,7 @@ public class BazelProblem {
                 }
             }
         }
-        
+
         return bestMatch;
     }
 
@@ -160,7 +160,7 @@ public class BazelProblem {
             if (resourceFile.isAbsolute() && resourcePath.contains(relativeFilePath)) {
                 // absolute path
                 int index = resourcePath.indexOf(relativeFilePath);
-                String relResourcePath= resourcePath.substring(index);
+                String relResourcePath = resourcePath.substring(index);
                 return File.separator + relResourcePath.substring(relativeFilePath.length());
             }
         }

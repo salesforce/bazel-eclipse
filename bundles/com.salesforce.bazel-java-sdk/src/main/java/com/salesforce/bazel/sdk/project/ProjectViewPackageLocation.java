@@ -112,8 +112,7 @@ public class ProjectViewPackageLocation implements BazelPackageLocation {
         }
         if (other instanceof ProjectViewPackageLocation) {
             ProjectViewPackageLocation o = (ProjectViewPackageLocation) other;
-            return workspaceRootDirectory.equals(o.workspaceRootDirectory)
-                    && packagePath.equals(o.packagePath);
+            return workspaceRootDirectory.equals(o.workspaceRootDirectory) && packagePath.equals(o.packagePath);
         }
         return false;
     }

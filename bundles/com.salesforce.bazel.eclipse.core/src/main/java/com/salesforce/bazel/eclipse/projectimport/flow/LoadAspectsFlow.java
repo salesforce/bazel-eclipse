@@ -90,9 +90,9 @@ public class LoadAspectsFlow implements ImportFlow {
             if (targetInfos.isEmpty()) {
                 BazelPluginActivator.getInstance().closeBazelWorkspace();
                 throw new IllegalStateException(
-                    "Bazel could not provide any information about the selected project(s). "
-                            + "This usually means there is a Bazel build error in the underlying packages being imported.\n\n"
-                            + "Please run a command line build for these packages to verify they build correctly.");
+                        "Bazel could not provide any information about the selected project(s). "
+                                + "This usually means there is a Bazel build error in the underlying packages being imported.\n\n"
+                                + "Please run a command line build for these packages to verify they build correctly.");
             }
 
             List<AspectTargetInfo> allTargetInfos = new ArrayList<>();

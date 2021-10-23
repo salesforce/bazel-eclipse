@@ -73,7 +73,7 @@ final class ProjectViewProcessor {
                     invalidDirectories.add(packageLocation);
                 } else {
                     additionalDirectories.addAll(additionalPackages.stream()
-                        .map(p -> new ProjectViewPackageLocation(rootDir, p)).collect(Collectors.toList()));
+                            .map(p -> new ProjectViewPackageLocation(rootDir, p)).collect(Collectors.toList()));
                 }
             }
         }

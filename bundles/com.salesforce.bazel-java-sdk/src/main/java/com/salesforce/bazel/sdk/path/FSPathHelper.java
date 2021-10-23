@@ -78,7 +78,7 @@ public final class FSPathHelper {
 
     // Slash character for file paths in jar files
     public static final String JAR_SLASH = "/";
-    
+
     private FSPathHelper() {
 
     }
@@ -170,7 +170,7 @@ public final class FSPathHelper {
         String path = unixStylePath;
         if (!isUnix) {
             // Basic case: a/b/c => a\\b\\c
-            
+
             // Variants
             // 1. we need to handle the case where a path has been converted already slash->backslash, and then is passed into
             // this method, which then needs to escape each backslash in addition to converting any new slashes
@@ -178,7 +178,7 @@ public final class FSPathHelper {
             // 2. we need to handle the case where a path has been converted and escaped already slash->backslash+backslash, 
             // and then is passed into this method, which then needs to escape each backslash in addition to converting any new slashes
             // a/b\\c\d => a\\b\\c\\d
-            
+
             path = unixStylePath.replace(WINDOWS_BACKSLASH + WINDOWS_BACKSLASH, WINDOWS_BACKSLASH);
             path = path.replace(UNIX_SLASH, WINDOWS_BACKSLASH);
             path = path.replace(WINDOWS_BACKSLASH, WINDOWS_BACKSLASH + WINDOWS_BACKSLASH);
@@ -192,7 +192,8 @@ public final class FSPathHelper {
      * <p>
      * An example use case is looking for a directory named 'test' or 'tests' in a file system path.
      */
-    public static boolean doesPathContainNamedResource(String filesystemPath, Set<String> targetNames, boolean allowStartsWith) {
+    public static boolean doesPathContainNamedResource(String filesystemPath, Set<String> targetNames,
+            boolean allowStartsWith) {
         String[] pathElements = filesystemPath.split(osSepRegex());
 
         for (String element : pathElements) {
@@ -221,7 +222,7 @@ public final class FSPathHelper {
         }
         return "";
     }
-    
+
     /**
      * Splits the passed absolute or relative path using the correct OS specific regex
      */

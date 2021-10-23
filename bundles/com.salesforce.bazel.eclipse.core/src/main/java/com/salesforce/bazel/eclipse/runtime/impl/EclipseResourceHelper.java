@@ -280,7 +280,7 @@ public class EclipseResourceHelper implements ResourceHelper {
             IProgressMonitor monitor) {
         try {
             LOG.debug("createFolderLink: thisFolder=" + thisFolder.getLocation().toOSString()
-                + " bazelWorkspaceLocation=" + bazelWorkspaceLocation.toOSString());
+                    + " bazelWorkspaceLocation=" + bazelWorkspaceLocation.toOSString());
             thisFolder.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);

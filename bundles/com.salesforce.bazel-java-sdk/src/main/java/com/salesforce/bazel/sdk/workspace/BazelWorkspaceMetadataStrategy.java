@@ -33,40 +33,40 @@
  */
 package com.salesforce.bazel.sdk.workspace;
 
- import java.io.File;
- import java.util.List;
+import java.io.File;
+import java.util.List;
 
- import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 
- /**
-  * Worker interface for a delegate that can retrieve metadata for the BazelWorkspace. For example, the primary
-  * implementation uses 'bazel info' commands. During tests, these methods are implemented with knowledge of the testing
-  * context.
-  */
- public interface BazelWorkspaceMetadataStrategy {
+/**
+ * Worker interface for a delegate that can retrieve metadata for the BazelWorkspace. For example, the primary
+ * implementation uses 'bazel info' commands. During tests, these methods are implemented with knowledge of the testing
+ * context.
+ */
+public interface BazelWorkspaceMetadataStrategy {
 
-     /**
-      * Returns the execution root of the current Bazel workspace.
-      */
-     File computeBazelWorkspaceExecRoot();
+    /**
+     * Returns the execution root of the current Bazel workspace.
+     */
+    File computeBazelWorkspaceExecRoot();
 
-     /**
-      * Returns the output base of the current Bazel workspace.
-      */
-     File computeBazelWorkspaceOutputBase();
+    /**
+     * Returns the output base of the current Bazel workspace.
+     */
+    File computeBazelWorkspaceOutputBase();
 
-     /**
-      * Returns the bazel-bin of the current Bazel workspace.
-      */
-     File computeBazelWorkspaceBin();
+    /**
+     * Returns the bazel-bin of the current Bazel workspace.
+     */
+    File computeBazelWorkspaceBin();
 
-     /**
-      * Returns the explicitly set option in the workspace config files (.bazelrc et al)
-      */
-     void populateBazelWorkspaceCommandOptions(BazelWorkspaceCommandOptions commandOptions);
+    /**
+     * Returns the explicitly set option in the workspace config files (.bazelrc et al)
+     */
+    void populateBazelWorkspaceCommandOptions(BazelWorkspaceCommandOptions commandOptions);
 
-     /**
-      * Return the result of the bazel query
-      */
-     List<String> computeBazelQuery(String query);
- }
+    /**
+     * Return the result of the bazel query
+     */
+    List<String> computeBazelQuery(String query);
+}

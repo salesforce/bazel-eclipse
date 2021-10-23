@@ -112,15 +112,14 @@ public class BazelCommandExecutorTest {
 
     private TestBazelCommandEnvironmentFactory createEnv(String key) throws Exception {
         File testDir = tmpFolder.newFolder();
-        File workspaceDir = new File(testDir, "bazelws-"+key);
+        File workspaceDir = new File(testDir, "bazelws-" + key);
         workspaceDir.mkdirs();
-        File outputbaseDir = new File(testDir, "obase-"+key);
+        File outputbaseDir = new File(testDir, "obase-" + key);
         outputbaseDir.mkdirs();
 
         TestOptions testOptions = new TestOptions().numberOfJavaPackages(1);
 
-        TestBazelWorkspaceDescriptor descriptor =
-                new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir);
+        TestBazelWorkspaceDescriptor descriptor = new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir);
         TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
         env.createTestEnvironment(workspace, testDir, testOptions);

@@ -84,7 +84,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     private static List<BazelJvmIndexClasspath> instances = new ArrayList<>();
 
     public BazelGlobalSearchClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
 

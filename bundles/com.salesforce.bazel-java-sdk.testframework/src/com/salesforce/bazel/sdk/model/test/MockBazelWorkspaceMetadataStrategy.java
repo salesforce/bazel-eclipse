@@ -101,7 +101,7 @@ public class MockBazelWorkspaceMetadataStrategy implements BazelWorkspaceMetadat
             optionLines = new ArrayList<>();
             optionLines.add("Inherited 'common' options: --isatty=1 --terminal_columns=260");
             optionLines.add(
-                    "Inherited 'build' options: --javacopt=-source 8 -target 8 --host_javabase=//tools/jdk:my-linux-jdk11 --javabase=//tools/jdk:my-linux-jdk8 --stamp");
+                "Inherited 'build' options: --javacopt=-source 8 -target 8 --host_javabase=//tools/jdk:my-linux-jdk11 --javabase=//tools/jdk:my-linux-jdk8 --stamp");
         }
         commandOptions.parseOptionsFromOutput(optionLines);
     }

@@ -36,12 +36,12 @@ public class TestJavaPackageFactory {
 
         // create the catalog entries
         TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(workspaceDescriptor,
-            packageRelativeBazelPath, packageName, javaPackageDir, trackState);
+                packageRelativeBazelPath, packageName, javaPackageDir, trackState);
 
         // we will be collecting locations of Aspect json files for this package
         Set<String> packageAspectFiles = new TreeSet<>();
 
-        // we optionally additional deps to the main java_library, this collects those
+        // we optionally add additional deps to the main java_library, this collects those
         List<String> extraDeps = new ArrayList<>();
 
         // create the BUILD file
@@ -57,10 +57,8 @@ public class TestJavaPackageFactory {
 
         // main source
         String javaPackageName = "com.salesforce.fruit" + index;
-        List<String> sourceFiles =
-                addMainSourceFiles(workspaceDescriptor, index, javaPackageName, packageName, javaPackageDir,
-                    packageRelativeBazelPath,
-                    packageRelativeFilePath);
+        List<String> sourceFiles = addMainSourceFiles(workspaceDescriptor, index, javaPackageName, packageName,
+            javaPackageDir, packageRelativeBazelPath, packageRelativeFilePath);
 
         // make this package depend on the library from the previously created package
         if (previousJavaLibTarget != null) {
@@ -122,8 +120,7 @@ public class TestJavaPackageFactory {
 
     private List<String> addMainSourceFiles(TestBazelWorkspaceDescriptor workspaceDescriptor, int index,
             String javaPackageName, String packageName, File javaPackageDir, String packageRelativeBazelPath,
-            String packageRelativeFilePath)
-                    throws Exception {
+            String packageRelativeFilePath) throws Exception {
         List<String> sourceFiles = new ArrayList<>();
         String srcMainRoot1 = "src/main";
         String srcMainRoot2 = "src/main";
@@ -177,8 +174,7 @@ public class TestJavaPackageFactory {
     private List<String> addTestSource(TestBazelWorkspaceDescriptor workspaceDescriptor, int index,
             String javaPackageName, String packageName, String packageRelativePath, File javaPackageDir,
             String packageRelativeBazelPath, String packageRelativeFilePath, String javaLibraryTargetName,
-            String javaTestTargetName, boolean explicitJavaTestDeps,
-            Set<String> packageAspectFiles) throws Exception {
+            String javaTestTargetName, boolean explicitJavaTestDeps, Set<String> packageAspectFiles) throws Exception {
         List<String> testSourceFiles = new ArrayList<>();
         String srcTestRoot1 = "src/test";
         String srcTestRoot2 = "src/test";
@@ -247,8 +243,8 @@ public class TestJavaPackageFactory {
 
     }
 
-    private void addExplicitTestJars(TestBazelWorkspaceDescriptor workspaceDescriptor,
-            Set<String> packageAspectFiles) throws Exception {
+    private void addExplicitTestJars(TestBazelWorkspaceDescriptor workspaceDescriptor, Set<String> packageAspectFiles)
+            throws Exception {
         TestJarDescriptor jarDescriptor = createFakeMavenInstallJar(workspaceDescriptor.outputBaseDirectory,
             "junit_junit", "junit", "junit", "4.12");
         String aspectFilePath_junit = TestAspectFileCreator
@@ -310,8 +306,7 @@ public class TestJavaPackageFactory {
     /**
      * Creates the jars (bin, src) on the file system to be used as maven_install deps in java rules
      */
-    public TestJarDescriptor createFakeMavenInstallJar(File dirOutputBase, String bazelName,
-            String groupNameWithDots,
+    public TestJarDescriptor createFakeMavenInstallJar(File dirOutputBase, String bazelName, String groupNameWithDots,
             String artifactName, String version) throws IOException {
         TestJarDescriptor jarDescriptor = new TestJarDescriptor();
         String combinedName = artifactName + "-" + version;
@@ -383,7 +378,7 @@ public class TestJavaPackageFactory {
      */
     public TestJarDescriptor createFakeProjectJars(TestBazelWorkspaceDescriptor workspaceDescriptor,
             String packageRelativePath, String packageName, String targetName, String testTargetName)
-                    throws IOException {
+            throws IOException {
         File packageBinDir = new File(workspaceDescriptor.dirBazelBin, packageRelativePath);
         packageBinDir.mkdirs(); // execroot/bazel_demo_simplejava_mvninstall/bazel-out/darwin-fastbuild/bin/projects/services/fruit-salad-service/fruit-salad
         TestJarDescriptor jarDescriptor = new TestJarDescriptor();

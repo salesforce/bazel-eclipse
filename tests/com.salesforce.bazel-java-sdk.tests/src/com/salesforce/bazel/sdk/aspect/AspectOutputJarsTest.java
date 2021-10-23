@@ -24,9 +24,8 @@ public class AspectOutputJarsTest {
     //  }
     private final String GUAVA_JAR = FSPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0.jar"); // $SLASH_OK
     private final String GUAVA_IJAR = FSPathHelper.osSeps(
-            "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar"); // $SLASH_OK
-    private final String GUAVA_SJAR =
-            FSPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0-sources.jar"); // $SLASH_OK
+        "bazel-out/darwin-fastbuild/bin/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-20.0-ijar.jar"); // $SLASH_OK
+    private final String GUAVA_SJAR = FSPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0-sources.jar"); // $SLASH_OK
 
     @Test
     public void testDeserializationHappy() {

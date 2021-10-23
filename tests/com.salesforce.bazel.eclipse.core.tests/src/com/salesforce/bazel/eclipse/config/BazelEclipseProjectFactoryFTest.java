@@ -71,11 +71,9 @@ public class BazelEclipseProjectFactoryFTest {
                 .explicitJavaTestDeps(false);
         String wsName = MockEclipse.BAZEL_WORKSPACE_NAME + "-imws";
 
-        MockEclipse mockEclipse =
-                EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
-                    testOptions);
-        workspace_IProject =
-                mockEclipse.getImportedProject("Bazel Workspace (" + wsName + ")");
+        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
+                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions);
+        workspace_IProject = mockEclipse.getImportedProject("Bazel Workspace (" + wsName + ")");
         assertNotNull(workspace_IProject);
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");
         assertNotNull(javalib0_IProject);

@@ -191,8 +191,7 @@ public class BazelJvmTestClasspathHelper {
      * the params file.
      */
     public static Set<File> findParamsFileForTestClassnameAndTarget(BazelWorkspace bazelWorkspace,
-            BazelProject bazelProject, String target, String className,
-            String suffix) {
+            BazelProject bazelProject, String target, String className, String suffix) {
         // TODO in what case will there be multiple test param files?
         Set<File> paramFiles = new HashSet<>();
         File paramFile = null;
@@ -229,7 +228,8 @@ public class BazelJvmTestClasspathHelper {
         // we can now sanity check the request - does this test class even have java_test target?
         if (labels.size() == 0) {
             // no, this is a dangling test class without a java_test rule
-            String message = "The test class "+className+" does not have a java_test target defined in the BUILD file.";
+            String message =
+                    "The test class " + className + " does not have a java_test target defined in the BUILD file.";
             LOG.error(message);
             throw new IllegalStateException(message);
         }
@@ -281,13 +281,13 @@ public class BazelJvmTestClasspathHelper {
 
     /*
       EXAMPLE param file contents (redacted, only shows what we are looking for)
-
+    
       --output
       bazel-out/darwin-fastbuild/bin/projects/libs/foo/src/test/java/com/salesforce/bar/MyServiceTest_deploy.jar
       --sources
       bazel-out/darwin-fastbuild/bin/projects/libs/foo/src/test/java/com/salesforce/bar/MyServiceTest.jar,//projects/libs/foo:src/test/java/com/salesforce/bar/MyServiceTest
       bazel-out/darwin-fastbuild/bin/tools/junit5/libbazeljunit5.jar,//tools/junit5:bazeljunit5
-
+    
      */
 
     /**

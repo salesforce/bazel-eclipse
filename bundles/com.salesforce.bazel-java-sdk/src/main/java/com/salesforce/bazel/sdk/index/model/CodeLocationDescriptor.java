@@ -47,7 +47,7 @@ public class CodeLocationDescriptor {
         this.id = id;
         this.bazelLabel = bazelLabel;
     }
-    
+
     public void addClass(ClassIdentifier classId) {
         if (containedClasses == null) {
             containedClasses = new ArrayList<>(5);

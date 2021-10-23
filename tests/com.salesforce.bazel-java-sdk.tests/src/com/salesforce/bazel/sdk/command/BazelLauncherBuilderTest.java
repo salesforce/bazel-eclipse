@@ -65,7 +65,7 @@ public class BazelLauncherBuilderTest {
 
         addBazelCommandOutput(env, 0,
             FSPathHelper.osSeps(".*bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME + ".*"), // $SLASH_OK
-                "fake bazel launcher script result");
+            "fake bazel launcher script result");
 
         Command command = launcherBuilder.build();
         BazelProcessBuilder processBuilder = command.getProcessBuilder();
@@ -73,7 +73,7 @@ public class BazelLauncherBuilderTest {
         String filesystemPath =
                 FSPathHelper.osSeps("bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME); // $SLASH_OK
         String commandStr = cmdTokens.get(0);
-        assertTrue(commandStr.endsWith(filesystemPath) || commandStr.endsWith(filesystemPath+".exe"));
+        assertTrue(commandStr.endsWith(filesystemPath) || commandStr.endsWith(filesystemPath + ".exe"));
         assertFalse(cmdTokens.contains("debug"));
     }
 
@@ -91,14 +91,14 @@ public class BazelLauncherBuilderTest {
 
         addBazelCommandOutput(env, 0,
             FSPathHelper.osSeps(".*bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME + ".*"), // $SLASH_OK
-                "fake bazel launcher script result");
+            "fake bazel launcher script result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
         String filesystemPath =
                 FSPathHelper.osSeps("bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME); // $SLASH_OK
         String command = cmdTokens.get(0);
-        assertTrue(command.endsWith(filesystemPath) || command.endsWith(filesystemPath+".exe"));
+        assertTrue(command.endsWith(filesystemPath) || command.endsWith(filesystemPath + ".exe"));
         assertFalse(cmdTokens.contains("debug=" + DEBUG_PORT));
     }
 
@@ -195,9 +195,9 @@ public class BazelLauncherBuilderTest {
 
     private TestBazelCommandEnvironmentFactory createEnv(String key) throws Exception {
         File testDir = tmpFolder.newFolder();
-        File workspaceDir = new File(testDir, "bazelws-"+key);
+        File workspaceDir = new File(testDir, "bazelws-" + key);
         workspaceDir.mkdirs();
-        File outputbaseDir = new File(testDir, "obase"+key);
+        File outputbaseDir = new File(testDir, "obase" + key);
         outputbaseDir.mkdirs();
 
         TestOptions testOptions = new TestOptions().numberOfJavaPackages(3).addJavaBinaryRule(true);

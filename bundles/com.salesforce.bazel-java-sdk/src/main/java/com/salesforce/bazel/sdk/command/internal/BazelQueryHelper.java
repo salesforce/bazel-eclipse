@@ -74,7 +74,7 @@ public class BazelQueryHelper {
     @Deprecated
     public synchronized List<String> listBazelTargetsInBuildFiles(File bazelWorkspaceRootDirectory,
             WorkProgressMonitor progressMonitor, File... directories)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> argBuilder = new ArrayList<>();
         argBuilder.add("query");
         for (File f : directories) {
@@ -91,7 +91,7 @@ public class BazelQueryHelper {
      */
     public synchronized Collection<BazelBuildFile> queryBazelTargetsInBuildFile(File bazelWorkspaceRootDirectory,
             Collection<BazelLabel> bazelLabels)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         if (bazelLabels.isEmpty()) {
             return Collections.singletonList(new BazelBuildFile(BazelLabel.BAZEL_ALL_REPO_PACKAGES));
@@ -124,7 +124,7 @@ public class BazelQueryHelper {
      */
     public synchronized Collection<String> querySourceFilesForTarget(File bazelWorkspaceRootDirectory,
             BazelLabel bazelLabel)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
         Collection<String> sourceFilePaths = runSourceFileQuery(bazelLabel, bazelWorkspaceRootDirectory);
         return sourceFilePaths;
@@ -143,7 +143,7 @@ public class BazelQueryHelper {
     // runs label query and populates cache, returns loaded BazelBuildFile instances
     private Collection<BazelBuildFile> runLabelQuery(Collection<BazelLabel> bazelLabels,
             File bazelWorkspaceRootDirectory)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         String labels = bazelLabels.stream().map(BazelLabel::getLabelPath).collect(Collectors.joining(" "));
 
         // bazel query 'kind(rule, [label]:*)' --output label_kind

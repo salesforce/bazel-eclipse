@@ -98,7 +98,8 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
         BazelTargetKind targetKind = BazelTargetKind.valueOfIgnoresCaseRequiresMatch(targetKindStr);
         IProject project = BazelPluginActivator.getResourceHelper().getProjectByName(projectName);
 
-        List<String> allArgs = new ArrayList<>(BazelLaunchConfigAttributes.INTERNAL_BAZEL_ARGS.getListValue(configuration));
+        List<String> allArgs =
+                new ArrayList<>(BazelLaunchConfigAttributes.INTERNAL_BAZEL_ARGS.getListValue(configuration));
         allArgs.addAll(BazelLaunchConfigAttributes.USER_BAZEL_ARGS.getListValue(configuration));
 
         if (targetKind.isRunnable()) {

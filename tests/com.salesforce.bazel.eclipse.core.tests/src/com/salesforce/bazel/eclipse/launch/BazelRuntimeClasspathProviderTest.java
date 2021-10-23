@@ -37,18 +37,19 @@ public class BazelRuntimeClasspathProviderTest {
 
     @Test
     public void getPathsToJars() {
-        List<String> result = BazelJvmTestClasspathHelper.getClasspathJarsFromParamsFile(new Scanner(PARAM_FILE_CONTENTS));
+        List<String> result =
+                BazelJvmTestClasspathHelper.getClasspathJarsFromParamsFile(new Scanner(PARAM_FILE_CONTENTS));
 
         String deployPath = FSPathHelper.osSeps(
-                "bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/src/test/java/demo/banana/api/BananaTest_deploy.jar"); // $SLASH_OK
-        String libPath = FSPathHelper
-                .osSeps("bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/libbanana-api.jar"); // $SLASH_OK
+            "bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/src/test/java/demo/banana/api/BananaTest_deploy.jar"); // $SLASH_OK
+        String libPath =
+                FSPathHelper.osSeps("bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/libbanana-api.jar"); // $SLASH_OK
         String slf4jPath = FSPathHelper.osSeps("external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar"); // $SLASH_OK
         String guavaPath = FSPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0.jar"); // $SLASH_OK
         String junitPath = FSPathHelper.osSeps("external/junit_junit/jar/junit-4.12.jar"); // $SLASH_OK
         String runnerPath = FSPathHelper.osSeps("external/remote_java_tools/java_tools/Runner_deploy.jar"); // $SLASH_OK
         String testPath = FSPathHelper.osSeps(
-                "bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/src/test/java/demo/banana/api/BananaTest.jar"); // $SLASH_OK
+            "bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/src/test/java/demo/banana/api/BananaTest.jar"); // $SLASH_OK
 
         assertEquals(7, result.size());
         assertEquals(deployPath, result.get(0));
@@ -67,21 +68,21 @@ public class BazelRuntimeClasspathProviderTest {
     }
 
     private static String PARAM_FILE_CONTENTS = "--output\n" + FSPathHelper.osSeps(
-            "bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/src/test/java/demo/banana/api/BananaTest_deploy.jar\n") // $SLASH_OK
-    + "--compression\n" + "--normalize\n" + "--main_class\n"
-    + "com.google.testing.junit.runner.BazelTestRunner\n" + "--build_info_file\n"
-    + FSPathHelper.osSeps("bazel-out/darwin-fastbuild/include/build-info-redacted.properties\n") // $SLASH_OK
-    + "--sources\n"
-    + FSPathHelper.osSeps("bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/libbanana-api.jar") // $SLASH_OK
-    + ",//projects/libs/banana/banana-api:banana-api\n"
-    + FSPathHelper.osSeps("external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar") // $SLASH_OK
+        "bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/src/test/java/demo/banana/api/BananaTest_deploy.jar\n") // $SLASH_OK
+            + "--compression\n" + "--normalize\n" + "--main_class\n"
+            + "com.google.testing.junit.runner.BazelTestRunner\n" + "--build_info_file\n"
+            + FSPathHelper.osSeps("bazel-out/darwin-fastbuild/include/build-info-redacted.properties\n") // $SLASH_OK
+            + "--sources\n"
+            + FSPathHelper.osSeps("bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/libbanana-api.jar") // $SLASH_OK
+            + ",//projects/libs/banana/banana-api:banana-api\n"
+            + FSPathHelper.osSeps("external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.25.jar") // $SLASH_OK
             + ",@@maven//:org_slf4j_slf4j_api:slf4j-api-1.7.25.jar\n"
-    + FSPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0.jar") // $SLASH_OK
+            + FSPathHelper.osSeps("external/com_google_guava_guava/jar/guava-20.0.jar") // $SLASH_OK
             + ",@@maven//:com_google_guava_guava:guava-20.0.jar\n"
             + FSPathHelper.osSeps("external/junit_junit/jar/junit-4.12.jar") + ",@@maven//:junit_junit:junit-4.12.jar\n" // $SLASH_OK
-    + FSPathHelper.osSeps("external/remote_java_tools/java_tools/Runner_deploy.jar") // $SLASH_OK
-    + ",@@remote_java_tools//:java_tools/Runner_deploy.jar\n"
-    + FSPathHelper.osSeps(
-            "bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/src/test/java/demo/banana/api/BananaTest.jar") // $SLASH_OK
-    + ",//projects/libs/banana/banana-api:src/test/java/demo/banana/api/BananaTest\n" + "";
+            + FSPathHelper.osSeps("external/remote_java_tools/java_tools/Runner_deploy.jar") // $SLASH_OK
+            + ",@@remote_java_tools//:java_tools/Runner_deploy.jar\n"
+            + FSPathHelper.osSeps(
+                "bazel-out/darwin-fastbuild/bin/projects/libs/banana/banana-api/src/test/java/demo/banana/api/BananaTest.jar") // $SLASH_OK
+            + ",//projects/libs/banana/banana-api:src/test/java/demo/banana/api/BananaTest\n" + "";
 }

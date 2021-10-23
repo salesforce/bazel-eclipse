@@ -90,7 +90,7 @@ public class BazelProject {
     public ProjectStructure getProjectStructure() {
         return projectStructure;
     }
-    
+
     public List<BazelPackageInfo> getProjectPackages() {
         return bazelPackages;
     }
@@ -106,7 +106,7 @@ public class BazelProject {
 
         if (!olderProject.name.equals(name)) {
             throw new IllegalArgumentException(
-                "failed trying to merge BazelProjects of different names: " + name + " and " + olderProject.name);
+                    "failed trying to merge BazelProjects of different names: " + name + " and " + olderProject.name);
         }
 
         if ((bazelPackages != null) && (bazelPackages.size() > 0)) {

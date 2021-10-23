@@ -58,7 +58,7 @@ public class BazelOutputParserTest {
             "ERROR: " + buildFilePath + ":16:5: positional argument may not follow keyword argument",
             "ERROR: " + buildFilePath + ":18: name 'xyx' is not defined",
             "ERROR: " + buildFilePath + ": elvis has left the building",
-                "ERROR: error loading package 'projects/libs/apple/apple-api': Package 'projects/libs/apple/apple-api' contains errors");
+            "ERROR: error loading package 'projects/libs/apple/apple-api': Package 'projects/libs/apple/apple-api' contains errors");
 
         List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
 
@@ -83,7 +83,7 @@ public class BazelOutputParserTest {
         List<String> lines = Arrays.asList(
             "ERROR: /Users/stoens/bazel-demo/main_usecases/java/simplejava-mvnimport/projects/libs/banana/banana-api/BUILD:1:1: Building libbanana-api.jar (2 source files) failed (Exit 1)",
             "projects/libs/banana/banana-api/src/main/java/demo/banana/api/Banana.java:50: error: cannot find symbol",
-                "    this.numSeeds = numSeeds;");
+            "    this.numSeeds = numSeeds;");
 
         List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
 
@@ -103,7 +103,7 @@ public class BazelOutputParserTest {
             "             ^",
             "ERROR: /Users/stoens/bazel-build-example-for-eclipse/sayhello/BUILD:1:1: Building sayhello/libsayhello.jar (2 source files) failed (Exit 1)",
             "sayhello/src/main/java/com/blah/foo/hello/Main.java:17: error: cannot find symbols",
-                "INFO: Elapsed time: 0.196s, Critical Path: 0.03s");
+            "INFO: Elapsed time: 0.196s, Critical Path: 0.03s");
 
         List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
 
@@ -171,8 +171,7 @@ public class BazelOutputParserTest {
     @Test
     public void testUnformattedError() {
         BazelOutputParser p = new BazelOutputParser();
-        List<String> lines =
-                Arrays.asList("ERROR: some unknown error");
+        List<String> lines = Arrays.asList("ERROR: some unknown error");
 
         List<BazelProblem> errors = p.convertErrorOutputToProblems(lines);
 

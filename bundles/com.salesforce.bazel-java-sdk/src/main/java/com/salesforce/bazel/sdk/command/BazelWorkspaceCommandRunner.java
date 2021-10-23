@@ -376,7 +376,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized Collection<String> querySourceFilesForTarget(File bazelWorkspaceRootDirectory,
             BazelLabel bazelLabel)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         return bazelQueryHelper.querySourceFilesForTarget(bazelWorkspaceRootDirectory, bazelLabel);
     }
 
@@ -387,7 +387,6 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     public synchronized void flushQueryCache(BazelLabel bazelPackageLabel) {
         bazelQueryHelper.flushCache(bazelPackageLabel);
     }
-
 
     /**
      * Returns the list of targets found in the BUILD files for the given sub-directories. Uses Bazel Query to build the
@@ -420,7 +419,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized List<BazelProblem> runBazelBuild(Set<String> bazelTargets, List<String> extraArgs,
             WorkProgressMonitor progressMonitor)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<String> extraArgsList = new ArrayList<String>();
         extraArgsList.add("build");
         extraArgsList.addAll(buildOptions);
@@ -431,17 +430,16 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         // run the build
         List<String> stderrOutput = bazelCommandExecutor.runBazelAndGetErrorLines(bazelWorkspaceRootDirectory,
             progressMonitor, extraArgsList, new ErrorOutputSelector(), BazelCommandExecutor.TIMEOUT_INFINITE);
-        
-        
+
         if (stderrOutput.isEmpty()) {
             // the build was a success
             return Collections.emptyList();
         }
-        
+
         // there was an error(s) in the build, parse them as BazelProblem objects
         BazelOutputParser outputParser = new BazelOutputParser();
         List<BazelProblem> errors = outputParser.convertErrorOutputToProblems(stderrOutput);
-        
+
         return errors;
     }
 
@@ -462,7 +460,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
      */
     public synchronized Map<BazelLabel, Set<AspectTargetInfo>> getAspectTargetInfoForPackages(
             Collection<BazelPackageLocation> targetPackages, String caller)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         List<BazelLabel> targetLabels = new ArrayList<>();
         for (BazelPackageLocation pkg : targetPackages) {
             String target = pkg.getBazelPackageFSRelativePath() + ":*";

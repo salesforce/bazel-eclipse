@@ -33,7 +33,8 @@ public class MockBuildCommand extends MockCommand {
         if (!isValidBazelTarget(target)) {
             // by default, isValidBazelTarget() will throw an exception if the package is missing, but the test may configure it to return false instead
             errorLines = Arrays.asList("ERROR: no such package '" + target
-                + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.", "- /fake/path/" + target); // // $SLASH_OK: bazel path
+                    + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.",
+                "- /fake/path/" + target); // // $SLASH_OK: bazel path
             return;
         }
 
@@ -64,23 +65,21 @@ public class MockBuildCommand extends MockCommand {
 
         // build command looks like: bazel build --override_repository=bazeljavasdk_aspect=/tmp/bef/bazelws/bazel-workspace/tools/aspect ...
         MockCommandSimulatedOutputMatcher aspectCommandMatcher1 = new MockCommandSimulatedOutputMatcher(1, "build");
-        MockCommandSimulatedOutputMatcher aspectCommandMatcher2 =
-                new MockCommandSimulatedOutputMatcher(BazelWorkspaceAspectProcessor.ASPECTCMD_EXTERNALREPO_ARGINDEX,
-                        ".*bazeljavasdk_aspect.*");
+        MockCommandSimulatedOutputMatcher aspectCommandMatcher2 = new MockCommandSimulatedOutputMatcher(
+                BazelWorkspaceAspectProcessor.ASPECTCMD_EXTERNALREPO_ARGINDEX, ".*bazeljavasdk_aspect.*");
 
         for (String packagePath : testWorkspaceFactory.workspaceDescriptor.aspectFileSets.keySet()) {
             // the last arg is the package path with the wildcard target (//projects/libs/javalib0:*)
             // TODO this is returning the same set of aspects for each target in a package
-            String wildcardTarget =
-                    BazelLabel.BAZEL_ROOT_SLASHES + packagePath + BazelLabel.BAZEL_COLON + ".*";
-            MockCommandSimulatedOutputMatcher aspectCommandMatcher3 =
-                    new MockCommandSimulatedOutputMatcher(BazelWorkspaceAspectProcessor.ASPECTCMD_TARGETLABEL_ARGINDEX,
-                        wildcardTarget);
+            String wildcardTarget = BazelLabel.BAZEL_ROOT_SLASHES + packagePath + BazelLabel.BAZEL_COLON + ".*";
+            MockCommandSimulatedOutputMatcher aspectCommandMatcher3 = new MockCommandSimulatedOutputMatcher(
+                    BazelWorkspaceAspectProcessor.ASPECTCMD_TARGETLABEL_ARGINDEX, wildcardTarget);
 
             List<MockCommandSimulatedOutputMatcher> matchers = new ArrayList<>();
             Collections.addAll(matchers, aspectCommandMatcher1, aspectCommandMatcher2, aspectCommandMatcher3);
 
-            List<String> aspectFilePathsList = new ArrayList<>(testWorkspaceFactory.workspaceDescriptor.aspectFileSets.get(packagePath));
+            List<String> aspectFilePathsList =
+                    new ArrayList<>(testWorkspaceFactory.workspaceDescriptor.aspectFileSets.get(packagePath));
             String nameForLog = "Aspect file set for target: " + wildcardTarget;
             MockCommandSimulatedOutput aspectOutput =
                     new MockCommandSimulatedOutput(nameForLog, outputLines, aspectFilePathsList, matchers);
@@ -102,8 +101,9 @@ public class MockBuildCommand extends MockCommand {
         // stdout is used to print diagnostics
         // assume the build will succeed and pre-set the stdout message (something further down may set this differently though)
         // note the time, target count, and action count are all static; if you want to write tests that inspect those values you have a lot of work to do here
-        outputLines =
-                Arrays.asList("INFO: Analyzed 19 targets (0 packages loaded, 1 target configured).", "INFO: Found 19 targets...", "INFO: Elapsed time: 0.146s, Critical Path: 0.00s", "INFO: Build completed successfully, 1 total action");
+        outputLines = Arrays.asList("INFO: Analyzed 19 targets (0 packages loaded, 1 target configured).",
+            "INFO: Found 19 targets...", "INFO: Elapsed time: 0.146s, Critical Path: 0.00s",
+            "INFO: Build completed successfully, 1 total action");
 
         // TODO derive build output from test workspace structure
         // TODO allow testOptions to determine that a package build should fail

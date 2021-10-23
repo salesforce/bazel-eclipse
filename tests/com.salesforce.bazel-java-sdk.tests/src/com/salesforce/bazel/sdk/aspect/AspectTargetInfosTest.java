@@ -143,8 +143,7 @@ public class AspectTargetInfosTest {
                 getAspectTargetInfo("myclass", FSPathHelper.osSeps("projects/services/foo/MyClass.java")); // $SLASH_OK
 
         AspectTargetInfos apis = new AspectTargetInfos(api);
-        Collection<AspectTargetInfo> infos =
-                apis.lookupByRootSourcePath(FSPathHelper.osSeps("projects/services/foo")); // $SLASH_OK
+        Collection<AspectTargetInfo> infos = apis.lookupByRootSourcePath(FSPathHelper.osSeps("projects/services/foo")); // $SLASH_OK
 
         assertEquals(1, infos.size());
         assertSame(api, infos.iterator().next());
@@ -211,7 +210,7 @@ public class AspectTargetInfosTest {
 
         String workspaceRelativePath = FAKE_REL_PATH;
         return new AspectTargetInfo(new File(""), workspaceRelativePath, targetKind.toString().toLowerCase(), label,
-            new ArrayList<>(), sourcePathList);
+                new ArrayList<>(), sourcePathList);
     }
 
 }

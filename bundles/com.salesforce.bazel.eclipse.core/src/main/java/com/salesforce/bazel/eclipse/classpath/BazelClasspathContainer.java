@@ -61,7 +61,7 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     private static List<BazelJvmClasspath> instances = new ArrayList<>();
 
     public BazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
         this(eclipseProject, BazelPluginActivator.getResourceHelper());
     }
 
@@ -74,11 +74,11 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
 
         if (USE_DYNAMIC_CP) {
             bazelClasspath = new DynamicBazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager(),
-                null);
+                    new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager(),
+                    null);
         } else {
             bazelClasspath = new BazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
+                    new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
         }
         instances.add(bazelClasspath);
     }

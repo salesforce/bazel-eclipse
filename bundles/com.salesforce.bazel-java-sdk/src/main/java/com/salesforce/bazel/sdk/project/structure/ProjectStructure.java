@@ -48,12 +48,12 @@ public class ProjectStructure {
 
     /**
      * The relative file system paths, starting at the root of the workspace, to the directories containing the main
-     * resource files. 
+     * resource files.
      * <p>
      * Example: projects/libs/apple/apple-api/src/main/resources
      */
     public List<String> mainResourceDirFSPaths = new ArrayList<>();
-    
+
     /**
      * The relative file system paths, starting at the root of the workspace, to the directories containing the test
      * source files. For languages like Java that use directories to organize files by Java package
@@ -66,12 +66,12 @@ public class ProjectStructure {
 
     /**
      * The relative file system paths, starting at the root of the workspace, to the directories containing the test
-     * resource files. 
+     * resource files.
      * <p>
      * Example: projects/libs/apple/apple-api/src/test/resources
      */
     public List<String> testResourceDirFSPaths = new ArrayList<>();
-    
+
     public ProjectStructure() {
 
     }
@@ -87,7 +87,7 @@ public class ProjectStructure {
     public List<String> getMainResourceDirFSPaths() {
         return mainResourceDirFSPaths;
     }
-    
+
     public List<String> getTestSourceDirFSPaths() {
         return testSourceDirFSPaths;
     }
@@ -125,7 +125,7 @@ public class ProjectStructure {
             testResourceDirFSPaths = olderStructure.testResourceDirFSPaths;
         }
     }
-    
+
     // DEPRECATED
 
     /**
@@ -134,7 +134,6 @@ public class ProjectStructure {
      * Example: //projects/foo:foo, //projects/foo:foo_tests
      */
     public final List<BazelLabel> bazelTargets = new ArrayList<>();
-
 
     @Deprecated // this should be coming from somewhere else
     public List<BazelLabel> getBazelTargets() {

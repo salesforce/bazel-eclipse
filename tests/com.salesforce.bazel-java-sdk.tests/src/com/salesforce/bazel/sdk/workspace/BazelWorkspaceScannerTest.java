@@ -73,7 +73,6 @@ public class BazelWorkspaceScannerTest {
         assertEquals(5, rootWorkspacePackage.getChildPackageInfos().size());
     }
 
-
     // UNHAPPY PATHS
 
     @Test(expected = IllegalArgumentException.class)

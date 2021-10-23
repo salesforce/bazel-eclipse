@@ -36,10 +36,12 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * <p>
  * There are three parts to the index: the artifactDictionary, fileDictionary and the typeDictionary.
  * <p>
- * The artifactDictionary maps the artifactId (e.g. junit, hamcrest-core, slf4j-api) to the one or more archives found that contains 
- * that artifactId. If your directories contains multiple versions of the same artifactId, this will be a list of artifacts.
+ * The artifactDictionary maps the artifactId (e.g. junit, hamcrest-core, slf4j-api) to the one or more archives found
+ * that contains that artifactId. If your directories contains multiple versions of the same artifactId, this will be a
+ * list of artifacts.
  * <p>
- * The fileDictionary maps the filename (e.g. junit-4.12.jar) to the one or more locations where that filename was found.
+ * The fileDictionary maps the filename (e.g. junit-4.12.jar) to the one or more locations where that filename was
+ * found.
  * <p>
  * The typeDictionary maps each found type name (e.g. the fully qualified Java classname) to the discovered location in
  * archive files or raw source files.
@@ -73,7 +75,7 @@ public class CodeIndex {
         fileDictionary.put(filename, indexEntry);
         LOG.debug("add file ({}): {}", filename, location.locationOnDisk.getPath());
     }
-    
+
     public void addTypeLocation(String typeName, CodeLocationDescriptor location) {
         CodeIndexEntry indexEntry = typeDictionary.get(typeName);
         if (indexEntry == null) {

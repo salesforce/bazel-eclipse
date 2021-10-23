@@ -83,7 +83,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
 
         String canonicalSourcePathString =
                 FSPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory())
-                + File.separator + sourcePath;
+                        + File.separator + sourcePath;
         Path canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
         for (BazelProject candidateProject : bazelProjects) {
@@ -109,8 +109,9 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
                     if (canonicalSourcePathString.startsWith(canonicalProjectRoot)) {
                         IPath[] inclusionPatterns = entry.getInclusionPatterns();
                         IPath[] exclusionPatterns = entry.getExclusionPatterns();
-                        if (!matchPatterns(canonicalSourcePath, exclusionPatterns) && ((inclusionPatterns == null) || (inclusionPatterns.length == 0)
-                                || matchPatterns(canonicalSourcePath, inclusionPatterns))) {
+                        if (!matchPatterns(canonicalSourcePath, exclusionPatterns)
+                                && ((inclusionPatterns == null) || (inclusionPatterns.length == 0)
+                                        || matchPatterns(canonicalSourcePath, inclusionPatterns))) {
                             return candidateProject;
                         }
                     }
@@ -233,8 +234,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
             // TODO this is a huge mess; we don't have the right abstractions for mapping packages to projects
             List<BazelLabel> projectLabels = bazelProject.getProjectStructure().getBazelTargets();
             if ((projectLabels != null) && (projectLabels.size() > 0)) {
-                activatedTargets =
-                        new BazelProjectTargets(bazelProject, projectLabels.get(0).getPackagePath());
+                activatedTargets = new BazelProjectTargets(bazelProject, projectLabels.get(0).getPackagePath());
                 activatedTargets.activateWildcardTarget(BazelLabel.BAZEL_WILDCARD_ALLTARGETS);
                 return activatedTargets;
             }

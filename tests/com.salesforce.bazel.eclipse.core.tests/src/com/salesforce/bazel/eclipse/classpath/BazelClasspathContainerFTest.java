@@ -350,8 +350,7 @@ public class BazelClasspathContainerFTest {
         MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
                 .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions);
 
-        workspace_IProject =
-                mockEclipse.getImportedProject("Bazel Workspace (" + wsName + ")");
+        workspace_IProject = mockEclipse.getImportedProject("Bazel Workspace (" + wsName + ")");
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");
         javalib0_IJavaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(javalib0_IProject);
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");

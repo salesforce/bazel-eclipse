@@ -60,7 +60,6 @@ public class TestBazelWorkspaceFactory {
             throw anyE;
         }
 
-
         boolean explicitJavaTestDeps = workspaceDescriptor.testOptions.explicitJavaTestDeps;
         boolean doCreateJavaImport = workspaceDescriptor.testOptions.addJavaImport;
         boolean doCreateNestedWorkspace = workspaceDescriptor.testOptions.addFakeNestedWorkspace;
@@ -72,7 +71,7 @@ public class TestBazelWorkspaceFactory {
             if (!explicitJavaTestDeps) {
                 // make the test runner jar file, because this workspace uses implicit deps (see ImplicitDependencyHelper)
                 String testRunnerPath = FSPathHelper.osSeps(
-                        "external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools"); // $SLASH_OK
+                    "external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools"); // $SLASH_OK
                 File testRunnerDir = new File(workspaceDescriptor.dirBazelBin, testRunnerPath);
                 testRunnerDir.mkdirs();
                 File testRunnerJar = new File(testRunnerDir, "Runner_deploy-ijar.jar");
@@ -117,7 +116,7 @@ public class TestBazelWorkspaceFactory {
 
             // create the catalog entries
             TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(workspaceDescriptor,
-                packageRelativeBazelPath, packageName, genruleLib, true);
+                    packageRelativeBazelPath, packageName, genruleLib, true);
 
             File buildFile = new File(genruleLib, workspaceDescriptor.buildFilename);
             buildFile.createNewFile();
@@ -187,7 +186,6 @@ public class TestBazelWorkspaceFactory {
         sb.append(")");
         return sb.toString();
     }
-
 
     /**
      * Creates a nested workspace with a Java packages in it.

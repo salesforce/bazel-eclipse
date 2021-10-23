@@ -41,7 +41,8 @@ public class MockQueryCommand extends MockCommand {
             if (!isValidBazelTarget(queryPackage)) {
                 // by default, isValidBazelTarget() will throw an exception if the package is missing, but the test may configure it to return false instead
                 errorLines = Arrays.asList("ERROR: no such package '" + queryPackage
-                    + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.", "- /fake/abs/path/" + queryPackage); // $SLASH_OK: bazel path
+                        + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.",
+                    "- /fake/abs/path/" + queryPackage); // $SLASH_OK: bazel path
                 return;
             }
 
@@ -49,7 +50,7 @@ public class MockQueryCommand extends MockCommand {
                     testWorkspaceFactory.workspaceDescriptor.createdPackages.get(queryPackage);
             if (queryPackageDescriptor == null) {
                 throw new IllegalStateException("The mock package descriptor is missing for package [" + queryPackage
-                    + "]. This is a bug in the mock testing framework.");
+                        + "]. This is a bug in the mock testing framework.");
             }
 
             // the query is for :* which means all targets, so iterate through the package's targets and write a line per target to stdout
@@ -75,7 +76,8 @@ public class MockQueryCommand extends MockCommand {
             String queryPackage = queryArg.substring(27, wildcard - 1);
             List<String> outputLines = new ArrayList<>();
 
-            List<String> mainSourceFiles = testWorkspaceFactory.workspaceDescriptor.createdMainSourceFilesForPackages.get(queryPackage);
+            List<String> mainSourceFiles =
+                    testWorkspaceFactory.workspaceDescriptor.createdMainSourceFilesForPackages.get(queryPackage);
             if (mainSourceFiles != null) {
                 for (String mainSourceFile : mainSourceFiles) {
                     String sourcePath = convertSourceFilePath(queryPackage, mainSourceFile);
@@ -97,8 +99,8 @@ public class MockQueryCommand extends MockCommand {
             addSimulatedOutputToCommandStdOut(outputLines);
         } else {
             throw new IllegalArgumentException(
-                "The plugin issued the command 'bazel query' with an unknown type of query. "
-                        + "The mocking layer (MockQueryCommand) does not know how to simulate a response.");
+                    "The plugin issued the command 'bazel query' with an unknown type of query. "
+                            + "The mocking layer (MockQueryCommand) does not know how to simulate a response.");
         }
     }
 

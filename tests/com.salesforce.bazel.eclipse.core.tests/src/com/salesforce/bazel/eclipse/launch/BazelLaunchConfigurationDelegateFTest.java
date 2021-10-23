@@ -63,7 +63,7 @@ public class BazelLaunchConfigurationDelegateFTest {
         // on Windows, the launcher is an .exe file extension
         addBazelCommandOutput(mockEclipse.getBazelCommandEnvironmentFactory(), 0,
             FSPathHelper.osSeps(".*bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME + ".*"),
-                "bazel run result"); // $SLASH_OK
+            "bazel run result"); // $SLASH_OK
         BazelLaunchConfigurationDelegate delegate = mockEclipse.getLaunchDelegate();
 
         // method under test
@@ -150,9 +150,8 @@ public class BazelLaunchConfigurationDelegateFTest {
         TestOptions testOptions = new TestOptions().uniqueKey(key).numberOfJavaPackages(1).computeClasspaths(true)
                 .explicitJavaTestDeps(false).addJavaBinaryRule(true);
 
-        MockEclipse mockEclipse =
-                EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
-                    testOptions);
+        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
+                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions);
 
         return mockEclipse;
     }
@@ -168,7 +167,7 @@ public class BazelLaunchConfigurationDelegateFTest {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(), "java_binary");
         } else if ("selenium".equals(verb)) {
             testConfig.attributes.put(BazelLaunchConfigAttributes.TARGET_KIND.getAttributeName(),
-                    "java_web_test_suite");
+                "java_web_test_suite");
         }
 
         List<String> args = new ArrayList<>();

@@ -217,7 +217,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             setBazelWorkspaceRootDirectory(workspaceName, new File(bazelWorkspacePathFromPrefs));
         } else {
             LOG.info(
-                    "The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
+                "The workspace path property is missing from preferences, which means this is either a new Eclipse workspace or a corrupt one.");
         }
 
         // insert our global resource listener into the workspace

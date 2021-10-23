@@ -64,9 +64,8 @@ public class BazelBuilderFTest {
         TestOptions testOptions = new TestOptions().uniqueKey(testName).numberOfJavaPackages(2).computeClasspaths(true)
                 .explicitJavaTestDeps(explicitJavaTestDeps);
 
-        MockEclipse mockEclipse =
-                EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,
-                    testOptions);
+        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
+                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions);
 
         workspace_IProject =
                 mockEclipse.getImportedProject("Bazel Workspace (" + MockEclipse.BAZEL_WORKSPACE_NAME + ")");

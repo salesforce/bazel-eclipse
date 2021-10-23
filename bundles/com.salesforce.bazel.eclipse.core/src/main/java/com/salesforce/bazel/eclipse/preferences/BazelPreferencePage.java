@@ -56,7 +56,7 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
     private static class BazelBinaryFieldEditor extends FileFieldEditor {
         BazelBinaryFieldEditor(Composite parent) {
             super(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, "Path to the &Bazel binary:", true, VALIDATE_ON_KEY_STROKE,
-                parent);
+                    parent);
         }
 
         @Override
@@ -88,15 +88,15 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
     private static class BazelGlobalClasspathSearchEnabledFieldEditor extends BooleanFieldEditor {
 
         public BazelGlobalClasspathSearchEnabledFieldEditor(Composite parent) {
-            super(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME,
-                "Enable &global classpath search?", SEPARATE_LABEL, parent);
+            super(BazelPreferenceKeys.GLOBALCLASSPATH_SEARCH_PREF_NAME, "Enable &global classpath search?",
+                    SEPARATE_LABEL, parent);
         }
     }
 
     private static class BazelExternalDownloadCachePathEditor extends DirectoryFieldEditor {
         BazelExternalDownloadCachePathEditor(Composite parent) {
             super(BazelPreferenceKeys.EXTERNAL_JAR_CACHE_PATH_PREF_NAME,
-                "Optional: path to the local &cache of downloaded jar files:", parent);
+                    "Optional: path to the local &cache of downloaded jar files:", parent);
         }
 
         @Override
@@ -133,7 +133,7 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
 
         public ProjectStructureOptimizationEnabledFieldEditor(Composite parent) {
             super(BazelPreferenceKeys.PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME,
-                "Enable &project structure optimizations during import? (rare to disable)", SEPARATE_LABEL, parent);
+                    "Enable &project structure optimizations during import? (rare to disable)", SEPARATE_LABEL, parent);
         }
     }
 

@@ -90,7 +90,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
         }
         if (!rootDirectory.exists()) {
             throw new IllegalArgumentException("A non-existent path [" + rootDirectory.getAbsolutePath()
-            + "] was used to construct a BazelPackageInfo.");
+                    + "] was used to construct a BazelPackageInfo.");
         }
 
         workspaceRoot = rootDirectory;
@@ -99,7 +99,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
             workspaceFile = new File(workspaceRoot, WORKSPACE_FILENAME_ALT);
             if (!workspaceFile.exists()) {
                 throw new IllegalArgumentException("The path [" + rootDirectory.getAbsolutePath()
-                + "] does not contain a " + WORKSPACE_FILENAME + " file.");
+                        + "] does not contain a " + WORKSPACE_FILENAME + " file.");
             }
         }
 
@@ -130,7 +130,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
         }
         if (relativeWorkspacePath.startsWith(File.separator)) {
             throw new IllegalArgumentException(
-                "BazelPackageInfo constructor requires a relative path, got [" + relativeWorkspacePath + "]");
+                    "BazelPackageInfo constructor requires a relative path, got [" + relativeWorkspacePath + "]");
         }
         if (relativeWorkspacePath.endsWith(File.separator)) {
             relativeWorkspacePath = relativeWorkspacePath.substring(0, relativeWorkspacePath.length() - 1);
@@ -149,7 +149,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
         directory = new File(workspaceRoot, this.relativeWorkspacePath);
         if (!directory.exists()) {
             throw new IllegalArgumentException("A non-existent path [" + directory.getAbsolutePath()
-            + "] was used to construct a BazelPackageInfo.");
+                    + "] was used to construct a BazelPackageInfo.");
         }
 
         // compute and cache the package name
@@ -158,7 +158,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
         // check if this is a dupe node
         if (findByPackage(packageName) != null) {
             throw new IllegalArgumentException(
-                "The package [" + packageName + "] already exists in the BazelPackageInfo tree.");
+                    "The package [" + packageName + "] already exists in the BazelPackageInfo tree.");
 
         }
 
@@ -205,7 +205,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
         // now is a good time to check that the root directory is still there
         if (!workspaceRoot.exists()) {
             throw new IllegalStateException("The workspace root directory [" + workspaceRoot.getAbsolutePath()
-            + "] has been deleted or moved.");
+                    + "] has been deleted or moved.");
         }
 
         return workspaceRoot;
@@ -220,13 +220,13 @@ public class BazelPackageInfo implements BazelPackageLocation {
         // now is a good time to check that the root directory is still there
         if (!workspaceRoot.exists()) {
             throw new IllegalStateException("The workspace root directory [" + workspaceRoot.getAbsolutePath()
-            + "] has been deleted or moved.");
+                    + "] has been deleted or moved.");
         }
         File workspaceFile = new File(workspaceRoot, WORKSPACE_FILENAME);
         // and that the WORKSPACE file is still there
         if (!workspaceFile.exists()) {
             throw new IllegalStateException(
-                "The WORKSPACE file [" + workspaceFile.getAbsolutePath() + "] has been deleted or moved.");
+                    "The WORKSPACE file [" + workspaceFile.getAbsolutePath() + "] has been deleted or moved.");
         }
 
         return workspaceFile;
@@ -362,8 +362,8 @@ public class BazelPackageInfo implements BazelPackageLocation {
         }
         if (!bazelPackagePath.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)) {
             throw new IllegalArgumentException(
-                "You must pass a Bazel path (e.g. //projects/libs/apple) to BazelPackageInfo.findByPackage(), got ["
-                        + bazelPackagePath + "]");
+                    "You must pass a Bazel path (e.g. //projects/libs/apple) to BazelPackageInfo.findByPackage(), got ["
+                            + bazelPackagePath + "]");
         }
 
         if (BazelLabel.BAZEL_ALL_REPO_PACKAGES.equals(bazelPackagePath)) {

@@ -47,11 +47,12 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * <p>
  * There are three parts to the index: the artifactDictionary, fileDictionary and the typeDictionary.
  * <p>
- * The artifactDictionary maps the Maven style artifactId (e.g. junit, hamcrest-core, slf4j-api) to the one or more jar 
- * files found that contains that artifactId. If your directories contains multiple versions of the same artifactId, this 
- * will be a list of artifacts.
+ * The artifactDictionary maps the Maven style artifactId (e.g. junit, hamcrest-core, slf4j-api) to the one or more jar
+ * files found that contains that artifactId. If your directories contains multiple versions of the same artifactId,
+ * this will be a list of artifacts.
  * <p>
- * The fileDictionary maps the filename (e.g. junit-4.12.jar) to the one or more locations where that filename was found.
+ * The fileDictionary maps the filename (e.g. junit-4.12.jar) to the one or more locations where that filename was
+ * found.
  * <p>
  * The typeDictionary maps each found classname to the discovered location in jar files or raw source files.
  * <p>
@@ -71,7 +72,6 @@ public class JvmCodeIndex extends CodeIndex {
     //public Map<String, CodeIndexEntry> fileDictionary = new TreeMap<>();
     //public Map<String, CodeIndexEntry> typeDictionary = new TreeMap<>();
 
-    
     public static JvmCodeIndex getWorkspaceIndex(BazelWorkspace bazelWorkspace) {
         return workspaceIndices.get(bazelWorkspace.getName());
     }
@@ -96,8 +96,7 @@ public class JvmCodeIndex extends CodeIndex {
         List<File> locations = new ArrayList<>();
 
         // for each jar downloading rule type in the workspace, add the appropriate local directories of the downloaded jars
-        List<BazelExternalJarRuleType> ruleTypes =
-                externalJarRuleManager.findInUseExternalJarRuleTypes(bazelWorkspace);
+        List<BazelExternalJarRuleType> ruleTypes = externalJarRuleManager.findInUseExternalJarRuleTypes(bazelWorkspace);
         for (BazelExternalJarRuleType ruleType : ruleTypes) {
             List<File> ruleSpecificLocations = ruleType.getDownloadedJarLocations(bazelWorkspace);
             locations.addAll(ruleSpecificLocations);
@@ -123,8 +122,8 @@ public class JvmCodeIndex extends CodeIndex {
 
     }
 
-    static void processLocation(BazelWorkspace bazelWorkspace, BazelExternalJarRuleManager externalJarRuleManager, JvmCodeIndex index, 
-            File location, WorkProgressMonitor progressMonitor) {
+    static void processLocation(BazelWorkspace bazelWorkspace, BazelExternalJarRuleManager externalJarRuleManager,
+            JvmCodeIndex index, File location, WorkProgressMonitor progressMonitor) {
         if ((location != null) && location.exists()) {
             JarIdentiferResolver jarResolver = new JarIdentiferResolver();
             JavaJarCrawler jarCrawler = new JavaJarCrawler(bazelWorkspace, index, jarResolver, externalJarRuleManager);

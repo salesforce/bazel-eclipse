@@ -39,9 +39,9 @@ public class MockLauncherCommand extends MockCommand {
                 commandPretty = commandPretty + token + " ";
             }
             throw new IllegalStateException(
-                "The MockLauncherCommand does not have enough output to provide to simulate the launcher commands. There are "
-                        + simulatedOutputLinesProvidedByTest.size() + " outputs configured. Command as received:\n"
-                        + commandPretty);
+                    "The MockLauncherCommand does not have enough output to provide to simulate the launcher commands. There are "
+                            + simulatedOutputLinesProvidedByTest.size() + " outputs configured. Command as received:\n"
+                            + commandPretty);
         }
     }
 }
