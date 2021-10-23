@@ -63,8 +63,8 @@ public class BazelCommandRunnerFTest {
     @Test
     public void testBazelWorkspaceCommandRunner_AtStartOfImport() throws Exception {
         File testTempDir = tmpFolder.newFolder();
-        TestOptions testOptions =
-                new TestOptions().numberOfJavaPackages(5).explicitJavaTestDeps(false).useAltConfigFileNames(false);
+        TestOptions testOptions = new TestOptions().uniqueKey("start").numberOfJavaPackages(5)
+                .explicitJavaTestDeps(false).useAltConfigFileNames(false);
 
         // create the mock Eclipse runtime in the correct state
         MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
@@ -99,8 +99,8 @@ public class BazelCommandRunnerFTest {
     @Test
     public void testBazelWorkspaceCommandRunner_WorkspaceDotBazel_AtStartOfImport() throws Exception {
         File testTempDir = tmpFolder.newFolder();
-        TestOptions testOptions =
-                new TestOptions().numberOfJavaPackages(5).explicitJavaTestDeps(false).useAltConfigFileNames(true);
+        TestOptions testOptions = new TestOptions().uniqueKey("dot").numberOfJavaPackages(5).explicitJavaTestDeps(false)
+                .useAltConfigFileNames(true);
 
         // create the mock Eclipse runtime in the correct state
         MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory

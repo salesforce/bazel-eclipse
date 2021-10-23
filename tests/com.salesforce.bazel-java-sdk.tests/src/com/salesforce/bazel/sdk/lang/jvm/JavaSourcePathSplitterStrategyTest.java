@@ -10,7 +10,7 @@ import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.path.SplitSourcePath;
-import com.salesforce.bazel.sdk.workspace.test.TestJavaFileCreator;
+import com.salesforce.bazel.sdk.workspace.test.java.TestJavaFileCreator;
 
 public class JavaSourcePathSplitterStrategyTest {
 

@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.workspace.test;
+package com.salesforce.bazel.sdk.workspace.test.java;
 
 import java.io.File;
 import java.io.FileOutputStream;

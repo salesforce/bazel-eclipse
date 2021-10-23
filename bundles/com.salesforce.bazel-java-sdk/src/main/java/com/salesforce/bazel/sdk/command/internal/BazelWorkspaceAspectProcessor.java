@@ -318,9 +318,18 @@ public class BazelWorkspaceAspectProcessor {
         Set<AspectTargetInfo> allDeps = new HashSet<>();
         List<AspectTargetInfo> queue = new ArrayList<>();
         Set<String> skippedLabels = new HashSet<>();
+        Set<String> visitedLabels = new HashSet<>();
         queue.add(aspectTargetInfo);
         while (!queue.isEmpty()) {
             AspectTargetInfo ati = queue.remove(0);
+            
+            String thisLabel = ati.getLabelPath();
+            if (visitedLabels.contains(thisLabel)) {
+                // we have already visited this dependency (through another path) just skip it
+                continue;
+            }
+            visitedLabels.add(thisLabel);
+            
             if (ati != aspectTargetInfo) {
                 allDeps.add(ati);
             }
@@ -330,6 +339,11 @@ public class BazelWorkspaceAspectProcessor {
                     // this is a dep that is not something we work with, so we ignore it
                     continue;
                 }
+                if (visitedLabels.contains(label)) {
+                    // we have already visited this dependency (through another path) just skip it
+                    continue;
+                }
+                
                 BazelLabel depLabel = new BazelLabel(label);
                 AspectTargetInfo dep = depNameToTargetInfo.get(depLabel);
                 if (dep == null) {
@@ -445,7 +459,7 @@ public class BazelWorkspaceAspectProcessor {
             }
             AspectTargetInfo value = e.getValue();
             bzToAtis.put(new BazelLabel(key), value);
-            LOG.debug("Aspect for {} generated successfully.", key);
+            LOG.info("Aspect for {} loaded successfully.", key);
         }
         return bzToAtis;
     }

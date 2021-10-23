@@ -15,6 +15,18 @@ public class TestOptions extends HashMap<String, String> {
 
     // COMMON OPTIONS
 
+    // short string to be used as a unique identifier (for unique temp folder names, etc)
+    // max 6 characters to reduce path length problems
+    public String uniqueKey = "gen";
+
+    public TestOptions uniqueKey(String key) {
+        uniqueKey = key;
+        if (key.length() > 6) {
+            uniqueKey = key.substring(0, 5);
+        }
+        return this;
+    }
+
     // version identifier to use in 'bazel version' commands
     public String bazelVersion = "1.0.0";
 

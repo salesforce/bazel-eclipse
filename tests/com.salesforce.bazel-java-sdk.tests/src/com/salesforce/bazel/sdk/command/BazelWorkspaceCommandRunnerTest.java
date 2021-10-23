@@ -53,7 +53,8 @@ public class BazelWorkspaceCommandRunnerTest {
     @Test
     public void testGlobalRunner_bazelpath() throws Exception {
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
-        env.createTestEnvironment(tmpFolder.newFolder(), null);
+        TestOptions testOptions = new TestOptions().uniqueKey("bpath");
+        env.createTestEnvironment(tmpFolder.newFolder(), testOptions);
 
         // verify that the command runner has the Bazel exec path
         assertEquals(env.bazelExecutable.getAbsolutePath(), BazelWorkspaceCommandRunner.getBazelExecutablePath());
@@ -62,7 +63,8 @@ public class BazelWorkspaceCommandRunnerTest {
     @Test
     public void testGlobalRunner_checkBazelVersion() throws Exception {
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
-        env.createTestEnvironment(tmpFolder.newFolder(), null);
+        TestOptions testOptions = new TestOptions().uniqueKey("bver");
+        env.createTestEnvironment(tmpFolder.newFolder(), testOptions);
 
         // run our version check, will throw if version is not approved
         // during tests, the Bazel command is simulated by MockVersionCommand
@@ -92,9 +94,9 @@ public class BazelWorkspaceCommandRunnerTest {
     @Test
     public void testWorkspaceRunner_workspacesetup() throws Exception {
         File testDir = tmpFolder.newFolder();
-        File workspaceDir = new File(testDir, "bazel-workspace");
+        File workspaceDir = new File(testDir, "bazelws-wsetup");
         workspaceDir.mkdirs();
-        File outputbaseDir = new File(testDir, "outputbase");
+        File outputbaseDir = new File(testDir, "obase-wsetup");
         outputbaseDir.mkdirs();
 
         TestOptions testOptions = new TestOptions().numberOfJavaPackages(3);

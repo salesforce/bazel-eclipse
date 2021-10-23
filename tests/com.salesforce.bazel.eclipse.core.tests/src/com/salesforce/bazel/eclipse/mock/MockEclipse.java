@@ -50,7 +50,8 @@ import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
  */
 public class MockEclipse {
 
-    public static final String BAZEL_WORKSPACE_NAME = "bazel-workspace";
+    // generic name for the bazel workspace directory, keep it short to avoid Windows path length issues
+    public static final String BAZEL_WORKSPACE_NAME = "bazelws";
 
     private File eclipseWorkspaceRoot;
     private File bazelWorkspaceRoot;

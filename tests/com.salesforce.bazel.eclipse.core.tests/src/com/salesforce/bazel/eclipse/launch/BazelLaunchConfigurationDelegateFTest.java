@@ -56,7 +56,7 @@ public class BazelLaunchConfigurationDelegateFTest {
     @Test
     public void testHappyRunLaunch() throws Exception {
         // setup functional test env
-        MockEclipse mockEclipse = createMockEnvironment();
+        MockEclipse mockEclipse = createMockEnvironment("runla");
         ILaunchConfiguration launchConfig = createLaunchConfiguration("run", TestOptions.JAVA_BINARY_TARGET_NAME);
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
@@ -87,7 +87,7 @@ public class BazelLaunchConfigurationDelegateFTest {
     @Test
     public void testHappyTestLaunch() throws Exception {
         // setup functional test env
-        MockEclipse mockEclipse = createMockEnvironment();
+        MockEclipse mockEclipse = createMockEnvironment("testla");
         ILaunchConfiguration launchConfig = createLaunchConfiguration("test", "javalib0Test");
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
@@ -114,7 +114,7 @@ public class BazelLaunchConfigurationDelegateFTest {
     @Test
     public void testHappySeleniumLaunch() throws Exception {
         // setup functional test env
-        MockEclipse mockEclipse = createMockEnvironment();
+        MockEclipse mockEclipse = createMockEnvironment("selen");
         ILaunchConfiguration launchConfig = createLaunchConfiguration("selenium", "javalib0Test");
         ILaunch launch = new MockILaunch(launchConfig);
         IProgressMonitor progress = new EclipseWorkProgressMonitor();
@@ -140,16 +140,15 @@ public class BazelLaunchConfigurationDelegateFTest {
 
     // HELPERS
 
-    private MockEclipse createMockEnvironment() throws Exception {
+    private MockEclipse createMockEnvironment(String key) throws Exception {
         File testTempDir = tmpFolder.newFolder();
 
         // during test development, it can be useful to have a stable location on disk for the Bazel workspace contents
         //testTempDir = new File("/tmp/bef/bazelws"); // $SLASH_OK: sample code
         //testTempDir.mkdirs();
 
-        TestOptions testOptions =
-                new TestOptions().numberOfJavaPackages(1).computeClasspaths(true).explicitJavaTestDeps(false)
-                .addJavaBinaryRule(true);
+        TestOptions testOptions = new TestOptions().uniqueKey(key).numberOfJavaPackages(1).computeClasspaths(true)
+                .explicitJavaTestDeps(false).addJavaBinaryRule(true);
 
         MockEclipse mockEclipse =
                 EclipseFunctionalTestEnvironmentFactory.createMockEnvironment_Imported_All_JavaPackages(testTempDir,

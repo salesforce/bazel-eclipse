@@ -45,7 +45,7 @@ public class BazelCommandExecutorTest {
 
     @Test
     public void testHappy_StdOut() throws Exception {
-        TestBazelCommandEnvironmentFactory env = createEnv();
+        TestBazelCommandEnvironmentFactory env = createEnv("stdout");
 
         List<String> emptyLines = new ArrayList<>();
         List<String> outputLines = new ArrayList<>();
@@ -70,7 +70,7 @@ public class BazelCommandExecutorTest {
 
     @Test
     public void testHappy_StdErr() throws Exception {
-        TestBazelCommandEnvironmentFactory env = createEnv();
+        TestBazelCommandEnvironmentFactory env = createEnv("stderr");
 
         List<String> emptyLines = new ArrayList<>();
         List<String> errLines = new ArrayList<>();
@@ -110,11 +110,11 @@ public class BazelCommandExecutorTest {
 
     // INTERNAL
 
-    private TestBazelCommandEnvironmentFactory createEnv() throws Exception {
+    private TestBazelCommandEnvironmentFactory createEnv(String key) throws Exception {
         File testDir = tmpFolder.newFolder();
-        File workspaceDir = new File(testDir, "bazel-workspace");
+        File workspaceDir = new File(testDir, "bazelws-"+key);
         workspaceDir.mkdirs();
-        File outputbaseDir = new File(testDir, "outputbase");
+        File outputbaseDir = new File(testDir, "obase-"+key);
         outputbaseDir.mkdirs();
 
         TestOptions testOptions = new TestOptions().numberOfJavaPackages(1);
