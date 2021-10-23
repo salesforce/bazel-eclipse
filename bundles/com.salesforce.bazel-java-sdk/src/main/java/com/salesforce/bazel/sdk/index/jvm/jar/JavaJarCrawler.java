@@ -49,6 +49,11 @@ public class JavaJarCrawler {
     private final JarIdentiferResolver resolver;
     private BazelExternalJarRuleManager externalJarRuleManager;
 
+    public JavaJarCrawler(JvmCodeIndex index, JarIdentiferResolver resolver) {
+        this.index = index;
+        this.resolver = resolver;
+    }
+    
     public JavaJarCrawler(BazelWorkspace bazelWorkspace, JvmCodeIndex index, JarIdentiferResolver resolver, BazelExternalJarRuleManager externalJarRuleManager) {
         this.bazelWorkspace = bazelWorkspace;
         this.index = index;
@@ -119,9 +124,12 @@ public class JavaJarCrawler {
         }
         String bazelLabel = null;
         String absoluteFilepath = jarFile.getAbsolutePath();
-        BazelExternalJarRuleType ruleType = externalJarRuleManager.findOwningRuleType(bazelWorkspace, absoluteFilepath);
-        if (ruleType != null) {
-            bazelLabel = ruleType.deriveBazelLabel(bazelWorkspace, absoluteFilepath, jarId);
+        
+        if (bazelWorkspace != null) {
+	        BazelExternalJarRuleType ruleType = externalJarRuleManager.findOwningRuleType(bazelWorkspace, absoluteFilepath);
+	        if (ruleType != null) {
+	            bazelLabel = ruleType.deriveBazelLabel(bazelWorkspace, absoluteFilepath, jarId);
+	        }
         }
         CodeLocationDescriptor jarLocationDescriptor = new CodeLocationDescriptor(jarFile, jarId, bazelLabel);
 
