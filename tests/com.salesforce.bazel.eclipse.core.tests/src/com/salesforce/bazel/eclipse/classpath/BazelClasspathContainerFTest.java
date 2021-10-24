@@ -292,11 +292,10 @@ public class BazelClasspathContainerFTest {
         assertContainsEntry(entries, "com.salesforce.bazel.eclipse.BAZEL_CONTAINER", EXACT, MAINCP);
         assertContainsEntry(entries, "JavaSE-11", CONTAINS, MAINCP);
 
-        // SECOND check that the resolved classpath has 5 entries for javalib0:
+        // SECOND check that the resolved classpath has 5 entries for javalib0: (4 external libs + orange.jar)
         entries = javaHelper.getResolvedClasspath(javalib0_IJavaProject, false);
         assertNotNull(entries);
         printClasspathEntries("testClasspath_BazelJavaProject_javaimport2", entries);
-        assertEquals(5, entries.length);
         assertContainsEntry(entries, "guava", CONTAINS, MAINCP);
         assertContainsEntry(entries, "slf4j", CONTAINS, MAINCP);
         assertContainsEntry(entries, "junit-4.12", CONTAINS, TESTCP);

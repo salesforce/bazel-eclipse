@@ -1,3 +1,26 @@
+/**
+ * Copyright (c) 2021, Salesforce.com, Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ * disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ * following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package com.salesforce.bazel.sdk.command.test.type;
 
 import java.util.ArrayList;
@@ -33,7 +56,7 @@ public class MockBuildCommand extends MockCommand {
         if (!isValidBazelTarget(target)) {
             // by default, isValidBazelTarget() will throw an exception if the package is missing, but the test may configure it to return false instead
             errorLines = Arrays.asList("ERROR: no such package '" + target
-                    + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.",
+                + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.",
                 "- /fake/path/" + target); // // $SLASH_OK: bazel path
             return;
         }
@@ -66,14 +89,14 @@ public class MockBuildCommand extends MockCommand {
         // build command looks like: bazel build --override_repository=bazeljavasdk_aspect=/tmp/bef/bazelws/bazel-workspace/tools/aspect ...
         MockCommandSimulatedOutputMatcher aspectCommandMatcher1 = new MockCommandSimulatedOutputMatcher(1, "build");
         MockCommandSimulatedOutputMatcher aspectCommandMatcher2 = new MockCommandSimulatedOutputMatcher(
-                BazelWorkspaceAspectProcessor.ASPECTCMD_EXTERNALREPO_ARGINDEX, ".*bazeljavasdk_aspect.*");
+            BazelWorkspaceAspectProcessor.ASPECTCMD_EXTERNALREPO_ARGINDEX, ".*bazeljavasdk_aspect.*");
 
         for (String packagePath : testWorkspaceFactory.workspaceDescriptor.aspectFileSets.keySet()) {
             // the last arg is the package path with the wildcard target (//projects/libs/javalib0:*)
             // TODO this is returning the same set of aspects for each target in a package
             String wildcardTarget = BazelLabel.BAZEL_ROOT_SLASHES + packagePath + BazelLabel.BAZEL_COLON + ".*";
             MockCommandSimulatedOutputMatcher aspectCommandMatcher3 = new MockCommandSimulatedOutputMatcher(
-                    BazelWorkspaceAspectProcessor.ASPECTCMD_TARGETLABEL_ARGINDEX, wildcardTarget);
+                BazelWorkspaceAspectProcessor.ASPECTCMD_TARGETLABEL_ARGINDEX, wildcardTarget);
 
             List<MockCommandSimulatedOutputMatcher> matchers = new ArrayList<>();
             Collections.addAll(matchers, aspectCommandMatcher1, aspectCommandMatcher2, aspectCommandMatcher3);
@@ -103,7 +126,7 @@ public class MockBuildCommand extends MockCommand {
         // note the time, target count, and action count are all static; if you want to write tests that inspect those values you have a lot of work to do here
         outputLines = Arrays.asList("INFO: Analyzed 19 targets (0 packages loaded, 1 target configured).",
             "INFO: Found 19 targets...", "INFO: Elapsed time: 0.146s, Critical Path: 0.00s",
-            "INFO: Build completed successfully, 1 total action");
+                "INFO: Build completed successfully, 1 total action");
 
         // TODO derive build output from test workspace structure
         // TODO allow testOptions to determine that a package build should fail
