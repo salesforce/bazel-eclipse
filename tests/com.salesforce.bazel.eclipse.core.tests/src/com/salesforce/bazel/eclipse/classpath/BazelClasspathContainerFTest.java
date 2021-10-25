@@ -316,11 +316,14 @@ public class BazelClasspathContainerFTest {
     @Test
     public void testClasspath_BazelWorkspaceProject() throws Exception {
         boolean explicitJavaTestDeps = false;
-        setupMockEnvironmentForClasspathTest("tcpbwp", explicitJavaTestDeps, false, false, false);
+        MockEclipse mockEclipse =
+                setupMockEnvironmentForClasspathTest("tcpbwp", explicitJavaTestDeps, false, false, false);
         ResourceHelper resourceHelper = mock(ResourceHelper.class);
         when(resourceHelper.isBazelRootProject(workspace_IProject)).thenReturn(true);
 
-        BazelClasspathContainer classpathContainer = new BazelClasspathContainer(workspace_IProject, resourceHelper);
+        BazelClasspathContainer classpathContainer = new BazelClasspathContainer(workspace_IProject, resourceHelper,
+            mockEclipse.getMockJavaCoreHelper(), mockEclipse.getProjectManager(), mockEclipse.getOsEnvStrategy(),
+            BazelPluginActivator.getBazelWorkspace());
         IClasspathEntry[] entries = classpathContainer.getClasspathEntries();
 
         assertNotNull(entries);

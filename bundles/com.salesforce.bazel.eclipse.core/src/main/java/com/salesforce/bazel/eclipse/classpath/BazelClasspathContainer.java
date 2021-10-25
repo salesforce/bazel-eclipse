@@ -45,12 +45,15 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.DynamicBazelJvmClasspath;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     protected final BazelJvmClasspath bazelClasspath;
@@ -61,24 +64,26 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     private static List<BazelJvmClasspath> instances = new ArrayList<>();
 
     public BazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
-        this(eclipseProject, BazelPluginActivator.getResourceHelper());
+    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+        this(eclipseProject, BazelPluginActivator.getResourceHelper(), BazelPluginActivator.getJavaCoreHelper(),
+            BazelPluginActivator.getBazelProjectManager(),
+            BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy(),
+            BazelPluginActivator.getBazelWorkspace());
     }
 
-    public BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
-            throws IOException, InterruptedException, BackingStoreException, JavaModelException,
-            BazelCommandLineToolConfigurationException {
-        super(eclipseProject, resourceHelper);
-
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+    public BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper, JavaCoreHelper jcHelper,
+            BazelProjectManager bpManager, OperatingEnvironmentDetectionStrategy osDetectStrategy,
+            BazelWorkspace bazelWorkspace) throws IOException, InterruptedException, BackingStoreException,
+    JavaModelException, BazelCommandLineToolConfigurationException {
+        super(eclipseProject, resourceHelper, jcHelper, bpManager, osDetectStrategy, bazelWorkspace);
 
         if (USE_DYNAMIC_CP) {
             bazelClasspath = new DynamicBazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                    new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager(),
-                    null);
+                new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager(),
+                null);
         } else {
             bazelClasspath = new BazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                    new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
+                new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
         }
         instances.add(bazelClasspath);
     }

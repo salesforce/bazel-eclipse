@@ -49,7 +49,6 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
@@ -73,15 +72,19 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     protected final JavaCoreHelper javaCoreHelper;
     protected final OperatingEnvironmentDetectionStrategy osDetector;
     protected final LogHelper logger;
+    protected final BazelWorkspace bazelWorkspace;
     protected IClasspathEntry[] lastComputedClasspath = null;
 
-    BaseBazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
-            throws IOException, InterruptedException, BackingStoreException, JavaModelException,
-            BazelCommandLineToolConfigurationException {
-        bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+    protected BaseBazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper, JavaCoreHelper jcHelper,
+            BazelProjectManager bpManager, OperatingEnvironmentDetectionStrategy osDetectStrategy,
+            BazelWorkspace workspace) throws IOException, InterruptedException, BackingStoreException,
+            JavaModelException, BazelCommandLineToolConfigurationException {
+        bazelProjectManager = bpManager;
         eclipseProjectPath = eclipseProject.getLocation();
         eclipseProjectIsRoot = resourceHelper.isBazelRootProject(eclipseProject);
-        osDetector = BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy();
+        osDetector = osDetectStrategy;
+        bazelWorkspace = workspace;
+        javaCoreHelper = jcHelper;
 
         bazelProject = bazelProjectManager.getProject(eclipseProject.getName());
         if (bazelProject == null) {
@@ -89,7 +92,6 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
             bazelProjectManager.addProject(bazelProject);
         }
 
-        javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
         logger = LogHelper.log(this.getClass());
 
     }
@@ -97,7 +99,6 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     @Override
     public IClasspathEntry[] getClasspathEntries() {
         long startTimeMillis = System.currentTimeMillis();
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
 
         // Fast exit - check the caller of this method to decide if we need to incur the expense of a full classpath compute
         // The saveContainers() caller is useful if we were persisting classpath data to disk for faster restarts later

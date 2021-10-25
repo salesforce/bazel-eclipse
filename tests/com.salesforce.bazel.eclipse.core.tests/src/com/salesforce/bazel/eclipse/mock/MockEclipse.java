@@ -67,6 +67,7 @@ public class MockEclipse {
     private MockJavaCoreHelper mockJavaCoreHelper;
     private final OperatingEnvironmentDetectionStrategy mockOsEnvStrategy =
             new MockOperatingEnvironmentDetectionStrategy();
+
     private MockIEclipsePreferences mockPrefs;
 
     // Feature collaborators
@@ -189,6 +190,14 @@ public class MockEclipse {
     }
 
     // Mock Objects
+
+    public OperatingEnvironmentDetectionStrategy getOsEnvStrategy() {
+        return mockOsEnvStrategy;
+    }
+
+    public BazelProjectManager getProjectManager() {
+        return projectManager;
+    }
 
     public MockJavaCoreHelper getMockJavaCoreHelper() {
         return mockJavaCoreHelper;
