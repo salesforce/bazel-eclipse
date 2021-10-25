@@ -168,8 +168,10 @@ public class BazelWorkspaceAspectHelperTest {
 
         TestBazelWorkspaceDescriptor descriptor =
                 new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).testOptions(testOptions);
-        TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
+        TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor);
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
+
+        workspace.build();
         env.createTestEnvironment(workspace, testDir, testOptions);
 
         return env;

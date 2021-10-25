@@ -65,7 +65,7 @@ public class BazelLauncherBuilderTest {
 
         addBazelCommandOutput(env, 0,
             FSPathHelper.osSeps(".*bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME + ".*"), // $SLASH_OK
-            "fake bazel launcher script result");
+                "fake bazel launcher script result");
 
         Command command = launcherBuilder.build();
         BazelProcessBuilder processBuilder = command.getProcessBuilder();
@@ -91,7 +91,7 @@ public class BazelLauncherBuilderTest {
 
         addBazelCommandOutput(env, 0,
             FSPathHelper.osSeps(".*bin/projects/libs/javalib0/" + TestOptions.JAVA_BINARY_TARGET_NAME + ".*"), // $SLASH_OK
-            "fake bazel launcher script result");
+                "fake bazel launcher script result");
 
         List<String> cmdTokens = launcherBuilder.build().getProcessBuilder().command();
 
@@ -204,8 +204,10 @@ public class BazelLauncherBuilderTest {
 
         TestBazelWorkspaceDescriptor descriptor =
                 new TestBazelWorkspaceDescriptor(workspaceDir, outputbaseDir).testOptions(testOptions);
-        TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor).build();
+        TestBazelWorkspaceFactory workspace = new TestBazelWorkspaceFactory(descriptor);
         TestBazelCommandEnvironmentFactory env = new TestBazelCommandEnvironmentFactory();
+
+        workspace.build();
         env.createTestEnvironment(workspace, testDir, testOptions);
 
         return env;
