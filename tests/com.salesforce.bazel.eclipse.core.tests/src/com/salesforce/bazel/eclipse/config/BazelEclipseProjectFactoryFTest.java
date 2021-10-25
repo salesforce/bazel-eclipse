@@ -67,12 +67,13 @@ public class BazelEclipseProjectFactoryFTest {
         //testTempDir.mkdirs();
 
         // create the mock Eclipse runtime in the correct state, which is two java projects javalib0 and javalib1
-        TestOptions testOptions = new TestOptions().uniqueKey("imws").numberOfJavaPackages(2).computeClasspaths(true)
+        TestOptions testOptions = new TestOptions().uniqueKey("imws").numberOfJavaPackages(2)
                 .explicitJavaTestDeps(false);
         String wsName = MockEclipse.BAZEL_WORKSPACE_NAME + "-imws";
 
+        boolean computeClasspaths = true;
         MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
-                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions);
+                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions, computeClasspaths);
         workspace_IProject = mockEclipse.getImportedProject("Bazel Workspace (" + wsName + ")");
         assertNotNull(workspace_IProject);
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");

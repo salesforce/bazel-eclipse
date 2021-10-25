@@ -91,8 +91,9 @@ public class EclipseFunctionalTestEnvironmentFactory {
      * <li>Each Bazel Java package is an imported Eclipse Java project with Bazel nature
      * </ul>
      */
-    public static MockEclipse createMockEnvironment_Imported_All_JavaPackages(File testTempDir, TestOptions testOptions)
-            throws Exception {
+    public static MockEclipse createMockEnvironment_Imported_All_JavaPackages(File testTempDir, TestOptions testOptions,
+            boolean computeClasspaths)
+                    throws Exception {
         // create base configuration, which includes the real bazel workspace on disk
         MockEclipse mockEclipse = createMockEnvironment_PriorToImport_JavaPackages(testTempDir, testOptions);
 
@@ -116,7 +117,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
         mockEclipse.setImportedProjectsList(importedProjectsList);
 
         // do you want to simulate Eclipse calling getClasspath on the classpath container for each project?
-        if (testOptions.computeClasspaths) {
+        if (computeClasspaths) {
             for (IProject project : importedProjectsList) {
                 JavaCoreHelper javaHelper = mockEclipse.getMockJavaCoreHelper();
                 javaHelper.getResolvedClasspath(javaHelper.getJavaProjectForProject(project), false);

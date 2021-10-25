@@ -29,6 +29,7 @@ import java.io.PrintStream;
 
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.workspace.test.java.TestJavaPackageFactory;
+import com.salesforce.bazel.sdk.workspace.test.java.TestJavaWorkspaceCreator;
 
 /**
  * Utility class to generate a Bazel workspace and other artifacts on the filesystem. As of this writing, the workspace
@@ -90,6 +91,8 @@ public class TestBazelWorkspaceFactory {
 
         int numJavaPackages = workspaceDescriptor.testOptions.numberOfJavaPackages;
         if (numJavaPackages > 0) {
+
+            TestJavaWorkspaceCreator.createMavenInstallJars(workspaceDescriptor);
 
             if (!explicitJavaTestDeps) {
                 // make the test runner jar file, because this workspace uses implicit deps (see ImplicitDependencyHelper)
