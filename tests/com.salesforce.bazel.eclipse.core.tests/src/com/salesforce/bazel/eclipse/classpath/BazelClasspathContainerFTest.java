@@ -341,13 +341,14 @@ public class BazelClasspathContainerFTest {
 
         // create the mock Eclipse runtime in the correct state
 
-        TestOptions testOptions = new TestOptions().uniqueKey(testName).numberOfJavaPackages(2).computeClasspaths(true)
+        TestOptions testOptions = new TestOptions().uniqueKey(testName).numberOfJavaPackages(2)
                 .explicitJavaTestDeps(explicitJavaTestDeps).nonStandardJavaLayout_enabled(nonstandardLayout)
                 .nonStandardJavaLayout_multipledirs(nonstandardMultipleDirs).addJavaImportRule(addJavaImport);
         String wsName = MockEclipse.BAZEL_WORKSPACE_NAME + "-" + testOptions.uniqueKey;
 
+        boolean computeClasspaths = true;
         MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
-                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions);
+                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions, computeClasspaths);
 
         workspace_IProject = mockEclipse.getImportedProject("Bazel Workspace (" + wsName + ")");
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");

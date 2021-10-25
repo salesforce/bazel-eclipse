@@ -86,7 +86,7 @@ public class TestBazelWorkspaceDescriptor {
     public Map<String, Set<String>> aspectFileSets = new TreeMap<>();
 
     // list of workspace external jars (via maven_install, etc)
-    public Set<TestJarDescriptor> externalJarDescriptors = new TreeSet<>();
+    public Set<TestJarDescriptor> createdExternalJars = new TreeSet<>();
 
     // CTORS
 

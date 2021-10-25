@@ -61,11 +61,12 @@ public class BazelBuilderFTest {
         //testTempDir = new File("/tmp/bef/bazelws");
         //testTempDir.mkdirs();
 
-        TestOptions testOptions = new TestOptions().uniqueKey(testName).numberOfJavaPackages(2).computeClasspaths(true)
+        TestOptions testOptions = new TestOptions().uniqueKey(testName).numberOfJavaPackages(2)
                 .explicitJavaTestDeps(explicitJavaTestDeps);
 
+        boolean computeClasspaths = true;
         MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
-                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions);
+                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions, computeClasspaths);
 
         workspace_IProject =
                 mockEclipse.getImportedProject("Bazel Workspace (" + MockEclipse.BAZEL_WORKSPACE_NAME + ")");

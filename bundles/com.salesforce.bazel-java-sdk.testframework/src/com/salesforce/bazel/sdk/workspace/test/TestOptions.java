@@ -74,14 +74,6 @@ public class TestOptions extends HashMap<String, String> {
         return this;
     }
 
-    // compute the classpaths? TODO why not
-    public boolean computeClasspaths = false;
-
-    public TestOptions computeClasspaths(boolean compute) {
-        computeClasspaths = compute;
-        return this;
-    }
-
     // for Java packages, should test deps be listed explicitly
     public boolean explicitJavaTestDeps = true;
 

@@ -27,7 +27,7 @@ package com.salesforce.bazel.sdk.workspace.test.java;
  * Basket of values that describe a generated test jar file. This is a simple value object that supports jars that are
  * brought into the workspace maven_install, java_import, and other ways.
  */
-public class TestJarDescriptor {
+public class TestJarDescriptor implements Comparable<TestJarDescriptor> {
     public String bazelLabel; // org_slf4j_slf4j_api or //projects/lib/apple:apple-lib
 
     public String jarFileName; // slf4j-api-1.7.25.jar or libapple.jar
@@ -52,7 +52,15 @@ public class TestJarDescriptor {
     public String testJarAbsolutePath; // apple-test.jar
     public String srcTestJarAbsolutePath; // apple-test-src.jar
 
-    public TestJarDescriptor() {
+    // EXTERNAL JARS (maven_install, jvm_import)
+    public String aspectFilePath;
 
+    public TestJarDescriptor(String bazelLabel) {
+        this.bazelLabel = bazelLabel;
+    }
+
+    @Override
+    public int compareTo(TestJarDescriptor other) {
+        return bazelLabel.compareTo(other.bazelLabel);
     }
 }
