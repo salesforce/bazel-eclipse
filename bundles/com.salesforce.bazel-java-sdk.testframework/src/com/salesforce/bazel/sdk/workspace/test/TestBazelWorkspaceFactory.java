@@ -1,3 +1,26 @@
+/**
+ * Copyright (c) 2021, Salesforce.com, Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ * disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ * following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package com.salesforce.bazel.sdk.workspace.test;
 
 import java.io.File;
@@ -71,7 +94,7 @@ public class TestBazelWorkspaceFactory {
             if (!explicitJavaTestDeps) {
                 // make the test runner jar file, because this workspace uses implicit deps (see ImplicitDependencyHelper)
                 String testRunnerPath = FSPathHelper.osSeps(
-                    "external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools"); // $SLASH_OK
+                        "external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools"); // $SLASH_OK
                 File testRunnerDir = new File(workspaceDescriptor.dirBazelBin, testRunnerPath);
                 testRunnerDir.mkdirs();
                 File testRunnerJar = new File(testRunnerDir, "Runner_deploy-ijar.jar");
@@ -93,7 +116,7 @@ public class TestBazelWorkspaceFactory {
                 // Do the heavy lifting to fully simulate a Java package with source, test source code
                 String packageName = "javalib" + i;
                 File javaPackageDir = new File(libsDir, packageName);
-                javaPackageFactory.createFakeJavaPackage(workspaceDescriptor, packageName, libsRelativeBazelPath,
+                javaPackageFactory.createJavaPackage(workspaceDescriptor, packageName, libsRelativeBazelPath,
                     javaPackageDir, i, explicitJavaTestDeps, doCreateJavaImport, doCreateJavaBinary, true);
 
                 // simulate a nested workspace to make sure we just ignore it for now (see BEF issue #25)
@@ -116,7 +139,7 @@ public class TestBazelWorkspaceFactory {
 
             // create the catalog entries
             TestBazelPackageDescriptor packageDescriptor = new TestBazelPackageDescriptor(workspaceDescriptor,
-                    packageRelativeBazelPath, packageName, genruleLib, true);
+                packageRelativeBazelPath, packageName, genruleLib, true);
 
             File buildFile = new File(genruleLib, workspaceDescriptor.buildFilename);
             buildFile.createNewFile();
@@ -206,7 +229,7 @@ public class TestBazelWorkspaceFactory {
         File nestedJavaPackage = new File(nestedLibDir, packageName);
 
         TestJavaPackageFactory javaPackageFactory = new TestJavaPackageFactory();
-        javaPackageFactory.createFakeJavaPackage(workspaceDescriptor, packageName, packageRelativePath,
+        javaPackageFactory.createJavaPackage(workspaceDescriptor, packageName, packageRelativePath,
             nestedJavaPackage, 99, explicitJavaTestDeps, addJavaImport, false, false);
     }
 }

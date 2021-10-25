@@ -1,3 +1,26 @@
+/**
+ * Copyright (c) 2021, Salesforce.com, Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ * disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ * following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package com.salesforce.bazel.sdk.command.test.type;
 
 import java.util.ArrayList;
@@ -41,7 +64,7 @@ public class MockQueryCommand extends MockCommand {
             if (!isValidBazelTarget(queryPackage)) {
                 // by default, isValidBazelTarget() will throw an exception if the package is missing, but the test may configure it to return false instead
                 errorLines = Arrays.asList("ERROR: no such package '" + queryPackage
-                        + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.",
+                    + "': BUILD file not found in any of the following directories. Add a BUILD file to a directory to mark it as a package.",
                     "- /fake/abs/path/" + queryPackage); // $SLASH_OK: bazel path
                 return;
             }
@@ -50,7 +73,7 @@ public class MockQueryCommand extends MockCommand {
                     testWorkspaceFactory.workspaceDescriptor.createdPackages.get(queryPackage);
             if (queryPackageDescriptor == null) {
                 throw new IllegalStateException("The mock package descriptor is missing for package [" + queryPackage
-                        + "]. This is a bug in the mock testing framework.");
+                    + "]. This is a bug in the mock testing framework.");
             }
 
             // the query is for :* which means all targets, so iterate through the package's targets and write a line per target to stdout
@@ -99,8 +122,8 @@ public class MockQueryCommand extends MockCommand {
             addSimulatedOutputToCommandStdOut(outputLines);
         } else {
             throw new IllegalArgumentException(
-                    "The plugin issued the command 'bazel query' with an unknown type of query. "
-                            + "The mocking layer (MockQueryCommand) does not know how to simulate a response.");
+                "The plugin issued the command 'bazel query' with an unknown type of query. "
+                        + "The mocking layer (MockQueryCommand) does not know how to simulate a response.");
         }
     }
 
@@ -122,7 +145,7 @@ public class MockQueryCommand extends MockCommand {
         outputLines.add("@local_jdk//:bin/jinfo");
         outputLines.add("@local_jdk//:bin/keytool");
         outputLines.add(
-            "@maven//:v1/https/repo1.maven.org/maven2/ch/qos/logback/logback-core/1.2.3/logback-core-1.2.3-sources.jar");
+                "@maven//:v1/https/repo1.maven.org/maven2/ch/qos/logback/logback-core/1.2.3/logback-core-1.2.3-sources.jar");
         addSimulatedOutputToCommandStdOut("@remote_java_tools_darwin//:java_tools/ijar/zip.cc");
         outputLines.add("@remote_java_tools_linux//java_tools/zlib:crc32.c");
     }

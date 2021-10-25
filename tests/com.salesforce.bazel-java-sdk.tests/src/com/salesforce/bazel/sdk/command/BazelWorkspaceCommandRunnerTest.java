@@ -118,7 +118,8 @@ public class BazelWorkspaceCommandRunnerTest {
         Map<BazelLabel, Set<AspectTargetInfo>> aspectMap =
                 workspaceRunner.getAspectTargetInfos(targets, "testWorkspaceRunner");
         // aspect infos returned for: guava, slf4j, javalib0, javalib0-test, javalib1, javalib2
-        assertEquals(6, aspectMap.get(new BazelLabel(label)).size());
+        Set<AspectTargetInfo> aspectList = aspectMap.get(new BazelLabel(label));
+        assertEquals(6, aspectList.size());
 
         // run a clean, should not throw an exception
         workspaceRunner.runBazelClean(new MockWorkProgressMonitor());
