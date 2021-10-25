@@ -111,4 +111,24 @@ public class TestJavaWorkspaceCreator {
         return jarDescriptor;
     }
 
+    public static void createTestRunner(TestBazelWorkspaceDescriptor workspaceDescriptor) throws Exception {
+        boolean explicitJavaTestDeps = workspaceDescriptor.testOptions.explicitJavaTestDeps;
+        if (!explicitJavaTestDeps) {
+            // make the test runner jar file, because this workspace uses implicit deps (see ImplicitDependencyHelper)
+            String testRunnerPath = FSPathHelper.osSeps(
+                    "external/bazel_tools/tools/jdk/_ijar/TestRunner/external/remote_java_tools_linux/java_tools");
+            File testRunnerDir = new File(workspaceDescriptor.dirBazelBin, testRunnerPath);
+            testRunnerDir.mkdirs();
+            File testRunnerJar = new File(testRunnerDir, "Runner_deploy-ijar.jar");
+            try {
+                testRunnerJar.createNewFile();
+                System.out.println("TESTRUNNER: created at: " + testRunnerJar.getAbsolutePath());
+            } catch (Exception anyE) {
+                System.err.println("Could not create the TestRunner jar file for the test Bazel workspace at location: "
+                        + testRunnerJar.getAbsolutePath());
+                anyE.printStackTrace();
+                throw anyE;
+            }
+        }
+    }
 }
