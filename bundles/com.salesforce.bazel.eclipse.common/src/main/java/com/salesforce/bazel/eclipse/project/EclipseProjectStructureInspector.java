@@ -26,7 +26,7 @@ package com.salesforce.bazel.eclipse.project;
 import java.io.File;
 import java.io.FilenameFilter;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
@@ -47,12 +47,10 @@ public class EclipseProjectStructureInspector {
     // TODO after cleaning this up, there might not be anything left of this operation in the Core plugin; it should
     // be all done in the SDK
 
-    public static ProjectStructure computePackageSourceCodePaths(BazelPackageLocation packageNode) {
+    public static ProjectStructure computePackageSourceCodePaths(BazelPackageLocation packageNode, BazelWorkspace bazelWorkspace, BazelCommandManager bazelCommandManager) {
         ProjectStructure result;
 
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        BazelWorkspaceCommandRunner commandRunner =
-                BazelPluginActivator.getBazelCommandManager().getWorkspaceCommandRunner(bazelWorkspace);
+        BazelWorkspaceCommandRunner commandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
         result = ProjectStructureStrategy.determineProjectStructure(bazelWorkspace, packageNode, commandRunner);
 

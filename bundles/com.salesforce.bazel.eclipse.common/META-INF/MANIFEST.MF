@@ -24,6 +24,8 @@ Export-Package: com.salesforce.bazel.eclipse,
  com.salesforce.bazel.eclipse.component,
  com.salesforce.bazel.eclipse.config,
  com.salesforce.bazel.eclipse.project,
+ com.salesforce.bazel.eclipse.projectimport,
+ com.salesforce.bazel.eclipse.projectimport.flow,
  com.salesforce.bazel.eclipse.runtime.api,
  com.salesforce.bazel.eclipse.runtime.impl,
  com.salesforce.bazel.eclipse.utils

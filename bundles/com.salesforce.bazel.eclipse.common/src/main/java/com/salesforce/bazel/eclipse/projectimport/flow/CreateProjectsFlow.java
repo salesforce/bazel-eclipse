@@ -32,18 +32,24 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.SubMonitor;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.project.EclipseFileLinker;
 import com.salesforce.bazel.eclipse.project.EclipseProjectCreator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 /**
  * Creates an Eclipse Project for each imported Bazel Package.
  */
-public class CreateProjectsFlow implements ImportFlow {
+public class CreateProjectsFlow extends AbstractImportFlowStep {
+
+    public CreateProjectsFlow(BazelCommandManager commandManager, BazelProjectManager projectManager,
+            ResourceHelper resourceHelper) {
+        super(commandManager, projectManager, resourceHelper);
+    }
 
     @Override
     public String getProgressText() {
@@ -68,11 +74,14 @@ public class CreateProjectsFlow implements ImportFlow {
     @Override
     public void run(ImportContext ctx, SubMonitor progressMonitor) throws CoreException {
         EclipseFileLinker fileLinker = ctx.getEclipseFileLinker();
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-        File bazelWorkspaceRootDirectory = ctx.getBazelWorkspaceRootDirectory();
+        final BazelWorkspace bazelWorkspace = getBazelWorkspace();
+        final ResourceHelper resourceHelper = getResourceHelper();
+//        final BazelCommandManager commandManager = getCommandManager();
+//        final BazelProjectManager projectManager = getProjectManager();
+//        File bazelWorkspaceRootDirectory = ctx.getBazelWorkspaceRootDirectory();
         Iterable<BazelPackageLocation> orderedModules = ctx.getOrderedModules();
-        EclipseProjectCreator projectCreator = new EclipseProjectCreator(bazelWorkspaceRootDirectory);
+        EclipseProjectCreator projectCreator = ctx.getEclipseProjectCreator();
+//                new EclipseProjectCreator(bazelWorkspaceRootDirectory, projectManager, resourceHelper, commandManager);
 
         List<IProject> currentImportedProjects = ctx.getImportedProjects();
         List<IProject> existingImportedProjects =
@@ -83,8 +92,9 @@ public class CreateProjectsFlow implements ImportFlow {
                 List<BazelLabel> bazelTargets = ctx.getPackageLocationToTargets().get(packageLocation);
 
                 // create the project
-                IProject project = projectCreator.createProject(ctx, packageLocation, bazelTargets,
-                    currentImportedProjects, existingImportedProjects, fileLinker);
+                IProject project =
+                        projectCreator.createProject(ctx, packageLocation, bazelTargets, currentImportedProjects,
+                            existingImportedProjects, fileLinker, bazelWorkspace);
 
                 if (project != null) {
                     ctx.addImportedProject(project, packageLocation);

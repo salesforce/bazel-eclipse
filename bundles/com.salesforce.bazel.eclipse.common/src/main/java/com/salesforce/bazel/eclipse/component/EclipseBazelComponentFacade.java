@@ -2,6 +2,8 @@ package com.salesforce.bazel.eclipse.component;
 
 import java.io.File;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.salesforce.bazel.eclipse.activator.Activator;
 import com.salesforce.bazel.eclipse.utils.BazelCompilerUtils;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
@@ -18,6 +20,9 @@ public class EclipseBazelComponentFacade {
     private static EclipseBazelComponentFacade instance;
 
     private final OperatingEnvironmentDetectionStrategy osDetectionStrategy;
+    /**
+     * The Bazel workspace that is in scope. Currently, we only support one Bazel workspace in an Eclipse workspace.
+     */
     private BazelWorkspace bazelWorkspace;
     /**
      * Facade that enables the plugin to execute the bazel command line tool outside of a workspace
@@ -27,6 +32,8 @@ public class EclipseBazelComponentFacade {
      * Runs bazel commands in the loaded workspace.
      */
     private BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
+
+    private String bazelExecutablePath;
 
     private EclipseBazelComponentFacade() {
         osDetectionStrategy = new RealOperatingEnvironmentDetectionStrategy();
@@ -61,8 +68,9 @@ public class EclipseBazelComponentFacade {
     }
 
     public void setCommandManager(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
-            CommandConsoleFactory consoleFactory) {
-        File bazelPathFile = new File(BazelCompilerUtils.getBazelPath());
+            CommandConsoleFactory consoleFactory, String filePath) {
+        String path = StringUtils.isNotBlank(filePath) ? filePath : BazelCompilerUtils.getBazelPath();
+        File bazelPathFile = new File(path);
         bazelCommandManager = new BazelCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelPathFile);
     }
 
@@ -85,8 +93,8 @@ public class EclipseBazelComponentFacade {
         bazelWorkspace = new BazelWorkspace(workspaceName, rootDirectory,
                 EclipseBazelComponentFacade.getInstance().getOsDetectionStrategy());
         BazelWorkspaceCommandRunner commandRunner = getWorkspaceCommandRunner();
-        bazelWorkspace.setBazelWorkspaceMetadataStrategy(commandRunner);
-        bazelWorkspace.setBazelWorkspaceCommandRunner(commandRunner);
+        getBazelWorkspace().setBazelWorkspaceMetadataStrategy(commandRunner);
+        getBazelWorkspace().setBazelWorkspaceCommandRunner(commandRunner);
     }
 
     /**
@@ -94,11 +102,11 @@ public class EclipseBazelComponentFacade {
      */
     public BazelWorkspaceCommandRunner getWorkspaceCommandRunner() {
         if (bazelWorkspaceCommandRunner == null) {
-            if (bazelWorkspace == null) {
+            if (getBazelWorkspace() == null) {
                 return null;
             }
-            if (bazelWorkspace.hasBazelWorkspaceRootDirectory()) {
-                bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
+            if (getBazelWorkspace().hasBazelWorkspaceRootDirectory()) {
+                bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(getBazelWorkspace());
             }
         }
         return bazelWorkspaceCommandRunner;
@@ -116,6 +124,26 @@ public class EclipseBazelComponentFacade {
      * related to Bazel or Bazel Java projects.
      */
     public boolean hasBazelWorkspaceRootDirectory() {
-        return bazelWorkspace.hasBazelWorkspaceRootDirectory();
+        return getBazelWorkspace().hasBazelWorkspaceRootDirectory();
     }
+
+    /**
+     * User is deleting the Bazel Workspace project from the Eclipse workspace. Do what we can here. To reset back to
+     * initial state, but hard to guarantee that this will be perfect. If the user does NOT also delete the Bazel
+     * workspace code projects, there could be trouble.
+     */
+    public void resetBazelWorkspace() {
+        // now forget about the workspace
+        bazelWorkspace = null;
+        bazelWorkspaceCommandRunner = null;
+    }
+
+    public String getBazelExecutablePath() {
+        return bazelExecutablePath;
+    }
+
+    public void setBazelExecutablePath(String bazelExecutablePath) {
+        this.bazelExecutablePath = bazelExecutablePath;
+    }
+
 }

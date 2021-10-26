@@ -41,21 +41,22 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.b2eclipse.BazelJdtPlugin;
+import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.projectimport.flow.BjlsFlowProjectImporter;
+import com.salesforce.bazel.eclipse.projectimport.flow.BjlsSetupClasspathContainersFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.CreateProjectsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.CreateRootProjectFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.DetermineTargetsFlow;
-import com.salesforce.bazel.eclipse.projectimport.flow.FlowProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.flow.ImportFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.InitImportFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.InitJREFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.LoadAspectsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.LoadTargetsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.OrderProjectsFlow;
-import com.salesforce.bazel.eclipse.projectimport.flow.SetupClasspathContainersFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.SetupProjectBuildersFlow;
-import com.salesforce.bazel.eclipse.projectimport.flow.SetupRootClasspathContainerFlow;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.utils.BazelCompilerUtils;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -97,18 +98,18 @@ public class ProjectImporterFactory {
     }
 
     public ProjectImporter build() {
-        return new FlowProjectImporter(flows.toArray(new ImportFlow[flows.size()]), bazelWorkspaceRootPackageInfo,
+        return new BjlsFlowProjectImporter(flows.toArray(new ImportFlow[flows.size()]), bazelWorkspaceRootPackageInfo,
                 selectedBazelPackages, projectOrderResolver,
-                BazelPluginActivator.getInstance().getConfigurationManager().getBazelExecutablePath(),
+                BazelCompilerUtils.getOSBazelPath(),
                 importInProgress);
     }
 
     private static List<ImportFlow> createFlows() {
         // each project import uses a new list of flow instances so that flows can have state
         // the List returned here needs to be modifiable
-        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-        BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
+        BazelProjectManager bazelProjectManager = BazelJdtPlugin.getBazelProjectManager();
+        ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
+        BazelCommandManager bazelCommandManager = EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
         return new ArrayList<>(Arrays.asList(new InitJREFlow(),
             new InitImportFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
             new DetermineTargetsFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
@@ -116,8 +117,8 @@ public class ProjectImporterFactory {
             new LoadTargetsFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
             new CreateRootProjectFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
             new OrderProjectsFlow(), new CreateProjectsFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
-            new SetupProjectBuildersFlow(), new SetupRootClasspathContainerFlow(),
-            new SetupClasspathContainersFlow(bazelCommandManager, bazelProjectManager, resourceHelper,
-                    BazelPluginActivator.getJavaCoreHelper())));
+            new SetupProjectBuildersFlow(),
+            new BjlsSetupClasspathContainersFlow(bazelCommandManager, bazelProjectManager, resourceHelper,
+                BazelJdtPlugin.getJavaCoreHelper())));
     }
 }

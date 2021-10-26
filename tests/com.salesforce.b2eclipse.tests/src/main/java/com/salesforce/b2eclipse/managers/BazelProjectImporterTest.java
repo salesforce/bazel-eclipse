@@ -27,7 +27,6 @@ package com.salesforce.b2eclipse.managers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -49,117 +48,99 @@ import org.junit.Test;
 @SuppressWarnings("restriction")
 public class BazelProjectImporterTest {
 
-	private static final String IMPORT_BAZEL_ENABLED = "java.import.bazel.enabled";
+    private static final String IMPORT_BAZEL_ENABLED = "java.import.bazel.enabled";
 
-	private static final String BAZEL_SRC_PATH_KEY = "java.import.bazel.src.path";
+    private static final String BAZEL_SRC_PATH_KEY = "java.import.bazel.src.path";
 
-	private static final String BAZEL_SRC_PATH_VALUE = "/java/src";
+    private static final String BAZEL_SRC_PATH_VALUE = "/java/src";
 
-	private BazelProjectImporter importer;
+    private BazelProjectImporter importer;
 
-	private B2EPreferncesManager preferencesManager;
+    private B2EPreferncesManager preferencesManager;
 
-	private final Map<String, Object> settings = new HashMap<>();
+    private final Map<String, Object> settings = new HashMap<>();
 
-	@Before
-	public void setup() {
-		importer = new BazelProjectImporter();
+    @Before
+    public void setup() {
+        importer = new BazelProjectImporter();
 
-		preferencesManager = B2EPreferncesManager.getInstance();
+        preferencesManager = B2EPreferncesManager.getInstance();
 
-		settings.put(IMPORT_BAZEL_ENABLED, true);
-		settings.put(BAZEL_SRC_PATH_KEY, BAZEL_SRC_PATH_VALUE);
-		preferencesManager.setConfiguration(settings);
-	}
+        settings.put(IMPORT_BAZEL_ENABLED, true);
+        settings.put(BAZEL_SRC_PATH_KEY, BAZEL_SRC_PATH_VALUE);
+        preferencesManager.setConfiguration(settings);
+    }
 
-	@After
-	public void deleteImportedProjects() throws CoreException {
-		for (IProject project : getWorkspaceRoot().getProjects()) {
-			project.delete(true, null);
-		}
-	}
+    @After
+    public void deleteImportedProjects() throws CoreException {
+        for (IProject project : getWorkspaceRoot().getProjects()) {
+            project.delete(true, null);
+        }
+    }
 
-	@Test
-	public void basic() throws CoreException {
-		importer.initialize(new File("projects/bazel-ls-demo-project"));
-		importer.importToWorkspace(new NullProgressMonitor());
+    @Test
+    public void basic() throws CoreException {
+        importer.initialize(new File("projects/bazel-ls-demo-project"));
+        importer.importToWorkspace(new NullProgressMonitor());
 
-		IProject module1Proj = getWorkspaceRoot().getProject("module1");
-		IProject module2Proj = getWorkspaceRoot().getProject("module2");
-		IProject module3Proj = getWorkspaceRoot().getProject("module3");
+        IProject module1Proj = getWorkspaceRoot().getProject("module1");
+        IProject module2Proj = getWorkspaceRoot().getProject("module2");
+        IProject module3Proj = getWorkspaceRoot().getProject("module3");
 
-		IProject[] referencedProjects = module1Proj.getReferencedProjects();
+        IProject[] referencedProjects = module1Proj.getReferencedProjects();
 
-		assertEquals(2, referencedProjects.length);
+        assertEquals(2, referencedProjects.length);
 
-		assertTrue("Didn't find module2 in the referenced projects list",
-				Arrays.stream(referencedProjects).anyMatch(proj -> proj.equals(module2Proj)));
+        assertTrue("Didn't find module2 in the referenced projects list",
+            Arrays.stream(referencedProjects).anyMatch(proj -> proj.equals(module2Proj)));
 
-		assertTrue("Didn't find module3 in the referenced projects list",
-				Arrays.stream(referencedProjects).anyMatch(proj -> proj.equals(module3Proj)));
+        assertTrue("Didn't find module3 in the referenced projects list",
+            Arrays.stream(referencedProjects).anyMatch(proj -> proj.equals(module3Proj)));
 
-	}
+    }
 
-	@Test
-	public void withClass() throws CoreException {
-		importer.initialize(new File("projects/build-with-class"));
-		updateSrcPath("/");
+    @Test
+    public void withSubpackage() throws CoreException {
+        importer.initialize(new File("projects/build-with-subpackage"));
+        importer.importToWorkspace(new NullProgressMonitor());
 
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			importer.importToWorkspace(new NullProgressMonitor());
-		});
+        IProject moduleProj = getWorkspaceRoot().getProject("module");
+        IProject subModuleProj = getWorkspaceRoot().getProject("submodule");
+        IProject[] referencedProjects = moduleProj.getReferencedProjects();
 
-		assertEquals("did not expect src code path to be equals to the bazel package path", exception.getMessage());
-	}
+        assertEquals(1, referencedProjects.length);
 
-	@Test
-	public void withSubpackage() throws CoreException {
-		importer.initialize(new File("projects/build-with-subpackage"));
-		importer.importToWorkspace(new NullProgressMonitor());
+        assertTrue("Couldn't find submodule in the referenced projects list",
+            Arrays.stream(referencedProjects).anyMatch(proj -> proj.equals(subModuleProj)));
+    }
 
-		IProject moduleProj = getWorkspaceRoot().getProject("module");
-		IProject subModuleProj = getWorkspaceRoot().getProject("submodule");
-		IProject[] referencedProjects = moduleProj.getReferencedProjects();
+    @Test
+    public void withQueryInTargetFile() throws CoreException, IOException {
+        File projectFile = new File("projects/bazel-ls-demo-project");
+        File targetFile = new File(projectFile, BazelBuildSupport.BAZELPROJECT_FILE_NAME_SUFIX);
 
-		assertEquals(1, referencedProjects.length);
+        FileUtils.writeLines(targetFile, Arrays.asList("directories:", "  module1", "  module2"));
 
-		assertTrue("Couldn't find submodule in the referenced projects list",
-				Arrays.stream(referencedProjects).anyMatch(proj -> proj.equals(subModuleProj)));
-	}
+        importer.initialize(projectFile);
+        importer.importToWorkspace(new NullProgressMonitor());
 
-	@Test
-	public void withQueryInTargetFile() throws CoreException, IOException {
-		File projectFile = new File("projects/bazel-ls-demo-project");
-		File targetFile = new File(projectFile, BazelBuildSupport.BAZELPROJECT_FILE_NAME_SUFIX);
+        FileUtils.forceDelete(targetFile);
 
-		FileUtils.writeLines(targetFile, Arrays.asList("directories:", "  module1", "  module2"));
+        IProject module1Proj = getWorkspaceRoot().getProject("module1");
+        IProject module2Proj = getWorkspaceRoot().getProject("module2");
+        IProject module3Proj = getWorkspaceRoot().getProject("module3");
 
-		importer.initialize(projectFile);
-		importer.importToWorkspace(new NullProgressMonitor());
+        IProject[] referencedProjects = module1Proj.getReferencedProjects();
 
-		FileUtils.forceDelete(targetFile);
+        assertEquals(1, referencedProjects.length);
 
-		IProject module1Proj = getWorkspaceRoot().getProject("module1");
-		IProject module2Proj = getWorkspaceRoot().getProject("module2");
-		IProject module3Proj = getWorkspaceRoot().getProject("module3");
+        assertTrue("Didn't find module2 in the referenced projects list",
+            Arrays.stream(referencedProjects).anyMatch(proj -> proj.equals(module2Proj)));
 
-		IProject[] referencedProjects = module1Proj.getReferencedProjects();
+        assertFalse("module3 should be excluded from import by .bazeltargets file", module3Proj.exists());
+    }
 
-		assertEquals(1, referencedProjects.length);
-
-		assertTrue("Didn't find module2 in the referenced projects list",
-				Arrays.stream(referencedProjects).anyMatch(proj -> proj.equals(module2Proj)));
-
-		assertFalse("module3 should be excluded from import by .bazeltargets file", module3Proj.exists());
-	}
-
-	private IWorkspaceRoot getWorkspaceRoot() {
-		return ResourcesPlugin.getWorkspace().getRoot();
-	}
-
-	private void updateSrcPath(String path) {
-		settings.put(BAZEL_SRC_PATH_KEY, path);
-		preferencesManager.setConfiguration(settings);
-	}
-
+    private IWorkspaceRoot getWorkspaceRoot() {
+        return ResourcesPlugin.getWorkspace().getRoot();
+    }
 }

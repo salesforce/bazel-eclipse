@@ -33,19 +33,25 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.SubMonitor;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
+import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.project.EclipseFileLinker;
 import com.salesforce.bazel.eclipse.projectview.ProjectViewUtils;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
 /**
  * Creates the root (WORKSPACE-level) project.
  */
-public class CreateRootProjectFlow implements ImportFlow {
+public class CreateRootProjectFlow extends AbstractImportFlowStep {
+
+    public CreateRootProjectFlow(BazelCommandManager commandManager, BazelProjectManager projectManager,
+            ResourceHelper resourceHelper) {
+        super(commandManager, projectManager, resourceHelper);
+    }
 
     @Override
     public String getProgressText() {
@@ -67,12 +73,12 @@ public class CreateRootProjectFlow implements ImportFlow {
             throw new IllegalArgumentException();
         }
 
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        final ResourceHelper resourceHelper = getResourceHelper();
+        final BazelWorkspace bazelWorkspace = getBazelWorkspace();
         IProject rootProject = resourceHelper.getBazelWorkspaceProject(bazelWorkspace);
         if (rootProject == null) {
             String rootProjectName =
-                    BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME + " (" + bazelWorkspace.getName() + ")";
+                    BazelNature.BAZELWORKSPACE_PROJECT_BASENAME + " (" + bazelWorkspace.getName() + ")";
             rootProject = ctx.getEclipseProjectCreator().createRootProject(rootProjectName);
         } else if (!rootProject.isOpen()) {
             try {

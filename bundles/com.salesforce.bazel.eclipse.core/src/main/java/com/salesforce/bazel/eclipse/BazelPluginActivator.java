@@ -44,6 +44,7 @@ import org.osgi.framework.BundleContext;
 
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.component.BazelAspectLocationComponentFacade;
+import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
@@ -86,22 +87,6 @@ public class BazelPluginActivator extends AbstractUIPlugin {
 
     // The shared instance
     private static BazelPluginActivator plugin;
-
-    /**
-     * The Bazel workspace that is in scope. Currently, we only support one Bazel workspace in an Eclipse workspace so
-     * this is a static singleton.
-     */
-    private static BazelWorkspace bazelWorkspace = null;
-
-    /**
-     * Facade that enables the plugin to execute the bazel command line tool outside of a workspace
-     */
-    private static BazelCommandManager bazelCommandManager;
-
-    /**
-     * Runs bazel commands in the loaded workspace.
-     */
-    private static BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
 
     /**
      * ProjectManager manages all of the imported projects
@@ -185,8 +170,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
             PreferenceStoreResourceHelper crh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv,
             BazelConfigurationManager configMgr, BazelExternalJarRuleManager externalJarRuleMgr) throws Exception {
         // reset internal state (this is so tests run in a clean env)
-        bazelWorkspace = null;
-        bazelWorkspaceCommandRunner = null;
+        EclipseBazelComponentFacade.getInstance().resetBazelWorkspace();
 
         // global collaborators
         resourceHelper = rh;
@@ -202,11 +186,10 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         String bazelPath = configurationManager.getBazelExecutablePath();
         File bazelPathFile = new File(bazelPath);
 
-        // Build the command manager for the workspace (runs Bazel commands)
-        bazelCommandManager = new BazelCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelPathFile);
+        EclipseBazelComponentFacade.getInstance().setCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelPath);
 
         // setup a listener, if the user changes the path to Bazel executable notify the command manager
-        configurationManager.setBazelExecutablePathListener(bazelCommandManager);
+        configurationManager.setBazelExecutablePathListener(getBazelCommandManager());
 
         // Get the bazel workspace path from the settings:
         //   ECLIPSE_WS_ROOT/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.salesforce.bazel.eclipse.core.prefs
@@ -247,14 +230,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * related to Bazel or Bazel Java projects.
      */
     public static boolean hasBazelWorkspaceRootDirectory() {
-        return bazelWorkspace.hasBazelWorkspaceRootDirectory();
+        return EclipseBazelComponentFacade.getInstance().hasBazelWorkspaceRootDirectory();
     }
 
     /**
      * Returns the model abstraction for the Bazel workspace
      */
     public static BazelWorkspace getBazelWorkspace() {
-        return bazelWorkspace;
+        return EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
     }
 
     /**
@@ -262,7 +245,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * location. Prior to importing/opening a Bazel workspace, this location will be null
      */
     public static File getBazelWorkspaceRootDirectory() {
-        return bazelWorkspace.getBazelWorkspaceRootDirectory();
+        return EclipseBazelComponentFacade.getInstance().getBazelWorkspaceRootDirectory();
     }
 
     /**
@@ -270,22 +253,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * Changing this location is a big deal, so use this method only during setup/import.
      */
     public void setBazelWorkspaceRootDirectory(String workspaceName, File rootDirectory) {
-        File workspaceFile = new File(rootDirectory, "WORKSPACE");
-        if (!workspaceFile.exists()) {
-            workspaceFile = new File(rootDirectory, "WORKSPACE.bazel");
-            if (!workspaceFile.exists()) {
-                Exception stack = new IllegalArgumentException();
-                LOG.error(
-                    "BazelPluginActivator could not set the Bazel workspace directory as there is no WORKSPACE file here: [{}]",
-                    stack, rootDirectory.getAbsolutePath());
-                return;
-            }
-        }
-        bazelWorkspace = new BazelWorkspace(workspaceName, rootDirectory, osEnvStrategy);
-        BazelWorkspaceCommandRunner commandRunner = getWorkspaceCommandRunner();
-        bazelWorkspace.setBazelWorkspaceMetadataStrategy(commandRunner);
-        bazelWorkspace.setBazelWorkspaceCommandRunner(commandRunner);
-
+        EclipseBazelComponentFacade.getInstance().setBazelWorkspaceRootDirectory(workspaceName, rootDirectory);
         // write it to the preferences file
         configurationManager.setBazelWorkspacePath(rootDirectory.getAbsolutePath());
     }
@@ -295,22 +263,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * command line tool.
      */
     public static BazelCommandManager getBazelCommandManager() {
-        return bazelCommandManager;
+        return EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
     }
 
     /**
      * Once the workspace is set, the workspace command runner is available. Otherwise returns null
      */
     public BazelWorkspaceCommandRunner getWorkspaceCommandRunner() {
-        if (bazelWorkspaceCommandRunner == null) {
-            if (bazelWorkspace == null) {
-                return null;
-            }
-            if (bazelWorkspace.hasBazelWorkspaceRootDirectory()) {
-                bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
-            }
-        }
-        return bazelWorkspaceCommandRunner;
+        return EclipseBazelComponentFacade.getInstance().getWorkspaceCommandRunner();
     }
 
     /**
@@ -377,8 +337,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      */
     public void closeBazelWorkspace() {
         // now forget about the workspace
-        bazelWorkspace = null;
-        bazelWorkspaceCommandRunner = null;
+        EclipseBazelComponentFacade.getInstance().resetBazelWorkspace();
     }
 
     // TEST ONLY

@@ -35,9 +35,13 @@ import org.eclipse.core.resources.IProject;
 import com.salesforce.bazel.eclipse.project.EclipseFileLinker;
 import com.salesforce.bazel.eclipse.project.EclipseProjectCreator;
 import com.salesforce.bazel.eclipse.project.EclipseProjectStructureInspector;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 
@@ -64,17 +68,19 @@ public class ImportContext {
     private EclipseProjectCreator eclipseProjectCreator;
     private EclipseFileLinker eclipseFileLinker;
 
-    ImportContext(BazelPackageLocation bazelWorkspaceRootPackageInfo, List<BazelPackageLocation> selectedBazelPackages,
+    public ImportContext(BazelPackageLocation bazelWorkspaceRootPackageInfo, List<BazelPackageLocation> selectedBazelPackages,
             ProjectOrderResolver projectOrderResolver) {
         this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
         this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
         this.projectOrderResolver = Objects.requireNonNull(projectOrderResolver);
     }
 
-    public void init(File bazelWorkspaceRootDirectory) {
+    public void init(File bazelWorkspaceRootDirectory, BazelProjectManager bazelProjectManager,
+            ResourceHelper resourceHelper, BazelCommandManager bazelCommandManager) {
         this.bazelWorkspaceRootDirectory = Objects.requireNonNull(bazelWorkspaceRootDirectory);
-        eclipseProjectCreator = new EclipseProjectCreator(bazelWorkspaceRootDirectory);
-        eclipseFileLinker = new EclipseFileLinker(bazelWorkspaceRootDirectory);
+        eclipseProjectCreator = buildEclipseProjectCreator(bazelWorkspaceRootDirectory, bazelProjectManager,
+            resourceHelper, bazelCommandManager);
+        eclipseFileLinker = new EclipseFileLinker(bazelWorkspaceRootDirectory, resourceHelper);
     }
 
     public BazelPackageLocation getBazelWorkspaceRootPackageInfo() {
@@ -176,15 +182,24 @@ public class ImportContext {
      * The importer flows will look up the structure of each Eclipse project multiple times during import. They are
      * expensive to compute, and so caching them for the duration of import is a big benefit.
      */
-    public ProjectStructure getProjectStructure(BazelPackageLocation packageNode) {
+    public ProjectStructure getProjectStructure(BazelPackageLocation packageNode, BazelWorkspace bazelWorkspace,
+            BazelCommandManager bazelCommandManager) {
         String cacheKey = packageNode.getBazelPackageFSRelativePath();
         ProjectStructure structure = ProjectSourceStructureCache.get(cacheKey);
 
         if (structure == null) {
-            structure = EclipseProjectStructureInspector.computePackageSourceCodePaths(packageNode);
+            structure = EclipseProjectStructureInspector.computePackageSourceCodePaths(packageNode, bazelWorkspace,
+                bazelCommandManager);
             ProjectSourceStructureCache.put(cacheKey, structure);
         }
 
         return structure;
+    }
+
+    protected EclipseProjectCreator buildEclipseProjectCreator(File bazelWorkspaceRootDirectory,
+            BazelProjectManager bazelProjectManager, ResourceHelper resourceHelper,
+            BazelCommandManager bazelCommandManager) {
+        return new EclipseProjectCreator(bazelWorkspaceRootDirectory, bazelProjectManager, resourceHelper,
+                bazelCommandManager);
     }
 }

@@ -31,7 +31,7 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.SubMonitor;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -40,6 +40,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 /**
  * Computes all aspects for all bazel packages being imported.
@@ -47,7 +48,12 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * This step in the flow can take a <b>LONG</b> time if the Bazel workspace is dirty and needs to be rebuilt. If users
  * complain about the slowness of this step, remind them to run a <i>bazel build //...</i> prior to import.
  */
-public class LoadAspectsFlow implements ImportFlow {
+public class LoadAspectsFlow extends AbstractImportFlowStep {
+    public LoadAspectsFlow(BazelCommandManager commandManager, BazelProjectManager projectManager,
+            ResourceHelper resourceHelper) {
+        super(commandManager, projectManager, resourceHelper);
+    }
+
     private static final LogHelper LOG = LogHelper.log(LoadAspectsFlow.class);
 
     @Override
@@ -63,8 +69,8 @@ public class LoadAspectsFlow implements ImportFlow {
 
     @Override
     public void run(ImportContext ctx, SubMonitor progressMonitor) {
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
+        final BazelWorkspace bazelWorkspace = getBazelWorkspace();
+        final BazelCommandManager bazelCommandManager = getCommandManager();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
@@ -88,7 +94,7 @@ public class LoadAspectsFlow implements ImportFlow {
                     bazelWorkspaceCmdRunner.getAspectTargetInfos(labels, "importWorkspace");
 
             if (targetInfos.isEmpty()) {
-                BazelPluginActivator.getInstance().closeBazelWorkspace();
+                closeBazelWorkspace();
                 throw new IllegalStateException(
                         "Bazel could not provide any information about the selected project(s). "
                                 + "This usually means there is a Bazel build error in the underlying packages being imported.\n\n"

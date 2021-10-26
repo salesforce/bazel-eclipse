@@ -29,14 +29,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
-import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
@@ -52,28 +51,56 @@ public class FlowProjectImporter implements ProjectImporter {
     private final List<BazelPackageLocation> selectedBazelPackages;
     private final ProjectOrderResolver projectOrderResolver;
     private final ImportFlow[] flows;
+    private final String executablePath;
+    private final AtomicBoolean importInProgress;
 
     public FlowProjectImporter(ImportFlow[] flows, BazelPackageLocation bazelWorkspaceRootPackageInfo,
-            List<BazelPackageLocation> selectedBazelPackages, ProjectOrderResolver projectOrderResolver) {
+            List<BazelPackageLocation> selectedBazelPackages, ProjectOrderResolver projectOrderResolver,
+            String executablePath, AtomicBoolean importInProgress) {
         this.flows = Objects.requireNonNull(flows);
         this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
         this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
         this.projectOrderResolver = Objects.requireNonNull(projectOrderResolver);
+        this.executablePath = Objects.requireNonNull(executablePath);
+        this.importInProgress = Objects.requireNonNull(importInProgress);
+    }
+
+    public BazelPackageLocation getBazelWorkspaceRootPackageInfo() {
+        return bazelWorkspaceRootPackageInfo;
+    }
+
+    public List<BazelPackageLocation> getSelectedBazelPackages() {
+        return selectedBazelPackages;
+    }
+
+    public ProjectOrderResolver getProjectOrderResolver() {
+        return projectOrderResolver;
+    }
+
+    public ImportFlow[] getFlows() {
+        return flows;
+    }
+
+    public String getExecutablePath() {
+        return executablePath;
+    }
+
+    public AtomicBoolean getImportInProgress() {
+        return importInProgress;
     }
 
     @Override
     public List<IProject> run(IProgressMonitor progressMonitor) {
         // Do a check before kicking off the import that we have a real Bazel executable available.
         // If we proceed without it, some factory infra is setup incorrectly, and it is hard to reset that state.
-        String executablePath = BazelPluginActivator.getInstance().getConfigurationManager().getBazelExecutablePath();
         File executableFile = new File(executablePath);
         if (!executableFile.exists() || !executableFile.canExecute()) {
             throw new IllegalStateException("Cannot start the import because there is no configured Bazel executable. "
                     + "Please configure the Bazel executable in the Eclipse preferences.");
         }
 
-        ImportContext ctx =
-                new ImportContext(bazelWorkspaceRootPackageInfo, selectedBazelPackages, projectOrderResolver);
+        ImportContext ctx = createFlowContext();
+
         SimplePerfRecorder.reset();
         long startTimeMillis = System.currentTimeMillis();
         runFlows(ctx, progressMonitor);
@@ -81,6 +108,10 @@ public class FlowProjectImporter implements ProjectImporter {
         SimplePerfRecorder.addTime("import_total", startTimeMillis);
         SimplePerfRecorder.logResults();
         return ctx.getAllImportedProjects();
+    }
+
+    protected ImportContext createFlowContext() {
+        return new ImportContext(getBazelWorkspaceRootPackageInfo(), getSelectedBazelPackages(), getProjectOrderResolver());
     }
 
     private void runFlows(ImportContext ctx, IProgressMonitor progressMonitor) {
@@ -96,11 +127,11 @@ public class FlowProjectImporter implements ProjectImporter {
                 subMonitor.worked(1);
             } catch (RuntimeException runE) {
                 LOG.error("Failure during import", runE);
-                ProjectImporterFactory.importInProgress.set(false);
+                importInProgress.set(false);
                 throw runE;
             } catch (Throwable th) {
                 LOG.error("Failure during import", th);
-                ProjectImporterFactory.importInProgress.set(false);
+                importInProgress.set(false);
                 // this needs to be handled better - generally, error handing is still a mess
                 // this could call a cleanup method on each Flow instance already processed if we
                 // need to undo work done so far

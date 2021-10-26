@@ -92,11 +92,11 @@ public class BazelBuildSupport implements IBuildSupport {
 
     @Override
     public boolean isBuildFile(IResource resource) {
-                return resource != null && resource.getProject() != null && resource.getType() == IResource.FILE
-                        && (resource.getName().endsWith(BAZELPROJECT_FILE_NAME_SUFIX)
-                                || resource.getName().endsWith(BAZEL_FILE_NAME_SUFIX)
-                                || resource.getName().equals(BUILD_FILE_NAME)
-                                || resource.getName().equals(WORKSPACE_FILE_NAME));
+        return resource != null && resource.getProject() != null && resource.getType() == IResource.FILE
+                && (resource.getName().endsWith(BAZELPROJECT_FILE_NAME_SUFIX)
+                        || resource.getName().endsWith(BAZEL_FILE_NAME_SUFIX)
+                        || resource.getName().equals(BUILD_FILE_NAME)
+                        || resource.getName().equals(WORKSPACE_FILE_NAME));
     }
 
     @Override
@@ -114,7 +114,7 @@ public class BazelBuildSupport implements IBuildSupport {
     public List<String> getExcludedFilePatterns() {
         return calculatedExcludedFilePatterns;
     }
-    
+
     @Override
     public boolean fileChanged(IResource resource, CHANGE_TYPE changeType, IProgressMonitor monitor)
             throws CoreException {
@@ -125,7 +125,7 @@ public class BazelBuildSupport implements IBuildSupport {
     }
 
     private IProjectImporter obtainBazelImporter() {
-        return ExtensionsExtractor.<IProjectImporter>extractOrderedExtensions(IConstants.PLUGIN_ID, "importers")
+        return ExtensionsExtractor.<IProjectImporter> extractOrderedExtensions(IConstants.PLUGIN_ID, "importers")
                 .stream().filter(importer -> importer instanceof BazelProjectImporter).findFirst().get();
     }
 
@@ -147,7 +147,7 @@ public class BazelBuildSupport implements IBuildSupport {
                 IPath projectLocation = getProjectLocation(project);
 
                 if (ResourceUtils.isContainedIn(projectLocation, rootPaths)) {
-                    BazelJdtPlugin.logInfo("NOP - if the project is contained in the root path, it's a valid project");
+                    BazelJdtPlugin.logInfo(project.getName() + " is contained in the root path, it's a valid project");
                 } else {
                     try {
                         project.delete(false, true, monitor);
@@ -158,13 +158,12 @@ public class BazelBuildSupport implements IBuildSupport {
             }
         }
     }
-    
+
     public static void calculateExcludedFilePatterns(String bazelWorkspaceRootDirectoryPath) {
         if (calculatedExcludedFilePatterns.isEmpty()) {
-            
-            EXCLUDED_FILE_PATTERN.stream()
-            .map(path -> StringUtils.join("**" + bazelWorkspaceRootDirectoryPath, path))
-            .forEach(calculatedExcludedFilePatterns::add);
+
+            EXCLUDED_FILE_PATTERN.stream().map(path -> StringUtils.join("**" + bazelWorkspaceRootDirectoryPath, path))
+                    .forEach(calculatedExcludedFilePatterns::add);
 
         }
     }
@@ -174,15 +173,15 @@ public class BazelBuildSupport implements IBuildSupport {
         if (project.getFile(WORKSPACE_FILE_NAME).isAccessible()) {
             return project.getFile(WORKSPACE_FILE_NAME).getLocation();
         }
-        
+
         if (project.getFile(WORKSPACE_FILE_NAME + BAZEL_FILE_NAME_SUFIX).isAccessible()) {
             return project.getFile(WORKSPACE_FILE_NAME + BAZEL_FILE_NAME_SUFIX).getLocation();
-        } 
+        }
 
         if (project.getFile(BUILD_FILE_NAME).isAccessible()) {
             return project.getFile(BUILD_FILE_NAME).getLocation();
         }
-        
+
         if (project.getFile(BUILD_FILE_NAME + BAZEL_FILE_NAME_SUFIX).isAccessible()) {
             return project.getFile(BUILD_FILE_NAME + BAZEL_FILE_NAME_SUFIX).getLocation();
         }
