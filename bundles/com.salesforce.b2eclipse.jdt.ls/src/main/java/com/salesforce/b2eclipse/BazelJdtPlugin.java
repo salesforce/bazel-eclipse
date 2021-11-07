@@ -64,6 +64,8 @@ import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory;
+import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
+import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
@@ -118,6 +120,9 @@ public class BazelJdtPlugin extends Plugin {
 
         CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
         CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
+
+        BazelJavaSDKInit.initialize("Bazel Language Server", "bzl_ls");
+        JvmRuleInit.initialize();
 
         startInternal(aspectLocation, commandBuilder, consoleFactory,
             ResourceHelperComponentFacade.getInstance().getComponent(),

@@ -55,8 +55,6 @@ import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.b2eclipse.config.BazelEclipseProjectFactory;
-import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
-import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.ProjectView;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
@@ -90,9 +88,6 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
 		try {
 			// TODO the SDK now has pluggable lang support (alas, java is the only option now)
 			// which means at some point you need to initialize the Java features of the SDK
-			BazelJavaSDKInit.initialize("Bazel Language Server", "bzl_ls");
-			JvmRuleInit.initialize();
-
 			BazelWorkspaceScanner workspaceScanner = new BazelWorkspaceScanner();
 			BazelPackageLocation workspaceRootPackage = workspaceScanner.getPackages(rootFolder.getAbsolutePath());
 
