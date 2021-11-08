@@ -114,12 +114,8 @@ public class EclipseResourceHelper implements ResourceHelper {
 
     @Override
     public boolean isBazelRootProject(IProject project) {
-        try {
-            // fix to not be based on string comparison?
-            return project.getDescription().getName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME);
-        } catch (CoreException ex) {
-            throw new IllegalStateException(ex);
-        }
+        // fix to not be based on string comparison?
+        return project.getName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME);
     }
 
     /**

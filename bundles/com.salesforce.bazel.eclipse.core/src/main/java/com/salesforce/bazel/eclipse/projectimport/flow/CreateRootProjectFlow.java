@@ -23,11 +23,14 @@
  */
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
@@ -71,6 +74,12 @@ public class CreateRootProjectFlow implements ImportFlow {
             String rootProjectName =
                     BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME + " (" + bazelWorkspace.getName() + ")";
             rootProject = ctx.getEclipseProjectCreator().createRootProject(rootProjectName);
+        } else if (!rootProject.isOpen()) {
+            try {
+                rootProject.open(progressMonitor.newChild(1));
+            } catch (CoreException e) {
+                throw new IllegalStateException(format("Unable to open root project '%s'!", rootProject.getName()), e);
+            }
         }
 
         // link all files in the workspace root into the Eclipse project
