@@ -219,28 +219,9 @@ public class BazelJvmClasspath implements JvmClasspath {
                         // no project found that houses the sources of this bazel target, add the jars to the classpath
                         // this means that this is an external jar, or a jar produced by a bazel target that was not imported
 
-                        for (JVMAspectOutputJarSet jarSet : jvmTargetInfo.getGeneratedJars()) {
-                            JvmClasspathEntry cpEntry = jarsToClasspathEntry(jarSet, isTestTarget);
-                            if (cpEntry != null) {
-                                addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget,
-                                    mainClasspathEntryMap, testClasspathEntryMap);
-                            } else {
-                                // there was a problem with the aspect computation, this might resolve itself if we recompute it
-                                bazelWorkspaceCmdRunner
-                                        .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
-                            }
-                        }
-                        for (JVMAspectOutputJarSet jarSet : jvmTargetInfo.getJars()) {
-                            JvmClasspathEntry cpEntry = jarsToClasspathEntry(jarSet, isTestTarget);
-                            if (cpEntry != null) {
-                                addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget,
-                                    mainClasspathEntryMap, testClasspathEntryMap);
-                            } else {
-                                // there was a problem with the aspect computation, this might resolve itself if we recompute it
-                                bazelWorkspaceCmdRunner
-                                        .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
-                            }
-                        }
+                        addTargetJarsIntoClasspath(bazelWorkspaceCmdRunner, mainClasspathEntryMap,
+                            testClasspathEntryMap, configuredTargetsForProject, targetLabel, isTestTarget,
+                            jvmTargetInfo);
                     } else { // otherProject != null
                         String otherBazelProjectName = otherProject.name;
                         if (!bazelProject.name.equals(otherBazelProjectName)) {
@@ -259,6 +240,15 @@ public class BazelJvmClasspath implements JvmClasspath {
                             // now make a project reference between this project and the other project; this allows for features like
                             // code refactoring across projects to work correctly
                             addProjectReference(response.classpathProjectReferences, otherProject);
+                        } else {
+                            // project might have a generated sources and been already imported into the workspace.
+                            // if it is not a binary, library or test type, then it should be included into the classpath
+                            boolean skipTarget = "java_library".equals(kind) || "java_binary".equals(kind) || "java_test".equals(kind);
+                            if( ! skipTarget ) {
+                                addTargetJarsIntoClasspath(bazelWorkspaceCmdRunner, mainClasspathEntryMap,
+                                    testClasspathEntryMap, configuredTargetsForProject, targetLabel, isTestTarget,
+                                    jvmTargetInfo);
+                            }
                         }
                     }
                 }
@@ -286,6 +276,35 @@ public class BazelJvmClasspath implements JvmClasspath {
         SimplePerfRecorder.addTime("classpath", startTimeMS);
 
         return cachedEntries;
+    }
+
+    private void addTargetJarsIntoClasspath(BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner,
+            Map<String, JvmClasspathEntry> mainClasspathEntryMap, Map<String, JvmClasspathEntry> testClasspathEntryMap,
+            BazelProjectTargets configuredTargetsForProject, String targetLabel, boolean isTestTarget,
+            JVMAspectTargetInfo jvmTargetInfo) {
+        for (JVMAspectOutputJarSet jarSet : jvmTargetInfo.getGeneratedJars()) {
+            addJarIntoClasspath(bazelWorkspaceCmdRunner, mainClasspathEntryMap, testClasspathEntryMap,
+                configuredTargetsForProject, targetLabel, isTestTarget, jarSet);
+        }
+        for (JVMAspectOutputJarSet jarSet : jvmTargetInfo.getJars()) {
+            addJarIntoClasspath(bazelWorkspaceCmdRunner, mainClasspathEntryMap, testClasspathEntryMap,
+                configuredTargetsForProject, targetLabel, isTestTarget, jarSet);
+        }
+    }
+
+    private void addJarIntoClasspath(BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner,
+            Map<String, JvmClasspathEntry> mainClasspathEntryMap, Map<String, JvmClasspathEntry> testClasspathEntryMap,
+            BazelProjectTargets configuredTargetsForProject, String targetLabel, boolean isTestTarget,
+            JVMAspectOutputJarSet jarSet) {
+        JvmClasspathEntry cpEntry = jarsToClasspathEntry(jarSet, isTestTarget);
+        if (cpEntry != null) {
+            addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget,
+                mainClasspathEntryMap, testClasspathEntryMap);
+        } else {
+            // there was a problem with the aspect computation, this might resolve itself if we recompute it
+            bazelWorkspaceCmdRunner
+                    .flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
+        }
     }
 
     // INTERNAL
