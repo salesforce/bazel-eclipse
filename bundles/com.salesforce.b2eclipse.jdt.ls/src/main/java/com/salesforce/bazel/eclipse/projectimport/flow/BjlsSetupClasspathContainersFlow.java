@@ -3,6 +3,7 @@ package com.salesforce.bazel.eclipse.projectimport.flow;
 import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -12,6 +13,7 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
+import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.classpath.EclipseSourceClasspathUtil;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
@@ -27,6 +29,10 @@ import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 
 public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFlow {
     private static final String TEST_BIN_FOLDER = "/testbin";
+
+    /** @see {@link org.eclipse.jdt.ls.core.internal.ProjectUtils#WORKSPACE_LINK} */
+    @SuppressWarnings("restriction")
+    public static final String WORKSPACE_LINK = "_";
 
     public BjlsSetupClasspathContainersFlow(BazelCommandManager commandManager, BazelProjectManager projectManager,
             ResourceHelper resourceHelper, JavaCoreHelper javaCoreHelper) {
@@ -50,28 +56,42 @@ public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFl
             EclipseSourceClasspathUtil.createClasspath(bazelWorkspaceRootDirectory, packageFSPath, structure,
                 javaProject, ctx.getJavaLanguageLevel(), getResourceHelper(), getJavaCoreHelper());
 
-            AspectTargetInfos aspects = ctx.getAspectTargetInfos();
-            if (aspects != null) {
-                for (AspectTargetInfo aspect : aspects.getTargetInfos()) {
-                    if (javaProject.getElementName().equals(aspect.getLabel().getPackageName())) {
-                        boolean isModule = JvmRuleInit.KIND_JAVA_BINARY.getKindName().equals(aspect.getKind())
-                                || JvmRuleInit.KIND_JAVA_LIBRARY.getKindName().equals(aspect.getKind());
-                        boolean isTest = JvmRuleInit.KIND_JAVA_TEST.getKindName().equals(aspect.getKind());
-                        if (isModule) {
-                            buildBinLinkFolder(javaProject, aspect.getLabel());
-                        }
-                        if (isTest) {
-                            buildTestBinLinkFolder(javaProject, aspect.getLabel());
-                        }
-                    }
-                }
-            }
+            buildWorkspaceLink(javaProject, bazelWorkspaceRootDirectory);
+            buildBinLinks(ctx, javaProject);
 
             progressSubMonitor.worked(1);
         }
     }
 
-    private static void buildBinLinkFolder(IJavaProject eclipseJavaProject, BazelLabel bazelLabel) {
+    private void buildWorkspaceLink(IJavaProject eclipseJavaProject, IPath bazelWorkspacePath) {
+        if (!eclipseJavaProject.getProject().getName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME)) {
+            IFolder linkHiddenFolder = eclipseJavaProject.getProject().getFolder(WORKSPACE_LINK);
+            if (!linkHiddenFolder.exists()) {
+                getResourceHelper().createFolderLink(linkHiddenFolder, bazelWorkspacePath, IResource.NONE, null);
+            }
+        }
+    }
+
+    private void buildBinLinks(ImportContext ctx, IJavaProject javaProject) {
+        AspectTargetInfos aspects = ctx.getAspectTargetInfos();
+        if (aspects != null) {
+            for (AspectTargetInfo aspect : aspects.getTargetInfos()) {
+                if (javaProject.getElementName().equals(aspect.getLabel().getPackageName())) {
+                    boolean isModule = JvmRuleInit.KIND_JAVA_BINARY.getKindName().equals(aspect.getKind())
+                            || JvmRuleInit.KIND_JAVA_LIBRARY.getKindName().equals(aspect.getKind());
+                    boolean isTest = JvmRuleInit.KIND_JAVA_TEST.getKindName().equals(aspect.getKind());
+                    if (isModule) {
+                        buildBinLinkFolder(javaProject, aspect.getLabel());
+                    }
+                    if (isTest) {
+                        buildTestBinLinkFolder(javaProject, aspect.getLabel());
+                    }
+                }
+            }
+        }
+    }
+
+    private void buildBinLinkFolder(IJavaProject eclipseJavaProject, BazelLabel bazelLabel) {
         String projectMainOutputPath =
                 EclipseBazelComponentFacade.getInstance().getWorkspaceCommandRunner().getProjectOutputPath(bazelLabel);
 
@@ -86,7 +106,7 @@ public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFl
         }
     }
 
-    private static void buildTestBinLinkFolder(IJavaProject eclipseJavaProject, BazelLabel bazelLabel) {
+    private void buildTestBinLinkFolder(IJavaProject eclipseJavaProject, BazelLabel bazelLabel) {
         String projectTestOutputPath =
                 EclipseBazelComponentFacade.getInstance().getWorkspaceCommandRunner().getProjectOutputPath(bazelLabel);
         IPath projectOutputPath = Optional.ofNullable(projectTestOutputPath).map(Path::fromOSString).orElse(null);
