@@ -33,7 +33,7 @@
    <extension
          point="com.salesforce.bazel.resourcehelper">
       <resourceHelper
-            class="com.salesforce.bazel.eclipse.runtile.impl.BjlsEclipseResourceHelper">
+            class="com.salesforce.bazel.eclipse.runtime.impl.BjlsEclipseResourceHelper">
       </resourceHelper>
    </extension>
    <extension

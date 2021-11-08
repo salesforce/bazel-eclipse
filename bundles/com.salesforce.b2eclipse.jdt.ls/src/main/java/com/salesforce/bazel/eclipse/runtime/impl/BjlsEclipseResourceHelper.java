@@ -1,12 +1,10 @@
-package com.salesforce.bazel.eclipse.runtile.impl;
+package com.salesforce.bazel.eclipse.runtime.impl;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-
-import com.salesforce.bazel.eclipse.runtime.impl.EclipseResourceHelper;
 
 public class BjlsEclipseResourceHelper extends EclipseResourceHelper {
     @Override
