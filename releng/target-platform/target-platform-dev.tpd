@@ -1,0 +1,42 @@
+target "bazel-eclipse-feature-target-platform-for-development" with source configurePhase requirements
+
+environment JavaSE-11
+
+
+// import "build" target platform
+
+include "target-platform.tpd"
+
+
+// add additional stuff to allow running in a self-hosted environment for convenience
+
+location "https://download.eclipse.org/egit/updates/" {
+    org.eclipse.egit.feature.group
+    org.eclipse.jgit.feature.group
+    org.eclipse.jgit.http.apache.feature.group
+    org.eclipse.jgit.ssh.apache.feature.group
+    org.eclipse.egit.gitflow.feature.feature.group
+}
+
+location "https://download.eclipse.org/releases/2021-09/" {
+	// EMF & Co
+    org.eclipse.emf.ecore.xcore.sdk.feature.group
+    org.eclipse.emf.sdk.feature.group
+    org.eclipse.gef.sdk.feature.group
+    org.eclipse.xsd.sdk.feature.group
+
+    // Docker Tools
+    org.eclipse.linuxtools.docker.feature.feature.group
+    org.eclipse.linuxtools.docker.editor.ls.feature.feature.group
+
+    // Terminal
+    org.eclipse.tm4e.feature.feature.group
+}
+
+location "https://download.eclipse.org/mylyn/docs/releases/3.0.39/" {
+    org.eclipse.mylyn.wikitext_feature.feature.group
+    org.eclipse.mylyn.wikitext.editors_feature.feature.group
+    org.eclipse.mylyn.wikitext.sdk.feature.group
+    org.eclipse.mylyn.wikitext.markdown
+    org.eclipse.mylyn.wikitext.markdown.ui
+}
