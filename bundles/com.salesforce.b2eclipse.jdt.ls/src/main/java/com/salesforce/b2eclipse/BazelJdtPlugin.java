@@ -129,7 +129,6 @@ public class BazelJdtPlugin extends Plugin {
             JavaCoreHelperComponentFacade.getInstance().getComponent(),
             EclipseBazelComponentFacade.getInstance().getOsDetectionStrategy(),
             ProjectManagerComponentFacade.getInstance().getComponent());
-//        reloadExistingProjects();
     }
 
     /**
@@ -230,20 +229,4 @@ public class BazelJdtPlugin extends Plugin {
             log(new Status(IStatus.ERROR, context.getBundle().getSymbolicName(), message, ex));
         }
     }
-
-//    private static void reloadExistingProjects() {
-//        IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-//        IProject[] projects = workspaceRoot.getProjects();
-//        Arrays.stream(projects)//
-//                .filter(IProject::isOpen)//
-//                .filter(project -> {
-//                    try {
-//                        return project.hasNature(BazelNature.BAZEL_NATURE_ID);
-//                    } catch (CoreException e) {
-//                        return false;
-//                    }
-//                })//
-//                .map(project -> new BazelProject(project.getName(), project))//
-//                .forEachOrdered(getBazelProjectManager()::addProject);
-//    }
 }
