@@ -204,7 +204,7 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
         SplitSourcePath result = null;
         SourcePathSplitterStrategy splitter = SourcePathSplitterStrategy.getSplitterForFilePath(srcPath);
         if (splitter != null) {
-            result = splitter.splitSourcePath(packageDir, srcPath);
+            result = splitter.splitSourcePath(packageDir, FSPathHelper.osSeps(srcPath));
         }
 
         return result;

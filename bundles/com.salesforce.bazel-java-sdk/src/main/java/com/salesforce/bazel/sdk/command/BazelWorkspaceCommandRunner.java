@@ -599,7 +599,9 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     public String getProjectOutputPath(BazelLabel bazelLabel) {
         // bazel-bin/[PACKAGE_PATH]/_javac/[TARGET_NAME]/[TARGET_TYPE][LAST_PATH_COMP_TARGET_NAME]_classes
         File genFolder = getBazelGeneratedFilesFolder();
-        File javacFolder = new File(genFolder, bazelLabel.getPackageName() + "/_javac/" + bazelLabel.getTargetName());
+        String pathToClasses = 
+                bazelLabel.getPackageName() + File.separator + "_javac" + File.separator + bazelLabel.getTargetName();
+        File javacFolder = new File(genFolder,pathToClasses);
         FileFilter fileFilter = file -> file.isDirectory() && file.getName().endsWith("_classes");
         File[] folders = javacFolder.listFiles(fileFilter);
         if ((folders != null) && (folders.length > 0)) {
