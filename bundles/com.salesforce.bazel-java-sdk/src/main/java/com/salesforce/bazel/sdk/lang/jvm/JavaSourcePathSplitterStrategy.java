@@ -35,6 +35,7 @@ package com.salesforce.bazel.sdk.lang.jvm;
 
 import java.io.File;
 
+import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.path.SourcePathSplitterStrategy;
 import com.salesforce.bazel.sdk.path.SplitSourcePath;
 
@@ -76,7 +77,7 @@ public class JavaSourcePathSplitterStrategy extends SourcePathSplitterStrategy {
         String namespacePath = "";
         if (packageName != null) {
             // convert 'com.salesforce.foo' to 'com/salesforce/foo'
-            namespacePath = packageName.replace(".", File.separator);
+            namespacePath = FSPathHelper.osSeps(packageName.replaceAll("\\.", "/"));
         }
 
         // split it

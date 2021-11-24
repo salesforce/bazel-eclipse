@@ -1,3 +1,26 @@
+/**
+ * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ * disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ * following disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package com.salesforce.bazel.eclipse.runtime.impl;
 
 import java.io.File;
@@ -20,11 +43,16 @@ import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IProcess;
+import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.activator.Activator;
+import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 public class EclipseResourceHelper implements ResourceHelper {
@@ -77,18 +105,17 @@ public class EclipseResourceHelper implements ResourceHelper {
      * Deletes the specified project.
      */
     @Override
-    //TODO implement method
     public void deleteProject(IProject project, IProgressMonitor monitor) throws CoreException {
-        //        if (!isBazelRootProject(project)) {
-        //            // clear the cached data for this project
-        //            BazelWorkspace bzlWs = BazelJdtPlugin.getBazelWorkspace();
-        //            BazelCommandManager bzlCmdMgr = BazelJdtPlugin.getBazelCommandManager();
-        //            BazelWorkspaceCommandRunner bzlWsCmdRunner = bzlCmdMgr.getWorkspaceCommandRunner(bzlWs);
-        //            projectManager.flushCaches(project.getName(), bzlWsCmdRunner);
-        //        }
-        //        boolean deleteContent = true; // delete metadata also, under the Eclipse Workspace directory
-        //        boolean force = true;
-        //        project.getProject().delete(deleteContent, force, monitor);
+        if (!isBazelRootProject(project)) {
+            // clear the cached data for this project
+            BazelWorkspace bzlWs = EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
+            BazelCommandManager bzlCmdMgr = EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
+            BazelWorkspaceCommandRunner bzlWsCmdRunner = bzlCmdMgr.getWorkspaceCommandRunner(bzlWs);
+            ProjectManagerComponentFacade.getInstance().getComponent().flushCaches(project.getName(), bzlWsCmdRunner);
+        }
+        boolean deleteContent = true; // delete metadata also, under the Eclipse Workspace directory
+        boolean force = true;
+        project.getProject().delete(deleteContent, force, monitor);
     }
 
     /**
@@ -105,6 +132,13 @@ public class EclipseResourceHelper implements ResourceHelper {
         Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(Activator.PLUGIN_ID);
 
         if (eclipseProjectPrefs == null) {
+            Activator.getDefault().logInfo(String.format(
+                "Could not find the Preferences node for the Bazel plugin for project [%s]", project.getName()));
+        }
+
+        try {
+            eclipseProjectPrefs.sync();
+        } catch (BackingStoreException bse) {
             Activator.getDefault().logInfo(String.format(
                 "Could not find the Preferences node for the Bazel plugin for project [%s]", project.getName()));
         }

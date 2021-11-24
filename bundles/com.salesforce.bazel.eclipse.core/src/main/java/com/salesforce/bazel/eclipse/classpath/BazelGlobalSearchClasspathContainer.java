@@ -48,6 +48,7 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
@@ -57,6 +58,7 @@ import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
@@ -84,14 +86,19 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     private static List<BazelJvmIndexClasspath> instances = new ArrayList<>();
 
     public BazelGlobalSearchClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
-        this(eclipseProject, BazelPluginActivator.getResourceHelper());
+    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+        this(eclipseProject, BazelPluginActivator.getResourceHelper(), BazelPluginActivator.getJavaCoreHelper(),
+            BazelPluginActivator.getBazelProjectManager(),
+            BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy(),
+            BazelPluginActivator.getBazelWorkspace());
     }
 
-    public BazelGlobalSearchClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
-            throws IOException, InterruptedException, BackingStoreException, JavaModelException,
-            BazelCommandLineToolConfigurationException {
-        super(eclipseProject, resourceHelper);
+    public BazelGlobalSearchClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper,
+            JavaCoreHelper jcHelper, BazelProjectManager bpManager,
+            OperatingEnvironmentDetectionStrategy osDetectStrategy, BazelWorkspace bazelWorkspace)
+                    throws IOException, InterruptedException, BackingStoreException, JavaModelException,
+                    BazelCommandLineToolConfigurationException {
+        super(eclipseProject, resourceHelper, jcHelper, bpManager, osDetectStrategy, bazelWorkspace);
         BazelPluginActivator activator = BazelPluginActivator.getInstance();
         config = activator.getConfigurationManager();
     }

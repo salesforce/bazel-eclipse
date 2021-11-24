@@ -31,54 +31,48 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.eclipse.projectimport.flow;
+package com.salesforce.bazel.eclipse.projectview;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
-import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
-import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
+import com.salesforce.bazel.sdk.project.ProjectView;
+import com.salesforce.bazel.sdk.project.ProjectViewConstants;
 
-/**
- * Determines the configured targets, for import, for each Bazel Package being imported.
- */
-public class DetermineTargetsFlow implements ImportFlow {
-    private static final LogHelper LOG = LogHelper.log(DetermineTargetsFlow.class);
+public class ProjectViewUtils {
 
-    @Override
-    public String getProgressText() {
-        return "Analyzing Bazel targets for use by Eclipse builds.";
-    }
+    /**
+     * Writes the project view file given the set of imported Bazel packages
+     */
+    public static void writeProjectViewFile(File bazelWorkspaceRootDirectory, IProject rootProject,
+            List<BazelPackageLocation> importedBazelPackages) {
+        ProjectView projectView =
+                new ProjectView(bazelWorkspaceRootDirectory, importedBazelPackages, Collections.emptyList());
+        IFile f = ResourceHelperComponentFacade.getInstance().getComponent().getProjectFile(rootProject,
+            ProjectViewConstants.PROJECT_VIEW_FILE_NAME);
 
-    @Override
-    public void assertContextState(ImportContext ctx) {
-        Objects.requireNonNull(ctx.getSelectedBazelPackages());
-    }
-
-    @Override
-    public void run(ImportContext ctx, SubMonitor progressMonitor) {
-        Map<BazelPackageLocation, List<BazelLabel>> packageLocationToTargets = new HashMap<>();
-        for (BazelPackageLocation packageLocation : ctx.getSelectedBazelPackages()) {
-            List<BazelLabel> targets = packageLocation.getBazelTargets();
-            if (targets == null) {
-                ProjectStructure structure = ctx.getProjectStructure(packageLocation);
-                if (structure == null) {
-                    LOG.warn("Could not determine the project structure of package [{}]. Ignoring...",
-                        packageLocation.getBazelPackageFSRelativePath());
-                    continue;
-                }
-                targets = structure.getBazelTargets();
+        String projectViewContent = projectView.getContent();
+        IProgressMonitor monitor = null;
+        boolean forceWrite = true;
+        try (InputStream bis = new ByteArrayInputStream(projectViewContent.getBytes())) {
+            if (f.exists()) {
+                boolean keepHistory = true;
+                f.setContents(bis, forceWrite, keepHistory, monitor);
+            } else {
+                f.create(bis, forceWrite, monitor);
             }
-            packageLocationToTargets.put(packageLocation, Collections.unmodifiableList(targets));
-            LOG.info("Configured targets for " + packageLocation.getBazelPackageFSRelativePath() + ": " + targets);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
-        ctx.setPackageLocationToTargets(packageLocationToTargets);
     }
+
 }

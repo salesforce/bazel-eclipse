@@ -28,8 +28,8 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 
+import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
-import com.salesforce.bazel.eclipse.config.BazelProjectConstants;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
@@ -48,7 +48,7 @@ public class BazelPluginResourceChangeListener implements IResourceChangeListene
         if (resource instanceof IProject) {
             IProject project = (IProject) resource;
             String name = project.getName();
-            if (name.startsWith(BazelProjectConstants.BAZELWORKSPACE_PROJECT_BASENAME)
+            if (name.startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME)
                     && (event.getType() == IResourceChangeEvent.PRE_DELETE)) {
                 LOG.info("User is deleting the Bazel Workspace project {} from the Eclipse workspace", name);
                 BazelPluginActivator.getInstance().closeBazelWorkspace();

@@ -31,7 +31,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Path;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
@@ -43,13 +42,14 @@ public class EclipseFileLinker {
     private static final LogHelper LOG = LogHelper.log(EclipseFileLinker.class);
 
     private final File bazelWorkspaceRootDirectory;
+    private final ResourceHelper resourceHelper;
 
-    public EclipseFileLinker(File bazelWorkspaceRootDirectory) {
+    public EclipseFileLinker(File bazelWorkspaceRootDirectory, ResourceHelper resourceHelper) {
         this.bazelWorkspaceRootDirectory = Objects.requireNonNull(bazelWorkspaceRootDirectory);
+        this.resourceHelper = Objects.requireNonNull(resourceHelper);
     }
 
     public boolean link(String packageFSPath, IProject eclipseProject, String fileName) {
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
         boolean retval = true;
 
         File f = new File(new File(bazelWorkspaceRootDirectory, packageFSPath), fileName);

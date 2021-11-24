@@ -4,7 +4,7 @@
    <extension
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
-            class="com.salesforce.b2eclipse.classpath.BazelClasspathContainerInitializer"
+            class="com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer"
             id="com.salesforce.bazel.eclipse.BAZEL_CONTAINER">
       </classpathContainerInitializer>
    </extension>
@@ -33,7 +33,7 @@
    <extension
          point="com.salesforce.bazel.resourcehelper">
       <resourceHelper
-            class="com.salesforce.bazel.eclipse.runtime.impl.EclipseResourceHelper">
+            class="com.salesforce.bazel.eclipse.runtime.impl.BjlsEclipseResourceHelper">
       </resourceHelper>
    </extension>
    <extension

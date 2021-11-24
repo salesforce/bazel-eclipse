@@ -33,7 +33,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.b2eclipse.classpath;
+package com.salesforce.bazel.eclipse.classpath;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;

@@ -38,12 +38,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
 
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.projectimport.flow.ImportContext;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
@@ -57,9 +58,32 @@ public class EclipseProjectCreator {
     private static final LogHelper LOG = LogHelper.log(EclipseProjectCreator.class);
 
     private final File bazelWorkspaceRootDirectory;
+    private final BazelProjectManager bazelProjectManager;
+    private final ResourceHelper resourceHelper;
+    private final BazelCommandManager bazelCommandManager;
 
-    public EclipseProjectCreator(File bazelWorkspaceRootDirectory) {
+    public EclipseProjectCreator(File bazelWorkspaceRootDirectory, BazelProjectManager bazelProjectManager,
+            ResourceHelper resourceHelper, BazelCommandManager bazelCommandManager) {
         this.bazelWorkspaceRootDirectory = Objects.requireNonNull(bazelWorkspaceRootDirectory);
+        this.bazelProjectManager = Objects.requireNonNull(bazelProjectManager);
+        this.resourceHelper = Objects.requireNonNull(resourceHelper);
+        this.bazelCommandManager = Objects.requireNonNull(bazelCommandManager);
+    }
+
+    public File getBazelWorkspaceRootDirectory() {
+        return bazelWorkspaceRootDirectory;
+    }
+
+    public BazelProjectManager getBazelProjectManager() {
+        return bazelProjectManager;
+    }
+
+    public BazelCommandManager getBazelCommandManager() {
+        return bazelCommandManager;
+    }
+
+    public ResourceHelper getResourceHelper() {
+        return resourceHelper;
     }
 
     public IProject createRootProject(String projectName) {
@@ -73,11 +97,10 @@ public class EclipseProjectCreator {
 
     public IProject createProject(ImportContext ctx, BazelPackageLocation packageLocation,
             List<BazelLabel> bazelTargets, List<IProject> currentImportedProjects,
-            List<IProject> existingImportedProjects, EclipseFileLinker fileLinker) {
+            List<IProject> existingImportedProjects, EclipseFileLinker fileLinker, BazelWorkspace bazelWorkspace) {
 
-        String projectName = EclipseProjectUtils.computeEclipseProjectNameForBazelPackage(packageLocation,
-            existingImportedProjects, currentImportedProjects);
-        ProjectStructure structure = ctx.getProjectStructure(packageLocation);
+        String projectName = createProjectName(packageLocation, currentImportedProjects, existingImportedProjects);
+        ProjectStructure structure = ctx.getProjectStructure(packageLocation, bazelWorkspace, bazelCommandManager);
         String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
         if (bazelTargets == null) {
             LOG.warn(
@@ -105,18 +128,13 @@ public class EclipseProjectCreator {
             List<BazelLabel> bazelTargets) {
         URI eclipseProjectLocation = null; // let Eclipse use the default location
 
-        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
-
         IProject eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation, structure);
         BazelProject bazelProject = bazelProjectManager.getProject(projectName);
         try {
-            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID,
-                BazelPluginActivator.getResourceHelper());
-            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID,
-                BazelPluginActivator.getResourceHelper());
-            BazelProjectManager projMgr = BazelPluginActivator.getBazelProjectManager();
-            projMgr.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(), packageFSPath,
-                bazelTargets, new ArrayList<>()); // TODO pass buildFlags
+            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID, resourceHelper);
+            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID, resourceHelper);
+            bazelProjectManager.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(),
+                packageFSPath, bazelTargets, new ArrayList<>()); // TODO pass buildFlags
         } catch (CoreException e) {
             LOG.error(e.getMessage(), e);
         }
@@ -141,9 +159,14 @@ public class EclipseProjectCreator {
         }
     }
 
-    private static IProject createBaseEclipseProject(String eclipseProjectName, URI location,
-            ProjectStructure structure) {
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
+    protected String createProjectName(BazelPackageLocation packageLocation, List<IProject> currentImportedProjects,
+            List<IProject> existingImportedProjects) {
+        String projectName = EclipseProjectUtils.computeEclipseProjectNameForBazelPackage(packageLocation,
+            existingImportedProjects, currentImportedProjects);
+        return projectName;
+    }
+
+    private IProject createBaseEclipseProject(String eclipseProjectName, URI location, ProjectStructure structure) {
         IProgressMonitor progressMonitor = null;
 
         // Request the project by name, which will create a new shell IProject instance if the project doesn't already exist.
@@ -176,14 +199,14 @@ public class EclipseProjectCreator {
                 createdEclipseProject = null;
             }
         } else {
-            LOG.error("Project [{}] already exists, which is unexpected. Project initialization will not occur.",
+            LOG.info("Project [{}] already exists, which is unexpected. Project initialization will not occur.",
                 eclipseProjectName);
             createdEclipseProject = newEclipseProject;
         }
 
         // create the logical bazel project
         BazelProject bazelProject = new BazelProject(eclipseProjectName, createdEclipseProject, structure);
-        BazelPluginActivator.getBazelProjectManager().addProject(bazelProject);
+        bazelProjectManager.addProject(bazelProject);
 
         return createdEclipseProject;
     }

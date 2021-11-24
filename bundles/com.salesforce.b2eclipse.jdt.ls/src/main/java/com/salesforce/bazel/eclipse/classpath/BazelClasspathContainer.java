@@ -33,7 +33,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.b2eclipse.classpath;
+package com.salesforce.bazel.eclipse.classpath;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,15 +48,16 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.common.base.Predicate;
 import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.bazel.eclipse.classpath.CallSource;
-import com.salesforce.bazel.eclipse.classpath.EclipseImplicitClasspathHelper;
-import com.salesforce.bazel.eclipse.classpath.IClasspathContainerConstants;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.DynamicBazelJvmClasspath;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
 
@@ -70,13 +71,16 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
 
     public BazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
             BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
-        this(eclipseProject, BazelJdtPlugin.getResourceHelper());
+        this(eclipseProject, BazelJdtPlugin.getResourceHelper(), BazelJdtPlugin.getJavaCoreHelper(),
+                BazelJdtPlugin.getBazelProjectManager(), BazelJdtPlugin.getOperatingEnvironmentDetectionStrategy(),
+                EclipseBazelComponentFacade.getInstance().getBazelWorkspace());
     }
 
-    public BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper)
-            throws IOException, InterruptedException, BackingStoreException, JavaModelException,
-            BazelCommandLineToolConfigurationException {
-        super(eclipseProject, resourceHelper);
+    public BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper, JavaCoreHelper jcHelper,
+            BazelProjectManager bpManager, OperatingEnvironmentDetectionStrategy osDetectStrategy,
+            BazelWorkspace bazelWorkspace) throws IOException, InterruptedException, BackingStoreException,
+            JavaModelException, BazelCommandLineToolConfigurationException {
+        super(eclipseProject, resourceHelper, jcHelper, bpManager, osDetectStrategy, bazelWorkspace);
 
         if (USE_DYNAMIC_CP) {
             bazelClasspath = new DynamicBazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,

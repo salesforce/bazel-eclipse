@@ -64,6 +64,8 @@ import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory;
+import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
+import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
@@ -119,12 +121,14 @@ public class BazelJdtPlugin extends Plugin {
         CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
         CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
 
+        BazelJavaSDKInit.initialize("Bazel Language Server", "bzl_ls");
+        JvmRuleInit.initialize();
+
         startInternal(aspectLocation, commandBuilder, consoleFactory,
             ResourceHelperComponentFacade.getInstance().getComponent(),
             JavaCoreHelperComponentFacade.getInstance().getComponent(),
             EclipseBazelComponentFacade.getInstance().getOsDetectionStrategy(),
             ProjectManagerComponentFacade.getInstance().getComponent());
-        reloadExistingProjects();
     }
 
     /**
@@ -135,7 +139,7 @@ public class BazelJdtPlugin extends Plugin {
     public static void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
             CommandConsoleFactory consoleFactory, ResourceHelper rh, JavaCoreHelper javac,
             OperatingEnvironmentDetectionStrategy osEnv, BazelProjectManager projectMgr) {
-        EclipseBazelComponentFacade.getInstance().setCommandManager(aspectLocation, commandBuilder, consoleFactory);
+        EclipseBazelComponentFacade.getInstance().setCommandManager(aspectLocation, commandBuilder, consoleFactory, null);
     }
 
     public static String getEnvBazelPath() {
@@ -224,21 +228,5 @@ public class BazelJdtPlugin extends Plugin {
         if (context != null) {
             log(new Status(IStatus.ERROR, context.getBundle().getSymbolicName(), message, ex));
         }
-    }
-
-    private static void reloadExistingProjects() {
-        IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-        IProject[] projects = workspaceRoot.getProjects();
-        Arrays.stream(projects)//
-                .filter(IProject::isOpen)//
-                .filter(project -> {
-                    try {
-                        return project.hasNature(BazelNature.BAZEL_NATURE_ID);
-                    } catch (CoreException e) {
-                        return false;
-                    }
-                })//
-                .map(project -> new BazelProject(project.getName(), project))//
-                .forEachOrdered(getBazelProjectManager()::addProject);
     }
 }

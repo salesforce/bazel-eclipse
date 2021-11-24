@@ -32,15 +32,31 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.EclipseSourceClasspathUtil;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 
 /**
  * Configures the Source directories into the classpath container for each project.
  */
-public class SetupClasspathContainersFlow implements ImportFlow {
+public class SetupClasspathContainersFlow extends AbstractImportFlowStep {
+
+    private final JavaCoreHelper javaCoreHelper;
+
+    public SetupClasspathContainersFlow(BazelCommandManager commandManager, BazelProjectManager projectManager,
+            ResourceHelper resourceHelper, JavaCoreHelper javaCoreHelper) {
+        super(commandManager, projectManager, resourceHelper);
+        this.javaCoreHelper = javaCoreHelper;
+    }
+
+    public JavaCoreHelper getJavaCoreHelper() {
+        return javaCoreHelper;
+    }
+
     @Override
     public String getProgressText() {
         return "Configuring the source code directories into the Eclipse classpath containers.";
@@ -63,16 +79,16 @@ public class SetupClasspathContainersFlow implements ImportFlow {
         List<IProject> importedProjects = ctx.getImportedProjects();
         for (IProject project : importedProjects) {
             BazelPackageLocation packageLocation = ctx.getPackageLocationForProject(project);
-            ProjectStructure structure = ctx.getProjectStructure(packageLocation);
+            ProjectStructure structure =
+                    ctx.getProjectStructure(packageLocation, getBazelWorkspace(), getCommandManager());
             String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
-            IJavaProject javaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
+            IJavaProject javaProject = getJavaCoreHelper().getJavaProjectForProject(project);
 
             // create the source dirs classpath (adding each source directory to the cp, and adding the JDK); there is no
             // return value because the cp is set directly into the passed javaProject; this method also links in the
             // source directory IFolders into the project
             EclipseSourceClasspathUtil.createClasspath(bazelWorkspaceRootDirectory, packageFSPath, structure,
-                javaProject, ctx.getJavaLanguageLevel(), BazelPluginActivator.getResourceHelper(),
-                BazelPluginActivator.getJavaCoreHelper());
+                javaProject, ctx.getJavaLanguageLevel(), getResourceHelper(), getJavaCoreHelper());
 
             progressSubMonitor.worked(1);
         }
