@@ -15,6 +15,7 @@ package com.salesforce.bazel.eclipse.wizard;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +51,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * which holds the chosen file system path, and the Browse button.
  */
 public class BazelImportWizardLocationControl {
-    private static final LogHelper LOG = LogHelper.log(BazelImportWizardLocationControl.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     protected BazelImportWizardPage page;
 

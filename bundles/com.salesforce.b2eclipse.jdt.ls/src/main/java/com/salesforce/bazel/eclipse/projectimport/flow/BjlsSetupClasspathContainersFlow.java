@@ -1,5 +1,6 @@
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,12 +23,15 @@ import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.init.JvmRuleInit;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 
 public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFlow {
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+
     private static final String TEST_BIN_FOLDER = "/testbin";
 
     /** @see {@link org.eclipse.jdt.ls.core.internal.ProjectUtils#WORKSPACE_LINK} */
@@ -101,7 +105,7 @@ public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFl
                 BazelJdtPlugin.getResourceHelper().createFolderLink(eclipseJavaProject.getProject().getFolder("/bin"),
                     projectOutputPath, IResource.NONE, null);
             } catch (IllegalArgumentException e) {
-                BazelJdtPlugin.logInfo("Folder link " + projectOutputPath + " already exists");
+                LOG.info("Folder link {} already exists", projectOutputPath);
             }
         }
     }
@@ -116,7 +120,7 @@ public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFl
                     eclipseJavaProject.getProject().getFolder(TEST_BIN_FOLDER), projectOutputPath, IResource.NONE,
                     null);
             } catch (IllegalArgumentException e) {
-                BazelJdtPlugin.logInfo("Folder link " + projectOutputPath + " already exists");
+                LOG.info("Folder link {} already exists", projectOutputPath);
             }
         }
     }

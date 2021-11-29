@@ -23,6 +23,7 @@
  */
 package com.salesforce.bazel.sdk.index;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -47,7 +48,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * archive files or raw source files.
  */
 public class CodeIndex {
-    private static final LogHelper LOG = LogHelper.log(CodeIndex.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     // map artifact name (e.g. junit, hamcrest-core, slf4j-api) to entry(s) 
     public Map<String, CodeIndexEntry> artifactDictionary = new TreeMap<>();

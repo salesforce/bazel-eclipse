@@ -35,6 +35,7 @@ package com.salesforce.bazel.sdk.workspace;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -47,7 +48,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageInfo;
  * subtree below that.
  */
 public class BazelWorkspaceScanner {
-    private static final LogHelper LOG = LogHelper.log(BazelWorkspaceScanner.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     // list of found projects from the last scan; this is only intended to be accessed by tests
     // this class is not intended to maintain state for real applications

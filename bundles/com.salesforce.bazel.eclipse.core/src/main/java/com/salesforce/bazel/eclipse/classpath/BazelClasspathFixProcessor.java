@@ -33,6 +33,8 @@
  */
 package com.salesforce.bazel.eclipse.classpath;
 
+import java.lang.invoke.MethodHandles;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -55,7 +57,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * @since 3.4
  */
 public class BazelClasspathFixProcessor extends DefaultClasspathFixProcessor {
-    private static final LogHelper LOG = LogHelper.log(BazelClasspathFixProcessor.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     @Override
     public ClasspathFixProposal[] getFixImportProposals(IJavaProject javaProject, String missingType)

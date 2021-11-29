@@ -1,21 +1,23 @@
 package com.salesforce.bazel.eclipse.component;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.salesforce.bazel.eclipse.activator.Activator;
 import com.salesforce.bazel.eclipse.utils.BazelCompilerUtils;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
 
 public class EclipseBazelComponentFacade {
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     private static EclipseBazelComponentFacade instance;
 
@@ -84,9 +86,8 @@ public class EclipseBazelComponentFacade {
             workspaceFile = new File(rootDirectory, "WORKSPACE.bazel");
             if (!workspaceFile.exists()) {
                 new IllegalArgumentException();
-                Activator.getDefault()
-                        .logError("Bazel workspace directory could not be set the as there is no WORKSPACE file here: "
-                                + rootDirectory.getAbsolutePath());
+                LOG.error("Bazel workspace directory could not be set the as there is no WORKSPACE file here: {}",
+                    rootDirectory.getAbsolutePath());
                 return;
             }
         }

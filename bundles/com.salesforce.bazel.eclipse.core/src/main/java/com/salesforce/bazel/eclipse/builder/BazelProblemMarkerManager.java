@@ -33,6 +33,7 @@
  */
 package com.salesforce.bazel.eclipse.builder;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,7 +62,7 @@ public class BazelProblemMarkerManager {
 
     private static final String BAZEL_MARKER_TYPE = "com.salesforce.bazel.eclipse.bazelmarker";
 
-    private static final LogHelper LOG = LogHelper.log(BazelProblemMarkerManager.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     // owner of marker (combination of project and ownerId) to List of IMarker instances
     private static ConcurrentHashMap<String, List<IMarker>> ownerToMarkers = new ConcurrentHashMap<>();

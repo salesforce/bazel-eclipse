@@ -24,6 +24,7 @@
 package com.salesforce.bazel.sdk.index.jvm;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +61,7 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Lucene indexes of code. We found the performance of that indexing solution to be too slow for our needs.
  */
 public class JvmCodeIndex extends CodeIndex {
-    private static final LogHelper LOG = LogHelper.log(JvmCodeIndex.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     /**
      * Global collection of indices for each workspace

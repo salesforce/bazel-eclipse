@@ -24,6 +24,7 @@
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 
 import org.eclipse.core.runtime.SubMonitor;
@@ -49,13 +50,12 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
  * Import initialization type work.
  */
 public class InitImportFlow extends AbstractImportFlowStep {
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     public InitImportFlow(BazelCommandManager commandManager, BazelProjectManager projectManager,
             ResourceHelper resourceHelper) {
         super(commandManager, projectManager, resourceHelper);
     }
-
-    private static final LogHelper LOG = LogHelper.log(InitImportFlow.class);
 
     @Override
     public String getProgressText() {

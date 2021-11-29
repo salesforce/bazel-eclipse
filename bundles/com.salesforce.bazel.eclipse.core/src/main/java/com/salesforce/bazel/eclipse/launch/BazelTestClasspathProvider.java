@@ -37,6 +37,7 @@ package com.salesforce.bazel.eclipse.launch;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,7 +75,7 @@ import com.salesforce.bazel.sdk.project.BazelProjectTargets;
  * exact order of jars that the bazel test runner uses.
  */
 public class BazelTestClasspathProvider extends StandardClasspathProvider {
-    private static final LogHelper LOG = LogHelper.log(BazelTestClasspathProvider.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     public static final String BAZEL_SOURCEPATH_PROVIDER =
             "com.salesforce.bazel.eclipse.launchconfig.sourcepathProvider";

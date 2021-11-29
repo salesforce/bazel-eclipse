@@ -24,6 +24,7 @@
 package com.salesforce.bazel.eclipse.runtime.impl;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,9 +54,11 @@ import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 public class EclipseResourceHelper implements ResourceHelper {
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     /**
      * Returns the IProject reference for the named project.
@@ -132,15 +135,13 @@ public class EclipseResourceHelper implements ResourceHelper {
         Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(Activator.PLUGIN_ID);
 
         if (eclipseProjectPrefs == null) {
-            Activator.getDefault().logInfo(String.format(
-                "Could not find the Preferences node for the Bazel plugin for project [%s]", project.getName()));
+            LOG.info("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
         }
 
         try {
             eclipseProjectPrefs.sync();
         } catch (BackingStoreException bse) {
-            Activator.getDefault().logInfo(String.format(
-                "Could not find the Preferences node for the Bazel plugin for project [%s]", project.getName()));
+            LOG.info("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
         }
 
         return eclipseProjectPrefs;
@@ -182,8 +183,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public IResource findMemberInWorkspace(IPath path) {
         IResource resource = getEclipseWorkspaceRoot().findMember(path);
-        Activator.getDefault().logInfo(String.format("findMemberInWorkspace: path=%s member.location= %s",
-            path.toOSString(), getResourceAbsolutePath(resource)));
+        LOG.info("findMemberInWorkspace: path={} member.location={}", path.toOSString(),
+            getResourceAbsolutePath(resource));
         return resource;
     }
 
@@ -221,8 +222,7 @@ public class EclipseResourceHelper implements ResourceHelper {
         } catch (Exception ex) {
             // this is likely an issue with the resource tree being locked, so we have to defer this update
             // but it works for any type of issue
-            Activator.getDefault().logInfo(
-                String.format("Deferring updates to project [%s] because workspace is locked.", project.getName()));
+            LOG.info("Deferring updates to project [{}] because workspace is locked.", project.getName());
             deferredProjectDescriptionUpdates.add(new DeferredProjectDescriptionUpdate(project, description));
             needsDeferredApplication = true;
         }
@@ -263,8 +263,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     public void createFileLink(IFile thisFile, IPath bazelWorkspaceLocation, int updateFlags,
             IProgressMonitor monitor) {
         try {
-            Activator.getDefault().logInfo(String.format("createFileLink: thisFile=%s bazelWorkspaceLocation=%s",
-                thisFile.getLocation().toOSString(), bazelWorkspaceLocation.toOSString()));
+            LOG.info("createFileLink: thisFile={} bazelWorkspaceLocation={}", thisFile.getLocation().toOSString(),
+                bazelWorkspaceLocation.toOSString());
             thisFile.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);
@@ -275,8 +275,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     public void createFolderLink(IFolder thisFolder, IPath bazelWorkspaceLocation, int updateFlags,
             IProgressMonitor monitor) {
         try {
-            Activator.getDefault().logInfo(String.format("createFolderLink: thisFolder=%s bazelWorkspaceLocation=%s",
-                thisFolder.getLocation().toOSString(), bazelWorkspaceLocation.toOSString()));
+            LOG.info("createFolderLink: thisFolder={} bazelWorkspaceLocation={}", thisFolder.getLocation().toOSString(),
+                bazelWorkspaceLocation.toOSString());
             thisFolder.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);

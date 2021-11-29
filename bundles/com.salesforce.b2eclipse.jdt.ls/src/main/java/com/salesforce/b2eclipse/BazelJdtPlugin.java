@@ -36,27 +36,27 @@
 package com.salesforce.b2eclipse;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
+import org.eclipse.jdt.ls.core.internal.handlers.MapFlattener;
+import org.eclipse.jdt.ls.core.internal.preferences.IPreferencesChangeListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.prefs.Preferences;
 
-import com.google.common.base.Throwables;
-import com.salesforce.bazel.eclipse.BazelNature;
+import com.salesforce.b2eclipse.managers.B2EPreferncesManager;
 import com.salesforce.bazel.eclipse.component.BazelAspectLocationComponentFacade;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
 import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
+import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade;
+import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade.LogLevel;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
@@ -66,18 +66,18 @@ import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory;
 import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
 import com.salesforce.bazel.sdk.init.JvmRuleInit;
-import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
  */
+@SuppressWarnings("restriction")
 public class BazelJdtPlugin extends Plugin {
-    private static BundleContext context;
 
     // The plug-in ID
     public static final String PLUGIN_ID = "com.salesforce.b2eclipse.jdt.ls"; //$NON-NLS-1$
+    private static BazelJdtPlugin plugin;
 
     // GLOBAL COLLABORATORS
     // TODO move the collaborators to some other place, perhaps a dedicated static context object
@@ -97,6 +97,8 @@ public class BazelJdtPlugin extends Plugin {
 
     public static final String BAZEL_EXECUTABLE_DEFAULT_PATH = "/usr/local/bin/bazel";
 
+    private IPreferencesChangeListener preferencesChangeListener;
+
     // LIFECYCLE
 
     /**
@@ -104,6 +106,10 @@ public class BazelJdtPlugin extends Plugin {
      */
     public BazelJdtPlugin() {
 
+    }
+
+    public static BazelJdtPlugin getDefault() {
+        return plugin;
     }
 
     /*
@@ -114,7 +120,12 @@ public class BazelJdtPlugin extends Plugin {
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
 
-        BazelJdtPlugin.context = bundleContext;
+        plugin = this;
+
+        preferencesChangeListener = (newPrefs, oldPrefs) -> setLogLevel();
+        JavaLanguageServerPlugin.getPreferencesManager().addPreferencesChangeListener(preferencesChangeListener);
+
+        initLoggerFacade();
 
         BazelAspectLocation aspectLocation = BazelAspectLocationComponentFacade.getInstance().getComponent();
 
@@ -131,6 +142,14 @@ public class BazelJdtPlugin extends Plugin {
             ProjectManagerComponentFacade.getInstance().getComponent());
     }
 
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        if (Objects.nonNull(preferencesChangeListener)) {
+            JavaLanguageServerPlugin.getPreferencesManager().removePreferencesChangeListener(preferencesChangeListener);
+        }
+        super.stop(context);
+    }
+
     /**
      * This is the inner entrypoint where the initialization really begins. Both the real activation entrypoint (when
      * running in Eclipse, seen above) and the mocking framework call in here. When running for real, the passed
@@ -139,7 +158,8 @@ public class BazelJdtPlugin extends Plugin {
     public static void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
             CommandConsoleFactory consoleFactory, ResourceHelper rh, JavaCoreHelper javac,
             OperatingEnvironmentDetectionStrategy osEnv, BazelProjectManager projectMgr) {
-        EclipseBazelComponentFacade.getInstance().setCommandManager(aspectLocation, commandBuilder, consoleFactory, null);
+        EclipseBazelComponentFacade.getInstance().setCommandManager(aspectLocation, commandBuilder, consoleFactory,
+            null);
     }
 
     public static String getEnvBazelPath() {
@@ -186,47 +206,20 @@ public class BazelJdtPlugin extends Plugin {
         return JavaCoreHelperComponentFacade.getInstance().getComponent();
     }
 
-    public static void log(IStatus status) {
-        if (context != null) {
-            Platform.getLog(BazelJdtPlugin.context.getBundle()).log(status);
-        }
+    public Map<String, Object> getJdtLsPreferences() {
+        Map<String, Object> prefs = JavaLanguageServerPlugin.getPreferencesManager().getPreferences().asMap();
+        return Objects.nonNull(prefs) ? prefs : Collections.emptyMap();
     }
 
-    public static void log(CoreException e) {
-        log(e.getStatus());
+    private void initLoggerFacade() throws Exception {
+        EclipseLoggerFacade.install(getBundle());
+        setLogLevel();
     }
 
-    public static void logError(String message) {
-        if (context != null) {
-            log(new Status(IStatus.ERROR, context.getBundle().getSymbolicName(), message));
-        }
-    }
-
-    public static void logInfo(String message) {
-        if (context != null) {
-            log(new Status(IStatus.INFO, context.getBundle().getSymbolicName(), message));
-        }
-    }
-
-    public static void logWarning(String message) {
-        if (context != null) {
-            log(new Status(IStatus.WARNING, context.getBundle().getSymbolicName(), message));
-        }
-    }
-
-    public static void logException(Throwable ex) {
-        if (context != null) {
-            String message = ex.getMessage();
-            if (message == null) {
-                message = Throwables.getStackTraceAsString(ex);
-            }
-            logException(message, ex);
-        }
-    }
-
-    public static void logException(String message, Throwable ex) {
-        if (context != null) {
-            log(new Status(IStatus.ERROR, context.getBundle().getSymbolicName(), message, ex));
-        }
+    private void setLogLevel() {
+        final Map<String, Object> jdtlsConfig = getJdtLsPreferences();
+        String level =
+                MapFlattener.getString(jdtlsConfig, B2EPreferncesManager.BJLS_LOG_LEVEL, LogLevel.INFO.getName());
+        EclipseLoggerFacade.setLevel(level);
     }
 }

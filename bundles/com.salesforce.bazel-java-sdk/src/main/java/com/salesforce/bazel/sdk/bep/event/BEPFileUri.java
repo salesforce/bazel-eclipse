@@ -36,6 +36,7 @@ package com.salesforce.bazel.sdk.bep.event;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * This class is meant to model the URI property, and provide some common helper functions for working with them.
  */
 public class BEPFileUri {
-    private static final LogHelper LOG = LogHelper.log(BEPFileUri.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     private final String id;
     private final String uriStr;

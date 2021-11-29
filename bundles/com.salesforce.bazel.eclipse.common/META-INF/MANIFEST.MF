@@ -13,6 +13,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.debug.core,
  org.eclipse.jdt.launching,
  org.apache.commons.lang3;bundle-version="3.1.0",
+ org.slf4j.api,
  com.salesforce.bazel-java-sdk
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
@@ -23,6 +24,7 @@ Export-Package: com.salesforce.bazel.eclipse,
  com.salesforce.bazel.eclipse.classpath,
  com.salesforce.bazel.eclipse.component,
  com.salesforce.bazel.eclipse.config,
+ com.salesforce.bazel.eclipse.logging,
  com.salesforce.bazel.eclipse.project,
  com.salesforce.bazel.eclipse.projectimport,
  com.salesforce.bazel.eclipse.projectimport.flow,

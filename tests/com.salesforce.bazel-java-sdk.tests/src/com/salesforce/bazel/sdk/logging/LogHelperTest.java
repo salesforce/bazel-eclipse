@@ -72,6 +72,9 @@ public class LogHelperTest {
         });
         LoggerFacade.setInstance(facade);
         subject.debug("test {}", 1);
+        assertNull(testEvent.get());
+        subject.setLevel(LoggerFacade.DEBUG);
+        subject.debug("test {}", 1);
         assertEquals("test {}", testEvent.get().message);
         assertEquals(getClass(), testEvent.get().from);
         assertNull(testEvent.get().exception);

@@ -33,6 +33,7 @@
  */
 package com.salesforce.bazel.sdk.command;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +46,7 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
  */
 public class BazelOutputParser {
     // TODO LOGGING TO stdout/err doesnt work here because the command runner output is redirected
-    private static final LogHelper LOG = LogHelper.log(BazelOutputParser.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     private static enum FailureType {
         BUILD_FILE, JAVA_FILE, UNKNOWN;

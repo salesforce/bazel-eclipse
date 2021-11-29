@@ -33,6 +33,7 @@
  */
 package com.salesforce.bazel.sdk.graph;
 
+import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -75,7 +76,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
  */
 public class InMemoryDependencyGraph extends BazelDependencyGraph {
 
-    private static final LogHelper LOG = LogHelper.log(InMemoryDependencyGraph.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     // lookup maps
 

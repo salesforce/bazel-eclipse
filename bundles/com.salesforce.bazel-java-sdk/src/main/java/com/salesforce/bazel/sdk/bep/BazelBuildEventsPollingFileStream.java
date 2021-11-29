@@ -34,6 +34,7 @@
 package com.salesforce.bazel.sdk.bep;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 
 import com.salesforce.bazel.sdk.bep.file.BEPMonitoredFile;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -57,7 +58,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * bep_test.json).
  */
 public class BazelBuildEventsPollingFileStream extends BazelBuildEventsFileStream {
-    private static final LogHelper LOG = LogHelper.log(BazelBuildEventsPollingFileStream.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     public int filePollerIntervalSeconds = 5;
     private FilePoller filePoller = null;

@@ -44,6 +44,10 @@ public final class B2EPreferncesManager {
      * Preference key to enable/disable bazel importer.
      */
     private static final String IMPORT_BAZEL_ENABLED = "java.import.bazel.enabled";
+    /**
+     * Preference key for log level.
+     */
+    public static final String BJLS_LOG_LEVEL = "java.bjls.log.level";
 
     private static volatile B2EPreferncesManager instance;
 

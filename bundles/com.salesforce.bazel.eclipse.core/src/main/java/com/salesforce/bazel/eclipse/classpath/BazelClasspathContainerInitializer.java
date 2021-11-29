@@ -36,6 +36,7 @@
 package com.salesforce.bazel.eclipse.classpath;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -67,7 +68,7 @@ import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 public class BazelClasspathContainerInitializer extends ClasspathContainerInitializer {
-    private static final LogHelper LOG = LogHelper.log(BazelClasspathContainerInitializer.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     private static final String CLASSPATH_CONTAINER_UPDATE_JOB_NAME = "BazelClasspathContainerUpdate";
 

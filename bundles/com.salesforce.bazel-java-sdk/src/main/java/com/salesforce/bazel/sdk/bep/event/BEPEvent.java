@@ -33,6 +33,7 @@
  */
 package com.salesforce.bazel.sdk.bep.event;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -53,7 +54,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * <a href="https://docs.bazel.build/versions/master/build-event-protocol.html">BEP Documentation</a>
  */
 public class BEPEvent {
-    private static final LogHelper LOG = LogHelper.log(BEPEvent.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     // Keeping the raw JSON string for each event can be helpful during debugging, but takes a lot
     // of memory, so this disabled by default

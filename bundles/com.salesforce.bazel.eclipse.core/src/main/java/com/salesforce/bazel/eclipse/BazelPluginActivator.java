@@ -48,6 +48,7 @@ import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
+import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade;
 import com.salesforce.bazel.eclipse.project.BazelPluginResourceChangeListener;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreResourceHelper;
@@ -139,8 +140,8 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      */
     @Override
     public void start(BundleContext context) throws Exception {
-        EclipseLoggerFacade.install(context.getBundle());
         super.start(context);
+        EclipseLoggerFacade.install(getBundle());
         BazelAspectLocation aspectLocation = BazelAspectLocationComponentFacade.getInstance().getComponent();
         CommandConsoleFactory consoleFactory = new EclipseConsole();
         CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
@@ -184,9 +185,9 @@ public class BazelPluginActivator extends AbstractUIPlugin {
 
         // Get the bazel executable path from the settings
         String bazelPath = configurationManager.getBazelExecutablePath();
-        File bazelPathFile = new File(bazelPath);
 
-        EclipseBazelComponentFacade.getInstance().setCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelPath);
+        EclipseBazelComponentFacade.getInstance().setCommandManager(aspectLocation, commandBuilder, consoleFactory,
+            bazelPath);
 
         // setup a listener, if the user changes the path to Bazel executable notify the command manager
         configurationManager.setBazelExecutablePathListener(getBazelCommandManager());

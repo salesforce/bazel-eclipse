@@ -35,6 +35,7 @@ package com.salesforce.bazel.sdk.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -49,7 +50,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  */
 public final class BazelDirectoryStructureUtil {
 
-    private static final LogHelper LOG = LogHelper.log(BazelDirectoryStructureUtil.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     public static boolean isBazelPackage(File repositoryRoot, String possiblePackagePath) {
         Path rootPath = repositoryRoot.toPath();

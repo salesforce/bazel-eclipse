@@ -35,6 +35,7 @@ package com.salesforce.bazel.sdk.path;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -53,7 +54,7 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Constants and utils for file system paths.
  */
 public final class FSPathHelper {
-    private static final LogHelper LOG = LogHelper.log(FSPathHelper.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     // Slash character for unix file paths
     public static final String UNIX_SLASH = "/";

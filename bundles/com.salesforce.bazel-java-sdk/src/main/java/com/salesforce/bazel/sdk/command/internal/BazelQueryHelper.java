@@ -25,6 +25,7 @@ package com.salesforce.bazel.sdk.command.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -50,7 +51,7 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * should be surfaced as a public class
  */
 public class BazelQueryHelper {
-    private static final LogHelper LOG = LogHelper.log(BazelQueryHelper.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     /**
      * Underlying command invoker which takes built Command objects and executes them.

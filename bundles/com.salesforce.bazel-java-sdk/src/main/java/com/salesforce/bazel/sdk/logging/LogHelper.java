@@ -61,42 +61,46 @@ public final class LogHelper {
      * Levels: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
      */
     public int getLevel() {
-        return getFacade().level;
+        return getFacade().getLevel();
+    }
+
+    public void setLevel(int level) {
+        getFacade().setLevel(level);
     }
 
     /**
      * Log an error message. Args are inserted into the message using the {} pattern.
      */
     public void error(String message, Object... args) {
-        getFacade().error(from, message, args);
+        getFacade().log(LoggerFacade.ERROR, from, message, args);
     }
 
     /**
      * Log an error message. Args are inserted into the message using the {} pattern.
      */
     public void error(String message, Throwable exception, Object... args) {
-        getFacade().error(from, message, exception, args);
+        getFacade().log(LoggerFacade.ERROR, from, message, exception, args);
     }
 
     /**
      * Log a warning message. Args are inserted into the message using the {} pattern.
      */
     public void warn(String message, Object... args) {
-        getFacade().warn(from, message, args);
+        getFacade().log(LoggerFacade.WARN, from, message, args);
     }
 
     /**
      * Log an info message. Args are inserted into the message using the {} pattern.
      */
     public void info(String message, Object... args) {
-        getFacade().info(from, message, args);
+        getFacade().log(LoggerFacade.INFO, from, message, args);
     }
 
     /**
      * Log a debug message. Args are inserted into the message using the {} pattern.
      */
     public void debug(String message, Object... args) {
-        getFacade().debug(from, message, args);
+        getFacade().log(LoggerFacade.DEBUG, from, message, args);
     }
 
     /**
@@ -106,7 +110,7 @@ public final class LogHelper {
         getFacade().log(level, from, message, args);
     }
 
-    private LoggerFacade getFacade() {
+    private static LoggerFacade getFacade() {
         return LoggerFacade.instance();
     }
 }

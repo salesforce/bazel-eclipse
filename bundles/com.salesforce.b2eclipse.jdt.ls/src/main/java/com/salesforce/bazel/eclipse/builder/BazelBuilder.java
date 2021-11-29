@@ -36,6 +36,7 @@
 package com.salesforce.bazel.eclipse.builder;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,6 +68,7 @@ import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -86,12 +88,10 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     public static final String BUILDER_NAME = "com.salesforce.bazel.eclipse.builder";
 
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+
     @Override
     protected IProject[] build(int kind, Map<String, String> args, IProgressMonitor monitor) throws CoreException {
-//        if (importInProgress()) {
-//            // during import we run bazel build through a different code path
-//            return null;
-//        }
         WorkProgressMonitor progressMonitor = WorkProgressMonitor.NOOP;
         IProject project = getProject();
         progressMonitor.beginTask("Bazel build", 1);
@@ -124,9 +124,9 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 maybeUpdateClasspathContainer(project, javaCoreHelper);
             }
         } catch (BazelCommandLineToolConfigurationException e) {
-            BazelJdtPlugin.logError("Bazel not found: " + e.getMessage());
+            LOG.error("Bazel executable not found in {}", e);
         } catch (Exception e) {
-        	BazelJdtPlugin.logError("Failed to build: "  + e.getMessage());
+            LOG.error("Failed to build", e);
         } finally {
             progressMonitor.done();
         }
@@ -144,8 +144,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
                 ClasspathContainerInitializer cpInit =
                         JavaCore.getClasspathContainerInitializer(IClasspathContainerConstants.CONTAINER_NAME);
-                cpInit.requestClasspathContainerUpdate(Path.fromPortableString(IClasspathContainerConstants.CONTAINER_NAME),
-                    javaProject, null);
+                cpInit.requestClasspathContainerUpdate(
+                    Path.fromPortableString(IClasspathContainerConstants.CONTAINER_NAME), javaProject, null);
             }
         }
     }
@@ -165,10 +165,6 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             super.clean(monitor);
         } else {
             bazelWorkspaceCmdRunner.flushAspectInfoCache();
-
-            // TODO make a pref to enable a bazel clean, but in almost any circumstance 'bazel clean' is not correct
-            // https://github.com/salesforce/bazel-eclipse/issues/185 // $SLASH_OK url
-            // bazelWorkspaceCmdRunner.runBazelClean(null);
         }
 
         BazelClasspathContainer.clean();
@@ -177,7 +173,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects,
             WorkProgressMonitor progressMonitor, IProject rootProject, IProgressMonitor monitor)
-                    throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         Set<String> bazelTargets = new TreeSet<>();
         BazelProjectManager bazelProjectManager = BazelJdtPlugin.getBazelProjectManager();
         List<BazelProject> bazelProjects = new ArrayList<>();
@@ -213,9 +209,4 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         }
         return buildFlags;
     }
-
-//    private boolean importInProgress() {
-//        // what's the right way to do this?
-//        return ProjectImporterFactory.importInProgress.get();
-//    }
 }

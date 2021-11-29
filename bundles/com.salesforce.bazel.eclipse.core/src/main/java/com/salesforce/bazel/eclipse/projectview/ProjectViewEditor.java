@@ -34,6 +34,7 @@
 package com.salesforce.bazel.eclipse.projectview;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -78,7 +79,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
     private static final String CONFIRMATION_TEXT =
             "Update the Bazel Project(s) in your Workspace to match the content of this file?";
 
-    private static final LogHelper LOG = LogHelper.log(ProjectViewEditor.class);
+    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
 
     private static final String PROJECT_VIEW_RESOURCE = File.separator + ProjectViewConstants.PROJECT_VIEW_FILE_NAME;
 
