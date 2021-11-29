@@ -1,7 +1,6 @@
 package com.salesforce.bazel.eclipse.component;
 
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -17,7 +16,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
 
 public class EclipseBazelComponentFacade {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(EclipseBazelComponentFacade.class);
 
     private static EclipseBazelComponentFacade instance;
 

@@ -33,7 +33,6 @@
  */
 package com.salesforce.bazel.eclipse.wizard;
 
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
@@ -53,7 +52,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
  * Imports projects with a Progress Dialog. This is used by the Import Wizard and the ProjectView machinery.
  */
 public class BazelProjectImporter {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelProjectImporter.class);
 
     public static void run(BazelPackageLocation workspaceRootProject,
             List<BazelPackageLocation> bazelPackagesToImport) {

@@ -34,7 +34,6 @@
 package com.salesforce.bazel.sdk.aspect.jvm;
 
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.json.simple.JSONObject;
@@ -48,7 +47,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * Provider that knows how to construct AspectTargetInfo objects for JVM rule kinds. (e.g. java_library)
  */
 public class JVMAspectTargetInfoFactoryProvider implements AspectTargetInfoFactoryProvider {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(JVMAspectTargetInfoFactoryProvider.class);
 
     @Override
     public AspectTargetInfo buildAspectTargetInfo(File aspectDataFile, JSONObject jsonObject, JSONParser jsonParser,

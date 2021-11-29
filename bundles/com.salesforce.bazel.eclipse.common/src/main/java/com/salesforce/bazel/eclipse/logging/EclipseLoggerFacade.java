@@ -67,6 +67,8 @@ public class EclipseLoggerFacade extends LoggerFacade {
     private static BufferedWriter befLogWriter = null;
     private static SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy-HH:mm:ss");
 
+    private static boolean extendedLog = true;
+
     public static enum LogLevel {
         DEBUG(IStatus.INFO, LoggerFacade.DEBUG, "DEBUG"),
         INFO(IStatus.INFO, LoggerFacade.INFO, "INFO"),
@@ -108,6 +110,14 @@ public class EclipseLoggerFacade extends LoggerFacade {
     public static void setLevel(String name) {
         LogLevel logLevel = LogLevel.fromName(name);
         setLevel(logLevel.getLevel());
+    }
+
+    public static boolean isExtendedLog() {
+        return extendedLog;
+    }
+
+    public static void setExtendedLog(boolean extendedLog) {
+        EclipseLoggerFacade.extendedLog = extendedLog;
     }
 
     /**
@@ -177,7 +187,7 @@ public class EclipseLoggerFacade extends LoggerFacade {
 
     private static synchronized void writeTmpLog(String message) {
         try {
-            if (befLogWriter != null) {
+            if (befLogWriter != null && EclipseLoggerFacade.isExtendedLog()) {
                 String date = formatter.format(new Date());
                 befLogWriter.write(date + " " + message + "\n");
                 befLogWriter.flush();
@@ -185,7 +195,6 @@ public class EclipseLoggerFacade extends LoggerFacade {
         } catch (Exception anyE) {
             // out of disk space, someone deleted /tmp/bef.log, etc
         }
-
     }
 
     //TODO

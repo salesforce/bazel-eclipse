@@ -23,15 +23,13 @@
  */
 package com.salesforce.bazel.sdk.index.model;
 
-import java.lang.invoke.MethodHandles;
-
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Holder object for a type: package name + class name
  */
 public class ClassIdentifier {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(ClassIdentifier.class);
 
     public String packageName;
     public String classname;

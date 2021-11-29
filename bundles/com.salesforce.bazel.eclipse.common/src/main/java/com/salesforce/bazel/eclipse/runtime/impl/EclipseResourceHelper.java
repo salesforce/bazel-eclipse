@@ -24,7 +24,6 @@
 package com.salesforce.bazel.eclipse.runtime.impl;
 
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,7 +57,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 public class EclipseResourceHelper implements ResourceHelper {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(EclipseResourceHelper.class);
 
     /**
      * Returns the IProject reference for the named project.

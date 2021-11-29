@@ -24,7 +24,6 @@
 package com.salesforce.bazel.sdk.lang.jvm;
 
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -42,7 +41,7 @@ import com.salesforce.bazel.sdk.project.structure.ProjectStructureStrategy;
  * workspaces because of this.
  */
 public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(MavenProjectStructureStrategy.class);
 
     @Override
     public ProjectStructure doStructureAnalysis(BazelWorkspace bazelWorkspace, BazelPackageLocation packageNode,

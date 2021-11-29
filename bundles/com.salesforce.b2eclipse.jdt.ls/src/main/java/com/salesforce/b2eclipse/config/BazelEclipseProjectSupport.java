@@ -46,6 +46,7 @@ import org.osgi.service.prefs.Preferences;
 import com.google.common.collect.ImmutableList;
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.bazel.eclipse.BazelNature;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Support class that provides interaction methods for existing Eclipse Bazel projects.
@@ -53,6 +54,8 @@ import com.salesforce.bazel.eclipse.BazelNature;
 public final class BazelEclipseProjectSupport {
     static final String WORKSPACE_ROOT_PROPERTY = "bazel.workspace.root";
     static final String BUILDFLAG_PROPERTY_PREFIX = "bazel.build.flag";
+
+    private static final LogHelper LOG = LogHelper.log(BazelEclipseProjectSupport.class);
 
     private BazelEclipseProjectSupport() {
 
@@ -84,14 +87,16 @@ public final class BazelEclipseProjectSupport {
             listBuilder.add("//...");
         }
 
-        return listBuilder.build();
+        List<String> targets = listBuilder.build();
+        LOG.debug("Bazel targets {} for {} ", targets, eclipseProject.getName());
+        return targets;
     }
 
     /**
      * Returns all Java Projects that have a Bazel Nature.
      */
     public static IJavaProject[] getAllJavaBazelProjects() {
-    	// TODO: not sure if we need true flag
+        // TODO: not sure if we need true flag
         IJavaProject[] javaProjects = BazelJdtPlugin.getJavaCoreHelper().getAllBazelJavaProjects(true);
         List<IJavaProject> bazelProjects = new ArrayList<>(javaProjects.length);
         for (IJavaProject project : javaProjects) {
@@ -99,7 +104,12 @@ public final class BazelEclipseProjectSupport {
                 bazelProjects.add(project);
             }
         }
-        return bazelProjects.toArray(new IJavaProject[bazelProjects.size()]);
+        IJavaProject[] projects = bazelProjects.toArray(new IJavaProject[bazelProjects.size()]);
+        if (LOG.isDebugLevel()) {
+            LOG.debug("Bazel Java projects {} ", bazelProjects.stream().map(IJavaProject::getElementName).toArray());
+        }
+        
+        return projects;
     }
 
     /**
@@ -116,7 +126,11 @@ public final class BazelEclipseProjectSupport {
                 listBuilder.add(eclipseProjectNode.get(property, ""));
             }
         }
-        return listBuilder.build();
+        List<String> buildFlags = listBuilder.build();
+
+        LOG.debug("Bazel build flags {} ", buildFlags);
+
+        return buildFlags;
     }
 
     // HELPERS

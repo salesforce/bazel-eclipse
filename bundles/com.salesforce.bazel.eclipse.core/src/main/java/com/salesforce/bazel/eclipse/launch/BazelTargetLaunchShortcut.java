@@ -23,7 +23,6 @@
  */
 package com.salesforce.bazel.eclipse.launch;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -58,7 +57,7 @@ import com.salesforce.bazel.sdk.model.BazelTargetKind;
  * Supports the Run or Debug operations for Java classes with a main method.
  */
 public class BazelTargetLaunchShortcut implements ILaunchShortcut {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelTargetLaunchShortcut.class);
 
     private final BazelLaunchConfigurationSupport support = new BazelLaunchConfigurationSupport();
 

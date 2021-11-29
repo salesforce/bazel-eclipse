@@ -37,7 +37,6 @@
 package com.salesforce.bazel.sdk.command;
 
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -50,7 +49,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * API for calling bazel commands.
  */
 public class BazelCommandManager {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelCommandManager.class);
 
     private final BazelAspectLocation aspectLocation;
     private final CommandBuilder commandBuilder;

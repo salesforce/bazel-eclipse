@@ -36,7 +36,6 @@
 package com.salesforce.bazel.eclipse.builder;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -88,7 +87,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     public static final String BUILDER_NAME = "com.salesforce.bazel.eclipse.builder";
 
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelBuilder.class);
 
     @Override
     protected IProject[] build(int kind, Map<String, String> args, IProgressMonitor monitor) throws CoreException {
@@ -186,6 +185,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             bazelTargets.addAll(activatedTargets.getConfiguredTargets());
             bazelProjects.add(bazelProject);
         }
+        
+        LOG.debug("Bazel build targets {}", bazelTargets);
 
         if (bazelTargets.isEmpty()) {
             return true;
@@ -194,7 +195,12 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, bazelBuildFlags, progressMonitor);
             // publish errors (even if no errors, this must run so that previous errors are cleared)
             Map<BazelLabel, BazelProject> labelToProject = bazelProjectManager.getBazelLabelToProjectMap(bazelProjects);
-            return errors.isEmpty();
+            
+            boolean successful = errors.isEmpty();
+            if( ! successful ) {
+                LOG.debug("Bazel build errors", errors);
+            }
+            return successful;
         }
     }
 

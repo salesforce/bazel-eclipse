@@ -24,7 +24,6 @@
 package com.salesforce.bazel.sdk.lang.jvm;
 
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 import java.util.Set;
 
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -45,7 +44,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * BazelClasspathContainer that uses the Bazel BUILD file.
  */
 public class DynamicBazelJvmClasspath extends BazelJvmClasspath {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(DynamicBazelJvmClasspath.class);
 
     protected BazelJvmIndexClasspath classIndex;
 

@@ -36,7 +36,6 @@
 package com.salesforce.bazel.eclipse.classpath;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.IProject;
@@ -56,7 +55,7 @@ import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationExcepti
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class BazelClasspathContainerInitializer extends ClasspathContainerInitializer {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelClasspathContainerInitializer.class);
 
     // error state
     private static AtomicBoolean isCorrupt = new AtomicBoolean(false);

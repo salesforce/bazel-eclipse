@@ -61,11 +61,27 @@ public final class LogHelper {
      * Levels: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
      */
     public int getLevel() {
-        return getFacade().getLevel();
+        return LoggerFacade.getLevel();
     }
 
     public void setLevel(int level) {
-        getFacade().setLevel(level);
+        LoggerFacade.setLevel(level);
+    }
+
+    public boolean isDebugLevel() {
+        return LoggerFacade.DEBUG == LoggerFacade.getLevel();
+    }
+
+    public boolean isInfoLevel() {
+        return LoggerFacade.INFO == LoggerFacade.getLevel();
+    }
+
+    public boolean isWarnLevel() {
+        return LoggerFacade.WARN == LoggerFacade.getLevel();
+    }
+
+    public boolean isErrorLevel() {
+        return LoggerFacade.ERROR == LoggerFacade.getLevel();
     }
 
     /**

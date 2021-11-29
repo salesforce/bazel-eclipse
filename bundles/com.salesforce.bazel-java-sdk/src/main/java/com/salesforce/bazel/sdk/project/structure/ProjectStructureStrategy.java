@@ -23,7 +23,6 @@
  */
 package com.salesforce.bazel.sdk.project.structure;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +36,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * Pluggable strategy for establishing the basic structure of a project. Used early during import.
  */
 public abstract class ProjectStructureStrategy {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(MavenProjectStructureStrategy.class);
 
     // STATIC UTILITIES
 

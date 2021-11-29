@@ -34,7 +34,6 @@
 package com.salesforce.bazel.eclipse.projectview;
 
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,7 +46,7 @@ import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
 final class ProjectViewProcessor {
 
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(ProjectViewProcessor.class);
 
     /**
      * Expands parent directories in the specified ProjectView to concrete Bazel Packages.

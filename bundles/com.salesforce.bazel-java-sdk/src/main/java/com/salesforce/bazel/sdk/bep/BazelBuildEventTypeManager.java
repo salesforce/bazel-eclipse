@@ -33,7 +33,6 @@
  */
 package com.salesforce.bazel.sdk.bep;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -59,7 +58,7 @@ import com.salesforce.bazel.sdk.bep.event.BEPUnstructuredCommandLineEvent;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class BazelBuildEventTypeManager {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelBuildEventTypeManager.class);
 
     public static final String EVENTTYPE_IGNORED = "ignored";
 

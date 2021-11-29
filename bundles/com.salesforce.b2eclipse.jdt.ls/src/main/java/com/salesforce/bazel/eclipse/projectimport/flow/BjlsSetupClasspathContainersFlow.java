@@ -1,6 +1,5 @@
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +29,7 @@ import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 
 public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFlow {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BjlsSetupClasspathContainersFlow.class);
 
     private static final String TEST_BIN_FOLDER = "/testbin";
 

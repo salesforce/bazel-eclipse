@@ -25,7 +25,6 @@ package com.salesforce.bazel.sdk.index.source;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,7 +38,7 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
  * Crawler that descends into nested directories of source files and adds found files to the index.
  */
 public class SourceFileCrawler {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(SourceFileCrawler.class);
 
     protected final CodeIndex index;
     protected final String artifactMarkerFileName;

@@ -39,9 +39,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
@@ -55,11 +57,13 @@ import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationExcepti
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.DynamicBazelJvmClasspath;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
+    private static final LogHelper LOG = LogHelper.log(BazelClasspathContainer.class);
 
     protected final BazelJvmClasspath bazelClasspath;
     private CallSource lastCallSource = CallSource.UNDEFINED;
@@ -105,6 +109,11 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     @Override
     public IClasspathEntry[] getClasspathEntries() {
         CallSource currentCallSource = getCallSource(Thread.currentThread().getStackTrace());
+
+        if (LOG.isDebugLevel()) {
+            LOG.debug("Call source for classpath is {}. Last call source was {}", currentCallSource.name(),
+                this.lastCallSource.name());
+        }
         if (ObjectUtils.notEqual(currentCallSource, CallSource.UNDEFINED)) {
             lastCallSource = currentCallSource;
         }
@@ -117,6 +126,11 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
         if (CallSource.RUN_DEBUG.equals(lastCallSource)) {
             classpathEntries =
                     Arrays.stream(classpathEntries).filter(isNormalClasspathEntry).toArray(IClasspathEntry[]::new);
+        }
+
+        if (LOG.isDebugLevel()) {
+            LOG.debug("Classpath entries are: {}", Objects.isNull(classpathEntries) ? "[]"
+                    : Arrays.stream(classpathEntries).map(IClasspathEntry::getPath).map(IPath::toOSString).toArray());
         }
         return classpathEntries;
     }

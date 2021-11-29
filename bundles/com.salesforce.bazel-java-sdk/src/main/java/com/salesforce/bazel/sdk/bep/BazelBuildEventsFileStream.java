@@ -34,7 +34,6 @@
 package com.salesforce.bazel.sdk.bep;
 
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +61,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * bep_test.json).
  */
 public class BazelBuildEventsFileStream extends BazelBuildEventStream {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelBuildEventsFileStream.class);
 
     protected final List<BEPMonitoredFile> monitoredFiles = new ArrayList<>();
 

@@ -36,7 +36,6 @@
 package com.salesforce.bazel.eclipse.builder;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -90,7 +89,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
     public static final String BUILDER_NAME = "com.salesforce.bazel.eclipse.builder";
 
     private static final AtomicBoolean REGISTERED_EL_CHANGE_LISTENER = new AtomicBoolean(false);
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelBuilder.class);
 
     // we only need one instance of this one
     private static JDTWarningPublisher warningPublisher = new JDTWarningPublisher();

@@ -23,7 +23,6 @@
  */
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 
 import org.eclipse.core.resources.ICommand;
@@ -40,7 +39,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  */
 public class SetupProjectBuildersFlow implements ImportFlow {
 
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(SetupProjectBuildersFlow.class);
 
     @Override
     public String getProgressText() {

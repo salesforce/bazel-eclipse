@@ -25,7 +25,6 @@ package com.salesforce.bazel.sdk.index.jvm.jar;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.lang.invoke.MethodHandles;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -43,7 +42,7 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
  * Crawler that descends into nested directories of jar files and adds found files to the index.
  */
 public class JavaJarCrawler {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(JavaJarCrawler.class);
 
     private BazelWorkspace bazelWorkspace;
     private final JvmCodeIndex index;

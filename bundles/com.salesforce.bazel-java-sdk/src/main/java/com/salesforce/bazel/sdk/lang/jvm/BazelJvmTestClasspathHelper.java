@@ -35,7 +35,6 @@ package com.salesforce.bazel.sdk.lang.jvm;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,7 +57,7 @@ import com.salesforce.bazel.sdk.project.BazelProjectTargets;
  * invoking that test via the java executable.
  */
 public class BazelJvmTestClasspathHelper {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelJvmTestClasspathHelper.class);
 
     static final String BAZEL_DEPLOY_PARAMS_SUFFIX = "_deploy.jar-0.params";
     static final String BAZEL_SRC_DEPLOY_PARAMS_SUFFIX = "_deploy-src.jar-0.params";

@@ -1,6 +1,5 @@
 package com.salesforce.b2eclipse.managers;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -42,7 +41,7 @@ public class BazelBuildSupport implements IBuildSupport {
 
     private static List<String> calculatedExcludedFilePatterns = new ArrayList<>();
 
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelBuildSupport.class);
 
     @Override
     public boolean applies(IProject project) {
@@ -75,6 +74,7 @@ public class BazelBuildSupport implements IBuildSupport {
     }
 
     protected void updateInternal(IProject project, boolean force, IProgressMonitor monitor) throws CoreException {
+        LOG.debug("updateInternal {}", project.getName());
 
         Assert.isTrue(applies(project));
 

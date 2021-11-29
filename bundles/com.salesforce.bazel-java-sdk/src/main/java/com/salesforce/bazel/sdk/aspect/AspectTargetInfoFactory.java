@@ -36,7 +36,6 @@ package com.salesforce.bazel.sdk.aspect;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +54,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  */
 public class AspectTargetInfoFactory {
 
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(AspectTargetInfoFactory.class);
     public static final String ASPECT_FILENAME_SUFFIX = ".bzljavasdk-data.json";
 
     protected static List<AspectTargetInfoFactoryProvider> providers = new ArrayList<>();

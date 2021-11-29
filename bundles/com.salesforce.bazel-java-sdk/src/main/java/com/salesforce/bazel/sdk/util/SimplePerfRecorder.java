@@ -33,14 +33,13 @@
  */
 package com.salesforce.bazel.sdk.util;
 
-import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class SimplePerfRecorder {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(SimplePerfRecorder.class);
 
     public static Map<String, Long> elapsedTimes = new LinkedHashMap<>();
     public static Map<String, Integer> counts = new LinkedHashMap<>();

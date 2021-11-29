@@ -49,7 +49,7 @@ import org.eclipse.jdt.ls.core.internal.preferences.IPreferencesChangeListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.prefs.Preferences;
 
-import com.salesforce.b2eclipse.managers.B2EPreferncesManager;
+import com.salesforce.b2eclipse.config.IPreferenceConfiguration;
 import com.salesforce.bazel.eclipse.component.BazelAspectLocationComponentFacade;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
@@ -122,7 +122,7 @@ public class BazelJdtPlugin extends Plugin {
 
         plugin = this;
 
-        preferencesChangeListener = (newPrefs, oldPrefs) -> setLogLevel();
+        preferencesChangeListener = (newPrefs, oldPrefs) -> configureLogging();
         JavaLanguageServerPlugin.getPreferencesManager().addPreferencesChangeListener(preferencesChangeListener);
 
         initLoggerFacade();
@@ -213,13 +213,15 @@ public class BazelJdtPlugin extends Plugin {
 
     private void initLoggerFacade() throws Exception {
         EclipseLoggerFacade.install(getBundle());
-        setLogLevel();
+        configureLogging();
     }
 
-    private void setLogLevel() {
+    private void configureLogging() {
         final Map<String, Object> jdtlsConfig = getJdtLsPreferences();
         String level =
-                MapFlattener.getString(jdtlsConfig, B2EPreferncesManager.BJLS_LOG_LEVEL, LogLevel.INFO.getName());
+                MapFlattener.getString(jdtlsConfig, IPreferenceConfiguration.BJLS_LOG_LEVEL, LogLevel.INFO.getName());
+        boolean extended = MapFlattener.getBoolean(jdtlsConfig, IPreferenceConfiguration.BJLS_LOG_EXTENDED, true);
         EclipseLoggerFacade.setLevel(level);
+        EclipseLoggerFacade.setExtendedLog(extended);
     }
 }

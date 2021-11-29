@@ -25,7 +25,6 @@ package com.salesforce.bazel.sdk.command;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +41,7 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Launch Configs).
  */
 public class BazelLauncherBuilder {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelLauncherBuilder.class);
 
     private final BazelWorkspaceCommandRunner bazelCommandRunner;
     private final CommandBuilder commandBuilder;

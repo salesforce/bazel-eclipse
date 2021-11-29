@@ -24,7 +24,6 @@
 package com.salesforce.bazel.sdk.project.structure;
 
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -47,7 +46,7 @@ import com.salesforce.bazel.sdk.path.SplitSourcePath;
  * strategy, so is used as the last resort.
  */
 public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelQueryProjectStructureStrategy.class);
 
     /**
      * Test source files will generally appear in a directory hierarchy that contains a directory named "test" or

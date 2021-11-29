@@ -33,7 +33,6 @@
  */
 package com.salesforce.bazel.sdk.workspace;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.aspect.AspectDependencyGraphFactory;
@@ -46,7 +45,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
  * Orders modules for import such that upstream dependencies are imported before downstream dependencies.
  */
 public class ProjectOrderResolverImpl implements ProjectOrderResolver {
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(ProjectOrderResolverImpl.class);
 
     public ProjectOrderResolverImpl() {}
 

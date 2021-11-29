@@ -33,7 +33,6 @@
  */
 package com.salesforce.bazel.eclipse.builder;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -57,7 +56,7 @@ class BazelErrorPublisher {
 
     static final String UNKNOWN_PROJECT_ERROR_MSG_PREFIX = "ERROR IN UNKNOWN PROJECT: ";
 
-    private static final LogHelper LOG = LogHelper.log(MethodHandles.lookup().lookupClass());
+    private static final LogHelper LOG = LogHelper.log(BazelErrorPublisher.class);
 
     private final IProject rootProject;
     private final Collection<IProject> projects;
