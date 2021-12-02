@@ -4,11 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import org.eclipse.core.runtime.Platform;
 
-import com.salesforce.bazel.eclipse.activator.Activator;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class BazelCompilerUtils {
@@ -22,6 +23,8 @@ public class BazelCompilerUtils {
 
     public static final String BAZEL_EXECUTABLE_DEFAULT_PATH = "/usr/local/bin/bazel";
 
+    private static final LogHelper LOG = LogHelper.log(BazelCompilerUtils.class);
+
     public static String getBazelPath() {
         String path = getEnvBazelPath();
 
@@ -31,9 +34,14 @@ public class BazelCompilerUtils {
 
         if (path == null) {
             path = BAZEL_EXECUTABLE_DEFAULT_PATH;
-            Activator.getDefault().logWarning("Bazel path has not been found, was used standart path " + path);
+            LOG.warn("Bazel path has not been found, was used standart path {}", path);
         }
 
+        if (Objects.isNull(path)) {
+            LOG.error("Bazel executable path has not been found");
+        } else {
+            LOG.info("Bazel executable path is {}", path);
+        }
         return path;
     }
 
@@ -47,7 +55,7 @@ public class BazelCompilerUtils {
     public static OperatingEnvironmentDetectionStrategy getOperatingEnvironmentDetectionStrategy() {
         return EclipseBazelComponentFacade.getInstance().getOsDetectionStrategy();
     }
-    
+
     public static String getOSBazelPath() {
         String path = null;
         String command = null;
@@ -67,6 +75,5 @@ public class BazelCompilerUtils {
 
         return path;
     }
-
 
 }

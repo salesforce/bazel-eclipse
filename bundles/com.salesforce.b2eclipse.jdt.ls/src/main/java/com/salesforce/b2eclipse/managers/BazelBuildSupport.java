@@ -22,11 +22,11 @@ import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 import org.eclipse.jdt.ls.core.internal.managers.IBuildSupport;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager.CHANGE_TYPE;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 @SuppressWarnings("restriction")
 public class BazelBuildSupport implements IBuildSupport {
@@ -40,6 +40,8 @@ public class BazelBuildSupport implements IBuildSupport {
     private static final List<String> EXCLUDED_FILE_PATTERN = Arrays.asList("/bazel-*/**");
 
     private static List<String> calculatedExcludedFilePatterns = new ArrayList<>();
+
+    private static final LogHelper LOG = LogHelper.log(BazelBuildSupport.class);
 
     @Override
     public boolean applies(IProject project) {
@@ -72,6 +74,7 @@ public class BazelBuildSupport implements IBuildSupport {
     }
 
     protected void updateInternal(IProject project, boolean force, IProgressMonitor monitor) throws CoreException {
+        LOG.debug("updateInternal {}", project.getName());
 
         Assert.isTrue(applies(project));
 
@@ -147,7 +150,7 @@ public class BazelBuildSupport implements IBuildSupport {
                 IPath projectLocation = getProjectLocation(project);
 
                 if (ResourceUtils.isContainedIn(projectLocation, rootPaths)) {
-                    BazelJdtPlugin.logInfo(project.getName() + " is contained in the root path, it's a valid project");
+                    LOG.info(project.getName() + " is contained in the root path, it's a valid project");
                 } else {
                     try {
                         project.delete(false, true, monitor);

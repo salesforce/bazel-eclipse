@@ -65,7 +65,7 @@ public abstract class LoggerFacade {
     /**
      * Logging level, default is INFO.
      */
-    public int level = INFO;
+    private static int level = INFO;
 
     /**
      * Default instance, this can change - DO NOT CACHE or STORE
@@ -77,46 +77,58 @@ public abstract class LoggerFacade {
     }
 
     /**
-     * Log an error message. Args are inserted into the message using the {} pattern.
+     * Log using the provided level. Args are inserted into the message using the {} pattern.
      */
-    public abstract void error(Class<?> from, String message, Object... args);
+    public void log(int level, Class<?> from, String message, Object... args) {
+        if (getLevel() <= level) {
+            switch (level) {
+            case DEBUG:
+                debug(from, message, args);
+                break;
+            case INFO:
+                info(from, message, args);
+                break;
+            case WARN:
+                warn(from, message, args);
+                break;
+            default:
+                error(from, message, args);
+            }
+        }
+    }
 
     /**
      * Log an error message. Args are inserted into the message using the {} pattern.
      */
-    public abstract void error(Class<?> from, String message, Throwable exception, Object... args);
+    protected abstract void error(Class<?> from, String message, Object... args);
+
+    /**
+     * Log an error message. Args are inserted into the message using the {} pattern.
+     */
+    protected abstract void error(Class<?> from, String message, Throwable exception, Object... args);
 
     /**
      * Log a warning message. Args are inserted into the message using the {} pattern.
      */
-    public abstract void warn(Class<?> from, String message, Object... args);
+    protected abstract void warn(Class<?> from, String message, Object... args);
 
     /**
      * Log an info message. Args are inserted into the message using the {} pattern.
      */
-    public abstract void info(Class<?> from, String message, Object... args);
+    protected abstract void info(Class<?> from, String message, Object... args);
 
     /**
      * Log a debug message. Args are inserted into the message using the {} pattern.
      */
-    public abstract void debug(Class<?> from, String message, Object... args);
+    protected abstract void debug(Class<?> from, String message, Object... args);
 
-    /**
-     * Log using the provided level. Args are inserted into the message using the {} pattern.
-     */
-    public void log(int level, Class<?> from, String message, Object... args) {
-        switch (level) {
-        case DEBUG:
-            debug(from, message, args);
-            break;
-        case INFO:
-            info(from, message, args);
-            break;
-        case WARN:
-            warn(from, message, args);
-            break;
-        default:
-            error(from, message, args);
+    public static synchronized int getLevel() {
+        return level;
+    }
+
+    public static synchronized void setLevel(int level) {
+        if (level != LoggerFacade.level) {
+            LoggerFacade.level = level;
         }
     }
 

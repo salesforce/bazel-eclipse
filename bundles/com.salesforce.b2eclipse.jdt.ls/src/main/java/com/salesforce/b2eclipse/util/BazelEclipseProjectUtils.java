@@ -12,17 +12,18 @@ import java.util.stream.Collectors;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.b2eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 public class BazelEclipseProjectUtils {
+    private static final LogHelper LOG = LogHelper.log(BazelEclipseProjectUtils.class);
 
 	public static Set<IProject> calculateProjectReferences(IProject eclipseProject) {
 		try {
@@ -42,14 +43,13 @@ public class BazelEclipseProjectUtils {
 
 			return computeProjectDependencies(eclipseProject, packageInfos);
 
-		} catch (BazelCommandLineToolConfigurationException e) {
-			BazelJdtPlugin.logError("Bazel not found: " + e.getMessage());
-		} catch (IOException | InterruptedException e) {
-			BazelJdtPlugin.logException(
-					"Unable to compute classpath containers entries for project " + eclipseProject.getName(), e);
-		}
-		return Collections.emptySet();
-	}
+        } catch (BazelCommandLineToolConfigurationException e) {
+            LOG.error("Bazel not found", e);
+        } catch (IOException | InterruptedException e) {
+            LOG.error("Unable to compute classpath containers entries for project {}", e, eclipseProject.getName());
+        }
+        return Collections.emptySet();
+    }
 
 	public static Set<IProject> computeProjectDependencies(IProject eclipseProject,
 			List<? extends AspectTargetInfo> packageInfos) {

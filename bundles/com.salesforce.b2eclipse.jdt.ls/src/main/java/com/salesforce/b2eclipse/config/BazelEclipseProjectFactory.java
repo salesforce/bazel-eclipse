@@ -46,6 +46,7 @@ import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
@@ -68,6 +69,8 @@ public final class BazelEclipseProjectFactory {
      * bazel.activated.target0=//projects/libs/foo:barlib bazel.activated.target1=//projects/libs/foo:bazlib
      */
     public static final String TARGET_PROPERTY_PREFIX = "bazel.activated.target";
+    
+    private static final LogHelper LOG = LogHelper.log(BazelEclipseProjectFactory.class);
 
     private BazelEclipseProjectFactory() {
 
@@ -85,6 +88,8 @@ public final class BazelEclipseProjectFactory {
             IProgressMonitor monitor) {
         String bazelWorkspaceRoot = workspaceRootPackage.getWorkspaceRootDirectory().getAbsolutePath();
         File bazelWorkspaceRootDirectory = new File(bazelWorkspaceRoot);
+        
+        LOG.debug("Start import process for root directory {}", bazelWorkspaceRootDirectory.getPath());
 
         SubMonitor subMonitor = SubMonitor.convert(monitor, selectedBazelPackages.size());
         subMonitor.setTaskName("Getting the Aspect Information for targets");
@@ -107,5 +112,7 @@ public final class BazelEclipseProjectFactory {
         projectImporter.run(subMonitor);
 
         subMonitor.done();
+
+        LOG.debug("Finish import process for root directory {}", bazelWorkspaceRootDirectory.getPath());
     }
 }

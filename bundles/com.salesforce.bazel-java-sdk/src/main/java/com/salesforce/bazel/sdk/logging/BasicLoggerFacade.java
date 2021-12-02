@@ -46,7 +46,7 @@ package com.salesforce.bazel.sdk.logging;
 public class BasicLoggerFacade extends LoggerFacade {
 
     @Override
-    public void error(Class<?> from, String message, Object... args) {
+    protected void error(Class<?> from, String message, Object... args) {
         // LoggerFactory.getLogger(from).error(message, args);
         System.err.println("ERROR " + formatMsg(from, message, args));
     }
@@ -55,7 +55,7 @@ public class BasicLoggerFacade extends LoggerFacade {
      * Log an error message. Args are inserted into the message using the {} pattern.
      */
     @Override
-    public void error(Class<?> from, String message, Throwable exception, Object... args) {
+    protected void error(Class<?> from, String message, Throwable exception, Object... args) {
         exception.printStackTrace();
         System.err.println("ERROR " + formatMsg(from, message, args));
     }
@@ -64,29 +64,23 @@ public class BasicLoggerFacade extends LoggerFacade {
      * Log a warning message. Args are inserted into the message using the {} pattern.
      */
     @Override
-    public void warn(Class<?> from, String message, Object... args) {
-        if (level <= WARN) {
-            System.err.println("WARN " + formatMsg(from, message, args));
-        }
+    protected void warn(Class<?> from, String message, Object... args) {
+        System.err.println("WARN " + formatMsg(from, message, args));
     }
 
     /**
      * Log an info message. Args are inserted into the message using the {} pattern.
      */
     @Override
-    public void info(Class<?> from, String message, Object... args) {
-        if (level <= INFO) {
-            System.out.println(formatMsg(from, message, args));
-        }
+    protected void info(Class<?> from, String message, Object... args) {
+        System.out.println(formatMsg(from, message, args));
     }
 
     /**
      * Log a debug message. Args are inserted into the message using the {} pattern.
      */
     @Override
-    public void debug(Class<?> from, String message, Object... args) {
-        if (level == DEBUG) {
-            System.out.println(formatMsg(from, message, args));
-        }
+    protected void debug(Class<?> from, String message, Object... args) {
+        System.out.println(formatMsg(from, message, args));
     }
 }

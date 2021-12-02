@@ -40,7 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,10 +50,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.ls.core.internal.AbstractProjectImporter;
-import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.b2eclipse.config.BazelEclipseProjectFactory;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.ProjectView;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
@@ -62,6 +61,7 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 
 @SuppressWarnings("restriction")
 public final class BazelProjectImporter extends AbstractProjectImporter {
+    private static final LogHelper LOG = LogHelper.log(BazelProjectImporter.class);
 
 	@Override
 	public boolean applies(IProgressMonitor monitor) throws OperationCanceledException, CoreException {
@@ -117,8 +117,7 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
 			BazelEclipseProjectFactory.importWorkspace(workspaceRootPackage, bazelPackagesToImport, progressMonitor,
 					monitor);
 		} catch (IOException e) {
-			// TODO: proper handling here
-			BazelJdtPlugin.logException(e);
+		    LOG.error("Import into workspace failed", e);
 		}
 	}
 
@@ -141,13 +140,11 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
 		}
 	}
 
-	private B2EPreferncesManager preparePreferences() {
-		final Map<String, Object> origConfig =
-				JavaLanguageServerPlugin.getPreferencesManager().getPreferences().asMap();
-		final Map<String, Object> configuration = origConfig != null ? origConfig : new HashMap<>();
-		final B2EPreferncesManager preferencesManager = B2EPreferncesManager.getInstance();
+    private B2EPreferncesManager preparePreferences() {
+        final Map<String, Object> jdtlsPrefs = BazelJdtPlugin.getDefault().getJdtLsPreferences();
+        final B2EPreferncesManager preferencesManager = B2EPreferncesManager.getInstance();
 
-		preferencesManager.setConfiguration(configuration);
+		preferencesManager.setConfiguration(jdtlsPrefs);
 
 		return preferencesManager;
 	}

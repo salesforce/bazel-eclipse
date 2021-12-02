@@ -37,13 +37,10 @@ import java.util.Map;
 
 import org.eclipse.jdt.ls.core.internal.handlers.MapFlattener;
 
+import com.salesforce.b2eclipse.config.IPreferenceConfiguration;
+
 @SuppressWarnings("restriction")
 public final class B2EPreferncesManager {
-
-    /**
-     * Preference key to enable/disable bazel importer.
-     */
-    private static final String IMPORT_BAZEL_ENABLED = "java.import.bazel.enabled";
 
     private static volatile B2EPreferncesManager instance;
 
@@ -54,7 +51,8 @@ public final class B2EPreferncesManager {
     }
 
     public void setConfiguration(Map<String, Object> configuration) {
-        importBazelEnabled = MapFlattener.getBoolean(configuration, IMPORT_BAZEL_ENABLED, false);
+        importBazelEnabled =
+                MapFlattener.getBoolean(configuration, IPreferenceConfiguration.IMPORT_BAZEL_ENABLED, false);
     }
 
     public static B2EPreferncesManager getInstance() {

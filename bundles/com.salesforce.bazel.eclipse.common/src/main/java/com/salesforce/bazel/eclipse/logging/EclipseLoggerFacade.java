@@ -33,13 +33,14 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.eclipse;
+package com.salesforce.bazel.eclipse.logging;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
@@ -49,9 +50,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.slf4j.helpers.MessageFormatter;
 
-import com.salesforce.bazel.sdk.logging.BasicLoggerFacade;
 import com.salesforce.bazel.sdk.logging.LoggerFacade;
-import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Add Eclipse Platform logging to WARN and ERROR log messages.
@@ -60,14 +59,66 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
  * Unix platforms) if /tmp exists. It sends the log messages both to the official logger but also to this file which we
  * fully control.
  */
-public class EclipseLoggerFacade extends BasicLoggerFacade {
+public class EclipseLoggerFacade extends LoggerFacade {
     private static final Bundle BUNDLE = FrameworkUtil.getBundle(EclipseLoggerFacade.class);
     private static final ILog ECLIPSELOGGER = Platform.getLog(BUNDLE);
 
-    // we have had issues with hard to find logs, missing log lines, etc
-    // for Unix platorms, we create a custom log file in /tmp/bef.log to make sure we get our lines
+    // a custom log file in <user_home>/bef.log to duplicate logs in case of loss
     private static BufferedWriter befLogWriter = null;
     private static SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy-HH:mm:ss");
+
+    private static boolean extendedLog = true;
+
+    public static enum LogLevel {
+        DEBUG(IStatus.INFO, LoggerFacade.DEBUG, "DEBUG"),
+        INFO(IStatus.INFO, LoggerFacade.INFO, "INFO"),
+        ERROR(IStatus.ERROR, LoggerFacade.DEBUG, "ERROR"),
+        WARN(IStatus.WARNING, LoggerFacade.WARN, "WARN");
+
+        private final int severityCode;
+        private final int level;
+        private final String name;
+
+        private LogLevel(int severityCode, int level, String messagePrefix) {
+            this.severityCode = severityCode;
+            this.level = level;
+            this.name = messagePrefix;
+        }
+
+        public int getSeverityCode() {
+            return severityCode;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getLevel() {
+            return level;
+        }
+
+        public static LogLevel fromName(String name) {
+            for (LogLevel level : LogLevel.values()) {
+                if (level.getName().equalsIgnoreCase(name)) {
+                    return level;
+                }
+            }
+            return INFO; //default level
+        }
+    }
+
+    public static void setLevel(String name) {
+        LogLevel logLevel = LogLevel.fromName(name);
+        setLevel(logLevel.getLevel());
+    }
+
+    public static boolean isExtendedLog() {
+        return extendedLog;
+    }
+
+    public static void setExtendedLog(boolean extendedLog) {
+        EclipseLoggerFacade.extendedLog = extendedLog;
+    }
 
     /**
      * Install the facade as the singleton and configure logging system
@@ -78,14 +129,15 @@ public class EclipseLoggerFacade extends BasicLoggerFacade {
     public static void install(Bundle bundle) throws Exception {
         EclipseLoggerFacade instance = new EclipseLoggerFacade();
         LoggerFacade.setInstance(instance);
-        //instance.configureLogging(bundle);
 
-        if (FSPathHelper.isUnix) {
-            File tmpDir = new File("/tmp");
-            if (tmpDir.exists()) {
-                FileWriter writer = new FileWriter("/tmp/bef.log", false);
+        final String home = System.getProperty("user.home");
+        if (Objects.nonNull(home)) {
+            final File userHome = new File(home);
+            if (userHome.exists()) {
+                final File logFile = new File(userHome, "bef.log");
+                FileWriter writer = new FileWriter(logFile, false);
                 befLogWriter = new BufferedWriter(writer);
-                writeTmpLog("Starting BEF Plugin");
+                writeTmpLog("Starting Bazel-support plugin");
             }
         }
     }
@@ -96,41 +148,46 @@ public class EclipseLoggerFacade extends BasicLoggerFacade {
     private EclipseLoggerFacade() {}
 
     @Override
-    public void error(Class<?> from, String message, Object... args) {
-        super.error(from, message, args);
-        String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
-
-        ECLIPSELOGGER.log(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(), resolved));
-        writeTmpLog("ERROR: " + resolved);
+    protected void error(Class<?> from, String message, Object... args) {
+        writeLog(from, LogLevel.ERROR, message, args);
     }
 
     @Override
-    public void error(Class<?> from, String message, Throwable exception, Object... args) {
-        super.error(from, message, exception, args);
-        String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
-        ECLIPSELOGGER.log(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(), resolved, exception));
-        writeTmpLog("ERROR: " + resolved);
+    protected void error(Class<?> from, String message, Throwable exception, Object... args) {
+        writeLog(from, LogLevel.ERROR, message, exception, args);
     }
 
     @Override
-    public void warn(Class<?> from, String message, Object... args) {
-        super.warn(from, message, args);
-        String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
-        ECLIPSELOGGER.log(new Status(IStatus.INFO, BUNDLE.getSymbolicName(), resolved));
-        writeTmpLog("WARN: " + resolved);
+    protected void warn(Class<?> from, String message, Object... args) {
+        writeLog(from, LogLevel.WARN, message, args);
     }
 
     @Override
-    public void info(Class<?> from, String message, Object... args) {
-        super.info(from, message, args);
-        String resolved = MessageFormatter.arrayFormat(message, args).getMessage();
-        ECLIPSELOGGER.log(new Status(IStatus.INFO, BUNDLE.getSymbolicName(), resolved));
-        writeTmpLog("INFO: " + resolved);
+    protected void info(Class<?> from, String message, Object... args) {
+        writeLog(from, LogLevel.INFO, message, args);
+    }
+
+    @Override
+    protected void debug(Class<?> from, String message, Object... args) {
+        writeLog(from, LogLevel.DEBUG, message, args);
+    }
+
+    private void writeLog(Class<?> from, LogLevel logLevel, String message, Object... args) {
+        writeLog(from, logLevel, message, null, args);
+    }
+
+    private void writeLog(Class<?> from, LogLevel logLevel, String message, Throwable exception, Object... args) {
+        String logMessage = "[" + from.getName() + "] " + MessageFormatter.arrayFormat(message, args).getMessage();
+        Status logStatus =
+                Objects.isNull(exception) ? new Status(logLevel.getSeverityCode(), BUNDLE.getSymbolicName(), logMessage)
+                        : new Status(logLevel.getSeverityCode(), BUNDLE.getSymbolicName(), logMessage, exception);
+        ECLIPSELOGGER.log(logStatus);
+        writeTmpLog(logLevel.getName() + ": " + logMessage);
     }
 
     private static synchronized void writeTmpLog(String message) {
         try {
-            if (befLogWriter != null) {
+            if (befLogWriter != null && EclipseLoggerFacade.isExtendedLog()) {
                 String date = formatter.format(new Date());
                 befLogWriter.write(date + " " + message + "\n");
                 befLogWriter.flush();
@@ -138,9 +195,9 @@ public class EclipseLoggerFacade extends BasicLoggerFacade {
         } catch (Exception anyE) {
             // out of disk space, someone deleted /tmp/bef.log, etc
         }
-
     }
 
+    //TODO
     /**
      * Configure slf4j and logback back using logback.xml at the top level directory
      *

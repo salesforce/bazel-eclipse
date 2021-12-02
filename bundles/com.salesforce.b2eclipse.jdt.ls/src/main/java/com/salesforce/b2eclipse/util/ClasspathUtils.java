@@ -15,8 +15,10 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 
 import com.salesforce.b2eclipse.BazelJdtPlugin;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class ClasspathUtils {
+    private static final LogHelper LOG = LogHelper.log(ClasspathUtils.class);
 
 	/**
 	 * Returns the IJavaProject in the current workspace that contains at least one
@@ -47,7 +49,7 @@ public class ClasspathUtils {
 			IJavaProject jProject = BazelJdtPlugin.getJavaCoreHelper().getJavaProjectForProject(project);
 			IClasspathEntry[] classpathEntries = BazelJdtPlugin.getJavaCoreHelper().getRawClasspath(jProject);
 			if (classpathEntries == null) {
-				BazelJdtPlugin.logError("No classpath entries found for project [" + jProject.getElementName() + "]");
+			    LOG.error("No classpath entries found for project [{}]", jProject.getElementName());
 				continue;
 			}
 			for (IClasspathEntry entry : classpathEntries) {

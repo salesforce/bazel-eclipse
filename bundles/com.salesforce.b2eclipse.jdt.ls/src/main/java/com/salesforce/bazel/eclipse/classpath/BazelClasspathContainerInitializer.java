@@ -48,13 +48,14 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
 import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class BazelClasspathContainerInitializer extends ClasspathContainerInitializer {
+    private static final LogHelper LOG = LogHelper.log(BazelClasspathContainerInitializer.class);
 
     // error state
     private static AtomicBoolean isCorrupt = new AtomicBoolean(false);
@@ -73,9 +74,9 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
             setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
 
         } catch (IOException | InterruptedException | BackingStoreException e) {
-            BazelJdtPlugin.logException("Error while creating Bazel classpath container.", e);
+            LOG.error("Error while creating Bazel classpath container.", e);
         } catch (BazelCommandLineToolConfigurationException e) {
-            BazelJdtPlugin.logError("Bazel not found: " + e.getMessage());
+            LOG.error("Bazel not found", e);
         }
     }
 
@@ -87,7 +88,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
         try {
             project.delete(true, null);
         } catch (CoreException e) {
-        	BazelJdtPlugin.logException(e);
+            LOG.error("Undo operation failed", e);
         }
     }
 

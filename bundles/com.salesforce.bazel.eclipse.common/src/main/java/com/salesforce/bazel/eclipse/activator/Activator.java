@@ -35,20 +35,14 @@
  */
 package com.salesforce.bazel.eclipse.activator;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Plugin;
-import org.eclipse.core.runtime.Status;
 import org.osgi.framework.BundleContext;
 
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
 import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 /**
@@ -85,39 +79,5 @@ public class Activator extends Plugin {
 
     public BazelProjectManager getProjectManager() {
         return ProjectManagerComponentFacade.getInstance().getComponent();
-    }
-
-    public void log(IStatus status) {
-        getLog().log(status);
-    }
-
-    public void log(CoreException e) {
-        log(e.getStatus());
-    }
-
-    public void logError(String message) {
-        log(new Status(IStatus.ERROR, getBundle().getSymbolicName(), message));
-    }
-
-    public void logInfo(String message) {
-        log(new Status(IStatus.INFO, getBundle().getSymbolicName(), message));
-    }
-
-    public void logWarning(String message) {
-        log(new Status(IStatus.WARNING, getBundle().getSymbolicName(), message));
-    }
-
-    public void logException(Throwable ex) {
-        String message = ex.getMessage();
-        if (message == null) {
-            StringWriter stringWriter = new StringWriter();
-            ex.printStackTrace(new PrintWriter(stringWriter));
-            message = stringWriter.toString();
-        }
-        logException(message, ex);
-    }
-
-    public void logException(String message, Throwable ex) {
-        log(new Status(IStatus.ERROR, getBundle().getSymbolicName(), message, ex));
     }
 }
