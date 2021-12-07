@@ -13,7 +13,7 @@
          point="org.eclipse.jdt.ls.core.importers">
          <importer
             id = "bazelProjectImporter"
-            order ="500"
+            order ="200"
             class = "com.salesforce.b2eclipse.managers.BazelProjectImporter"/>
    </extension>
    <extension
@@ -21,7 +21,7 @@
          point="org.eclipse.jdt.ls.core.buildSupport">
          <buildSupport
          	id="bazelSupport"
-         	order="500"
+         	order="200"
          	class="com.salesforce.b2eclipse.managers.BazelBuildSupport" />
    </extension>
    <extension
