@@ -131,7 +131,8 @@ public class MockEclipse {
 
         // initialize our plugins/feature with all the mock infrastructure
         // this simulates how our feature starts up when run inside of Eclipse
-        pluginActivator.startInternal(bazelCommandEnvironment.bazelAspectLocation,
+        pluginActivator.startInternal(new MockComponentContextInitializer(this),
+            bazelCommandEnvironment.bazelAspectLocation,
             bazelCommandEnvironment.commandBuilder, bazelCommandEnvironment.commandConsole, projectManager,
             mockResourceHelper, mockCoreResourceHelper, mockJavaCoreHelper, mockOsEnvStrategy, configManager,
             externalJarRuleManager);

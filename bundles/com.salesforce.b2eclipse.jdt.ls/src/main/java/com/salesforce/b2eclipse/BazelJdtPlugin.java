@@ -52,6 +52,7 @@ import org.osgi.service.prefs.Preferences;
 import com.salesforce.b2eclipse.config.IPreferenceConfiguration;
 import com.salesforce.bazel.eclipse.component.BazelAspectLocationComponentFacade;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.EclipseComponentContextInitializer;
 import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
 import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
@@ -59,8 +60,6 @@ import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade;
 import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade.LogLevel;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
-import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory;
@@ -127,19 +126,16 @@ public class BazelJdtPlugin extends Plugin {
 
         initLoggerFacade();
 
-        BazelAspectLocation aspectLocation = BazelAspectLocationComponentFacade.getInstance().getComponent();
-
-        CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
-        CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
-
         BazelJavaSDKInit.initialize("Bazel Language Server", "bzl_ls");
         JvmRuleInit.initialize();
 
-        startInternal(aspectLocation, commandBuilder, consoleFactory,
-            ResourceHelperComponentFacade.getInstance().getComponent(),
-            JavaCoreHelperComponentFacade.getInstance().getComponent(),
-            EclipseBazelComponentFacade.getInstance().getOsDetectionStrategy(),
-            ProjectManagerComponentFacade.getInstance().getComponent());
+        CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
+
+        new EclipseComponentContextInitializer().initialize();
+
+        EclipseBazelComponentFacade.getInstance().setCommandManager(
+            BazelAspectLocationComponentFacade.getInstance().getComponent(), new ShellCommandBuilder(consoleFactory),
+            consoleFactory, null);
     }
 
     @Override
@@ -148,18 +144,6 @@ public class BazelJdtPlugin extends Plugin {
             JavaLanguageServerPlugin.getPreferencesManager().removePreferencesChangeListener(preferencesChangeListener);
         }
         super.stop(context);
-    }
-
-    /**
-     * This is the inner entrypoint where the initialization really begins. Both the real activation entrypoint (when
-     * running in Eclipse, seen above) and the mocking framework call in here. When running for real, the passed
-     * collaborators are all the real ones, when running mock tests the collaborators are mocks.
-     */
-    public static void startInternal(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
-            CommandConsoleFactory consoleFactory, ResourceHelper rh, JavaCoreHelper javac,
-            OperatingEnvironmentDetectionStrategy osEnv, BazelProjectManager projectMgr) {
-        EclipseBazelComponentFacade.getInstance().setCommandManager(aspectLocation, commandBuilder, consoleFactory,
-            null);
     }
 
     public static String getEnvBazelPath() {
