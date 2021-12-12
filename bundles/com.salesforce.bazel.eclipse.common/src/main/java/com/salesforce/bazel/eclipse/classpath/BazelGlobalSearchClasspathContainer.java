@@ -43,10 +43,9 @@ import java.util.List;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.osgi.service.prefs.BackingStoreException;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -86,21 +85,19 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     private static List<BazelJvmIndexClasspath> instances = new ArrayList<>();
 
     public BazelGlobalSearchClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
-        this(eclipseProject, BazelPluginActivator.getResourceHelper(), BazelPluginActivator.getJavaCoreHelper(),
-            BazelPluginActivator.getBazelProjectManager(),
-            BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy(),
-            BazelPluginActivator.getBazelWorkspace());
+            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+        this(eclipseProject, ComponentContext.getInstance().getResourceHelper(),
+                ComponentContext.getInstance().getJavaCoreHelper(), ComponentContext.getInstance().getProjectManager(),
+                ComponentContext.getInstance().getOsStrategy(), ComponentContext.getInstance().getBazelWorkspace());
     }
 
     public BazelGlobalSearchClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper,
             JavaCoreHelper jcHelper, BazelProjectManager bpManager,
             OperatingEnvironmentDetectionStrategy osDetectStrategy, BazelWorkspace bazelWorkspace)
-                    throws IOException, InterruptedException, BackingStoreException, JavaModelException,
-                    BazelCommandLineToolConfigurationException {
+            throws IOException, InterruptedException, BackingStoreException, JavaModelException,
+            BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper, jcHelper, bpManager, osDetectStrategy, bazelWorkspace);
-        BazelPluginActivator activator = BazelPluginActivator.getInstance();
-        config = activator.getConfigurationManager();
+        config = ComponentContext.getInstance().getConfigurationManager();
     }
 
     @Override
@@ -116,7 +113,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
 
     @Override
     public BazelJvmClasspathResponse computeClasspath() {
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        BazelWorkspace bazelWorkspace = ComponentContext.getInstance().getBazelWorkspace();
         if (!config.isGlobalClasspathSearchEnabled() || (bazelWorkspace == null)) {
             // user has disabled the global search feature, or hasnt imported a bazel workspace yet
             return new BazelJvmClasspathResponse();
@@ -124,9 +121,8 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
 
         if (!bazelWorkspace.getName().equals(bazelWorkspaceName)) {
             // this is the first time with this Bazel Workspace, load our collaborators
-            BazelPluginActivator activator = BazelPluginActivator.getInstance();
-            OperatingEnvironmentDetectionStrategy os = activator.getOperatingEnvironmentDetectionStrategy();
-            BazelExternalJarRuleManager externalJarManager = activator.getBazelExternalJarRuleManager();
+            OperatingEnvironmentDetectionStrategy os = ComponentContext.getInstance().getOsStrategy();
+            BazelExternalJarRuleManager externalJarManager = ComponentContext.getInstance().getBazelExternalJarRuleManager();
 
             // check if the user has provided an additional location to look for jars
             List<File> additionalJarLocations = loadAdditionalLocations();
@@ -166,9 +162,9 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
      */
     public static List<File> loadAdditionalLocations() {
         List<File> additionalJarLocations = null;
-        BazelPluginActivator activator = BazelPluginActivator.getInstance();
-        IPreferenceStore prefs = activator.getPreferenceStore();
-        String jarCacheDir = prefs.getString(BazelPreferenceKeys.EXTERNAL_JAR_CACHE_PATH_PREF_NAME);
+
+        String jarCacheDir = ComponentContext.getInstance().getPreferenceStoreHelper()
+                .getString(BazelPreferenceKeys.EXTERNAL_JAR_CACHE_PATH_PREF_NAME);
         if (jarCacheDir != null) {
             // user has specified a location, make sure it exists
             File jarCacheDirFile = new File(jarCacheDir);

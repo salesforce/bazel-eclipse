@@ -43,7 +43,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.ProjectView;
 import com.salesforce.bazel.sdk.project.ProjectViewConstants;
@@ -57,7 +57,7 @@ public class ProjectViewUtils {
             List<BazelPackageLocation> importedBazelPackages) {
         ProjectView projectView =
                 new ProjectView(bazelWorkspaceRootDirectory, importedBazelPackages, Collections.emptyList());
-        IFile f = ResourceHelperComponentFacade.getInstance().getComponent().getProjectFile(rootProject,
+        IFile f = ComponentContext.getInstance().getResourceHelper().getProjectFile(rootProject,
             ProjectViewConstants.PROJECT_VIEW_FILE_NAME);
 
         String projectViewContent = projectView.getContent();

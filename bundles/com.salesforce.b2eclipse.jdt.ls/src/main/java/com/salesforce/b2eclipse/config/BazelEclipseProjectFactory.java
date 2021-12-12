@@ -108,7 +108,7 @@ public final class BazelEclipseProjectFactory {
                 new ProjectImporterFactory(workspaceRootPackage, selectedBazelPackages);
         final ProjectImporter projectImporter = projectImporterFactory.build();
 
-        BazelClasspathContainerInitializer.getIsCorrupt().set(false);
+        BazelClasspathContainerInitializer.isCorrupt.set(false);
         projectImporter.run(subMonitor);
 
         subMonitor.done();

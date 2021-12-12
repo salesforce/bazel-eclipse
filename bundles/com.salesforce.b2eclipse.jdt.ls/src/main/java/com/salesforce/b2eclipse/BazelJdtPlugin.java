@@ -51,6 +51,7 @@ import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.b2eclipse.config.IPreferenceConfiguration;
 import com.salesforce.bazel.eclipse.component.BazelAspectLocationComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.component.EclipseComponentContextInitializer;
 import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
@@ -131,7 +132,7 @@ public class BazelJdtPlugin extends Plugin {
 
         CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
 
-        new EclipseComponentContextInitializer().initialize();
+        new EclipseComponentContextInitializer(getBundle().getSymbolicName()).initialize();
 
         EclipseBazelComponentFacade.getInstance().setCommandManager(
             BazelAspectLocationComponentFacade.getInstance().getComponent(), new ShellCommandBuilder(consoleFactory),
@@ -154,7 +155,7 @@ public class BazelJdtPlugin extends Plugin {
      * Provides details of the operating environment (OS, real vs. tests, etc)
      */
     public static OperatingEnvironmentDetectionStrategy getOperatingEnvironmentDetectionStrategy() {
-        return EclipseBazelComponentFacade.getInstance().getOsDetectionStrategy();
+        return ComponentContext.getInstance().getOsStrategy();
     }
 
     // COLLABORATORS

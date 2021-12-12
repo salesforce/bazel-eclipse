@@ -58,9 +58,8 @@ import org.eclipse.jdt.core.JavaCore;
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.IClasspathContainerConstants;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
-import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
-import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -95,10 +94,10 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         IProject project = getProject();
         progressMonitor.beginTask("Bazel build", 1);
 
-        BazelCommandManager bazelCommandManager = EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
-        JavaCoreHelper javaCoreHelper = JavaCoreHelperComponentFacade.getInstance().getComponent();
-        BazelWorkspace bazelWorkspace = EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
-        ResourceHelper resourceHelper = ResourceHelperComponentFacade.getInstance().getComponent();
+        BazelCommandManager bazelCommandManager = ComponentContext.getInstance().getBazelCommandManager();
+        JavaCoreHelper javaCoreHelper = ComponentContext.getInstance().getJavaCoreHelper();
+        BazelWorkspace bazelWorkspace = ComponentContext.getInstance().getBazelWorkspace();
+        ResourceHelper resourceHelper = ComponentContext.getInstance().getResourceHelper();
         if (bazelWorkspace == null) {
             return new IProject[] {};
         }

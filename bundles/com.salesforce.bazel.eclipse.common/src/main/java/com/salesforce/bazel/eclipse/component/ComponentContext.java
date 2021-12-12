@@ -1,8 +1,12 @@
 package com.salesforce.bazel.eclipse.component;
 
+import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
+import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
+import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
@@ -27,6 +31,17 @@ public class ComponentContext {
      */
     private OperatingEnvironmentDetectionStrategy osStrategy;
 
+    private BazelConfigurationManager configurationManager;
+    private PreferenceStoreHelper preferenceStoreHelper;
+    /**
+     * Manager for working with external jars
+     */
+    private BazelExternalJarRuleManager bazelExternalJarRuleManager;
+    /**
+     * Global search index of classes
+     */
+    private BazelGlobalSearchClasspathContainer globalSearchClasspathContainer;
+
     private ComponentContext() {}
 
     public static synchronized ComponentContext getInstance() {
@@ -37,11 +52,15 @@ public class ComponentContext {
     }
 
     public synchronized void initialize(BazelProjectManager projectMgr, ResourceHelper rh, JavaCoreHelper javac,
-            OperatingEnvironmentDetectionStrategy osEnv) {
+            OperatingEnvironmentDetectionStrategy osEnv, BazelConfigurationManager configManager,
+            PreferenceStoreHelper preferenceStoreHelper) {
         setJavaCoreHelper(javac);
         setOsStrategy(osEnv);
         setProjectManager(projectMgr);
         setResourceHelper(rh);
+        setConfigurationManager(configManager);
+        setPreferenceStoreHelper(preferenceStoreHelper);
+        setBazelExternalJarRuleManager(new BazelExternalJarRuleManager(getOsStrategy()));
     }
 
     public BazelProjectManager getProjectManager() {
@@ -76,6 +95,26 @@ public class ComponentContext {
         this.resourceHelper = resourceHelper;
     }
 
+    public BazelConfigurationManager getConfigurationManager() {
+        return configurationManager;
+    }
+
+    public PreferenceStoreHelper getPreferenceStoreHelper() {
+        return preferenceStoreHelper;
+    }
+
+    public BazelExternalJarRuleManager getBazelExternalJarRuleManager() {
+        return bazelExternalJarRuleManager;
+    }
+
+    public BazelGlobalSearchClasspathContainer getGlobalSearchClasspathContainer() {
+        return globalSearchClasspathContainer;
+    }
+
+    public void setGlobalSearchClasspathContainer(BazelGlobalSearchClasspathContainer globalSearchContainer) {
+        this.globalSearchClasspathContainer = globalSearchContainer;
+    }
+
     private void setProjectManager(BazelProjectManager projectManager) {
         this.projectManager = projectManager;
     }
@@ -87,4 +126,17 @@ public class ComponentContext {
     private void setOsStrategy(OperatingEnvironmentDetectionStrategy osStrategy) {
         this.osStrategy = osStrategy;
     }
+
+    private void setConfigurationManager(BazelConfigurationManager configurationManager) {
+        this.configurationManager = configurationManager;
+    }
+
+    private void setPreferenceStoreHelper(PreferenceStoreHelper preferenceStoreHelper) {
+        this.preferenceStoreHelper = preferenceStoreHelper;
+    }
+
+    private void setBazelExternalJarRuleManager(BazelExternalJarRuleManager externalJarRuleManager) {
+        this.bazelExternalJarRuleManager = externalJarRuleManager;
+    }
+
 }

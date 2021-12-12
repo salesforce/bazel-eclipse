@@ -43,6 +43,7 @@ import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.swt.graphics.Image;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.index.CodeIndexEntry;
 import com.salesforce.bazel.sdk.index.jvm.BazelJvmIndexClasspath;
 import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndex;
@@ -90,8 +91,7 @@ public class BazelClasspathFixProcessor extends DefaultClasspathFixProcessor {
             String jarName = pText.substring(13, endOfJar);
 
             // get access to the underlying index data
-            BazelPluginActivator activator = BazelPluginActivator.getInstance();
-            BazelGlobalSearchClasspathContainer searchContainer = activator.getGlobalSearchClasspathContainer();
+            BazelGlobalSearchClasspathContainer searchContainer = ComponentContext.getInstance().getGlobalSearchClasspathContainer();
             BazelJvmIndexClasspath indexCP = searchContainer.getIndexClasspath();
             JvmCodeIndex index = indexCP.getIndex(null);
 

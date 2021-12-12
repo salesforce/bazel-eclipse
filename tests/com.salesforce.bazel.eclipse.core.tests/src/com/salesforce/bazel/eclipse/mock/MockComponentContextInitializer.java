@@ -13,7 +13,8 @@ public class MockComponentContextInitializer implements IComponentContextInitial
     @Override
     public void initialize() {
         ComponentContext.getInstance().initialize(mockEclipse.getProjectManager(), mockEclipse.getMockResourceHelper(),
-            mockEclipse.getMockJavaCoreHelper(), mockEclipse.getOsEnvStrategy());
+            mockEclipse.getMockJavaCoreHelper(), mockEclipse.getOsEnvStrategy(), mockEclipse.getConfigManager(),
+            mockEclipse.getMockCorePreferencesStoreHelper());
     }
 
 }

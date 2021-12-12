@@ -17,7 +17,7 @@ public class JavaCoreHelperComponentFacade extends AbstractExtensionPointCompone
 
     @Override
     protected BazelEclipseExtensionPointDefinition getExtensionPointDefinition() {
-        return BazelEclipseExtensionPointDefinition.JAVA_CORE_HELPER;
+        return BazelEclipseExtensionPointDefinition.BAZEL_JAVA_CORE_HELPER;
     }
 
 }

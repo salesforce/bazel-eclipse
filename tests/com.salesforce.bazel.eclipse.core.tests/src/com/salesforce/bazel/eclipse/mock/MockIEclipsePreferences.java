@@ -23,6 +23,8 @@
  */
 package com.salesforce.bazel.eclipse.mock;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -37,6 +39,9 @@ public class MockIEclipsePreferences implements IEclipsePreferences {
             "MockPreferences is pay as you go, you have hit a method that is not implemented.";
 
     public Map<String, String> strings = new TreeMap<>();
+    public Map<String, Boolean> booleans = new TreeMap<>();
+
+    public List<IPreferenceChangeListener> listeners = new ArrayList<>();
 
     // MOCKED METHODS
 
@@ -56,6 +61,16 @@ public class MockIEclipsePreferences implements IEclipsePreferences {
     @Override
     public void put(String key, String value) {
         strings.put(key, value);
+    }
+
+    @Override
+    public void addPreferenceChangeListener(IPreferenceChangeListener listener) {
+        listeners.add(listener);
+    }
+
+    @Override
+    public void removePreferenceChangeListener(IPreferenceChangeListener listener) {
+        listeners.remove(listener);
     }
 
     // UNIMPLEMENTED METHODS
@@ -93,12 +108,12 @@ public class MockIEclipsePreferences implements IEclipsePreferences {
 
     @Override
     public void putBoolean(String key, boolean value) {
-        throw new UnsupportedOperationException(UOE_MSG);
+        booleans.put(key, value);
     }
 
     @Override
     public boolean getBoolean(String key, boolean def) {
-        throw new UnsupportedOperationException(UOE_MSG);
+        return booleans.getOrDefault(key, Boolean.FALSE).booleanValue();
     }
 
     @Override
@@ -178,16 +193,6 @@ public class MockIEclipsePreferences implements IEclipsePreferences {
 
     @Override
     public void removeNodeChangeListener(INodeChangeListener listener) {
-        throw new UnsupportedOperationException(UOE_MSG);
-    }
-
-    @Override
-    public void addPreferenceChangeListener(IPreferenceChangeListener listener) {
-        throw new UnsupportedOperationException(UOE_MSG);
-    }
-
-    @Override
-    public void removePreferenceChangeListener(IPreferenceChangeListener listener) {
         throw new UnsupportedOperationException(UOE_MSG);
     }
 

@@ -40,7 +40,6 @@ import java.io.FileReader;
 import java.util.Properties;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
-import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -50,10 +49,8 @@ import com.salesforce.bazel.sdk.util.BazelExecutableUtil;
  * Initialize the preferences of Bazel plugins. See the BazelPreferenceKeys class for the supported preferences.
  */
 public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
-
     @Override
     public void initializeDefaultPreferences() {
-        IPreferenceStore store = BazelPluginActivator.getInstance().getPreferenceStore();
         Properties userDefaults = loadUserDefaultPreferencesFile();
 
         // STRING PREFS
@@ -62,7 +59,7 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
             String befDefaultValue = BazelPreferenceKeys.defaultValues.get(prefName);
             String value = userDefaults.getProperty(prefName, befDefaultValue);
             if (value != null) {
-                store.setDefault(prefName, value);
+                BazelPluginActivator.getPreferenceStoreResourceHelper().setDefaultValue(prefName, value);
             }
         }
 
@@ -71,7 +68,8 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
         for (String prefName : BazelPreferenceKeys.ALL_BOOLEAN_PREFS) {
             String befDefaultValue = BazelPreferenceKeys.defaultValues.get(prefName);
             String value = userDefaults.getProperty(prefName, befDefaultValue);
-            store.setDefault(prefName, "true".equals(value));
+            BazelPluginActivator.getPreferenceStoreResourceHelper().setDefaultValue(prefName,
+                Boolean.toString(true).equals(value));
         }
 
         // SPECIAL CASES
@@ -79,8 +77,8 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
         String defaultBazelExecutablePath = BazelCommandManager.getDefaultBazelExecutablePath();
         String bazelExecLocationFromEnv = BazelExecutableUtil.which("bazel", defaultBazelExecutablePath);
         String value = userDefaults.getProperty(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
-        store.setDefault(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, value);
-
+        BazelPluginActivator.getPreferenceStoreResourceHelper()
+                .setDefaultValue(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, value);
     }
 
     /**

@@ -42,23 +42,22 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.component.BazelAspectLocationComponentFacade;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.eclipse.component.IComponentContextInitializer;
 import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.component.EclipseComponentContextInitializer;
+import com.salesforce.bazel.eclipse.component.IComponentContextInitializer;
 import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
 import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade;
 import com.salesforce.bazel.eclipse.project.BazelPluginResourceChangeListener;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
-import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.impl.EclipePreferenceStoreHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseConsole;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseJavaCoreHelper;
-import com.salesforce.bazel.eclipse.runtime.impl.PreferenceStoreEclipeResourceHelper;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -93,24 +92,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     private static BazelPluginActivator plugin;
 
     /**
-     * PreferenceStoreResourceHelper to access {@link IPreferenceStore}
+     * PreferenceStoreHelper to access {@link IPreferenceStore}
      */
-    private static PreferenceStoreResourceHelper preferenceStoreResourceHelper;
+    private static PreferenceStoreHelper preferenceStoreResourceHelper;
 
     /**
      * Iteracts with preferences
      */
     private static BazelConfigurationManager configurationManager;
-
-    /**
-     * Manager for working with external jars
-     */
-    private static BazelExternalJarRuleManager externalJarRuleManager;
-
-    /**
-     * Global search index of classes
-     */
-    private static BazelGlobalSearchClasspathContainer globalSearchContainer;
 
     // LIFECYCLE
 
@@ -129,20 +118,20 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         BazelAspectLocation aspectLocation = BazelAspectLocationComponentFacade.getInstance().getComponent();
         CommandConsoleFactory consoleFactory = new EclipseConsole();
         CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
-        PreferenceStoreResourceHelper eclipseResourceHelper = new PreferenceStoreEclipeResourceHelper();
+        PreferenceStoreHelper eclipsePrefsHelper = new EclipePreferenceStoreHelper(getBundle().getSymbolicName());
         ResourceHelper resourceHelper = ResourceHelperComponentFacade.getInstance().getComponent();
         JavaCoreHelper eclipseJavaCoreHelper = new EclipseJavaCoreHelper();
         BazelProjectManager projectMgr = ProjectManagerComponentFacade.getInstance().getComponent();
         OperatingEnvironmentDetectionStrategy osEnvStrategy = new RealOperatingEnvironmentDetectionStrategy();
-        BazelConfigurationManager configManager = new EclipseBazelConfigurationManager(eclipseResourceHelper);
-        BazelExternalJarRuleManager externalJarRuleManager = new BazelExternalJarRuleManager(osEnvStrategy);
+        BazelConfigurationManager configManager = new EclipseBazelConfigurationManager(eclipsePrefsHelper);
 
         // initialize the SDK, tell it to load the JVM rules support
         BazelJavaSDKInit.initialize("Bazel Eclipse", "bzleclipse");
         JvmRuleInit.initialize();
-        
-        startInternal(new EclipseComponentContextInitializer(), aspectLocation, commandBuilder, consoleFactory, projectMgr, resourceHelper, eclipseResourceHelper,
-            eclipseJavaCoreHelper, osEnvStrategy, configManager, externalJarRuleManager);
+
+        startInternal(new EclipseComponentContextInitializer(getBundle().getSymbolicName()), aspectLocation,
+            commandBuilder, consoleFactory, projectMgr, resourceHelper, eclipsePrefsHelper, eclipseJavaCoreHelper,
+            osEnvStrategy, configManager);
     }
 
     /**
@@ -150,10 +139,10 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * running in Eclipse, seen above) and the mocking framework call in here. When running for real, the passed
      * collaborators are all the real ones, when running mock tests the collaborators are mocks.
      */
-    public void startInternal(IComponentContextInitializer componentCtxInitializer, BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
-            CommandConsoleFactory consoleFactory, BazelProjectManager projectMgr, ResourceHelper rh,
-            PreferenceStoreResourceHelper crh, JavaCoreHelper javac, OperatingEnvironmentDetectionStrategy osEnv,
-            BazelConfigurationManager configMgr, BazelExternalJarRuleManager externalJarRuleMgr) throws Exception {
+    public void startInternal(IComponentContextInitializer componentCtxInitializer, BazelAspectLocation aspectLocation,
+            CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory, BazelProjectManager projectMgr,
+            ResourceHelper rh, PreferenceStoreHelper crh, JavaCoreHelper javac,
+            OperatingEnvironmentDetectionStrategy osEnv, BazelConfigurationManager configMgr) throws Exception {
         // reset internal state (this is so tests run in a clean env)
         EclipseBazelComponentFacade.getInstance().resetBazelWorkspace();
 
@@ -162,7 +151,6 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         preferenceStoreResourceHelper = crh;
         plugin = this;
         configurationManager = configMgr;
-        externalJarRuleManager = externalJarRuleMgr;
 
         // Get the bazel executable path from the settings
         String bazelPath = configurationManager.getBazelExecutablePath();
@@ -272,7 +260,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         return ComponentContext.getInstance().getResourceHelper();
     }
 
-    public static PreferenceStoreResourceHelper getPreferenceStoreResourceHelper() {
+    public static PreferenceStoreHelper getPreferenceStoreResourceHelper() {
         return preferenceStoreResourceHelper;
     }
 
@@ -299,15 +287,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     }
 
     public BazelExternalJarRuleManager getBazelExternalJarRuleManager() {
-        return externalJarRuleManager;
-    }
-
-    public void setGlobalSearchClasspathContainer(BazelGlobalSearchClasspathContainer index) {
-        globalSearchContainer = index;
-    }
-
-    public BazelGlobalSearchClasspathContainer getGlobalSearchClasspathContainer() {
-        return globalSearchContainer;
+        return ComponentContext.getInstance().getBazelExternalJarRuleManager();
     }
 
     // DANGER ZONE

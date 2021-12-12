@@ -8,7 +8,7 @@ import java.util.Objects;
 
 import org.eclipse.core.runtime.Platform;
 
-import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
@@ -53,7 +53,7 @@ public class BazelCompilerUtils {
      * Provides details of the operating environment (OS, real vs. tests, etc)
      */
     public static OperatingEnvironmentDetectionStrategy getOperatingEnvironmentDetectionStrategy() {
-        return EclipseBazelComponentFacade.getInstance().getOsDetectionStrategy();
+        return ComponentContext.getInstance().getOsStrategy();
     }
 
     public static String getOSBazelPath() {
