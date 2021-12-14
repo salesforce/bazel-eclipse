@@ -29,6 +29,8 @@ import java.util.Objects;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreHelper;
@@ -123,7 +125,7 @@ public class InitImportFlow extends AbstractImportFlowStep {
         // we support pluggable project structure strategies to optimize import performance
         // this will use knowledge of common patterns like Maven to quickly locate source directories
         // but if a strategy gets this wrong it can cause problems
-        PreferenceStoreHelper resourceHelper = BazelPluginActivator.getPreferenceStoreResourceHelper();
+        PreferenceStoreHelper resourceHelper = ComponentContext.getInstance().getPreferenceStoreHelper();
         boolean enabledStructureStrategies =
                 resourceHelper.getBoolean(BazelPreferenceKeys.PROJECTSTRUCTUREOPTIMIZATIONS_PREF_NAME);
         if (!enabledStructureStrategies) {
@@ -138,13 +140,13 @@ public class InitImportFlow extends AbstractImportFlowStep {
         BazelPackageLocation bazelWorkspaceRootPackageInfo = ctx.getBazelWorkspaceRootPackageInfo();
         File bazelWorkspaceRootDirectory =
                 FSPathHelper.getCanonicalFileSafely(bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory());
-        ctx.init(bazelWorkspaceRootDirectory, BazelPluginActivator.getBazelProjectManager(),
-            BazelPluginActivator.getResourceHelper(), BazelPluginActivator.getBazelCommandManager());
+        ctx.init(bazelWorkspaceRootDirectory, ComponentContext.getInstance().getProjectManager(),
+            ComponentContext.getInstance().getResourceHelper(), ComponentContext.getInstance().getBazelCommandManager());
         return bazelWorkspaceRootDirectory;
     }
 
     private static BazelWorkspace initBazelWorkspace(File bazelWorkspaceRootDirectory) {
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        BazelWorkspace bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
         boolean isInitialImport = bazelWorkspace == null;
         String bazelWorkspaceName = null;
         if (isInitialImport) {
@@ -178,6 +180,6 @@ public class InitImportFlow extends AbstractImportFlowStep {
         if (existingBazelWorkspace != null) {
             return existingBazelWorkspace;
         }
-        return BazelPluginActivator.getBazelWorkspace();
+        return EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
     }
 }

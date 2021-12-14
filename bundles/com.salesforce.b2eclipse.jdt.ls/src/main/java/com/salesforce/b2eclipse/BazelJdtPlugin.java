@@ -50,23 +50,13 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.b2eclipse.config.IPreferenceConfiguration;
-import com.salesforce.bazel.eclipse.component.BazelAspectLocationComponentFacade;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
 import com.salesforce.bazel.eclipse.component.EclipseComponentContextInitializer;
-import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
-import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
-import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade;
 import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade.LogLevel;
-import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
-import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory;
 import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
 import com.salesforce.bazel.sdk.init.JvmRuleInit;
-import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
@@ -130,13 +120,8 @@ public class BazelJdtPlugin extends Plugin {
         BazelJavaSDKInit.initialize("Bazel Language Server", "bzl_ls");
         JvmRuleInit.initialize();
 
-        CommandConsoleFactory consoleFactory = new StandardCommandConsoleFactory();
-
-        new EclipseComponentContextInitializer(getBundle().getSymbolicName()).initialize();
-
-        EclipseBazelComponentFacade.getInstance().setCommandManager(
-            BazelAspectLocationComponentFacade.getInstance().getComponent(), new ShellCommandBuilder(consoleFactory),
-            consoleFactory, null);
+        new EclipseComponentContextInitializer(getBundle().getSymbolicName(), new StandardCommandConsoleFactory())
+                .initialize();
     }
 
     @Override
@@ -164,31 +149,6 @@ public class BazelJdtPlugin extends Plugin {
     public static File getBazelWorkspaceRootDirectoryOnStart() {
         String path = pluginPreferences.get(PREFERENCE_WORKSPACE_ROOT_DIRECTORY, null);
         return path != null ? new File(path) : null;
-    }
-
-    /**
-     * Returns the manager for imported projects
-     *
-     * @return
-     */
-    public static BazelProjectManager getBazelProjectManager() {
-        return ProjectManagerComponentFacade.getInstance().getComponent();
-    }
-
-    /**
-     * Returns the unique instance of {@link ResourceHelper}, this helper helps retrieve workspace and project objects
-     * from the environment
-     */
-    public static ResourceHelper getResourceHelper() {
-        return ResourceHelperComponentFacade.getInstance().getComponent();
-    }
-
-    /**
-     * Returns the unique instance of {@link JavaCoreHelper}, this helper helps manipulate the Java configuration of a
-     * Java project
-     */
-    public static JavaCoreHelper getJavaCoreHelper() {
-        return JavaCoreHelperComponentFacade.getInstance().getComponent();
     }
 
     public Map<String, Object> getJdtLsPreferences() {

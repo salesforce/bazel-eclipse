@@ -41,7 +41,7 @@ import java.util.Properties;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.util.BazelExecutableUtil;
 
@@ -59,7 +59,7 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
             String befDefaultValue = BazelPreferenceKeys.defaultValues.get(prefName);
             String value = userDefaults.getProperty(prefName, befDefaultValue);
             if (value != null) {
-                BazelPluginActivator.getPreferenceStoreResourceHelper().setDefaultValue(prefName, value);
+                ComponentContext.getInstance().getPreferenceStoreHelper().setDefaultValue(prefName, value);
             }
         }
 
@@ -68,7 +68,7 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
         for (String prefName : BazelPreferenceKeys.ALL_BOOLEAN_PREFS) {
             String befDefaultValue = BazelPreferenceKeys.defaultValues.get(prefName);
             String value = userDefaults.getProperty(prefName, befDefaultValue);
-            BazelPluginActivator.getPreferenceStoreResourceHelper().setDefaultValue(prefName,
+            ComponentContext.getInstance().getPreferenceStoreHelper().setDefaultValue(prefName,
                 Boolean.toString(true).equals(value));
         }
 
@@ -77,7 +77,7 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
         String defaultBazelExecutablePath = BazelCommandManager.getDefaultBazelExecutablePath();
         String bazelExecLocationFromEnv = BazelExecutableUtil.which("bazel", defaultBazelExecutablePath);
         String value = userDefaults.getProperty(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, bazelExecLocationFromEnv);
-        BazelPluginActivator.getPreferenceStoreResourceHelper()
+        ComponentContext.getInstance().getPreferenceStoreHelper()
                 .setDefaultValue(BazelPreferenceKeys.BAZEL_PATH_PREF_NAME, value);
     }
 

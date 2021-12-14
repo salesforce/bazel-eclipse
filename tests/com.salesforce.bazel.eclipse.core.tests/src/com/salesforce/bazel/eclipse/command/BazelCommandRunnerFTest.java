@@ -45,6 +45,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -74,8 +76,8 @@ public class BazelCommandRunnerFTest {
         BazelPluginActivator.getInstance().setBazelWorkspaceRootDirectory("test", mockEclipse.getBazelWorkspaceRoot());
 
         // run the method under test
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
+        BazelWorkspace bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
+        BazelCommandManager bazelCommandManager = ComponentContext.getInstance().getBazelCommandManager();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
@@ -83,7 +85,8 @@ public class BazelCommandRunnerFTest {
         assertNotNull(bazelWorkspaceCmdRunner);
 
         String expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot().getCanonicalPath();
-        String actualBazelWorkspaceRoot = BazelPluginActivator.getBazelWorkspaceRootDirectory().getCanonicalPath();
+        String actualBazelWorkspaceRoot =
+                EclipseBazelWorkspaceContext.getInstance().getBazelWorkspaceRootDirectory().getCanonicalPath();
         assertEquals(expectedBazelWorkspaceRoot, actualBazelWorkspaceRoot);
 
         // verify command runner 'bazel info' commands
@@ -110,8 +113,8 @@ public class BazelCommandRunnerFTest {
         BazelPluginActivator.getInstance().setBazelWorkspaceRootDirectory("test", mockEclipse.getBazelWorkspaceRoot());
 
         // run the method under test
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
+        BazelWorkspace bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
+        BazelCommandManager bazelCommandManager = ComponentContext.getInstance().getBazelCommandManager();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
@@ -119,7 +122,8 @@ public class BazelCommandRunnerFTest {
         assertNotNull(bazelWorkspaceCmdRunner);
 
         String expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot().getCanonicalPath();
-        String actualBazelWorkspaceRoot = BazelPluginActivator.getBazelWorkspaceRootDirectory().getCanonicalPath();
+        String actualBazelWorkspaceRoot =
+                EclipseBazelWorkspaceContext.getInstance().getBazelWorkspaceRootDirectory().getCanonicalPath();
         assertEquals(expectedBazelWorkspaceRoot, actualBazelWorkspaceRoot);
 
         // verify command runner 'bazel info' commands

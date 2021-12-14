@@ -46,6 +46,7 @@ import org.osgi.service.prefs.Preferences;
 import com.google.common.collect.ImmutableList;
 import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.bazel.eclipse.BazelNature;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
@@ -69,7 +70,7 @@ public final class BazelEclipseProjectSupport {
             boolean addWildcardIfNoTargets) {
         // Get the list of targets from the preferences
         Preferences eclipseProjectBazelPrefs =
-                BazelJdtPlugin.getResourceHelper().getProjectBazelPreferences(eclipseProject);
+                ComponentContext.getInstance().getResourceHelper().getProjectBazelPreferences(eclipseProject);
         ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
 
         boolean addedTarget = false;
@@ -97,7 +98,7 @@ public final class BazelEclipseProjectSupport {
      */
     public static IJavaProject[] getAllJavaBazelProjects() {
         // TODO: not sure if we need true flag
-        IJavaProject[] javaProjects = BazelJdtPlugin.getJavaCoreHelper().getAllBazelJavaProjects(true);
+        IJavaProject[] javaProjects = ComponentContext.getInstance().getJavaCoreHelper().getAllBazelJavaProjects(true);
         List<IJavaProject> bazelProjects = new ArrayList<>(javaProjects.length);
         for (IJavaProject project : javaProjects) {
             if (isBazelProject(project.getProject())) {
@@ -117,7 +118,7 @@ public final class BazelEclipseProjectSupport {
      */
     public static List<String> getBazelBuildFlagsForEclipseProject(IProject eclipseProject) {
         // Get the list of build flags from the preferences
-        IScopeContext eclipseProjectScope = BazelJdtPlugin.getResourceHelper().getProjectScopeContext(eclipseProject);
+        IScopeContext eclipseProjectScope = ComponentContext.getInstance().getResourceHelper().getProjectScopeContext(eclipseProject);
         Preferences eclipseProjectNode = eclipseProjectScope.getNode(BazelJdtPlugin.PLUGIN_ID);
 
         ImmutableList.Builder<String> listBuilder = ImmutableList.builder();

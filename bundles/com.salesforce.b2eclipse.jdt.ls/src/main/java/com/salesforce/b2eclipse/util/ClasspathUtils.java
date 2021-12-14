@@ -14,7 +14,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class ClasspathUtils {
@@ -38,7 +38,7 @@ public class ClasspathUtils {
 
 		// TODO this code is messy, why get workspace root two different ways, and is
 		// there a better way to handle source paths?
-		IWorkspace eclipseWorkspace = BazelJdtPlugin.getResourceHelper().getEclipseWorkspace();
+		IWorkspace eclipseWorkspace = ComponentContext.getInstance().getResourceHelper().getEclipseWorkspace();
 		IWorkspaceRoot rootResource = eclipseWorkspace.getRoot();
 		IProject[] projects = rootResource.getProjects();
 
@@ -46,8 +46,8 @@ public class ClasspathUtils {
 		Path absoluteSourcePath = new File(absoluteSourcePathString).toPath();
 
 		for (IProject project : projects) {
-			IJavaProject jProject = BazelJdtPlugin.getJavaCoreHelper().getJavaProjectForProject(project);
-			IClasspathEntry[] classpathEntries = BazelJdtPlugin.getJavaCoreHelper().getRawClasspath(jProject);
+			IJavaProject jProject = ComponentContext.getInstance().getJavaCoreHelper().getJavaProjectForProject(project);
+			IClasspathEntry[] classpathEntries = ComponentContext.getInstance().getJavaCoreHelper().getRawClasspath(jProject);
 			if (classpathEntries == null) {
 			    LOG.error("No classpath entries found for project [{}]", jProject.getElementName());
 				continue;
@@ -56,7 +56,7 @@ public class ClasspathUtils {
 				if (entry.getEntryKind() != IClasspathEntry.CPE_SOURCE) {
 					continue;
 				}
-				IResource res = BazelJdtPlugin.getResourceHelper().findMemberInWorkspace(entry.getPath());
+				IResource res = ComponentContext.getInstance().getResourceHelper().findMemberInWorkspace(entry.getPath());
 				if (res == null) {
 					continue;
 				}

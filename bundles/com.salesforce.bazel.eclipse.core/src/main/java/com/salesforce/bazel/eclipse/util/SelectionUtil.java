@@ -27,7 +27,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkingSet;
 
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 
@@ -181,7 +181,7 @@ public class SelectionUtil {
         }
 
         if (projectList.isEmpty() && includeAll) {
-            return BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot().getProjects();
+            return ComponentContext.getInstance().getResourceHelper().getEclipseWorkspaceRoot().getProjects();
         }
         return projectList.toArray(new IProject[projectList.size()]);
     }

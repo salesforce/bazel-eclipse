@@ -42,7 +42,6 @@ import org.eclipse.jdt.internal.ui.text.correction.DefaultClasspathFixProcessor;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.swt.graphics.Image;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.index.CodeIndexEntry;
 import com.salesforce.bazel.sdk.index.jvm.BazelJvmIndexClasspath;
@@ -71,8 +70,7 @@ public class BazelClasspathFixProcessor extends DefaultClasspathFixProcessor {
         if (proposals.length == 0) {
             return proposals;
         }
-        BazelPluginActivator activator = BazelPluginActivator.getInstance();
-        if (!activator.getConfigurationManager().isGlobalClasspathSearchEnabled()) {
+        if (!ComponentContext.getInstance().getConfigurationManager().isGlobalClasspathSearchEnabled()) {
             // no point in trying to improve on the advice, since we dont have the search index
             return proposals;
         }

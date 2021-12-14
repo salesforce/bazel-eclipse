@@ -39,7 +39,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
@@ -84,7 +84,7 @@ public class BazelEclipseProjectFactoryFTest {
         assertNotNull(javalib1_IProject);
 
         // workspace preferences
-        BazelConfigurationManager configMgr = BazelPluginActivator.getInstance().getConfigurationManager();
+        BazelConfigurationManager configMgr = ComponentContext.getInstance().getConfigurationManager();
         String expectedBazelWorkspaceRoot = mockEclipse.getBazelWorkspaceRoot().getCanonicalPath();
         assertEquals(expectedBazelWorkspaceRoot, configMgr.getBazelWorkspacePath());
 
@@ -93,14 +93,14 @@ public class BazelEclipseProjectFactoryFTest {
         assertEquals("Bazel Workspace (" + wsName + ")", workspace_IProject.getName());
         // at some point we may drop the Java nature from the Bazel Workspace project, but until then...
         IProjectDescription workspace_description =
-                BazelPluginActivator.getResourceHelper().getProjectDescription(workspace_IProject);
+                ComponentContext.getInstance().getResourceHelper().getProjectDescription(workspace_IProject);
         hasNature("workspace", workspace_description.getNatureIds(), true, true);
 
         // Eclipse project for a Java package: javalib0
         assertNotNull(javalib0_IProject);
         assertEquals("javalib0", javalib0_IProject.getName());
         IProjectDescription javalib0_description =
-                BazelPluginActivator.getResourceHelper().getProjectDescription(javalib0_IProject);
+                ComponentContext.getInstance().getResourceHelper().getProjectDescription(javalib0_IProject);
         hasNature("javalib0", javalib0_description.getNatureIds(), true, true);
         // javalib0 CP should have 4 source folders (src/main/java, src/main/resources, src/test/java, src/test/resources), JDK, and Bazel Classpath Container
         IClasspathEntry[] refClasspathEntries = javalib0_IJavaProject.getReferencedClasspathEntries();
@@ -110,7 +110,7 @@ public class BazelEclipseProjectFactoryFTest {
         assertNotNull(javalib1_IProject);
         assertEquals("javalib1", javalib1_IProject.getName());
         IProjectDescription javalib1_description =
-                BazelPluginActivator.getResourceHelper().getProjectDescription(javalib1_IProject);
+                ComponentContext.getInstance().getResourceHelper().getProjectDescription(javalib1_IProject);
         hasNature("javalib1", javalib1_description.getNatureIds(), true, true);
 
         // javalib1 depends on javalib0 (Bazel-wise) which should get imported as a Project reference

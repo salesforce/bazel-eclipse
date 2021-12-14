@@ -56,7 +56,7 @@ import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 
 /**
  * File system path based Content Assistant (auto-completion). Adapted from
@@ -74,7 +74,7 @@ public final class BazelPackageContentAssistProcessor implements IContentAssistP
             String matchSuffix = null;
             String suggestionPrefix = "";
 
-            File f = new File(BazelPluginActivator.getBazelWorkspaceRootDirectory(), prefix);
+            File f = new File(EclipseBazelWorkspaceContext.getInstance().getBazelWorkspaceRootDirectory(), prefix);
             if (f.isDirectory()) {
                 if (!prefix.isEmpty() && !prefix.endsWith(File.separator)) {
                     suggestionPrefix = File.separator;
@@ -82,9 +82,10 @@ public final class BazelPackageContentAssistProcessor implements IContentAssistP
             } else {
                 int i = prefix.lastIndexOf(File.separator);
                 if (i == -1) {
-                    f = BazelPluginActivator.getBazelWorkspaceRootDirectory();
+                    f = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspaceRootDirectory();
                 } else {
-                    f = new File(BazelPluginActivator.getBazelWorkspaceRootDirectory(), prefix.substring(0, i));
+                    f = new File(EclipseBazelWorkspaceContext.getInstance().getBazelWorkspaceRootDirectory(),
+                            prefix.substring(0, i));
                 }
                 matchSuffix = prefix.substring(i + 1);
             }

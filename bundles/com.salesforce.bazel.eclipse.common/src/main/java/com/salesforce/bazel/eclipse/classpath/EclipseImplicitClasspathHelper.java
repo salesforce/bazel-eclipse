@@ -43,7 +43,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 
-import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.lang.jvm.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
@@ -79,7 +79,7 @@ public class EclipseImplicitClasspathHelper extends ImplicitClasspathHelper {
                 IPath sourceAttachmentPath = null;
                 IPath sourceAttachmentRootPath = null;
                 boolean isTestLib = generic_dep.isTestJar;
-                IClasspathEntry runnerJarEntry = JavaCoreHelperComponentFacade.getInstance().getComponent().newLibraryEntry(runnerJarPath,
+                IClasspathEntry runnerJarEntry = ComponentContext.getInstance().getJavaCoreHelper().newLibraryEntry(runnerJarPath,
                     sourceAttachmentPath, sourceAttachmentRootPath, isTestLib);
                 deps.add(runnerJarEntry);
             }

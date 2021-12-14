@@ -28,9 +28,8 @@ import java.util.Objects;
 
 import org.eclipse.core.runtime.SubMonitor;
 
-import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
-import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
-import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -122,14 +121,14 @@ public class InitImportFlow extends AbstractImportFlowStep {
         BazelPackageLocation bazelWorkspaceRootPackageInfo = ctx.getBazelWorkspaceRootPackageInfo();
         File bazelWorkspaceRootDirectory =
                 FSPathHelper.getCanonicalFileSafely(bazelWorkspaceRootPackageInfo.getWorkspaceRootDirectory());
-        ctx.init(bazelWorkspaceRootDirectory, ProjectManagerComponentFacade.getInstance().getComponent(),
-            ResourceHelperComponentFacade.getInstance().getComponent(),
-            EclipseBazelComponentFacade.getInstance().getBazelCommandManager());
+        ctx.init(bazelWorkspaceRootDirectory, ComponentContext.getInstance().getProjectManager(),
+            ComponentContext.getInstance().getResourceHelper(),
+            ComponentContext.getInstance().getBazelCommandManager());
         return bazelWorkspaceRootDirectory;
     }
 
     private static BazelWorkspace initBazelWorkspace(File bazelWorkspaceRootDirectory) {
-        BazelWorkspace bazelWorkspace = EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
+        BazelWorkspace bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
         boolean isInitialImport = bazelWorkspace == null;
         String bazelWorkspaceName = null;
         if (isInitialImport) {
@@ -137,7 +136,7 @@ public class InitImportFlow extends AbstractImportFlowStep {
 
             // Many collaborators need the Bazel workspace directory location, so we stash it in an accessible global location
             // currently we only support one Bazel workspace in an Eclipse workspace
-            EclipseBazelComponentFacade.getInstance().setBazelWorkspaceRootDirectory(bazelWorkspaceName,
+            EclipseBazelWorkspaceContext.getInstance().setBazelWorkspaceRootDirectory(bazelWorkspaceName,
                 bazelWorkspaceRootDirectory);
         } else {
             bazelWorkspaceName = bazelWorkspace.getName();
@@ -149,6 +148,6 @@ public class InitImportFlow extends AbstractImportFlowStep {
     }
 
     protected static BazelWorkspace getExistingBazelWorkspace() {
-        return EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
+        return EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
     }
 }

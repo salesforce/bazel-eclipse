@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -114,7 +115,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     @Override
     public BazelJvmClasspathResponse computeClasspath() {
         BazelWorkspace bazelWorkspace = ComponentContext.getInstance().getBazelWorkspace();
-        if (!config.isGlobalClasspathSearchEnabled() || (bazelWorkspace == null)) {
+        if (Objects.isNull(config) || !config.isGlobalClasspathSearchEnabled() || (bazelWorkspace == null)) {
             // user has disabled the global search feature, or hasnt imported a bazel workspace yet
             return new BazelJvmClasspathResponse();
         }

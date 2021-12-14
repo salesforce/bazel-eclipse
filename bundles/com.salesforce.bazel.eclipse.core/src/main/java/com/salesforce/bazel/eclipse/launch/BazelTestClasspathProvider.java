@@ -60,7 +60,8 @@ import org.eclipse.swt.widgets.Display;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmTestClasspathHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -135,8 +136,8 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
         List<IRuntimeClasspathEntry> result = new ArrayList<>();
         IJavaProject project = JavaRuntime.getJavaProject(configuration);
         String projectName = project.getProject().getName();
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+        BazelWorkspace bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
+        BazelProjectManager bazelProjectManager = ComponentContext.getInstance().getProjectManager();
         BazelProject bazelProject = bazelProjectManager.getProject(projectName);
         String testClassName = configuration.getAttribute("org.eclipse.jdt.launching.MAIN_TYPE", (String) null);
         BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);

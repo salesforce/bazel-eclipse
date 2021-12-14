@@ -59,6 +59,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.TypedBazelLabel;
 import com.salesforce.bazel.eclipse.ui.BazelSWTFactory;
@@ -228,7 +229,7 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         ElementListSelectionDialog dialog = new ElementListSelectionDialog(getShell(), BAZEL_PROJECT_LABEL_PROVIDER);
         dialog.setTitle("Select Project");
         dialog.setMessage("Select Project");
-        dialog.setElements(BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false));
+        dialog.setElements(ComponentContext.getInstance().getJavaCoreHelper().getAllBazelJavaProjects(false));
 
         IJavaProject javaProject = getSelectedProject();
         if (javaProject != null) {
@@ -268,8 +269,8 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
     }
 
     private static IJavaModel getJavaModel() {
-        IWorkspaceRoot wsRoot = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot();
-        return BazelPluginActivator.getJavaCoreHelper().getJavaModelForWorkspace(wsRoot);
+        IWorkspaceRoot wsRoot = ComponentContext.getInstance().getResourceHelper().getEclipseWorkspaceRoot();
+        return ComponentContext.getInstance().getJavaCoreHelper().getJavaModelForWorkspace(wsRoot);
     }
 
     private static abstract class DefaultLabelProvider implements ILabelProvider {
