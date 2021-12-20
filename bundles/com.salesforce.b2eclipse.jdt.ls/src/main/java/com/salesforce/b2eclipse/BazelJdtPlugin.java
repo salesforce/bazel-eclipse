@@ -126,7 +126,8 @@ public class BazelJdtPlugin extends Plugin {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        if (Objects.nonNull(preferencesChangeListener)) {
+        if (Objects.nonNull(preferencesChangeListener)
+                && Objects.nonNull(JavaLanguageServerPlugin.getPreferencesManager())) {
             JavaLanguageServerPlugin.getPreferencesManager().removePreferencesChangeListener(preferencesChangeListener);
         }
         super.stop(context);
