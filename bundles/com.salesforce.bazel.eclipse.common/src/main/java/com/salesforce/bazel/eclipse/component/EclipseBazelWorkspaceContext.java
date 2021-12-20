@@ -2,54 +2,32 @@ package com.salesforce.bazel.eclipse.component;
 
 import java.io.File;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.salesforce.bazel.eclipse.utils.BazelCompilerUtils;
-import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
-import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.command.CommandBuilder;
-import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
-import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
 
-public class EclipseBazelComponentFacade {
-    private static final LogHelper LOG = LogHelper.log(EclipseBazelComponentFacade.class);
+public class EclipseBazelWorkspaceContext {
+    private static final LogHelper LOG = LogHelper.log(EclipseBazelWorkspaceContext.class);
 
-    private static EclipseBazelComponentFacade instance;
-
-    private final OperatingEnvironmentDetectionStrategy osDetectionStrategy;
+    private static EclipseBazelWorkspaceContext instance;
     /**
      * The Bazel workspace that is in scope. Currently, we only support one Bazel workspace in an Eclipse workspace.
      */
     private BazelWorkspace bazelWorkspace;
     /**
-     * Facade that enables the plugin to execute the bazel command line tool outside of a workspace
-     */
-    private BazelCommandManager bazelCommandManager;
-    /**
      * Runs bazel commands in the loaded workspace.
      */
     private BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
 
-    private String bazelExecutablePath;
-
-    private EclipseBazelComponentFacade() {
-        osDetectionStrategy = new RealOperatingEnvironmentDetectionStrategy();
+    private EclipseBazelWorkspaceContext() {
         bazelWorkspace = null;
     }
 
-    public static synchronized EclipseBazelComponentFacade getInstance() {
+    public static synchronized EclipseBazelWorkspaceContext getInstance() {
         if (instance == null) {
-            instance = new EclipseBazelComponentFacade();
+            instance = new EclipseBazelWorkspaceContext();
         }
         return instance;
-    }
-
-    public OperatingEnvironmentDetectionStrategy getOsDetectionStrategy() {
-        return osDetectionStrategy;
     }
 
     /**
@@ -58,21 +36,6 @@ public class EclipseBazelComponentFacade {
      */
     public File getBazelWorkspaceRootDirectory() {
         return bazelWorkspace.getBazelWorkspaceRootDirectory();
-    }
-
-    /**
-     * Returns the unique instance of {@link BazelCommandManager}, the facade enables the plugin to execute the bazel
-     * command line tool.
-     */
-    public BazelCommandManager getBazelCommandManager() {
-        return bazelCommandManager;
-    }
-
-    public void setCommandManager(BazelAspectLocation aspectLocation, CommandBuilder commandBuilder,
-            CommandConsoleFactory consoleFactory, String filePath) {
-        String path = StringUtils.isNotBlank(filePath) ? filePath : BazelCompilerUtils.getBazelPath();
-        File bazelPathFile = new File(path);
-        bazelCommandManager = new BazelCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelPathFile);
     }
 
     /**
@@ -90,8 +53,8 @@ public class EclipseBazelComponentFacade {
                 return;
             }
         }
-        bazelWorkspace = new BazelWorkspace(workspaceName, rootDirectory,
-                EclipseBazelComponentFacade.getInstance().getOsDetectionStrategy());
+        bazelWorkspace =
+                new BazelWorkspace(workspaceName, rootDirectory, ComponentContext.getInstance().getOsStrategy());
         BazelWorkspaceCommandRunner commandRunner = getWorkspaceCommandRunner();
         getBazelWorkspace().setBazelWorkspaceMetadataStrategy(commandRunner);
         getBazelWorkspace().setBazelWorkspaceCommandRunner(commandRunner);
@@ -106,7 +69,8 @@ public class EclipseBazelComponentFacade {
                 return null;
             }
             if (getBazelWorkspace().hasBazelWorkspaceRootDirectory()) {
-                bazelWorkspaceCommandRunner = bazelCommandManager.getWorkspaceCommandRunner(getBazelWorkspace());
+                bazelWorkspaceCommandRunner = ComponentContext.getInstance().getBazelCommandManager()
+                        .getWorkspaceCommandRunner(getBazelWorkspace());
             }
         }
         return bazelWorkspaceCommandRunner;
@@ -136,14 +100,6 @@ public class EclipseBazelComponentFacade {
         // now forget about the workspace
         bazelWorkspace = null;
         bazelWorkspaceCommandRunner = null;
-    }
-
-    public String getBazelExecutablePath() {
-        return bazelExecutablePath;
-    }
-
-    public void setBazelExecutablePath(String bazelExecutablePath) {
-        this.bazelExecutablePath = bazelExecutablePath;
     }
 
 }

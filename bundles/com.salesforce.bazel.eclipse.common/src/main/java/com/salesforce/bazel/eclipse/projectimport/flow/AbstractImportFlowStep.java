@@ -1,6 +1,7 @@
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
-import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -19,7 +20,7 @@ public abstract class AbstractImportFlowStep implements ImportFlow {
     }
 
     public BazelWorkspace getBazelWorkspace() {
-        return EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
+        return ComponentContext.getInstance().getBazelWorkspace();
     }
 
     public BazelCommandManager getCommandManager() {
@@ -35,6 +36,6 @@ public abstract class AbstractImportFlowStep implements ImportFlow {
     }
 
     protected void closeBazelWorkspace() {
-        EclipseBazelComponentFacade.getInstance().resetBazelWorkspace();
+        EclipseBazelWorkspaceContext.getInstance().resetBazelWorkspace();
     }
 }

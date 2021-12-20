@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.component;
+package com.salesforce.bazel.eclipse.component.internal;
 
 import com.salesforce.bazel.eclipse.activator.BazelEclipseExtensionPointDefinition;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;

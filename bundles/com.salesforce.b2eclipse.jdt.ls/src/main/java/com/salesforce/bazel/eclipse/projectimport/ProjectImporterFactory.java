@@ -41,8 +41,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
-import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.projectimport.flow.BjlsFlowProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.flow.BjlsSetupClasspathContainersFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.CreateProjectsFlow;
@@ -107,9 +106,9 @@ public class ProjectImporterFactory {
     private static List<ImportFlow> createFlows() {
         // each project import uses a new list of flow instances so that flows can have state
         // the List returned here needs to be modifiable
-        BazelProjectManager bazelProjectManager = BazelJdtPlugin.getBazelProjectManager();
-        ResourceHelper resourceHelper = BazelJdtPlugin.getResourceHelper();
-        BazelCommandManager bazelCommandManager = EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
+        BazelProjectManager bazelProjectManager = ComponentContext.getInstance().getProjectManager();
+        ResourceHelper resourceHelper = ComponentContext.getInstance().getResourceHelper();
+        BazelCommandManager bazelCommandManager = ComponentContext.getInstance().getBazelCommandManager();
         return new ArrayList<>(Arrays.asList(new InitJREFlow(),
             new InitImportFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
             new DetermineTargetsFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
@@ -119,6 +118,6 @@ public class ProjectImporterFactory {
             new OrderProjectsFlow(), new CreateProjectsFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
             new SetupProjectBuildersFlow(),
             new BjlsSetupClasspathContainersFlow(bazelCommandManager, bazelProjectManager, resourceHelper,
-                BazelJdtPlugin.getJavaCoreHelper())));
+                ComponentContext.getInstance().getJavaCoreHelper())));
     }
 }

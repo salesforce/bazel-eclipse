@@ -50,14 +50,14 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 
 public class MockIWorkspaceRoot implements IWorkspaceRoot {
     private static final String UOE_MSG =
             "MockIWorkspaceRoot is pay as you go, you have hit a method that is not implemented.";
 
-    private MockEclipse mockEclipse;
-    private File eclipseWorkspaceDir;
+    private final MockEclipse mockEclipse;
+    private final File eclipseWorkspaceDir;
 
     /**
      * This is where we stored the linked folder bookkeeping.
@@ -95,14 +95,14 @@ public class MockIWorkspaceRoot implements IWorkspaceRoot {
         IResource res = null;
         if (path == null) {
             System.err.println(
-                "MockIWorkspaceRoot.findMember was called with a null 'path' parameter, which is suspicious.");
+                    "MockIWorkspaceRoot.findMember was called with a null 'path' parameter, which is suspicious.");
             return null;
         }
         String[] segments = path.segments();
 
         if (segments.length == 0) {
             System.err.println(
-                "MockIWorkspaceRoot.findMember was called with an empty 'path' parameter, which is suspicious.");
+                    "MockIWorkspaceRoot.findMember was called with an empty 'path' parameter, which is suspicious.");
         } else if (segments.length == 1) {
             // if there is only one token, it is a project name and we will return the IProject
             // which will have a location in the Eclipse workspace directory
@@ -127,7 +127,7 @@ public class MockIWorkspaceRoot implements IWorkspaceRoot {
 
     @Override
     public IWorkspace getWorkspace() {
-        return BazelPluginActivator.getResourceHelper().getEclipseWorkspace();
+        return ComponentContext.getInstance().getResourceHelper().getEclipseWorkspace();
     }
 
     @Override

@@ -37,26 +37,35 @@ package com.salesforce.bazel.eclipse.classpath;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.DynamicBazelJvmClasspath;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
+    private static final LogHelper LOG = LogHelper.log(BazelClasspathContainer.class);
+
     protected final BazelJvmClasspath bazelClasspath;
+    private CallSource lastCallSource = CallSource.UNDEFINED;
 
     // TODO make this an Eclipse pref
     public boolean USE_DYNAMIC_CP = false;
@@ -64,26 +73,26 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     private static List<BazelJvmClasspath> instances = new ArrayList<>();
 
     public BazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
-    BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
-        this(eclipseProject, BazelPluginActivator.getResourceHelper(), BazelPluginActivator.getJavaCoreHelper(),
-            BazelPluginActivator.getBazelProjectManager(),
-            BazelPluginActivator.getInstance().getOperatingEnvironmentDetectionStrategy(),
-            BazelPluginActivator.getBazelWorkspace());
+            BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
+        this(eclipseProject, ComponentContext.getInstance().getResourceHelper(), ComponentContext.getInstance().getJavaCoreHelper(),
+            ComponentContext.getInstance().getProjectManager(), ComponentContext.getInstance().getOsStrategy(),
+                ComponentContext.getInstance().getBazelWorkspace());
     }
 
     public BazelClasspathContainer(IProject eclipseProject, ResourceHelper resourceHelper, JavaCoreHelper jcHelper,
             BazelProjectManager bpManager, OperatingEnvironmentDetectionStrategy osDetectStrategy,
             BazelWorkspace bazelWorkspace) throws IOException, InterruptedException, BackingStoreException,
-    JavaModelException, BazelCommandLineToolConfigurationException {
+            JavaModelException, BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper, jcHelper, bpManager, osDetectStrategy, bazelWorkspace);
 
         if (USE_DYNAMIC_CP) {
             bazelClasspath = new DynamicBazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager(),
-                null);
+                    new EclipseImplicitClasspathHelper(), osDetector,
+                    ComponentContext.getInstance().getBazelCommandManager(), null);
         } else {
             bazelClasspath = new BazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                new EclipseImplicitClasspathHelper(), osDetector, BazelPluginActivator.getBazelCommandManager());
+                    new EclipseImplicitClasspathHelper(), osDetector,
+                    ComponentContext.getInstance().getBazelCommandManager());
         }
         instances.add(bazelClasspath);
     }
@@ -98,8 +107,31 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
 
     @Override
     public IClasspathEntry[] getClasspathEntries() {
-        // this method is overridden just for a breakpoint opportunity
-        return super.getClasspathEntries();
+        CallSource currentCallSource = getCallSource(Thread.currentThread().getStackTrace());
+
+        if (LOG.isDebugLevel()) {
+            LOG.debug("Call source for classpath is {}. Last call source was {}", currentCallSource.name(),
+                this.lastCallSource.name());
+        }
+        if (ObjectUtils.notEqual(currentCallSource, CallSource.UNDEFINED)) {
+            lastCallSource = currentCallSource;
+        }
+
+        Predicate<IClasspathEntry> isNormalClasspathEntry = classpathEntry -> !(classpathEntry.getPath().toFile()
+                .getName().equalsIgnoreCase("Runner_deploy-ijar.jar"));
+
+        // if it is Run/Debug call, then implicit dependencies should be filtered out to prevent the loading of a wrong version of classes
+        IClasspathEntry[] classpathEntries = super.getClasspathEntries();
+        if (CallSource.RUN_DEBUG.equals(lastCallSource)) {
+            classpathEntries =
+                    Arrays.stream(classpathEntries).filter(isNormalClasspathEntry).toArray(IClasspathEntry[]::new);
+        }
+
+        if (LOG.isDebugLevel()) {
+            LOG.debug("Classpath entries are: {}", Objects.isNull(classpathEntries) ? "[]"
+                    : Arrays.stream(classpathEntries).map(IClasspathEntry::getPath).map(IPath::toOSString).toArray());
+        }
+        return classpathEntries;
     }
 
     @Override
@@ -114,4 +146,18 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
             instance.clean();
         }
     }
+
+    private CallSource getCallSource(StackTraceElement[] stack) {
+        for (StackTraceElement elem : stack) {
+            String classname = elem.getClassName();
+            if (classname.endsWith(IClasspathContainerConstants.JAVA_DEBUG_DELEGATE_CMD_HANDLER)) {
+                return CallSource.RUN_DEBUG;
+            }
+            if (classname.endsWith(IClasspathContainerConstants.JUNIT_LAUNCH_CONFIGURATION_DELEGATE)) {
+                return CallSource.JUNIT;
+            }
+        }
+        return CallSource.UNDEFINED;
+    }
+
 }

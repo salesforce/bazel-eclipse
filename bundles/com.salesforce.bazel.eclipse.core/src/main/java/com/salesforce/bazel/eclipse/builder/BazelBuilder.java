@@ -56,10 +56,11 @@ import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.IClasspathContainerConstants;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
@@ -111,10 +112,10 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         IProject project = getProject();
         progressMonitor.beginTask("Bazel build", 1);
 
-        BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
-        JavaCoreHelper javaCoreHelper = BazelPluginActivator.getJavaCoreHelper();
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
+        BazelCommandManager bazelCommandManager = ComponentContext.getInstance().getBazelCommandManager();
+        JavaCoreHelper javaCoreHelper = ComponentContext.getInstance().getJavaCoreHelper();
+        BazelWorkspace bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
+        ResourceHelper resourceHelper = ComponentContext.getInstance().getResourceHelper();
         if (bazelWorkspace == null) {
             LOG.warn("Ignoring a Bazel build request, as the Bazel Workspace is not set.");
             BazelProblem problem = BazelProblem.createError("BUILD", 1,
@@ -175,8 +176,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         // this may not have a severe performance impact as bazel handles it efficiently but we may want to revisit
         // TODO: revisit if we want to clean only once when multiple targets are selected
 
-        BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
-        BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
+        BazelCommandManager bazelCommandManager = ComponentContext.getInstance().getBazelCommandManager();
+        BazelWorkspace bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
@@ -198,7 +199,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             WorkProgressMonitor progressMonitor, IProject rootProject, IProgressMonitor monitor)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
         Set<String> bazelTargets = new TreeSet<>();
-        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+        BazelProjectManager bazelProjectManager = ComponentContext.getInstance().getProjectManager();
         List<BazelProject> bazelProjects = new ArrayList<>();
 
         // figure out the list of targets to build
@@ -226,7 +227,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     private static List<String> getAllBazelBuildFlags(Collection<IProject> projects) {
         List<String> buildFlags = new ArrayList<>();
-        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+        BazelProjectManager bazelProjectManager = ComponentContext.getInstance().getProjectManager();
 
         for (IProject project : projects) {
             String projectName = project.getName();

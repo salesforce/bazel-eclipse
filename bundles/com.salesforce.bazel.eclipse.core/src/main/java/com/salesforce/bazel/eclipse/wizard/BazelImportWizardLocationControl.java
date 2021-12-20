@@ -41,7 +41,7 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
@@ -114,7 +114,7 @@ public class BazelImportWizardLocationControl {
                 dialog.setText("Locate the Bazel WORKSPACE file");
                 String path = rootDirectoryCombo.getText();
                 if (path.length() == 0) {
-                    path = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot().getLocation()
+                    path = ComponentContext.getInstance().getResourceHelper().getEclipseWorkspaceRoot().getLocation()
                             .toPortableString();
                 }
                 dialog.setFilterPath(path);

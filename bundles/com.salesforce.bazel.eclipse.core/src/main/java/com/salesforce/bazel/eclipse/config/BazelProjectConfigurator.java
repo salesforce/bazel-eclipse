@@ -52,7 +52,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.wizards.datatransfer.ProjectConfigurator;
 
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -171,7 +171,7 @@ public class BazelProjectConfigurator implements ProjectConfigurator {
         try {
             // TODO when will this be called? we add the nature already when we created the project
             EclipseProjectUtils.addNatureToEclipseProject(project, BazelNature.BAZEL_NATURE_ID,
-                BazelPluginActivator.getResourceHelper());
+                ComponentContext.getInstance().getResourceHelper());
         } catch (CoreException coreEx) {
             LOG.error("Exception adding Bazel nature: {}", coreEx.getMessage());
         }

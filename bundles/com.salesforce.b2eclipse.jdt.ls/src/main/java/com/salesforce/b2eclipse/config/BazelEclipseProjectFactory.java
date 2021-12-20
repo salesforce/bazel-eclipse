@@ -43,7 +43,7 @@ import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.b2eclipse.managers.BazelBuildSupport;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer;
-import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -99,7 +99,7 @@ public final class BazelEclipseProjectFactory {
         // it in an accessible global location
         // currently we only support one Bazel workspace in an Eclipse workspace
 
-        EclipseBazelComponentFacade.getInstance().setBazelWorkspaceRootDirectory(
+        EclipseBazelWorkspaceContext.getInstance().setBazelWorkspaceRootDirectory(
             BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspaceRoot), bazelWorkspaceRootDirectory);
 
         BazelBuildSupport.calculateExcludedFilePatterns(bazelWorkspaceRootDirectory.getAbsolutePath());
@@ -108,7 +108,7 @@ public final class BazelEclipseProjectFactory {
                 new ProjectImporterFactory(workspaceRootPackage, selectedBazelPackages);
         final ProjectImporter projectImporter = projectImporterFactory.build();
 
-        BazelClasspathContainerInitializer.getIsCorrupt().set(false);
+        BazelClasspathContainerInitializer.isCorrupt.set(false);
         projectImporter.run(subMonitor);
 
         subMonitor.done();

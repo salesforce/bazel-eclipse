@@ -48,7 +48,8 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
@@ -207,7 +208,7 @@ class BazelLaunchConfigurationSupport {
      * Returns all AspectTargetInfo instances that represent targets of the specified type, for the specified project.
      */
     Collection<AspectTargetInfo> getAspectTargetInfosForProject(IProject project, Set<BazelTargetKind> targetTypes) {
-        BazelWorkspaceCommandRunner bazelRunner = BazelPluginActivator.getInstance().getWorkspaceCommandRunner();
+        BazelWorkspaceCommandRunner bazelRunner = EclipseBazelWorkspaceContext.getInstance().getWorkspaceCommandRunner();
         AspectTargetInfos apis = computeAspectTargetInfos(project, bazelRunner);
         return apis.lookupByTargetKind(targetTypes);
     }
@@ -236,7 +237,7 @@ class BazelLaunchConfigurationSupport {
 
     private static AspectTargetInfos computeAspectTargetInfos(IProject project,
             BazelWorkspaceCommandRunner bazelRunner) {
-        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+        BazelProjectManager bazelProjectManager = ComponentContext.getInstance().getProjectManager();
         try {
             // TODO switch this to use the BazelBuildFile value object
             String projectName = project.getName();

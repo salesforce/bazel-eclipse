@@ -12,10 +12,10 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 
-import com.salesforce.b2eclipse.BazelJdtPlugin;
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.classpath.EclipseSourceClasspathUtil;
-import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
@@ -96,12 +96,12 @@ public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFl
 
     private void buildBinLinkFolder(IJavaProject eclipseJavaProject, BazelLabel bazelLabel) {
         String projectMainOutputPath =
-                EclipseBazelComponentFacade.getInstance().getWorkspaceCommandRunner().getProjectOutputPath(bazelLabel);
+                EclipseBazelWorkspaceContext.getInstance().getWorkspaceCommandRunner().getProjectOutputPath(bazelLabel);
 
         IPath projectOutputPath = Optional.ofNullable(projectMainOutputPath).map(Path::fromOSString).orElse(null);
         if (projectOutputPath != null) {
             try {
-                BazelJdtPlugin.getResourceHelper().createFolderLink(eclipseJavaProject.getProject().getFolder("/bin"),
+                ComponentContext.getInstance().getResourceHelper().createFolderLink(eclipseJavaProject.getProject().getFolder("/bin"),
                     projectOutputPath, IResource.NONE, null);
             } catch (IllegalArgumentException e) {
                 LOG.info("Folder link {} already exists", projectOutputPath);
@@ -111,11 +111,11 @@ public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFl
 
     private void buildTestBinLinkFolder(IJavaProject eclipseJavaProject, BazelLabel bazelLabel) {
         String projectTestOutputPath =
-                EclipseBazelComponentFacade.getInstance().getWorkspaceCommandRunner().getProjectOutputPath(bazelLabel);
+                EclipseBazelWorkspaceContext.getInstance().getWorkspaceCommandRunner().getProjectOutputPath(bazelLabel);
         IPath projectOutputPath = Optional.ofNullable(projectTestOutputPath).map(Path::fromOSString).orElse(null);
         if (projectOutputPath != null) {
             try {
-                BazelJdtPlugin.getResourceHelper().createFolderLink(
+                ComponentContext.getInstance().getResourceHelper().createFolderLink(
                     eclipseJavaProject.getProject().getFolder(TEST_BIN_FOLDER), projectOutputPath, IResource.NONE,
                     null);
             } catch (IllegalArgumentException e) {

@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.component;
+package com.salesforce.bazel.eclipse.component.internal;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.Objects;

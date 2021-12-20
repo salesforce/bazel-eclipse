@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.component;
+package com.salesforce.bazel.eclipse.component.internal;
 
 import com.salesforce.bazel.eclipse.activator.BazelEclipseExtensionPointDefinition;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
@@ -17,7 +17,7 @@ public class JavaCoreHelperComponentFacade extends AbstractExtensionPointCompone
 
     @Override
     protected BazelEclipseExtensionPointDefinition getExtensionPointDefinition() {
-        return BazelEclipseExtensionPointDefinition.JAVA_CORE_HELPER;
+        return BazelEclipseExtensionPointDefinition.BAZEL_JAVA_CORE_HELPER;
     }
 
 }

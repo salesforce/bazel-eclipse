@@ -57,8 +57,9 @@ import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.editors.text.TextFileDocumentProvider;
 import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.builder.BazelProblemMarkerManager;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.project.BazelPackageContentAssistProcessor;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -91,11 +92,11 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
 
     public ProjectViewEditor() {
         rootProject = getBazelRootProject();
-        rootDirectory = BazelPluginActivator.getBazelWorkspace().getBazelWorkspaceRootDirectory();
+        rootDirectory = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace().getBazelWorkspaceRootDirectory();
         rootPackage = new ProjectViewPackageLocation(rootDirectory, "");
         markerManager = new BazelProblemMarkerManager(getClass().getName());
-        projectManager = BazelPluginActivator.getBazelProjectManager();
-        resourceHelper = BazelPluginActivator.getResourceHelper();
+        projectManager = ComponentContext.getInstance().getProjectManager();
+        resourceHelper = ComponentContext.getInstance().getResourceHelper();
         setDocumentProvider(new TextFileDocumentProvider());
         super.setSourceViewerConfiguration(new SourceViewerConfiguration() {
             @Override
@@ -192,12 +193,12 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
     }
 
     private static IJavaProject[] getAllJavaBazelProjects() {
-        return BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false);
+        return ComponentContext.getInstance().getJavaCoreHelper().getAllBazelJavaProjects(false);
     }
 
     private static IProject getBazelRootProject() {
-        for (IJavaProject project : BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(true)) {
-            if (BazelPluginActivator.getResourceHelper().isBazelRootProject(project.getProject())) {
+        for (IJavaProject project : ComponentContext.getInstance().getJavaCoreHelper().getAllBazelJavaProjects(true)) {
+            if (ComponentContext.getInstance().getResourceHelper().isBazelRootProject(project.getProject())) {
                 return project.getProject();
             }
         }

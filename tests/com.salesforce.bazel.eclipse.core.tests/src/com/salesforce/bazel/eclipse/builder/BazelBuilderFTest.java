@@ -13,7 +13,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
@@ -71,9 +71,11 @@ public class BazelBuilderFTest {
         workspace_IProject =
                 mockEclipse.getImportedProject("Bazel Workspace (" + MockEclipse.BAZEL_WORKSPACE_NAME + ")");
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");
-        javalib0_IJavaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(javalib0_IProject);
+        javalib0_IJavaProject =
+                ComponentContext.getInstance().getJavaCoreHelper().getJavaProjectForProject(javalib0_IProject);
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");
-        javalib1_IJavaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(javalib1_IProject);
+        javalib1_IJavaProject =
+                ComponentContext.getInstance().getJavaCoreHelper().getJavaProjectForProject(javalib1_IProject);
 
         return mockEclipse;
     }

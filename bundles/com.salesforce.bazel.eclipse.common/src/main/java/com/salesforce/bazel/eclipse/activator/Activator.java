@@ -38,13 +38,6 @@ package com.salesforce.bazel.eclipse.activator;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 
-import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
-import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
-import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
-import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.project.BazelProjectManager;
-
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
  */
@@ -67,17 +60,5 @@ public class Activator extends Plugin {
 
     public static Activator getDefault() {
         return plugin;
-    }
-
-    public ResourceHelper getResourceHelper() {
-        return ResourceHelperComponentFacade.getInstance().getComponent();
-    }
-
-    public JavaCoreHelper getJavaCoreHelper() {
-        return JavaCoreHelperComponentFacade.getInstance().getComponent();
-    }
-
-    public BazelProjectManager getProjectManager() {
-        return ProjectManagerComponentFacade.getInstance().getComponent();
     }
 }

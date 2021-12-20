@@ -23,7 +23,7 @@ import org.eclipse.jdt.ls.core.internal.managers.IBuildSupport;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager.CHANGE_TYPE;
 
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -56,6 +56,7 @@ public class BazelBuildSupport implements IBuildSupport {
     @Override
     public void update(IProject project, boolean force, IProgressMonitor monitor) throws CoreException {
         try {
+            LOG.debug("BJLS update project {}", project.getName());
             updateInternal(project, force, monitor);
 
         } catch (CoreException ex) {
@@ -80,11 +81,11 @@ public class BazelBuildSupport implements IBuildSupport {
 
         final IProjectImporter importer = obtainBazelImporter();
 
-        importer.initialize(EclipseBazelComponentFacade.getInstance().getBazelWorkspaceRootDirectory());
+        importer.initialize(ComponentContext.getInstance().getBazelWorkspace().getBazelWorkspaceRootDirectory());
 
-        BazelCommandManager bazelCommandManager = EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
+        BazelCommandManager bazelCommandManager = ComponentContext.getInstance().getBazelCommandManager();
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = bazelCommandManager
-                .getWorkspaceCommandRunner(EclipseBazelComponentFacade.getInstance().getBazelWorkspace());
+                .getWorkspaceCommandRunner(ComponentContext.getInstance().getBazelWorkspace());
 
         bazelWorkspaceCmdRunner.flushAspectInfoCache();
 

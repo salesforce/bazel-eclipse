@@ -26,6 +26,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
@@ -166,8 +167,8 @@ public class BazelImportWizardPage extends WizardPage {
 
     private static List<BazelPackageInfo> getImportedBazelPackages(BazelPackageInfo rootPackage) {
         List<BazelPackageInfo> importedPackages = new ArrayList<>();
-        IJavaProject[] javaProjects = BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false);
-        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
+        IJavaProject[] javaProjects = ComponentContext.getInstance().getJavaCoreHelper().getAllBazelJavaProjects(false);
+        BazelProjectManager bazelProjectManager = ComponentContext.getInstance().getProjectManager();
 
         for (IJavaProject javaProject : javaProjects) {
             // TODO it is possible there are no targets configured for a project

@@ -60,7 +60,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.launching.IVMConnector;
 import org.eclipse.jdt.launching.JavaRuntime;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
@@ -96,7 +97,7 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
             return;
         }
         BazelTargetKind targetKind = BazelTargetKind.valueOfIgnoresCaseRequiresMatch(targetKindStr);
-        IProject project = BazelPluginActivator.getResourceHelper().getProjectByName(projectName);
+        IProject project = ComponentContext.getInstance().getResourceHelper().getProjectByName(projectName);
 
         List<String> allArgs =
                 new ArrayList<>(BazelLaunchConfigAttributes.INTERNAL_BAZEL_ARGS.getListValue(configuration));
@@ -108,7 +109,7 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
             project.build(IncrementalProjectBuilder.FULL_BUILD, monitor);
         }
 
-        BazelWorkspaceCommandRunner bazelCommandRunner = BazelPluginActivator.getInstance().getWorkspaceCommandRunner();
+        BazelWorkspaceCommandRunner bazelCommandRunner = EclipseBazelWorkspaceContext.getInstance().getWorkspaceCommandRunner();
 
         Command cmd = bazelCommandRunner.getBazelLauncherBuilder().setLabel(label).setTargetKind(targetKind)
                 .setArgs(allArgs).setDebugMode(isDebugMode, DEBUG_HOST, DEBUG_PORT).build();
@@ -123,7 +124,7 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
     // OVERRIDABLE FOR TESTS
 
     protected IProject getProject(String projectName) {
-        return BazelPluginActivator.getResourceHelper().getProjectByName(projectName);
+        return ComponentContext.getInstance().getResourceHelper().getProjectByName(projectName);
     }
 
     protected void launchExec(ILaunchConfiguration configuration, IProject project, List<String> commandTokens,
@@ -132,7 +133,7 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
         String[] cmdLine = commandTokens.toArray(new String[commandTokens.size()]);
         File workingDirectory = processBuilder.directory();
 
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
+        ResourceHelper resourceHelper = ComponentContext.getInstance().getResourceHelper();
 
         // launch the external process, and attach to the output
         Process process = resourceHelper.exec(cmdLine, workingDirectory);
@@ -165,7 +166,7 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
         // logic below copied and adapted from
         // https://github.com/eclipse/eclipse.jdt.debug/blob/master/org.eclipse.jdt.launching/launching/org/eclipse/jdt/internal/launching/JavaRemoteApplicationLaunchConfigurationDelegate.java ($SLASH_OK url)
 
-        IJavaProject mainProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(project);
+        IJavaProject mainProject = ComponentContext.getInstance().getJavaCoreHelper().getJavaProjectForProject(project);
         List<IJavaProject> otherProjects = getOtherJavaProjects(mainProject);
         ISourceLookupDirector sourceLocator = new BazelJavaSourceLookupDirector(mainProject, otherProjects);
         try {
@@ -179,7 +180,7 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
     }
 
     private static List<IJavaProject> getOtherJavaProjects(IJavaProject mainProject) {
-        return Arrays.stream(BazelPluginActivator.getJavaCoreHelper().getAllBazelJavaProjects(false))
+        return Arrays.stream(ComponentContext.getInstance().getJavaCoreHelper().getAllBazelJavaProjects(false))
                 .filter(p -> p != mainProject).collect(Collectors.toList());
     }
 

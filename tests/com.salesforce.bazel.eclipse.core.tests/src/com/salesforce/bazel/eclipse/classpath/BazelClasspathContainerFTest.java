@@ -54,7 +54,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
@@ -100,7 +101,7 @@ public class BazelClasspathContainerFTest {
         boolean explicitJavaTestDeps = false;
 
         setupMockEnvironmentForClasspathTest("tcpbjp_im", explicitJavaTestDeps, false, false, false);
-        JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
+        JavaCoreHelper javaHelper = ComponentContext.getInstance().getJavaCoreHelper();
 
         // FIRST check that the project raw classpath has 4 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
@@ -149,7 +150,7 @@ public class BazelClasspathContainerFTest {
         boolean explicitJavaTestDeps = true;
 
         setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, false, false, false);
-        JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
+        JavaCoreHelper javaHelper = ComponentContext.getInstance().getJavaCoreHelper();
 
         // FIRST check that the project raw classpath has 6 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
@@ -210,7 +211,7 @@ public class BazelClasspathContainerFTest {
         setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, nonstandardlayout,
             nonstandardlayout_multipledirs, addJavaImport);
 
-        JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
+        JavaCoreHelper javaHelper = ComponentContext.getInstance().getJavaCoreHelper();
 
         // Check that the project raw classpath has 4 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
@@ -244,7 +245,7 @@ public class BazelClasspathContainerFTest {
         setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, nonstandardlayout,
             nonstandardlayout_multipledirs, addJavaImport);
 
-        JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
+        JavaCoreHelper javaHelper = ComponentContext.getInstance().getJavaCoreHelper();
 
         // Check that the project raw classpath has 6 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
@@ -279,7 +280,7 @@ public class BazelClasspathContainerFTest {
         setupMockEnvironmentForClasspathTest("tcpbjp_ex", explicitJavaTestDeps, nonstandardlayout,
             nonstandardlayout_multipledirs, addJavaImport);
 
-        JavaCoreHelper javaHelper = BazelPluginActivator.getJavaCoreHelper();
+        JavaCoreHelper javaHelper = ComponentContext.getInstance().getJavaCoreHelper();
 
         // FIRST heck that the project raw classpath has 6 entries for javalib0:
         IClasspathEntry[] entries = javaHelper.getRawClasspath(javaHelper.getJavaProjectForProject(javalib0_IProject));
@@ -323,7 +324,7 @@ public class BazelClasspathContainerFTest {
 
         BazelClasspathContainer classpathContainer = new BazelClasspathContainer(workspace_IProject, resourceHelper,
             mockEclipse.getMockJavaCoreHelper(), mockEclipse.getProjectManager(), mockEclipse.getOsEnvStrategy(),
-            BazelPluginActivator.getBazelWorkspace());
+                EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace());
         IClasspathEntry[] entries = classpathContainer.getClasspathEntries();
 
         assertNotNull(entries);
@@ -355,9 +356,11 @@ public class BazelClasspathContainerFTest {
 
         workspace_IProject = mockEclipse.getImportedProject("Bazel Workspace (" + wsName + ")");
         javalib0_IProject = mockEclipse.getImportedProject("javalib0");
-        javalib0_IJavaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(javalib0_IProject);
+        javalib0_IJavaProject =
+                ComponentContext.getInstance().getJavaCoreHelper().getJavaProjectForProject(javalib0_IProject);
         javalib1_IProject = mockEclipse.getImportedProject("javalib1");
-        javalib1_IJavaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(javalib1_IProject);
+        javalib1_IJavaProject =
+                ComponentContext.getInstance().getJavaCoreHelper().getJavaProjectForProject(javalib1_IProject);
 
         assertEquals(2, mockEclipse.getBazelWorkspaceCreator().workspaceDescriptor.createdPackages.size());
 

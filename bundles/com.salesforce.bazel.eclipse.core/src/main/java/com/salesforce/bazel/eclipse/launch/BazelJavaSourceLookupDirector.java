@@ -49,6 +49,7 @@ import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContai
 import org.eclipse.jdt.launching.sourcelookup.containers.JavaSourceLookupParticipant;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 
 /**
  * Copied and adapted from org.eclipse.jdt.internal.launching.JavaSourceLookupDirector.
@@ -81,7 +82,7 @@ public class BazelJavaSourceLookupDirector extends AbstractSourceLookupDirector 
 
     private static void addSourceJarsForDependencies(IJavaProject project, List<ISourceContainer> sourceContainers) {
         IClasspathEntry[] resolvedClasspath =
-                BazelPluginActivator.getJavaCoreHelper().getResolvedClasspath(project, true);
+                ComponentContext.getInstance().getJavaCoreHelper().getResolvedClasspath(project, true);
         for (IClasspathEntry e : resolvedClasspath) {
             if (e.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
                 IPath sourceAttachmentPath = e.getSourceAttachmentPath();

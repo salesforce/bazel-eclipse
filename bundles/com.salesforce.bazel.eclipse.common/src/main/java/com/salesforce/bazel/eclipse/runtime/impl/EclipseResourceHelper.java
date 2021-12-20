@@ -48,8 +48,7 @@ import org.osgi.service.prefs.Preferences;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.activator.Activator;
-import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
-import com.salesforce.bazel.eclipse.component.ProjectManagerComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -110,10 +109,10 @@ public class EclipseResourceHelper implements ResourceHelper {
     public void deleteProject(IProject project, IProgressMonitor monitor) throws CoreException {
         if (!isBazelRootProject(project)) {
             // clear the cached data for this project
-            BazelWorkspace bzlWs = EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
-            BazelCommandManager bzlCmdMgr = EclipseBazelComponentFacade.getInstance().getBazelCommandManager();
+            BazelWorkspace bzlWs = ComponentContext.getInstance().getBazelWorkspace();
+            BazelCommandManager bzlCmdMgr = ComponentContext.getInstance().getBazelCommandManager();
             BazelWorkspaceCommandRunner bzlWsCmdRunner = bzlCmdMgr.getWorkspaceCommandRunner(bzlWs);
-            ProjectManagerComponentFacade.getInstance().getComponent().flushCaches(project.getName(), bzlWsCmdRunner);
+            ComponentContext.getInstance().getProjectManager().flushCaches(project.getName(), bzlWsCmdRunner);
         }
         boolean deleteContent = true; // delete metadata also, under the Eclipse Workspace directory
         boolean force = true;

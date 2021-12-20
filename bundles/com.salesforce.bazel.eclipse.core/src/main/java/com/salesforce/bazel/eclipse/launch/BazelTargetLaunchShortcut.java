@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 
 import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfo;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -90,9 +91,9 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
         String fqClassName = packageName + "." + fileName;
         LOG.info("Bazel target launcher for [{}]", fqClassName);
 
-        IWorkspaceRoot eclipseWorkspaceRoot = BazelPluginActivator.getResourceHelper().getEclipseWorkspaceRoot();
+        IWorkspaceRoot eclipseWorkspaceRoot = ComponentContext.getInstance().getResourceHelper().getEclipseWorkspaceRoot();
         IJavaModel eclipseJavaModel =
-                BazelPluginActivator.getJavaCoreHelper().getJavaModelForWorkspace(eclipseWorkspaceRoot);
+                ComponentContext.getInstance().getJavaCoreHelper().getJavaModelForWorkspace(eclipseWorkspaceRoot);
         IProject project = eclipseJavaModel.getJavaProject(projectName).getProject();
 
         Collection<AspectTargetInfo> apis = support.getLaunchableAspectTargetInfosForProject(project);

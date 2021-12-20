@@ -34,8 +34,9 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndex;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
@@ -58,17 +59,16 @@ public class SetupRootClasspathContainerFlow implements ImportFlow {
 
     @Override
     public void run(ImportContext ctx, SubMonitor progressSubMonitor) throws CoreException {
-        IClasspathEntry cpe = BazelPluginActivator.getJavaCoreHelper()
+        IClasspathEntry cpe = ComponentContext.getInstance().getJavaCoreHelper()
                 .newContainerEntry(new Path(BazelGlobalSearchClasspathContainer.CONTAINER_NAME));
         IProject rootProject = ctx.getRootProject();
-        IJavaProject javaProject = BazelPluginActivator.getJavaCoreHelper().getJavaProjectForProject(rootProject);
+        IJavaProject javaProject = ComponentContext.getInstance().getJavaCoreHelper().getJavaProjectForProject(rootProject);
         javaProject.setRawClasspath(new IClasspathEntry[] { cpe }, null);
 
         // trigger the load of the global search index
-        BazelPluginActivator activator = BazelPluginActivator.getInstance();
-        if (activator.getConfigurationManager().isGlobalClasspathSearchEnabled()) {
-            BazelWorkspace bazelWorkspace = BazelPluginActivator.getBazelWorkspace();
-            BazelExternalJarRuleManager externalJarManager = activator.getBazelExternalJarRuleManager();
+        if (ComponentContext.getInstance().getConfigurationManager().isGlobalClasspathSearchEnabled()) {
+            BazelWorkspace bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
+            BazelExternalJarRuleManager externalJarManager = ComponentContext.getInstance().getBazelExternalJarRuleManager();
             List<File> additionalJarLocations = BazelGlobalSearchClasspathContainer.loadAdditionalLocations();
 
             // this might take a while if it hasn't been computed yet

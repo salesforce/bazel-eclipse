@@ -33,8 +33,7 @@
  */
 package com.salesforce.bazel.eclipse.config;
 
-import com.salesforce.bazel.eclipse.component.JavaCoreHelperComponentFacade;
-import com.salesforce.bazel.eclipse.component.ResourceHelperComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 
@@ -42,11 +41,11 @@ public class EclipseBazelProjectManager extends AbstractBazelProjectManager {
 
     @Override
     protected ResourceHelper getResourceHelper() {
-        return ResourceHelperComponentFacade.getInstance().getComponent();
+        return ComponentContext.getInstance().getResourceHelper();
     }
 
     @Override
     protected JavaCoreHelper getJavaCoreHelper() {
-        return JavaCoreHelperComponentFacade.getInstance().getComponent();
+        return ComponentContext.getInstance().getJavaCoreHelper();
     }
 }

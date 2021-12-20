@@ -14,7 +14,8 @@ import org.eclipse.jdt.core.IJavaProject;
 
 import com.salesforce.b2eclipse.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.component.EclipseBazelComponentFacade;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
@@ -30,8 +31,8 @@ public class BazelEclipseProjectUtils {
 			if (eclipseProject.getName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME)) {
 				return Collections.emptySet();
 			}
-            BazelWorkspace bazelWorkspace = EclipseBazelComponentFacade.getInstance().getBazelWorkspace();
-            BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = EclipseBazelComponentFacade.getInstance()
+            BazelWorkspace bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
+            BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner = ComponentContext.getInstance()
                     .getBazelCommandManager().getWorkspaceCommandRunner(bazelWorkspace);
 			List<String> bazelTargetsForProject = BazelEclipseProjectSupport
 					.getBazelTargetsForEclipseProject(eclipseProject, false);

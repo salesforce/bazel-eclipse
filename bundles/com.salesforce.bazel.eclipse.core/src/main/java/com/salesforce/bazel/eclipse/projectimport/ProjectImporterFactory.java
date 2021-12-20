@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.projectimport.flow.CreateProjectsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.CreateRootProjectFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.DetermineTargetsFlow;
@@ -99,16 +99,16 @@ public class ProjectImporterFactory {
     public ProjectImporter build() {
         return new FlowProjectImporter(flows.toArray(new ImportFlow[flows.size()]), bazelWorkspaceRootPackageInfo,
                 selectedBazelPackages, projectOrderResolver,
-                BazelPluginActivator.getInstance().getConfigurationManager().getBazelExecutablePath(),
+                ComponentContext.getInstance().getConfigurationManager().getBazelExecutablePath(),
                 importInProgress);
     }
 
     private static List<ImportFlow> createFlows() {
         // each project import uses a new list of flow instances so that flows can have state
         // the List returned here needs to be modifiable
-        BazelProjectManager bazelProjectManager = BazelPluginActivator.getBazelProjectManager();
-        ResourceHelper resourceHelper = BazelPluginActivator.getResourceHelper();
-        BazelCommandManager bazelCommandManager = BazelPluginActivator.getBazelCommandManager();
+        BazelProjectManager bazelProjectManager = ComponentContext.getInstance().getProjectManager();
+        ResourceHelper resourceHelper = ComponentContext.getInstance().getResourceHelper();
+        BazelCommandManager bazelCommandManager = ComponentContext.getInstance().getBazelCommandManager();
         return new ArrayList<>(Arrays.asList(new InitJREFlow(),
             new InitImportFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
             new DetermineTargetsFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
@@ -118,6 +118,6 @@ public class ProjectImporterFactory {
             new OrderProjectsFlow(), new CreateProjectsFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
             new SetupProjectBuildersFlow(), new SetupRootClasspathContainerFlow(),
             new SetupClasspathContainersFlow(bazelCommandManager, bazelProjectManager, resourceHelper,
-                    BazelPluginActivator.getJavaCoreHelper())));
+                ComponentContext.getInstance().getJavaCoreHelper())));
     }
 }
