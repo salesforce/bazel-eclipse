@@ -98,7 +98,7 @@ public final class EclipseSourceClasspathUtil {
         buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath,
             structure.mainResourceDirFSPaths, false, classpathEntries, resourceHelper, javaCoreHelper);
 
-        // test source oaths
+        // test source paths
         buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath, structure.testSourceDirFSPaths,
             true, classpathEntries, resourceHelper, javaCoreHelper);
         buildSourceClasspathEntries(bazelWorkspacePath, javaProject, bazelPackageFSPath,

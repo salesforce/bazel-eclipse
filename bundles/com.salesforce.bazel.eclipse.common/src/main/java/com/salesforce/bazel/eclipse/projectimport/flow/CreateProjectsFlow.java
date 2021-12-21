@@ -23,7 +23,6 @@
  */
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -76,17 +75,13 @@ public class CreateProjectsFlow extends AbstractImportFlowStep {
         EclipseFileLinker fileLinker = ctx.getEclipseFileLinker();
         final BazelWorkspace bazelWorkspace = getBazelWorkspace();
         final ResourceHelper resourceHelper = getResourceHelper();
-//        final BazelCommandManager commandManager = getCommandManager();
-//        final BazelProjectManager projectManager = getProjectManager();
-//        File bazelWorkspaceRootDirectory = ctx.getBazelWorkspaceRootDirectory();
         Iterable<BazelPackageLocation> orderedModules = ctx.getOrderedModules();
         EclipseProjectCreator projectCreator = ctx.getEclipseProjectCreator();
-//                new EclipseProjectCreator(bazelWorkspaceRootDirectory, projectManager, resourceHelper, commandManager);
 
         List<IProject> currentImportedProjects = ctx.getImportedProjects();
         List<IProject> existingImportedProjects =
                 Arrays.asList(resourceHelper.getProjectsForBazelWorkspace(bazelWorkspace));
-
+        
         for (BazelPackageLocation packageLocation : orderedModules) {
             if (!packageLocation.isWorkspaceRoot()) {
                 List<BazelLabel> bazelTargets = ctx.getPackageLocationToTargets().get(packageLocation);

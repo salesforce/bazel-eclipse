@@ -29,15 +29,22 @@ import java.io.File;
 import java.util.List;
 import java.util.Objects;
 
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 
 import com.salesforce.bazel.eclipse.BazelNature;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.project.EclipseFileLinker;
 import com.salesforce.bazel.eclipse.projectview.ProjectViewUtils;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -47,6 +54,7 @@ import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
  * Creates the root (WORKSPACE-level) project.
  */
 public class CreateRootProjectFlow extends AbstractImportFlowStep {
+    private static final LogHelper LOG = LogHelper.log(CreateRootProjectFlow.class);
 
     public CreateRootProjectFlow(BazelCommandManager commandManager, BazelProjectManager projectManager,
             ResourceHelper resourceHelper) {
@@ -99,7 +107,35 @@ public class CreateRootProjectFlow extends AbstractImportFlowStep {
         List<BazelPackageLocation> selectedBazelPackages = ctx.getSelectedBazelPackages();
         ProjectViewUtils.writeProjectViewFile(bazelWorkspaceRootDirectory, rootProject, selectedBazelPackages);
 
+        createDummySourceFolder(rootProject);
+
         ctx.setRootProject(rootProject);
     }
 
+    /**
+     * Dummy source folder allows to avoid exception on processing classpath for the root project
+     * 
+     * @param project
+     *            - root project
+     */
+    private void createDummySourceFolder(IProject project) {
+        final JavaCoreHelper javaCoreHelper = ComponentContext.getInstance().getJavaCoreHelper();
+        IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
+        IFolder srcFolder = project.getFolder("src");
+        if (srcFolder.exists()) {
+            return;
+        }
+        try {
+            boolean force = false; // "a flag controlling how to deal with resources that are not in sync with the local file system"
+            boolean local = true; // "a flag controlling whether or not the folder will be local after the creation"
+            srcFolder.create(force, local, null);
+            // add the created path to the classpath as a Source cp entry
+            IPath sourceDir = srcFolder.getFullPath();
+            IClasspathEntry sourceClasspathEntry = javaCoreHelper.newSourceEntry(sourceDir, null, false);
+            javaProject.setRawClasspath(new IClasspathEntry[] { sourceClasspathEntry }, null);
+        } catch (CoreException ex) {
+            LOG.error("Error in the creation of dummy source folder for the root project", ex);
+            throw new IllegalStateException(ex);
+        }
+    }
 }
