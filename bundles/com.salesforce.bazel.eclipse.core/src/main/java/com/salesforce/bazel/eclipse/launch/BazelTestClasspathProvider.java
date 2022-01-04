@@ -36,18 +36,16 @@
 package com.salesforce.bazel.eclipse.launch;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.core.IJavaProject;
@@ -57,8 +55,6 @@ import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.StandardClasspathProvider;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
@@ -81,8 +77,6 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
             "com.salesforce.bazel.eclipse.launchconfig.sourcepathProvider";
     public static final String BAZEL_CLASSPATH_PROVIDER = "com.salesforce.bazel.eclipse.launchconfig.classpathProvider";
 
-    private static final Bundle BUNDLE = FrameworkUtil.getBundle(BazelTestClasspathProvider.class);
-
     // suppresses a common error dialog
     private static int javaTestDialogSkipCount = 0;
 
@@ -90,6 +84,9 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
     // we need this variable to keep track of when to open the error dialog
     public static AtomicBoolean canOpenErrorDialog = new AtomicBoolean(true);
 
+    // collaborator for retrieving/analyzing Bazel test param files
+    BazelJvmTestClasspathHelper bazelJvmTestClasspathHelper = new BazelJvmTestClasspathHelper();
+        
     /**
      * Compute classpath entries for test
      */
@@ -133,7 +130,6 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
      */
     IRuntimeClasspathEntry[] computeUnresolvedClasspath(ILaunchConfiguration configuration, boolean isSource)
             throws CoreException {
-        List<IRuntimeClasspathEntry> result = new ArrayList<>();
         IJavaProject project = JavaRuntime.getJavaProject(configuration);
         String projectName = project.getProject().getName();
         BazelWorkspace bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
@@ -141,77 +137,49 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
         BazelProject bazelProject = bazelProjectManager.getProject(projectName);
         String testClassName = configuration.getAttribute("org.eclipse.jdt.launching.MAIN_TYPE", (String) null);
         BazelProjectTargets targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
+        File execRootDir = bazelWorkspace.getBazelExecRootDirectory();
 
         // look for the param files for the test classname and/or targets
-        BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult = BazelJvmTestClasspathHelper
+        // each param file contains a Bazel specific list of data used when launching the test
+        BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult = bazelJvmTestClasspathHelper
                 .findParamFilesForTests(bazelWorkspace, bazelProject, isSource, testClassName, targets);
+        
+        return computeUnresolvedClasspathFromParamFiles(execRootDir, testParamFilesResult);
+    }
+    
+    /**
+     * Return the classpath entries needed to run the tests, using the Bazel param files for the
+     * targets as input
+     */ 
+    IRuntimeClasspathEntry[] computeUnresolvedClasspathFromParamFiles(File execRootDir, 
+            BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult) throws CoreException {
+        List<IRuntimeClasspathEntry> result = new ArrayList<>();
 
-        File base = bazelWorkspace.getBazelExecRootDirectory();
-        for (File paramsFile : testParamFilesResult.paramFiles) {
-            List<String> jarPaths;
-            try {
-                jarPaths = BazelJvmTestClasspathHelper.getClasspathJarsFromParamsFile(paramsFile);
-            } catch (IOException e) {
-                throw new CoreException(new Status(IStatus.ERROR, BUNDLE.getSymbolicName(),
-                        "Error parsing " + paramsFile.getAbsolutePath(), e));
-            }
-            if (jarPaths == null) {
-                // error has already been logged, just try to soldier on
-                continue;
-            }
-            for (String rawPath : jarPaths) {
-                String canonicalPath = FSPathHelper.getCanonicalPathStringSafely(new File(base, rawPath));
-                IPath eachPath = new Path(canonicalPath);
-                if (eachPath.toFile().exists()) {
-                    IRuntimeClasspathEntry src = JavaRuntime.newArchiveRuntimeClasspathEntry(eachPath);
-                    result.add(src);
-                }
+        // assemble the de-duplicated list of jar files that are used across all the test targets
+        // these paths are listed in the param files, and are relative to the Bazel workspace exec root
+        Set<String> jarPaths = bazelJvmTestClasspathHelper.aggregateJarFilesFromParamFiles(testParamFilesResult);
+        for (String rawPath : jarPaths) {
+            String canonicalPath = FSPathHelper.getCanonicalPathStringSafely(new File(execRootDir, rawPath));
+            IPath eachPath = new Path(canonicalPath);
+            if (eachPath.toFile().exists()) {
+                IRuntimeClasspathEntry src = JavaRuntime.newArchiveRuntimeClasspathEntry(eachPath);
+                result.add(src);
             }
         }
 
+        // if there was a test target that had no param file, it is an unrunnable test
         if (!testParamFilesResult.unrunnableLabels.isEmpty()) {
             StringBuffer unrunnableLabelsString = new StringBuffer();
             for (String label : testParamFilesResult.unrunnableLabels) {
                 unrunnableLabelsString.append(label);
                 unrunnableLabelsString.append(" ");
             }
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    if (canOpenErrorDialog.get()) {
-                        canOpenErrorDialog.set(false);
-
-                        // only present the dialog once every ~10 times; often the user will
-                        // be "yeah yeah, just run the tests that you can find" when this happens
-                        // because if they run the tests over a project this can happen every time
-                        // TODO create a pref for a user to be able to ignore these errors
-                        javaTestDialogSkipCount++;
-                        if (javaTestDialogSkipCount > 1) {
-                            if (javaTestDialogSkipCount > 10) {
-                                // trigger it next time
-                                javaTestDialogSkipCount = 0;
-                            }
-                            return;
-                        }
-
-                        Display.getDefault().syncExec(new Runnable() {
-                            @Override
-                            public void run() {
-                                MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target",
-                                    "One or more of the targets being executed are not part of a Bazel java_test target ( "
-                                            + unrunnableLabelsString + "). The target(s) will be ignored.\n\n"
-                                            + "Since this might be a common issue for your workspace, this dialog "
-                                            + "will only be presented periodically when this happens.");
-                            }
-                        });
-                    }
-                }
-            });
+            showUnrunnableErrorDialog(unrunnableLabelsString);
         }
 
         return result.toArray(new IRuntimeClasspathEntry[result.size()]);
     }
-
+    
     /**
      * Add the classpath providers to the configuration
      *
@@ -236,5 +204,40 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
             enable(wc);
             wc.doSave();
         }
+    }
+    
+    private void showUnrunnableErrorDialog(StringBuffer unrunnableLabelsString) {
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                if (canOpenErrorDialog.get()) {
+                    canOpenErrorDialog.set(false);
+
+                    // only present the dialog once every ~10 times; often the user will
+                    // be "yeah yeah, just run the tests that you can find" when this happens
+                    // because if they run the tests over a project this can happen every time
+                    // TODO create a pref for a user to be able to ignore these errors
+                    javaTestDialogSkipCount++;
+                    if (javaTestDialogSkipCount > 1) {
+                        if (javaTestDialogSkipCount > 10) {
+                            // trigger it next time
+                            javaTestDialogSkipCount = 0;
+                        }
+                        return;
+                    }
+
+                    Display.getDefault().syncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target",
+                                "One or more of the targets being executed are not part of a Bazel java_test target ( "
+                                        + unrunnableLabelsString + "). The target(s) will be ignored.\n\n"
+                                        + "Since this might be a common issue for your workspace, this dialog "
+                                        + "will only be presented periodically when this happens.");
+                        }
+                    });
+                }
+            }
+        });
     }
 }
