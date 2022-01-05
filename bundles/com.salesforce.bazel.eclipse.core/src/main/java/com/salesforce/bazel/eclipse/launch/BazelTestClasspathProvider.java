@@ -39,7 +39,10 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -86,6 +89,9 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
 
     // collaborator for retrieving/analyzing Bazel test param files
     BazelJvmTestClasspathHelper bazelJvmTestClasspathHelper = new BazelJvmTestClasspathHelper();
+    
+    // entry cache
+    private static Map<String, IRuntimeClasspathEntry[]> resolvedEntriesCache = new HashMap<>();
         
     /**
      * Compute classpath entries for test
@@ -104,12 +110,28 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
             ILaunchConfiguration configuration) throws CoreException {
         List<IRuntimeClasspathEntry> result = new ArrayList<>();
 
+        Set<String> addedPaths = new HashSet<>();
         for (IRuntimeClasspathEntry entry : entries) {
-            IRuntimeClasspathEntry[] resolved = JavaRuntime.resolveRuntimeClasspathEntry(entry, configuration);
+            String path = entry.getClasspathEntry().getPath().toString();
+            
+            // de-dupe the list
+            if (addedPaths.contains(path)) {
+                continue;
+            }
+            addedPaths.add(path);
+            
+            // now check the cache, this will prevent work being redone across invocations of this method
+            IRuntimeClasspathEntry[] resolved = resolvedEntriesCache.get(path);
+            if (resolved == null) {
+                resolved = JavaRuntime.resolveRuntimeClasspathEntry(entry, configuration);
+                resolvedEntriesCache.put(path, resolved);
+            }
             Collections.addAll(result, resolved);
         }
 
-        Collections.addAll(result, JavaRuntime.resolveSourceLookupPath(entries, configuration));
+        // the Bazel param file lists --sources so entries[] should already contain the source paths
+        // this call is left here for future reference in case a situation is found where it is needed BEF #381
+        //Collections.addAll(result, JavaRuntime.resolveSourceLookupPath(entries, configuration));
 
         IRuntimeClasspathEntry[] resolvedClasspath = result.toArray(new IRuntimeClasspathEntry[result.size()]);
         LOG.info("Test classpath: {}", (Object[]) resolvedClasspath);
@@ -204,6 +226,13 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
             enable(wc);
             wc.doSave();
         }
+    }
+    
+    /**
+     * Clean caches.
+     */
+    public static void clean() {
+        resolvedEntriesCache.clear();
     }
     
     private void showUnrunnableErrorDialog(StringBuffer unrunnableLabelsString) {
