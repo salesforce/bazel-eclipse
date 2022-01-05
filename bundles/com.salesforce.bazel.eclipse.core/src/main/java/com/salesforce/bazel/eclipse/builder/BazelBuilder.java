@@ -61,6 +61,7 @@ import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContaine
 import com.salesforce.bazel.eclipse.classpath.IClasspathContainerConstants;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
+import com.salesforce.bazel.eclipse.launch.BazelTestClasspathProvider;
 import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
@@ -191,8 +192,10 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             // bazelWorkspaceCmdRunner.runBazelClean(null);
         }
 
+        // TODO implement a clean() listener and let impls register with us, instead of hacking like this
         BazelClasspathContainer.clean();
         BazelGlobalSearchClasspathContainer.clean();
+        BazelTestClasspathProvider.clean();
     }
 
     private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects,
