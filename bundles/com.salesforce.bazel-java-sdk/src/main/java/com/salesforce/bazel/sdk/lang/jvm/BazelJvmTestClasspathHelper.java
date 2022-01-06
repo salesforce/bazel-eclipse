@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.TreeSet;
 
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
@@ -132,8 +131,19 @@ public class BazelJvmTestClasspathHelper {
         return key;
     }
 
+    /**
+     * Convenience bundle of the test param files generated from a set of targets
+     */
     public static class ParamFileResult {
-        public Set<File> paramFiles = new HashSet<>();
+        /**
+         * The ordered list of param files obtained by querying on the targets
+         */
+        public List<File> paramFiles = new ArrayList<>();
+        
+        /**
+         * Labels that did not resolve to a param file. Usually means the test class is not referenced by
+         * a java_test target, but is a different kind of test that we don't know how to run.
+         */
         public Set<String> unrunnableLabels = new HashSet<>();
     }
 
@@ -282,11 +292,22 @@ public class BazelJvmTestClasspathHelper {
      * Given the set of param files in the passed testParamFilesResult, parse each param file and extract a list
      * of jar files from the sources and output sections of each file. Then assemble a de-duplicated list of these
      * jar files. The path for each jar file comes from the param file and is known to be relative to the Bazel
-     * exec root of the workspace. 
+     * exec root of the workspace.
+     * <p>
+     * @param testParamFiles the ordered list of discovered param files for the set of targets
+     * @param includeDeployJars deploy jars contain the Bazel test runner and the full classpath of classes to run
+     *              the test. For some environments, this isn't necessary because the environment externally specifies
+     *              the classpath at launch, and provides the test runner (e.g. Eclipse RemoteTestRunner) 
+     * @return a List of paths to jar files; the list is ordered the same as the param files
      */
-    public Set<String> aggregateJarFilesFromParamFiles(BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult) {
-        Set<String> allPaths = new TreeSet<>();
-        for (File paramsFile : testParamFilesResult.paramFiles) {
+    public List<String> aggregateJarFilesFromParamFiles(List<File> testParamFiles,
+            boolean includeDeployJars) {
+        
+        // Bazel is deterministic in the ordering of classpath elements, so use a list here not a Set
+        // to allow us to better model the classpath order of Bazel
+        List<String> allPaths = new ArrayList<>();
+        
+        for (File paramsFile : testParamFiles) {
             List<String> jarPaths = null;
             try { 
                 jarPaths = getClasspathJarsFromParamsFile(paramsFile);
@@ -299,6 +320,15 @@ public class BazelJvmTestClasspathHelper {
             }            
             
             for (String jarPath : jarPaths) {
+                if (!includeDeployJars && jarPath.endsWith("_deploy.jar")) {
+                    // deploy jars are bloated and redundant for some callers, exclude them if asked to
+                    continue;
+                }
+                if (allPaths.contains(jarPath)) {
+                    // we don't want dupes
+                    continue;
+                }
+                
                 // it is important to use a Set for allPaths, as the jarPaths will contain many dupes 
                 // across ParamFiles and we only want each one listed once
                 allPaths.add(jarPath);
