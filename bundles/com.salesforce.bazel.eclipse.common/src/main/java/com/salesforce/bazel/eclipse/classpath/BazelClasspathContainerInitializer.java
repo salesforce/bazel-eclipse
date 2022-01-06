@@ -79,9 +79,21 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 undo(eclipseJavaProject.getProject());
                 return;
             }
+            
+            // ComponentContext is a lightweight wireup facility for collaborators; since we rely on it 
+            // we verify the status here because our initialize() method gets invoked early in the plugin 
+            // lifecycle and we want to verify plugin activation happened as expected
+            ComponentContext context = ComponentContext.getInstance();
+            if (!context.isInitialized()) {
+                String message = "Failure initializing Bazel classpath container for project "+eclipseProjectName+" because the "
+                        + "internal ComponentContext has not been initialized yet. This is typically a problem due to activation "+
+                        "of a plugin not happening which is an internal tooling bug. Please report it to the tool owners.";
+                LOG.error(message);
+                throw new IllegalStateException(message);
+            }
 
             // create the BazelProject if necessary
-            BazelProjectManager bazelProjectManager = ComponentContext.getInstance().getProjectManager();
+            BazelProjectManager bazelProjectManager = context.getProjectManager();
             BazelProject bazelProject = bazelProjectManager.getProject(eclipseProjectName);
             if (bazelProject == null) {
                 bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
@@ -97,9 +109,15 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
             }
         } catch (BazelCommandLineToolConfigurationException e) {
-            LOG.error("Bazel not found: " + e.getMessage());
+            String message = "Error while initializing Bazel classpath container for project "+eclipseProjectName+
+                    " because the Bazel executable failed invocation. Root cause: "+e.getMessage();
+            LOG.error(message, e);
+            throw new IllegalStateException(message);
         } catch (Exception anyE) {
-            LOG.error("Error while initializing Bazel classpath container for project {}", anyE, eclipseProjectName);
+            String message = "Error while initializing Bazel classpath container for project "+eclipseProjectName+
+                    ". Root cause: "+anyE.getMessage();
+            LOG.error(message, anyE);
+            throw new IllegalStateException(message);
         }
     }
 
