@@ -48,6 +48,13 @@ public class BasicLoggerFacade extends LoggerFacade {
     @Override
     protected void error(Class<?> from, String message, Object... args) {
         // LoggerFactory.getLogger(from).error(message, args);
+        if (args != null && args.length > 0) {
+            Object firstArg = args[0]; 
+            if (firstArg instanceof Throwable) {
+                Throwable anyE = (Throwable)firstArg;
+                anyE.printStackTrace();
+            }
+        }
         System.err.println("ERROR " + formatMsg(from, message, args));
     }
 

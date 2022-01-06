@@ -28,16 +28,15 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.TreeSet;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.sdk.lang.jvm.BazelJvmTestClasspathHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 public class BazelJvmTestClasspathHelperTest {
@@ -82,7 +81,7 @@ public class BazelJvmTestClasspathHelperTest {
     @Test
     public void testClasspathAggregation() throws Exception {
         BazelJvmTestClasspathHelper.ParamFileResult result = new BazelJvmTestClasspathHelper.ParamFileResult();
-        result.paramFiles = new TreeSet<>();
+        result.paramFiles = new ArrayList<>();
         result.unrunnableLabels = new TreeSet<>();
         File tdir = tmpDir.newFolder("paramFiles");
         File pdir = new File(tdir, "paramFiles");
@@ -95,9 +94,14 @@ public class BazelJvmTestClasspathHelperTest {
             result.paramFiles.add(createParamFile(pdir, i));
         }
 
-        Set<String> jarPaths = bazelJvmTestClasspathHelper.aggregateJarFilesFromParamFiles(result);
-
+        boolean includeDeployJars = true;
+        List<String> jarPaths =
+                bazelJvmTestClasspathHelper.aggregateJarFilesFromParamFiles(result.paramFiles, includeDeployJars);
         assertEquals(7, jarPaths.size());
+
+        includeDeployJars = false;
+        jarPaths = bazelJvmTestClasspathHelper.aggregateJarFilesFromParamFiles(result.paramFiles, includeDeployJars);
+        assertEquals(5, jarPaths.size());
     }
 
     private static File createParamFile(File dir, int index) {

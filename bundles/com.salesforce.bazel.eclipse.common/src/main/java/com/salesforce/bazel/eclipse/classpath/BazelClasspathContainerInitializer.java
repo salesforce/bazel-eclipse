@@ -72,6 +72,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     @Override
     public void initialize(IPath eclipseProjectPath, IJavaProject eclipseJavaProject) throws CoreException {
         IProject eclipseProject = eclipseJavaProject.getProject();
+        String eclipseProjectName = eclipseProject.getName();
         try {
             //remove projects added to the workspace after a corrupted package in identified
             if (isCorrupt.get()) {
@@ -81,7 +82,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
 
             // create the BazelProject if necessary
             BazelProjectManager bazelProjectManager = ComponentContext.getInstance().getProjectManager();
-            BazelProject bazelProject = bazelProjectManager.getProject(eclipseProject.getName());
+            BazelProject bazelProject = bazelProjectManager.getProject(eclipseProjectName);
             if (bazelProject == null) {
                 bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
                 bazelProjectManager.addProject(bazelProject);
@@ -95,10 +96,10 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
             } else {
                 setClasspathContainerForProject(eclipseProjectPath, eclipseJavaProject, container);
             }
-        } catch (IOException | InterruptedException | BackingStoreException e) {
-            LOG.error("Error while creating Bazel classpath container.", e);
         } catch (BazelCommandLineToolConfigurationException e) {
             LOG.error("Bazel not found: " + e.getMessage());
+        } catch (Exception anyE) {
+            LOG.error("Error while initializing Bazel classpath container for project {}", anyE, eclipseProjectName);
         }
     }
 

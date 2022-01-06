@@ -177,9 +177,12 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
             BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult) throws CoreException {
         List<IRuntimeClasspathEntry> result = new ArrayList<>();
 
-        // assemble the de-duplicated list of jar files that are used across all the test targets
-        // these paths are listed in the param files, and are relative to the Bazel workspace exec root
-        Set<String> jarPaths = bazelJvmTestClasspathHelper.aggregateJarFilesFromParamFiles(testParamFilesResult);
+        // Assemble the de-duplicated list of jar files that are used across all the test targets
+        // these paths are listed in the param files, and are relative to the Bazel workspace exec root.
+        // We don't want deploy jars, because those are bloated and kill performance. Eclipse passes the project classpath
+        // to the RemoteTestRunner JVM so we don't need the self-contained deploy jars.
+        boolean includeDeployJars = false;
+        List<String> jarPaths = bazelJvmTestClasspathHelper.aggregateJarFilesFromParamFiles(testParamFilesResult.paramFiles, includeDeployJars);
         for (String rawPath : jarPaths) {
             String canonicalPath = FSPathHelper.getCanonicalPathStringSafely(new File(execRootDir, rawPath));
             IPath eachPath = new Path(canonicalPath);
