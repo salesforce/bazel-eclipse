@@ -21,6 +21,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class ComponentContext {
     private static ComponentContext instance;
+    private static boolean initialized = false;
 
     /** ProjectManager manages all of the imported projects */
     private BazelProjectManager projectManager;
@@ -72,6 +73,11 @@ public class ComponentContext {
         setBazelExecutablePath(bazelExecutablePath);
         setBazelCommandManager(
             new BazelCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelExecutablePath));
+        initialized = true;
+    }
+    
+    public boolean isInitialized() {
+        return initialized;
     }
 
     public BazelProjectManager getProjectManager() {

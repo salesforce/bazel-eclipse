@@ -4,14 +4,14 @@
    <extension
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
-            class="com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer"
+            class="com.salesforce.bazel.eclipse.classpath.BazelCoreClasspathContainerInitializer"
             id="com.salesforce.bazel.eclipse.BAZEL_CONTAINER">
       </classpathContainerInitializer>
    </extension>
    <extension
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
-            class="com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer"
+            class="com.salesforce.bazel.eclipse.classpath.BazelCoreClasspathContainerInitializer"
             id="com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER">
       </classpathContainerInitializer>
    </extension>
