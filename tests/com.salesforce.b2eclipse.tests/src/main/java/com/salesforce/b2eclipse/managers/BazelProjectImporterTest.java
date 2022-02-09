@@ -43,6 +43,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 @SuppressWarnings("restriction")
@@ -79,6 +80,7 @@ public class BazelProjectImporterTest {
     }
 
     @Test
+    @Ignore
     public void basic() throws CoreException {
         importer.initialize(new File("projects/bazel-ls-demo-project"));
         importer.importToWorkspace(new NullProgressMonitor());
@@ -100,6 +102,7 @@ public class BazelProjectImporterTest {
     }
 
     @Test
+    @Ignore
     public void withSubpackage() throws CoreException {
         importer.initialize(new File("projects/build-with-subpackage"));
         importer.importToWorkspace(new NullProgressMonitor());
@@ -115,6 +118,7 @@ public class BazelProjectImporterTest {
     }
 
     @Test
+    @Ignore
     public void withQueryInTargetFile() throws CoreException, IOException {
         File projectFile = new File("projects/bazel-ls-demo-project");
         File targetFile = new File(projectFile, BazelBuildSupport.BAZELPROJECT_FILE_NAME_SUFIX);
