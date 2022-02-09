@@ -74,5 +74,5 @@ You may see an error such as this:
 This is covered in [this issue](https://github.com/bazelbuild/rules_jvm_external/issues/464) in *rules_jvm_external*.
 
 Possible fixes:
-- Set *JAVA_HOME* not just in Git Bash, but in the Windows environment https://mkyong.com/java/how-to-set-java_home-on-windows-10/
+- Set *JAVA_HOME* not just in Git Bash, but in the Windows environment (Google for mkyong's article _How to set JAVA_HOME on Windows 10?_)
 - Make sure you are using the JDK not the JRE
