@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1636373983">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1647094073">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.21.0.v20210906-0842"/>
@@ -79,11 +79,11 @@
       <repository location="https://download.eclipse.org/buildship/updates/e420/snapshots/3.x/3.1.6.v20210909-1001-s/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.egit.feature.group" version="5.13.0.202109080827-r"/>
-      <unit id="org.eclipse.jgit.feature.group" version="5.13.0.202109080827-r"/>
-      <unit id="org.eclipse.jgit.http.apache.feature.group" version="5.13.0.202109080827-r"/>
-      <unit id="org.eclipse.jgit.ssh.apache.feature.group" version="5.13.0.202109080827-r"/>
-      <unit id="org.eclipse.egit.gitflow.feature.feature.group" version="5.13.0.202109080827-r"/>
+      <unit id="org.eclipse.egit.feature.group" version="6.0.0.202111291000-r"/>
+      <unit id="org.eclipse.jgit.feature.group" version="6.0.0.202111291000-r"/>
+      <unit id="org.eclipse.jgit.http.apache.feature.group" version="6.0.0.202111291000-r"/>
+      <unit id="org.eclipse.jgit.ssh.apache.feature.group" version="6.0.0.202111291000-r"/>
+      <unit id="org.eclipse.egit.gitflow.feature.feature.group" version="6.0.0.202111291000-r"/>
       <repository location="https://download.eclipse.org/egit/updates/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
