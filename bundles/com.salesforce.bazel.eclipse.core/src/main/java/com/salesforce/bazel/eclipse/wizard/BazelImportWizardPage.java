@@ -45,7 +45,7 @@ public class BazelImportWizardPage extends WizardPage {
     BazelImportWizardLocationControl locationControl;
     BazelImportWizardLabelProvider labelProvider;
     BazelImportWizardProjectTree projectTree;
-    BazelImportWizardWorkingSetControl workingSetControl;
+    final BazelImportWizardWorkingSetControl workingSetControl;
     BazelImportWizardAdvancedSettingsControl advancedSettingsControl;
 
     BazelPackageInfo workspaceRootPackage = null;
@@ -59,6 +59,8 @@ public class BazelImportWizardPage extends WizardPage {
         setTitle("Import a Bazel Workspace");
         setDescription("Imports a Bazel Workspace into Eclipse");
         setPageComplete(false);
+
+        workingSetControl = new BazelImportWizardWorkingSetControl(this);
     }
 
     /**
@@ -80,7 +82,6 @@ public class BazelImportWizardPage extends WizardPage {
         projectTree = new BazelImportWizardProjectTree(this, labelProvider);
         projectTree.addProjectTree(composite);
 
-        workingSetControl = new BazelImportWizardWorkingSetControl(this);
         workingSetControl.addWorkingSetControl(composite);
 
         advancedSettingsControl = new BazelImportWizardAdvancedSettingsControl(this);
