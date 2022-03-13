@@ -107,7 +107,10 @@ public class SplitSourcePath {
 
         // We can now expect that relativePathToWithoutSourceFile ends with packagePath
         SplitSourcePath sourcePath = new SplitSourcePath();
-        if (relativePathToWithoutSourceFile.endsWith(packagePath)) {
+        if (relativePathToWithoutSourceFile.equals(packagePath)) {
+            sourcePath.sourceDirectoryPath = "";
+            sourcePath.filePath = relativePathToSourceFile;
+        } else if (relativePathToWithoutSourceFile.endsWith(packagePath)) {
             // hooray, we know what we are doing, do some fancy math to figure it out
             int lastIndex = relativePathToWithoutSourceFile.length() - packagePath.length();
             if (packagePath.length() == 0) {

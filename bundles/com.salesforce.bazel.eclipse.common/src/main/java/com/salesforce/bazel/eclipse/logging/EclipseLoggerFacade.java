@@ -177,6 +177,9 @@ public class EclipseLoggerFacade extends LoggerFacade {
     }
 
     private void writeLog(Class<?> from, LogLevel logLevel, String message, Throwable exception, Object... args) {
+        if(exception == null && args.length > 0)
+            exception = args[0] instanceof Throwable ? (Throwable) args[0] : args[args.length-1] instanceof Throwable ? (Throwable)  args[args.length-1] :null;
+
         String logMessage = "[" + from.getName() + "] " + MessageFormatter.arrayFormat(message, args).getMessage();
         Status logStatus =
                 Objects.isNull(exception) ? new Status(logLevel.getSeverityCode(), BUNDLE.getSymbolicName(), logMessage)
