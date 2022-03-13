@@ -37,6 +37,7 @@ location "https://download.eclipse.org/tools/orbit/downloads/drops/R202108252228
 	com.google.protobuf
 	org.apache.commons.lang3
 	org.apache.commons.io
+	org.apache.xerces
 	org.apache.xalan
 	java_cup.runtime
 	javax.activation
