@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Bazel Eclipse Dev Deps Plugin
 Automatic-Module-Name: com.salesforce.bazel.eclipse.deps
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.deps;singleton:=true
-Bundle-Version: 1.5.1.qualifier
+Bundle-Version: 1.5.2.qualifier
 Bundle-Vendor: Salesforce
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy

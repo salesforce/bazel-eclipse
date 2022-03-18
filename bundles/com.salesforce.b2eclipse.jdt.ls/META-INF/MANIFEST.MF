@@ -4,7 +4,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Bazel JDT LS Plugin
 Automatic-Module-Name: com.salesforce.b2eclipse.jdt.ls
 Bundle-SymbolicName: com.salesforce.b2eclipse.jdt.ls;singleton:=true
-Bundle-Version: 1.5.1.qualifier
+Bundle-Version: 1.5.2.qualifier
 Bundle-Activator: com.salesforce.b2eclipse.BazelJdtPlugin
 Bundle-Vendor: Salesforce
 Require-Bundle: org.eclipse.core.runtime,
