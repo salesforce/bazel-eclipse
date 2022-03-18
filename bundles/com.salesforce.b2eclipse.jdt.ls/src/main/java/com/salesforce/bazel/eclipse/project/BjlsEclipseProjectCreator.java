@@ -8,6 +8,7 @@ import org.eclipse.core.resources.IProject;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 public class BjlsEclipseProjectCreator extends EclipseProjectCreator {
@@ -18,8 +19,8 @@ public class BjlsEclipseProjectCreator extends EclipseProjectCreator {
     }
 
     @Override
-    protected String createProjectName(BazelPackageLocation packageLocation, List<IProject> currentImportedProjects,
-            List<IProject> existingImportedProjects) {
+    protected String createProjectName(BazelWorkspace bazelWorkspace, BazelPackageLocation packageLocation,
+            List<IProject> currentImportedProjects, List<IProject> existingImportedProjects) {
         return packageLocation.getBazelPackageNameLastSegment();
     }
 }

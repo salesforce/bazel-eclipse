@@ -191,8 +191,4 @@ public class BazelLabelTest {
         new BazelLabel(BazelLabel.BAZEL_SLASH);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidLabel_onlyLeadingSlashes() {
-        new BazelLabel("//");
-    }
 }

@@ -280,7 +280,6 @@ public class BazelPackageInfo implements BazelPackageLocation {
     /**
      * Provides the proper Bazel label for the Bazel package.
      * <p>
-     *
      * e.g. "//projects/libs/apple"
      */
     @Override
@@ -290,14 +289,8 @@ public class BazelPackageInfo implements BazelPackageLocation {
         }
 
         if ("".equals(relativeWorkspacePath)) {
-            // the caller is referring to the WORKSPACE root, which for build operations can
-            // (but not always) means that the user wants to build the entire workspace.
-
-            // TODO refine this, so that if the root directory contains a BUILD file with a Java package to
-            // somehow handle that workspace differently
-            // Docs should indicate that a better practice is to keep the root dir free of an actual package
-            // For now, assume that anything referring to the root dir is a proxy for 'whole repo'
-            computedPackageName = BazelLabel.BAZEL_ALL_REPO_PACKAGES;
+            // the caller is referring to the WORKSPACE root
+            computedPackageName = BazelLabel.BAZEL_ROOT_SLASHES;
             return computedPackageName;
         }
 
@@ -366,7 +359,7 @@ public class BazelPackageInfo implements BazelPackageLocation {
                             + bazelPackagePath + "]");
         }
 
-        if (BazelLabel.BAZEL_ALL_REPO_PACKAGES.equals(bazelPackagePath)) {
+        if (BazelLabel.BAZEL_ROOT_PACKAGE_ALLTARGETS.equals(bazelPackagePath)) {
             // special case
             return workspaceRootNode;
         }

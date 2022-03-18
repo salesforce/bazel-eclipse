@@ -58,6 +58,9 @@ public class BazelLabel {
     // All packages wildcard 
     public static final String BAZEL_ALL_REPO_PACKAGES = "//...";
 
+    // Root package wildcard 
+    public static final String BAZEL_ROOT_PACKAGE_ALLTARGETS = "//:*";
+
     // Double slash characters for root of Bazel paths
     public static final String BAZEL_ROOT_SLASHES = "//";
 
@@ -362,19 +365,21 @@ public class BazelLabel {
     public static boolean validateLabelPath(String labelPathStr, boolean throwOnError) {
         try {
             if (labelPathStr == null) {
-                throw new IllegalArgumentException(labelPathStr);
-            }
-            labelPathStr = labelPathStr.trim();
-            if (labelPathStr.length() == 0) {
-                throw new IllegalArgumentException(labelPathStr);
-            }
-            if (labelPathStr.endsWith(BAZEL_COLON)) {
-                throw new IllegalArgumentException(labelPathStr);
-            }
-            if (labelPathStr.endsWith(BAZEL_SLASH)) {
-                throw new IllegalArgumentException(labelPathStr);
+                throw new IllegalArgumentException("Illegal Bazel path string: "+labelPathStr);
             }
             if (labelPathStr.equals(BAZEL_ROOT_SLASHES)) {
+                // this is a special case, it is a legal label so we will shall let it pass
+                return true;
+            }
+            
+            labelPathStr = labelPathStr.trim();
+            if (labelPathStr.length() == 0) {
+                throw new IllegalArgumentException("Illegal Bazel path string: "+labelPathStr);
+            }
+            if (labelPathStr.endsWith(BAZEL_COLON)) {
+                throw new IllegalArgumentException("Illegal Bazel path string: "+labelPathStr);
+            }
+            if (labelPathStr.endsWith(BAZEL_SLASH)) {
                 throw new IllegalArgumentException(labelPathStr);
             }
             if (labelPathStr.contains(FSPathHelper.WINDOWS_BACKSLASH)) {

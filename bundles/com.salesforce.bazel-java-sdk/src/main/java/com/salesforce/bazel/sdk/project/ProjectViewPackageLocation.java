@@ -88,14 +88,8 @@ public class ProjectViewPackageLocation implements BazelPackageLocation {
     @Override
     public String getBazelPackageName() {
         if ("".equals(packagePath)) {
-            // the caller is referring to the WORKSPACE root, which for build operations can
-            // (but not always) means that the user wants to build the entire workspace.
-
-            // TODO refine this, so that if the root directory contains a BUILD file with a Java package to
-            // somehow handle that workspace differently
-            // Docs should indicate that a better practice is to keep the root dir free of an actual package
-            // For now, assume that anything referring to the root dir is a proxy for 'whole repo'
-            return BazelLabel.BAZEL_ALL_REPO_PACKAGES;
+            // the caller is referring to the WORKSPACE root
+            return BazelLabel.BAZEL_ROOT_SLASHES;
         }
         return BazelLabel.BAZEL_ROOT_SLASHES + packagePath;
     }

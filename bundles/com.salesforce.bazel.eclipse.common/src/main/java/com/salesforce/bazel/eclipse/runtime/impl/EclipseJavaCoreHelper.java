@@ -137,8 +137,8 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
             for (IJavaProject candidate : javaProjects) {
                 IProject p = candidate.getProject();
                 if (p.getNature(BazelNature.BAZEL_NATURE_ID) != null) {
-                    if (includeBazelWorkspaceRootProject
-                            || !ComponentContext.getInstance().getResourceHelper().isBazelRootProject(p)) {
+                    boolean isRootProject = ComponentContext.getInstance().getResourceHelper().isBazelRootProject(p);
+                    if (includeBazelWorkspaceRootProject || !isRootProject) {
                         bazelProjects.add(candidate);
                     }
                 }

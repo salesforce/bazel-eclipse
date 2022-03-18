@@ -53,6 +53,10 @@ public class BazelNature implements IProjectNature {
      */
     public static final String BAZELWORKSPACE_PROJECT_BASENAME = "Bazel Workspace";
 
+    public static String getEclipseRootProjectName(String bazelWorkspaceName) {
+        return BazelNature.BAZELWORKSPACE_PROJECT_BASENAME + " (" + bazelWorkspaceName + ")";
+    }
+    
     @Override
     public void configure() throws CoreException {
         // TODO we aren't doing anything right now for BazelNature configure hook, seems like it should be used for something

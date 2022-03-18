@@ -86,20 +86,28 @@ public class EclipseProjectCreator {
         return resourceHelper;
     }
 
-    public IProject createRootProject(String projectName) {
-        IProject rootProject = createProject(projectName, "", new ProjectStructure(), Collections.emptyList());
-        if (rootProject == null) {
+    public IProject createRootProject(ImportContext ctx, BazelWorkspace bazelWorkspace, String projectName) {
+        // create the root Eclipse project
+        BazelPackageLocation rootLocation = ctx.getBazelWorkspaceRootPackageInfo();
+        ProjectStructure structure = ctx.getProjectStructure(rootLocation, bazelWorkspace, bazelCommandManager);
+        URI eclipseProjectLocation = null; // let Eclipse use the default location
+        IProject eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation, structure);
+
+        if (eclipseProject == null) {
             throw new IllegalStateException(
                     "Could not create the root workspace project. Look back in the log for more details.");
         }
-        return rootProject;
+        
+        provisionProjectNature(eclipseProject, projectName, "", structure, new ArrayList<>());
+        
+        return eclipseProject;
     }
 
     public IProject createProject(ImportContext ctx, BazelPackageLocation packageLocation,
             List<BazelLabel> bazelTargets, List<IProject> currentImportedProjects,
             List<IProject> existingImportedProjects, EclipseFileLinker fileLinker, BazelWorkspace bazelWorkspace) {
 
-        String projectName = createProjectName(packageLocation, currentImportedProjects, existingImportedProjects);
+        String projectName = createProjectName(bazelWorkspace, packageLocation, currentImportedProjects, existingImportedProjects);
         ProjectStructure structure = ctx.getProjectStructure(packageLocation, bazelWorkspace, bazelCommandManager);
         String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
         if (bazelTargets == null) {
@@ -116,7 +124,16 @@ public class EclipseProjectCreator {
             return null;
         }
         // create the project
-        project = createProject(projectName, packageFSPath, structure, targets);
+        IProject eclipseProject = null;
+        if (packageLocation.isWorkspaceRoot()) {
+            // we will get here if there is a BUILD file in the workspace root that has interesting targets, and the 
+            // user chose to import this package; check if the root project has been created already
+            eclipseProject = ctx.getRootProject();
+        } else {
+            URI eclipseProjectLocation = null; // let Eclipse use the default location
+            eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation, structure);
+        }
+        project = provisionProjectNature(eclipseProject, projectName, packageFSPath, structure, targets);
 
         // link all files in the package root into the Eclipse project
         linkFilesInPackageDirectory(fileLinker, project, packageFSPath,
@@ -124,11 +141,9 @@ public class EclipseProjectCreator {
         return project;
     }
 
-    public IProject createProject(String projectName, String packageFSPath, ProjectStructure structure,
-            List<BazelLabel> bazelTargets) {
-        URI eclipseProjectLocation = null; // let Eclipse use the default location
+    public IProject provisionProjectNature(IProject eclipseProject, String projectName, String packageFSPath, 
+            ProjectStructure structure, List<BazelLabel> bazelTargets) {
 
-        IProject eclipseProject = createBaseEclipseProject(projectName, eclipseProjectLocation, structure);
         BazelProject bazelProject = bazelProjectManager.getProject(projectName);
         try {
             EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID, resourceHelper);
@@ -159,8 +174,12 @@ public class EclipseProjectCreator {
         }
     }
 
-    protected String createProjectName(BazelPackageLocation packageLocation, List<IProject> currentImportedProjects,
-            List<IProject> existingImportedProjects) {
+    protected String createProjectName(BazelWorkspace bazelWorkspace, BazelPackageLocation packageLocation, 
+            List<IProject> currentImportedProjects, List<IProject> existingImportedProjects) {
+        if (packageLocation.isWorkspaceRoot()) {
+            return BazelNature.getEclipseRootProjectName(bazelWorkspace.getName());
+        }
+        
         String projectName = EclipseProjectUtils.computeEclipseProjectNameForBazelPackage(packageLocation,
             existingImportedProjects, currentImportedProjects);
         return projectName;
