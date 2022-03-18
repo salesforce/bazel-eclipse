@@ -83,20 +83,17 @@ public class CreateProjectsFlow extends AbstractImportFlowStep {
                 Arrays.asList(resourceHelper.getProjectsForBazelWorkspace(bazelWorkspace));
         
         for (BazelPackageLocation packageLocation : orderedModules) {
-            if (!packageLocation.isWorkspaceRoot()) {
-                List<BazelLabel> bazelTargets = ctx.getPackageLocationToTargets().get(packageLocation);
+            List<BazelLabel> bazelTargets = ctx.getPackageLocationToTargets().get(packageLocation);
 
-                // create the project
-                IProject project =
-                        projectCreator.createProject(ctx, packageLocation, bazelTargets, currentImportedProjects,
-                            existingImportedProjects, fileLinker, bazelWorkspace);
+            // create the project
+            IProject project = projectCreator.createProject(ctx, packageLocation, bazelTargets, 
+                currentImportedProjects, existingImportedProjects, fileLinker, bazelWorkspace);
 
-                if (project != null) {
-                    ctx.addImportedProject(project, packageLocation);
-                }
-
-                progressMonitor.worked(1);
+            if (project != null) {
+                ctx.addImportedProject(project, packageLocation);
             }
+
+            progressMonitor.worked(1);
         }
     }
 

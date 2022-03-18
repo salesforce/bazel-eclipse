@@ -58,10 +58,10 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.TypedBazelLabel;
+import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.ui.BazelSWTFactory;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
@@ -229,7 +229,9 @@ public class BazelLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         ElementListSelectionDialog dialog = new ElementListSelectionDialog(getShell(), BAZEL_PROJECT_LABEL_PROVIDER);
         dialog.setTitle("Select Project");
         dialog.setMessage("Select Project");
-        dialog.setElements(ComponentContext.getInstance().getJavaCoreHelper().getAllBazelJavaProjects(false));
+        JavaCoreHelper javaCoreHelper = ComponentContext.getInstance().getJavaCoreHelper();
+        IJavaProject[] launchableProjects = javaCoreHelper.getAllBazelJavaProjects(true);
+        dialog.setElements(launchableProjects);
 
         IJavaProject javaProject = getSelectedProject();
         if (javaProject != null) {

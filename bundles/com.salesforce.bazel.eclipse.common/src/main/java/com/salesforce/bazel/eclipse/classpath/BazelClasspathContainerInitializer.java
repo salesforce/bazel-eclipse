@@ -50,6 +50,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
 
+import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
@@ -100,7 +101,7 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 bazelProjectManager.addProject(bazelProject);
             }
 
-            boolean isRootProject = eclipseJavaProject.getProject().getName().contains("Bazel Workspace");
+            boolean isRootProject = eclipseJavaProject.getProject().getName().contains(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME);
             IClasspathContainer container = getClasspathContainer(eclipseProject, isRootProject);
 
             if (isRootProject) {

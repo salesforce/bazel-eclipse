@@ -85,9 +85,8 @@ public class CreateRootProjectFlow extends AbstractImportFlowStep {
         final BazelWorkspace bazelWorkspace = getBazelWorkspace();
         IProject rootProject = resourceHelper.getBazelWorkspaceProject(bazelWorkspace);
         if (rootProject == null) {
-            String rootProjectName =
-                    BazelNature.BAZELWORKSPACE_PROJECT_BASENAME + " (" + bazelWorkspace.getName() + ")";
-            rootProject = ctx.getEclipseProjectCreator().createRootProject(rootProjectName);
+            String rootProjectName = BazelNature.getEclipseRootProjectName(bazelWorkspace.getName());
+            rootProject = ctx.getEclipseProjectCreator().createRootProject(ctx, bazelWorkspace, rootProjectName);
         } else if (!rootProject.isOpen()) {
             try {
                 rootProject.open(progressMonitor.newChild(1));
@@ -107,7 +106,18 @@ public class CreateRootProjectFlow extends AbstractImportFlowStep {
         List<BazelPackageLocation> selectedBazelPackages = ctx.getSelectedBazelPackages();
         ProjectViewUtils.writeProjectViewFile(bazelWorkspaceRootDirectory, rootProject, selectedBazelPackages);
 
-        createDummySourceFolder(rootProject);
+        boolean isImportingRootPackage = false;
+        for (BazelPackageLocation pkg : selectedBazelPackages) {
+            if (pkg.isWorkspaceRoot()) {
+                isImportingRootPackage = true;
+                break;
+            }
+        }
+        
+        // we only create a dummy source folder if we aren't importing the root package //:*
+        if (!isImportingRootPackage) {
+            createDummySourceFolder(rootProject);
+        }
 
         ctx.setRootProject(rootProject);
     }
@@ -126,11 +136,17 @@ public class CreateRootProjectFlow extends AbstractImportFlowStep {
             return;
         }
         try {
+            IPath sourceDir = srcFolder.getFullPath();
+            
             boolean force = false; // "a flag controlling how to deal with resources that are not in sync with the local file system"
             boolean local = true; // "a flag controlling whether or not the folder will be local after the creation"
             srcFolder.create(force, local, null);
+
+            if (!sourceDir.toFile().exists()) {
+                return;
+            }
+            
             // add the created path to the classpath as a Source cp entry
-            IPath sourceDir = srcFolder.getFullPath();
             IClasspathEntry sourceClasspathEntry = javaCoreHelper.newSourceEntry(sourceDir, null, false);
             javaProject.setRawClasspath(new IClasspathEntry[] { sourceClasspathEntry }, null);
         } catch (CoreException ex) {

@@ -100,7 +100,7 @@ public class BazelProjectInfoTest {
 
         assertEquals("", rootNode.getBazelPackageFSRelativePath());
         assertEquals("WORKSPACE", rootNode.getBazelPackageFSRelativePathForUI());
-        assertEquals("//...", rootNode.getBazelPackageName());
+        assertEquals("//", rootNode.getBazelPackageName());
         assertEquals("", rootNode.getBazelPackageNameLastSegment());
 
         assertTrue(rootNode.getChildPackageInfos().isEmpty());
@@ -240,7 +240,7 @@ public class BazelProjectInfoTest {
         BazelPackageInfo banana = new BazelPackageInfo(apple_web, BANANA_PROJECT_FS_PATH);
 
         assertEquals(apple_web, banana.findByPackage("//projects/libs/apple/web")); // $SLASH_OK bazel path
-        assertEquals(rootNode, apple.findByPackage("//..."));
+        assertEquals(rootNode, apple.findByPackage("//"));
     }
 
     // HELPERS
