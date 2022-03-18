@@ -8,7 +8,7 @@
 <feature
       id="com.salesforce.bazel.eclipse.feature"
       label="Bazel Eclipse Feature"
-      version="1.5.1.qualifier"
+      version="1.5.2.qualifier"
       provider-name="Salesforce">
 
    <description url="https://github.com/salesforce/bazel-eclipse">
@@ -248,7 +248,7 @@
       <import plugin="org.eclipse.jface.text" version="3.14.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jdt.junit" version="3.11.100" match="greaterOrEqual"/>
       <import plugin="org.eclipse.core.expressions" version="3.6.200.v20180817-1401" match="greaterOrEqual"/>
-      <import plugin="com.salesforce.bazel-java-sdk" version="1.5.1" match="greaterOrEqual"/>
+      <import plugin="com.salesforce.bazel-java-sdk" version="1.5.2" match="greaterOrEqual"/>
       <import plugin="org.slf4j.api" version="1.7.30" match="greaterOrEqual"/>
       <import plugin="ch.qos.logback.core" version="1.2.3" match="greaterOrEqual"/>
       <import plugin="ch.qos.logback.classic" version="1.2.3" match="greaterOrEqual"/>
