@@ -52,6 +52,7 @@ public class ImportContext {
 
     private final BazelPackageLocation bazelWorkspaceRootPackageInfo;
     private final List<BazelPackageLocation> selectedBazelPackages;
+    private boolean isExplicitImportRootProject = false;
     private final ProjectOrderResolver projectOrderResolver;
     private final Map<String, ProjectStructure> ProjectSourceStructureCache = new HashMap<>();
 
@@ -73,6 +74,13 @@ public class ImportContext {
         this.bazelWorkspaceRootPackageInfo = Objects.requireNonNull(bazelWorkspaceRootPackageInfo);
         this.selectedBazelPackages = Objects.requireNonNull(selectedBazelPackages);
         this.projectOrderResolver = Objects.requireNonNull(projectOrderResolver);
+        
+        for (BazelPackageLocation pkg : selectedBazelPackages) {
+            if (pkg.isWorkspaceRoot()) {
+                isExplicitImportRootProject = true;
+                break;
+            }
+        }
     }
 
     public void init(File bazelWorkspaceRootDirectory, BazelProjectManager bazelProjectManager,
@@ -89,6 +97,16 @@ public class ImportContext {
 
     public List<BazelPackageLocation> getSelectedBazelPackages() {
         return selectedBazelPackages;
+    }
+    
+    /**
+     * We always create an Eclipse project for the root package (//:*) in the Bazel workspace as a holder for
+     * Bazel workspace level config (e.g. Global Search Classpath). But if the user has targets in the root
+     * package (in the BUILD file) they may explicitly ask us to import the root package. If the user has
+     * explicitly asked for the root package to be imported, this will return true.
+     */
+    public boolean isExplicitImportRootProject() {
+        return isExplicitImportRootProject;
     }
 
     public Map<BazelPackageLocation, List<BazelLabel>> getPackageLocationToTargets() {

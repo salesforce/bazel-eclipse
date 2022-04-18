@@ -79,6 +79,14 @@ public class SetupClasspathContainersFlow extends AbstractImportFlowStep {
         List<IProject> importedProjects = ctx.getImportedProjects();
         for (IProject project : importedProjects) {
             BazelPackageLocation packageLocation = ctx.getPackageLocationForProject(project);
+            
+            if (packageLocation.isWorkspaceRoot() && !ctx.isExplicitImportRootProject()) {
+                // we always create an Eclipse project for the root Bazel package to hold workspace level
+                // things. but in this case the user didn't ask us to import the root package targets, 
+                // so we don't want to setup the classpath container for the root package here
+                continue;
+            }
+            
             ProjectStructure structure =
                     ctx.getProjectStructure(packageLocation, getBazelWorkspace(), getCommandManager());
             String packageFSPath = packageLocation.getBazelPackageFSRelativePath();
