@@ -106,16 +106,8 @@ public class CreateRootProjectFlow extends AbstractImportFlowStep {
         List<BazelPackageLocation> selectedBazelPackages = ctx.getSelectedBazelPackages();
         ProjectViewUtils.writeProjectViewFile(bazelWorkspaceRootDirectory, rootProject, selectedBazelPackages);
 
-        boolean isImportingRootPackage = false;
-        for (BazelPackageLocation pkg : selectedBazelPackages) {
-            if (pkg.isWorkspaceRoot()) {
-                isImportingRootPackage = true;
-                break;
-            }
-        }
-        
         // we only create a dummy source folder if we aren't importing the root package //:*
-        if (!isImportingRootPackage) {
+        if (!ctx.isExplicitImportRootProject()) {
             createDummySourceFolder(rootProject);
         }
 
