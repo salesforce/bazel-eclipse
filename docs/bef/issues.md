@@ -40,6 +40,10 @@ In the meantime, there are two workarounds:
 - Only import one of the Bazel packages (```//a/b/c``` or ```//x/y/z```) into Eclipse to prevent the cycle.
 - Delete the error from the _Problems View_ in Eclipse and the Error will not return often. Right click on the error line, and choose _Delete_.
 
+### JDK Configuration Issues: "IllegalArgumentException: external/local_jdk" or "Unable to locate a Java Runtime."
+
+See [this BEF issue](https://github.com/salesforce/bazel-eclipse/issues/417) for status and
+  workarounds for these types of problems.
 
 ### "CreateProcess Error Code 5 Access Denied", "Error fetching repository" (Windows)
 

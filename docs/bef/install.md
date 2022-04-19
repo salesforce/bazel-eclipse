@@ -22,8 +22,14 @@ Other platforms (yo, OS/2 user!) may also work, but you may need to contribute p
 
 At this time, we don't have specific guidance on what JDK version you should be using.
 Any JDK11 or above should work.
-We support modern versions of Java, so whatever you pick should just work.
 If you find one that does NOT work, let us know.
+
+Bazel generally has not been strong with hermetic Java configuration and relies on *JAVA_HOME*
+   in unexpected ways.
+If your build relies on *JAVA_HOME* being set, you will likely have problems with BEF.
+See [this issue](https://github.com/salesforce/bazel-eclipse/issues/417) for additional configuration steps
+   you will need to perform as workarounds.
+
 More details of our JDK support strategy can be [found here](../dev/jdk.md).
 
 ### Installing Eclipse
