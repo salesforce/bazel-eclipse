@@ -178,14 +178,16 @@ public class TestBazelWorkspaceFactory {
 
     /**
      * Subclassable hook for creating all of the Java packages.
-     *
-     * @param packageParentDir
-     *            the //projects/libs directory on the file system, where you are expected to place the Bazel packages
-     * @param packageParentDirBazelRelPath
-     *            the relative path for the Bazel label (not File separated) for the Bazel packages (e.g. projects/libs)
      */
     protected void buildJavaPackages() throws Exception {
         int numJavaPackages = workspaceDescriptor.testOptions.numberOfJavaPackages;
+
+        // does the test want a BUILD file in the root of the workspace with targets?
+        if (workspaceDescriptor.testOptions.hasRootPackage) {
+            String packageName = "";
+            javaPackageFactory.createJavaPackage(workspaceDescriptor, packageName, "",
+                workspaceDescriptor.workspaceRootDirectory, 0, true);
+        }
 
         for (int i = 0; i < numJavaPackages; i++) {
 
@@ -204,11 +206,6 @@ public class TestBazelWorkspaceFactory {
 
     /**
      * Subclassable hook for creating all of the Genrule elements of the workspace.
-     *
-     * @param packageParentDir
-     *            the //projects/libs directory on the file system, where you are expected to place the Bazel packages
-     * @param packageParentDirBazelRelPath
-     *            the relative path for the Bazel label (not File separated) for the Bazel packages (e.g. projects/libs)
      */
     protected void buildGenruleWorkspaceElements() throws Exception {
         // Genrule usually does not require anything loaded into the WORKSPACE
@@ -216,11 +213,6 @@ public class TestBazelWorkspaceFactory {
 
     /**
      * Subclassable hook for creating all of the Genrule packages.
-     *
-     * @param packageParentDir
-     *            the //projects/libs directory on the file system, where you are expected to place the Bazel packages
-     * @param packageParentDirBazelRelPath
-     *            the relative path for the Bazel label (not File separated) for the Bazel packages (e.g. projects/libs)
      */
     protected void buildGenrulePackages() throws Exception {
         for (int i = 0; i < workspaceDescriptor.testOptions.numberGenrulePackages; i++) {
