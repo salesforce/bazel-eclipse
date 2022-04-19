@@ -23,6 +23,11 @@ Tycho has commands for this, and is a good start, but they don't do the full job
 
  # auto update the version
  mvn -X -DnewVersion=1.3.1-SNAPSHOT tycho-versions:set-version
+
+ # find any files it missed (manually update these)
+ find . -type f | xargs grep '1.3.0-SNAPSHOT'
+
+ # now tell tycho to finish updating the metadata
  mvn -X tycho-versions:update-eclipse-metadata
 
  # rebuild with the new versions
@@ -143,6 +148,13 @@ git pull
 git tag 1.3.1.updatesite
 git push origin 1.3.1.updatesite
 ```
+
+### Update the Version in pom.xml
+
+Ideally, you will now set the version in the metadata to be the next expected version.
+This is good because it is easy to forget the *Setting the Version* steps when
+  triggering the RC workflow for the next release.
+Doing it now will prevent mistakes later.
 
 ### Update the Eclipse Marketplace Record (BEF)
 

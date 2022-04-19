@@ -8,7 +8,7 @@
 <feature
       id="com.salesforce.b2eclipse.jdt.ls.feature"
       label="Bazel JDT LS Eclipse Feature"
-      version="1.5.2.qualifier"
+      version="1.5.3.qualifier"
       provider-name="Salesforce">
 
    <description url="https://github.com/salesforce/bazel-eclipse">

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Bazel Java SDK Plugin
 Bundle-SymbolicName: com.salesforce.bazel-java-sdk;singleton:=true
-Bundle-Version: 1.5.2.qualifier
+Bundle-Version: 1.5.3.qualifier
 Bundle-Vendor: Salesforce
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: com.salesforce.bazel.eclipse.model
