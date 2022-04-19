@@ -58,6 +58,14 @@ public class TestOptions extends HashMap<String, String> {
         return this;
     }
 
+    // should the Workspace root contain a BUILD file with targets?
+    public boolean hasRootPackage = false;
+
+    public TestOptions hasRootPackage(boolean rootPackage) {
+        hasRootPackage = rootPackage;
+        return this;
+    }
+
     // number of packages with Java rules to create in the test workspace
     public int numberOfJavaPackages = 0;
 

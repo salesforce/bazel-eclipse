@@ -61,6 +61,14 @@ public class TestJavaPackageFactory {
 
         String packageRelativeBazelPath = packageRelativePath + "/" + packageName; // $SLASH_OK bazel path
         String packageRelativeFilePath = FSPathHelper.osSeps(packageRelativeBazelPath);
+        if (packageName.equals("")) {
+            // hacky signal that this package is the root package //
+            packageRelativeBazelPath = "";
+            packageRelativeFilePath = "";
+            packageName = "rootLib";
+        }
+
+        // create the package directory
         javaPackageDir.mkdir();
 
         // create the catalog entries

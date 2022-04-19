@@ -103,8 +103,10 @@ public class EclipseFunctionalTestEnvironmentFactory {
 
         // choose the list of Bazel packages to import, in this case we assume the user selected all Java packages
         List<BazelPackageLocation> bazelPackagesToImport = new ArrayList<>();
-        bazelPackagesToImport.add(workspaceRootProject);
-        addBazelPackageInfosToSelectedList(workspaceRootProject, bazelPackagesToImport);
+        if (testOptions.hasRootPackage) {
+            bazelPackagesToImport.add(workspaceRootProject);
+        }
+        addChildPackagesToImportList(workspaceRootProject, bazelPackagesToImport);
 
         ProjectImporterFactory projectImporterFactory =
                 new ProjectImporterFactory(workspaceRootProject, bazelPackagesToImport);
@@ -127,7 +129,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
         return mockEclipse;
     }
 
-    private static void addBazelPackageInfosToSelectedList(BazelPackageInfo currentNode,
+    private static void addChildPackagesToImportList(BazelPackageInfo currentNode,
             List<BazelPackageLocation> bazelPackagesToImport) {
         Collection<BazelPackageInfo> children = currentNode.getChildPackageInfos();
         bazelPackagesToImport.addAll(children);

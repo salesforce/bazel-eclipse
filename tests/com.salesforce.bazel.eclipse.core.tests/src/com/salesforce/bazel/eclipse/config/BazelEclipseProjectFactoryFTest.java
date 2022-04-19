@@ -55,6 +55,7 @@ public class BazelEclipseProjectFactoryFTest {
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
     private IProject workspace_IProject;
+    private IJavaProject workspace_IJavaProject;
     private IProject javalib0_IProject;
     private IJavaProject javalib0_IJavaProject;
     private IProject javalib1_IProject;
@@ -117,6 +118,34 @@ public class BazelEclipseProjectFactoryFTest {
         IProject[] javalib1_refs = javalib1_description.getReferencedProjects();
         assertEquals(1, javalib1_refs.length);
         assertEquals("javalib0", javalib1_refs[0].getName());
+    }
+
+    @Test
+    public void testImportWorkspace_withRootPackage() throws Exception {
+        File testTempDir = tmpFolder.newFolder();
+        // during test development, it can be useful to have a stable location on disk for the Bazel workspace contents
+        //testTempDir = new File("/tmp/bef/bazelws");
+        //testTempDir.mkdirs();
+
+        // create the mock Eclipse runtime in the correct state, which is two java projects root-package0 and javalib0
+        TestOptions testOptions = new TestOptions().uniqueKey("imws").numberOfJavaPackages(1)
+                .explicitJavaTestDeps(false).hasRootPackage(true);
+        String wsName = MockEclipse.BAZEL_WORKSPACE_NAME + "-imws";
+
+        boolean computeClasspaths = true;
+        MockEclipse mockEclipse = EclipseFunctionalTestEnvironmentFactory
+                .createMockEnvironment_Imported_All_JavaPackages(testTempDir, testOptions, computeClasspaths);
+        workspace_IProject = mockEclipse.getImportedProject("Bazel Workspace (" + wsName + ")");
+        assertNotNull(workspace_IProject);
+        workspace_IJavaProject = mockEclipse.getMockJavaCoreHelper().getJavaProjectForProject(workspace_IProject);
+        assertNotNull(workspace_IJavaProject);
+
+        // Eclipse project for the Bazel workspace
+        assertNotNull(workspace_IProject);
+        assertEquals("Bazel Workspace (" + wsName + ")", workspace_IProject.getName());
+        IProjectDescription workspace_description =
+                ComponentContext.getInstance().getResourceHelper().getProjectDescription(workspace_IProject);
+        hasNature("workspace", workspace_description.getNatureIds(), true, true);
     }
 
     private void hasNature(String projectName, String[] natureIds, boolean expectJava, boolean expectBazel) {
