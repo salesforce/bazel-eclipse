@@ -8,6 +8,11 @@ Both provide IDE integrations for projects built by the [Bazel](http://bazel.io)
 
 These projects are supported by Salesforce.
 
+### BazelCon 2021 Presentation
+
+For an easy 20 minute overview of what this repository contains, see the BazelCon 2021 presentation that covers both IDE projects.
+- [Eclipse and VS Code IDE Support for Java packages in Bazel](https://www.youtube.com/watch?v=oLnfv2-aGwk)
+
 ### BEF: Bazel Eclipse Feature ![BEF Logo](docs/logos/bef_logo_small.png)
 
 This is the Eclipse Feature for developing [Bazel](http://bazel.io) projects in Eclipse.
