@@ -27,11 +27,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.salesforce.bazel.sdk.index.CodeIndex;
-import com.salesforce.bazel.sdk.index.CodeIndexEntry;
 import com.salesforce.bazel.sdk.index.jvm.jar.JarIdentiferResolver;
 import com.salesforce.bazel.sdk.index.jvm.jar.JavaJarCrawler;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;

@@ -50,14 +50,16 @@ At this point you almost certainly have multiple *Eclipse IDE* versions installe
 Therefore you want to be very intentional about how you launch the Eclipse SDK.
 Do not rely on your OS finder to launch "Eclipse", as it might not be the PDE one.
 
-As a best practice, write a simple launcher script named *eclipse_sdk.sh*
+As a best practice, use the simple launcher script named *eclipse_sdk.sh*.
+You will need to create your own ```my_env.sh``` file
  (it is [.gitignore](../../.gitignore)'d already)
  in the root directory of this repository on your local machine.
 It will look something like:
 
 ```
-# launch the Eclipse SDK
-/Users/mbenioff/tools/eclipse/sdk49/Eclipse.app/Contents/MacOS/eclipse &
+export JAVA_HOME=/Users/mbenioff/dev/jdk/openjdk_17
+export ECLIPSE_DIR=/Users/mbenioff/dev/eclipse/SDK/4.25
+
 ```
 
 ### Import the bazel-eclipse projects into the Eclipse SDK
@@ -75,7 +77,8 @@ There will be errors. This is expected at this point.
 
 - Click *Window* -> *Perspective* -> *Open Perspective* -> *Plug-in Development*
 - Open file *releng/target-platform/target-platform.target* file
-- Click *Reload Target Platform* in the upper right. This will run for a **long** time (20 minutes perhaps).
+- Click the *Set as Active Target Platform* link in the upper right
+- Click *Reload Target Platform* in the upper right. This will run for a **long** time (5 minutes perhaps).
 - The Problems view should now be free of errors
 
 :fire: if you see errors or warnings at this point, see the [dev issues page](dev_issues.md) for help.

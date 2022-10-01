@@ -28,8 +28,6 @@ Require-Bundle: org.eclipse.ui.console;bundle-version="3.8.100.v20180821-1744",
  org.eclipse.core.expressions;bundle-version="3.6.200.v20180817-1401",
  com.salesforce.bazel-java-sdk;bundle-version="1.5.2.qualifier",
  org.slf4j.api;bundle-version="1.7.30",
- ch.qos.logback.core;bundle-version="1.2.3",
- ch.qos.logback.classic;bundle-version="1.2.3",
  com.salesforce.bazel.eclipse.common,
  org.eclipse.ltk.core.refactoring
 Bundle-RequiredExecutionEnvironment: JavaSE-11
