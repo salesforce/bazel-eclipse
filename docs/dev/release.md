@@ -128,6 +128,8 @@ git push --force origin gh-pages
 After the release build has been confirmed, please create a new release in our
   [Releases](https://github.com/salesforce/bazel-eclipse/releases) list.
 Click the _Draft a new release_ button to get started.
+You will attach the zip archive of the release, which was built by the GitHub Action and
+  add to [this location in the gh-pages branch](https://github.com/salesforce/bazel-eclipse/tree/gh-pages/update-site/features).
 
 Please follow the pattern of previous releases.
 Be sure to list the changes and give credit to outside contributors.
@@ -164,7 +166,7 @@ The BEF record is here, which will have an _Edit_ button if you are entitled:
 - [BEF in the Eclipse Marketplace](https://marketplace.eclipse.org/content/bazel-eclipse-feature)
 
 When you create a new _Solution Version_, use these data points:
-- Version: use the full version like *1.4.0.v20210707-0040*
+- Version: use the full version like *1.4.0.v20210707-0040* (get this from the [gh-pages release filename](https://github.com/salesforce/bazel-eclipse/tree/gh-pages/update-site/features) )
 <!-- markdown-link-check-disable-next-line -->
 - Update site: https://opensource.salesforce.com/bazel-eclipse/update-site
 - Feature id: *com.salesforce.bazel.eclipse.feature*
@@ -172,7 +174,7 @@ When you create a new _Solution Version_, use these data points:
 Make sure to remove the previous _Solution Version_ entry, so that the Marketplace will
   offer the newer version metadata.
 
-## Release Implementation (BEF)
+## GitHub Actions Release Implementation (BEF)
 
 The release workflow is defined using GitHub Actions.
 Instead of explaining how it works, here are some pointers to some interesting files:

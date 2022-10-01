@@ -8,7 +8,7 @@
 <feature
       id="com.salesforce.bazel.eclipse.feature"
       label="Bazel Eclipse Feature"
-      version="1.5.3.qualifier"
+      version="1.5.4.qualifier"
       provider-name="Salesforce">
 
    <description url="https://github.com/salesforce/bazel-eclipse">
