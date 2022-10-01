@@ -48,7 +48,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.launching.sourcelookup.containers.JavaProjectSourceContainer;
 import org.eclipse.jdt.launching.sourcelookup.containers.JavaSourceLookupParticipant;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 
 /**
