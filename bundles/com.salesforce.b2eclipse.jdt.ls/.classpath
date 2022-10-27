@@ -7,5 +7,6 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry exported="true" kind="lib" path="bin" sourcepath="bin"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

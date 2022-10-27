@@ -1,60 +1,48 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1636373983">
+<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1666929537">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.e4.rcp.feature.group" version="4.21.0.v20210906-0842"/>
-      <unit id="org.eclipse.ecf.core.feature.feature.group" version="1.5.702.v20210409-2301"/>
+      <unit id="org.eclipse.e4.rcp.feature.group" version="4.25.0.v20220829-1402"/>
+      <unit id="org.eclipse.ecf.core.feature.feature.group" version="1.6.1.v20211005-1944"/>
       <unit id="org.eclipse.ecf.core.ssl.feature.feature.group" version="1.1.501.v20210409-2301"/>
-      <unit id="org.eclipse.ecf.filetransfer.feature.feature.group" version="3.14.1800.v20210618-0642"/>
-      <unit id="org.eclipse.ecf.filetransfer.httpclient45.feature.feature.group" version="1.0.703.v20210512-0614"/>
+      <unit id="org.eclipse.ecf.filetransfer.feature.feature.group" version="3.14.1800.v20220215-0126"/>
       <unit id="org.eclipse.ecf.filetransfer.ssl.feature.feature.group" version="1.1.401.v20210409-2301"/>
-      <unit id="org.eclipse.emf.common.feature.group" version="2.23.0.v20210618-0700"/>
-      <unit id="org.eclipse.emf.ecore.feature.group" version="2.25.0.v20210816-0937"/>
-      <unit id="org.eclipse.equinox.core.feature.feature.group" version="1.13.300.v20210823-1805"/>
-      <unit id="org.eclipse.equinox.core.sdk.feature.group" version="3.23.100.v20210823-1805"/>
-      <unit id="org.eclipse.equinox.p2.core.feature.source.feature.group" version="1.6.1100.v20210830-0925"/>
-      <unit id="org.eclipse.equinox.sdk.feature.group" version="3.23.100.v20210830-0925"/>
-      <unit id="org.eclipse.equinox.p2.discovery.feature.feature.group" version="1.2.1000.v20210813-0655"/>
-      <unit id="org.eclipse.rcp.feature.group" version="4.21.0.v20210906-0842"/>
-      <unit id="org.eclipse.rcp.sdk.id" version="4.21.0.I20210906-0500"/>
-      <unit id="org.eclipse.sdk.ide" version="4.21.0.I20210906-0500"/>
-      <unit id="org.eclipse.test.feature.group" version="3.7.1600.v20210729-0440"/>
-      <unit id="org.eclipse.equinox.executable" version="3.8.1300.v20210828-0802"/>
-      <unit id="org.eclipse.equinox.executable.feature.group" version="3.8.1300.v20210828-0802"/>
-      <unit id="org.eclipse.jdt.feature.group" version="3.18.900.v20210906-0500"/>
-      <unit id="org.eclipse.platform.feature.group" version="4.21.0.v20210906-0842"/>
-      <unit id="org.eclipse.test" version="3.4.800.v20210428-1559"/>
-      <unit id="org.eclipse.jface.text.tests" version="3.12.200.v20210629-1413"/>
+      <unit id="org.eclipse.emf.common.feature.group" version="2.27.0.v20220817-1401"/>
+      <unit id="org.eclipse.emf.ecore.feature.group" version="2.29.0.v20220817-1401"/>
+      <unit id="org.eclipse.equinox.core.feature.feature.group" version="1.13.800.v20220817-1601"/>
+      <unit id="org.eclipse.equinox.core.sdk.feature.group" version="3.23.500.v20220826-1025"/>
+      <unit id="org.eclipse.equinox.p2.core.feature.source.feature.group" version="1.6.1500.v20220819-1949"/>
+      <unit id="org.eclipse.equinox.sdk.feature.group" version="3.23.500.v20220826-1025"/>
+      <unit id="org.eclipse.equinox.p2.discovery.feature.feature.group" version="1.2.1100.v20220210-1157"/>
+      <unit id="org.eclipse.rcp.feature.group" version="4.25.0.v20220831-1800"/>
+      <unit id="org.eclipse.rcp.sdk.id" version="4.25.0.I20220831-1800"/>
+      <unit id="org.eclipse.sdk.ide" version="4.25.0.I20220831-1800"/>
+      <unit id="org.eclipse.test.feature.group" version="3.8.200.v20220824-0342"/>
+      <unit id="org.eclipse.equinox.executable" version="3.8.1800.v20220720-1949"/>
+      <unit id="org.eclipse.equinox.executable.feature.group" version="3.8.1800.v20220720-1949"/>
+      <unit id="org.eclipse.jdt.feature.group" version="3.18.1300.v20220831-1800"/>
+      <unit id="org.eclipse.platform.feature.group" version="4.25.0.v20220831-1800"/>
+      <unit id="org.eclipse.test" version="3.5.100.v20220710-2055"/>
+      <unit id="org.eclipse.jface.text.tests" version="3.12.500.v20220506-1519"/>
       <unit id="org.eclipse.text.tests" version="3.13.100.v20210629-1413"/>
-      <unit id="org.eclipse.sdk.feature.group" version="4.21.0.v20210906-0842"/>
-      <repository location="https://download.eclipse.org/eclipse/updates/4.21/R-4.21-202109060500/"/>
+      <unit id="org.eclipse.sdk.feature.group" version="4.25.0.v20220831-1800"/>
+      <repository location="https://download.eclipse.org/eclipse/updates/4.25/R-4.25-202208311800/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="com.google.gson" version="2.8.7.v20210624-1215"/>
-      <unit id="com.google.guava" version="30.1.0.v20210127-2300"/>
-      <unit id="com.google.javascript" version="0.0.20160315.v20161124-1903"/>
-      <unit id="com.google.protobuf" version="2.4.0.v201105131100"/>
-      <unit id="org.apache.commons.lang3" version="3.1.0.v201403281430"/>
+      <unit id="com.google.gson" version="2.9.0.v20220704-0629"/>
       <unit id="org.apache.commons.io" version="2.8.0.v20210415-0900"/>
-      <unit id="org.apache.xalan" version="2.7.2.v20201124-1837"/>
-      <unit id="java_cup.runtime" version="0.10.0.v201005080400"/>
-      <unit id="javax.activation" version="2.0.0.v20201118-1818"/>
-      <unit id="javax.xml.bind" version="2.2.0.v201105210648"/>
-      <unit id="javax.xml.rpc" version="1.1.0.v201209140446"/>
-      <unit id="javax.xml.stream" version="1.0.1.v201004272200"/>
-      <unit id="javax.xml.soap" version="1.3.0.v201105210645"/>
-      <repository location="https://download.eclipse.org/tools/orbit/downloads/drops/R20210825222808/repository/"/>
+      <repository location="https://download.eclipse.org/tools/orbit/downloads/drops/R20220830213456/repository/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.jdt.ls.core" version="1.4.0.202109161824"/>
-      <repository location="https://download.eclipse.org/jdtls/milestones/1.4.0/repository/"/>
+      <unit id="org.eclipse.jdt.ls.core" version="1.17.0.202210271413"/>
+      <repository location="https://download.eclipse.org/jdtls/milestones/1.17.0/repository/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.xtend.sdk.feature.group" version="2.25.0.v20210301-1429"/>
-      <unit id="org.eclipse.xtext.sdk.feature.group" version="2.25.0.v20210301-1429"/>
-      <repository location="https://download.eclipse.org/releases/2021-09/202109151000/"/>
+      <unit id="org.eclipse.xtend.sdk.feature.group" version="2.28.0.v20220829-0555"/>
+      <unit id="org.eclipse.xtext.sdk.feature.group" version="2.28.0.v20220829-0555"/>
+      <repository location="https://download.eclipse.org/releases/2022-09/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.mockito.mockito-all" version="1.9.5"/>
@@ -65,10 +53,10 @@
       <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.12.0/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.m2e.feature.feature.group" version="1.18.1.20210618-2246"/>
-      <unit id="org.eclipse.m2e.logback.feature.feature.group" version="1.17.1.20210603-1006"/>
-      <unit id="org.eclipse.m2e.sdk.feature.feature.group" version="1.18.1.20210618-1338"/>
-      <repository location="https://download.eclipse.org/technology/m2e/releases/1.18.1/"/>
+      <unit id="org.eclipse.m2e.feature.feature.group" version="2.0.5.20220912-1211"/>
+      <unit id="org.eclipse.m2e.logback.feature.feature.group" version="2.0.0.20220717-0848"/>
+      <unit id="org.eclipse.m2e.sdk.feature.feature.group" version="2.0.5.20220912-1211"/>
+      <repository location="https://download.eclipse.org/technology/m2e/releases/2.0.5/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.jboss.tools.maven.apt.core" version="1.5.3.201911081053"/>
@@ -79,5 +67,5 @@
       <repository location="https://download.eclipse.org/buildship/updates/e420/snapshots/3.x/3.1.6.v20210909-1001-s/"/>
     </location>
   </locations>
-  <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11"/>
+  <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17"/>
 </target>

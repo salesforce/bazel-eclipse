@@ -1,13 +1,12 @@
 target "bazel-eclipse-feature-target-platform" with source configurePhase requirements
 
-environment JavaSE-11
+environment JavaSE-17
 
-location "https://download.eclipse.org/eclipse/updates/4.21/R-4.21-202109060500/" {
+location "https://download.eclipse.org/eclipse/updates/4.25/R-4.25-202208311800/" {
     org.eclipse.e4.rcp.feature.group
     org.eclipse.ecf.core.feature.feature.group
     org.eclipse.ecf.core.ssl.feature.feature.group
     org.eclipse.ecf.filetransfer.feature.feature.group
-    org.eclipse.ecf.filetransfer.httpclient45.feature.feature.group
     org.eclipse.ecf.filetransfer.ssl.feature.feature.group
     org.eclipse.emf.common.feature.group
     org.eclipse.emf.ecore.feature.group
@@ -30,30 +29,18 @@ location "https://download.eclipse.org/eclipse/updates/4.21/R-4.21-202109060500/
     org.eclipse.sdk.feature.group
 }
 
-location "https://download.eclipse.org/tools/orbit/downloads/drops/R20210825222808/repository/" {
+location "https://download.eclipse.org/tools/orbit/downloads/drops/R20220830213456/repository/" {
 	com.google.gson
-	com.google.guava
-	com.google.javascript
-	com.google.protobuf
-	org.apache.commons.lang3
 	org.apache.commons.io
-	org.apache.xerces
-	org.apache.xalan
-	java_cup.runtime
-	javax.activation
-	javax.xml.bind
-	javax.xml.rpc
-	javax.xml.stream
-	javax.xml.soap
 }
 
-location "https://download.eclipse.org/jdtls/milestones/1.4.0/repository/" {
+location "https://download.eclipse.org/jdtls/milestones/1.17.0/repository/" {
 	org.eclipse.jdt.ls.core
 }
 
 // locations below taken from eclipse.jdt.ls project (to allow building the JDT LS in same workspace)
 
-location "https://download.eclipse.org/releases/2021-09/202109151000/" {
+location "https://download.eclipse.org/releases/2022-09/" {
 	// this location needs to match with the Eclipse version above, otherwise EMF will fail to resolve
     org.eclipse.xtend.sdk.feature.group
     org.eclipse.xtext.sdk.feature.group
@@ -67,7 +54,7 @@ location "https://download.eclipse.org/lsp4j/updates/releases/0.12.0/" {
 	org.eclipse.lsp4j.sdk.feature.group
 }
 
-location "https://download.eclipse.org/technology/m2e/releases/1.18.1/" {
+location "https://download.eclipse.org/technology/m2e/releases/2.0.5/" {
 	org.eclipse.m2e.feature.feature.group
 	org.eclipse.m2e.logback.feature.feature.group
 	org.eclipse.m2e.sdk.feature.feature.group

@@ -27,6 +27,7 @@ package com.salesforce.bazel.eclipse.mock;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathAttribute;
@@ -147,6 +148,11 @@ public class MockIClasspathEntry implements IClasspathEntry {
 
     @Override
     public IClasspathEntry getResolvedEntry() {
+        throw new UnsupportedOperationException(UOE_MSG);
+    }
+
+    @Override
+    public IPath getExternalAnnotationPath(IProject project, boolean resolve) {
         throw new UnsupportedOperationException(UOE_MSG);
     }
 
