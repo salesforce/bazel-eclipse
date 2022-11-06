@@ -66,9 +66,19 @@ It scans the external jar directory of the Bazel build, and adds all found jars 
   nested under the Bazel Workspace project in the Package Explorer.
 By having them appear in a classpath object, JDT can now find all enclosed types.
 
+This feature does add your entire set of workspace jars to the search path for Eclipse.
+If you have thousands of jars in your workspace, this may cause performance issues.
 To disable this feature do the following *before* importing packages into your workspace:  
 - *Eclipse -> Preferences -> Bazel* (exact menu varies by platform)
 - Uncheck the *Enable global classpath search* option.
+
+Also, you may at times see multiple versions of the same external jar in your workspace.
+This happens if you upgrade versions of that external jar.
+BEF crawls internal Bazel directories to build the index, and Bazel does not typically clean
+up old versions of jars when you upgrade.
+This simply results in an extra entry in the Open Type dialog, and is easily ignored by the user.
+The real solution to this is to run ```bazel clean``` from the command line in your workspace
+  before opening the workspace in Eclipse if you have done any external jar upgrades.
 
 Note that the feature may not work for all use cases.
 See the [Global Search Classpath](https://github.com/salesforce/bazel-eclipse/issues/161) issue for status

@@ -42,47 +42,28 @@ public class JarIdentiferResolver {
             return null;
         }
 
-        String path = pathFile.getAbsolutePath();
-
-        // do some quick Bazel exclusions (TODO how best to identify the interesting jars in the Bazel output dirs?)
-        if (path.contains("-hjar.jar")) {
-            return null; // perf optimization jar, not intended for non-Bazel consumption
-        }
-        if (path.contains("-native-header.jar")) {
-            return null; // perf optimization jar, not intended for non-Bazel consumption
-        }
-        if (path.contains("-class.jar")) {
-            return null; // perf optimization jar, not intended for non-Bazel consumption
-        }
-        if (path.contains("-src.jar")) {
-            return null; // source jar, this will be pulled in as an attribute of the main jar
-        }
-        if (path.contains("-sources.jar")) {
-            return null; // source jar, this will be pulled in as an attribute of the main jar
-        }
-        if (path.contains("-gensrc.jar")) {
-            return null; // generated source jar, this will be pulled in as an attribute of the main jar
-        }
-        if (path.contains("_deploy.jar")) {
-            return null; // uber jar, which contains exploded classes from other jars
-        }
-        if (path.contains("Test.jar")) {
-            return null; // by convention, a jar that contains a test to run in bazel
-        }
-        if (path.contains("IT.jar")) {
-            return null; // by convention, a jar that contains a test to run in bazel
+        String jarFileName = pathFile.getName();
+        boolean ignoreHeaderJars = true;
+        boolean ignoreTestJars = true;
+        boolean ignoreInterfaceJars = false; // TODO revisit this
+        boolean ignoreSourceJars = true;
+        boolean ignoreDeployJars = true;
+        if (JarNameAnalyzer.doIgnoreJarFile(jarFileName, ignoreHeaderJars, ignoreTestJars, ignoreInterfaceJars, ignoreSourceJars, ignoreDeployJars)) {
+            return null;
         }
 
         // Maven compatible: com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8.jar  $SLASH_OK comment
         // Bazel internal:   com/acme/libs/my-blue-impl/0.1.8/my-blue-impl-0.1.8-ijar.jar  $SLASH_OK comment
 
-        String gavPart = path.substring(gavRoot.getAbsolutePath().length());
+        String abspath = pathFile.getAbsolutePath();
+        String gavPart = abspath.substring(gavRoot.getAbsolutePath().length());
         String[] gavParts = gavPart.split(File.separator);
 
         // open-context-impl-0.1.8.jar => open-context-impl
         String artifact = gavParts[gavParts.length - 1];
         if (artifact.endsWith("-ijar.jar")) {
             // Bazel convention, need to customize it here because the extra hyphen confuses the logic below
+            // TODO why aren't ijars ignored like header jars?
             artifact = artifact.substring(0, artifact.length() - 9);
         } else if (artifact.endsWith(".jar")) {
             // standard jars
@@ -111,6 +92,7 @@ public class JarIdentiferResolver {
         return id;
     }
 
+    
     // test
     public static void main(String[] args) {
 
