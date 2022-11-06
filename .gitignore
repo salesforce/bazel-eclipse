@@ -17,6 +17,7 @@ dist
 
 # Eclipse
 eclipse.sh
+eclipse_ide.sh
 
 # OS
 .DS_Store
