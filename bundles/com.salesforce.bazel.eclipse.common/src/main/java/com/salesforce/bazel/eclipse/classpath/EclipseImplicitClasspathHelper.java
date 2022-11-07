@@ -45,8 +45,8 @@ import org.eclipse.jdt.core.IClasspathEntry;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
-import com.salesforce.bazel.sdk.lang.jvm.ImplicitClasspathHelper;
-import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.ImplicitClasspathHelper;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**

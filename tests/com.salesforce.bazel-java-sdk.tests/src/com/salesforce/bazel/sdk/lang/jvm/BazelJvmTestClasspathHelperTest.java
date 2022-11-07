@@ -37,6 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.salesforce.bazel.sdk.lang.jvm.classpath.BazelJvmTestClasspathHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 public class BazelJvmTestClasspathHelperTest {

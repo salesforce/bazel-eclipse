@@ -53,7 +53,7 @@ import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.index.jvm.BazelJvmIndexClasspath;
-import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.BazelJvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;

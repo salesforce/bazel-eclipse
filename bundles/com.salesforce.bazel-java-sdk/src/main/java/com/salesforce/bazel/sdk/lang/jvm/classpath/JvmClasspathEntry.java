@@ -31,24 +31,42 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.lang.jvm;
-
-import java.util.ArrayList;
-import java.util.List;
+package com.salesforce.bazel.sdk.lang.jvm.classpath;
 
 import com.salesforce.bazel.sdk.project.BazelProject;
 
-public class BazelJvmClasspathResponse {
-    /**
-     * The jvm classpath entries (e.g. jar files)
-     */
-    public JvmClasspathEntry[] jvmClasspathEntries = new JvmClasspathEntry[] {};
+/**
+ * Entry in a classpath for the JVM that points to a Jar with bytecode.
+ */
+public class JvmClasspathEntry implements Comparable<JvmClasspathEntry> {
 
-    /**
-     * The list of projects that should be added to the classpath, if this environment is using project support. The
-     * caller is expected to invoke the following: bazelProjectManager.setProjectReferences(bazelProject,
-     * computedClasspath.classpathProjectReferences); But due to locking in some environments, this may need to be
-     * delayed.
-     */
-    public List<BazelProject> classpathProjectReferences = new ArrayList<>();
+    // TODO make classpath entries better typed (jar, project)
+
+    // Jar Entry
+    public String pathToJar;
+    public String pathToSourceJar;
+    public boolean isTestJar;
+
+    // Project Entry
+    public BazelProject bazelProject;
+
+    public JvmClasspathEntry(String pathToJar, boolean isTestJar) {
+        this.pathToJar = pathToJar;
+        this.isTestJar = isTestJar;
+    }
+
+    public JvmClasspathEntry(String pathToJar, String pathToSourceJar, boolean isTestJar) {
+        this.pathToJar = pathToJar;
+        this.pathToSourceJar = pathToSourceJar;
+        this.isTestJar = isTestJar;
+    }
+
+    public JvmClasspathEntry(BazelProject bazelProject) {
+        this.bazelProject = bazelProject;
+    }
+
+    @Override
+    public int compareTo(JvmClasspathEntry otherEntry) {
+        return pathToJar.compareTo(otherEntry.pathToJar);
+    }
 }

@@ -31,7 +31,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.lang.jvm;
+package com.salesforce.bazel.sdk.lang.jvm.classpath;
 
 import java.io.File;
 import java.io.IOException;
