@@ -61,7 +61,7 @@ import org.eclipse.swt.widgets.Display;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
-import com.salesforce.bazel.sdk.lang.jvm.BazelJvmTestClasspathHelper;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.BazelJvmTestClasspathHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;

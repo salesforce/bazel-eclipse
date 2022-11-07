@@ -29,8 +29,8 @@ import java.util.List;
 
 import com.salesforce.bazel.sdk.index.CodeIndexEntry;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
-import com.salesforce.bazel.sdk.lang.jvm.BazelJvmClasspathResponse;
-import com.salesforce.bazel.sdk.lang.jvm.JvmClasspathEntry;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.BazelJvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;

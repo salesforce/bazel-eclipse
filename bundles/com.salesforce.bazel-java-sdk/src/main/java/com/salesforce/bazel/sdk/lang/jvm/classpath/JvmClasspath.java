@@ -1,4 +1,4 @@
-package com.salesforce.bazel.sdk.lang.jvm;
+package com.salesforce.bazel.sdk.lang.jvm.classpath;
 
 /**
  * Interface for generating the classpath for a Bazel package.
