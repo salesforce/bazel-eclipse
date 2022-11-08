@@ -438,7 +438,8 @@ public class BazelClasspathContainerFTest {
                         assertTrue(outputLoc.toOSString().endsWith("testbin"));
                     }
                 } else {
-                    assertFalse(entry.isTest());
+                    assertFalse("Entry " + path + " was found, but it should not be a test classpath entry.",
+                        entry.isTest());
                 }
                 return entry;
             }

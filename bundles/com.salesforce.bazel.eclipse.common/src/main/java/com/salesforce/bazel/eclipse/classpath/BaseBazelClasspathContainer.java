@@ -52,7 +52,7 @@ import org.osgi.service.prefs.BackingStoreException;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.BazelJvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -127,7 +127,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
          * completes, therefore the cache is not as effective as it could be. Synchronize on this instance such that the
          * first invocation completes and populates the cache before the subsequent calls are allowed to proceed.
          */
-        BazelJvmClasspathResponse computedClasspath = null;
+        JvmClasspathResponse computedClasspath = null;
         List<IClasspathEntry> eclipseClasspathEntries = new ArrayList<>();
         synchronized (this) {
 
@@ -178,7 +178,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
 
     // OVERRIDES
 
-    protected abstract BazelJvmClasspathResponse computeClasspath();
+    protected abstract JvmClasspathResponse computeClasspath();
 
     // HELPERS
 
