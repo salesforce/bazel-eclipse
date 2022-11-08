@@ -31,7 +31,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.lang.jvm.classpath;
+package com.salesforce.bazel.sdk.lang.jvm.classpath.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +44,7 @@ import java.util.TreeSet;
 
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
@@ -64,6 +65,8 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
  */
 public class ImplicitClasspathHelper {
 
+    // TODO this is specific to the aspect classpath provider, can we make it more generic?
+    
     // observed location where the TestRunner is written; this is an internal Bazel detail that may change
     private static final String IMPLICIT_RUNNER = "external/bazel_tools/tools/jdk/_ijar/TestRunner"; // $SLASH_OK
 
@@ -93,8 +96,9 @@ public class ImplicitClasspathHelper {
         String filePathForRunnerJar = computeFilePathForRunnerJar(bazelWorkspace, targetInfo);
         if (filePathForRunnerJar != null) {
             // now manufacture the classpath entry
+            boolean isRuntimeLib = false;
             boolean isTestLib = true;
-            JvmClasspathEntry runnerJarEntry = new JvmClasspathEntry(filePathForRunnerJar, isTestLib);
+            JvmClasspathEntry runnerJarEntry = new JvmClasspathEntry(filePathForRunnerJar, isRuntimeLib, isTestLib);
             deps.add(runnerJarEntry);
         }
         return deps;

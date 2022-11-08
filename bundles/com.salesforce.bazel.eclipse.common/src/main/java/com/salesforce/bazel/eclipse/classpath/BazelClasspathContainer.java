@@ -53,9 +53,12 @@ import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.BazelJvmClasspath;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.BazelJvmClasspathResponse;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.DynamicBazelJvmClasspath;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspath;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.BazelAspectJvmClasspathStrategy;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.BazelJvmClasspathStrategy;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.BazelJvmUnionClasspath;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.BazelJvmSourceClasspath;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -64,13 +67,13 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     private static final LogHelper LOG = LogHelper.log(BazelClasspathContainer.class);
 
-    protected final BazelJvmClasspath bazelClasspath;
+    protected final JvmClasspath bazelClasspath;
     private CallSource lastCallSource = CallSource.UNDEFINED;
 
     // TODO make this an Eclipse pref
     public boolean USE_DYNAMIC_CP = false;
 
-    private static List<BazelJvmClasspath> instances = new ArrayList<>();
+    private static List<JvmClasspath> instances = new ArrayList<>();
 
     public BazelClasspathContainer(IProject eclipseProject) throws IOException, InterruptedException,
             BackingStoreException, JavaModelException, BazelCommandLineToolConfigurationException {
@@ -86,13 +89,21 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
         super(eclipseProject, resourceHelper, jcHelper, bpManager, osDetectStrategy, bazelWorkspace);
 
         if (USE_DYNAMIC_CP) {
-            bazelClasspath = new DynamicBazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
+            // TODO the dynamic classpath will be folded into the strategy concept
+            bazelClasspath = new BazelJvmSourceClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
                     new EclipseImplicitClasspathHelper(), osDetector,
                     ComponentContext.getInstance().getBazelCommandManager(), null);
         } else {
-            bazelClasspath = new BazelJvmClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                    new EclipseImplicitClasspathHelper(), osDetector,
-                    ComponentContext.getInstance().getBazelCommandManager());
+            // TODO this is where we will configure the classpath strategy chain, right now there is just one
+            // assemble the list of classpath strategies we support (right now, just one)
+            List<BazelJvmClasspathStrategy> strategies = new ArrayList<>();
+            strategies.add(new BazelAspectJvmClasspathStrategy(bazelWorkspace, bazelProjectManager, 
+                new EclipseImplicitClasspathHelper(), osDetector, ComponentContext.getInstance().getBazelCommandManager()));
+
+            // create the classpath computation engine
+            bazelClasspath = new BazelJvmUnionClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
+                    new EclipseImplicitClasspathHelper(), osDetector, ComponentContext.getInstance().getBazelCommandManager(),
+                    strategies);
         }
         instances.add(bazelClasspath);
     }
@@ -135,14 +146,14 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     }
 
     @Override
-    protected BazelJvmClasspathResponse computeClasspath() {
+    protected JvmClasspathResponse computeClasspath() {
         // the Java SDK will produce a list of logical classpath entries
         return bazelClasspath.getClasspathEntries();
     }
 
     // TODO this clean() method should not be static
     public static void clean() {
-        for (BazelJvmClasspath instance : instances) {
+        for (JvmClasspath instance : instances) {
             instance.clean();
         }
     }

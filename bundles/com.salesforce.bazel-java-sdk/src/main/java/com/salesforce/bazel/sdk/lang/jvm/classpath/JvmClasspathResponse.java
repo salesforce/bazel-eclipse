@@ -34,11 +34,25 @@
 package com.salesforce.bazel.sdk.lang.jvm.classpath;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import com.salesforce.bazel.sdk.project.BazelProject;
 
-public class BazelJvmClasspathResponse {
+/**
+ * Carries the results of a classpath computation.
+ */
+public class JvmClasspathResponse {
+    
+    /**
+     * Marks if this response comes from a successful computation of the classpath. If the underlying mechanism
+     * used to compute the classpath failed, this will remain false.
+     */
+    public boolean isComplete = false;
+    
     /**
      * The jvm classpath entries (e.g. jar files)
      */
@@ -51,4 +65,27 @@ public class BazelJvmClasspathResponse {
      * delayed.
      */
     public List<BazelProject> classpathProjectReferences = new ArrayList<>();
+    
+    
+    // INTERNAL
+    
+    // Indices to help during computation of what is on the test classpath, versus main+runtime.
+    // key: path to the jar file, e.g. external/maven/v1/https/repo1.maven.org/maven2/com.google.guava/guava/20.0/guava-20.0.jar
+    
+    /**
+     * Internal. Used during computation of what is on the test classpath, versus main+runtime.
+     */
+    public Map<String, JvmClasspathEntry> mainClasspathEntryMap = new TreeMap<>();
+
+    /**
+     * Internal. Used during computation of what is on the test classpath, versus main+runtime.
+     */
+    public Map<String, JvmClasspathEntry> testClasspathEntryMap = new TreeMap<>();
+
+    /**
+     *  Internal. Set for the list of implicitDeps that will be added to the test classpath (this may be empty if implicit deps 
+     *  are disabled for the workspace)
+     */
+    public Set<JvmClasspathEntry> implicitDeps = Collections.emptySet();
+
 }

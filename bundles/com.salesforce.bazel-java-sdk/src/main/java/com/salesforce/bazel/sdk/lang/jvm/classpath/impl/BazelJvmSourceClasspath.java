@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.lang.jvm.classpath;
+package com.salesforce.bazel.sdk.lang.jvm.classpath.impl;
 
 import java.io.File;
 import java.util.Set;
@@ -32,6 +32,8 @@ import com.salesforce.bazel.sdk.index.jvm.BazelJvmIndexClasspath;
 import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndex;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.lang.jvm.JavaSourceFile;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspath;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathResponse;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
@@ -42,10 +44,20 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
  * Classpath loader that uses import data from the Java files to determine the actual classpath, as opposed to the
- * BazelClasspathContainer that uses the Bazel BUILD file.
+ * BazelJvmUnionClasspath that uses the Bazel BUILD file.
+ * 
+ * TODO this should be reimplemented as a classpath strategy instead.
  */
-public class DynamicBazelJvmClasspath extends BazelJvmClasspath {
-    private static final LogHelper LOG = LogHelper.log(DynamicBazelJvmClasspath.class);
+public class BazelJvmSourceClasspath implements JvmClasspath {
+    private static final LogHelper LOG = LogHelper.log(BazelJvmSourceClasspath.class);
+
+    protected final BazelWorkspace bazelWorkspace;
+    protected final BazelProjectManager bazelProjectManager;
+    protected final BazelProject bazelProject;
+    protected final ImplicitClasspathHelper implicitDependencyHelper;
+    protected final OperatingEnvironmentDetectionStrategy osDetector;
+    protected final BazelCommandManager bazelCommandManager;
+    private final LogHelper logger;
 
     protected BazelJvmIndexClasspath classIndex;
 
@@ -66,17 +78,23 @@ public class DynamicBazelJvmClasspath extends BazelJvmClasspath {
      * @param classIndex
      *            the index of jars in the workspace, and the classes that each contains
      */
-    public DynamicBazelJvmClasspath(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
+    public BazelJvmSourceClasspath(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
             BazelProject bazelProject, ImplicitClasspathHelper implicitDependencyHelper,
             OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager,
             BazelJvmIndexClasspath classIndex) {
-        super(bazelWorkspace, bazelProjectManager, bazelProject, implicitDependencyHelper, osDetector,
-                bazelCommandManager);
+        this.bazelWorkspace = bazelWorkspace;
+        this.bazelProjectManager = bazelProjectManager;
+        this.bazelProject = bazelProject;
+        this.implicitDependencyHelper = implicitDependencyHelper;
+        this.osDetector = osDetector;
+        this.bazelCommandManager = bazelCommandManager;
         this.classIndex = classIndex;
+
+        this.logger = LogHelper.log(this.getClass());
     }
 
     @Override
-    public BazelJvmClasspathResponse getClasspathEntries() {
+    public JvmClasspathResponse getClasspathEntries() {
         // the structure contains the file system layout of source files
         ProjectStructure fileStructure = bazelProject.getProjectStructure();
 
@@ -127,8 +145,11 @@ public class DynamicBazelJvmClasspath extends BazelJvmClasspath {
             }
         }
 
-        // TODO until we have the dynamic classpath implemented, just delegate to super to compute it
-        // using the BUILD file
-        return super.getClasspathEntries();
+        // TODO until we have the dynamic classpath implemented, just fake it
+        return new JvmClasspathResponse();
+    }
+
+    @Override
+    public void clean() {
     }
 }

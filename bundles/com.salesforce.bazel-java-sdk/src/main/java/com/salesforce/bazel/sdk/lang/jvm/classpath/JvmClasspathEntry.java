@@ -45,19 +45,24 @@ public class JvmClasspathEntry implements Comparable<JvmClasspathEntry> {
     // Jar Entry
     public String pathToJar;
     public String pathToSourceJar;
-    public boolean isTestJar;
+    
+    // Scope
+    public boolean isRuntimeJar = false; // TODO aspect currently doesn't output what is runtime vs main, so this is not implemented yet
+    public boolean isTestJar = false;
 
     // Project Entry
     public BazelProject bazelProject;
 
-    public JvmClasspathEntry(String pathToJar, boolean isTestJar) {
+    public JvmClasspathEntry(String pathToJar, boolean isRuntimeJar, boolean isTestJar) {
         this.pathToJar = pathToJar;
+        this.isRuntimeJar = isRuntimeJar;
         this.isTestJar = isTestJar;
     }
 
-    public JvmClasspathEntry(String pathToJar, String pathToSourceJar, boolean isTestJar) {
+    public JvmClasspathEntry(String pathToJar, String pathToSourceJar, boolean isRuntimeJar, boolean isTestJar) {
         this.pathToJar = pathToJar;
         this.pathToSourceJar = pathToSourceJar;
+        this.isRuntimeJar = isRuntimeJar;
         this.isTestJar = isTestJar;
     }
 

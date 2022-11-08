@@ -29,7 +29,7 @@ import java.util.List;
 
 import com.salesforce.bazel.sdk.index.CodeIndexEntry;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.BazelJvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathResponse;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -59,7 +59,7 @@ public class BazelJvmIndexClasspath {
 
     // computed data
     protected JvmCodeIndex index;
-    protected BazelJvmClasspathResponse cacheResponse;
+    protected JvmClasspathResponse cacheResponse;
 
     /**
      * Ctor with workspace.
@@ -76,7 +76,7 @@ public class BazelJvmIndexClasspath {
      * Computes the JVM classpath for the associated Bazel workspace. The first invocation is expected to take a long
      * time, but subsequent invocations will read from cache.
      */
-    public synchronized BazelJvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
+    public synchronized JvmClasspathResponse getClasspathEntries(WorkProgressMonitor progressMonitor) {
         if (cacheResponse != null) {
             return cacheResponse;
         }
@@ -108,8 +108,8 @@ public class BazelJvmIndexClasspath {
         cacheResponse = null;
     }
 
-    protected BazelJvmClasspathResponse convertIndexIntoResponse(JvmCodeIndex index) {
-        BazelJvmClasspathResponse response = new BazelJvmClasspathResponse();
+    protected JvmClasspathResponse convertIndexIntoResponse(JvmCodeIndex index) {
+        JvmClasspathResponse response = new JvmClasspathResponse();
         List<JvmClasspathEntry> entries = new ArrayList<>();
 
         for (String artifact : index.artifactDictionary.keySet()) {
@@ -144,9 +144,9 @@ public class BazelJvmIndexClasspath {
 
         JvmClasspathEntry cpEntry = null;
         if (!candidateSourcePath.exists()) {
-            cpEntry = new JvmClasspathEntry(location.locationOnDisk.getPath(), false);
+            cpEntry = new JvmClasspathEntry(location.locationOnDisk.getPath(), false, false);
         } else {
-            cpEntry = new JvmClasspathEntry(location.locationOnDisk.getPath(), candidateSourcePath.getPath(), false);
+            cpEntry = new JvmClasspathEntry(location.locationOnDisk.getPath(), candidateSourcePath.getPath(), false, false);
         }
         entries.add(cpEntry);
     }
