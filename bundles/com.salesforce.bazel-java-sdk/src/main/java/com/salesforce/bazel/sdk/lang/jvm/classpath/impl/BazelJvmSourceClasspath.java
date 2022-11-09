@@ -33,13 +33,14 @@ import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndex;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.lang.jvm.JavaSourceFile;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspath;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
@@ -94,7 +95,7 @@ public class BazelJvmSourceClasspath implements JvmClasspath {
     }
 
     @Override
-    public JvmClasspathResponse getClasspathEntries() {
+    public JvmClasspathData getClasspathEntries(WorkProgressMonitor progressMonitor) {
         // the structure contains the file system layout of source files
         ProjectStructure fileStructure = bazelProject.getProjectStructure();
 
@@ -146,7 +147,7 @@ public class BazelJvmSourceClasspath implements JvmClasspath {
         }
 
         // TODO until we have the dynamic classpath implemented, just fake it
-        return new JvmClasspathResponse();
+        return new JvmClasspathData();
     }
 
     @Override

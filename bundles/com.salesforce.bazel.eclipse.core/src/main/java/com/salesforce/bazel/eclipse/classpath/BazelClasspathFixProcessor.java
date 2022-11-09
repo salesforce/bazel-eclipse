@@ -81,8 +81,14 @@ public class BazelClasspathFixProcessor extends DefaultClasspathFixProcessor {
         return new ClasspathFixProposal[] { proposal };
     }
 
+    /**
+     * This method converts the raw file path to a jar file to the Bazel label that can be used to reference
+     * that external dependency in a BUILD file. It does this by consulting the global type search index.
+     */
     private ClasspathFixProposal rewriteProposal(IProject iproject, String missingType, ClasspathFixProposal proposal) {
-        // Add archive 'guava-23.0.jar - /private/var/tmp/_bazel_plaird/21626313aa1530b4323d3b57fdf300e9/external/maven/v1/https/repo1.maven.org/maven2/com/google/guava/guava/23.0' to build path of 'old-guava'
+        // Proposal display string will look like this:
+        //    Add archive 'guava-23.0.jar - /private/var/tmp/xyz/external/maven/v1/https/repo1.maven.org/maven2/com/google/guava/guava/23.0' 
+        //    to build path of 'old-guava'
         String pText = proposal.getDisplayString();
         if (pText.startsWith("Add archive '")) {
             int endOfJar = pText.indexOf(" ", 14);

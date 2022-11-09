@@ -29,7 +29,7 @@ import java.util.Set;
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectOutputJarSet;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -68,8 +68,8 @@ public abstract class BazelJvmClasspathStrategy {
     /**
      * Loads the classpath for a target.
      */
-    public abstract JvmClasspathResponse getClasspathForTarget(BazelProject bazelProject, String targetName, String targetType, 
-            BazelProjectTargets configuredTargetsForProject, Set<String> actualActivatedTargets, JvmClasspathResponse response);
+    public abstract JvmClasspathData getClasspathForTarget(BazelProject bazelProject, String targetName, String targetType, 
+            BazelProjectTargets configuredTargetsForProject, Set<String> actualActivatedTargets, JvmClasspathData classpathData);
 
     
     // INTERNAL
@@ -134,9 +134,9 @@ public abstract class BazelJvmClasspathStrategy {
         }
     }
 
-    protected JvmClasspathResponse returnEmptyClasspathOrThrow(Throwable th) {
+    protected JvmClasspathData returnEmptyClasspathOrThrow(Throwable th) {
         continueOrThrow(th);
-        return new JvmClasspathResponse();
+        return new JvmClasspathData();
     }
 
 

@@ -43,12 +43,12 @@ import java.util.TreeMap;
 import com.salesforce.bazel.sdk.project.BazelProject;
 
 /**
- * Carries the results of a classpath computation.
+ * Carries the data from a classpath computation.
  */
-public class JvmClasspathResponse {
+public class JvmClasspathData {
     
     /**
-     * Marks if this response comes from a successful computation of the classpath. If the underlying mechanism
+     * Marks if this data comes from a successful computation of the classpath. If the underlying mechanism
      * used to compute the classpath failed, this will remain false.
      */
     public boolean isComplete = false;
@@ -84,7 +84,8 @@ public class JvmClasspathResponse {
 
     /**
      *  Internal. Set for the list of implicitDeps that will be added to the test classpath (this may be empty if implicit deps 
-     *  are disabled for the workspace)
+     *  are disabled for the workspace). This will be added by the classpath engine to the jvmClasspathEntries as needed, so this
+     *  member is not intended for use by clients.
      */
     public Set<JvmClasspathEntry> implicitDeps = Collections.emptySet();
 
