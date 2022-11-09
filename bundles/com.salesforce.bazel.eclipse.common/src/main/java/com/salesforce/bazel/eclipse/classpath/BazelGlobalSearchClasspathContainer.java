@@ -50,15 +50,15 @@ import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.index.jvm.BazelJvmIndexClasspath;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
@@ -113,11 +113,11 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     }
 
     @Override
-    public JvmClasspathResponse computeClasspath() {
+    public JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) {
         BazelWorkspace bazelWorkspace = ComponentContext.getInstance().getBazelWorkspace();
         if (Objects.isNull(config) || !config.isGlobalClasspathSearchEnabled() || (bazelWorkspace == null)) {
             // user has disabled the global search feature, or hasnt imported a bazel workspace yet
-            return new JvmClasspathResponse();
+            return new JvmClasspathData();
         }
 
         if (!bazelWorkspace.getName().equals(bazelWorkspaceName)) {
@@ -134,8 +134,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
 
         // the Java SDK will produce a list of logical classpath entries
         long startTime = System.currentTimeMillis();
-        EclipseWorkProgressMonitor monitor = new EclipseWorkProgressMonitor(null);
-        JvmClasspathResponse computedClasspath = bazelJvmIndexClasspath.getClasspathEntries(monitor);
+        JvmClasspathData computedClasspath = bazelJvmIndexClasspath.getClasspathEntries(progressMonitor);
         long endTime = System.currentTimeMillis();
 
         LOG.info("completed indexing in [{}] milliseconds.", (endTime - startTime));
@@ -146,7 +145,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     // TODO this clean() method should not be static
     public static void clean() {
         for (BazelJvmIndexClasspath instance : instances) {
-            instance.clearCache();
+            instance.clean();
         }
     }
 

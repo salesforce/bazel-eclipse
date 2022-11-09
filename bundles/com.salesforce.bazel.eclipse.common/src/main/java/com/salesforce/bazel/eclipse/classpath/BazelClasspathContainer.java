@@ -54,7 +54,7 @@ import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspath;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.BazelAspectJvmClasspathStrategy;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.BazelJvmClasspathStrategy;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.BazelJvmUnionClasspath;
@@ -62,6 +62,7 @@ import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.BazelJvmSourceClasspath;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class BazelClasspathContainer extends BaseBazelClasspathContainer {
@@ -146,9 +147,9 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
     }
 
     @Override
-    protected JvmClasspathResponse computeClasspath() {
+    protected JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) {
         // the Java SDK will produce a list of logical classpath entries
-        return bazelClasspath.getClasspathEntries();
+        return bazelClasspath.getClasspathEntries(progressMonitor);
     }
 
     // TODO this clean() method should not be static

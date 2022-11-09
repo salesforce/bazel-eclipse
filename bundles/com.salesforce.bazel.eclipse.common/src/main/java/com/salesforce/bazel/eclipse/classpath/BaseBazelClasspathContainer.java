@@ -51,14 +51,16 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
+import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathResponse;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
@@ -99,6 +101,10 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     @Override
     public IClasspathEntry[] getClasspathEntries() {
         long startTimeMillis = System.currentTimeMillis();
+        
+        // TODO this is a fake progress monitor; doesn't JDT provide a progress monitor for computing classpath? 
+        // given how expensive this can be, seems like a big miss? 
+        WorkProgressMonitor progressMonitor = new EclipseWorkProgressMonitor();
 
         // Fast exit - check the caller of this method to decide if we need to incur the expense of a full classpath compute
         // The saveContainers() caller is useful if we were persisting classpath data to disk for faster restarts later
@@ -127,12 +133,12 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
          * completes, therefore the cache is not as effective as it could be. Synchronize on this instance such that the
          * first invocation completes and populates the cache before the subsequent calls are allowed to proceed.
          */
-        JvmClasspathResponse computedClasspath = null;
+        JvmClasspathData computedClasspath = null;
         List<IClasspathEntry> eclipseClasspathEntries = new ArrayList<>();
         synchronized (this) {
 
-            // the Java SDK will produce a list of logical classpath entries
-            computedClasspath = computeClasspath();
+            // the Bazel Java SDK will produce a list of logical classpath entries
+            computedClasspath = computeClasspath(progressMonitor);
 
             // convert the logical entries into concrete Eclipse entries
             for (JvmClasspathEntry entry : computedClasspath.jvmClasspathEntries) {
@@ -178,7 +184,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
 
     // OVERRIDES
 
-    protected abstract JvmClasspathResponse computeClasspath();
+    protected abstract JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor);
 
     // HELPERS
 

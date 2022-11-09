@@ -30,9 +30,7 @@ import java.util.stream.Collectors;
 
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspath;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathResponse;
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -40,6 +38,7 @@ import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
+import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
@@ -55,7 +54,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * <p>
  * There is an instance of this class for each project.
  */
-public class BazelJvmUnionClasspath implements JvmClasspath {
+public class BazelJvmUnionClasspath extends InMemoryJvmClasspath {
     // TODO make classpath cache timeout configurable
     private static final long CLASSPATH_CACHE_TIMEOUT_MS = 300000;
 
@@ -66,15 +65,13 @@ public class BazelJvmUnionClasspath implements JvmClasspath {
     protected final OperatingEnvironmentDetectionStrategy osDetector;
     protected final BazelCommandManager bazelCommandManager;
     protected final List<BazelJvmClasspathStrategy> orderedClasspathStrategies;
-    private final LogHelper logger;
-    
-    private JvmClasspathResponse cachedEntries;
-    private long cachePutTimeMillis = 0;
 
     public BazelJvmUnionClasspath(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
             BazelProject bazelProject, ImplicitClasspathHelper implicitDependencyHelper,
             OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager,
             List<BazelJvmClasspathStrategy> orderedClasspathStrategies) {
+        super(bazelProject.name, CLASSPATH_CACHE_TIMEOUT_MS);
+        
         this.bazelWorkspace = bazelWorkspace;
         this.bazelProjectManager = bazelProjectManager;
         this.bazelProject = bazelProject;
@@ -82,21 +79,14 @@ public class BazelJvmUnionClasspath implements JvmClasspath {
         this.osDetector = osDetector;
         this.bazelCommandManager = bazelCommandManager;
         this.orderedClasspathStrategies = orderedClasspathStrategies;
-
-        logger = LogHelper.log(this.getClass());
-    }
-
-    @Override
-    public void clean() {
-        cachedEntries = null;
-        cachePutTimeMillis = 0;
     }
 
     /**
-     * Computes the JVM classpath for the associated BazelProject
+     * Computes the JVM classpath for the associated BazelProject. This response is cached in
+     * the super class. External callers will invoke getClasspathEntries() which in turn invokes this method.
      */
     @Override
-    public JvmClasspathResponse getClasspathEntries() {
+    protected JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) {
         // sanity check
         if (bazelWorkspace == null) {
             // not sure how we could get here, but just check
@@ -106,11 +96,11 @@ public class BazelJvmUnionClasspath implements JvmClasspath {
         long startTimeMS = System.currentTimeMillis();
 
         boolean isImport = false;
-        JvmClasspathResponse response = getCachedEntries();
+        JvmClasspathData response = getCachedEntries();
         if (response != null) {
             return response;
         }
-        response = new JvmClasspathResponse();
+        response = new JvmClasspathData();
 
         logger.info("Computing classpath for project " + bazelProject.name + " (import? " + isImport + ")");
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
@@ -156,29 +146,16 @@ public class BazelJvmUnionClasspath implements JvmClasspath {
 
         // cache the entries
         cachePutTimeMillis = System.currentTimeMillis();
-        cachedEntries = response;
+        cachedClasspath = response;
         logger.debug("Cached the classpath for project " + bazelProject.name);
 
         SimplePerfRecorder.addTime("classpath", startTimeMS);
 
-        return cachedEntries;
+        return cachedClasspath;
     }
 
 
     // INTERNAL
-    
-    private JvmClasspathResponse getCachedEntries() {
-        if (cachedEntries != null) {
-            long now = System.currentTimeMillis();
-            if ((now - cachePutTimeMillis) <= CLASSPATH_CACHE_TIMEOUT_MS) {
-                logger.debug("  Using cached classpath for project " + bazelProject.name);
-                return cachedEntries;
-            }
-            logger.info("Evicted classpath from cache for project " + bazelProject.name);
-            cachedEntries = null;
-        }
-        return null;
-    }
     
     private BazelBuildFile getBuildFile(BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner, BazelProjectTargets configuredTargetsForProject) throws Exception {
         // TODO this code is hard to follow, why are there collections where we expect there to be a single build file?
@@ -212,9 +189,9 @@ public class BazelJvmUnionClasspath implements JvmClasspath {
         }
     }
 
-    private JvmClasspathResponse returnEmptyClasspathOrThrow(Throwable th) {
+    private JvmClasspathData returnEmptyClasspathOrThrow(Throwable th) {
         continueOrThrow(th);
-        return new JvmClasspathResponse();
+        return new JvmClasspathData();
     }
 
 }
