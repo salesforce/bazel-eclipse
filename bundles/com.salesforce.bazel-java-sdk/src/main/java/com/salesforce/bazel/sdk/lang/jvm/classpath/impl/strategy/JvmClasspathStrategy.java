@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.lang.jvm.classpath.impl;
+package com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy;
 
 import java.util.List;
 import java.util.Set;
@@ -29,6 +29,7 @@ import java.util.Set;
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectOutputJarSet;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
@@ -39,21 +40,23 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
  * Base class for classpath strategies. A classpath strategy uses some mechanism to load classpath data for a project.
+ * It is invoked by certain JvmClasspath implementations that support pluggable strategies.
  * <p>
- * Example mechanisms used by classpath strategies include:<ul>
+ * Example mechanisms that can be used by classpath strategies include:<ul>
  * <li>Bazel Aspect
  * <li>Bazel Query
- * <li>Persisted classpath file
+ * <li>Locally persisted classpath file
+ * <li>Remote cached classpath file
  * </ul>
  */
-public abstract class BazelJvmClasspathStrategy {
+public abstract class JvmClasspathStrategy {
     protected final BazelWorkspace bazelWorkspace;
     protected final BazelProjectManager bazelProjectManager;
     protected final ImplicitClasspathHelper implicitDependencyHelper;
     protected final OperatingEnvironmentDetectionStrategy osDetector;
     protected final BazelCommandManager bazelCommandManager;
 
-    BazelJvmClasspathStrategy(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager, 
+    public JvmClasspathStrategy(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager, 
         ImplicitClasspathHelper implicitDependencyHelper, OperatingEnvironmentDetectionStrategy osDetector, 
         BazelCommandManager bazelCommandManager) {
         this.bazelWorkspace = bazelWorkspace;

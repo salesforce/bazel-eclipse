@@ -31,7 +31,7 @@ import com.salesforce.bazel.sdk.index.CodeIndexEntry;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.InMemoryJvmClasspath;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.JvmInMemoryClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
@@ -43,7 +43,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * types that they could use. It could also be used for build tooling that needs to enumerate all available types in a
  * workspace.
  */
-public class BazelJvmIndexClasspath extends InMemoryJvmClasspath {
+public class BazelJvmIndexClasspath extends JvmInMemoryClasspath {
     /**
      * Associated workspace.
      */

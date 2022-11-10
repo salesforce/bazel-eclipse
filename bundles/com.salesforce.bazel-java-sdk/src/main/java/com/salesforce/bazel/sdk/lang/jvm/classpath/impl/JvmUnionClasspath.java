@@ -31,6 +31,8 @@ import java.util.stream.Collectors;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy.JvmClasspathStrategy;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -54,7 +56,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * <p>
  * There is an instance of this class for each project.
  */
-public class BazelJvmUnionClasspath extends InMemoryJvmClasspath {
+public class JvmUnionClasspath extends JvmInMemoryClasspath {
     // TODO make classpath cache timeout configurable
     private static final long CLASSPATH_CACHE_TIMEOUT_MS = 300000;
 
@@ -64,12 +66,12 @@ public class BazelJvmUnionClasspath extends InMemoryJvmClasspath {
     protected final ImplicitClasspathHelper implicitDependencyHelper;
     protected final OperatingEnvironmentDetectionStrategy osDetector;
     protected final BazelCommandManager bazelCommandManager;
-    protected final List<BazelJvmClasspathStrategy> orderedClasspathStrategies;
+    protected final List<JvmClasspathStrategy> orderedClasspathStrategies;
 
-    public BazelJvmUnionClasspath(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
+    public JvmUnionClasspath(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
             BazelProject bazelProject, ImplicitClasspathHelper implicitDependencyHelper,
             OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager,
-            List<BazelJvmClasspathStrategy> orderedClasspathStrategies) {
+            List<JvmClasspathStrategy> orderedClasspathStrategies) {
         super(bazelProject.name, CLASSPATH_CACHE_TIMEOUT_MS);
         
         this.bazelWorkspace = bazelWorkspace;
@@ -128,7 +130,7 @@ public class BazelJvmUnionClasspath extends InMemoryJvmClasspath {
             
             try {
                 // invoke our classpath strategies in order, until one is able to complete the classpath
-                for (BazelJvmClasspathStrategy strategy : orderedClasspathStrategies) {
+                for (JvmClasspathStrategy strategy : orderedClasspathStrategies) {
                     
                     strategy.getClasspathForTarget(bazelProject, targetLabel, targetType, configuredTargetsForProject, 
                         actualActivatedTargets, response);

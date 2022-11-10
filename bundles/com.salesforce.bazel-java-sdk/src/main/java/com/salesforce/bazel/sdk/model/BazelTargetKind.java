@@ -50,22 +50,34 @@ public class BazelTargetKind {
     protected final String targetKind;
     protected boolean isRunnable = false;
     protected boolean isTestable = false;
+    protected boolean isRegistered = true;
 
     static Set<String> registeredKindNames = new HashSet<>();
     static Map<String, BazelTargetKind> registeredKinds = new HashMap<>();
+    
 
     public BazelTargetKind(String targetKindName, boolean isRunnable, boolean isTestable) {
         this.targetKind = targetKindName;
         this.isRunnable = isRunnable;
         this.isTestable = isTestable;
+        this.isRegistered = true;
 
         registeredKindNames.add(targetKindName.toLowerCase());
         registeredKinds.put(targetKindName.toLowerCase(), this);
     }
 
+    private BazelTargetKind(String unregisteredKind) {
+        this.targetKind = unregisteredKind;
+        this.isRunnable = false;
+        this.isTestable = false;
+        this.isRegistered = false;
+    }
+
     /**
      * Returns the corresponding TargetKind value based on the specified String kind name, ignoring the casing of the
-     * given value. Returns null if no matching TargetKind is found.
+     * given value.
+     * <p>
+     * Returns a BazelTargetKind with registered=false if the kindName isn't registered.
      *
      * @return matching TargetKind instance, null if no match
      */
@@ -73,6 +85,11 @@ public class BazelTargetKind {
         String valueLower = targetKindName.toLowerCase();
         BazelTargetKind found = registeredKinds.get(valueLower);
 
+        if (found == null) {
+            // create an unregistered kind for this name
+            found = new BazelTargetKind(targetKindName);
+        }
+        
         return found;
     }
 
@@ -118,6 +135,13 @@ public class BazelTargetKind {
     }
 
     /**
+     * Returns true if the kind name matches the passed name.
+     */
+    public boolean isKind(String kindName) {
+        return targetKind.equals(kindName);
+    }
+
+    /**
      * Returns true if this target kind is runnable using "bazel run".
      */
     public boolean isRunnable() {
@@ -129,6 +153,14 @@ public class BazelTargetKind {
      */
     public boolean isTestable() {
         return isTestable;
+    }
+
+    /**
+     * Returns true if this target kind has been registered. Unregistered kinds will happen in 
+     * some cases, but the logic in the SDK is not written to process them.
+     */
+    public boolean isRegistered() {
+        return isRegistered;
     }
 
     @Override

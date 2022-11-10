@@ -61,7 +61,7 @@ import org.eclipse.swt.widgets.Display;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.BazelJvmTestClasspathHelper;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.TestClasspathHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
@@ -88,7 +88,7 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
     public static AtomicBoolean canOpenErrorDialog = new AtomicBoolean(true);
 
     // collaborator for retrieving/analyzing Bazel test param files
-    BazelJvmTestClasspathHelper bazelJvmTestClasspathHelper = new BazelJvmTestClasspathHelper();
+    TestClasspathHelper bazelJvmTestClasspathHelper = new TestClasspathHelper();
     
     // entry cache
     private static Map<String, IRuntimeClasspathEntry[]> resolvedEntriesCache = new HashMap<>();
@@ -163,7 +163,7 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
 
         // look for the param files for the test classname and/or targets
         // each param file contains a Bazel specific list of data used when launching the test
-        BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult = bazelJvmTestClasspathHelper
+        TestClasspathHelper.ParamFileResult testParamFilesResult = bazelJvmTestClasspathHelper
                 .findParamFilesForTests(bazelWorkspace, bazelProject, isSource, testClassName, targets);
         
         return computeUnresolvedClasspathFromParamFiles(execRootDir, testParamFilesResult);
@@ -174,7 +174,7 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
      * targets as input
      */ 
     IRuntimeClasspathEntry[] computeUnresolvedClasspathFromParamFiles(File execRootDir, 
-            BazelJvmTestClasspathHelper.ParamFileResult testParamFilesResult) throws CoreException {
+            TestClasspathHelper.ParamFileResult testParamFilesResult) throws CoreException {
         List<IRuntimeClasspathEntry> result = new ArrayList<>();
 
         // Assemble the de-duplicated list of jar files that are used across all the test targets

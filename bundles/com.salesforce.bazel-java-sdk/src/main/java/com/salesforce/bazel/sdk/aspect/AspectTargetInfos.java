@@ -97,15 +97,14 @@ public class AspectTargetInfos {
         List<AspectTargetInfo> matchedTargetInfos = new ArrayList<>();
 
         for (AspectTargetInfo aspectTargetInfo : labelToAspectTargetInfo.values()) {
-            String aspectKindStr = aspectTargetInfo.getKind();
-            BazelTargetKind aspectKind = BazelTargetKind.valueOfIgnoresCase(aspectKindStr);
+            BazelTargetKind aspectKind = aspectTargetInfo.getKind();
             if (aspectKind != null) {
                 if (requestedTargetKinds.contains(aspectKind)) {
                     matchedTargetInfos.add(aspectTargetInfo);
                 }
             } else {
                 System.err.println("AspectTargetInfo " + aspectTargetInfo.getLabelPath() + " has an unknown kind: "
-                        + aspectTargetInfo.getKind());
+                        + aspectTargetInfo.getKindAsString());
             }
         }
         return matchedTargetInfos;
@@ -115,7 +114,8 @@ public class AspectTargetInfos {
         List<BazelTargetKind> requestedTargetKindsList = Arrays.asList(requestedTargetKinds);
         List<AspectTargetInfo> aspectTargetInfos = new ArrayList<>();
         for (AspectTargetInfo aspectTargetInfo : labelToAspectTargetInfo.values()) {
-            if (requestedTargetKindsList.contains(BazelTargetKind.valueOfIgnoresCase(aspectTargetInfo.getKind()))) {
+            BazelTargetKind kind = aspectTargetInfo.getKind();
+            if (kind != null && requestedTargetKindsList.contains(kind)) {
                 aspectTargetInfos.add(aspectTargetInfo);
             }
         }

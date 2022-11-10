@@ -45,6 +45,7 @@ import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationExcepti
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
  * Manages running, collecting, and caching all of the build info aspects for a specific workspace.
@@ -356,11 +357,18 @@ public class BazelWorkspaceAspectProcessor {
             }
         }
 
-        // now add this aspect to the transitive closure if test or import (TODO why?) 
-        if ("java_test".equals(aspectTargetInfo.getKind())) {
-            allDeps.add(aspectTargetInfo);
-        } else if ("java_import".equals(aspectTargetInfo.getKind())) {
-            allDeps.add(aspectTargetInfo);
+        // now add this aspect to the transitive closure if test or import (TODO why?)
+        BazelTargetKind kind = aspectTargetInfo.getKind();
+        if (kind != null) {
+            if (kind.isKind("java_test")) {
+                allDeps.add(aspectTargetInfo);
+            } else if (kind.isKind("java_import")) {
+                allDeps.add(aspectTargetInfo);
+            }
+        } else {
+            kind = aspectTargetInfo.getKind();
+            LOG.info("AspectInfo " + aspectTargetInfo.getLabel().getLabelPath()
+                + " does not have an associated target kind.");
         }
 
         return Collections.unmodifiableSet(allDeps);
