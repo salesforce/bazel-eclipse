@@ -34,6 +34,7 @@ import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.lang.jvm.JavaSourceFile;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
@@ -44,13 +45,13 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
- * Classpath loader that uses import data from the Java files to determine the actual classpath, as opposed to the
- * BazelJvmUnionClasspath that uses the Bazel BUILD file.
- * 
- * TODO this should be reimplemented as a classpath strategy instead.
+ * Classpath engine that uses 'import' entries from the Java files to determine the actual classpath, as opposed to the
+ * JvmUnionClasspath that uses the Bazel BUILD metadata.
+ * <p>
+ * TODO this is just a stub so far, it isn't actually implemented.
  */
-public class BazelJvmSourceClasspath implements JvmClasspath {
-    private static final LogHelper LOG = LogHelper.log(BazelJvmSourceClasspath.class);
+public class JvmSourceDerivedClasspath implements JvmClasspath {
+    private static final LogHelper LOG = LogHelper.log(JvmSourceDerivedClasspath.class);
 
     protected final BazelWorkspace bazelWorkspace;
     protected final BazelProjectManager bazelProjectManager;
@@ -79,7 +80,7 @@ public class BazelJvmSourceClasspath implements JvmClasspath {
      * @param classIndex
      *            the index of jars in the workspace, and the classes that each contains
      */
-    public BazelJvmSourceClasspath(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
+    public JvmSourceDerivedClasspath(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
             BazelProject bazelProject, ImplicitClasspathHelper implicitDependencyHelper,
             OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager,
             BazelJvmIndexClasspath classIndex) {
@@ -96,6 +97,10 @@ public class BazelJvmSourceClasspath implements JvmClasspath {
 
     @Override
     public JvmClasspathData getClasspathEntries(WorkProgressMonitor progressMonitor) {
+        
+        // TODO when implementing this, implement it as a strategy such that this logic is compoable in other
+        // JvmClasspath implementations.
+        
         // the structure contains the file system layout of source files
         ProjectStructure fileStructure = bazelProject.getProjectStructure();
 

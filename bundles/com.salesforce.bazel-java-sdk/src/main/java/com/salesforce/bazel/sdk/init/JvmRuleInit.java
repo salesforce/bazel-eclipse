@@ -51,6 +51,7 @@ public class JvmRuleInit {
 
     // register the collection of Java rules that we want to handle
     public static final BazelTargetKind KIND_JAVA_LIBRARY = new BazelTargetKind("java_library", false, false);
+    public static final BazelTargetKind KIND_JAVA_IMPORT = new BazelTargetKind("java_import", false, false);
     public static final BazelTargetKind KIND_JAVA_TEST = new BazelTargetKind("java_test", false, true);
     public static final BazelTargetKind KIND_JAVA_BINARY = new BazelTargetKind("java_binary", true, false);
     public static final BazelTargetKind KIND_SELENIUM_TEST = new BazelTargetKind("java_web_test_suite", false, true);

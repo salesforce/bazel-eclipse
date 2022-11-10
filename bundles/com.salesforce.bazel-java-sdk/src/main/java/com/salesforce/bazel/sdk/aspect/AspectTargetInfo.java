@@ -40,6 +40,7 @@ import java.io.File;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
  * A parsed version of the JSON file produced by the application of the Bazel aspect. Each target in each package will
@@ -71,8 +72,8 @@ public class AspectTargetInfo {
     protected final File aspectDataFile; // full path to the file on the file system
     protected final String workspaceRelativePath; // relative path on the filesystem within the workspace
     protected final List<String> deps;
-    protected final String kind;
-    protected final String label;
+    protected final String kind; // TODO convert to BazelTargetKind
+    protected final String label; // TODO convert to BazelLabel
     protected List<String> sources;
 
     @Override
@@ -119,10 +120,24 @@ public class AspectTargetInfo {
     }
 
     /**
-     * Kind of the target (e.g., java_test, java_binary, java_web_test_suite, etc).
+     * Kind of the target, as a String (e.g., java_test, java_binary, java_web_test_suite, etc).
+     * <p>
+     * Use the getKind() method instead to get a proper kind object.
      */
-    public String getKind() {
+    @Deprecated
+    public String getKindAsString() {
         return kind;
+    }
+    
+    /**
+     * Kind of the target (e.g., java_test, java_binary, java_web_test_suite, etc).
+     * <p>
+     * NOTE: this method might return a BazelTargetKind that is not registered (meaning it is not a kind that
+     * is recognized by the SDK). Use the isRegistered() method on the BazelTargetKind object to determine this.
+     * It might be ok, but your tooling may want to signal/log that this aspect cannot be processed by your tool.
+     */
+    public BazelTargetKind getKind() {
+        return BazelTargetKind.valueOfIgnoresCase(kind);
     }
 
     /**

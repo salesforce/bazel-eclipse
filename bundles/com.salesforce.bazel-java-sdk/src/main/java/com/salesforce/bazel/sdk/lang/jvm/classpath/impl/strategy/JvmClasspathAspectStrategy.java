@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.lang.jvm.classpath.impl;
+package com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,9 +38,11 @@ import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationExcepti
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -57,10 +59,10 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * This strategy will only work if the package does not have a build error. Bazel will not write
  * the aspect output files if there is a build error. 
  */
-public class BazelAspectJvmClasspathStrategy extends BazelJvmClasspathStrategy {
+public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
     private final LogHelper logger;
 
-    public BazelAspectJvmClasspathStrategy(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
+    public JvmClasspathAspectStrategy(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
             ImplicitClasspathHelper implicitDependencyHelper, OperatingEnvironmentDetectionStrategy osDetector,
             BazelCommandManager bazelCommandManager) {
         super(bazelWorkspace, bazelProjectManager, implicitDependencyHelper, osDetector, bazelCommandManager);
@@ -101,32 +103,33 @@ public class BazelAspectJvmClasspathStrategy extends BazelJvmClasspathStrategy {
                 }
                 JVMAspectTargetInfo jvmTargetInfo = (JVMAspectTargetInfo) targetInfo;
                 String targetInfoLabelPath = jvmTargetInfo.getLabelPath();
-                String kind = jvmTargetInfo.getKind();
+                BazelTargetKind kind = jvmTargetInfo.getKind();
                 
-                if ("java_import".equals(kind)) {
+                if (kind.isKind("java_import")) {
                     logger.info("Found java_import target with label {}", targetInfoLabelPath);
                 }
 
                 if (actualActivatedTargets.contains(targetInfoLabelPath)) {
-                    if ("java_library".equals(kind) || "java_binary".equals(kind)) {
+                    if (kind.isKind("java_library") || kind.isKind("java_binary")) {
                         // this info describes a java_library target in the current package; don't add it to the classpath
                         // as all java_library targets in this package are assumed to be represented by source code entries
                         continue;
                     }
 
                     // java_test aspect should be analyzed for implicit dependencies
-                    if ("java_test".equals(jvmTargetInfo.getKind())) {
-                        classpathData.implicitDeps = implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, jvmTargetInfo);
+                    if (kind.isKind("java_test")) {
+                        classpathData.implicitDeps = implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, 
+                            jvmTargetInfo.getLabel(), kind);
                         // there is no need to process test jar further
                         continue;
                     }
                     // else in some cases, the target is local, but we still want to proceed to process it below. the expected
                     // example here are java_import targets in the BUILD file that directly load jars from the file system
                     //   java_import(name = "zip4j", jars = ["lib/zip4j-2.6.4.jar"])
-                    else if (!"java_import".equals(jvmTargetInfo.getKind())) {
+                    else if (!kind.isKind("java_import")) {
                         // some other case like java_binary, proto_library, java_proto_library, etc
                         // proceed but log a warn
-                        logger.info("Found unsupported target type as dependency: " + jvmTargetInfo.getKind()
+                        logger.info("Found unsupported target type as dependency: " + kind.getKindName()
                                 + "; the JVM classpath processor currently supports java_library or java_import.");
                     }
                 }
@@ -162,7 +165,7 @@ public class BazelAspectJvmClasspathStrategy extends BazelJvmClasspathStrategy {
                         // project might have a generated sources and been already imported into the workspace.
                         // if it is not a binary, library or test type, then it should be included into the classpath
                         boolean skipTarget =
-                                "java_library".equals(kind) || "java_binary".equals(kind) || "java_test".equals(kind);
+                                kind.isKind("java_library") || kind.isKind("java_binary") || kind.isKind("java_test");
                         if (!skipTarget) {
                             addTargetJarsIntoClasspath(bazelWorkspaceCmdRunner, classpathData, configuredTargetsForProject, 
                                 targetLabel, isTestTarget, jvmTargetInfo);

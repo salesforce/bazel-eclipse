@@ -150,7 +150,7 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
             support.setLaunchConfigDefaults(config);
             AspectTargetInfo api = mainClassInfos.iterator().next();
             BazelLabel label = api.getLabel();
-            BazelTargetKind kind = BazelTargetKind.valueOfIgnoresCase(api.getKind());
+            BazelTargetKind kind = api.getKind();
             support.populateBazelLaunchConfig(config, projectName, label, kind);
             DebugUITools.launch(config.doSave(), mode);
 

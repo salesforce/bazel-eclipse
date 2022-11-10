@@ -39,9 +39,15 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
- * Caching impl of JvmClasspath, expected to be the base class of most implementations.
+ * Implementation of JvmClasspath that uses a stored object for computations. It does not have innate ability
+ * to compute classpath data; the caller that creates it must provide the classpath data at initialization.
+ * <p>
+ * It supports caching. If the cache timeout expires, the classpath data will be erased and this implementation
+ * returns null;
+ * <p>
+ * As a side gig, it is also expected to be the base class of most implementations.
  */
-public class InMemoryJvmClasspath implements JvmClasspath {
+public class JvmInMemoryClasspath implements JvmClasspath {
     /**
      * A logical name for the classpath instance, like the Bazel package name or project name.
      */
@@ -61,7 +67,7 @@ public class InMemoryJvmClasspath implements JvmClasspath {
      * @param cacheTimeoutMillis
      *            the timeout in milliseconds; -1 never expires
      */
-    public InMemoryJvmClasspath(String classpathName, JvmClasspathData classpath) {
+    public JvmInMemoryClasspath(String classpathName, JvmClasspathData classpath) {
         this.classpathName = classpathName;
         this.cacheTimeoutMillis = -1;
         this.cachePutTimeMillis = System.currentTimeMillis();
@@ -78,7 +84,7 @@ public class InMemoryJvmClasspath implements JvmClasspath {
      * @param cacheTimeoutMillis
      *            the timeout in milliseconds; -1 never expires
      */
-    protected InMemoryJvmClasspath(String classpathName, long cacheTimeoutMillis) {
+    protected JvmInMemoryClasspath(String classpathName, long cacheTimeoutMillis) {
         this.classpathName = classpathName;
         this.cacheTimeoutMillis = cacheTimeoutMillis;
 

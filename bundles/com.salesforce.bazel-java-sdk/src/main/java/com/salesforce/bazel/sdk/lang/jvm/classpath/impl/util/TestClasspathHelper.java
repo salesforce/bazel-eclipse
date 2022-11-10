@@ -31,7 +31,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.sdk.lang.jvm.classpath.impl;
+package com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,8 +56,8 @@ import com.salesforce.bazel.sdk.project.BazelProjectTargets;
  * Bazel creates a 'param' file for each java_test that contains the list of jar file paths for the classpath for
  * invoking that test via the java executable.
  */
-public class BazelJvmTestClasspathHelper {
-    private static final LogHelper LOG = LogHelper.log(BazelJvmTestClasspathHelper.class);
+public class TestClasspathHelper {
+    private static final LogHelper LOG = LogHelper.log(TestClasspathHelper.class);
 
     static final String BAZEL_DEPLOY_PARAMS_SUFFIX = "_deploy.jar-0.params";
     static final String BAZEL_SRC_DEPLOY_PARAMS_SUFFIX = "_deploy-src.jar-0.params";

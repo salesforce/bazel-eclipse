@@ -229,7 +229,7 @@ class BazelLaunchConfigurationSupport {
         List<TypedBazelLabel> typedBazelLabels = new ArrayList<>();
         for (AspectTargetInfo api : getAspectTargetInfosForProject(project, targetTypes)) {
             BazelLabel label = api.getLabel();
-            BazelTargetKind kind = BazelTargetKind.valueOfIgnoresCase(api.getKind());
+            BazelTargetKind kind = api.getKind();
             typedBazelLabels.add(new TypedBazelLabel(label, kind));
         }
         return typedBazelLabels;
