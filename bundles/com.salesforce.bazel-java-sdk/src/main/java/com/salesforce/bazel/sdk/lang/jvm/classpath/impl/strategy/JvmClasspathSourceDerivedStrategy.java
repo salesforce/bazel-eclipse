@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021, Salesforce.com, Inc. All rights reserved.
+ * Copyright (c) 2022, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -21,88 +21,45 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.sdk.lang.jvm.classpath.impl;
+package com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy;
 
 import java.io.File;
 import java.util.Set;
 
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.index.CodeIndexEntry;
-import com.salesforce.bazel.sdk.index.jvm.BazelJvmIndexClasspath;
 import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndex;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.lang.jvm.JavaSourceFile;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
-import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
-import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
- * Classpath engine that uses 'import' entries from the Java files to determine the actual classpath, as opposed to the
- * JvmUnionClasspath that uses the Bazel BUILD metadata.
+ * Classpath strategy that uses 'import' entries from the Java files to determine the actual classpath, as opposed to the
+ *  that uses the Bazel BUILD metadata.
  * <p>
  * TODO this is just a stub so far, it isn't actually implemented.
  */
-public class JvmSourceDerivedClasspath implements JvmClasspath {
-    private static final LogHelper LOG = LogHelper.log(JvmSourceDerivedClasspath.class);
+public class JvmClasspathSourceDerivedStrategy extends JvmClasspathStrategy {
+    private static final LogHelper LOG = LogHelper.log(JvmClasspathSourceDerivedStrategy.class);
 
-    protected final BazelWorkspace bazelWorkspace;
-    protected final BazelProjectManager bazelProjectManager;
-    protected final BazelProject bazelProject;
-    protected final ImplicitClasspathHelper implicitDependencyHelper;
-    protected final OperatingEnvironmentDetectionStrategy osDetector;
-    protected final BazelCommandManager bazelCommandManager;
-    private final LogHelper logger;
-
-    protected BazelJvmIndexClasspath classIndex;
-
-    /**
-     *
-     * @param bazelWorkspace
-     *            gateway to a number of workspace level features
-     * @param bazelProjectManager
-     *            project manager is used to help build references to other projects
-     * @param bazelProject
-     *            the project (aka a Bazel package that corresponds to the concept of a Maven module)
-     * @param implicitDependencyHelper
-     *            helper utility that computes annoying implicit dependencies added by Bazel
-     * @param osDetector
-     *            use this when do OS specific work - this allows us to mock the OS in tests
-     * @param bazelCommandManager
-     *            gateway object for running Bazel commands
-     * @param classIndex
-     *            the index of jars in the workspace, and the classes that each contains
-     */
-    public JvmSourceDerivedClasspath(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
-            BazelProject bazelProject, ImplicitClasspathHelper implicitDependencyHelper,
-            OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager,
-            BazelJvmIndexClasspath classIndex) {
-        this.bazelWorkspace = bazelWorkspace;
-        this.bazelProjectManager = bazelProjectManager;
-        this.bazelProject = bazelProject;
-        this.implicitDependencyHelper = implicitDependencyHelper;
-        this.osDetector = osDetector;
-        this.bazelCommandManager = bazelCommandManager;
-        this.classIndex = classIndex;
-
-        this.logger = LogHelper.log(this.getClass());
+    public JvmClasspathSourceDerivedStrategy(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
+            ImplicitClasspathHelper implicitDependencyHelper, OperatingEnvironmentDetectionStrategy osDetector,
+            BazelCommandManager bazelCommandManager) {
+        super(bazelWorkspace, bazelProjectManager, implicitDependencyHelper, osDetector, bazelCommandManager);
     }
 
     @Override
-    public JvmClasspathData getClasspathEntries(WorkProgressMonitor progressMonitor) {
-        
-        // TODO when implementing this, implement it as a strategy such that this logic is compoable in other
-        // JvmClasspath implementations.
+    public JvmClasspathData getClasspathForTarget(JvmClasspathStrategyRequest request) {
         
         // the structure contains the file system layout of source files
-        ProjectStructure fileStructure = bazelProject.getProjectStructure();
+        ProjectStructure fileStructure = request.bazelProject.getProjectStructure();
 
         // get the index, if one has been computed
         JvmCodeIndex index = JvmCodeIndex.getWorkspaceIndex(bazelWorkspace);
@@ -155,7 +112,4 @@ public class JvmSourceDerivedClasspath implements JvmClasspath {
         return new JvmClasspathData();
     }
 
-    @Override
-    public void clean() {
-    }
 }

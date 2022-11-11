@@ -28,13 +28,12 @@ import java.util.Set;
 
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectOutputJarSet;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
-import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
@@ -71,8 +70,7 @@ public abstract class JvmClasspathStrategy {
     /**
      * Loads the classpath for a target.
      */
-    public abstract JvmClasspathData getClasspathForTarget(BazelProject bazelProject, String targetName, String targetType, 
-            BazelProjectTargets configuredTargetsForProject, Set<String> actualActivatedTargets, JvmClasspathData classpathData);
+    public abstract JvmClasspathData getClasspathForTarget(JvmClasspathStrategyRequest request);
 
     
     // INTERNAL

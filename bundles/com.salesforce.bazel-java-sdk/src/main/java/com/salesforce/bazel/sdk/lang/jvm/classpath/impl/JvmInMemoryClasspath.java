@@ -39,13 +39,14 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
- * Implementation of JvmClasspath that uses a stored object for computations. It does not have innate ability
- * to compute classpath data; the caller that creates it must provide the classpath data at initialization.
+ * Basic implementation of JvmClasspath that uses a stored object for the classpath state. It does not have 
+ * innate ability to compute classpath data; the caller that creates it must provide the classpath data at 
+ * initialization.
  * <p>
  * It supports caching. If the cache timeout expires, the classpath data will be erased and this implementation
  * returns null;
  * <p>
- * As a side gig, it is also expected to be the base class of most implementations.
+ * As a side gig, it is also expected to be the base class of most computational JvmClasspath implementations.
  */
 public class JvmInMemoryClasspath implements JvmClasspath {
     /**
@@ -101,8 +102,10 @@ public class JvmInMemoryClasspath implements JvmClasspath {
         if (cachedClasspath != null && cacheTimeoutMillis == -1) {
             return cachedClasspath;
         }
-
-        // where the magic happens 
+        
+        // where the magic happens
+        // in most cases, this class will be subclassed and the computeClasspath method will be overridden
+        // with code that can compute the classpath using something tangible (build metadata, source files, etc).
         cachedClasspath = computeClasspath(progressMonitor);
 
         return cachedClasspath;
@@ -126,10 +129,14 @@ public class JvmInMemoryClasspath implements JvmClasspath {
     // SUBCLASS API
 
     /**
-     * If the classpath is not cached, this method will recompute it. For subclasses, this is the main method to
-     * implement.
+     * If the classpath is not cached, this method will recompute it.
+     * <p>
+     * For subclasses, this is the main method to implement.
      */
     protected JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) {
+        // if this class is not subclassed, and we get here, the captive JvmClasspathData has expired
+        // and we just return null. this isn't a good situation. so if you are using this class without
+        // subclassing, be sure to set the timeout to -1
         return null;
     }
 

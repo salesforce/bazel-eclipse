@@ -63,9 +63,10 @@ public class BazelBuildFile {
     private final Map<String, Set<String>> typeToTargetMap = new TreeMap<>();
 
     /**
-     * Maps the String target label (e.g. //projects/libs/foo:foolib) to the rule type (e.g. java_library)
+     * Maps the String target label (e.g. //projects/libs/foo:foolib) to the rule kind (e.g. java_library)
+     * TODO reimplement this as a BazelTargetKind not String
      */
-    private final Map<String, String> targetToTypeMap = new TreeMap<>();
+    private final Map<String, String> targetToKindMap = new TreeMap<>();
 
     private final Set<String> allTargets = new TreeSet<>();
 
@@ -95,7 +96,7 @@ public class BazelBuildFile {
     }
 
     public void addTarget(String ruleType, String targetLabel) {
-        targetToTypeMap.put(targetLabel, ruleType);
+        targetToKindMap.put(targetLabel, ruleType);
         allTargets.add(targetLabel);
 
         Set<String> targetsForRuleType = typeToTargetMap.get(ruleType);
@@ -122,7 +123,7 @@ public class BazelBuildFile {
     }
 
     public String getRuleTypeForTarget(String targetLabel) {
-        return targetToTypeMap.get(targetLabel);
+        return targetToKindMap.get(targetLabel);
     }
 
     public Set<String> getAllTargetLabels() {
