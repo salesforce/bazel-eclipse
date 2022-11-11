@@ -57,8 +57,8 @@ import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.JvmUnionClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy.JvmClasspathAspectStrategy;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy.JvmClasspathSourceDerivedStrategy;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy.JvmClasspathStrategy;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.JvmSourceDerivedClasspath;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -89,23 +89,26 @@ public class BazelClasspathContainer extends BaseBazelClasspathContainer {
             JavaModelException, BazelCommandLineToolConfigurationException {
         super(eclipseProject, resourceHelper, jcHelper, bpManager, osDetectStrategy, bazelWorkspace);
 
+        // TODO this is where we will configure the classpath strategy chain, right now there is just one
+        // assemble the list of classpath strategies we support (right now, just one)
+        // order is very important as it determines the order in which the strategies are consulted
+        List<JvmClasspathStrategy> strategies = new ArrayList<>();
+        
         if (USE_DYNAMIC_CP) {
-            // TODO the dynamic classpath will be folded into the strategy concept
-            bazelClasspath = new JvmSourceDerivedClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                    new EclipseImplicitClasspathHelper(), osDetector,
-                    ComponentContext.getInstance().getBazelCommandManager(), null);
-        } else {
-            // TODO this is where we will configure the classpath strategy chain, right now there is just one
-            // assemble the list of classpath strategies we support (right now, just one)
-            List<JvmClasspathStrategy> strategies = new ArrayList<>();
-            strategies.add(new JvmClasspathAspectStrategy(bazelWorkspace, bazelProjectManager, 
+            // TODO this strategy not implemented yet
+            strategies.add(new JvmClasspathSourceDerivedStrategy(bazelWorkspace, bazelProjectManager, 
                 new EclipseImplicitClasspathHelper(), osDetector, ComponentContext.getInstance().getBazelCommandManager()));
-
-            // create the classpath computation engine
-            bazelClasspath = new JvmUnionClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
-                    new EclipseImplicitClasspathHelper(), osDetector, ComponentContext.getInstance().getBazelCommandManager(),
-                    strategies);
         }
+        
+        strategies.add(new JvmClasspathAspectStrategy(bazelWorkspace, bazelProjectManager, 
+            new EclipseImplicitClasspathHelper(), osDetector, ComponentContext.getInstance().getBazelCommandManager()));
+
+        
+        // create the classpath computation engine
+        bazelClasspath = new JvmUnionClasspath(bazelWorkspace, bazelProjectManager, bazelProject,
+                new EclipseImplicitClasspathHelper(), osDetector, ComponentContext.getInstance().getBazelCommandManager(),
+                strategies);
+
         instances.add(bazelClasspath);
     }
 

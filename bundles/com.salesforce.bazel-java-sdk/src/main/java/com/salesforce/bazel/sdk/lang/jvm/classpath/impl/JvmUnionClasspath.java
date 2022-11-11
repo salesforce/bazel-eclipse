@@ -32,9 +32,11 @@ import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy.JvmClasspathStrategy;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy.JvmClasspathStrategyRequest;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -126,14 +128,15 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
         // Iterate over the activated targets and compute the classpath for each. The result will be aggregated into a
         // union classpath in the JvmClasspathResponse that contains all entries for all activated targets
         for (String targetLabel : actualActivatedTargets) {
-            String targetType = bazelBuildFileModel.getRuleTypeForTarget(targetLabel);
+            String targetKindString = bazelBuildFileModel.getRuleTypeForTarget(targetLabel);
+            BazelTargetKind targetKind = BazelTargetKind.valueOfIgnoresCase(targetKindString);
             
             try {
                 // invoke our classpath strategies in order, until one is able to complete the classpath
                 for (JvmClasspathStrategy strategy : orderedClasspathStrategies) {
-                    
-                    strategy.getClasspathForTarget(bazelProject, targetLabel, targetType, configuredTargetsForProject, 
-                        actualActivatedTargets, response);
+                    JvmClasspathStrategyRequest request = new JvmClasspathStrategyRequest(bazelProject, targetLabel, targetKind, 
+                        configuredTargetsForProject, actualActivatedTargets, response);
+                    strategy.getClasspathForTarget(request);
                     if (response.isComplete) {
                         break;
                     }
