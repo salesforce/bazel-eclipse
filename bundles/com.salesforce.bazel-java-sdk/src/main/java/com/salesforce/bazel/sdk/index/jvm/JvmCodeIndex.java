@@ -23,20 +23,11 @@
  */
 package com.salesforce.bazel.sdk.index.jvm;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.salesforce.bazel.sdk.index.CodeIndex;
-import com.salesforce.bazel.sdk.index.jvm.jar.JarIdentiferResolver;
-import com.salesforce.bazel.sdk.index.jvm.jar.JavaJarCrawler;
-import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
-import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleType;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * An index of JVM types. This is the output of an indexer that knows how to traverse the file system looking for JVM
@@ -58,80 +49,50 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Lucene indexes of code. We found the performance of that indexing solution to be too slow for our needs.
  */
 public class JvmCodeIndex extends CodeIndex {
-    private static final LogHelper LOG = LogHelper.log(JvmCodeIndex.class);
-
-    /**
-     * Global collection of indices for each workspace
-     */
-    protected static Map<String, JvmCodeIndex> workspaceIndices = new ConcurrentHashMap<>();
-
     // See superclass for the collections
     //public Map<String, CodeIndexEntry> artifactDictionary = new TreeMap<>();
     //public Map<String, CodeIndexEntry> fileDictionary = new TreeMap<>();
     //public Map<String, CodeIndexEntry> typeDictionary = new TreeMap<>();
 
+    /**
+     * Global cache of indices, keyed by workspace name. (BazelWorkspace.name)
+     */
+    protected static Map<String, JvmCodeIndex> workspaceIndices = new ConcurrentHashMap<>();
+
+    
+    public JvmCodeIndex() {}
+    
+    public JvmCodeIndex(JvmCodeIndexerOptions indexerOptions) {
+        this.indexOptions = indexerOptions;
+    }
+    
+    // STATIC CACHE
+    
+    /**
+     * Returns an existing index from cache if one exists. This does NOT compute a new index if one isn't available.
+     */
     public static JvmCodeIndex getWorkspaceIndex(BazelWorkspace bazelWorkspace) {
         return workspaceIndices.get(bazelWorkspace.getName());
     }
 
+    /**
+     * Adds an index to the cache.
+     */
+    public static void addWorkspaceIndex(BazelWorkspace bazelWorkspace, JvmCodeIndex index) {
+        workspaceIndices.put(bazelWorkspace.getName(), index);
+    }
+
+    /**
+     * Clears an index from the cache.
+     */
     public static JvmCodeIndex clearWorkspaceIndex(BazelWorkspace bazelWorkspace) {
         return workspaceIndices.remove(bazelWorkspace.getName());
     }
 
-    /**
-     * Builds an index for an entire workspace, which can be a very expensive operation.
-     */
-    public static synchronized JvmCodeIndex buildWorkspaceIndex(BazelWorkspace bazelWorkspace,
-            BazelExternalJarRuleManager externalJarRuleManager, List<File> additionalJarLocations,
-            WorkProgressMonitor progressMonitor) {
-        JvmCodeIndex index = getWorkspaceIndex(bazelWorkspace);
-        if (index != null) {
-            return index;
-        }
-        LOG.info("Building the type index for workspace {}, this may take some time...", bazelWorkspace.getName());
-
-        index = new JvmCodeIndex();
-        List<File> locations = new ArrayList<>();
-
-        // for each jar downloading rule type in the workspace, add the appropriate local directories of the downloaded jars
-        List<BazelExternalJarRuleType> ruleTypes = externalJarRuleManager.findInUseExternalJarRuleTypes(bazelWorkspace);
-        for (BazelExternalJarRuleType ruleType : ruleTypes) {
-            List<File> ruleSpecificLocations = ruleType.getDownloadedJarLocations(bazelWorkspace);
-            locations.addAll(ruleSpecificLocations);
-        }
-
-        // add internal location (jars built by the bazel workspace
-        addInternalLocations(index, locations);
-
-        // add the additional directories the user wants to search
-        if (additionalJarLocations != null) {
-            locations.addAll(additionalJarLocations);
-        }
-
-        // now build the index
-        for (File location : locations) {
-            processLocation(bazelWorkspace, externalJarRuleManager, index, location, progressMonitor);
-        }
-
-        workspaceIndices.put(bazelWorkspace.getName(), index);
-
-        LOG.info("Finished building the type index for workspace {}", bazelWorkspace.getName());
-        return index;
-
+    // GETTERS
+    
+    public JvmCodeIndexerOptions getJvmOptions() {
+        return (JvmCodeIndexerOptions)this.indexOptions;
     }
-
-    static void processLocation(BazelWorkspace bazelWorkspace, BazelExternalJarRuleManager externalJarRuleManager,
-            JvmCodeIndex index, File location, WorkProgressMonitor progressMonitor) {
-        if ((location != null) && location.exists()) {
-            JarIdentiferResolver jarResolver = new JarIdentiferResolver();
-            JavaJarCrawler jarCrawler = new JavaJarCrawler(bazelWorkspace, index, jarResolver, externalJarRuleManager);
-            jarCrawler.index(location, false);
-        }
-    }
-
-    protected static void addInternalLocations(JvmCodeIndex index, List<File> locations) {
-        // TODO INTERNAL (jars produced by Bazel)
-        // this needs to be implemented to make the Dynamic classpath work
-    }
-
+    
 }

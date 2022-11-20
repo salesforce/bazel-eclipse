@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020, Salesforce.com, Inc. All rights reserved.
+ * Copyright (c) 2022, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -20,18 +20,23 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ *
  */
 package com.salesforce.bazel.sdk.index;
 
-import java.io.File;
-
 /**
- * A code index can take some time to generate, so this class can persist/read the index to/from file.
- * TODO this is not implemented yet
+ * Base class for all processors that can compute CodeIndex objects.
  */
-public class CodeIndexPersister {
-
-    public CodeIndexPersister(File outputDirectory) {
-        // TODO CodeIndexPersister is not implemented yet. Consider reusing the CodeIndexReport class, it does more or less what we need
-    }
+public class CodeIndexer {
+    // currently just a marker interface to help you find the impls
+    // over time, we will probably find some common members/methods we can move down into here
 }

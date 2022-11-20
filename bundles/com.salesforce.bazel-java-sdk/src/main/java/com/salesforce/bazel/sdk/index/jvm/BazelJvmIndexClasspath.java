@@ -83,8 +83,14 @@ public class BazelJvmIndexClasspath extends JvmInMemoryClasspath {
      */
     public JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) {
         synchronized (this) {
-            index = JvmCodeIndex.buildWorkspaceIndex(bazelWorkspace, externalJarRuleManager, additionalJarLocations,
-                progressMonitor);
+            if (cachedClasspath != null) {
+                return cachedClasspath;
+            }
+            
+            // make sure the index is loaded
+            getIndex(progressMonitor);
+            
+            // build the Global classpath
             cachedClasspath = convertIndexIntoResponse(index);
         }
         
@@ -98,7 +104,10 @@ public class BazelJvmIndexClasspath extends JvmInMemoryClasspath {
         if (index != null) {
             return index;
         }
-        index = JvmCodeIndex.buildWorkspaceIndex(bazelWorkspace, externalJarRuleManager, additionalJarLocations,
+        JvmCodeIndexer indexer = new JvmCodeIndexer();
+        JvmCodeIndexerOptions indexerOptions = JvmCodeIndexerOptions.buildJvmGlobalSearchOptions();
+
+        index = indexer.buildWorkspaceIndex(bazelWorkspace, externalJarRuleManager, indexerOptions, additionalJarLocations,
             progressMonitor);
         return index;
     }
@@ -110,6 +119,7 @@ public class BazelJvmIndexClasspath extends JvmInMemoryClasspath {
     public void clean() {
         synchronized (this) {
             index = null;
+            cachedClasspath = null;
             super.clean();
         }
     }
