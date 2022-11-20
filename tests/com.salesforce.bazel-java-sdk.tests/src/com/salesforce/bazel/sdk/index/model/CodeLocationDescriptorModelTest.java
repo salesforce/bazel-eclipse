@@ -27,10 +27,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
+
 public class CodeLocationDescriptorModelTest {
 
     private static final long ONE_DAY_MILLIS = 24 * 60 * 60 * 1000L;
 
+    @Test
     public void testJarAgeComputations() {
         CodeLocationDescriptor jarLocationDescriptor = new CodeLocationDescriptor();
 

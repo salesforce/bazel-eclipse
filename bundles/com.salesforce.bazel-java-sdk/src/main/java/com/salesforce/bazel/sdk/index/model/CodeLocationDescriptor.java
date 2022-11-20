@@ -94,6 +94,8 @@ public class CodeLocationDescriptor {
      * @return true if a reliable age was probably found, false if not
      */
     public boolean computeAge(long writtenTimeMillis, long currentTimeMillis,  long earliestRealTimestampMillis) {
+        ageInDays = -1;
+        
         // writtenTime is computed from epoch (Jan 1 1970) and we can assume anything really old is a bogus
         // date written by a build system that intentionally suppresses the date for hermeticity reasons
         if (writtenTimeMillis < earliestRealTimestampMillis) {

@@ -60,7 +60,9 @@ public class JvmCodeIndex extends CodeIndex {
     protected static Map<String, JvmCodeIndex> workspaceIndices = new ConcurrentHashMap<>();
 
     
-    public JvmCodeIndex() {}
+    public JvmCodeIndex() {
+        this.indexOptions = new JvmCodeIndexerOptions();
+    }
     
     public JvmCodeIndex(JvmCodeIndexerOptions indexerOptions) {
         this.indexOptions = indexerOptions;
