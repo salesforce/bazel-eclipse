@@ -38,7 +38,10 @@ import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContaine
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
+import com.salesforce.bazel.sdk.index.CodeIndexReporter;
 import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndex;
+import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndexer;
+import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndexerOptions;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
@@ -46,7 +49,10 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * Configures the classpath container for the special root project.
  */
 public class SetupRootClasspathContainerFlow implements ImportFlow {
-
+    // until we have a formal feature for providing dep reports, we only print to stdout
+    // we disable this by default for release builds
+    private static final boolean PRINT_INDEX_REPORT = false;
+    
     @Override
     public String getProgressText() {
         return "Configuring the root project classpath.";
@@ -71,9 +77,30 @@ public class SetupRootClasspathContainerFlow implements ImportFlow {
             BazelExternalJarRuleManager externalJarManager = ComponentContext.getInstance().getBazelExternalJarRuleManager();
             List<File> additionalJarLocations = BazelGlobalSearchClasspathContainer.loadAdditionalLocations();
 
+            JvmCodeIndexer indexer = new JvmCodeIndexer();
+            JvmCodeIndexerOptions indexerOptions = JvmCodeIndexerOptions.buildJvmGlobalSearchOptions();
+            
             // this might take a while if it hasn't been computed yet
-            JvmCodeIndex.buildWorkspaceIndex(bazelWorkspace, externalJarManager, additionalJarLocations,
+            JvmCodeIndex index = indexer.buildWorkspaceIndex(bazelWorkspace, externalJarManager, indexerOptions, additionalJarLocations,
                 new EclipseWorkProgressMonitor(progressSubMonitor));
+            
+            
+            if (PRINT_INDEX_REPORT) {
+                CodeIndexReporter codeIndexReport = new CodeIndexReporter(index);
+    
+                List<String> rawList = codeIndexReport.buildArtifactReportAsCSV();
+                System.out.println("Dependency Report:");
+                for (String row : rawList) {
+                    System.out.println(row);
+                }
+                
+                
+                List<String> ageHistogram = codeIndexReport.buildArtifactAgeHistogramReportAsCSV();
+                System.out.println("Dependency Age Report:");
+                for (String row : ageHistogram) {
+                    System.out.println(row);
+                }
+            }
         }
     }
 }

@@ -40,6 +40,9 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Crawler that descends into nested directories of jar files and adds found files to the index.
+ * <p>
+ * There is a one to many relationship between JvmCodeIndex and JavaJarCrawler. Many crawlers will
+ * be used to build a single JvmCodeIndex. See JvmCodeIndexer to see how that works.
  */
 public class JavaJarCrawler {
     private static final LogHelper LOG = LogHelper.log(JavaJarCrawler.class);
@@ -62,21 +65,49 @@ public class JavaJarCrawler {
         this.externalJarRuleManager = externalJarRuleManager;
     }
 
-    public void index(File basePath, boolean doIndexClasses) {
-        indexRecur(null, basePath, doIndexClasses);
+    /**
+     * Crawls the passed file system path, descending directories looking for jar files.
+     * Entries are added to the JvmCodeIndex as they are found. 
+     */
+    public void index(File rootCrawlDirectory) {
+        
+        if (!rootCrawlDirectory.exists()) {
+            LOG.error("JavaJarCrawler was passed a directory location that does not exist, it has been ignored. ", rootCrawlDirectory.getAbsolutePath());
+            return;
+        }
+        if (!rootCrawlDirectory.isDirectory()) {
+            LOG.error("JavaJarCrawler was passed a location that is not a directory, it has been ignored. ", rootCrawlDirectory.getAbsolutePath());
+            return;
+        }
+        
+        // To prevent concurrency bugs, after the indexing has begun we don't want the index configuration to change
+        // The indexer should have already done this, but just in case...
+        index.getOptions().setLock();
+        
+        // gavRoot is a tricky concept, see comments below; it starts off unknown
+        File gavRoot = null;
+        
+        indexRecur(gavRoot, rootCrawlDirectory);
     }
 
-    protected void indexRecur(File gavRoot, File path, boolean doIndexClasses) {
-        File[] children = path.listFiles();
+    /**
+     * Looks in the passed directory for jar files and processes those found. Recursively descends
+     * into any child directories.
+     * 
+     * @param gavRoot see code comments about what the gavRoot is, it is complicated 
+     * @param currentDirectory
+     */
+    protected void indexRecur(File gavRoot, File currentDirectory) {
+        File[] children = currentDirectory.listFiles();
         if (children == null) {
             return;
         }
 
         // some file system layouts put gav information in the path, e.g.
         // ~/.m2/repository/com/acme/blue/1.0.0/blue.jar
-        // we want to track the start of the gav info in the path if possible
+        // we want to track the start of the gav info in the path if possible so we can decode it
         if (gavRoot == null) {
-            File[] gavRootIndicators = path.listFiles(new FilenameFilter() {
+            File[] gavRootIndicators = currentDirectory.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
                     // TODO sketchy logic here, we assume at least one downloaded jar comes from a common domain
@@ -84,7 +115,7 @@ public class JavaJarCrawler {
                 }
             });
             if (gavRootIndicators.length > 0) {
-                gavRoot = path;
+                gavRoot = currentDirectory;
             }
         }
 
@@ -92,15 +123,16 @@ public class JavaJarCrawler {
             ZipFile zipFile = null;
             try {
                 if (child.isDirectory()) {
-                    if (child.getPath().contains(".runfiles")) {
-                        // bazel test sandbox, stay out of here as the jars in here are for running tests
-                        return;
+                    if (doSkipDirectory(child.getPath())) {
+                        continue;
                     }
-                    indexRecur(gavRoot, child, doIndexClasses);
+                    indexRecur(gavRoot, child);
                 } else if (child.canRead()) {
                     if (child.getName().endsWith(".jar")) {
                         zipFile = new ZipFile(child);
-                        foundJar(gavRoot, child, zipFile, doIndexClasses);
+                        
+                        // TODO run this method async in a different thread
+                        foundJar(gavRoot, child, zipFile);
                     }
                 }
             } catch (Exception anyE) {
@@ -114,69 +146,194 @@ public class JavaJarCrawler {
             }
         }
     }
+    
+    static boolean doSkipDirectory(String directoryName) {
+        if (directoryName.contains(".runfiles")) {
+            // bazel test sandbox, stay out of here as the jars in here are for running tests
+            return true;
+        }
+        return false;
+    }
 
-    protected void foundJar(File gavRootDir, File jarFile, ZipFile zipFile, boolean doIndexClasses) {
-        // precisely identify the jar file
+    /**
+     * For a given jar file found on disk, check if it is an interesting jar file and add it to the index
+     * if so.
+     * <p>
+     * Configure the CodeIndexOption class in the CodeIndex to alter the behavior of this operation.
+     * <p>
+     * TODO someday we will run this method concurrent to other threads, be careful of shared state
+     */
+    protected void foundJar(File gavRootDir, File jarFile, ZipFile zipFile) {
         LOG.debug("found jar: [{}]", jarFile.getName());
+                
+        // precisely identify the jar file
         JarIdentifier jarId = resolver.resolveJarIdentifier(gavRootDir, jarFile, zipFile);
         if (jarId == null) {
             // this jar is not part of the typical dependencies (e.g. it is a jar used in the build toolchain); ignore
             return;
         }
-        String bazelLabel = null;
         String absoluteFilepath = jarFile.getAbsolutePath();
-
+        
+        // use shorter names
+        boolean doComputeTypes = index.getOptions().doComputeTypeDictionary();
+        boolean doUseFileAge = index.getJvmOptions().doComputeJarAgeUsingInternalFiles();
+        boolean doUseRemoteAge = index.getJvmOptions().doComputeJarAgeUsingRemoteMavenRepo();
+        
+        // we want to determine the Bazel label based on filename (not always possible)
+        // for example: @maven//:org_slf4j_slf4j_api
+        // this logic is dependent on the external jar rule type that we are using
+        // are we using maven_install, jvm_importexport, etc
+        String bazelLabel = null;
+        // TODO why would we run this outside of a workspace? is this code just being paranoid?
         if (bazelWorkspace != null) {
-            BazelExternalJarRuleType ruleType =
+            BazelExternalJarRuleType externalJarRuleType =
                     externalJarRuleManager.findOwningRuleType(bazelWorkspace, absoluteFilepath);
-            if (ruleType != null) {
-                bazelLabel = ruleType.deriveBazelLabel(bazelWorkspace, absoluteFilepath, jarId);
+            if (externalJarRuleType != null) {
+                bazelLabel = externalJarRuleType.deriveBazelLabel(bazelWorkspace, absoluteFilepath, jarId);
             }
         }
-        CodeLocationDescriptor jarLocationDescriptor = new CodeLocationDescriptor(jarFile, jarId, bazelLabel);
 
+        // we have enough information to add an index entry, build the descriptor
+        CodeLocationDescriptor jarLocationDescriptor = new CodeLocationDescriptor(jarFile, jarId, bazelLabel, jarId.version);
+        
         // add to our index using artifact name (eg. junit, hamcrest-core, slf4j-api) 
         index.addArtifactLocation(jarId.artifact, jarLocationDescriptor);
         // add to our index using file name (eg. junit-4.12.jar) 
         index.addFileLocation(jarFile.getName(), jarLocationDescriptor);
 
-        // if we don't want an index of each class found in a jar, bail here and save a lot of work
-        if (!doIndexClasses) {
+        // if we don't want an index of each class found in a jar, and we aren't computing internal file ages 
+        // we can bail here and save a lot of work
+        if (!doComputeTypes && !doUseFileAge) {
             return;
         }
 
-        // add to our index by the enclosed classnames
+        // BEGIN GOING INSIDE THE JAR FILE
+        
+        // attempt to load the zipentries; if this is not actually a zip file (or jar/tar) this operation
+        // will fail so we guard against that
         Enumeration<? extends ZipEntry> entries = null;
         try {
             entries = zipFile.entries();
         } catch (Exception anyE) {
-            LOG.error("failure opening zipfile [{}]", anyE, jarFile.getPath());
+            LOG.error("Failure opening file [{}] as a zip/jar. Corrupt file?", anyE, jarFile.getPath());
             return;
         }
-        while (entries.hasMoreElements()) {
+        
+        // iterate through the contents for the jar file, for as long as the keepGoing flag is still set
+        ZipEntriesProcessingState processEntriesState = new ZipEntriesProcessingState();
+        while (processEntriesState.keepGoing && entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
+            
+            // name of the zip file entry, which will contain the path info: com/salesforce/foo/Bar.class
             String fqClassname = entry.getName();
-            if (fqClassname == null) {
-                // whatever
-                continue;
-            } else if (!fqClassname.endsWith(".class")) {
-                // non-class file, don't care
-                continue;
-            } else if (fqClassname.endsWith("package-info.class")) {
-                // non-class file, don't care
-                continue;
-            } else if (fqClassname.contains("$")) {
-                // inner class, don't care
-                continue;
-            }
-            // convert path / into . to form the legal package name, and trim the .class off the end
-            fqClassname = fqClassname.replace(FSPathHelper.JAR_SLASH, ".");
-            fqClassname = fqClassname.substring(0, fqClassname.length() - 6);
-            LOG.debug("Indexer found classname: {} in jar {}", fqClassname, jarId.locationIdentifier);
-
-            ClassIdentifier classId = new ClassIdentifier(fqClassname);
-            jarLocationDescriptor.addClass(classId);
-            index.addTypeLocation(classId.classname, jarLocationDescriptor);
+            // gets the time when the entry was written (as according to the builder of the jar)
+            long writtenTimeMillis = entry.getTime();
+            
+            processJarFileZipEntry(processEntriesState, fqClassname, writtenTimeMillis, jarLocationDescriptor);
         }
+        
+        // END GOING INSIDE THE JAR FILE
+        
+        if (!processEntriesState.foundValidAge && doUseRemoteAge) {
+            // TODO also provide an option to call a remote system (e.g. Maven Central). It will be slow.
+        }
+    }
+    
+    /**
+     * Simple holder class of ongoing state as we index through the internal entries in a jar file.
+     */
+    protected class ZipEntriesProcessingState {
+        // if we are building the type dictionary, we will keep going through the whole jar
+        // but for some index configurations, we don't iterate through all files in the jar
+        // the loop will set this flag to false to stop iterating through zip file entries in the jar
+        boolean keepGoing = true;
+        
+        // convenience booleans
+        boolean doComputeTypes =  index.getJvmOptions().doComputeTypeDictionary();
+        boolean doComputeAgeViaFileTimes = index.getJvmOptions().doComputeJarAgeUsingInternalFiles();
+
+        // if we are computing the age of the jar, we only try a limited number of times
+        int computeFileAgeAttemptsRemaining = doComputeAgeViaFileTimes ? 
+                index.getJvmOptions().getTriesForComputeJarAgeUsingInternalFiles() : 0;
+        
+        // if we found a valid age using the entry times, we set this to true so more expensive techniques
+        // (e.g. calling to an external maven repo) are avoided
+        boolean foundValidAge = false;
+    }
+    
+    /**
+     * For a given zipfile entry, process it for information that the indexer is asking for
+     */
+    void processJarFileZipEntry(ZipEntriesProcessingState processEntriesState, String filepath, long writtenTimeMillis,
+            CodeLocationDescriptor jarLocationDescriptor) {
+        
+        // we only care about Java class files
+        if (!hasClassfileName(filepath)) {
+            return;
+        }
+        
+        // convert path / into . to form the legal package name, and trim the .class off the end
+        String fqClassname = convertClassfileNameToClassname(filepath);
+        if (fqClassname == null) {
+            return;
+        }
+        LOG.debug("Indexer found classname: {} in jar {}", fqClassname, jarLocationDescriptor.id);
+
+        ClassIdentifier classId = new ClassIdentifier(fqClassname);
+        jarLocationDescriptor.addClass(classId);
+        index.addTypeLocation(classId.classname, jarLocationDescriptor);
+        
+        if (processEntriesState.computeFileAgeAttemptsRemaining > 0) {
+            long currentTimeMillis = System.currentTimeMillis();
+            long earliestRealTimeMillis = index.getJvmOptions().getEarliestTimestampForComputeJarAgeUsingInternalFiles();
+            processEntriesState.foundValidAge = jarLocationDescriptor.computeAge(writtenTimeMillis, currentTimeMillis, earliestRealTimeMillis);
+
+            if (processEntriesState.foundValidAge && !processEntriesState.doComputeTypes) {
+                // we can stop now, we have our age, and we aren't building the type dictionary
+                processEntriesState.keepGoing = false;
+            }
+            processEntriesState.computeFileAgeAttemptsRemaining = processEntriesState.foundValidAge ? 0 : processEntriesState.computeFileAgeAttemptsRemaining-1;
+        }
+    }
+    
+    /**
+     * @param filepath name of the zip file entry, which will contain the path info: com/salesforce/foo/Bar.class
+     * @return true if the filename indicates a Java classfile
+     */
+    static boolean hasClassfileName(String filepath) {
+        if (filepath == null) {
+            // bug
+            return false;
+        } else if (!filepath.endsWith(".class")) {
+            // non-class file, don't care
+            return false;
+        } else if (filepath.endsWith("package-info.class")) {
+            // non-class file, don't care
+            return false;
+        } else if (filepath.contains("$")) {
+            // inner class like Foo$Bar.class, don't care
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * @param filepath name of the zip file entry, which will contain the path info: com/salesforce/foo/Bar.class
+     * @return the fully qualified classname: com.salesforce.foo.Bar
+     */
+    static String convertClassfileNameToClassname(String filepath) {
+        if (filepath == null || filepath.isEmpty() || filepath.length() < 7) {
+            // since indexing is a bulk operation, we want to avoid throwing exceptions just in case someone
+            // forgets to catch; we don't want one bad file to ruin the whole thing
+            return null;
+        }
+        
+        // convert path / into . to form the legal package name, 
+        filepath = filepath.replace(FSPathHelper.JAR_SLASH, ".");
+        
+        // trim the .class off the end
+        filepath = filepath.substring(0, filepath.length() - 6);
+        
+        return filepath;
     }
 }
