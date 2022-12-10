@@ -24,7 +24,9 @@
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.eclipse.core.resources.IProject;
@@ -51,7 +53,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
 public class SetupRootClasspathContainerFlow implements ImportFlow {
     // until we have a formal feature for providing dep reports, we only print to stdout
     // we disable this by default for release builds
-    private static final boolean PRINT_INDEX_REPORT = false;
+    private static final boolean PRINT_INDEX_REPORT = true;
     
     @Override
     public String getProgressText() {
@@ -87,8 +89,10 @@ public class SetupRootClasspathContainerFlow implements ImportFlow {
             
             if (PRINT_INDEX_REPORT) {
                 CodeIndexReporter codeIndexReport = new CodeIndexReporter(index);
+                Map<String, String> options = new HashMap<>();
+                options.put("suppressDeprecated", "true");
     
-                List<String> rawList = codeIndexReport.buildArtifactReportAsCSV();
+                List<String> rawList = codeIndexReport.buildArtifactReportAsCSV(options);
                 System.out.println("Dependency Report:");
                 for (String row : rawList) {
                     System.out.println(row);

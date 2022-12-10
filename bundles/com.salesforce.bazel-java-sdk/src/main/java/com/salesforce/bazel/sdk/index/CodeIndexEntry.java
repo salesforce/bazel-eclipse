@@ -31,6 +31,9 @@ import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 /**
  * A entry that is the value for each map in the CodeIndex. This class strives to be light on memory since there can be
  * tens of thousands, so we don't create a List for single length entries.
+ * <p>
+ * For example, there will be an instance of this class for each code artifact (e.g. a jar file). This entry will consolidate
+ * multiple found locations of the file if it is found multiple times on the file system.
  */
 public class CodeIndexEntry {
     public CodeLocationDescriptor singleLocation = null;
@@ -57,5 +60,17 @@ public class CodeIndexEntry {
         } else {
             singleLocation = newLocation;
         }
+    }
+    
+    /**
+     * The canonical location for this artifact. If there were multiple found locations, this method will
+     * return the 'primary' location, which is not well defined (normally the first location it was found).
+     */
+    public CodeLocationDescriptor getPrimaryLocation() {
+        if (multipleLocations != null) {
+            return multipleLocations.get(0);
+        }
+        return singleLocation;
+        
     }
 }

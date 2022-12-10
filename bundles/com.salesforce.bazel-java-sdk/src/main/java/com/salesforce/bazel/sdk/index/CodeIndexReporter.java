@@ -25,13 +25,16 @@ package com.salesforce.bazel.sdk.index;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 
 /**
- * Utilities to analyze and generate a report about the files in an index.
+ * Report generator for the contents of an index. Intentionally simple and not general purpose.
+ * Subclass this to provide more custom options, or (more likely) implement your own reporter
+ * for your custom needs.
  */
 public class CodeIndexReporter {
     protected CodeIndex index;
@@ -40,31 +43,60 @@ public class CodeIndexReporter {
         this.index = index;
     }
     
+
+    // FILTERING
+    
+    /**
+     * Decides what to filter out of the report. Subclasses should implement a filtering method that 
+     * meets their needs.
+     */
+    protected boolean accept(Map<String, String> options, CodeIndexEntry entry) {
+        if (options.containsKey("suppressDeprecated")) {
+            CodeLocationDescriptor loc = entry.getPrimaryLocation();
+            if (loc.bazelLabel.startsWith("@deprecated")) {
+                // this artifact is deprecated and the user is not interested in seeing it in the report
+                return false;
+            }
+        }
+        return true;
+    }
+    
+
+    
     // SIMPLE REPORT
     
-    public void printIndexAsText() {
+    public void printIndexAsText(Map<String, String> options) {
         println("");
         println("ARTIFACT INDEX (" + index.artifactDictionary.size() + " entries)");
         println("----------------------------------------");
         for (String artifact : index.artifactDictionary.keySet()) {
-            printArtifact(artifact, index.artifactDictionary.get(artifact));
+            CodeIndexEntry entry = index.artifactDictionary.get(artifact);
+            if (accept(options, entry)) {
+                printArtifact(options, artifact, entry);
+            }
         }
         println("");
         println("FILE INDEX (" + index.fileDictionary.size() + " entries)");
         println("----------------------------------------");
         for (String filename : index.fileDictionary.keySet()) {
-            printArtifact(filename, index.fileDictionary.get(filename));
+            CodeIndexEntry entry = index.fileDictionary.get(filename);
+            if (accept(options, entry)) {
+                printArtifact(options, filename, entry);
+            }
         }
         println("");
         println("TYPE INDEX (" + index.typeDictionary.size() + " entries)");
         println("----------------------------------------");
         for (String classname : index.typeDictionary.keySet()) {
-            printArtifact(classname, index.typeDictionary.get(classname));
+            CodeIndexEntry entry = index.typeDictionary.get(classname);
+            if (accept(options, entry)) {
+                printArtifact(options, classname, entry);
+            }
         }
         println("");
     }
 
-    private void printArtifact(String artifact, CodeIndexEntry entry) {
+    protected void printArtifact(Map<String, String> options, String artifact, CodeIndexEntry entry) {
         println("  " + artifact);
         if (entry.singleLocation != null) {
             println("    " + entry.singleLocation.id.locationIdentifier);
@@ -75,7 +107,7 @@ public class CodeIndexReporter {
         }
     }
 
-    private void println(String line) {
+    protected void println(String line) {
         System.out.println(line);
     }
 
@@ -85,7 +117,7 @@ public class CodeIndexReporter {
     /**
      * Provides the list of artifacts in the index. Format: CSV
      */
-    public List<String> buildArtifactReportAsCSV() {
+    public List<String> buildArtifactReportAsCSV(Map<String, String> options) {
         List<String>  rows = new ArrayList<>();
         Set<String> artifactNames = index.artifactDictionary.keySet();
         artifactNames = new TreeSet<>(artifactNames);
@@ -99,11 +131,13 @@ public class CodeIndexReporter {
         for (String artifactName : artifactNames) {
             CodeIndexEntry entry = index.artifactDictionary.get(artifactName);
             
-            if (entry.singleLocation != null) {
-                rows.add(writeArtifactRow(artifactName, entry.singleLocation));
-            } else {
-                for (CodeLocationDescriptor location : entry.multipleLocations) {
-                    rows.add(writeArtifactRow(artifactName, location));
+            if (accept(options, entry)) {
+                if (entry.singleLocation != null) {
+                    rows.add(writeCsvRow(options, artifactName, entry.singleLocation));
+                } else {
+                    for (CodeLocationDescriptor location : entry.multipleLocations) {
+                        rows.add(writeCsvRow(options, artifactName, location));
+                    }
                 }
             }
         }
@@ -111,7 +145,7 @@ public class CodeIndexReporter {
         return rows;
     }
         
-    private String writeArtifactRow(String artifactName, CodeLocationDescriptor location) {
+    protected String writeCsvRow(Map<String, String> options, String artifactName, CodeLocationDescriptor location) {
         if (index.getOptions().doComputeArtifactAges()) {
             return artifactName + ", " + location.bazelLabel + ", " + location.version + ", " + location.ageInDays;
         }
