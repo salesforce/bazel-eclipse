@@ -5,12 +5,14 @@ import com.salesforce.bazel.eclipse.component.internal.JavaCoreHelperComponentFa
 import com.salesforce.bazel.eclipse.component.internal.ProjectManagerComponentFacade;
 import com.salesforce.bazel.eclipse.component.internal.ResourceHelperComponentFacade;
 import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
+import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipePreferenceStoreHelper;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
+import com.salesforce.bazel.sdk.command.shell.ShellEnvironment;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -36,8 +38,18 @@ public class EclipseComponentContextInitializer implements IComponentContextInit
         BazelConfigurationManager configManager = new EclipseBazelConfigurationManager(eclipsePrefsHelper);
         BazelAspectLocation bazelAspectLocation = BazelAspectLocationComponentFacade.getInstance().getComponent();
 
+        ShellCommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory, new ShellEnvironment() {
+
+            @Override
+            public boolean launchWithBashEnvironment() {
+                // TODO check for OS
+                return eclipsePrefsHelper.getBoolean(BazelPreferenceKeys.BAZEL_USE_SHELL_ENVIRONMENT_PREF_NAME);
+            }
+
+        });
+
         ComponentContext.getInstance().initialize(projectManager, resourceHelper, javaCoreHelper, osStrategy,
-            configManager, eclipsePrefsHelper, bazelAspectLocation, new ShellCommandBuilder(consoleFactory),
+            configManager, eclipsePrefsHelper, bazelAspectLocation, commandBuilder,
             consoleFactory);
     }
 }

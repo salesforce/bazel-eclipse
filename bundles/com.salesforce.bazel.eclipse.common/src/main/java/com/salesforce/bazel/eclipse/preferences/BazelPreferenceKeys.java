@@ -58,6 +58,10 @@ public class BazelPreferenceKeys {
         String defaultExecutablePath = BazelCommandManager.getDefaultBazelExecutablePath();
         defaultValues.put(BAZEL_PATH_PREF_NAME, defaultExecutablePath);
     }
+    public static final String BAZEL_USE_SHELL_ENVIRONMENT_PREF_NAME = "BAZEL_USE_SHELL_ENVIRONMENT";
+    static {
+        defaultValues.put(BAZEL_USE_SHELL_ENVIRONMENT_PREF_NAME, "true");
+    }
 
     // Global classpath search allows BEF to index all jars associated with a Bazel Workspace which makes them
     // available for Open Type searches. These prefs enabled it, and override the default location(s) of where

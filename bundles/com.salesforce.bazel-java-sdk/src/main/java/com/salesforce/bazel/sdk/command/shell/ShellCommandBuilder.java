@@ -37,7 +37,9 @@ import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
  */
 public class ShellCommandBuilder extends CommandBuilder {
 
-    public ShellCommandBuilder(final CommandConsoleFactory consoleFactory) {
+    private ShellEnvironment shellEnvironment;
+
+    public ShellCommandBuilder(final CommandConsoleFactory consoleFactory, ShellEnvironment shellEnvironment) {
         super(consoleFactory);
     }
 
@@ -53,7 +55,7 @@ public class ShellCommandBuilder extends CommandBuilder {
             "Running " + String.join(" ", args) + " from " + directory.toString());
 
         ShellCommand command = new ShellCommand(console, directory, args, stdoutSelector, stderrSelector, stdout,
-                stderr, progressMonitor, timeoutMS);
+                stderr, progressMonitor, timeoutMS, shellEnvironment);
 
         return command;
     }
