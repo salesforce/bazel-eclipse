@@ -36,6 +36,8 @@
 
 package com.salesforce.bazel.sdk.command.shell;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,6 +82,7 @@ public final class ShellCommand implements Command {
     private final SelectOutputStream stdout;
     private final SelectOutputStream stderr;
     private final WorkProgressMonitor progressMonitor;
+    private final ShellEnvironment shellEnvironment;
 
     // TODO ShellCommand timeouts are not usable; if a command times out subsequent commands hang, etc.
     // https://github.com/salesforce/bazel-eclipse/issues/191
@@ -87,14 +90,13 @@ public final class ShellCommand implements Command {
 
     private boolean executed = false;
 
-    private ShellEnvironment shellEnvironment;
 
     ShellCommand(CommandConsole console, File directory, List<String> args, Function<String, String> stdoutSelector,
             Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
             WorkProgressMonitor progressMonitor, long timeoutMS, ShellEnvironment shellEnvironment) {
         this.directory = directory;
         this.args = args;
-        this.shellEnvironment = shellEnvironment;
+        this.shellEnvironment = requireNonNull(shellEnvironment);
         if (console != null) {
             if (stdout == null) {
                 stdout = console.createOutputStream();

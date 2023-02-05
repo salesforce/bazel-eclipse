@@ -97,7 +97,7 @@ public class ShellCommandTest {
         }
     }
 
-    private class MockConsoleFactory implements CommandConsoleFactory {
+    private static class MockConsoleFactory implements CommandConsoleFactory {
         final List<MockCommandConsole> consoles = new LinkedList<>();
 
         @Override
@@ -121,6 +121,7 @@ public class ShellCommandTest {
     @Before
     public void setup() {
         mockConsoleFactory = new MockConsoleFactory();
+        mockShellEnvironment = new MockShellEnvironment();
     }
 
     @Test
@@ -164,7 +165,7 @@ public class ShellCommandTest {
         }
         CommandBuilder builder =
                 ShellCommand.builder(mockConsoleFactory, mockShellEnvironment).setConsoleName(null)
-                        .setDirectory(tempFolder.getRoot());
+                .setDirectory(tempFolder.getRoot());
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
         builder.setStderrLineSelector(NON_EMPTY_LINES_SELECTOR).setStdoutLineSelector(NON_EMPTY_LINES_SELECTOR);
         Command cmd = builder.build();
@@ -184,7 +185,7 @@ public class ShellCommandTest {
         }
         CommandBuilder builder =
                 ShellCommand.builder(mockConsoleFactory, mockShellEnvironment).setConsoleName("test")
-                        .setDirectory(tempFolder.getRoot());
+                .setDirectory(tempFolder.getRoot());
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
         Command cmd = builder.build();
         assertEquals(0, cmd.run());
@@ -205,7 +206,7 @@ public class ShellCommandTest {
         }
         CommandBuilder builder =
                 ShellCommand.builder(mockConsoleFactory, mockShellEnvironment).setConsoleName(null)
-                        .setDirectory(tempFolder.getRoot());
+                .setDirectory(tempFolder.getRoot());
         builder.setStderrLineSelector(NON_EMPTY_LINES_SELECTOR).setStdoutLineSelector(NON_EMPTY_LINES_SELECTOR);
         builder.addArguments("pwd");
         Command cmd = builder.build();

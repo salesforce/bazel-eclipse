@@ -23,6 +23,8 @@
  */
 package com.salesforce.bazel.sdk.command.shell;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 
 import com.salesforce.bazel.sdk.command.CommandBuilder;
@@ -37,10 +39,11 @@ import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
  */
 public class ShellCommandBuilder extends CommandBuilder {
 
-    private ShellEnvironment shellEnvironment;
+    private final ShellEnvironment shellEnvironment;
 
     public ShellCommandBuilder(final CommandConsoleFactory consoleFactory, ShellEnvironment shellEnvironment) {
         super(consoleFactory);
+        this.shellEnvironment = requireNonNull(shellEnvironment);
     }
 
     /**
