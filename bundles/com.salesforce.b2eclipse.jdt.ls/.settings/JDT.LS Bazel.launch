@@ -31,7 +31,7 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_ATTR_USE_ARGFILE" value="false"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
-    <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/JRE [17.0.4]"/>
+    <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/JRE [17.0.5]"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -console"/>
     <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx2048m -Declipse.log.size.max=3000"/>
@@ -43,7 +43,7 @@
         <setEntry value="ch.qos.logback.core@default:default"/>
         <setEntry value="ch.qos.logback.slf4j@default:false"/>
         <setEntry value="com.google.gson@default:default"/>
-        <setEntry value="com.google.guava@default:default"/>
+        <setEntry value="com.google.guava*30.1.0.v20210127-2300@default:default"/>
         <setEntry value="com.sun.jna@default:default"/>
         <setEntry value="javax.inject@default:default"/>
         <setEntry value="org.apache.ant@default:default"/>
@@ -234,6 +234,20 @@
         <mapEntry key="org.eclipse.ecf.provider.filetransfer.httpclient45/debug/exceptions/throwing" value="false"/>
         <mapEntry key="org.eclipse.ecf.provider.filetransfer.httpclient45/debug/methods/entering" value="false"/>
         <mapEntry key="org.eclipse.ecf.provider.filetransfer.httpclient45/debug/methods/exiting" value="false"/>
+        <mapEntry key="org.eclipse.egit.core/debug" value="false"/>
+        <mapEntry key="org.eclipse.egit.core/debug/core" value="false"/>
+        <mapEntry key="org.eclipse.egit.core/debug/core/gpg" value="false"/>
+        <mapEntry key="org.eclipse.egit.core/debug/core/indexdiffcache" value="false"/>
+        <mapEntry key="org.eclipse.egit.core/debug/core/refresh" value="false"/>
+        <mapEntry key="org.eclipse.egit.ui/debug" value="false"/>
+        <mapEntry key="org.eclipse.egit.ui/debug/quickdiff" value="false"/>
+        <mapEntry key="org.eclipse.egit.ui/debug/repochangescanner" value="false"/>
+        <mapEntry key="org.eclipse.egit.ui/debug/ui" value="false"/>
+        <mapEntry key="org.eclipse.egit.ui/debug/ui/decoration" value="false"/>
+        <mapEntry key="org.eclipse.egit.ui/debug/ui/historyview" value="false"/>
+        <mapEntry key="org.eclipse.egit.ui/debug/ui/propertiestesters" value="false"/>
+        <mapEntry key="org.eclipse.egit.ui/debug/ui/repositoriesview" value="false"/>
+        <mapEntry key="org.eclipse.egit.ui/debug/ui/selection" value="false"/>
         <mapEntry key="org.eclipse.equinox.common/debug" value="false"/>
         <mapEntry key="org.eclipse.equinox.common/progress_monitors" value="false"/>
         <mapEntry key="org.eclipse.equinox.p2.core/artifacts/mirrors" value="false"/>
@@ -360,6 +374,7 @@
         <mapEntry key="org.eclipse.jface/newlook/preferences/showNewLook" value="false"/>
         <mapEntry key="org.eclipse.jface/trace/actions" value="false"/>
         <mapEntry key="org.eclipse.jface/trace/toolbarDisposal" value="false"/>
+        <mapEntry key="org.eclipse.lsp4e/debug" value="false"/>
         <mapEntry key="org.eclipse.ltk.core.refactoring/perf/participants/checkConditions" value="300"/>
         <mapEntry key="org.eclipse.ltk.core.refactoring/perf/participants/createChanges" value="300"/>
         <mapEntry key="org.eclipse.m2e/actions" value="false"/>
@@ -439,6 +454,16 @@
         <mapEntry key="org.eclipse.team.ui/dnd" value="false"/>
         <mapEntry key="org.eclipse.team.ui/history" value="false"/>
         <mapEntry key="org.eclipse.team.ui/syncmodels" value="false"/>
+        <mapEntry key="org.eclipse.tm.terminal.control/debug/log" value="false"/>
+        <mapEntry key="org.eclipse.tm.terminal.control/debug/log/VT100Backend" value="false"/>
+        <mapEntry key="org.eclipse.tm.terminal.control/debug/log/char" value="false"/>
+        <mapEntry key="org.eclipse.tm.terminal.control/debug/log/hover" value="false"/>
+        <mapEntry key="org.eclipse.tm4e.registry/debug/log/Grammar" value="false"/>
+        <mapEntry key="org.eclipse.tm4e.ui/debug/log/GenerateTest" value="false"/>
+        <mapEntry key="org.eclipse.tm4e.ui/debug/log/TMModelManager" value="false"/>
+        <mapEntry key="org.eclipse.tm4e.ui/debug/log/TMPresentationReconciler" value="false"/>
+        <mapEntry key="org.eclipse.tm4e.ui/debug/log/ThrowError" value="false"/>
+        <mapEntry key="org.eclipse.tm4e.ui/trace" value="false"/>
         <mapEntry key="org.eclipse.ui.browser/debug" value="false"/>
         <mapEntry key="org.eclipse.ui.forms/debug" value="false"/>
         <mapEntry key="org.eclipse.ui.forms/debug/focus" value="false"/>

@@ -85,6 +85,14 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
         }
     }
 
+    private static class BazelUseBashShellFieldEditor extends BooleanFieldEditor {
+
+        public BazelUseBashShellFieldEditor(Composite parent) {
+            super(BazelPreferenceKeys.BAZEL_USE_SHELL_ENVIRONMENT_PREF_NAME, "Use &Bash shell environment when launching Bazel?",
+                    SEPARATE_LABEL, parent);
+        }
+    }
+
     private static class BazelGlobalClasspathSearchEnabledFieldEditor extends BooleanFieldEditor {
 
         public BazelGlobalClasspathSearchEnabledFieldEditor(Composite parent) {
@@ -144,6 +152,7 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
     @Override
     public void createFieldEditors() {
         addField(new BazelBinaryFieldEditor(getFieldEditorParent()));
+        addField(new BazelUseBashShellFieldEditor(getFieldEditorParent()));
         addField(new BazelGlobalClasspathSearchEnabledFieldEditor(getFieldEditorParent()));
         addField(new BazelExternalDownloadCachePathEditor(getFieldEditorParent()));
         addField(new ProjectStructureOptimizationEnabledFieldEditor(getFieldEditorParent()));

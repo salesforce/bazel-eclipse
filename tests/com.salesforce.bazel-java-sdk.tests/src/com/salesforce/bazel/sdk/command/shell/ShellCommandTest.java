@@ -34,7 +34,7 @@
  *
  */
 
-package com.salesforce.bazel.sdk.command;
+package com.salesforce.bazel.sdk.command.shell;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,7 +52,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.sdk.command.shell.ShellCommand;
+import com.salesforce.bazel.sdk.command.Command;
+import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsole;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 
@@ -74,7 +75,7 @@ public class ShellCommandTest {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
-    private class MockCommandConsole implements CommandConsole {
+    private static class MockCommandConsole implements CommandConsole {
         final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         final ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         final String name;
@@ -96,7 +97,7 @@ public class ShellCommandTest {
         }
     }
 
-    private class MockConsoleFactory implements CommandConsoleFactory {
+    private static class MockConsoleFactory implements CommandConsoleFactory {
         final List<MockCommandConsole> consoles = new LinkedList<>();
 
         @Override
@@ -107,11 +108,30 @@ public class ShellCommandTest {
         }
     }
 
+    private static class MockShellEnvironment implements ShellEnvironment {
+        private final boolean launchWithBash;
+
+        public MockShellEnvironment() {
+            this(false);
+        }
+
+        public MockShellEnvironment(boolean launchWithBash) {
+            this.launchWithBash = launchWithBash;
+        }
+
+        @Override
+        public boolean launchWithBashEnvironment() {
+            return launchWithBash;
+        }
+    }
+
     public MockConsoleFactory mockConsoleFactory;
+    public MockShellEnvironment mockShellEnvironment;
 
     @Before
     public void setup() {
         mockConsoleFactory = new MockConsoleFactory();
+        mockShellEnvironment = new MockShellEnvironment();
     }
 
     @Test
@@ -124,7 +144,7 @@ public class ShellCommandTest {
         Function<String, String> stdoutSelector = x -> (x.trim().isEmpty() || x.equals("a")) ? null : x;
         Function<String, String> stderrSelector = x -> (x.trim().isEmpty() || x.equals("b")) ? null : x;
 
-        CommandBuilder builder = ShellCommand.builder(mockConsoleFactory).setConsoleName("test")
+        CommandBuilder builder = ShellCommand.builder(mockConsoleFactory, mockShellEnvironment).setConsoleName("test")
                 .setDirectory(tempFolder.getRoot()).setStandardError(stderr).setStandardOutput(stdout)
                 .setStderrLineSelector(stderrSelector).setStdoutLineSelector(stdoutSelector);
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
@@ -154,7 +174,8 @@ public class ShellCommandTest {
             return; // no bash on Windows
         }
         CommandBuilder builder =
-                ShellCommand.builder(mockConsoleFactory).setConsoleName(null).setDirectory(tempFolder.getRoot());
+                ShellCommand.builder(mockConsoleFactory, mockShellEnvironment).setConsoleName(null)
+                .setDirectory(tempFolder.getRoot());
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
         builder.setStderrLineSelector(NON_EMPTY_LINES_SELECTOR).setStdoutLineSelector(NON_EMPTY_LINES_SELECTOR);
         Command cmd = builder.build();
@@ -173,7 +194,8 @@ public class ShellCommandTest {
             return; // no bash on Windows
         }
         CommandBuilder builder =
-                ShellCommand.builder(mockConsoleFactory).setConsoleName("test").setDirectory(tempFolder.getRoot());
+                ShellCommand.builder(mockConsoleFactory, mockShellEnvironment).setConsoleName("test")
+                .setDirectory(tempFolder.getRoot());
         builder.addArguments("bash", "-c", "echo a; echo b; echo a >&2; echo b >&2");
         Command cmd = builder.build();
         assertEquals(0, cmd.run());
@@ -188,12 +210,23 @@ public class ShellCommandTest {
     }
 
     @Test
+    public void testBashCommandQuoting()  {
+        assertEquals("bazel info execution_root",
+            ShellCommand.toQuotedStringForShell(List.of("bazel", "info", "execution_root")));
+
+        assertEquals("bazel query \"kind('source file', deps(//foo/bar:*))\"",
+            ShellCommand.toQuotedStringForShell(List.of("bazel", "query", "kind('source file', deps(//foo/bar:*))")));
+
+    }
+
+    @Test
     public void testBashCommandWorkDir() throws IOException, InterruptedException {
         if (isWindows) {
             return; // no pwd on Windows
         }
         CommandBuilder builder =
-                ShellCommand.builder(mockConsoleFactory).setConsoleName(null).setDirectory(tempFolder.getRoot());
+                ShellCommand.builder(mockConsoleFactory, mockShellEnvironment).setConsoleName(null)
+                .setDirectory(tempFolder.getRoot());
         builder.setStderrLineSelector(NON_EMPTY_LINES_SELECTOR).setStdoutLineSelector(NON_EMPTY_LINES_SELECTOR);
         builder.addArguments("pwd");
         Command cmd = builder.build();

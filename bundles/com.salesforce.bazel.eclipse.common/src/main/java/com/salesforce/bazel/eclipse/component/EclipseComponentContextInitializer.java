@@ -36,8 +36,10 @@ public class EclipseComponentContextInitializer implements IComponentContextInit
         BazelConfigurationManager configManager = new EclipseBazelConfigurationManager(eclipsePrefsHelper);
         BazelAspectLocation bazelAspectLocation = BazelAspectLocationComponentFacade.getInstance().getComponent();
 
+        ShellCommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory, new EclipseShellEnvironment(eclipsePrefsHelper));
+
         ComponentContext.getInstance().initialize(projectManager, resourceHelper, javaCoreHelper, osStrategy,
-            configManager, eclipsePrefsHelper, bazelAspectLocation, new ShellCommandBuilder(consoleFactory),
+            configManager, eclipsePrefsHelper, bazelAspectLocation, commandBuilder,
             consoleFactory);
     }
 }

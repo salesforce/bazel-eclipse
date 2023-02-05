@@ -90,7 +90,6 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         super.start(context);
         EclipseLoggerFacade.install(getBundle());
         CommandConsoleFactory consoleFactory = new EclipseConsole();
-        CommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory);
         JavaCoreHelper eclipseJavaCoreHelper = new EclipseJavaCoreHelper();
 
         // initialize the SDK, tell it to load the JVM rules support
@@ -98,7 +97,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
         JvmRuleInit.initialize();
 
         startInternal(new EclipseComponentContextInitializer(getBundle().getSymbolicName(), new EclipseConsole()),
-            commandBuilder, consoleFactory, eclipseJavaCoreHelper);
+            consoleFactory, eclipseJavaCoreHelper);
     }
 
     /**
@@ -106,7 +105,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      * running in Eclipse, seen above) and the mocking framework call in here. When running for real, the passed
      * collaborators are all the real ones, when running mock tests the collaborators are mocks.
      */
-    public void startInternal(IComponentContextInitializer componentCtxInitializer, CommandBuilder commandBuilder,
+    public void startInternal(IComponentContextInitializer componentCtxInitializer,
             CommandConsoleFactory consoleFactory, JavaCoreHelper javac) throws Exception {
         // reset internal state (this is so tests run in a clean env)
         EclipseBazelWorkspaceContext.getInstance().resetBazelWorkspace();
