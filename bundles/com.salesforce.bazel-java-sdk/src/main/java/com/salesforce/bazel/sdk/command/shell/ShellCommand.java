@@ -90,7 +90,6 @@ public final class ShellCommand implements Command {
 
     private boolean executed = false;
 
-
     ShellCommand(CommandConsole console, File directory, List<String> args, Function<String, String> stdoutSelector,
             Function<String, String> stderrSelector, OutputStream stdout, OutputStream stderr,
             WorkProgressMonitor progressMonitor, long timeoutMS, ShellEnvironment shellEnvironment) {
@@ -123,8 +122,8 @@ public final class ShellCommand implements Command {
         bazelEnvironmentVariables.put("PULLER_TIMEOUT", "3000"); // increases default timeout from 600 to 3000 seconds for rules_docker downloads
 
         BazelProcessBuilder builder;
-        if(shellEnvironment.launchWithBashEnvironment()) {
-            List<String> bashArgs = List.of("/bin/bash", "-l", "-c", toQuotedStringForShell(args));
+        if (shellEnvironment.launchWithBashEnvironment()) {
+            List<String> bashArgs = List.of("bash", "-c", toQuotedStringForShell(args));
             builder = new BazelProcessBuilder(bashArgs, bazelEnvironmentVariables);
         } else {
             builder = new BazelProcessBuilder(args, bazelEnvironmentVariables);
@@ -133,12 +132,18 @@ public final class ShellCommand implements Command {
         return builder;
     }
 
-    private String toQuotedStringForShell(List<String> args) {
+    /* visible for testing */
+    static String toQuotedStringForShell(List<String> args) {
         StringBuilder result = new StringBuilder();
         for (String arg : args) {
-            if(result.length() > 0)
+            if (result.length() > 0)
                 result.append(' ');
+            boolean quoteArg = arg.indexOf(' ') > -1 && !arg.startsWith("\\\"");
+            if (quoteArg)
+                result.append("\"");
             result.append(arg.replace("\"", "\\\""));
+            if (quoteArg)
+                result.append("\"");
         }
         return result.toString();
     }

@@ -34,7 +34,7 @@
  *
  */
 
-package com.salesforce.bazel.sdk.command;
+package com.salesforce.bazel.sdk.command.shell;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,8 +52,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.salesforce.bazel.sdk.command.shell.ShellCommand;
-import com.salesforce.bazel.sdk.command.shell.ShellEnvironment;
+import com.salesforce.bazel.sdk.command.Command;
+import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsole;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
 
@@ -109,9 +109,19 @@ public class ShellCommandTest {
     }
 
     private static class MockShellEnvironment implements ShellEnvironment {
+        private final boolean launchWithBash;
+
+        public MockShellEnvironment() {
+            this(false);
+        }
+
+        public MockShellEnvironment(boolean launchWithBash) {
+            this.launchWithBash = launchWithBash;
+        }
+
         @Override
         public boolean launchWithBashEnvironment() {
-            return false;
+            return launchWithBash;
         }
     }
 
@@ -197,6 +207,16 @@ public class ShellCommandTest {
         String stderrStr = new String(console.stderr.toByteArray(), StandardCharsets.UTF_8).trim();
         assertEquals("a\nb", stdoutStr);
         assertEquals("a\nb", stderrStr);
+    }
+
+    @Test
+    public void testBashCommandQuoting()  {
+        assertEquals("bazel info execution_root",
+            ShellCommand.toQuotedStringForShell(List.of("bazel", "info", "execution_root")));
+
+        assertEquals("bazel query \"kind('source file', deps(//foo/bar:*))\"",
+            ShellCommand.toQuotedStringForShell(List.of("bazel", "query", "kind('source file', deps(//foo/bar:*))")));
+
     }
 
     @Test
