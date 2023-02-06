@@ -32,5 +32,3 @@ Require-Bundle: org.eclipse.ui.console;bundle-version="3.8.100.v20180821-1744",
  org.eclipse.ltk.core.refactoring
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: bin/,
- .
