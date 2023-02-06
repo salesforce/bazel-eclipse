@@ -42,6 +42,7 @@ package com.salesforce.bazel.sdk.logging;
  * Default facade that logs to stdout/stderr.
  * <p>
  * You can set the level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
+ * @deprecated Replace with SLF4J
  */
 public class BasicLoggerFacade extends LoggerFacade {
 
@@ -49,7 +50,7 @@ public class BasicLoggerFacade extends LoggerFacade {
     protected void error(Class<?> from, String message, Object... args) {
         // LoggerFactory.getLogger(from).error(message, args);
         if (args != null && args.length > 0) {
-            Object firstArg = args[0]; 
+            Object firstArg = args[0];
             if (firstArg instanceof Throwable) {
                 Throwable anyE = (Throwable)firstArg;
                 anyE.printStackTrace();

@@ -33,3 +33,4 @@ Export-Package: com.salesforce.bazel.sdk.aspect,
  com.salesforce.bazel.sdk.project.structure,
  com.salesforce.bazel.sdk.util,
  com.salesforce.bazel.sdk.workspace
+Import-Package: org.slf4j;version="1.7.30"
