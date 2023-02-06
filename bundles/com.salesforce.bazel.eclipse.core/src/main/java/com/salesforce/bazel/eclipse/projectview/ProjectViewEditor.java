@@ -45,6 +45,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
@@ -146,7 +147,7 @@ public class ProjectViewEditor extends AbstractDecoratedTextEditor {
                 if (ok) {
                     deleteProjects(importedProjects);
                     List<BazelPackageLocation> projectsToImport = proposedProjectView.getDirectories();
-                    BazelProjectImporter.run(rootPackage, projectsToImport);
+                    BazelProjectImporter.run(rootPackage, projectsToImport, new ProgressMonitorDialog(getSite().getShell()));
                 }
             }
         }

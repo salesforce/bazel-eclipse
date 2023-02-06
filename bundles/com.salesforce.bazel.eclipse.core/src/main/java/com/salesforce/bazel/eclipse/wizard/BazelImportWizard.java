@@ -93,7 +93,7 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
                 .filter(bpi -> !grayedBazelPackages.contains(bpi))
                 .map(bpi -> (BazelPackageInfo) bpi).collect(Collectors.toList());
 
-        BazelProjectImporter.run(workspaceRootProject, bazelPackagesToImport);
+        BazelProjectImporter.run(workspaceRootProject, bazelPackagesToImport, getContainer());
 
         return true;
     }

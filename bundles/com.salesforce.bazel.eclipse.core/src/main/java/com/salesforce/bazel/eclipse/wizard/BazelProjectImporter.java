@@ -38,24 +38,22 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableContext;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
  * Imports projects with a Progress Dialog. This is used by the Import Wizard and the ProjectView machinery.
  */
 public class BazelProjectImporter {
-    private static final LogHelper LOG = LogHelper.log(BazelProjectImporter.class);
 
     public static void run(BazelPackageLocation workspaceRootProject,
-            List<BazelPackageLocation> bazelPackagesToImport) {
+            List<BazelPackageLocation> bazelPackagesToImport, IRunnableContext runnabelContext) {
         IRunnableWithProgress op = new IRunnableWithProgress() {
             @Override
             public void run(IProgressMonitor monitor) {
@@ -65,14 +63,13 @@ public class BazelProjectImporter {
                 try {
                     projectImporter.run(monitor);
                 } catch (Exception e) {
-                    LOG.error("catch error during import", e);
                     openError("Error", e);
                 }
             }
         };
 
         try {
-            new ProgressMonitorDialog(new Shell()).run(true, true, op);
+            runnabelContext.run(true, true, op);
         } catch (InvocationTargetException e) {
             openError("Error", e.getTargetException());
         } catch (Exception e) {
