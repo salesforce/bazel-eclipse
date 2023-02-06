@@ -42,6 +42,8 @@ package com.salesforce.bazel.sdk.logging;
  * default logger is the BasicLoggerFacade.
  * <p>
  * You can set the level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
+ *
+ * @deprecated Replace with SLF4J
  */
 public abstract class LoggerFacade {
 

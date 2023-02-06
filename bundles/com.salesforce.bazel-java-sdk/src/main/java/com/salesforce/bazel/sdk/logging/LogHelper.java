@@ -40,6 +40,8 @@ package com.salesforce.bazel.sdk.logging;
  * LoggerFacade to be changed and without having to constantly give the class.
  * <p>
  * This is the preferred way to log in the Bazel SDK.
+ *
+ * @deprecated Replace with SLF4J
  */
 public final class LogHelper {
     private final Class<?> from;
