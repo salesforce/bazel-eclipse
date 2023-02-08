@@ -1,6 +1,6 @@
 target "bazel-eclipse-feature-target-platform-for-development" with source configurePhase requirements
 
-environment JavaSE-11
+environment JavaSE-17
 
 
 // import "build" target platform

@@ -1,6 +1,6 @@
 target "bazel-eclipse-feature-target-platform" with source configurePhase requirements
 
-environment JavaSE-11
+environment JavaSE-17
 
 location "https://download.eclipse.org/eclipse/updates/4.21/R-4.21-202109060500/" {
     org.eclipse.e4.rcp.feature.group
