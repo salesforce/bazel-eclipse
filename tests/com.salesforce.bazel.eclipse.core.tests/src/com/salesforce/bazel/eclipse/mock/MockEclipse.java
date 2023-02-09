@@ -29,7 +29,7 @@ import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.BazelUIPluginActivator;
 import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationDelegate;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
@@ -70,7 +70,7 @@ public class MockEclipse {
     private MockIEclipsePreferences mockPrefs;
 
     // Feature collaborators
-    private BazelPluginActivator pluginActivator;
+    private BazelUIPluginActivator pluginActivator;
     private BazelLaunchConfigurationDelegate launchDelegate;
     private BazelProjectManager projectManager;
     private BazelConfigurationManager configManager;
@@ -121,7 +121,7 @@ public class MockEclipse {
         setupDefaultPreferences();
 
         // feature collaborators
-        pluginActivator = new BazelPluginActivator();
+        pluginActivator = new BazelUIPluginActivator();
         launchDelegate = new BazelLaunchConfigurationDelegate();
         configManager = new EclipseBazelConfigurationManager(mockCorePreferencesStoreHelper);
         projectManager = new MockBazelProjectManager(mockResourceHelper, mockJavaCoreHelper);
@@ -233,7 +233,7 @@ public class MockEclipse {
 
     // INTERNAL FEATURE COLLABORATORS
 
-    public BazelPluginActivator getPluginActivator() {
+    public BazelUIPluginActivator getPluginActivator() {
         return pluginActivator;
     }
 

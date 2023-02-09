@@ -25,7 +25,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.BazelUIPluginActivator;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -73,7 +73,7 @@ public class BazelImportWizardPage extends WizardPage {
         composite.setLayout(new GridLayout(3, false));
         setControl(composite);
 
-        IPreferenceStore prefs = BazelPluginActivator.getInstance().getPreferenceStore();
+        IPreferenceStore prefs = BazelUIPluginActivator.getInstance().getPreferenceStore();
         locationControl = new BazelImportWizardLocationControl(this, prefs);
         boolean hasWorkspaceLocation = locationControl.addLocationControl(composite);
 

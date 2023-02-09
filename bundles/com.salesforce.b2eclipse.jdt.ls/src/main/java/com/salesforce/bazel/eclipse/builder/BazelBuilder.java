@@ -55,7 +55,6 @@ import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
-import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
 import com.salesforce.bazel.eclipse.classpath.IClasspathContainerConstants;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
@@ -140,9 +139,9 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 // this should also consider added or removed BUILD files (?)
                 IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
                 ClasspathContainerInitializer cpInit =
-                        JavaCore.getClasspathContainerInitializer(IClasspathContainerConstants.CONTAINER_NAME);
+                        JavaCore.getClasspathContainerInitializer(IClasspathContainerConstants.CONTAINER_ID);
                 cpInit.requestClasspathContainerUpdate(
-                    Path.fromPortableString(IClasspathContainerConstants.CONTAINER_NAME), javaProject, null);
+                    Path.fromPortableString(IClasspathContainerConstants.CONTAINER_ID), javaProject, null);
             }
         }
     }
@@ -163,9 +162,6 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         } else {
             bazelWorkspaceCmdRunner.flushAspectInfoCache();
         }
-
-        BazelClasspathContainer.clean();
-        // TODO: BazelGlobalSearchClasspathContainer.clean();
     }
 
     private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects,
@@ -183,7 +179,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             bazelTargets.addAll(activatedTargets.getConfiguredTargets());
             bazelProjects.add(bazelProject);
         }
-        
+
         LOG.debug("Bazel build targets {}", bazelTargets);
 
         if (bazelTargets.isEmpty()) {
@@ -193,7 +189,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             List<BazelProblem> errors = cmdRunner.runBazelBuild(bazelTargets, bazelBuildFlags, progressMonitor);
             // publish errors (even if no errors, this must run so that previous errors are cleared)
             Map<BazelLabel, BazelProject> labelToProject = bazelProjectManager.getBazelLabelToProjectMap(bazelProjects);
-            
+
             boolean successful = errors.isEmpty();
             if( ! successful ) {
                 LOG.debug("Bazel build errors", errors);

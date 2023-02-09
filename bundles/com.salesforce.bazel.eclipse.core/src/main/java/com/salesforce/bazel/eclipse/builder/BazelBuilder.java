@@ -165,8 +165,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             // this should also consider added or removed BUILD files (?)
             IJavaProject javaProject = javaCoreHelper.getJavaProjectForProject(project);
             ClasspathContainerInitializer cpInit =
-                    JavaCore.getClasspathContainerInitializer(IClasspathContainerConstants.CONTAINER_NAME);
-            cpInit.requestClasspathContainerUpdate(Path.fromPortableString(IClasspathContainerConstants.CONTAINER_NAME),
+                    JavaCore.getClasspathContainerInitializer(IClasspathContainerConstants.CONTAINER_ID);
+            cpInit.requestClasspathContainerUpdate(Path.fromPortableString(IClasspathContainerConstants.CONTAINER_ID),
                 javaProject, null);
         }
     }
@@ -191,11 +191,6 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             // https://github.com/salesforce/bazel-eclipse/issues/185 // $SLASH_OK url
             // bazelWorkspaceCmdRunner.runBazelClean(null);
         }
-
-        // TODO implement a clean() listener and let impls register with us, instead of hacking like this
-        BazelClasspathContainer.clean();
-        BazelGlobalSearchClasspathContainer.clean();
-        BazelTestClasspathProvider.clean();
     }
 
     private boolean buildProjects(BazelWorkspaceCommandRunner cmdRunner, Collection<IProject> projects,

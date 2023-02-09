@@ -62,8 +62,8 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
  */
-public class BazelPluginActivator extends AbstractUIPlugin {
-    static final LogHelper LOG = LogHelper.log(BazelPluginActivator.class);
+public class BazelUIPluginActivator extends AbstractUIPlugin {
+    static final LogHelper LOG = LogHelper.log(BazelUIPluginActivator.class);
 
     // The plug-in IDs
     public static final String CORE_PLUGIN_ID = "com.salesforce.bazel.eclipse.core"; //$NON-NLS-1$
@@ -73,14 +73,14 @@ public class BazelPluginActivator extends AbstractUIPlugin {
     // TODO move the collaborators to some other place, perhaps a dedicated static context object
 
     // The shared instance
-    private static BazelPluginActivator plugin;
+    private static BazelUIPluginActivator plugin;
 
     // LIFECYCLE
 
     /**
      * The constructor
      */
-    public BazelPluginActivator() {}
+    public BazelUIPluginActivator() {}
 
     /**
      * This is the real activation entrypoint when running the core plugin in Eclipse.
@@ -146,7 +146,7 @@ public class BazelPluginActivator extends AbstractUIPlugin {
      *
      * @return the shared instance
      */
-    public static BazelPluginActivator getInstance() {
+    public static BazelUIPluginActivator getInstance() {
         return plugin;
     }
 

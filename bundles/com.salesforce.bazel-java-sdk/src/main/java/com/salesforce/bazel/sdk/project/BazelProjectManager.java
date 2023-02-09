@@ -170,4 +170,19 @@ public abstract class BazelProjectManager {
         cmdRunner.flushAspectInfoCacheForPackage(packageLabel);
         cmdRunner.flushQueryCache(new BazelLabel(packageLabel));
     }
+
+    public BazelProject create(String name, Object projectImpl) {
+        BazelProject bazelProject = getProject(name);
+        if (bazelProject != null) {
+            return bazelProject;
+        }
+        synchronized (this) { // FIXME: is this needed?
+            bazelProject = getProject(name);
+            if (bazelProject == null) {
+                bazelProject = new BazelProject(name, projectImpl);
+                addProject(bazelProject);
+            }
+        }
+        return bazelProject;
+    }
 }

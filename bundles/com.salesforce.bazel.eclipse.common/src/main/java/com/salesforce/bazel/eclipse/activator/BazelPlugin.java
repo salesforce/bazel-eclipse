@@ -41,8 +41,8 @@ import org.osgi.framework.BundleContext;
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
  */
-public class Activator extends Plugin {
-    private static Activator plugin;
+public class BazelPlugin extends Plugin {
+    private static BazelPlugin plugin;
 
     // The plug-in ID
     public static final String PLUGIN_ID = "com.salesforce.bazel.eclipse.common"; //$NON-NLS-1$
@@ -58,7 +58,7 @@ public class Activator extends Plugin {
         super.stop(context);
     }
 
-    public static Activator getDefault() {
+    public static BazelPlugin getDefault() {
         return plugin;
     }
 }

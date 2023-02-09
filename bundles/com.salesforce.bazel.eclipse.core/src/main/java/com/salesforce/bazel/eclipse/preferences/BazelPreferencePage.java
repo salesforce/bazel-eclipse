@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import com.salesforce.bazel.eclipse.BazelPluginActivator;
+import com.salesforce.bazel.eclipse.BazelUIPluginActivator;
 
 /**
  * Page to configure the Bazel Eclipse plugin. See BazelPreferenceInitializer for how this preference is initialized
@@ -160,7 +160,7 @@ public class BazelPreferencePage extends FieldEditorPreferencePage implements IW
 
     @Override
     public void init(IWorkbench workbench) {
-        setPreferenceStore(BazelPluginActivator.getInstance().getPreferenceStore());
+        setPreferenceStore(BazelUIPluginActivator.getInstance().getPreferenceStore());
         setDescription("Configure the Bazel feature.");
     }
 }

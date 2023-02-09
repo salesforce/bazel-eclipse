@@ -120,7 +120,7 @@ public class BazelJdtPlugin extends Plugin {
         BazelJavaSDKInit.initialize("Bazel Language Server", "bzl_ls");
         JvmRuleInit.initialize();
 
-        new EclipseComponentContextInitializer(getBundle().getSymbolicName(), new StandardCommandConsoleFactory())
+        new EclipseComponentContextInitializer(getBundle().getSymbolicName(), new StandardCommandConsoleFactory(), getStateLocation())
                 .initialize();
     }
 
