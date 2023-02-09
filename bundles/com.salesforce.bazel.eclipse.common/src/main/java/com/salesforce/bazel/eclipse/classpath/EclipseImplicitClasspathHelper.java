@@ -63,7 +63,11 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * <p>
  * This code is isolated from the classpath container code because this is somewhat of a hack and it is nice to have it
  * isolated.
+ *
+ * @deprecated this is a wrong; if a classpath is incomplete for tests, we need to have a separate JUNIT launch config
+ *             delegate; also we should *force* projects to add required JUNIT API into their BUILD files
  */
+@Deprecated
 public class EclipseImplicitClasspathHelper extends ImplicitClasspathHelper {
 
     Set<IClasspathEntry> computeImplicitDependencies(IProject eclipseIProject, BazelWorkspace bazelWorkspace,

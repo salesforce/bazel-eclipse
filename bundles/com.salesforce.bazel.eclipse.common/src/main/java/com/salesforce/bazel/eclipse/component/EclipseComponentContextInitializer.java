@@ -1,5 +1,7 @@
 package com.salesforce.bazel.eclipse.component;
 
+import org.eclipse.core.runtime.IPath;
+
 import com.salesforce.bazel.eclipse.component.internal.BazelAspectLocationComponentFacade;
 import com.salesforce.bazel.eclipse.component.internal.JavaCoreHelperComponentFacade;
 import com.salesforce.bazel.eclipse.component.internal.ProjectManagerComponentFacade;
@@ -20,10 +22,12 @@ import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrat
 public class EclipseComponentContextInitializer implements IComponentContextInitializer {
     private final String prefsScope;
     private final CommandConsoleFactory consoleFactory;
+    private IPath stateLocation;
 
-    public EclipseComponentContextInitializer(String prefsScope, CommandConsoleFactory consoleFactory) {
+    public EclipseComponentContextInitializer(String prefsScope, CommandConsoleFactory consoleFactory, IPath stateLocation) {
         this.prefsScope = prefsScope;
         this.consoleFactory = consoleFactory;
+        this.stateLocation = stateLocation;
     }
 
     public void initialize() {
@@ -40,6 +44,6 @@ public class EclipseComponentContextInitializer implements IComponentContextInit
 
         ComponentContext.getInstance().initialize(projectManager, resourceHelper, javaCoreHelper, osStrategy,
             configManager, eclipsePrefsHelper, bazelAspectLocation, commandBuilder,
-            consoleFactory);
+            consoleFactory, stateLocation.toFile());
     }
 }

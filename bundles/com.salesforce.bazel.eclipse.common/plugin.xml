@@ -5,6 +5,7 @@
    <extension-point id="com.salesforce.bazel.resourcehelper" name="Eclipse Bazel Resource Helper" schema="schema/com.salesforce.bazel.resourcehelper.exsd"/>
    <extension-point id="com.salesforce.bazel.javacorehelper" name="Bazel Java Core Helper" schema="schema/com.salesforce.bazel.javacorehelper.exsd"/>
    <extension-point id="com.salesforce.bazel.aspectlocation" name="Bazel Aspect Location Provider" schema="schema/com.salesforce.bazel.aspectlocation.exsd"/>
+
    <extension
          id="com.salesforce.bazel.eclipse.bazelNature"
          point="org.eclipse.core.resources.natures">
@@ -13,6 +14,21 @@
                class="com.salesforce.bazel.eclipse.BazelNature">
          </run>
       </runtime>
+   </extension>
+
+   <extension
+         point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer"
+            id="com.salesforce.bazel.eclipse.BAZEL_CONTAINER">
+      </classpathContainerInitializer>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer"
+            id="com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER">
+      </classpathContainerInitializer>
    </extension>
 
 </plugin>

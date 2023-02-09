@@ -4,6 +4,7 @@ import java.io.File;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.salesforce.bazel.eclipse.classpath.BazelClasspathManager;
 import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreHelper;
@@ -44,6 +45,7 @@ public class ComponentContext {
     /** Facade that enables the plugin to execute the bazel command line tool outside of a workspace */
     private BazelCommandManager bazelCommandManager;
     private File bazelExecutablePath;
+    private BazelClasspathManager classpathManager;
 
     private ComponentContext() {}
 
@@ -54,10 +56,19 @@ public class ComponentContext {
         return instance;
     }
 
+    public static ComponentContext getInstanceCheckInitialized() throws IllegalStateException {
+        ComponentContext context = getInstance();
+        if (!context.isInitialized()) {
+            throw new IllegalStateException(
+                    "ComponentContext has not been initialized yet. This is typically a problem due to activation of a plugin not happening which is an internal tooling bug. Please report it to the tool owners.");
+        }
+        return context;
+    }
+
     public synchronized void initialize(BazelProjectManager projectMgr, ResourceHelper rh, JavaCoreHelper javac,
             OperatingEnvironmentDetectionStrategy osEnv, BazelConfigurationManager configManager,
             PreferenceStoreHelper preferenceStoreHelper, BazelAspectLocation aspectLocation,
-            CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory) {
+            CommandBuilder commandBuilder, CommandConsoleFactory consoleFactory, File stateLocationDirectory) {
         setJavaCoreHelper(javac);
         setOsStrategy(osEnv);
         setProjectManager(projectMgr);
@@ -73,9 +84,10 @@ public class ComponentContext {
         setBazelExecutablePath(bazelExecutablePath);
         setBazelCommandManager(
             new BazelCommandManager(aspectLocation, commandBuilder, consoleFactory, bazelExecutablePath));
+        setClasspathManager(new BazelClasspathManager(stateLocationDirectory));
         initialized = true;
     }
-    
+
     public boolean isInitialized() {
         return initialized;
     }
@@ -182,6 +194,14 @@ public class ComponentContext {
 
     private void setBazelExecutablePath(File bazelExecutablePath) {
         this.bazelExecutablePath = bazelExecutablePath;
+    }
+
+    public BazelClasspathManager getClasspathManager() {
+        return classpathManager;
+    }
+
+    public void setClasspathManager(BazelClasspathManager classpathManager) {
+        this.classpathManager = classpathManager;
     }
 
 }
