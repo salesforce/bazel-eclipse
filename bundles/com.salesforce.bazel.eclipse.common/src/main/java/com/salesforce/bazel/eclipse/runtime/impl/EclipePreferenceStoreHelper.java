@@ -10,14 +10,13 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.salesforce.bazel.eclipse.activator.BazelPlugin;
 import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class EclipePreferenceStoreHelper implements PreferenceStoreHelper {
-    private static final LogHelper LOG = LogHelper.log(EclipePreferenceStoreHelper.class);
     private final String scope;
 
     public EclipePreferenceStoreHelper(String requiredScope) {
-        scope = Objects.nonNull(requiredScope) ? requiredScope : BazelPlugin.getDefault().getBundle().getSymbolicName();
+        scope = Objects.nonNull(requiredScope) ? requiredScope
+                : BazelPlugin.PLUGIN_ID;
     }
 
     @Override
@@ -49,7 +48,7 @@ public class EclipePreferenceStoreHelper implements PreferenceStoreHelper {
             prefs.put(key, value);
             prefs.flush();
         } catch (BackingStoreException e) {
-            LOG.error("Preference storing failed", e);
+            throw new IllegalStateException("Error saving preferences: " + e.getMessage(), e);
         }
     }
 
@@ -60,7 +59,7 @@ public class EclipePreferenceStoreHelper implements PreferenceStoreHelper {
             prefs.putBoolean(key, value);
             prefs.flush();
         } catch (BackingStoreException e) {
-            LOG.error("Preference storing failed", e);
+            throw new IllegalStateException("Error saving preferences: " + e.getMessage(), e);
         }
     }
 
@@ -71,7 +70,7 @@ public class EclipePreferenceStoreHelper implements PreferenceStoreHelper {
             prefs.putBoolean(key, value);
             prefs.flush();
         } catch (BackingStoreException e) {
-            LOG.error("Preference storing failed", e);
+            // default scope is in-memory
         }
     }
 
@@ -82,7 +81,7 @@ public class EclipePreferenceStoreHelper implements PreferenceStoreHelper {
             prefs.put(key, value);
             prefs.flush();
         } catch (BackingStoreException e) {
-            LOG.error("Preference storing failed", e);
+            // default scope is in-memory
         }
     }
 

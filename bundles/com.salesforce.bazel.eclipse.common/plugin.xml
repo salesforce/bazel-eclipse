@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension-point id="com.salesforce.bazel.projectmanager" name="Bazel Project Manager" schema="schema/com.salesforce.bazel.projectmanager.exsd"/>
-   <extension-point id="com.salesforce.bazel.resourcehelper" name="Eclipse Bazel Resource Helper" schema="schema/com.salesforce.bazel.resourcehelper.exsd"/>
-   <extension-point id="com.salesforce.bazel.javacorehelper" name="Bazel Java Core Helper" schema="schema/com.salesforce.bazel.javacorehelper.exsd"/>
-   <extension-point id="com.salesforce.bazel.aspectlocation" name="Bazel Aspect Location Provider" schema="schema/com.salesforce.bazel.aspectlocation.exsd"/>
+   <extension-point id="com.salesforce.bazel.consolefactory" name="Bazel Console Factory" schema="schema/com.salesforce.bazel.consolefactory.exsd"/>
 
    <extension
          id="com.salesforce.bazel.eclipse.bazelNature"
@@ -29,6 +26,13 @@
             class="com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer"
             id="com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER">
       </classpathContainerInitializer>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.consolefactory">
+      <commandConsoleFactory
+            class="com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory"
+            priority="100">
+      </commandConsoleFactory>
    </extension>
 
 </plugin>

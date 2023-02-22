@@ -3,11 +3,10 @@
 <schema targetNamespace="com.salesforce.bazel.eclipse.common" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appinfo>
-         <meta.schema plugin="com.salesforce.bazel.eclipse.common" id="com.salesforce.bazel.projectmanager" name="Bazel Project Manager"/>
+         <meta.schema plugin="com.salesforce.bazel.eclipse.common" id="com.salesforce.bazel.consolefactory" name="Bazel Console Factory"/>
       </appinfo>
       <documentation>
-         Extension point of the BazelProjectManager implementation.
-There should be only one implementation in platform
+         Extension point for Bazel&apos;s CommandConsoleFactory
       </documentation>
    </annotation>
 
@@ -19,7 +18,7 @@ There should be only one implementation in platform
       </annotation>
       <complexType>
          <sequence>
-            <element ref="projectManager"/>
+            <element ref="commandConsoleFactory"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -48,7 +47,7 @@ There should be only one implementation in platform
       </complexType>
    </element>
 
-   <element name="projectManager">
+   <element name="commandConsoleFactory">
       <complexType>
          <attribute name="class" type="string" use="required">
             <annotation>
@@ -56,8 +55,15 @@ There should be only one implementation in platform
                   
                </documentation>
                <appinfo>
-                  <meta.attribute kind="java" basedOn="com.salesforce.bazel.sdk.project.BazelProjectManager:"/>
+                  <meta.attribute kind="java" basedOn=":com.salesforce.bazel.sdk.console.CommandConsoleFactory"/>
                </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="priority" type="string" use="default" value="100">
+            <annotation>
+               <documentation>
+                  the lower the more preferred
+               </documentation>
             </annotation>
          </attribute>
       </complexType>

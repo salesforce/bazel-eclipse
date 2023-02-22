@@ -53,7 +53,11 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * It is also a useful place to put breakpoints instead of debugging into Eclipse internals, and logging statements.
  * Since these methods represent major integration points between the Bazel Eclipse Feature and the Eclipse SDK, you can
  * best observe the integration by instrumenting the implementation of this interface.
+ *
+ * @deprecated such mocking is not needed - we should do proper Eclipse integration tests with SWT Bot and full
+ *             OSGi/Eclipse environment
  */
+@Deprecated
 public interface ResourceHelper {
 
     /**

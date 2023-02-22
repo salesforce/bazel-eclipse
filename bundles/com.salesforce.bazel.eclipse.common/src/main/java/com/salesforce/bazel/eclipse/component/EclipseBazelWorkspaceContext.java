@@ -95,7 +95,10 @@ public class EclipseBazelWorkspaceContext {
      * User is deleting the Bazel Workspace project from the Eclipse workspace. Do what we can here. To reset back to
      * initial state, but hard to guarantee that this will be perfect. If the user does NOT also delete the Bazel
      * workspace code projects, there could be trouble.
+     * 
+     * @deprecated this method is an architectural issue - we need a better way of closing/refreshing a Bazel workspace
      */
+    @Deprecated
     public void resetBazelWorkspace() {
         // now forget about the workspace
         bazelWorkspace = null;

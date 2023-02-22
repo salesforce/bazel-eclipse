@@ -17,6 +17,7 @@ Require-Bundle: org.eclipse.core.runtime,
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Export-Package: com.salesforce.bazel.eclipse,
+ com.salesforce.bazel.eclipse.activator,
  com.salesforce.bazel.eclipse.builder,
  com.salesforce.bazel.eclipse.classpath,
  com.salesforce.bazel.eclipse.component,
@@ -26,6 +27,7 @@ Export-Package: com.salesforce.bazel.eclipse,
  com.salesforce.bazel.eclipse.project,
  com.salesforce.bazel.eclipse.projectimport,
  com.salesforce.bazel.eclipse.projectimport.flow,
+ com.salesforce.bazel.eclipse.projectview,
  com.salesforce.bazel.eclipse.runtime.api,
  com.salesforce.bazel.eclipse.runtime.impl,
  com.salesforce.bazel.eclipse.utils

@@ -29,6 +29,7 @@ import java.util.Objects;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.BazelUIPluginActivator;
+import com.salesforce.bazel.eclipse.activator.BazelPlugin;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
@@ -154,7 +155,7 @@ public class InitImportFlow extends AbstractImportFlowStep {
 
             // Many collaborators need the Bazel workspace directory location, so we stash it in an accessible global location
             // currently we only support one Bazel workspace in an Eclipse workspace
-            BazelUIPluginActivator.getInstance().setBazelWorkspaceRootDirectory(bazelWorkspaceName,
+            BazelPlugin.getInstance().setBazelWorkspaceRootDirectory(bazelWorkspaceName,
                 bazelWorkspaceRootDirectory);
         } else {
             bazelWorkspaceName = bazelWorkspace.getName();

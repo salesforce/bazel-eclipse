@@ -44,19 +44,10 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
-import org.eclipse.jdt.ls.core.internal.handlers.MapFlattener;
-import org.eclipse.jdt.ls.core.internal.preferences.IPreferencesChangeListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.prefs.Preferences;
 
-import com.salesforce.b2eclipse.config.IPreferenceConfiguration;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.eclipse.component.EclipseComponentContextInitializer;
-import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade;
-import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade.LogLevel;
-import com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory;
-import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
-import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
@@ -87,8 +78,6 @@ public class BazelJdtPlugin extends Plugin {
 
     public static final String BAZEL_EXECUTABLE_DEFAULT_PATH = "/usr/local/bin/bazel";
 
-    private IPreferencesChangeListener preferencesChangeListener;
-
     // LIFECYCLE
 
     /**
@@ -109,27 +98,11 @@ public class BazelJdtPlugin extends Plugin {
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
-
         plugin = this;
-
-        preferencesChangeListener = (newPrefs, oldPrefs) -> configureLogging();
-        JavaLanguageServerPlugin.getPreferencesManager().addPreferencesChangeListener(preferencesChangeListener);
-
-        initLoggerFacade();
-
-        BazelJavaSDKInit.initialize("Bazel Language Server", "bzl_ls");
-        JvmRuleInit.initialize();
-
-        new EclipseComponentContextInitializer(getBundle().getSymbolicName(), new StandardCommandConsoleFactory(), getStateLocation())
-                .initialize();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        if (Objects.nonNull(preferencesChangeListener)
-                && Objects.nonNull(JavaLanguageServerPlugin.getPreferencesManager())) {
-            JavaLanguageServerPlugin.getPreferencesManager().removePreferencesChangeListener(preferencesChangeListener);
-        }
         super.stop(context);
     }
 
@@ -157,17 +130,4 @@ public class BazelJdtPlugin extends Plugin {
         return Objects.nonNull(prefs) ? prefs : Collections.emptyMap();
     }
 
-    private void initLoggerFacade() throws Exception {
-        EclipseLoggerFacade.install(getBundle());
-        configureLogging();
-    }
-
-    private void configureLogging() {
-        final Map<String, Object> jdtlsConfig = getJdtLsPreferences();
-        String level =
-                MapFlattener.getString(jdtlsConfig, IPreferenceConfiguration.BJLS_LOG_LEVEL, LogLevel.INFO.getName());
-        boolean extended = MapFlattener.getBoolean(jdtlsConfig, IPreferenceConfiguration.BJLS_LOG_EXTENDED, true);
-        EclipseLoggerFacade.setLevel(level);
-        EclipseLoggerFacade.setExtendedLog(extended);
-    }
 }

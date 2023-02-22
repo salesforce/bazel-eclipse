@@ -34,7 +34,7 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.BazelUIPluginActivator;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.mock.MockIProjectFactory;
 import com.salesforce.bazel.eclipse.mock.MockResourceHelper;
 
@@ -49,7 +49,7 @@ public class MockTest {
     public void testIProjectFactory() throws Exception {
         MockIProjectFactory mockIProjectFactory = new MockIProjectFactory();
         MockResourceHelper resourceHelper = new MockResourceHelper(tmpFolder.newFolder(), null);
-        BazelUIPluginActivator.setResourceHelperForTests(resourceHelper);
+        ComponentContext.getInstance().setResourceHelper(resourceHelper);
 
         // create the bill of materials
         MockIProjectFactory.MockIProjectDescriptor desc = new MockIProjectFactory.MockIProjectDescriptor("test1");

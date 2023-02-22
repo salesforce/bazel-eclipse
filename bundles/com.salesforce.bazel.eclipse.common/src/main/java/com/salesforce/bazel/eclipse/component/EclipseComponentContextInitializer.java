@@ -2,15 +2,15 @@ package com.salesforce.bazel.eclipse.component;
 
 import org.eclipse.core.runtime.IPath;
 
-import com.salesforce.bazel.eclipse.component.internal.BazelAspectLocationComponentFacade;
-import com.salesforce.bazel.eclipse.component.internal.JavaCoreHelperComponentFacade;
-import com.salesforce.bazel.eclipse.component.internal.ProjectManagerComponentFacade;
-import com.salesforce.bazel.eclipse.component.internal.ResourceHelperComponentFacade;
+import com.salesforce.bazel.eclipse.config.BazelAspectLocationImpl;
 import com.salesforce.bazel.eclipse.config.EclipseBazelConfigurationManager;
+import com.salesforce.bazel.eclipse.config.EclipseBazelProjectManager;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipePreferenceStoreHelper;
+import com.salesforce.bazel.eclipse.runtime.impl.EclipseJavaCoreHelper;
+import com.salesforce.bazel.eclipse.runtime.impl.EclipseResourceHelper;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.shell.ShellCommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
@@ -30,15 +30,16 @@ public class EclipseComponentContextInitializer implements IComponentContextInit
         this.stateLocation = stateLocation;
     }
 
+    @Override
     public void initialize() {
 
-        ResourceHelper resourceHelper = ResourceHelperComponentFacade.getInstance().getComponent();
-        JavaCoreHelper javaCoreHelper = JavaCoreHelperComponentFacade.getInstance().getComponent();
+        ResourceHelper resourceHelper = new EclipseResourceHelper();
+        JavaCoreHelper javaCoreHelper = new EclipseJavaCoreHelper();
         OperatingEnvironmentDetectionStrategy osStrategy = new RealOperatingEnvironmentDetectionStrategy();
-        BazelProjectManager projectManager = ProjectManagerComponentFacade.getInstance().getComponent();
+        BazelProjectManager projectManager = new EclipseBazelProjectManager();
         PreferenceStoreHelper eclipsePrefsHelper = new EclipePreferenceStoreHelper(prefsScope);
         BazelConfigurationManager configManager = new EclipseBazelConfigurationManager(eclipsePrefsHelper);
-        BazelAspectLocation bazelAspectLocation = BazelAspectLocationComponentFacade.getInstance().getComponent();
+        BazelAspectLocation bazelAspectLocation = new BazelAspectLocationImpl();
 
         ShellCommandBuilder commandBuilder = new ShellCommandBuilder(consoleFactory, new EclipseShellEnvironment(eclipsePrefsHelper));
 
