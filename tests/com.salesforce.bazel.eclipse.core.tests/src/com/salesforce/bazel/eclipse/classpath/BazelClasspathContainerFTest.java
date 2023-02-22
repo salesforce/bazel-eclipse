@@ -44,9 +44,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.util.Properties;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.junit.Before;
@@ -55,7 +57,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
@@ -342,10 +343,9 @@ public class BazelClasspathContainerFTest {
         ResourceHelper resourceHelper = mock(ResourceHelper.class);
         when(resourceHelper.isBazelRootProject(workspace_IProject)).thenReturn(true);
 
-        BazelClasspathContainer classpathContainer = new BazelClasspathContainer(workspace_IProject, resourceHelper,
-            mockEclipse.getMockJavaCoreHelper(), mockEclipse.getProjectManager(), mockEclipse.getOsEnvStrategy(),
-            EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace());
-        IClasspathEntry[] entries = classpathContainer.getClasspathEntries();
+        IClasspathEntry[] entries = new BazelClasspathManager(mockEclipse.getEclipseStateLocation()).computeClasspath(
+            mockEclipse.getProjectManager().getProject(workspace_IProject.getName()),
+            BazelClasspathScope.DEFAULT_CLASSPATH, new Properties(), true, new NullProgressMonitor());
 
         assertNotNull(entries);
         assertEquals(0, entries.length);
@@ -368,10 +368,9 @@ public class BazelClasspathContainerFTest {
         ResourceHelper resourceHelper = mock(ResourceHelper.class);
         when(resourceHelper.isBazelRootProject(workspace_IProject)).thenReturn(true);
 
-        BazelClasspathContainer classpathContainer = new BazelClasspathContainer(workspace_IProject, resourceHelper,
-            mockEclipse.getMockJavaCoreHelper(), mockEclipse.getProjectManager(), mockEclipse.getOsEnvStrategy(),
-            EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace());
-        IClasspathEntry[] entries = classpathContainer.getClasspathEntries();
+        IClasspathEntry[] entries = new BazelClasspathManager(mockEclipse.getEclipseStateLocation()).computeClasspath(
+            mockEclipse.getProjectManager().getProject(workspace_IProject.getName()),
+            BazelClasspathScope.DEFAULT_CLASSPATH, new Properties(), true, new NullProgressMonitor());
 
         assertNotNull(entries);
         assertEquals(2, entries.length);

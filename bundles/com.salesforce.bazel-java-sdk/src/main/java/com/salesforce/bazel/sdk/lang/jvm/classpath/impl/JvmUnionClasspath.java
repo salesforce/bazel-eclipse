@@ -45,6 +45,7 @@ import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
+import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
 
 /**
  * Computes a JVM classpath for a BazelProject based on the dependencies configured in Bazel.
@@ -52,10 +53,12 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * This classpath implementation collapses the dependencies for all Java rules in the package into a single classpath,
  * otherwise known as a <b>union</b> classpath. The entries are marked as 'main', 'runtime' or 'test' entries.
  * <p>
- * This may not be precise enough for all use cases but for most tooling (e.g. IDEs) use cases this is sufficient granularity.
+ * This may not be precise enough for all use cases but for most tooling (e.g. IDEs) use cases this is sufficient
+ * granularity.
  * <p>
- * Targets within the package are excluded from the classpath, as they are presumed to be represented by source code found in
- * source folders. Dependencies on other BazelProjects are represented as BazelProject references in the response.
+ * Targets within the package are excluded from the classpath, as they are presumed to be represented by source code
+ * found in source folders. Dependencies on other BazelProjects are represented as BazelProject references in the
+ * response.
  * <p>
  * There is an instance of this class for each project.
  */
@@ -86,15 +89,20 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
         this.orderedClasspathStrategies = orderedClasspathStrategies;
     }
 
-    public JvmUnionClasspath(BazelProject bazelProject) {
-        // TODO Auto-generated constructor stub
-
-        new JvmClasspathAspectStrategy(bazelProject)
+    public static JvmUnionClasspath withAspectStrategy(BazelProject bazelProject, BazelWorkspace bazelWorkspace,
+            BazelCommandManager bazelCommandManager) {
+        ImplicitClasspathHelper implicitDependencyHelper = new ImplicitClasspathHelper();
+        RealOperatingEnvironmentDetectionStrategy osDetector = new RealOperatingEnvironmentDetectionStrategy();
+        return new JvmUnionClasspath(bazelWorkspace, bazelProject.bazelProjectManager, bazelProject, implicitDependencyHelper,
+                osDetector, bazelCommandManager,
+                List.of(new JvmClasspathAspectStrategy(bazelWorkspace, bazelProject.bazelProjectManager,
+                        implicitDependencyHelper, osDetector,
+                        bazelCommandManager)));
     }
 
     /**
-     * Computes the JVM classpath for the associated BazelProject. This response is cached in
-     * the super class. External callers will invoke getClasspathEntries() which in turn invokes this method.
+     * Computes the JVM classpath for the associated BazelProject. This response is cached in the super class. External
+     * callers will invoke getClasspathEntries() which in turn invokes this method.
      */
     @Override
     protected JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) {
@@ -141,8 +149,8 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
             try {
                 // invoke our classpath strategies in order, until one is able to complete the classpath
                 for (JvmClasspathStrategy strategy : orderedClasspathStrategies) {
-                    JvmClasspathStrategyRequest request = new JvmClasspathStrategyRequest(bazelProject, targetLabel, targetKind,
-                        configuredTargetsForProject, actualActivatedTargets, response);
+                    JvmClasspathStrategyRequest request = new JvmClasspathStrategyRequest(bazelProject, targetLabel,
+                            targetKind, configuredTargetsForProject, actualActivatedTargets, response);
                     strategy.getClasspathForTarget(request);
                     if (response.isComplete) {
                         break;
@@ -166,10 +174,10 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
         return cachedClasspath;
     }
 
-
     // INTERNAL
 
-    private BazelBuildFile getBuildFile(BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner, BazelProjectTargets configuredTargetsForProject) throws Exception {
+    private BazelBuildFile getBuildFile(BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner,
+            BazelProjectTargets configuredTargetsForProject) throws Exception {
         // TODO this code is hard to follow, why are there collections where we expect there to be a single build file?
 
         BazelBuildFile bazelBuildFileModel = null;
@@ -177,8 +185,8 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
         // we pass the targets that are configured for the current project to bazel query
         // typically, this is a single wildcard target, but the user may
         // also have specified explicit targets to use
-        List<BazelLabel> labels = configuredTargetsForProject.getConfiguredTargets().stream()
-                .map(BazelLabel::new).collect(Collectors.toList());
+        List<BazelLabel> labels = configuredTargetsForProject.getConfiguredTargets().stream().map(BazelLabel::new)
+                .collect(Collectors.toList());
         Collection<BazelBuildFile> buildFiles = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(labels);
         // since we only call query with labels for the same package, we expect to get a single BazelBuildFile instance back
         if (buildFiles.isEmpty()) {

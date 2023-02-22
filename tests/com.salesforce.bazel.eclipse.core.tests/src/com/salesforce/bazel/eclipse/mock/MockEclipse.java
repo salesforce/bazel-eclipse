@@ -53,6 +53,7 @@ public class MockEclipse {
     public static final String BAZEL_WORKSPACE_NAME = "bazelws";
 
     private File eclipseWorkspaceRoot;
+    private File eclipseStateLocation;
     private File bazelWorkspaceRoot;
     private File bazelOutputBase;
     private File bazelExecutionRoot;
@@ -110,6 +111,9 @@ public class MockEclipse {
         eclipseWorkspaceRoot = new File(testTempDir, "eclipse-workspace");
         eclipseWorkspaceRoot.mkdir();
 
+        eclipseStateLocation = new File(testTempDir, "eclipse-workspace-state");
+        eclipseStateLocation.mkdir();
+
         mockResourceHelper = new MockResourceHelper(eclipseWorkspaceRoot, this);
         mockCorePreferencesStoreHelper = new MockCorePreferencesStoreHelper(this);
         mockPrefs = new MockIEclipsePreferences();
@@ -163,6 +167,10 @@ public class MockEclipse {
 
     public File getEclipseWorkspaceRoot() {
         return eclipseWorkspaceRoot;
+    }
+
+    public File getEclipseStateLocation() {
+        return eclipseStateLocation;
     }
 
     public File getBazelWorkspaceRoot() {

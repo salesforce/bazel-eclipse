@@ -96,7 +96,7 @@ public class BazelUIPluginActivator extends AbstractUIPlugin {
         BazelJavaSDKInit.initialize("Bazel Eclipse", "bzleclipse");
         JvmRuleInit.initialize();
 
-        startInternal(new EclipseComponentContextInitializer(getBundle().getSymbolicName(), new EclipseConsole()),
+        startInternal(new EclipseComponentContextInitializer(getBundle().getSymbolicName(), new EclipseConsole(), getStateLocation()),
             consoleFactory, eclipseJavaCoreHelper);
     }
 

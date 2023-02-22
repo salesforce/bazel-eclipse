@@ -48,6 +48,7 @@ import org.eclipse.jdt.core.JavaCore;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
+import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.JvmUnionClasspath;
@@ -72,6 +73,43 @@ public class BazelClasspathManager {
 
     public BazelClasspathManager(File stateLocationDirectory) {
         this.stateLocationDirectory = requireNonNull(stateLocationDirectory);
+    }
+
+    IClasspathEntry[] computeClasspath(BazelProject bazelProject, BazelClasspathScope scope, Properties props,
+            boolean eliminateDuplicateEntries, IProgressMonitor monitor) {
+
+        // create the classpath computation engine
+        JvmClasspathData jcmClasspathData =
+                JvmUnionClasspath.withAspectStrategy(bazelProject, getBazelWorkspace(), getBazelCommandManager())
+                        .getClasspathEntries(new EclipseWorkProgressMonitor(monitor));
+
+        // convert the logical entries into concrete Eclipse entries
+        List<IClasspathEntry> entries = new ArrayList<>();
+        for (JvmClasspathEntry entry : jcmClasspathData.jvmClasspathEntries) {
+            if (entry.pathToJar != null) {
+                IPath jarPath = getAbsoluteLocation(entry.pathToJar);
+                if (jarPath != null) {
+                    // srcJarPath must be relative to the workspace, by order of Eclipse
+                    IPath srcJarPath = getAbsoluteLocation(entry.pathToSourceJar);
+                    IPath srcJarRootPath = null;
+                    entries.add(newLibraryEntry(jarPath, srcJarPath, srcJarRootPath, entry.isTestJar));
+                }
+            } else {
+                entries.add(newProjectEntry(entry.bazelProject));
+            }
+        }
+
+        if (eliminateDuplicateEntries) {
+            Map<IPath, IClasspathEntry> paths = new LinkedHashMap<>();
+            for (IClasspathEntry entry : entries) {
+                if (!paths.containsKey(entry.getPath())) {
+                    paths.put(entry.getPath(), entry);
+                }
+            }
+            return paths.values().toArray(new IClasspathEntry[paths.size()]);
+        }
+
+        return entries.toArray(new IClasspathEntry[entries.size()]);
     }
 
     IPath getAbsoluteLocation(final String pathInWorkspace) {
@@ -132,6 +170,10 @@ public class BazelClasspathManager {
         return Path.fromOSString(absolutePath.toString());
     }
 
+    BazelCommandManager getBazelCommandManager() {
+        return ComponentContext.getInstanceCheckInitialized().getBazelCommandManager();
+    }
+
     IClasspathEntry getBazelContainerEntry(IJavaProject project) {
         return BazelClasspathHelpers.getBazelContainerEntry(project);
     }
@@ -142,42 +184,6 @@ public class BazelClasspathManager {
 
     BazelWorkspace getBazelWorkspace() {
         return EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
-    }
-
-    IClasspathEntry[] getClasspath(BazelProject bazelProject, BazelClasspathScope scope, Properties props,
-            boolean eliminateDuplicateEntries, IProgressMonitor monitor) {
-
-        // create the classpath computation engine
-        JvmClasspathData jcmClasspathData =
-                new JvmUnionClasspath(bazelProject).getClasspathEntries(new EclipseWorkProgressMonitor(monitor));
-
-        // convert the logical entries into concrete Eclipse entries
-        List<IClasspathEntry> entries = new ArrayList<>();
-        for (JvmClasspathEntry entry : jcmClasspathData.jvmClasspathEntries) {
-            if (entry.pathToJar != null) {
-                IPath jarPath = getAbsoluteLocation(entry.pathToJar);
-                if (jarPath != null) {
-                    // srcJarPath must be relative to the workspace, by order of Eclipse
-                    IPath srcJarPath = getAbsoluteLocation(entry.pathToSourceJar);
-                    IPath srcJarRootPath = null;
-                    entries.add(newLibraryEntry(jarPath, srcJarPath, srcJarRootPath, entry.isTestJar));
-                }
-            } else {
-                entries.add(newProjectEntry(entry.bazelProject));
-            }
-        }
-
-        if (eliminateDuplicateEntries) {
-            Map<IPath, IClasspathEntry> paths = new LinkedHashMap<>();
-            for (IClasspathEntry entry : entries) {
-                if (!paths.containsKey(entry.getPath())) {
-                    paths.put(entry.getPath(), entry);
-                }
-            }
-            return paths.values().toArray(new IClasspathEntry[paths.size()]);
-        }
-
-        return entries.toArray(new IClasspathEntry[entries.size()]);
     }
 
     public IClasspathEntry[] getClasspath(IJavaProject project, BazelClasspathScope scope,
@@ -194,7 +200,7 @@ public class BazelClasspathManager {
                     props.load(is);
                 }
             }
-            return getClasspath(facade, scope, props, eliminateDuplicateEntries, monitor);
+            return computeClasspath(facade, scope, props, eliminateDuplicateEntries, monitor);
         } catch (IOException e) {
             throw new CoreException(Status.error("Can't read classpath container data", e));
         }
@@ -299,7 +305,7 @@ public class BazelClasspathManager {
         }
 
         // eliminate all "standard" source/javadoc attachement we get from local repo
-        entries = getClasspath(facade, DEFAULT_CLASSPATH, null, true, monitor);
+        entries = computeClasspath(facade, DEFAULT_CLASSPATH, null, true, monitor);
         for (IClasspathEntry entry : entries) {
             if (IClasspathEntry.CPE_LIBRARY == entry.getEntryKind()) {
                 String path = entry.getPath().toPortableString();

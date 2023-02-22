@@ -30,6 +30,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -47,27 +48,28 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.eval.IEvaluationContext;
 
-import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainer;
+import com.salesforce.bazel.eclipse.classpath.BazelClasspathManager;
+import com.salesforce.bazel.eclipse.component.ComponentContext;
 
 public class MockIJavaProject implements IJavaProject {
     private static final String UOE_MSG =
             "MockIJavaProject is pay as you go, you have hit a method that is not implemented.";
 
-    private IProject iproject;
-    private String name;
+    private final IProject iproject;
+    private final String name;
     private IClasspathEntry[] entries;
     private IClasspathEntry[] resolvedEntries;
 
     public MockIJavaProject(IProject iproject) {
         this.iproject = iproject;
-        this.name = iproject.getName();
+        name = iproject.getName();
     }
 
     // IMPLEMENTED METHODS
 
     @Override
     public String getElementName() {
-        return this.name;
+        return name;
     }
 
     @Override
@@ -86,11 +88,11 @@ public class MockIJavaProject implements IJavaProject {
     }
 
     /*
-     * CLASSPATH README 
+     * CLASSPATH README
      * - the "raw" classpath is the one set at the project level, and includes the Bazel Classpath Container as a single entry, the JRE as a single entry, etc
      * - the "resolved" classpath is the one where each raw entry contributes back the actual elements; for the Bazel classpath container it will contain
      *     an entry PER dependency for the project (e.g. slf4j-api, log4j, other Bazel workspace packages). Each resolved entry is known as a 'simple' entry.
-     * - referenced entries are the ones written into the .classpath file, which seem to be the raw classpath at least for our use cases 
+     * - referenced entries are the ones written into the .classpath file, which seem to be the raw classpath at least for our use cases
      */
 
     @Override
@@ -103,19 +105,20 @@ public class MockIJavaProject implements IJavaProject {
 
     @Override
     public IClasspathEntry[] getResolvedClasspath(boolean ignoreUnresolvedEntry) throws JavaModelException {
-        if (this.resolvedEntries == null || this.resolvedEntries.length == 0) {
+        if ((resolvedEntries == null) || (resolvedEntries.length == 0)) {
 
             // TODO this should be done during setRawClasspath but that is causing timing issues. But right now the mock framework is
             // not consistent with real Eclipse so we should investigate
 
             try {
-                BazelClasspathContainer classpathContainer = new BazelClasspathContainer(iproject);
-                this.resolvedEntries = classpathContainer.getClasspathEntries();
+                ComponentContext componentContext = ComponentContext.getInstanceCheckInitialized();
+                BazelClasspathManager classpathManager = componentContext.getClasspathManager();
+                resolvedEntries = classpathManager.getClasspath(this, new NullProgressMonitor());
             } catch (Exception anyE) {
                 throw new IllegalStateException(anyE);
             }
         }
-        return this.resolvedEntries;
+        return resolvedEntries;
     }
 
     @Override
@@ -143,7 +146,7 @@ public class MockIJavaProject implements IJavaProject {
     public void setRawClasspath(IClasspathEntry[] entries, IProgressMonitor monitor) throws JavaModelException {
         if (entries == null) {
             throw new IllegalArgumentException(
-                    "Bazel Eclipse Feature is setting the classpath as null for project " + iproject.getName());
+                "Bazel Eclipse Feature is setting the classpath as null for project " + iproject.getName());
         }
         this.entries = entries;
 
@@ -553,6 +556,7 @@ public class MockIJavaProject implements IJavaProject {
         throw new UnsupportedOperationException(UOE_MSG);
     }
 
+    @Override
     public IModuleDescription getOwnModuleDescription() throws JavaModelException {
         throw new UnsupportedOperationException(UOE_MSG);
     }

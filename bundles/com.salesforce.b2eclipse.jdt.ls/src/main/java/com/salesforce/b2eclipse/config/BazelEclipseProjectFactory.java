@@ -42,7 +42,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.b2eclipse.managers.BazelBuildSupport;
-import com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
@@ -69,7 +68,7 @@ public final class BazelEclipseProjectFactory {
      * bazel.activated.target0=//projects/libs/foo:barlib bazel.activated.target1=//projects/libs/foo:bazlib
      */
     public static final String TARGET_PROPERTY_PREFIX = "bazel.activated.target";
-    
+
     private static final LogHelper LOG = LogHelper.log(BazelEclipseProjectFactory.class);
 
     private BazelEclipseProjectFactory() {
@@ -88,7 +87,7 @@ public final class BazelEclipseProjectFactory {
             IProgressMonitor monitor) {
         String bazelWorkspaceRoot = workspaceRootPackage.getWorkspaceRootDirectory().getAbsolutePath();
         File bazelWorkspaceRootDirectory = new File(bazelWorkspaceRoot);
-        
+
         LOG.debug("Start import process for root directory {}", bazelWorkspaceRootDirectory.getPath());
 
         SubMonitor subMonitor = SubMonitor.convert(monitor, selectedBazelPackages.size());
@@ -108,7 +107,6 @@ public final class BazelEclipseProjectFactory {
                 new ProjectImporterFactory(workspaceRootPackage, selectedBazelPackages);
         final ProjectImporter projectImporter = projectImporterFactory.build();
 
-        BazelClasspathContainerInitializer.isCorrupt.set(false);
         projectImporter.run(subMonitor);
 
         subMonitor.done();
