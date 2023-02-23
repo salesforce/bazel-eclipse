@@ -48,8 +48,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.eval.IEvaluationContext;
 
+import com.salesforce.bazel.eclipse.activator.BazelPlugin;
 import com.salesforce.bazel.eclipse.classpath.BazelClasspathManager;
-import com.salesforce.bazel.eclipse.component.ComponentContext;
 
 public class MockIJavaProject implements IJavaProject {
     private static final String UOE_MSG =
@@ -111,8 +111,8 @@ public class MockIJavaProject implements IJavaProject {
             // not consistent with real Eclipse so we should investigate
 
             try {
-                ComponentContext componentContext = ComponentContext.getInstanceCheckInitialized();
-                BazelClasspathManager classpathManager = componentContext.getClasspathManager();
+                BazelClasspathManager classpathManager =
+                        BazelPlugin.getInstance().getBazelModelManager().getClasspathManager();
                 resolvedEntries = classpathManager.getClasspath(this, new NullProgressMonitor());
             } catch (Exception anyE) {
                 throw new IllegalStateException(anyE);

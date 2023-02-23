@@ -39,15 +39,16 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 
-import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 
+import com.salesforce.bazel.eclipse.BazelCommonContstants;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.component.EclipseComponentContextInitializer;
+import com.salesforce.bazel.eclipse.core.BazelModelManager;
 import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade;
-import com.salesforce.bazel.eclipse.project.BazelPluginResourceChangeListener;
 import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
 import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
@@ -55,11 +56,28 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
  */
-public class BazelPlugin extends Plugin {
+public class BazelPlugin extends Plugin implements BazelCommonContstants {
     private static volatile BazelPlugin plugin;
 
-    // The plug-in ID
-    public static final String PLUGIN_ID = "com.salesforce.bazel.eclipse.common"; //$NON-NLS-1$
+    public static BazelPlugin getInstance() {
+        return requireNonNull(plugin, "not initialized");
+    }
+
+    private BazelModelManager bazelModelManager;
+
+    public BazelModelManager getBazelModelManager() {
+        return requireNonNull(bazelModelManager, "not initialized");
+    }
+
+    /**
+     * Sets the location on disk where the Bazel workspace is located. There must be a WORKSPACE file in this location.
+     * Changing this location is a big deal, so use this method only during setup/import.
+     */
+    public void setBazelWorkspaceRootDirectory(String workspaceName, File rootDirectory) {
+        EclipseBazelWorkspaceContext.getInstance().setBazelWorkspaceRootDirectory(workspaceName, rootDirectory);
+        // write it to the preferences file
+        ComponentContext.getInstance().getConfigurationManager().setBazelWorkspacePath(rootDirectory.getAbsolutePath());
+    }
 
     @Override
     public void start(BundleContext bundleContext) throws Exception {
@@ -74,9 +92,8 @@ public class BazelPlugin extends Plugin {
         JvmRuleInit.initialize();
 
         // initialize the compontent Context
-        EclipseComponentContextInitializer contextInitializer =
-                new EclipseComponentContextInitializer(getBundle().getSymbolicName(), new ExtensibleConsoleFactory(),
-                getStateLocation());
+        var contextInitializer = new EclipseComponentContextInitializer("com.salesforce.bazel.eclipse.core", // use the old and soon new plug-in id
+                new ExtensibleConsoleFactory(), getStateLocation());
         contextInitializer.initialize();
 
         // setup a listener, if the user changes the path to Bazel executable notify the command manager
@@ -85,41 +102,23 @@ public class BazelPlugin extends Plugin {
 
         // Get the bazel workspace path from the settings:
         //   ECLIPSE_WS_ROOT/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.salesforce.bazel.eclipse.core.prefs
-        String bazelWorkspacePathFromPrefs =
+        var bazelWorkspacePathFromPrefs =
                 ComponentContext.getInstance().getConfigurationManager().getBazelWorkspacePath();
         if ((bazelWorkspacePathFromPrefs != null) && !bazelWorkspacePathFromPrefs.isEmpty()) {
-            String workspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
-            File workspaceRoot = new File(bazelWorkspacePathFromPrefs);
+            var workspaceName = BazelWorkspaceScanner.getBazelWorkspaceName(bazelWorkspacePathFromPrefs);
+            var workspaceRoot = new File(bazelWorkspacePathFromPrefs);
             setBazelWorkspaceRootDirectory(workspaceName, workspaceRoot);
         }
 
-        // insert our global resource listener into the workspace
-        // FIXME: there is a better way to do this, which includes emitting all DELTAs since the last Eclipse start till plug-in activation
-
-        IWorkspace eclipseWorkspace = ComponentContext.getInstance().getResourceHelper().getEclipseWorkspace();
-        BazelPluginResourceChangeListener resourceChangeListener = new BazelPluginResourceChangeListener();
-        eclipseWorkspace.addResourceChangeListener(resourceChangeListener);
-
+        bazelModelManager = new BazelModelManager(getStateLocation());
+        bazelModelManager.initialize(ResourcesPlugin.getWorkspace());
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         plugin = null;
         super.stop(context);
-    }
 
-    /**
-     * Sets the location on disk where the Bazel workspace is located. There must be a WORKSPACE file in this location.
-     * Changing this location is a big deal, so use this method only during setup/import.
-     */
-    public void setBazelWorkspaceRootDirectory(String workspaceName, File rootDirectory) {
-        EclipseBazelWorkspaceContext.getInstance().setBazelWorkspaceRootDirectory(workspaceName, rootDirectory);
-        // write it to the preferences file
-        ComponentContext.getInstance().getConfigurationManager().setBazelWorkspacePath(rootDirectory.getAbsolutePath());
+        bazelModelManager.shutdown();
     }
-
-    public static BazelPlugin getInstance() {
-        return requireNonNull(plugin, "not initialized");
-    }
-
 }

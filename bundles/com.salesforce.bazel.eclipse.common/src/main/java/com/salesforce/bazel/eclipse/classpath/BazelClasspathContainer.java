@@ -35,6 +35,8 @@
  */
 package com.salesforce.bazel.eclipse.classpath;
 
+import java.io.Serializable;
+
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -45,10 +47,12 @@ import org.eclipse.jdt.core.IClasspathEntry;
  * The container is static and managed/updated by {@link BazelClasspathManager}.
  * </p>
  */
-public class BazelClasspathContainer implements IClasspathContainer {
+public class BazelClasspathContainer implements IClasspathContainer, Serializable {
 
-    private IPath path;
-    private IClasspathEntry[] classpath;
+    private static final long serialVersionUID = 390898179243551621L;
+
+    private final IPath path;
+    private final IClasspathEntry[] classpath;
 
     public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath) {
         this.path = path;

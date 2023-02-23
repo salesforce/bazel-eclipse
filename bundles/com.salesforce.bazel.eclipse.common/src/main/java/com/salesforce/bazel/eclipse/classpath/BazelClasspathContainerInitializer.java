@@ -49,7 +49,7 @@ import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
-import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.activator.BazelPlugin;
 
 public class BazelClasspathContainerInitializer extends ClasspathContainerInitializer {
 
@@ -59,15 +59,15 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
             return;
         }
 
-        IClasspathContainer bazelContainer = getClasspathManager().getSavedContainer(project.getProject());
-        if (bazelContainer != null)
+        var bazelContainer = getClasspathManager().getSavedContainer(project.getProject());
+        if (bazelContainer != null) {
             JavaCore.setClasspathContainer(containerPath, new IJavaProject[] { project },
                 new IClasspathContainer[] { bazelContainer }, new NullProgressMonitor());
+        }
     }
 
     BazelClasspathManager getClasspathManager() {
-        ComponentContext context = ComponentContext.getInstanceCheckInitialized();
-        return context.getClasspathManager();
+        return BazelPlugin.getInstance().getBazelModelManager().getClasspathManager();
     }
 
     @Override
@@ -84,7 +84,9 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
                 try {
                     getClasspathManager().persistAttachedSourcesAndJavadoc(project, containerSuggestion, monitor);
                 } catch (CoreException ex) {
-                    return Status.error(format("An error occured saving the Bazel classpath container for project '%s'.", project.getElementName()), ex);
+                    return Status
+                            .error(format("An error occured saving the Bazel classpath container for project '%s'.",
+                                project.getElementName()), ex);
                 }
                 return Status.OK_STATUS;
             }

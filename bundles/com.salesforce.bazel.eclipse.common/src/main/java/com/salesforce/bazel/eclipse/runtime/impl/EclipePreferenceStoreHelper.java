@@ -8,7 +8,7 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChang
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.service.prefs.BackingStoreException;
 
-import com.salesforce.bazel.eclipse.activator.BazelPlugin;
+import com.salesforce.bazel.eclipse.BazelCommonContstants;
 import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreHelper;
 
 public class EclipePreferenceStoreHelper implements PreferenceStoreHelper {
@@ -16,7 +16,7 @@ public class EclipePreferenceStoreHelper implements PreferenceStoreHelper {
 
     public EclipePreferenceStoreHelper(String requiredScope) {
         scope = Objects.nonNull(requiredScope) ? requiredScope
-                : BazelPlugin.PLUGIN_ID;
+                : BazelCommonContstants.PLUGIN_ID;
     }
 
     @Override

@@ -21,7 +21,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.bazel.eclipse.project;
+package com.salesforce.bazel.eclipse.core;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -30,13 +30,11 @@ import org.eclipse.core.resources.IResourceChangeListener;
 
 import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
- * Global change listener for Bazel plugin for Eclipse Workspaces.
+ * Global change listener for Eclipse Workspaces used by the Bazel model.
  */
-public class BazelPluginResourceChangeListener implements IResourceChangeListener {
-    static final LogHelper LOG = LogHelper.log(BazelPluginResourceChangeListener.class);
+class ResourceChangeProcessor implements IResourceChangeListener {
 
     @Override
     public void resourceChanged(IResourceChangeEvent event) {
@@ -50,7 +48,6 @@ public class BazelPluginResourceChangeListener implements IResourceChangeListene
             String name = project.getName();
             if (name.startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME)
                     && (event.getType() == IResourceChangeEvent.PRE_DELETE)) {
-                LOG.info("User is deleting the Bazel Workspace project {} from the Eclipse workspace", name);
                 EclipseBazelWorkspaceContext.getInstance().resetBazelWorkspace();
             }
         }

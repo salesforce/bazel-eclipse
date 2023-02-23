@@ -15,8 +15,7 @@ public class MockComponentContextInitializer implements IComponentContextInitial
         ComponentContext.getInstance().initialize(mockEclipse.getProjectManager(), mockEclipse.getMockResourceHelper(),
             mockEclipse.getMockJavaCoreHelper(), mockEclipse.getOsEnvStrategy(), mockEclipse.getConfigManager(),
             mockEclipse.getMockCorePreferencesStoreHelper(), mockEclipse.getMockBazelAspectLocation(),
-            mockEclipse.getMockCommandBuilder(), mockEclipse.getMockCommandConsole(),
-            mockEclipse.getEclipseStateLocation());
+            mockEclipse.getMockCommandBuilder(), mockEclipse.getMockCommandConsole());
     }
 
 }

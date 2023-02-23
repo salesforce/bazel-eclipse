@@ -45,6 +45,6 @@ public class EclipseComponentContextInitializer implements IComponentContextInit
 
         ComponentContext.getInstance().initialize(projectManager, resourceHelper, javaCoreHelper, osStrategy,
             configManager, eclipsePrefsHelper, bazelAspectLocation, commandBuilder,
-            consoleFactory, stateLocation.toFile());
+            consoleFactory);
     }
 }

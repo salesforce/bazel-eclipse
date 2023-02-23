@@ -46,8 +46,8 @@ import org.eclipse.debug.core.model.IProcess;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
+import com.salesforce.bazel.eclipse.BazelCommonContstants;
 import com.salesforce.bazel.eclipse.BazelNature;
-import com.salesforce.bazel.eclipse.activator.BazelPlugin;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -130,7 +130,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public Preferences getProjectBazelPreferences(IProject project) {
         IScopeContext eclipseProjectScope = new ProjectScope(project);
-        Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(BazelPlugin.PLUGIN_ID);
+        Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(BazelCommonContstants.PLUGIN_ID);
 
         if (eclipseProjectPrefs == null) {
             LOG.info("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
