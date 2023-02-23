@@ -51,6 +51,7 @@ import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.JvmUnionClasspath;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -77,40 +78,51 @@ public class BazelClasspathManager {
     }
 
     IClasspathEntry[] computeClasspath(BazelProject bazelProject, BazelClasspathScope scope, Properties props,
-            boolean eliminateDuplicateEntries, IProgressMonitor monitor) {
-
-        // create the classpath computation engine
-        var jcmClasspathData =
-                JvmUnionClasspath.withAspectStrategy(bazelProject, getBazelWorkspace(), getBazelCommandManager())
+            boolean eliminateDuplicateEntries, IProgressMonitor monitor) throws CoreException {
+        try {
+            // create the classpath computation engine
+            JvmClasspathData jcmClasspathData;
+            try {
+                jcmClasspathData = JvmUnionClasspath
+                        .withAspectStrategy(bazelProject, getBazelWorkspace(), getBazelCommandManager())
                         .getClasspathEntries(new EclipseWorkProgressMonitor(monitor));
-
-        // convert the logical entries into concrete Eclipse entries
-        List<IClasspathEntry> entries = new ArrayList<>();
-        for (JvmClasspathEntry entry : jcmClasspathData.jvmClasspathEntries) {
-            if (entry.pathToJar != null) {
-                var jarPath = getAbsoluteLocation(entry.pathToJar);
-                if (jarPath != null) {
-                    // srcJarPath must be relative to the workspace, by order of Eclipse
-                    var srcJarPath = getAbsoluteLocation(entry.pathToSourceJar);
-                    IPath srcJarRootPath = null;
-                    entries.add(newLibraryEntry(jarPath, srcJarPath, srcJarRootPath, entry.isTestJar));
-                }
-            } else {
-                entries.add(newProjectEntry(entry.bazelProject));
+            } catch (Exception e) {
+                throw new CoreException(
+                        Status.error("Computing of the classpath failed. Please check Bazel output!", e));
             }
-        }
 
-        if (eliminateDuplicateEntries) {
-            Map<IPath, IClasspathEntry> paths = new LinkedHashMap<>();
-            for (IClasspathEntry entry : entries) {
-                if (!paths.containsKey(entry.getPath())) {
-                    paths.put(entry.getPath(), entry);
+            // convert the logical entries into concrete Eclipse entries
+            List<IClasspathEntry> entries = new ArrayList<>();
+            for (JvmClasspathEntry entry : jcmClasspathData.jvmClasspathEntries) {
+                if (entry.pathToJar != null) {
+                    var jarPath = getAbsoluteLocation(entry.pathToJar);
+                    if (jarPath != null) {
+                        // srcJarPath must be relative to the workspace, by order of Eclipse
+                        var srcJarPath = getAbsoluteLocation(entry.pathToSourceJar);
+                        IPath srcJarRootPath = null;
+                        entries.add(newLibraryEntry(jarPath, srcJarPath, srcJarRootPath, entry.isTestJar));
+                    }
+                } else {
+                    entries.add(newProjectEntry(entry.bazelProject));
                 }
             }
-            return paths.values().toArray(new IClasspathEntry[paths.size()]);
-        }
 
-        return entries.toArray(new IClasspathEntry[entries.size()]);
+            if (eliminateDuplicateEntries) {
+                Map<IPath, IClasspathEntry> paths = new LinkedHashMap<>();
+                for (IClasspathEntry entry : entries) {
+                    if (!paths.containsKey(entry.getPath())) {
+                        paths.put(entry.getPath(), entry);
+                    }
+                }
+                return paths.values().toArray(new IClasspathEntry[paths.size()]);
+            }
+
+            return entries.toArray(new IClasspathEntry[entries.size()]);
+        } finally {
+            if (monitor != null) {
+                monitor.done();
+            }
+        }
     }
 
     IPath getAbsoluteLocation(final String pathInWorkspace) {
@@ -258,26 +270,33 @@ public class BazelClasspathManager {
     }
 
     public void initializeMissingClasspaths(IWorkspace workspace, IProgressMonitor monitor) throws CoreException {
-        var projects = workspace.getRoot().getProjects();
-        var subMonitor = SubMonitor.convert(monitor, projects.length);
-        nextProject: for (IProject project : projects) {
-            // we only process Java projects
-            if (project.hasNature(JavaCore.NATURE_ID)) {
-                var javaProject = JavaCore.create(project);
-                var containerEntry = getBazelContainerEntry(javaProject);
-                // ensure the project has a Bazel container
-                if (containerEntry != null) {
-                    var savedContainer = getSavedContainer(project);
-                    if (savedContainer == null) {
-                        // there is no saved container; i.e. this is a project setup/imported before the classpath container rework
-                        // initialize the classpath
-                        updateClasspath(javaProject, subMonitor.newChild(1));
-                        continue nextProject;
+        try {
+            var projects = workspace.getRoot().getProjects();
+            var subMonitor = SubMonitor.convert(monitor, projects.length);
+            nextProject: for (IProject project : projects) {
+                // we only process Java projects
+                if (project.hasNature(JavaCore.NATURE_ID)) {
+                    var javaProject = JavaCore.create(project);
+                    var containerEntry = getBazelContainerEntry(javaProject);
+                    // ensure the project has a Bazel container
+                    if (containerEntry != null) {
+                        var savedContainer = getSavedContainer(project);
+                        if (savedContainer == null) {
+                            // there is no saved container; i.e. this is a project setup/imported before the classpath container rework
+                            // initialize the classpath
+                            subMonitor.setTaskName(project.getName());
+                            updateClasspath(javaProject, subMonitor.newChild(1));
+                            continue nextProject;
+                        }
                     }
                 }
-            }
 
-            subMonitor.worked(1);
+                subMonitor.worked(1);
+            }
+        } finally {
+            if (monitor != null) {
+                monitor.done();
+            }
         }
     }
 
@@ -369,13 +388,20 @@ public class BazelClasspathManager {
     }
 
     public void updateClasspath(IJavaProject project, IProgressMonitor monitor) throws CoreException {
-        var containerEntry = getBazelContainerEntry(project);
-        var path = containerEntry != null ? containerEntry.getPath() : new Path(CONTAINER_ID);
-        var classpath = getClasspath(project, monitor);
-        IClasspathContainer container = new BazelClasspathContainer(path, classpath);
-        JavaCore.setClasspathContainer(container.getPath(), new IJavaProject[] { project },
-            new IClasspathContainer[] { container }, monitor);
-        saveContainerState(project.getProject(), container);
+        try {
+            var subMonitor = SubMonitor.convert(monitor, 2);
+            var containerEntry = getBazelContainerEntry(project);
+            var path = containerEntry != null ? containerEntry.getPath() : new Path(CONTAINER_ID);
+            var classpath = getClasspath(project, subMonitor.newChild(1));
+            IClasspathContainer container = new BazelClasspathContainer(path, classpath);
+            JavaCore.setClasspathContainer(container.getPath(), new IJavaProject[] { project },
+                new IClasspathContainer[] { container }, subMonitor.newChild(1));
+            saveContainerState(project.getProject(), container);
+        } finally {
+            if (monitor != null) {
+                monitor.done();
+            }
+        }
     }
 
 }

@@ -123,7 +123,7 @@ public final class ShellCommand implements Command {
 
         BazelProcessBuilder builder;
         if (shellEnvironment.launchWithBashEnvironment()) {
-            List<String> bashArgs = List.of("bash", "-c", toQuotedStringForShell(args));
+            List<String> bashArgs = List.of("bash", "-l", "-c", toQuotedStringForShell(args));
             builder = new BazelProcessBuilder(bashArgs, bazelEnvironmentVariables);
         } else {
             builder = new BazelProcessBuilder(args, bazelEnvironmentVariables);

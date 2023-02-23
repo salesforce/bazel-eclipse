@@ -114,7 +114,7 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
 
     @Override
     public JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) {
-        BazelWorkspace bazelWorkspace = ComponentContext.getInstance().getBazelWorkspace();
+        var bazelWorkspace = ComponentContext.getInstance().getBazelWorkspace();
         if (Objects.isNull(config) || !config.isGlobalClasspathSearchEnabled() || (bazelWorkspace == null)) {
             // user has disabled the global search feature, or hasnt imported a bazel workspace yet
             return new JvmClasspathData();
@@ -122,20 +122,26 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
 
         if (!bazelWorkspace.getName().equals(bazelWorkspaceName)) {
             // this is the first time with this Bazel Workspace, load our collaborators
-            OperatingEnvironmentDetectionStrategy os = ComponentContext.getInstance().getOsStrategy();
-            BazelExternalJarRuleManager externalJarManager = ComponentContext.getInstance().getBazelExternalJarRuleManager();
+            var os = ComponentContext.getInstance().getOsStrategy();
+            var externalJarManager =
+                    ComponentContext.getInstance().getBazelExternalJarRuleManager();
 
             // check if the user has provided an additional location to look for jars
-            List<File> additionalJarLocations = loadAdditionalLocations();
+            var additionalJarLocations = loadAdditionalLocations();
             bazelJvmIndexClasspath =
                     new BazelJvmIndexClasspath(bazelWorkspace, os, externalJarManager, additionalJarLocations);
             instances.add(bazelJvmIndexClasspath);
         }
 
         // the Java SDK will produce a list of logical classpath entries
-        long startTime = System.currentTimeMillis();
-        JvmClasspathData computedClasspath = bazelJvmIndexClasspath.getClasspathEntries(progressMonitor);
-        long endTime = System.currentTimeMillis();
+        var startTime = System.currentTimeMillis();
+        JvmClasspathData computedClasspath;
+        try {
+            computedClasspath = bazelJvmIndexClasspath.getClasspathEntries(progressMonitor);
+        } catch (Exception e) {
+            computedClasspath = new JvmClasspathData();
+        }
+        var endTime = System.currentTimeMillis();
 
         LOG.info("completed indexing in [{}] milliseconds.", (endTime - startTime));
 
@@ -163,11 +169,11 @@ public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathConta
     public static List<File> loadAdditionalLocations() {
         List<File> additionalJarLocations = null;
 
-        String jarCacheDir = ComponentContext.getInstance().getPreferenceStoreHelper()
+        var jarCacheDir = ComponentContext.getInstance().getPreferenceStoreHelper()
                 .getString(BazelPreferenceKeys.EXTERNAL_JAR_CACHE_PATH_PREF_NAME);
         if (jarCacheDir != null) {
             // user has specified a location, make sure it exists
-            File jarCacheDirFile = new File(jarCacheDir);
+            var jarCacheDirFile = new File(jarCacheDir);
             if (jarCacheDirFile.exists()) {
                 additionalJarLocations = new ArrayList<>();
                 additionalJarLocations.add(jarCacheDirFile);

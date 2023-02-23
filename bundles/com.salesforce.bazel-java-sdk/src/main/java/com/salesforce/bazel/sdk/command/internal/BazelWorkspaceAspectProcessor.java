@@ -23,6 +23,9 @@
  */
 package com.salesforce.bazel.sdk.command.internal;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,12 +41,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfoFactory;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
@@ -53,7 +58,7 @@ import com.salesforce.bazel.sdk.model.BazelTargetKind;
  * TODO this belongs in an sdk.aspect package, not buried down in command.internal
  */
 public class BazelWorkspaceAspectProcessor {
-    static final LogHelper LOG = LogHelper.log(BazelWorkspaceAspectProcessor.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelWorkspaceAspectProcessor.class);
 
     private final BazelWorkspaceCommandRunner bazelWorkspaceCommandRunner;
     private final BazelCommandExecutor bazelCommandExecutor;
@@ -218,9 +223,14 @@ public class BazelWorkspaceAspectProcessor {
             Map<BazelLabel, Set<AspectTargetInfo>> resultMap, String caller)
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
 
-        LOG.info("Starting generation of Aspect files for " + cacheMisses.size() + " packages.");
+        LOG.debug("Starting generation of Aspect files for {} packages.",  cacheMisses.size());
         List<String> discoveredAspectFilePaths = generateAspectTargetInfoFiles(cacheMisses);
-        LOG.info("Finished generation of Aspect files for " + cacheMisses.size() + " packages.");
+        LOG.debug("Finished generation of Aspect files for {} packages.",  cacheMisses.size());
+
+        if(discoveredAspectFilePaths.isEmpty()) {
+            // this cannot be right
+            throw new IOException(format("No Aspect files generated for: %s", cacheMisses.stream().map(BazelLabel::toString).collect(joining(", "))));
+        }
 
         Map<BazelLabel, AspectTargetInfo> aspectInfos = loadAspectFilePaths(discoveredAspectFilePaths);
 
@@ -233,7 +243,7 @@ public class BazelWorkspaceAspectProcessor {
             for (BazelLabel label : cacheMisses) {
                 Set<AspectTargetInfo> lastgood = aspectInfoCache_lastgood.get(label);
                 if (lastgood == null) {
-                    LOG.info("Aspect execution failed (all) for target: {}", getLogStr(label, caller));
+                    LOG.debug("Aspect execution failed (all) for target: {}", getLogStr(label, caller));
                 } else {
                     resultMap.put(label, lastgood);
                 }
@@ -248,7 +258,7 @@ public class BazelWorkspaceAspectProcessor {
                 Set<AspectTargetInfo> infos = owningLabelToAspectInfos.get(label);
                 aspectInfoCache_current.put(label, infos);
                 aspectInfoCache_lastgood.put(label, infos);
-                LOG.info("Aspect data loaded for target: " + label + getLogStr(label, caller));
+                LOG.debug("Aspect data loaded for target: " + label + getLogStr(label, caller));
             }
             for (BazelLabel label : cacheMisses) {
                 // since we just populated the caches above, we should now find results
@@ -348,8 +358,7 @@ public class BazelWorkspaceAspectProcessor {
                 BazelLabel depLabel = new BazelLabel(label);
                 AspectTargetInfo dep = depNameToTargetInfo.get(depLabel);
                 if (dep == null) {
-                    LOG.info("No AspectTargetInfo exists for " + label
-                            + "; it and its descendents are excluded from analysis.");
+                    LOG.debug("No AspectTargetInfo exists for {}; it and its descendents are excluded from analysis.", label);
                     skippedLabels.add(label);
                 } else {
                     queue.add(dep);
@@ -367,8 +376,7 @@ public class BazelWorkspaceAspectProcessor {
             }
         } else {
             kind = aspectTargetInfo.getKind();
-            LOG.info("AspectInfo " + aspectTargetInfo.getLabel().getLabelPath()
-                + " does not have an associated target kind.");
+            LOG.debug("AspectInfo {} does not have an associated target kind.", aspectTargetInfo.getLabel().getLabelPath());
         }
 
         return Collections.unmodifiableSet(allDeps);
@@ -432,7 +440,7 @@ public class BazelWorkspaceAspectProcessor {
             };
 
             List<String> partialListOfGeneratedFilePaths =
-                    bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE, bazelWorkspaceRootDirectory,
+                    bazelCommandExecutor.runBazelAndGetErrorLinesIgnoringExitCode(ConsoleType.WORKSPACE, bazelWorkspaceRootDirectory,
                         null, args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
             listOfGeneratedFilePaths.addAll(partialListOfGeneratedFilePaths);
         }

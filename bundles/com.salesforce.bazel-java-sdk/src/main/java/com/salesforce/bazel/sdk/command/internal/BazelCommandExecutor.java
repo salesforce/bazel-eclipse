@@ -36,6 +36,9 @@
 
 package com.salesforce.bazel.sdk.command.internal;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -117,8 +120,17 @@ public class BazelCommandExecutor {
         if (exitCode == 0) {
             return command.getSelectedErrorLines();
         }
-        LOG.error("Command [{}] failed with this exit code: {}", args, exitCode);
-        return new ArrayList<>();
+        throw new IOException(format("Command [%s] failed with this exit code: %d", args, exitCode, command.getSelectedErrorLines().stream().collect(joining(System.lineSeparator()))));
+    }
+
+    public synchronized List<String> runBazelAndGetErrorLinesIgnoringExitCode(ConsoleType consoleType, File directory,
+            WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector, long timeoutMS)
+            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
+
+        CommandBuilder builder = getConfiguredCommandBuilder(consoleType, directory, progressMonitor, args, timeoutMS);
+        Command command = builder.setStderrLineSelector(selector).build();
+        command.run();
+        return command.getSelectedErrorLines();
     }
 
     // HELPERS

@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
@@ -66,6 +69,8 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
     // TODO make classpath cache timeout configurable
     private static final long CLASSPATH_CACHE_TIMEOUT_MS = 300000;
 
+    private static Logger LOG = LoggerFactory.getLogger(JvmUnionClasspath.class);
+
     protected final BazelWorkspace bazelWorkspace;
     protected final BazelProjectManager bazelProjectManager;
     protected final BazelProject bazelProject;
@@ -93,19 +98,19 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
             BazelCommandManager bazelCommandManager) {
         ImplicitClasspathHelper implicitDependencyHelper = new ImplicitClasspathHelper();
         RealOperatingEnvironmentDetectionStrategy osDetector = new RealOperatingEnvironmentDetectionStrategy();
-        return new JvmUnionClasspath(bazelWorkspace, bazelProject.bazelProjectManager, bazelProject, implicitDependencyHelper,
-                osDetector, bazelCommandManager,
+        return new JvmUnionClasspath(bazelWorkspace, bazelProject.bazelProjectManager, bazelProject,
+                implicitDependencyHelper, osDetector, bazelCommandManager,
                 List.of(new JvmClasspathAspectStrategy(bazelWorkspace, bazelProject.bazelProjectManager,
-                        implicitDependencyHelper, osDetector,
-                        bazelCommandManager)));
+                        implicitDependencyHelper, osDetector, bazelCommandManager)));
     }
 
     /**
      * Computes the JVM classpath for the associated BazelProject. This response is cached in the super class. External
      * callers will invoke getClasspathEntries() which in turn invokes this method.
+     * @throws Exception
      */
     @Override
-    protected JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) {
+    protected JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) throws Exception {
         // sanity check
         if (bazelWorkspace == null) {
             // not sure how we could get here, but just check
@@ -121,7 +126,7 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
         }
         response = new JvmClasspathData();
 
-        logger.info("Computing classpath for project " + bazelProject.name + " (import? " + isImport + ")");
+        LOG.debug("Computing classpath for project " + bazelProject.name + " (import? " + isImport + ")");
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
         BazelProjectTargets configuredTargetsForProject = null;
@@ -129,13 +134,8 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
 
         // get the model of the BUILD file for this package, which will tell us the type of each target, and the list
         // of all targets if configured with the wildcard target
-        try {
-            configuredTargetsForProject = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
-            bazelBuildFileModel = getBuildFile(bazelWorkspaceCmdRunner, configuredTargetsForProject);
-        } catch (Exception anyE) {
-            logger.error("Unable to compute classpath containers entries for project " + bazelProject.name, anyE);
-            return returnEmptyClasspathOrThrow(anyE);
-        }
+        configuredTargetsForProject = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
+        bazelBuildFileModel = getBuildFile(bazelWorkspaceCmdRunner, configuredTargetsForProject);
 
         // now get the actual list of activated targets, with wildcard resolved using the BUILD file model if necessary
         Set<String> actualActivatedTargets = configuredTargetsForProject.getActualTargets(bazelBuildFileModel);
@@ -146,28 +146,26 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
             String targetKindString = bazelBuildFileModel.getRuleTypeForTarget(targetLabel);
             BazelTargetKind targetKind = BazelTargetKind.valueOfIgnoresCase(targetKindString);
 
-            try {
-                // invoke our classpath strategies in order, until one is able to complete the classpath
-                for (JvmClasspathStrategy strategy : orderedClasspathStrategies) {
-                    JvmClasspathStrategyRequest request = new JvmClasspathStrategyRequest(bazelProject, targetLabel,
-                            targetKind, configuredTargetsForProject, actualActivatedTargets, response);
-                    strategy.getClasspathForTarget(request);
-                    if (response.isComplete) {
-                        break;
-                    }
-
-                }
-            } catch (Exception anyE) {
-                // computing the classpath for a single target can fail, and we will try to continue
-                logger.error("Exception caught during classpath computation: {}", anyE, anyE.getMessage());
+            // skip targets that should not be processed during classpath computation
+            if(!targetKind.isRegistered())
                 continue;
+
+            // invoke our classpath strategies in order, until one is able to complete the classpath
+            for (JvmClasspathStrategy strategy : orderedClasspathStrategies) {
+                JvmClasspathStrategyRequest request = new JvmClasspathStrategyRequest(bazelProject, targetLabel,
+                        targetKind, configuredTargetsForProject, actualActivatedTargets, response);
+                strategy.getClasspathForTarget(request);
+                if (response.isComplete) {
+                    break;
+                }
+
             }
         } // for loop
 
         // cache the entries
         cachePutTimeMillis = System.currentTimeMillis();
         cachedClasspath = response;
-        logger.debug("Cached the classpath for project " + bazelProject.name);
+        LOG.debug("Cached the classpath for project " + bazelProject.name);
 
         SimplePerfRecorder.addTime("classpath", startTimeMS);
 
@@ -198,20 +196,6 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
         bazelBuildFileModel = buildFiles.iterator().next();
 
         return bazelBuildFileModel;
-    }
-
-    private void continueOrThrow(Throwable th) {
-        // under real usage, we suppress fatal exceptions because sometimes there are IDE timing issues that can
-        // be corrected if the classpath is computed again.
-        // But under tests, we want to fail fatally otherwise tests could pass when they shouldn't
-        if (osDetector.isTestRuntime()) {
-            throw new IllegalStateException("The classpath could not be computed by the BazelClasspathContainer", th);
-        }
-    }
-
-    private JvmClasspathData returnEmptyClasspathOrThrow(Throwable th) {
-        continueOrThrow(th);
-        return new JvmClasspathData();
     }
 
 }

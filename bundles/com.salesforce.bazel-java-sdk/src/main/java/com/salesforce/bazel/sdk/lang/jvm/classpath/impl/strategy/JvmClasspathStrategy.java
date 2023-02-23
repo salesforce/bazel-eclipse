@@ -55,8 +55,8 @@ public abstract class JvmClasspathStrategy {
     protected final OperatingEnvironmentDetectionStrategy osDetector;
     protected final BazelCommandManager bazelCommandManager;
 
-    public JvmClasspathStrategy(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager, 
-        ImplicitClasspathHelper implicitDependencyHelper, OperatingEnvironmentDetectionStrategy osDetector, 
+    public JvmClasspathStrategy(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
+        ImplicitClasspathHelper implicitDependencyHelper, OperatingEnvironmentDetectionStrategy osDetector,
         BazelCommandManager bazelCommandManager) {
         this.bazelWorkspace = bazelWorkspace;
         this.bazelProjectManager = bazelProjectManager;
@@ -64,17 +64,18 @@ public abstract class JvmClasspathStrategy {
         this.osDetector = osDetector;
         this.bazelCommandManager = bazelCommandManager;
     }
-    
+
     // API
-    
+
     /**
      * Loads the classpath for a target.
+     * @throws Exception
      */
-    public abstract JvmClasspathData getClasspathForTarget(JvmClasspathStrategyRequest request);
+    public abstract JvmClasspathData getClasspathForTarget(JvmClasspathStrategyRequest request) throws Exception;
 
-    
+
     // INTERNAL
-    
+
 
     /**
      * Returns the IJavaProject in the current workspace that contains at least one of the specified sources.
@@ -101,7 +102,7 @@ public abstract class JvmClasspathStrategy {
         }
         projectList.add(addThis);
     }
-    
+
     protected JvmClasspathEntry jarsToClasspathEntry(JVMAspectOutputJarSet jarSet, boolean isRuntimeLib,
             boolean isTestLib) {
         JvmClasspathEntry cpEntry;
@@ -109,7 +110,6 @@ public abstract class JvmClasspathStrategy {
         return cpEntry;
     }
 
-    @SuppressWarnings("unused")
     protected JvmClasspathEntry[] jarsToClasspathEntries(BazelWorkspace bazelWorkspace,
             WorkProgressMonitor progressMonitor, Set<JVMAspectOutputJarSet> jars, boolean isRuntimeLib,
             boolean isTestLib) {
@@ -123,22 +123,4 @@ public abstract class JvmClasspathStrategy {
         }
         return entries;
     }
-
-
-    
-    protected void continueOrThrow(Throwable th) {
-        // under real usage, we suppress fatal exceptions because sometimes there are IDE timing issues that can
-        // be corrected if the classpath is computed again.
-        // But under tests, we want to fail fatally otherwise tests could pass when they shouldn't
-        if (osDetector.isTestRuntime()) {
-            throw new IllegalStateException("The classpath could not be computed by the BazelClasspathContainer", th);
-        }
-    }
-
-    protected JvmClasspathData returnEmptyClasspathOrThrow(Throwable th) {
-        continueOrThrow(th);
-        return new JvmClasspathData();
-    }
-
-
 }

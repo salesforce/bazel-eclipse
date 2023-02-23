@@ -124,7 +124,7 @@ public class BazelClasspathContainerOld extends BaseBazelClasspathContainer {
 
     @Override
     public IClasspathEntry[] getClasspathEntries() {
-        CallSource currentCallSource = getCallSource(Thread.currentThread().getStackTrace());
+        var currentCallSource = getCallSource(Thread.currentThread().getStackTrace());
 
         if (LOG.isDebugLevel()) {
             LOG.debug("Call source for classpath is {}. Last call source was {}", currentCallSource.name(),
@@ -138,7 +138,7 @@ public class BazelClasspathContainerOld extends BaseBazelClasspathContainer {
                 .getName().equalsIgnoreCase("Runner_deploy-ijar.jar"));
 
         // if it is Run/Debug call, then implicit dependencies should be filtered out to prevent the loading of a wrong version of classes
-        IClasspathEntry[] classpathEntries = super.getClasspathEntries();
+        var classpathEntries = super.getClasspathEntries();
         if (CallSource.RUN_DEBUG.equals(lastCallSource)) {
             classpathEntries =
                     Arrays.stream(classpathEntries).filter(isNormalClasspathEntry).toArray(IClasspathEntry[]::new);
@@ -154,7 +154,12 @@ public class BazelClasspathContainerOld extends BaseBazelClasspathContainer {
     @Override
     protected JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) {
         // the Java SDK will produce a list of logical classpath entries
-        return bazelClasspath.getClasspathEntries(progressMonitor);
+        try {
+            return bazelClasspath.getClasspathEntries(progressMonitor);
+        } catch (Exception e) {
+            // old behavior
+            return new JvmClasspathData();
+        }
     }
 
     // TODO this clean() method should not be static
@@ -166,7 +171,7 @@ public class BazelClasspathContainerOld extends BaseBazelClasspathContainer {
 
     private CallSource getCallSource(StackTraceElement[] stack) {
         for (StackTraceElement elem : stack) {
-            String classname = elem.getClassName();
+            var classname = elem.getClassName();
             if (classname.endsWith(IClasspathContainerConstants.JAVA_DEBUG_DELEGATE_CMD_HANDLER)) {
                 return CallSource.RUN_DEBUG;
             }

@@ -23,7 +23,6 @@
  */
 package com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,16 +30,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectOutputJarSet;
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfo;
-import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
+import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
-import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -57,21 +57,19 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * detailed dependency information.
  * <p>
  * This strategy will only work if the package does not have a build error. Bazel will not write
- * the aspect output files if there is a build error. 
+ * the aspect output files if there is a build error.
  */
 public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
-    private final LogHelper logger;
+    private static Logger LOG = LoggerFactory.getLogger(JvmClasspathAspectStrategy.class);
 
     public JvmClasspathAspectStrategy(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
             ImplicitClasspathHelper implicitDependencyHelper, OperatingEnvironmentDetectionStrategy osDetector,
             BazelCommandManager bazelCommandManager) {
         super(bazelWorkspace, bazelProjectManager, implicitDependencyHelper, osDetector, bazelCommandManager);
-
-        logger = LogHelper.log(this.getClass());
     }
 
     @Override
-    public JvmClasspathData getClasspathForTarget(JvmClasspathStrategyRequest request) {
+    public JvmClasspathData getClasspathForTarget(JvmClasspathStrategyRequest request) throws Exception {
 
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
                 bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
@@ -83,13 +81,12 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
         // each project target can depend on many downstream targets
         // we need to query bazel to load all the aspect info objects that are associated with the full
         // dependency graph of the requested target
-        try {
             Map<BazelLabel, Set<AspectTargetInfo>> targetLabelToAspectTargetInfos =
                     bazelWorkspaceCmdRunner.getAspectTargetInfos(request.actualActivatedTargets, "getClasspathEntries");
             Set<AspectTargetInfo> targetInfos = targetLabelToAspectTargetInfos.get(new BazelLabel(request.targetLabel));
 
             if (targetInfos == null) {
-                logger.warn("Failed to inspect target: " + request.targetLabel + ", skipping");
+                LOG.warn("Failed to inspect target: " + request.targetLabel + ", skipping");
                 targetInfos = Collections.emptySet();
                 request.classpathData.isComplete = false;
             } else {
@@ -106,8 +103,8 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
                 JVMAspectTargetInfo jvmTargetInfo = (JVMAspectTargetInfo) targetInfo;
                 String targetInfoLabelPath = jvmTargetInfo.getLabelPath();
                 BazelTargetKind aspectKind = jvmTargetInfo.getKind();
-                
-                logger.info("Found java_import target of kind {} with label {}", aspectKind.getKindName(), targetInfoLabelPath);
+
+                LOG.debug("Found java_import target of kind {} with label {}", aspectKind.getKindName(), targetInfoLabelPath);
 
                 if (request.actualActivatedTargets.contains(targetInfoLabelPath)) {
                     if (aspectKind.isKind("java_library") || aspectKind.isKind("java_binary")) {
@@ -118,7 +115,7 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
 
                     // java_test aspect should be analyzed for implicit dependencies
                     if (aspectKind.isTestable()) {
-                        request.classpathData.implicitDeps = implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace, 
+                        request.classpathData.implicitDeps = implicitDependencyHelper.computeImplicitDependencies(bazelWorkspace,
                             jvmTargetInfo.getLabel(), aspectKind);
                         // there is no need to process test jar further
                         continue;
@@ -129,11 +126,11 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
                     else if (!aspectKind.isKind("java_import")) {
                         // some other case like java_binary, proto_library, java_proto_library, etc
                         // proceed but log a warn
-                        logger.info("Found unsupported target type as dependency: " + aspectKind.getKindName()
+                        LOG.info("Found unsupported target type as dependency: " + aspectKind.getKindName()
                                 + "; the JVM classpath processor currently supports java_library or java_import.");
                     }
                 }
-                
+
                 List<String> sourcePaths = jvmTargetInfo.getSources();
                 BazelProject otherProject = getSourceProjectForSourcePaths(sourcePaths);
                 if (otherProject == null) {
@@ -141,8 +138,8 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
                     // this means that this is an external jar, or a jar produced by a bazel target that was not imported
 
                     // TODO implement runtime classpath
-                    
-                    addTargetJarsIntoClasspath(bazelWorkspaceCmdRunner, request.classpathData, request.configuredTargetsForProject, 
+
+                    addTargetJarsIntoClasspath(bazelWorkspaceCmdRunner, request.classpathData, request.configuredTargetsForProject,
                         request.targetLabel, isTestTarget, jvmTargetInfo);
                 } else { // otherProject != null
                     String otherBazelProjectName = otherProject.name;
@@ -167,26 +164,15 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
                         boolean skipTarget =
                                 aspectKind.isKind("java_library") || aspectKind.isKind("java_binary") || aspectKind.isKind("java_test");
                         if (!skipTarget) {
-                            addTargetJarsIntoClasspath(bazelWorkspaceCmdRunner, request.classpathData, request.configuredTargetsForProject, 
+                            addTargetJarsIntoClasspath(bazelWorkspaceCmdRunner, request.classpathData, request.configuredTargetsForProject,
                                 request.targetLabel, isTestTarget, jvmTargetInfo);
-                        } 
+                        }
                     } // else name equals
                 } // else otherProject != null
             } // for targetInfos
-        } // try
-        catch (IOException | InterruptedException e) {
-            logger.error("Unable to compute classpath containers entries for project {}, error: ", e,
-                request.bazelProject.name);
-            request.classpathData.isComplete = false;
-            return returnEmptyClasspathOrThrow(e);
-        } catch (BazelCommandLineToolConfigurationException e) {
-            logger.error("Classpath could not be computed. Bazel not found: {}", e, e.getMessage());
-            request.classpathData.isComplete = false;
-            return returnEmptyClasspathOrThrow(e);
-        }
-        
+
         request.classpathData.jvmClasspathEntries = assembleClasspathEntries(request.classpathData);
-        
+
         return request.classpathData;
     }
 
@@ -202,7 +188,7 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
         if (pathStr == null) {
             pathStr = cpEntry.bazelProject.name;
         }
-        //logger.info("Adding cp entry ["+pathStr+"] to target ["+targetLabel+"]");
+        //LOG.info("Adding cp entry ["+pathStr+"] to target ["+targetLabel+"]");
         if (!isTestTarget) {
             // add to the main classpath?
             // if this was previously a test CP entry, we need to remove it since this is now a main cp entry
@@ -216,26 +202,26 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
             classpathData.testClasspathEntryMap.put(pathStr, cpEntry);
         }
     }
-    
+
     protected void addTargetJarsIntoClasspath(BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner,
-            JvmClasspathData classpathData, BazelProjectTargets configuredTargetsForProject, String targetLabel, 
+            JvmClasspathData classpathData, BazelProjectTargets configuredTargetsForProject, String targetLabel,
             boolean isTestTarget, JVMAspectTargetInfo jvmTargetInfo) {
-        
+
         for (JVMAspectOutputJarSet jarSet : jvmTargetInfo.getGeneratedJars()) {
-            addJarIntoClasspath(bazelWorkspaceCmdRunner, classpathData, configuredTargetsForProject, targetLabel, 
+            addJarIntoClasspath(bazelWorkspaceCmdRunner, classpathData, configuredTargetsForProject, targetLabel,
                 isTestTarget, jarSet);
         }
-        
+
         for (JVMAspectOutputJarSet jarSet : jvmTargetInfo.getJars()) {
-            addJarIntoClasspath(bazelWorkspaceCmdRunner, classpathData, configuredTargetsForProject, targetLabel, 
+            addJarIntoClasspath(bazelWorkspaceCmdRunner, classpathData, configuredTargetsForProject, targetLabel,
                 isTestTarget, jarSet);
         }
     }
 
     protected void addJarIntoClasspath(BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner,
-            JvmClasspathData classpathData, BazelProjectTargets configuredTargetsForProject, String targetLabel, 
+            JvmClasspathData classpathData, BazelProjectTargets configuredTargetsForProject, String targetLabel,
             boolean isTestTarget, JVMAspectOutputJarSet jarSet) {
-        
+
         JvmClasspathEntry cpEntry = jarsToClasspathEntry(jarSet, false, isTestTarget);
         if (cpEntry != null) {
             addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, targetLabel, cpEntry, isTestTarget, classpathData);
@@ -243,7 +229,7 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
             // there was a problem with the aspect computation, this might resolve itself if we recompute it
             bazelWorkspaceCmdRunner.flushAspectInfoCache(configuredTargetsForProject.getConfiguredTargets());
         }
-        
+
     }
 
     protected JvmClasspathEntry[] assembleClasspathEntries(JvmClasspathData classpathData) {
