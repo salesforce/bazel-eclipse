@@ -38,6 +38,7 @@ pom.tycho
 .polyglot.*
 .META_INF_MANIFEST.MF
 .META-INF_MANIFEST.MF
+.tycho-*
 
 # other
 *.patch

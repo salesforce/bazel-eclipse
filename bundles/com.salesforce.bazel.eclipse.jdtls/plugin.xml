@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+      <extension
+         id="importers"
+         point="org.eclipse.jdt.ls.core.importers">
+         <importer
+            id = "bazelProjectImporter"
+            order ="200"
+            class = "com.salesforce.bazel.eclipse.jdtls.managers.BazelProjectImporter"/>
+   </extension>
+   <extension
+   		 id="buildSupporter"
+         point="org.eclipse.jdt.ls.core.buildSupport">
+         <buildSupport
+         	id="bazelSupport"
+         	order="200"
+         	class="com.salesforce.bazel.eclipse.jdtls.managers.BazelBuildSupport" />
+   </extension>
+</plugin>

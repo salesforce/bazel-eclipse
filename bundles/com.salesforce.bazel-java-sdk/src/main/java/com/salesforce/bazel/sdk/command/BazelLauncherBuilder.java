@@ -23,6 +23,8 @@
  */
 package com.salesforce.bazel.sdk.command;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,8 +32,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.internal.ConsoleType;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
@@ -41,7 +45,7 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Launch Configs).
  */
 public class BazelLauncherBuilder {
-    private static final LogHelper LOG = LogHelper.log(BazelLauncherBuilder.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelLauncherBuilder.class);
 
     private final BazelWorkspaceCommandRunner bazelCommandRunner;
     private final CommandBuilder commandBuilder;
@@ -146,11 +150,10 @@ public class BazelLauncherBuilder {
         }
         File appFile = new File(bazelBinDirectory, appPath);
         if (!appFile.exists()) {
-            LOG.error("ERROR: Launch executable does not exist: {}", appFile.getAbsolutePath());
-            throw new IllegalStateException();
-        } else {
-            LOG.info("Launch executable: {}", appFile.getAbsolutePath());
+            throw new IllegalStateException(format("ERROR: Launch executable does not exist: %s", appFile.getAbsolutePath()));
         }
+
+        LOG.debug("Launch executable: {}", appFile.getAbsolutePath());
 
         List<String> args = new ArrayList<>();
         args.add(appFile.getAbsolutePath());
