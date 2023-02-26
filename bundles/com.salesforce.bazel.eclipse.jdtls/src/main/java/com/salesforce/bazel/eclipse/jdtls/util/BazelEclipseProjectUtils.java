@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
-import com.salesforce.bazel.eclipse.core.resources.BazelNature;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.jdtls.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
@@ -24,7 +24,7 @@ public class BazelEclipseProjectUtils {
 
     public static Set<IProject> calculateProjectReferences(IProject eclipseProject) {
         try {
-            if (eclipseProject.getName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME)) {
+            if (eclipseProject.getName().startsWith(BazelProject.BAZELWORKSPACE_PROJECT_BASENAME)) {
                 return Collections.emptySet();
             }
             var bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();

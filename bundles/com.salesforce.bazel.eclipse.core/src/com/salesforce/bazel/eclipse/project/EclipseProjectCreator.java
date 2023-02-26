@@ -36,16 +36,15 @@ import org.eclipse.jdt.core.JavaCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
-import com.salesforce.bazel.eclipse.core.resources.BazelNature;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.projectimport.flow.ImportContext;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
@@ -108,7 +107,7 @@ public class EclipseProjectCreator {
         }
 
         // create the logical bazel project
-        var bazelProject = new BazelProject(eclipseProjectName, createdEclipseProject, structure);
+        var bazelProject = new BazelProjectOld(eclipseProjectName, createdEclipseProject, structure);
         bazelProjectManager.addProject(bazelProject);
 
         return createdEclipseProject;
@@ -156,7 +155,7 @@ public class EclipseProjectCreator {
     protected String createProjectName(BazelWorkspace bazelWorkspace, BazelPackageLocation packageLocation,
             List<IProject> currentImportedProjects, List<IProject> existingImportedProjects) {
         if (packageLocation.isWorkspaceRoot()) {
-            return BazelNature.getEclipseRootProjectName(bazelWorkspace.getName());
+            return BazelProjectOld.getEclipseRootProjectName(bazelWorkspace.getName());
         }
 
         return EclipseProjectUtils.computeEclipseProjectNameForBazelPackage(packageLocation, existingImportedProjects,
@@ -219,8 +218,8 @@ public class EclipseProjectCreator {
 
         var bazelProject = bazelProjectManager.getProject(projectName);
         try {
-            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject,
-                BazelCorePluginSharedContstants.BAZEL_NATURE_ID, resourceHelper);
+            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelCoreSharedContstants.BAZEL_NATURE_ID,
+                resourceHelper);
             EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID, resourceHelper);
             bazelProjectManager.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(),
                 packageFSPath, bazelTargets, new ArrayList<>()); // TODO pass buildFlags

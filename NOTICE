@@ -6,15 +6,6 @@ Copyright (c) 2008-2018 Sonatype, Inc. and others.
 This product includes software developed at Salesforce (http://www.salesforce.com/).
 An early version of this software was developed by Google Inc. using the attribution 'The Bazel Authors'.
 
-Some portions of the software was copied in whole or part from the M2Eclipse project, which was contributed by Sonatype, Inc. and others.
-The files that were derived from that source include:
- - SelectionUtil.java
- - BazelImportWizard
- - BazelImportWizardAdvancedSettingsControl
- - BazelImportWizardLabelProvider
- - BazelImportWizardLocationControl
- - BazelImportWizardPage
- - BazelImportWizardProjectTree
- - BazelImportWizardWorkingSetControl
-
-The files are accompanied with the license header as well as SPDX-License-Identifier: EPL-2.0.
+This product includes software developed at
+The Eclipse Foundation (http://www.eclipse.org/).
+The relevant files contain an EPL header as well as SPDX-License-Identifier: EPL-2.0.

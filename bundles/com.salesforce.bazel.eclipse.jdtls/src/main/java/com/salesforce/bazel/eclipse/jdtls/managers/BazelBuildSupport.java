@@ -24,7 +24,7 @@ import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager.CHANGE_TYPE;
 import org.slf4j.Logger;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 
 @SuppressWarnings("restriction")
 public class BazelBuildSupport implements IBuildSupport {
@@ -53,7 +53,7 @@ public class BazelBuildSupport implements IBuildSupport {
     @Override
     public boolean applies(IProject project) {
         try {
-            return (project != null) && project.hasNature(BazelCorePluginSharedContstants.BAZEL_NATURE_ID);
+            return (project != null) && project.hasNature(BazelCoreSharedContstants.BAZEL_NATURE_ID);
 
         } catch (CoreException e) {
             return false;

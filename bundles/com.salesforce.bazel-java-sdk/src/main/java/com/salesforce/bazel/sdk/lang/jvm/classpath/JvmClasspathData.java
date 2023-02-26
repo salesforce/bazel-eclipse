@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 
 /**
  * Carries the data from a classpath computation.
@@ -64,7 +64,7 @@ public class JvmClasspathData {
      * computedClasspath.classpathProjectReferences); But due to locking in some environments, this may need to be
      * delayed.
      */
-    public List<BazelProject> classpathProjectReferences = new ArrayList<>();
+    public List<BazelProjectOld> classpathProjectReferences = new ArrayList<>();
     
     
     // INTERNAL

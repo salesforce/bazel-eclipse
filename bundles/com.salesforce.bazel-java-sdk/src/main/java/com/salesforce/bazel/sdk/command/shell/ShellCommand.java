@@ -118,6 +118,9 @@ public final class ShellCommand implements Command {
 
         BazelProcessBuilder builder;
         if (shellEnvironment.launchWithBashEnvironment()) {
+            // FIXME: should only do this on OSX as '-l' login shell; linux should use non-login shell
+            // FIXME: read login shell on OSX with 'dscl . -read /Users/$USER UserShell'
+            // FIXME: parse /etc/passwd in Linux (split by ':', 7 fields, login shell is last)
             List<String> bashArgs = List.of("bash", "-l", "-c", toQuotedStringForShell(args));
             builder = new BazelProcessBuilder(bashArgs, bazelEnvironmentVariables);
         } else {

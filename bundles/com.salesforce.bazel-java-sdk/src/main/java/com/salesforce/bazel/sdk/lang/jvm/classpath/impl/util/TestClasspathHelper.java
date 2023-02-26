@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 /**
@@ -93,7 +93,7 @@ public class TestClasspathHelper {
      * If a testClassName is passed, it will often speed up the operation as the param file for that test class can
      * often be found on the file system.
      */
-    public ParamFileResult findParamFilesForTests(BazelWorkspace bazelWorkspace, BazelProject bazelProject,
+    public ParamFileResult findParamFilesForTests(BazelWorkspace bazelWorkspace, BazelProjectOld bazelProject,
             boolean isSource, String testClassName, BazelProjectTargets targets) {
         ParamFileResult result = null;
 
@@ -155,7 +155,7 @@ public class TestClasspathHelper {
      * <p>
      * Internally, this method uses Bazel query, which is somewhat expensive.
      */
-    public ParamFileResult findParamFilesForTestTargets(BazelWorkspace bazelWorkspace, BazelProject bazelProject,
+    public ParamFileResult findParamFilesForTestTargets(BazelWorkspace bazelWorkspace, BazelProjectOld bazelProject,
             boolean isSource, BazelProjectTargets targets) {
         ParamFileResult result = new ParamFileResult();
 
@@ -186,7 +186,7 @@ public class TestClasspathHelper {
      * to find it, the scope of the bazel query commands will be the passed targets.
      */
     public ParamFileResult findParamFilesForTestClassname(BazelWorkspace bazelWorkspace,
-            BazelProject bazelProject, boolean isSource, BazelProjectTargets targets, String testClassName) {
+            BazelProjectOld bazelProject, boolean isSource, BazelProjectTargets targets, String testClassName) {
         ParamFileResult result = new ParamFileResult();
 
         String suffix = getParamsJarSuffix(isSource);
@@ -204,7 +204,7 @@ public class TestClasspathHelper {
      * the params file.
      */
     public Set<File> findParamsFileForTestClassnameAndTarget(BazelWorkspace bazelWorkspace,
-            BazelProject bazelProject, String target, String className, String suffix) {
+            BazelProjectOld bazelProject, String target, String className, String suffix) {
         // TODO in what case will there be multiple test param files?
         Set<File> paramFiles = new HashSet<>();
         File paramFile = null;

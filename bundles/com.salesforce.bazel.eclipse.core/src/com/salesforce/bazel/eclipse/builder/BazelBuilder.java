@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
-import com.salesforce.bazel.eclipse.core.classpath.IClasspathContainerConstants;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
@@ -65,7 +65,7 @@ import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.model.BazelProblem;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
@@ -76,8 +76,6 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * $SLASH_OK xml point="org.eclipse.core.resources.builders"
  */
 public class BazelBuilder extends IncrementalProjectBuilder {
-
-    public static final String BUILDER_NAME = "com.salesforce.bazel.eclipse.builder";
 
     private static final AtomicBoolean REGISTERED_EL_CHANGE_LISTENER = new AtomicBoolean(false);
     private static Logger LOG = LoggerFactory.getLogger(BazelBuilder.class);
@@ -160,7 +158,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             throws IOException, InterruptedException, BazelCommandLineToolConfigurationException, CoreException {
         Set<String> bazelTargets = new TreeSet<>();
         var bazelProjectManager = ComponentContext.getInstance().getProjectManager();
-        List<BazelProject> bazelProjects = new ArrayList<>();
+        List<BazelProjectOld> bazelProjects = new ArrayList<>();
 
         // figure out the list of targets to build
         for (IProject project : projects) {
@@ -219,8 +217,8 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             // we request a classpath container update only if detect a BUILD file change
             // this should also consider added or removed BUILD files (?)
             var javaProject = javaCoreHelper.getJavaProjectForProject(project);
-            var cpInit = JavaCore.getClasspathContainerInitializer(IClasspathContainerConstants.CONTAINER_ID);
-            cpInit.requestClasspathContainerUpdate(Path.fromPortableString(IClasspathContainerConstants.CONTAINER_ID),
+            var cpInit = JavaCore.getClasspathContainerInitializer(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
+            cpInit.requestClasspathContainerUpdate(Path.fromPortableString(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID),
                 javaProject, null);
         }
     }

@@ -13,10 +13,9 @@ import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
-public class BazelWorkspace {
-    private static Logger LOG = LoggerFactory.getLogger(BazelWorkspace.class);
+public final class BazelWorkspace {
 
-    // DATA
+    private static Logger LOG = LoggerFactory.getLogger(BazelWorkspace.class);
 
     /**
      * The location on disk for the workspace.
@@ -28,8 +27,6 @@ public class BazelWorkspace {
      */
     private final String name;
 
-    // COLLABORATORS
-
     /**
      * Bazel command runner for this workspace
      */
@@ -39,8 +36,6 @@ public class BazelWorkspace {
      * Strategy delegate that can compute the data for file paths
      */
     private BazelWorkspaceMetadataStrategy metadataStrategy;
-
-    // COMPUTED DATA
 
     /**
      * The internal location on disk for Bazel's 'execroot' for this workspace. E.g.
@@ -89,8 +84,6 @@ public class BazelWorkspace {
      * List of Bazel command options that apply for all workspace commands (i.e. from .bazelrc)
      */
     private BazelWorkspaceCommandOptions commandOptions;
-
-    // CTORS AND INITIALIZERS
 
     public BazelWorkspace(String name, File bazelWorkspaceRootDirectory,
             OperatingEnvironmentDetectionStrategy osEnvStrategy, BazelWorkspaceMetadataStrategy metadataStrategy) {
@@ -234,5 +227,6 @@ public class BazelWorkspace {
             return false;
         return true;
     }
+
 
 }

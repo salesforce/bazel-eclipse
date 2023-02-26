@@ -18,7 +18,8 @@ location "https://download.eclipse.org/egit/updates/" {
     org.eclipse.egit.gitflow.feature.feature.group
 }
 
-location "https://download.eclipse.org/releases/2021-09/" {
+// NOTE: this location needs to match with the Eclipse version above, otherwise EMF will fail to resolve
+location "https://download.eclipse.org/releases/2023-03/" {
 	// EMF & Co
     org.eclipse.emf.ecore.xcore.sdk.feature.group
     org.eclipse.emf.sdk.feature.group
@@ -31,9 +32,13 @@ location "https://download.eclipse.org/releases/2021-09/" {
 
     // Terminal
     org.eclipse.tm4e.feature.feature.group
+
+	// Xtext
+    org.eclipse.xtend.sdk.feature.group
+    org.eclipse.xtext.sdk.feature.group
 }
 
-location "https://download.eclipse.org/mylyn/docs/releases/3.0.39/" {
+location "https://download.eclipse.org/mylyn/docs/releases/3.0.46/" {
     org.eclipse.mylyn.wikitext_feature.feature.group
     org.eclipse.mylyn.wikitext.editors_feature.feature.group
     org.eclipse.mylyn.wikitext.sdk.feature.group

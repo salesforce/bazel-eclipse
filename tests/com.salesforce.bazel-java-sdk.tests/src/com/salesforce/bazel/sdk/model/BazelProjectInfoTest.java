@@ -91,7 +91,7 @@ public class BazelProjectInfoTest {
 
     @Test
     public void testCtorValidation_Root_Happy() throws Exception {
-        BazelPackageInfo rootNode = new BazelPackageInfo(WSDIR);
+        BazelPackageInfoOld rootNode = new BazelPackageInfoOld(WSDIR);
 
         assertTrue(rootNode.isWorkspaceRoot());
         assertNull(rootNode.getParentPackageInfo());
@@ -109,18 +109,18 @@ public class BazelProjectInfoTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testCtorValidation_Root_NotNull() throws Exception {
-        new BazelPackageInfo(null);
+        new BazelPackageInfoOld(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCtorValidation_Root_NotExists() throws Exception {
-        new BazelPackageInfo(new File("/tmp/somebogusdirectory")); // TODO windows
+        new BazelPackageInfoOld(new File("/tmp/somebogusdirectory")); // TODO windows
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCtorValidation_Root_WORKSPACE_NotExists() throws Exception {
         // Workspace dir exists, but is empty
-        new BazelPackageInfo(EMPTYDIR);
+        new BazelPackageInfoOld(EMPTYDIR);
     }
 
     // SUBPACKAGE NODE CTOR
@@ -129,8 +129,8 @@ public class BazelProjectInfoTest {
     public void testCtor_Sub_Happy() throws Exception {
         create_subdir(APPLE_PROJECT_FS_PATH);
 
-        BazelPackageInfo rootNode = new BazelPackageInfo(WSDIR);
-        BazelPackageInfo subNode = new BazelPackageInfo(rootNode, APPLE_PROJECT_FS_PATH);
+        BazelPackageInfoOld rootNode = new BazelPackageInfoOld(WSDIR);
+        BazelPackageInfoOld subNode = new BazelPackageInfoOld(rootNode, APPLE_PROJECT_FS_PATH);
 
         assertFalse(subNode.isWorkspaceRoot());
         assertEquals(rootNode, subNode.getParentPackageInfo());
@@ -154,8 +154,8 @@ public class BazelProjectInfoTest {
     public void testCtor_Sub_Happy_trailingslash() throws Exception {
         create_subdir(APPLE_PROJECT_FS_PATH);
 
-        BazelPackageInfo rootNode = new BazelPackageInfo(WSDIR);
-        BazelPackageInfo subNode = new BazelPackageInfo(rootNode, APPLE_PROJECT_FS_PATH + File.separator);
+        BazelPackageInfoOld rootNode = new BazelPackageInfoOld(WSDIR);
+        BazelPackageInfoOld subNode = new BazelPackageInfoOld(rootNode, APPLE_PROJECT_FS_PATH + File.separator);
 
         assertFalse(subNode.isWorkspaceRoot());
         assertEquals(rootNode, subNode.getParentPackageInfo());
@@ -173,38 +173,38 @@ public class BazelProjectInfoTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testCtorValidation_Sub_Null() throws Exception {
-        new BazelPackageInfo(null, APPLE_PROJECT_FS_PATH);
+        new BazelPackageInfoOld(null, APPLE_PROJECT_FS_PATH);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCtorValidation_Sub_LeadingSlash() throws Exception {
-        BazelPackageInfo rootNode = new BazelPackageInfo(WSDIR);
+        BazelPackageInfoOld rootNode = new BazelPackageInfoOld(WSDIR);
 
-        new BazelPackageInfo(rootNode, File.separator + APPLE_PROJECT_FS_PATH);
+        new BazelPackageInfoOld(rootNode, File.separator + APPLE_PROJECT_FS_PATH);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCtorValidation_Sub_NotExists() throws Exception {
-        BazelPackageInfo rootNode = new BazelPackageInfo(WSDIR);
+        BazelPackageInfoOld rootNode = new BazelPackageInfoOld(WSDIR);
 
         // calling subdir() here would create the sub-project dir, but intentionally do not do that
 
-        new BazelPackageInfo(rootNode, "projects" + File.separator + "does_not_exist");
+        new BazelPackageInfoOld(rootNode, "projects" + File.separator + "does_not_exist");
     }
 
     // EQUALITY
 
     @Test
     public void testEquality_Root() {
-        assertEquals(new BazelPackageInfo(WSDIR), new BazelPackageInfo(WSDIR));
+        assertEquals(new BazelPackageInfoOld(WSDIR), new BazelPackageInfoOld(WSDIR));
     }
 
     @Test
     public void testEquality_Sub() throws Exception {
         create_subdir(APPLE_PROJECT_FS_PATH);
 
-        BazelPackageInfo rootNode = new BazelPackageInfo(WSDIR);
-        BazelPackageInfo apple = new BazelPackageInfo(rootNode, APPLE_PROJECT_FS_PATH);
+        BazelPackageInfoOld rootNode = new BazelPackageInfoOld(WSDIR);
+        BazelPackageInfoOld apple = new BazelPackageInfoOld(rootNode, APPLE_PROJECT_FS_PATH);
 
         assertEquals(apple, apple);
         assertNotEquals(apple, rootNode);
@@ -218,10 +218,10 @@ public class BazelProjectInfoTest {
         create_subdir(APPLE_PROJECT_FS_PATH + File.separator + "web");
         create_subdir(BANANA_PROJECT_FS_PATH);
 
-        BazelPackageInfo rootNode = new BazelPackageInfo(WSDIR);
-        BazelPackageInfo apple = new BazelPackageInfo(rootNode, APPLE_PROJECT_FS_PATH);
-        BazelPackageInfo apple_web = new BazelPackageInfo(apple, APPLE_PROJECT_FS_PATH + File.separator + "web");
-        BazelPackageInfo banana = new BazelPackageInfo(apple_web, BANANA_PROJECT_FS_PATH);
+        BazelPackageInfoOld rootNode = new BazelPackageInfoOld(WSDIR);
+        BazelPackageInfoOld apple = new BazelPackageInfoOld(rootNode, APPLE_PROJECT_FS_PATH);
+        BazelPackageInfoOld apple_web = new BazelPackageInfoOld(apple, APPLE_PROJECT_FS_PATH + File.separator + "web");
+        BazelPackageInfoOld banana = new BazelPackageInfoOld(apple_web, BANANA_PROJECT_FS_PATH);
 
         assertEquals(rootNode, apple.getParentPackageInfo());
         assertEquals(apple, apple_web.getParentPackageInfo());
@@ -234,10 +234,10 @@ public class BazelProjectInfoTest {
         create_subdir(APPLE_PROJECT_FS_PATH + File.separator + "web");
         create_subdir(BANANA_PROJECT_FS_PATH);
 
-        BazelPackageInfo rootNode = new BazelPackageInfo(WSDIR);
-        BazelPackageInfo apple = new BazelPackageInfo(rootNode, APPLE_PROJECT_FS_PATH);
-        BazelPackageInfo apple_web = new BazelPackageInfo(apple, APPLE_PROJECT_FS_PATH + File.separator + "web");
-        BazelPackageInfo banana = new BazelPackageInfo(apple_web, BANANA_PROJECT_FS_PATH);
+        BazelPackageInfoOld rootNode = new BazelPackageInfoOld(WSDIR);
+        BazelPackageInfoOld apple = new BazelPackageInfoOld(rootNode, APPLE_PROJECT_FS_PATH);
+        BazelPackageInfoOld apple_web = new BazelPackageInfoOld(apple, APPLE_PROJECT_FS_PATH + File.separator + "web");
+        BazelPackageInfoOld banana = new BazelPackageInfoOld(apple_web, BANANA_PROJECT_FS_PATH);
 
         assertEquals(apple_web, banana.findByPackage("//projects/libs/apple/web")); // $SLASH_OK bazel path
         assertEquals(rootNode, apple.findByPackage("//"));

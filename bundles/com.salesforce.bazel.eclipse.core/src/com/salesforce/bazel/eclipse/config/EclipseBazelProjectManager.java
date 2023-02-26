@@ -59,7 +59,7 @@ import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
@@ -76,7 +76,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     }
 
     @Override
-    public void addSettingsToProject(BazelProject bazelProject, String bazelWorkspaceRoot, String packageFSPath,
+    public void addSettingsToProject(BazelProjectOld bazelProject, String bazelWorkspaceRoot, String packageFSPath,
             List<BazelLabel> bazelTargets, List<String> bazelBuildFlags) {
 
         var eclipseProject = (IProject) bazelProject.getProjectImpl();
@@ -138,7 +138,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
      * List of Bazel build flags for this Eclipse project, taken from the project configuration
      */
     @Override
-    public List<String> getBazelBuildFlagsForProject(BazelProject bazelProject) {
+    public List<String> getBazelBuildFlagsForProject(BazelProjectOld bazelProject) {
         var eclipseProject = (IProject) bazelProject.getProjectImpl();
         var eclipseProjectBazelPrefs = getResourceHelper().getProjectBazelPreferences(eclipseProject);
 
@@ -157,7 +157,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
      * https://github.com/salesforce/bazel-eclipse/issues/24
      */
     @Override
-    public String getBazelLabelForProject(BazelProject bazelProject) {
+    public String getBazelLabelForProject(BazelProjectOld bazelProject) {
         var eclipseProject = (IProject) bazelProject.getProjectImpl();
         var eclipseProjectBazelPrefs = getResourceHelper().getProjectBazelPreferences(eclipseProject);
         return eclipseProjectBazelPrefs.get(IEclipseBazelProjectSettings.PROJECT_PACKAGE_LABEL, null);
@@ -167,9 +167,9 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
      * Returns a map that maps Bazel labels to their Eclipse projects
      */
     @Override
-    public Map<BazelLabel, BazelProject> getBazelLabelToProjectMap(Collection<BazelProject> bazelProjects) {
-        Map<BazelLabel, BazelProject> labelToProject = new HashMap<>();
-        for (BazelProject bazelProject : bazelProjects) {
+    public Map<BazelLabel, BazelProjectOld> getBazelLabelToProjectMap(Collection<BazelProjectOld> bazelProjects) {
+        Map<BazelLabel, BazelProjectOld> labelToProject = new HashMap<>();
+        for (BazelProjectOld bazelProject : bazelProjects) {
             var activatedTargets = getConfiguredBazelTargets(bazelProject, false);
             List<BazelLabel> labels =
                     activatedTargets.getConfiguredTargets().stream().map(BazelLabel::new).collect(Collectors.toList());
@@ -193,7 +193,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
      * funny things in their prefs file and sets multiple targets along with the wildcard target.
      */
     @Override
-    public BazelProjectTargets getConfiguredBazelTargets(BazelProject bazelProject, boolean addWildcardIfNoTargets) {
+    public BazelProjectTargets getConfiguredBazelTargets(BazelProjectOld bazelProject, boolean addWildcardIfNoTargets) {
         var eclipseProject = (IProject) bazelProject.getProjectImpl();
         var eclipseProjectBazelPrefs = getResourceHelper().getProjectBazelPreferences(eclipseProject);
         var projectLabel = eclipseProjectBazelPrefs.get(IEclipseBazelProjectSettings.PROJECT_PACKAGE_LABEL, null);
@@ -250,7 +250,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     }
 
     @Override
-    public BazelProject getOwningProjectForSourcePath(BazelWorkspace bazelWorkspace, String sourcePath) {
+    public BazelProjectOld getOwningProjectForSourcePath(BazelWorkspace bazelWorkspace, String sourcePath) {
         var bazelProjects = getAllProjects();
 
         var canonicalSourcePathString =
@@ -258,7 +258,7 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
                         + File.separator + sourcePath;
         var canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
-        for (BazelProject candidateProject : bazelProjects) {
+        for (BazelProjectOld candidateProject : bazelProjects) {
             var iProject = (IProject) candidateProject.getProjectImpl();
             var jProject = getJavaCoreHelper().getJavaProjectForProject(iProject);
             var classpathEntries = getJavaCoreHelper().getRawClasspath(jProject);
@@ -315,14 +315,14 @@ public class EclipseBazelProjectManager extends BazelProjectManager {
     // HELPERS
 
     @Override
-    public void setProjectReferences(BazelProject thisProject, List<BazelProject> updatedRefList) {
+    public void setProjectReferences(BazelProjectOld thisProject, List<BazelProjectOld> updatedRefList) {
         var thisEclipseProject = (IProject) thisProject.getProjectImpl();
         var projectDescription = getResourceHelper().getProjectDescription(thisEclipseProject);
 
         var existingEclipseRefList = projectDescription.getReferencedProjects();
         var updatedEclipseRefList = new IProject[updatedRefList.size()];
         var i = 0;
-        for (BazelProject ref : updatedRefList) {
+        for (BazelProjectOld ref : updatedRefList) {
             updatedEclipseRefList[i] = (IProject) ref.getProjectImpl();
             i++;
         }

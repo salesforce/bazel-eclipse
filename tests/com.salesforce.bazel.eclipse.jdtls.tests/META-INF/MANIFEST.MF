@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Automatic-Module-Name: com.salesforce.bazel.eclipse.jdtls.tests
 Bundle-Name: Bazel Java Lanaguage Server Tests
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.jdtls.tests;singleton:=true
-Bundle-Version: 1.5.4.qualifier
+Bundle-Version: 2.0.0.qualifier
 Bundle-Activator: com.salesforce.bazel.eclipse.jdtls.B2eclipseTestPlugin
 Bundle-Vendor: Bazel Eclipse Feature
 Require-Bundle: com.salesforce.bazel.eclipse.jdtls,

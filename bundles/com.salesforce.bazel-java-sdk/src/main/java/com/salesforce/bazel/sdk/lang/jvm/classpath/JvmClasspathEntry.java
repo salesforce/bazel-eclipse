@@ -33,7 +33,7 @@
  */
 package com.salesforce.bazel.sdk.lang.jvm.classpath;
 
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 
 /**
  * Entry in a classpath for the JVM that points to a Jar with bytecode.
@@ -51,7 +51,7 @@ public class JvmClasspathEntry implements Comparable<JvmClasspathEntry> {
     public boolean isTestJar = false;
 
     // Project Entry
-    public BazelProject bazelProject;
+    public BazelProjectOld bazelProject;
 
     public JvmClasspathEntry(String pathToJar, boolean isRuntimeJar, boolean isTestJar) {
         this.pathToJar = pathToJar;
@@ -66,7 +66,7 @@ public class JvmClasspathEntry implements Comparable<JvmClasspathEntry> {
         this.isTestJar = isTestJar;
     }
 
-    public JvmClasspathEntry(BazelProject bazelProject) {
+    public JvmClasspathEntry(BazelProjectOld bazelProject) {
         this.bazelProject = bazelProject;
     }
 

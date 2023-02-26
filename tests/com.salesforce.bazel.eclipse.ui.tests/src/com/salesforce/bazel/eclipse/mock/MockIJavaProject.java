@@ -111,7 +111,7 @@ public class MockIJavaProject implements IJavaProject {
             // not consistent with real Eclipse so we should investigate
 
             try {
-                BazelClasspathManager classpathManager =
+                var classpathManager =
                         BazelCorePlugin.getInstance().getBazelModelManager().getClasspathManager();
                 resolvedEntries = classpathManager.getClasspath(this, new NullProgressMonitor());
             } catch (Exception anyE) {
@@ -128,11 +128,11 @@ public class MockIJavaProject implements IJavaProject {
 
     @Override
     public String[] getRequiredProjectNames() throws JavaModelException {
-        String[] names = new String[] {};
+        String[] names = {};
         try {
-            IProject[] projects = iproject.getReferencedProjects();
+            var projects = iproject.getReferencedProjects();
             names = new String[projects.length];
-            int i = 0;
+            var i = 0;
             for (IProject project : projects) {
                 names[i++] = project.getName();
             }
@@ -146,7 +146,7 @@ public class MockIJavaProject implements IJavaProject {
     public void setRawClasspath(IClasspathEntry[] entries, IProgressMonitor monitor) throws JavaModelException {
         if (entries == null) {
             throw new IllegalArgumentException(
-                "Bazel Eclipse Feature is setting the classpath as null for project " + iproject.getName());
+                    "Bazel Eclipse Feature is setting the classpath as null for project " + iproject.getName());
         }
         this.entries = entries;
 
@@ -558,6 +558,11 @@ public class MockIJavaProject implements IJavaProject {
 
     @Override
     public IModuleDescription getOwnModuleDescription() throws JavaModelException {
+        throw new UnsupportedOperationException(UOE_MSG);
+    }
+
+    @Override
+    public IClasspathEntry findContainingClasspathEntry(IResource resource) {
         throw new UnsupportedOperationException(UOE_MSG);
     }
 

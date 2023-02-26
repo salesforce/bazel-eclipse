@@ -94,7 +94,7 @@ public class JvmInMemoryClasspath implements JvmClasspath {
     // API
 
     /**
-     * Provides the JVM classpath for the associated BazelProject
+     * Provides the JVM classpath for the associated BazelProjectOld
      * @throws Exception
      */
     @Override

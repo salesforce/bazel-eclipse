@@ -37,7 +37,7 @@ import org.eclipse.ui.IWorkingSet;
 import org.eclipse.ui.IWorkingSetManager;
 import org.eclipse.ui.PlatformUI;
 
-import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfoOld;
 
 public class BazelImportWizardWorkingSetControl {
 
@@ -130,7 +130,7 @@ public class BazelImportWizardWorkingSetControl {
 
     // Taken from org.eclipse.m2e.core.ui.internal.WorkingSets
 
-    void updateWorkingSet(BazelPackageInfo rootWorkspacePackage) {
+    void updateWorkingSet(BazelPackageInfoOld rootWorkspacePackage) {
 
         // check if working set name was preselected
         if (preselectedWorkingSetName != null) {

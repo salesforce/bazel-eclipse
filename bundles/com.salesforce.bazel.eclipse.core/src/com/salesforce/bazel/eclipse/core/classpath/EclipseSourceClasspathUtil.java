@@ -50,6 +50,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
@@ -143,7 +144,7 @@ public final class EclipseSourceClasspathUtil {
 
         startTimeMS = System.currentTimeMillis();
         var bazelClasspathContainerEntry =
-                javaCoreHelper.newContainerEntry(new Path(IClasspathContainerConstants.CONTAINER_ID));
+                javaCoreHelper.newContainerEntry(new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID));
         classpathEntries.add(bazelClasspathContainerEntry);
 
         // add in a JDK to the classpath

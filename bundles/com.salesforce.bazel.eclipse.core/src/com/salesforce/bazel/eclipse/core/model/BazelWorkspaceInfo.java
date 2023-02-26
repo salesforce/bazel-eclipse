@@ -1,0 +1,210 @@
+/*-
+ * Copyright (c) 2023 Salesforce and others.
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *      Salesforce - Partially adapted and heavily inspired from Eclipse JDT, M2E and PDE
+ */
+package com.salesforce.bazel.eclipse.core.model;
+
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Status;
+
+import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
+import com.salesforce.bazel.eclipse.core.projectview.BazelProjectFileReader;
+import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
+import com.salesforce.bazel.sdk.command.BazelInfoCommand;
+
+public final class BazelWorkspaceInfo extends BazelElementInfo {
+
+    private final IPath root;
+    private final Path workspaceFile;
+    private final BazelWorkspace bazelWorkspace;
+    private volatile IProject project;
+    private volatile BazelProject bazelProject;
+    private volatile BazelProjectView bazelProjectView;
+
+    private IPath excutionRoot;
+    private String name;
+    private String release;
+    private IPath repositoryCache;
+    private IPath bazelBin;
+    private IPath bazelGenfiles;
+    private IPath bazelTestlogs;
+    private IPath commandLog;
+    private IPath outputBase;
+    private IPath outputPath;
+
+    public BazelWorkspaceInfo(IPath root, Path workspaceFile, BazelWorkspace bazelWorkspace) {
+        this.root = root;
+        this.workspaceFile = workspaceFile;
+        this.bazelWorkspace = bazelWorkspace;
+    }
+
+    public IPath getBazelBin() {
+        return bazelBin;
+    }
+
+    public IPath getBazelGenfiles() {
+        return bazelGenfiles;
+    }
+
+    public BazelProject getBazelProject() throws CoreException {
+        var cachedBazelProject = this.bazelProject;
+        if (cachedBazelProject != null) {
+            return cachedBazelProject;
+        }
+
+        return bazelProject = new BazelProject(getProject(), bazelWorkspace.getModel());
+    }
+
+    public BazelProjectView getBazelProjectView() throws CoreException {
+        var cachedProjectView = bazelProjectView;
+        if (cachedProjectView != null) {
+            return cachedProjectView;
+        }
+
+        var projectViewLocation = getBazelProject().getProjectViewLocation();
+        try {
+            return bazelProjectView = new BazelProjectFileReader(projectViewLocation.toFile().toPath()).read();
+        } catch (IOException e) {
+            throw new CoreException(Status
+                    .error(format("Error reading project view '%s': %s", projectViewLocation, e.getMessage()), e));
+        }
+    }
+
+    public IPath getBazelTestlogs() {
+        return bazelTestlogs;
+    }
+
+    public BazelWorkspace getBazelWorkspace() {
+        return bazelWorkspace;
+    }
+
+    public IPath getCommandLog() {
+        return commandLog;
+    }
+
+    IWorkspaceRoot getEclipseWorkspaceRoot() {
+        return ResourcesPlugin.getWorkspace().getRoot();
+    }
+
+    public IPath getExcutionRoot() {
+        return excutionRoot;
+    }
+
+    private String getExpectedOutput(Map<String, String> infoResult, String key) throws CoreException {
+        var value = infoResult.get(key);
+        if ((value == null) || value.isBlank()) {
+            throw new CoreException(Status
+                    .error(format("incomplete bazel info output in workspace '%s': %s missing%n%navailable info:%n%s",
+                        root, key, infoResult.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue())
+                                .collect(joining(System.lineSeparator())))));
+        }
+
+        return value;
+    }
+
+    private IPath getExpectedOutputAsPath(Map<String, String> infoResult, String key) throws CoreException {
+        return new org.eclipse.core.runtime.Path(getExpectedOutput(infoResult, key));
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public IPath getOutputBase() {
+        return outputBase;
+    }
+
+    public IPath getOutputPath() {
+        return outputPath;
+    }
+
+    IProject getProject() throws CoreException {
+        var cachedProject = this.project;
+        if (cachedProject != null) {
+            return cachedProject;
+        }
+
+        // we don't care about the actual project name - we look for the path
+        var projects = getEclipseWorkspaceRoot().getProjects();
+        for (IProject project : projects) {
+            if (root.equals(project.getLocation())) {
+                return this.project = project;
+            }
+        }
+
+        throw new CoreException(Status.error(format(
+            "Unable to find project for Bazel workspace root '%s' in the Eclipse workspace. Please check the workspace setup!",
+            root)));
+    }
+
+    public String getRelease() {
+        return release;
+    }
+
+    public IPath getRepositoryCache() {
+        return repositoryCache;
+    }
+
+    public IPath getRoot() {
+        return root;
+    }
+
+    public Path getWorkspaceFile() {
+        return workspaceFile;
+    }
+
+    public String getWorkspaceName() {
+        return requireNonNull(name, "not loaded");
+    }
+
+    public void load(BazelModelCommandExecutionService executionService) throws CoreException {
+        var workspaceRoot = getWorkspaceFile().getParent();
+        try {
+            var infoResult = executionService
+                    .executeOutsideWorkspaceLockAsync(new BazelInfoCommand(workspaceRoot), bazelWorkspace).get();
+            excutionRoot = getExpectedOutputAsPath(infoResult, "execution_root");
+            name = infoResult.get(excutionRoot.lastSegment()); // https://github.com/bazelbuild/bazel/issues/2317
+            release = getExpectedOutput(infoResult, "release");
+            repositoryCache = getExpectedOutputAsPath(infoResult, "repository_cache");
+            bazelBin = getExpectedOutputAsPath(infoResult, "bazel-bin");
+            bazelGenfiles = getExpectedOutputAsPath(infoResult, "bazel-genfiles");
+            bazelTestlogs = getExpectedOutputAsPath(infoResult, "bazel-testlogs");
+            commandLog = getExpectedOutputAsPath(infoResult, "command_log");
+            outputBase = getExpectedOutputAsPath(infoResult, "output_base");
+            outputPath = getExpectedOutputAsPath(infoResult, "output_path");
+        } catch (InterruptedException e) {
+            throw new OperationCanceledException("cancelled");
+        } catch (ExecutionException e) {
+            var cause = e.getCause();
+            if (cause == null) {
+                throw new CoreException(Status.error(
+                    format("bazel info failed in workspace '%s' for with unknown reason", workspaceRoot), e));
+            }
+            throw new CoreException(Status.error(
+                format("bazel info failed in workspace '%s': %s", workspaceRoot, cause.getMessage()), cause));
+        }
+    }
+}

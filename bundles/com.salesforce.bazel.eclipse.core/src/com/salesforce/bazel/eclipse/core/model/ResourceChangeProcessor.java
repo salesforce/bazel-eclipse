@@ -23,7 +23,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
-import static com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants.BAZEL_NATURE_ID;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -65,10 +65,6 @@ class ResourceChangeProcessor implements IResourceChangeListener {
                             modelManager.getClasspathManager(), true /* force refresh */);
             classpathJob.schedule();
         }
-    }
-
-    boolean isAutoBuilding() {
-        return ResourcesPlugin.getWorkspace().isAutoBuilding();
     }
 
     private void collectProjectsAffectedByPossibleClasspathChange(IResourceDelta delta,
@@ -139,46 +135,51 @@ class ResourceChangeProcessor implements IResourceChangeListener {
     }
 
     private void deleting(IProject resource) {
-        // TODO Auto-generated method stub
+        // invalidate the
 
     }
 
-    /*
-     * Returns whether a given delta contains some information relevant to the JavaModel,
-     * in particular it will not consider SYNC or MARKER only deltas.
+    /**
+     * Returns whether a given delta contains some information relevant to the Bazel model, in particular it will not
+     * consider SYNC or MARKER only deltas.
      */
     private boolean isAffectedBy(IResourceDelta rootDelta) {
-        //if (rootDelta == null) System.out.println("NULL DELTA");
-        //long start = System.currentTimeMillis();
-        if (rootDelta != null) {
-            // use local exception to quickly escape from delta traversal
-            class FoundRelevantDeltaException extends RuntimeException {
-                private static final long serialVersionUID = 7137113252936111022L; // backward compatible
-                // only the class name is used (to differentiate from other RuntimeExceptions)
-            }
-            try {
-                rootDelta.accept((IResourceDeltaVisitor) delta -> /* throws CoreException */ {
-                    switch (delta.getKind()) {
-                        case IResourceDelta.ADDED:
-                        case IResourceDelta.REMOVED:
-                            throw new FoundRelevantDeltaException();
-                        case IResourceDelta.CHANGED:
-                            // if any flag is set but SYNC or MARKER, this delta should be considered
-                            if ((delta.getAffectedChildren().length == 0 // only check leaf delta nodes
-                            ) && ((delta.getFlags() & ~(IResourceDelta.SYNC | IResourceDelta.MARKERS)) != 0)) {
-                                throw new FoundRelevantDeltaException();
-                            }
-                    }
-                    return true;
-                }, IContainer.INCLUDE_HIDDEN);
-            } catch (FoundRelevantDeltaException e) {
-                //System.out.println("RELEVANT DELTA detected in: "+ (System.currentTimeMillis() - start));
-                return true;
-            } catch (CoreException e) { // ignore delta if not able to traverse
-            }
+        if (rootDelta == null) {
+            return false;
         }
+
+        // use local exception to quickly escape from delta traversal
+        class FoundRelevantDeltaException extends RuntimeException {
+            private static final long serialVersionUID = 7137113252936111022L; // backward compatible
+            // only the class name is used (to differentiate from other RuntimeExceptions)
+        }
+        try {
+            rootDelta.accept((IResourceDeltaVisitor) delta -> /* throws CoreException */ {
+                switch (delta.getKind()) {
+                    case IResourceDelta.ADDED:
+                    case IResourceDelta.REMOVED:
+                        throw new FoundRelevantDeltaException();
+                    case IResourceDelta.CHANGED:
+                        // if any flag is set but SYNC or MARKER, this delta should be considered
+                        if ((delta.getAffectedChildren().length == 0 // only check leaf delta nodes
+                        ) && ((delta.getFlags() & ~(IResourceDelta.SYNC | IResourceDelta.MARKERS)) != 0)) {
+                            throw new FoundRelevantDeltaException();
+                        }
+                }
+                return true;
+            }, IContainer.INCLUDE_HIDDEN);
+        } catch (FoundRelevantDeltaException e) {
+            //System.out.println("RELEVANT DELTA detected in: "+ (System.currentTimeMillis() - start));
+            return true;
+        } catch (CoreException e) { // ignore delta if not able to traverse
+        }
+
         //System.out.println("IGNORE SYNC DELTA took: "+ (System.currentTimeMillis() - start));
         return false;
+    }
+
+    boolean isAutoBuilding() {
+        return ResourcesPlugin.getWorkspace().isAutoBuilding();
     }
 
     @Override
@@ -190,7 +191,6 @@ class ResourceChangeProcessor implements IResourceChangeListener {
             case IResourceChangeEvent.PRE_DELETE:
                 try {
                     if ((resource.getType() == IResource.PROJECT) && ((IProject) resource).hasNature(BAZEL_NATURE_ID)) {
-
                         deleting((IProject) resource);
                     }
                 } catch (CoreException e) {

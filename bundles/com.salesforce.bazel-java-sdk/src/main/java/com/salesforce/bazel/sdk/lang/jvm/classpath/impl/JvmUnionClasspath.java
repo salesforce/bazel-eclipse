@@ -42,7 +42,7 @@ import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
@@ -51,7 +51,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrategy;
 
 /**
- * Computes a JVM classpath for a BazelProject based on the dependencies configured in Bazel.
+ * Computes a JVM classpath for a BazelProjectOld based on the dependencies configured in Bazel.
  * <p>
  * This classpath implementation collapses the dependencies for all Java rules in the package into a single classpath,
  * otherwise known as a <b>union</b> classpath. The entries are marked as 'main', 'runtime' or 'test' entries.
@@ -60,7 +60,7 @@ import com.salesforce.bazel.sdk.workspace.RealOperatingEnvironmentDetectionStrat
  * granularity.
  * <p>
  * Targets within the package are excluded from the classpath, as they are presumed to be represented by source code
- * found in source folders. Dependencies on other BazelProjects are represented as BazelProject references in the
+ * found in source folders. Dependencies on other BazelProjects are represented as BazelProjectOld references in the
  * response.
  * <p>
  * There is an instance of this class for each project.
@@ -73,14 +73,14 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
 
     protected final BazelWorkspace bazelWorkspace;
     protected final BazelProjectManager bazelProjectManager;
-    protected final BazelProject bazelProject;
+    protected final BazelProjectOld bazelProject;
     protected final ImplicitClasspathHelper implicitDependencyHelper;
     protected final OperatingEnvironmentDetectionStrategy osDetector;
     protected final BazelCommandManager bazelCommandManager;
     protected final List<JvmClasspathStrategy> orderedClasspathStrategies;
 
     public JvmUnionClasspath(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
-            BazelProject bazelProject, ImplicitClasspathHelper implicitDependencyHelper,
+            BazelProjectOld bazelProject, ImplicitClasspathHelper implicitDependencyHelper,
             OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager,
             List<JvmClasspathStrategy> orderedClasspathStrategies) {
         super(bazelProject.name, CLASSPATH_CACHE_TIMEOUT_MS);
@@ -94,7 +94,7 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
         this.orderedClasspathStrategies = orderedClasspathStrategies;
     }
 
-    public static JvmUnionClasspath withAspectStrategy(BazelProject bazelProject, BazelWorkspace bazelWorkspace,
+    public static JvmUnionClasspath withAspectStrategy(BazelProjectOld bazelProject, BazelWorkspace bazelWorkspace,
             BazelCommandManager bazelCommandManager) {
         ImplicitClasspathHelper implicitDependencyHelper = new ImplicitClasspathHelper();
         RealOperatingEnvironmentDetectionStrategy osDetector = new RealOperatingEnvironmentDetectionStrategy();
@@ -105,7 +105,7 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
     }
 
     /**
-     * Computes the JVM classpath for the associated BazelProject. This response is cached in the super class. External
+     * Computes the JVM classpath for the associated BazelProjectOld. This response is cached in the super class. External
      * callers will invoke getClasspathEntries() which in turn invokes this method.
      * @throws Exception
      */

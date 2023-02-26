@@ -1,5 +1,6 @@
 package com.salesforce.bazel.eclipse.ui;
 
+import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -13,6 +14,8 @@ public class BazelUIPlugin extends AbstractUIPlugin {
 
     // The shared instance
     private static BazelUIPlugin plugin;
+
+    public static final String ICON_BAZEL = "icon_bazel";
 
     /**
      * Returns the shared instance
@@ -40,4 +43,8 @@ public class BazelUIPlugin extends AbstractUIPlugin {
         super.stop(context);
     }
 
+    @Override
+    protected void initializeImageRegistry(ImageRegistry reg) {
+        reg.put(ICON_BAZEL, imageDescriptorFromPlugin(PLUGIN_ID, "resources/bazelicon.gif"));
+    }
 }

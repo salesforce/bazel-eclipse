@@ -50,10 +50,10 @@ public class BazelPackageInfoTest {
 
     @Test
     public void testGetChildPackageInfos() throws IOException {
-        BazelPackageInfo root = getRootBazelPackageInfo(false);
+        BazelPackageInfoOld root = getRootBazelPackageInfo(false);
 
-        BazelPackageInfo child1 = getBazelPackageInfo(root, "sayhello");
-        BazelPackageInfo child2 = getBazelPackageInfo(root, "sayhello_again");
+        BazelPackageInfoOld child1 = getBazelPackageInfo(root, "sayhello");
+        BazelPackageInfoOld child2 = getBazelPackageInfo(root, "sayhello_again");
 
         assertEquals(2, root.getChildPackageInfos().size());
         assertTrue(root.getChildPackageInfos().contains(child1));
@@ -62,10 +62,10 @@ public class BazelPackageInfoTest {
 
     @Test
     public void testGetChildPackageInfosWithWorkspaceDotBazel() throws IOException {
-        BazelPackageInfo root = getRootBazelPackageInfo(true);
+        BazelPackageInfoOld root = getRootBazelPackageInfo(true);
 
-        BazelPackageInfo child1 = getBazelPackageInfo(root, "sayhello");
-        BazelPackageInfo child2 = getBazelPackageInfo(root, "sayhello_again");
+        BazelPackageInfoOld child1 = getBazelPackageInfo(root, "sayhello");
+        BazelPackageInfoOld child2 = getBazelPackageInfo(root, "sayhello_again");
 
         assertEquals(2, root.getChildPackageInfos().size());
         assertTrue(root.getChildPackageInfos().contains(child1));
@@ -74,19 +74,19 @@ public class BazelPackageInfoTest {
 
     // HELPERS
 
-    private BazelPackageInfo getRootBazelPackageInfo(boolean useAltWsFilename) throws IOException {
+    private BazelPackageInfoOld getRootBazelPackageInfo(boolean useAltWsFilename) throws IOException {
         File f = tmpDir.newFolder("root");
         if (useAltWsFilename) {
             new File(f, "WORKSPACE.bazel").createNewFile();
         } else {
             new File(f, "WORKSPACE").createNewFile();
         }
-        return new BazelPackageInfo(f);
+        return new BazelPackageInfoOld(f);
     }
 
-    private BazelPackageInfo getBazelPackageInfo(BazelPackageInfo root, String relPathFromRoot) throws IOException {
+    private BazelPackageInfoOld getBazelPackageInfo(BazelPackageInfoOld root, String relPathFromRoot) throws IOException {
         tmpDir.newFolder("root", relPathFromRoot);
-        return new BazelPackageInfo(root, relPathFromRoot);
+        return new BazelPackageInfoOld(root, relPathFromRoot);
     }
 
 }

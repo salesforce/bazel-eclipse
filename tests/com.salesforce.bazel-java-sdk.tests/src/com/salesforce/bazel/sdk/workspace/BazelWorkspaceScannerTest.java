@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.sdk.init.JvmRuleInit;
-import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfoOld;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceFactory;
 import com.salesforce.bazel.sdk.workspace.test.TestOptions;
@@ -67,7 +67,7 @@ public class BazelWorkspaceScannerTest {
         new TestBazelWorkspaceFactory(descriptor).build();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
-        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
+        BazelPackageInfoOld rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
 
         assertEquals(5, scanner.projects.size());
         assertEquals(5, rootWorkspacePackage.getChildPackageInfos().size());
@@ -94,7 +94,7 @@ public class BazelWorkspaceScannerTest {
         new TestBazelWorkspaceFactory(descriptor).build();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
-        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
+        BazelPackageInfoOld rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
 
         assertEquals(0, scanner.projects.size());
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());
@@ -107,7 +107,7 @@ public class BazelWorkspaceScannerTest {
         workspaceFile.createNewFile();
 
         BazelWorkspaceScanner scanner = new BazelWorkspaceScanner();
-        BazelPackageInfo rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
+        BazelPackageInfoOld rootWorkspacePackage = scanner.getPackages(tmpWorkspaceDir, null);
 
         assertEquals(0, scanner.projects.size());
         assertEquals(0, rootWorkspacePackage.getChildPackageInfos().size());

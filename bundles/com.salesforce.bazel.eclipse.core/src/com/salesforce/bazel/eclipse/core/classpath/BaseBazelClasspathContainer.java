@@ -58,7 +58,7 @@ import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationExcepti
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
@@ -71,7 +71,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
     private static Logger LOG = LoggerFactory.getLogger(BaseBazelClasspathContainer.class);
 
     protected final BazelProjectManager bazelProjectManager;
-    protected BazelProject bazelProject;
+    protected BazelProjectOld bazelProject;
     protected final IPath eclipseProjectPath;
     protected final boolean eclipseProjectIsRoot;
     protected final JavaCoreHelper javaCoreHelper;
@@ -93,7 +93,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
 
         bazelProject = bazelProjectManager.getProject(eclipseProject.getName());
         if (bazelProject == null) {
-            bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
+            bazelProject = new BazelProjectOld(eclipseProject.getName(), eclipseProject);
             bazelProjectManager.addProject(bazelProject);
         }
     }

@@ -158,14 +158,6 @@
       </editor>
    </extension>
 
-   <extension
-          point="com.salesforce.bazel.consolefactory">
-       <commandConsoleFactory
-             class="com.salesforce.bazel.eclipse.runtime.impl.EclipseConsole"
-             priority="10">
-       </commandConsoleFactory>
-    </extension>
-
     <extension
           point="org.eclipse.ui.menus">
        <menuContribution
@@ -203,6 +195,12 @@
              id="com.salesforce.bazel.eclipse.ui.commands.updateClasspaths"
              name="Update Classpaths">
        </command>
+    </extension>
+    <extension
+          point="com.salesforce.bazel.eclipse.core.executor">
+       <commandExecutor
+             class="com.salesforce.bazel.eclipse.ui.execution.EclipseConsoleBazelCommandExecutor">
+       </commandExecutor>
     </extension>
 
 </plugin>

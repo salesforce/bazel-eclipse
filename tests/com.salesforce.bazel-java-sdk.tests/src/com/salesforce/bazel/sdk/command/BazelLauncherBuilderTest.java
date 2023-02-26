@@ -150,7 +150,7 @@ public class BazelLauncherBuilderTest {
         BazelLabel label = new BazelLabel("//projects/libs/javalib0"); // $SLASH_OK bazel path
         BazelTargetKind targetKind = JvmRuleInit.KIND_JAVA_TEST;
         List<String> bazelArgs =
-                Collections.singletonList(BazelCommandArgs.TEST_FILTER.getName() + "=someBazelTestFilter");
+                Collections.singletonList("--test_filter=someBazelTestFilter");
 
         BazelLauncherBuilder launcherBuilder = env.bazelWorkspaceCommandRunner.getBazelLauncherBuilder();
         launcherBuilder.setLabel(label);

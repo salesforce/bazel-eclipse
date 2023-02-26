@@ -12,7 +12,7 @@ import org.osgi.service.prefs.Preferences;
 import com.salesforce.bazel.eclipse.config.IEclipseBazelProjectSettings;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 public class BazelProjectSettingsUtils {
@@ -20,7 +20,7 @@ public class BazelProjectSettingsUtils {
     /**
      * List of Bazel build flags for this Eclipse project, taken from the project configuration
      */
-    public static List<String> getBazelBuildFlagsForProject(ResourceHelper resourceHelper, BazelProject bazelProject) {
+    public static List<String> getBazelBuildFlagsForProject(ResourceHelper resourceHelper, BazelProjectOld bazelProject) {
         var eclipseProject = (IProject) bazelProject.getProjectImpl();
         var eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
 
@@ -44,7 +44,7 @@ public class BazelProjectSettingsUtils {
      * funny things in their prefs file and sets multiple targets along with the wildcard target.
      */
     public static BazelProjectTargets getConfiguredBazelTargets(ResourceHelper resourceHelper,
-            BazelProject bazelProject, boolean addWildcardIfNoTargets) {
+            BazelProjectOld bazelProject, boolean addWildcardIfNoTargets) {
         var eclipseProject = (IProject) bazelProject.getProjectImpl();
         var eclipseProjectBazelPrefs = resourceHelper.getProjectBazelPreferences(eclipseProject);
         var projectLabel = eclipseProjectBazelPrefs.get(IEclipseBazelProjectSettings.PROJECT_PACKAGE_LABEL, null);

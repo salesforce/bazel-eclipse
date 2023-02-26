@@ -4,7 +4,7 @@ Bundle-ManifestVersion: 2
 Automatic-Module-Name: com.salesforce.bazel.eclipse.jdtls
 Bundle-Name: Bazel Java Language Server Plugin
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.jdtls;singleton:=true
-Bundle-Version: 1.5.4.qualifier
+Bundle-Version: 2.0.0.qualifier
 Bundle-Activator: com.salesforce.bazel.eclipse.jdtls.BazelJdtLsPlugin
 Bundle-Vendor: Bazel Eclipse Feature
 Require-Bundle: org.eclipse.core.runtime,

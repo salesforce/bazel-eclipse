@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.core.classpath.EclipseSourceClasspathUtil;
-import com.salesforce.bazel.eclipse.core.resources.BazelNature;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
@@ -87,7 +87,7 @@ public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFl
     }
 
     private void buildWorkspaceLink(IJavaProject eclipseJavaProject, IPath bazelWorkspacePath) {
-        if (!eclipseJavaProject.getProject().getName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME)) {
+        if (!eclipseJavaProject.getProject().getName().startsWith(BazelProject.BAZELWORKSPACE_PROJECT_BASENAME)) {
             var linkHiddenFolder = eclipseJavaProject.getProject().getFolder(WORKSPACE_LINK);
             if (!linkHiddenFolder.exists()) {
                 getResourceHelper().createFolderLink(linkHiddenFolder, bazelWorkspacePath, IResource.NONE, null);

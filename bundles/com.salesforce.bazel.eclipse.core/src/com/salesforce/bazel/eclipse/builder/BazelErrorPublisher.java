@@ -47,7 +47,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 
 /**
  * Publishes BazelError instances to the Problems View.
@@ -58,7 +58,7 @@ public class BazelErrorPublisher {
 
     // maps the specified errors to the project instances they belong to, and returns that mapping
     public static Map<IProject, List<BazelProblem>> assignErrorsToOwningProject(List<BazelProblem> errors,
-            Map<BazelLabel, BazelProject> labelToProject, IProject rootProject) {
+            Map<BazelLabel, BazelProjectOld> labelToProject, IProject rootProject) {
         Map<IProject, List<BazelProblem>> projectToErrors = new HashMap<>();
         if (errors.size() == 0) {
             return projectToErrors;
@@ -103,12 +103,12 @@ public class BazelErrorPublisher {
     private final IProject rootProject;
     private final Collection<IProject> projects;
 
-    private final Map<BazelLabel, BazelProject> labelToProject;
+    private final Map<BazelLabel, BazelProjectOld> labelToProject;
 
     private final BazelProblemMarkerManager markerManager;
 
     public BazelErrorPublisher(IProject rootProject, Collection<IProject> projects,
-            Map<BazelLabel, BazelProject> labelToProject) {
+            Map<BazelLabel, BazelProjectOld> labelToProject) {
         this.rootProject = rootProject;
         this.projects = projects;
         this.labelToProject = labelToProject;

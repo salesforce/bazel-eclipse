@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfoOld;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 
 /**
@@ -41,8 +41,8 @@ public class BazelImportWizardPage extends WizardPage {
 
     static final Object[] EMPTY = {};
 
-    private static List<BazelPackageInfo> getImportedBazelPackages(BazelPackageInfo rootPackage) {
-        List<BazelPackageInfo> importedPackages = new ArrayList<>();
+    private static List<BazelPackageInfoOld> getImportedBazelPackages(BazelPackageInfoOld rootPackage) {
+        List<BazelPackageInfoOld> importedPackages = new ArrayList<>();
         var javaProjects = ComponentContext.getInstance().getJavaCoreHelper().getAllBazelJavaProjects(false);
         var bazelProjectManager = ComponentContext.getInstance().getProjectManager();
 
@@ -69,7 +69,7 @@ public class BazelImportWizardPage extends WizardPage {
 
     BazelImportWizardAdvancedSettingsControl advancedSettingsControl;
 
-    BazelPackageInfo workspaceRootPackage = null;
+    BazelPackageInfoOld workspaceRootPackage = null;
 
     // errors should be set into this field, which will be shown to the user
     String loadingErrorMessage;
@@ -121,7 +121,7 @@ public class BazelImportWizardPage extends WizardPage {
         var workspaceScanner = new BazelWorkspaceScanner();
         try {
             List<String> newFilesystemLocations = new ArrayList<>();
-            List<BazelPackageInfo> newEclipseProjects = new ArrayList<>();
+            List<BazelPackageInfoOld> newEclipseProjects = new ArrayList<>();
 
             // get the selected location
             // when the wizard is first opened, the location field is blank and we have a null root package
@@ -174,13 +174,13 @@ public class BazelImportWizardPage extends WizardPage {
     }
 
     private void uncheckAlreadyImportedProjects(CheckboxTreeViewer projectTreeViewer,
-            BazelPackageInfo rootBazelPackage) {
+            BazelPackageInfoOld rootBazelPackage) {
         var importedBazelPackages = getImportedBazelPackages(rootBazelPackage);
 
         if (importedBazelPackages.size() > 0) {
             projectTreeViewer.setChecked(rootBazelPackage, false);
             projectTreeViewer.setGrayed(rootBazelPackage, true);
-            for (BazelPackageInfo alreadyImportedPackage : importedBazelPackages) {
+            for (BazelPackageInfoOld alreadyImportedPackage : importedBazelPackages) {
                 projectTreeViewer.setChecked(alreadyImportedPackage, false);
                 projectTreeViewer.setGrayed(alreadyImportedPackage, true);
             }

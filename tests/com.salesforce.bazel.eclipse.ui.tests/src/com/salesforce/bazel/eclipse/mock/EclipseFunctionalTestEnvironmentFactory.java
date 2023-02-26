@@ -37,7 +37,7 @@ import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.sdk.init.JvmRuleInit;
-import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfoOld;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 import com.salesforce.bazel.sdk.workspace.test.TestBazelWorkspaceDescriptor;
@@ -132,7 +132,7 @@ public class EclipseFunctionalTestEnvironmentFactory {
         return mockEclipse;
     }
 
-    private static void addChildPackagesToImportList(BazelPackageInfo currentNode,
+    private static void addChildPackagesToImportList(BazelPackageInfoOld currentNode,
             List<BazelPackageLocation> bazelPackagesToImport) {
         var children = currentNode.getChildPackageInfos();
         bazelPackagesToImport.addAll(children);

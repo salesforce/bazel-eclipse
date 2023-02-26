@@ -16,7 +16,7 @@ import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 
 public class EclipseProjectSettingsUtils {
     private static Logger LOG = LoggerFactory.getLogger(EclipseProjectSettingsUtils.class);
@@ -63,7 +63,7 @@ public class EclipseProjectSettingsUtils {
         return false;
     }
 
-    private static boolean checkProject(BazelProject candidateProject, ResourceHelper resourceHelper,
+    private static boolean checkProject(BazelProjectOld candidateProject, ResourceHelper resourceHelper,
             JavaCoreHelper javaCoreHelper, String canonicalSourcePathString, Path canonicalSourcePath) {
         var iProject = (IProject) candidateProject.getProjectImpl();
         var jProject = javaCoreHelper.getJavaProjectForProject(iProject);
@@ -90,14 +90,14 @@ public class EclipseProjectSettingsUtils {
         return false;
     }
 
-    public static BazelProject getOwningProjectForSourcePath(BazelWorkspace bazelWorkspace, String sourcePath,
-            Collection<BazelProject> bazelProjects, ResourceHelper resourceHelper, JavaCoreHelper javaCoreHelper) {
+    public static BazelProjectOld getOwningProjectForSourcePath(BazelWorkspace bazelWorkspace, String sourcePath,
+            Collection<BazelProjectOld> bazelProjects, ResourceHelper resourceHelper, JavaCoreHelper javaCoreHelper) {
         var canonicalSourcePathString =
                 FSPathHelper.getCanonicalPathStringSafely(bazelWorkspace.getBazelWorkspaceRootDirectory())
                         + File.separator + sourcePath;
         var canonicalSourcePath = new File(canonicalSourcePathString).toPath();
 
-        for (BazelProject candidateProject : bazelProjects) {
+        for (BazelProjectOld candidateProject : bazelProjects) {
             if (checkProject(candidateProject, resourceHelper, javaCoreHelper, canonicalSourcePathString,
                 canonicalSourcePath)) {
                 return candidateProject;
@@ -122,15 +122,15 @@ public class EclipseProjectSettingsUtils {
         return false;
     }
 
-    public static void setProjectReferences(ResourceHelper resourceHelper, BazelProject project,
-            List<BazelProject> references) {
+    public static void setProjectReferences(ResourceHelper resourceHelper, BazelProjectOld project,
+            List<BazelProjectOld> references) {
         var thisEclipseProject = (IProject) project.getProjectImpl();
         var projectDescription = resourceHelper.getProjectDescription(thisEclipseProject);
 
         var existingEclipseRefList = projectDescription.getReferencedProjects();
         var updatedEclipseRefList = new IProject[references.size()];
         var i = 0;
-        for (BazelProject ref : references) {
+        for (BazelProjectOld ref : references) {
             updatedEclipseRefList[i] = (IProject) ref.getProjectImpl();
             i++;
         }

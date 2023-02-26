@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Tree;
 
-import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfoOld;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.ProjectView;
 import com.salesforce.bazel.sdk.project.ProjectViewConstants;
@@ -119,12 +119,12 @@ public class BazelImportWizardProjectTree {
             public Object[] getChildren(Object parentElement) {
                 if (parentElement instanceof List) {
                     @SuppressWarnings("unchecked")
-                    var projects = (List<BazelPackageInfo>) parentElement;
-                    return projects.toArray(new BazelPackageInfo[projects.size()]);
+                    var projects = (List<BazelPackageInfoOld>) parentElement;
+                    return projects.toArray(new BazelPackageInfoOld[projects.size()]);
                 }
-                if (parentElement instanceof BazelPackageInfo bazelProjectInfo) {
+                if (parentElement instanceof BazelPackageInfoOld bazelProjectInfo) {
                     var packages = bazelProjectInfo.getChildPackageInfos();
-                    return packages.toArray(new BazelPackageInfo[packages.size()]);
+                    return packages.toArray(new BazelPackageInfoOld[packages.size()]);
                 }
                 return EMPTY;
             }
@@ -133,8 +133,8 @@ public class BazelImportWizardProjectTree {
             public Object[] getElements(Object element) {
                 if (element instanceof List) {
                     @SuppressWarnings("unchecked")
-                    var projects = (List<BazelPackageInfo>) element;
-                    return projects.toArray(new BazelPackageInfo[projects.size()]);
+                    var projects = (List<BazelPackageInfoOld>) element;
+                    return projects.toArray(new BazelPackageInfoOld[projects.size()]);
                 }
                 return EMPTY;
             }
@@ -150,7 +150,7 @@ public class BazelImportWizardProjectTree {
                     List<?> projects = (List<?>) parentElement;
                     return !projects.isEmpty();
                 }
-                if (parentElement instanceof BazelPackageInfo bazelPackageInfo) {
+                if (parentElement instanceof BazelPackageInfoOld bazelPackageInfo) {
                     return !bazelPackageInfo.getChildPackageInfos().isEmpty();
                 }
                 return false;
@@ -259,16 +259,16 @@ public class BazelImportWizardProjectTree {
                 dialog.setFilterPath(rootWorkspaceDirectory);
                 var path = dialog.open();
                 if (path != null) {
-                    Set<BazelPackageInfo> packagesToImport = new HashSet<>();
+                    Set<BazelPackageInfoOld> packagesToImport = new HashSet<>();
                     var projectView = new ProjectView(new File(rootWorkspaceDirectory), readFile(path));
                     Set<String> projectViewPaths = projectView.getDirectories().stream()
                             .map(BazelPackageLocation::getBazelPackageFSRelativePath).collect(Collectors.toSet());
-                    for (BazelPackageInfo bpi : getAllBazelPackageInfos()) {
+                    for (BazelPackageInfoOld bpi : getAllBazelPackageInfos()) {
                         if (projectViewPaths.contains(bpi.getBazelPackageFSRelativePath())) {
                             packagesToImport.add(bpi);
                         }
                     }
-                    for (BazelPackageInfo bpi : packagesToImport) {
+                    for (BazelPackageInfoOld bpi : packagesToImport) {
                         projectTreeViewer.setChecked(bpi, true);
                     }
                     MessageDialog.openInformation(page.getShell(), "Imported Project View",
@@ -279,12 +279,12 @@ public class BazelImportWizardProjectTree {
         });
     }
 
-    private List<BazelPackageInfo> getAllBazelPackageInfos() {
+    private List<BazelPackageInfoOld> getAllBazelPackageInfos() {
         // seems hacky - but this will change again as we update the import UI
         setAllChecked(true);
         try {
-            return Arrays.stream(projectTreeViewer.getCheckedElements()).filter(el -> (el instanceof BazelPackageInfo))
-                    .map(el -> (BazelPackageInfo) el).collect(Collectors.toList());
+            return Arrays.stream(projectTreeViewer.getCheckedElements()).filter(el -> (el instanceof BazelPackageInfoOld))
+                    .map(el -> (BazelPackageInfoOld) el).collect(Collectors.toList());
         } finally {
             setAllChecked(false);
         }
@@ -300,9 +300,9 @@ public class BazelImportWizardProjectTree {
 
     void setAllChecked(boolean state) {
         @SuppressWarnings("unchecked")
-        var input = (List<BazelPackageInfo>) projectTreeViewer.getInput();
+        var input = (List<BazelPackageInfoOld>) projectTreeViewer.getInput();
         if (input != null) {
-            for (BazelPackageInfo bazelProjectInfo : input) {
+            for (BazelPackageInfoOld bazelProjectInfo : input) {
                 setSubtreeChecked(bazelProjectInfo, state);
             }
             updateCheckedState();
@@ -341,7 +341,7 @@ public class BazelImportWizardProjectTree {
     public void updateCheckedState() {
         var elements = projectTreeViewer.getCheckedElements();
         for (Object element : elements) {
-            if (element instanceof BazelPackageInfo info) {
+            if (element instanceof BazelPackageInfoOld info) {
                 if (isAlreadyImported()) {
                     projectTreeViewer.setChecked(info, false);
                 }
@@ -355,7 +355,7 @@ public class BazelImportWizardProjectTree {
         }
         var elements = projectTreeViewer.getCheckedElements();
         for (Object element : elements) {
-            if (element instanceof BazelPackageInfo) {
+            if (element instanceof BazelPackageInfoOld) {
                 var errorMsg = validateProjectInfo();
                 if (errorMsg != null) {
                     page.setPageComplete(false);

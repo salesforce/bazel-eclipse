@@ -32,7 +32,7 @@ import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
@@ -80,12 +80,12 @@ public abstract class JvmClasspathStrategy {
     /**
      * Returns the IJavaProject in the current workspace that contains at least one of the specified sources.
      */
-    protected BazelProject getSourceProjectForSourcePaths(List<String> sources) {
+    protected BazelProjectOld getSourceProjectForSourcePaths(List<String> sources) {
         if (sources == null) {
             return null;
         }
         for (String candidate : sources) {
-            BazelProject project = bazelProjectManager.getOwningProjectForSourcePath(bazelWorkspace, candidate);
+            BazelProjectOld project = bazelProjectManager.getOwningProjectForSourcePath(bazelWorkspace, candidate);
             if (project != null) {
                 return project;
             }
@@ -93,8 +93,8 @@ public abstract class JvmClasspathStrategy {
         return null;
     }
 
-    protected void addProjectReference(List<BazelProject> projectList, BazelProject addThis) {
-        for (BazelProject existingProject : projectList) {
+    protected void addProjectReference(List<BazelProjectOld> projectList, BazelProjectOld addThis) {
+        for (BazelProjectOld existingProject : projectList) {
             if (existingProject.name.equals(addThis.name)) {
                 // we already have a reference to this project
                 return;

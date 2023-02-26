@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.ui.utils.SelectionUtil;
-import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfoOld;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
@@ -97,7 +97,7 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
 
         List<BazelPackageLocation> bazelPackagesToImport =
                 Arrays.asList(selectedBazelPackages).stream().filter(bpi -> !grayedBazelPackages.contains(bpi))
-                        .map(bpi -> (BazelPackageInfo) bpi).collect(Collectors.toList());
+                        .map(bpi -> (BazelPackageInfoOld) bpi).collect(Collectors.toList());
 
         BazelProjectImporter.run(workspaceRootProject, bazelPackagesToImport, getContainer());
 

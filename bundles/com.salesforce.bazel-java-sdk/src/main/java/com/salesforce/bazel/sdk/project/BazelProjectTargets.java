@@ -42,10 +42,10 @@ import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
- * Object that encapsulates the logic and state regarding the active targets configured for a BazelProject.
+ * Object that encapsulates the logic and state regarding the active targets configured for a BazelProjectOld.
  */
 public class BazelProjectTargets {
-    private BazelProject project;
+    private BazelProjectOld project;
     private String projectBazelLabel;
 
     /**
@@ -66,7 +66,7 @@ public class BazelProjectTargets {
      */
     private Set<String> actualTargets;
 
-    public BazelProjectTargets(BazelProject project, String projectBazelLabel) {
+    public BazelProjectTargets(BazelProjectOld project, String projectBazelLabel) {
         this.project = project;
         this.projectBazelLabel = projectBazelLabel;
     }
@@ -86,7 +86,7 @@ public class BazelProjectTargets {
 
     // CONSUMER API
 
-    public BazelProject getProject() {
+    public BazelProjectOld getProject() {
         return this.project;
     }
 

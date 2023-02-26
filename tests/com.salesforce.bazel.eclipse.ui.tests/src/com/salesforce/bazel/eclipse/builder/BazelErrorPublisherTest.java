@@ -19,7 +19,7 @@ import org.junit.Test;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 
 public class BazelErrorPublisherTest {
 
@@ -33,9 +33,9 @@ public class BazelErrorPublisherTest {
         BazelLabel l2 = new BazelLabel("projects/libs/lib2:*"); // $SLASH_OK: bazel path
         String test2JavaPath = FSPathHelper.osSeps("projects/libs/lib2/src/Test2.java"); // $SLASH_OK
         BazelProblem error2 = BazelProblem.createError(test2JavaPath, 22, "blah");
-        Map<BazelLabel, BazelProject> labelToProject = new HashMap<>();
-        labelToProject.put(l1, new BazelProject("P1", project1));
-        labelToProject.put(l2, new BazelProject("P2", project2));
+        Map<BazelLabel, BazelProjectOld> labelToProject = new HashMap<>();
+        labelToProject.put(l1, new BazelProjectOld("P1", project1));
+        labelToProject.put(l2, new BazelProjectOld("P2", project2));
         IProject rootProject = getMockedProject("ROOT").getProject();
 
         Map<IProject, List<BazelProblem>> projectToErrors = BazelErrorPublisher
@@ -61,7 +61,7 @@ public class BazelErrorPublisherTest {
         IProject rootProject = getMockedProject("ROOT").getProject();
         IProject project1 = getMockedProject("P1").getProject();
         BazelLabel l1 = new BazelLabel("projects/libs/lib1:*"); // $SLASH_OK: bazel path
-        Map<BazelLabel, BazelProject> labelToProject = Collections.singletonMap(l1, new BazelProject("P1", project1));
+        Map<BazelLabel, BazelProjectOld> labelToProject = Collections.singletonMap(l1, new BazelProjectOld("P1", project1));
 
         BazelProblem error1 =
                 BazelProblem.createError(FSPathHelper.osSeps("projects/libs/lib1/src/Test.java"), 21, "foo"); // $SLASH_OK

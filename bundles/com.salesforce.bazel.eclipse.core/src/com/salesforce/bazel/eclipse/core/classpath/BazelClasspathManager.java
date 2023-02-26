@@ -15,7 +15,6 @@
 package com.salesforce.bazel.eclipse.core.classpath;
 
 import static com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope.DEFAULT_CLASSPATH;
-import static com.salesforce.bazel.eclipse.core.classpath.IClasspathContainerConstants.CONTAINER_ID;
 import static java.util.Objects.requireNonNull;
 
 import java.io.BufferedInputStream;
@@ -51,13 +50,14 @@ import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.JvmUnionClasspath;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 
 /**
@@ -81,7 +81,7 @@ public class BazelClasspathManager {
         this.stateLocationDirectory = requireNonNull(stateLocationDirectory);
     }
 
-    IClasspathEntry[] computeClasspath(BazelProject bazelProject, BazelClasspathScope scope, Properties props,
+    IClasspathEntry[] computeClasspath(BazelProjectOld bazelProject, BazelClasspathScope scope, Properties props,
             boolean eliminateDuplicateEntries, IProgressMonitor monitor) throws CoreException {
         try {
             JvmClasspathData jcmClasspathData;
@@ -198,7 +198,7 @@ public class BazelClasspathManager {
         return BazelClasspathHelpers.getBazelContainerEntry(project);
     }
 
-    BazelProject getBazelProject(IJavaProject project) {
+    BazelProjectOld getBazelProject(IJavaProject project) {
         return getProjectManager().create(project.getElementName(), project.getProject());
     }
 
@@ -285,7 +285,7 @@ public class BazelClasspathManager {
         return JavaCore.newLibraryEntry(jarPath, srcJarPath, srcJarRootPath, isTestJar);
     }
 
-    IClasspathEntry newProjectEntry(BazelProject bazelProject) {
+    IClasspathEntry newProjectEntry(BazelProjectOld bazelProject) {
         return JavaCore.newProjectEntry(((IProject) bazelProject.projectImpl).getFullPath());
     }
 
@@ -372,7 +372,7 @@ public class BazelClasspathManager {
         try {
             var subMonitor = SubMonitor.convert(monitor, 2);
             var containerEntry = getBazelContainerEntry(project);
-            var path = containerEntry != null ? containerEntry.getPath() : new Path(CONTAINER_ID);
+            var path = containerEntry != null ? containerEntry.getPath() : new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
             var classpath = getClasspath(project, subMonitor.newChild(1));
             IClasspathContainer container = new BazelClasspathContainer(path, classpath);
             JavaCore.setClasspathContainer(container.getPath(), new IJavaProject[] { project },

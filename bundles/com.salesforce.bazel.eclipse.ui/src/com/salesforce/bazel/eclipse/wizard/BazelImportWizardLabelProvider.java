@@ -26,7 +26,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfoOld;
 
 public class BazelImportWizardLabelProvider extends LabelProvider
         implements IColorProvider, DelegatingStyledCellLabelProvider.IStyledLabelProvider {
@@ -58,7 +58,7 @@ public class BazelImportWizardLabelProvider extends LabelProvider
 
     @Override
     public StyledString getStyledText(Object element) {
-        if (element instanceof BazelPackageInfo info) {
+        if (element instanceof BazelPackageInfoOld info) {
             var ss = new StyledString();
 
             // this will produce lines in the project tree dialog like:

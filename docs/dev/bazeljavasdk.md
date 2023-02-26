@@ -2,12 +2,10 @@
 
 Under the covers BEF uses the separately managed [Bazel Java SDK](https://github.com/salesforce/bazel-java-sdk)
    for all interactions with Bazel.
-Primary development for the SDK should occur in that repository.
+However, primary development for the SDK occurs in **this** repository for convenience reasons.
 
 However, the IDE work happening in this repository is largely engaged with making improvements and
   fixes in the SDK.
-Roughly 90% of the code to support Bazel in Eclipse is not specific to Eclipse, and therefore lives
-  in the SDK.
 
 For that reason, a vendored (static copy) version of the SDK lives in this repository.
 As changes are made to the SDK in either repository, the changes are copied across

@@ -1,9 +1,23 @@
+/*-
+ * Copyright (c) 2023 Salesforce and others.
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *      Salesforce - Partially adapted and heavily inspired from Eclipse JDT, M2E and PDE
+ */
 package com.salesforce.bazel.eclipse.core.model;
 
 import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.ISaveContext;
 import org.eclipse.core.resources.ISaveParticipant;
@@ -21,9 +35,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
-import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathManager;
 import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
+import com.salesforce.bazel.eclipse.core.extensions.ExtensibleCommandExecutor;
+import com.salesforce.bazel.eclipse.core.model.cache.BazelElementInfoCache;
+import com.salesforce.bazel.eclipse.core.model.cache.CaffeineBasedBazelElementInfoCache;
+import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
+import com.salesforce.bazel.eclipse.core.model.execution.JobsBasedExecutionService;
 
 /**
  * The Bazel model manager is responsible for managing the mapping state of the Bazel model into the IDE.
@@ -32,7 +51,7 @@ import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJ
  * instance is managed by {@link BazelCorePlugin}.
  * </p>
  */
-public class BazelModelManager implements BazelCorePluginSharedContstants {
+public class BazelModelManager implements BazelCoreSharedContstants {
 
     private static Logger LOG = LoggerFactory.getLogger(BazelModelManager.class);
 
@@ -82,6 +101,11 @@ public class BazelModelManager implements BazelCorePluginSharedContstants {
     };
 
     private final IPath stateLocation;
+    private final BazelModel model;
+
+    private final JobsBasedExecutionService executionService =
+            new JobsBasedExecutionService(new ExtensibleCommandExecutor());
+
     private BazelClasspathManager classpathManager;
 
     /**
@@ -92,7 +116,12 @@ public class BazelModelManager implements BazelCorePluginSharedContstants {
      */
     public BazelModelManager(IPath stateLocation) {
         this.stateLocation = stateLocation;
+        this.model = new BazelModel(this);
         resourceChangeProcessor = new ResourceChangeProcessor(this);
+    }
+
+    public BazelProject getBazelProject(IProject project) {
+        return new BazelProject(requireNonNull(project, "missing project"), getModel());
     }
 
     /**
@@ -100,6 +129,17 @@ public class BazelModelManager implements BazelCorePluginSharedContstants {
      */
     public BazelClasspathManager getClasspathManager() {
         return requireNonNull(classpathManager, "not initialized");
+    }
+
+    /**
+     * @return the execution service used by the model
+     */
+    public BazelModelCommandExecutionService getExecutionService() {
+        return executionService;
+    }
+
+    public BazelModel getModel() {
+        return model;
     }
 
     /**
@@ -124,7 +164,8 @@ public class BazelModelManager implements BazelCorePluginSharedContstants {
                     "Attempt to initialize a model more than once. Please verify the code flow!");
         }
 
-        // TODO: load all existing Bazel mappings
+        // configure cache
+        BazelElementInfoCache.setInstance(new CaffeineBasedBazelElementInfoCache(5000));
 
         // initialize the classpath
         classpathManager = new BazelClasspathManager(stateLocation.toFile());
@@ -182,6 +223,13 @@ public class BazelModelManager implements BazelCorePluginSharedContstants {
             return;
         }
 
+        // wait for the initialization job to finish
+        try {
+            Job.getJobManager().join(PLUGIN_ID, null);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+
         // flush preferences
         var preferences = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
         try {
@@ -191,13 +239,5 @@ public class BazelModelManager implements BazelCorePluginSharedContstants {
         }
         workspace.removeResourceChangeListener(resourceChangeProcessor);
         workspace.removeSaveParticipant(PLUGIN_ID);
-
-        // wait for the initialization job to finish
-        try {
-            Job.getJobManager().join(PLUGIN_ID, null);
-        } catch (InterruptedException e) {
-            // ignore
-        }
-
     }
 }

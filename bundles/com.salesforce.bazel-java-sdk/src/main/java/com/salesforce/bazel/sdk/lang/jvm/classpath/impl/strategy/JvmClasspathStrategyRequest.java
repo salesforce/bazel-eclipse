@@ -27,7 +27,7 @@ import java.util.Set;
 
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 /**
@@ -35,14 +35,14 @@ import com.salesforce.bazel.sdk.project.BazelProjectTargets;
  * By wrapping these objects, we can add to them over time without breaking existing strategies.
  */
 public class JvmClasspathStrategyRequest {
-    public BazelProject bazelProject;
+    public BazelProjectOld bazelProject;
     public String targetLabel; // TODO switch to BazelLabel
     public BazelTargetKind targetKind; // TODO switch to kind
     public BazelProjectTargets configuredTargetsForProject;
     public Set<String> actualActivatedTargets;
     public  JvmClasspathData classpathData;
 
-    public JvmClasspathStrategyRequest(BazelProject bazelProject, String targetLabel, BazelTargetKind targetKind,
+    public JvmClasspathStrategyRequest(BazelProjectOld bazelProject, String targetLabel, BazelTargetKind targetKind,
             BazelProjectTargets configuredTargetsForProject, Set<String> actualActivatedTargets,
             JvmClasspathData classpathData) {
         this.bazelProject = bazelProject;

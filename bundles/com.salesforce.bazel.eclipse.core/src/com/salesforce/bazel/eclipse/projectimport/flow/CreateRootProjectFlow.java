@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.eclipse.core.resources.BazelNature;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.projectview.ProjectViewUtils;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -110,7 +110,7 @@ public class CreateRootProjectFlow extends AbstractImportFlowStep {
         final var bazelWorkspace = getBazelWorkspace();
         var rootProject = resourceHelper.getBazelWorkspaceProject(bazelWorkspace);
         if (rootProject == null) {
-            var rootProjectName = BazelNature.getEclipseRootProjectName(bazelWorkspace.getName());
+            var rootProjectName = BazelProject.getEclipseRootProjectName(bazelWorkspace.getName());
             rootProject = ctx.getEclipseProjectCreator().createRootProject(ctx, bazelWorkspace, rootProjectName);
         } else if (!rootProject.isOpen()) {
             try {

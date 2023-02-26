@@ -8,7 +8,7 @@
 <feature
       id="com.salesforce.bazel.eclipse.feature"
       label="Bazel Eclipse Feature"
-      version="1.5.4.qualifier"
+      version="2.0.0.qualifier"
       provider-name="Bazel Eclipse Feature">
 
    <description url="https://github.com/salesforce/bazel-eclipse">
@@ -228,40 +228,8 @@
       <discovery label="Salesforce internal Git repository" url="https://github.com/salesforce/bazel-eclipse"/>
    </url>
 
-   <requires>
-      <import plugin="org.eclipse.ui.console" version="3.8.100.v20180821-1744" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.core.jobs" version="3.10.100.v20180817-1215" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jface" version="3.14.100.v20180828-0836" match="greaterOrEqual"/>
-      <import plugin="javax.inject" version="1.0.0.v20091030" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.core.runtime" version="3.15.0.v20180817-1401" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui" version="3.110.0.v20180828-1350" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.ide" version="3.14.100.v20180828-1350" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.core" version="3.15.0.v20180905-0317" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt" version="3.11.0.v20180827-1040" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.ui" version="3.0.0" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.core.resources" version="3.13.100.v20180828-0158" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.debug.core" version="3.13.0.v20180821-1744" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.debug.ui" version="3.13.100.v20180827-0649" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.launching" version="3.11.0.v20180827-1040" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.editors" version="3.9.200.v20180828-0837" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.text" version="3.7.0.v20180822-1511" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jface.text" version="3.14.0" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.junit" version="3.11.100" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.core.expressions" version="3.6.200.v20180817-1401" match="greaterOrEqual"/>
-      <import plugin="com.salesforce.bazel-java-sdk" version="1.5.2" match="greaterOrEqual"/>
-      <import plugin="org.slf4j.api" version="1.7.30" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ltk.core.refactoring"/>
-      <import plugin="org.apache.commons.lang3" version="3.1.0" match="greaterOrEqual"/>
-   </requires>
-
    <plugin
          id="com.salesforce.bazel.eclipse.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="com.salesforce.bazel.eclipse.deps"
          download-size="0"
          install-size="0"
          version="0.0.0"/>

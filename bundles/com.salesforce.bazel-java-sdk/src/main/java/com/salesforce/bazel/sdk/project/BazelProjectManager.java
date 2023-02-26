@@ -50,16 +50,18 @@ import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
- * Central manager for managing BazelProject instances
+ * Central manager for managing BazelProjectOld instances
+ *
+ * @deprecated this does not belong into the SDk because its an IDE specific concept
  */
 public abstract class BazelProjectManager {
 
-    private final Map<String, BazelProject> projectMap = new TreeMap<>();
+    private final Map<String, BazelProjectOld> projectMap = new TreeMap<>();
 
     private static Logger LOG = LoggerFactory.getLogger(BazelProjectManager.class);
 
-    public void addProject(BazelProject newProject) {
-        BazelProject existingProject = projectMap.get(newProject.name);
+    public void addProject(BazelProjectOld newProject) {
+        BazelProjectOld existingProject = projectMap.get(newProject.name);
         if (existingProject != null) {
             newProject.merge(existingProject);
         }
@@ -67,11 +69,11 @@ public abstract class BazelProjectManager {
         newProject.bazelProjectManager = this;
     }
 
-    public BazelProject getProject(String name) {
+    public BazelProjectOld getProject(String name) {
         return projectMap.get(name);
     }
 
-    public Collection<BazelProject> getAllProjects() {
+    public Collection<BazelProjectOld> getAllProjects() {
         return projectMap.values();
     }
 
@@ -79,7 +81,7 @@ public abstract class BazelProjectManager {
      * Runs a build with the passed targets and returns true if no errors are returned.
      */
     public boolean isValid(BazelWorkspace bazelWorkspace, BazelCommandManager bazelCommandManager,
-            BazelProject bazelProject) {
+            BazelProjectOld bazelProject) {
         if (bazelWorkspace == null) {
             return false;
         }
@@ -115,26 +117,26 @@ public abstract class BazelProjectManager {
      * <p>
      * The sourcePath is the relative path from the root of the workspace to a source folder or source file.
      */
-    public abstract BazelProject getOwningProjectForSourcePath(BazelWorkspace bazelWorkspace, String sourcePath);
+    public abstract BazelProjectOld getOwningProjectForSourcePath(BazelWorkspace bazelWorkspace, String sourcePath);
 
     /**
      * Creates a project reference between this project and a set of other projects. References are used by IDE code
      * refactoring among other things. The direction of reference goes from this->updatedRefList If this project no
      * longer uses another project, removing it from the list will eliminate the project reference.
      */
-    public abstract void setProjectReferences(BazelProject thisProject, List<BazelProject> updatedRefList);
+    public abstract void setProjectReferences(BazelProjectOld thisProject, List<BazelProjectOld> updatedRefList);
 
     /**
      * The label that identifies the Bazel package that represents this project. This will be the 'module' label when we
      * start supporting multiple BUILD files in a single 'module'. Example: //projects/libs/foo See
      * https://github.com/salesforce/bazel-eclipse/issues/24
      */
-    public abstract String getBazelLabelForProject(BazelProject bazelProject);
+    public abstract String getBazelLabelForProject(BazelProjectOld bazelProject);
 
     /**
      * Returns a map that maps Bazel labels to their projects
      */
-    public abstract Map<BazelLabel, BazelProject> getBazelLabelToProjectMap(Collection<BazelProject> bazelProjects);
+    public abstract Map<BazelLabel, BazelProjectOld> getBazelLabelToProjectMap(Collection<BazelProjectOld> bazelProjects);
 
     /**
      * List the Bazel targets the user has chosen to activate for this project. Each project configured for Bazel is
@@ -146,39 +148,39 @@ public abstract class BazelProjectManager {
      * By contract, this method will return only one target if the there is a wildcard target, even if the user does
      * funny things in their prefs file and sets multiple targets along with the wildcard target.
      */
-    public abstract BazelProjectTargets getConfiguredBazelTargets(BazelProject bazelProject,
+    public abstract BazelProjectTargets getConfiguredBazelTargets(BazelProjectOld bazelProject,
             boolean addWildcardIfNoTargets);
 
     /**
      * List of Bazel build flags for this project, taken from the project configuration
      */
-    public abstract List<String> getBazelBuildFlagsForProject(BazelProject bazelProject);
+    public abstract List<String> getBazelBuildFlagsForProject(BazelProjectOld bazelProject);
 
     /**
      * Persists preferences for the given project
      */
-    public abstract void addSettingsToProject(BazelProject bazelProject, String bazelWorkspaceRoot,
+    public abstract void addSettingsToProject(BazelProjectOld bazelProject, String bazelWorkspaceRoot,
             String bazelProjectPackage, List<BazelLabel> bazelTargets, List<String> bazelBuildFlags);
 
     /**
      * Clears all backing caches for the specified project
      */
     public void flushCaches(String projectName, BazelWorkspaceCommandRunner cmdRunner) {
-        BazelProject bazelProject = getProject(projectName);
+        BazelProjectOld bazelProject = getProject(projectName);
         String packageLabel = getBazelLabelForProject(bazelProject);
         cmdRunner.flushAspectInfoCacheForPackage(packageLabel);
         cmdRunner.flushQueryCache(new BazelLabel(packageLabel));
     }
 
-    public BazelProject create(String name, Object projectImpl) {
-        BazelProject bazelProject = getProject(name);
+    public BazelProjectOld create(String name, Object projectImpl) {
+        BazelProjectOld bazelProject = getProject(name);
         if (bazelProject != null) {
             return bazelProject;
         }
         synchronized (this) { // FIXME: is this needed?
             bazelProject = getProject(name);
             if (bazelProject == null) {
-                bazelProject = new BazelProject(name, projectImpl);
+                bazelProject = new BazelProjectOld(name, projectImpl);
                 addProject(bazelProject);
             }
         }

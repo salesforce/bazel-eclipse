@@ -41,7 +41,7 @@ import java.util.TreeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.salesforce.bazel.sdk.model.BazelPackageInfo;
+import com.salesforce.bazel.sdk.model.BazelPackageInfoOld;
 
 /**
  * Scans a Bazel workspace looking for Java packages (BUILD files that have java_binary or java_library targets). It is
@@ -89,7 +89,7 @@ public class BazelWorkspaceScanner {
      *            the directory to scan, which must be the root node of a Bazel workspace
      * @return the workspace root BazelPackageInfo
      */
-    public BazelPackageInfo getPackages(String rootDirectory) throws IOException {
+    public BazelPackageInfoOld getPackages(String rootDirectory) throws IOException {
         if ((rootDirectory == null) || rootDirectory.isEmpty()) {
             // this is the initialization state of the wizard
             return null;
@@ -121,13 +121,13 @@ public class BazelWorkspaceScanner {
      *            enormous docker base image to be downloaded)
      * @return the workspace root BazelPackageInfo
      */
-    public BazelPackageInfo getPackages(File rootDirectoryFile, Set<String> excludes) throws IOException {
+    public BazelPackageInfoOld getPackages(File rootDirectoryFile, Set<String> excludes) throws IOException {
         if ((rootDirectoryFile == null) || !rootDirectoryFile.exists() || !rootDirectoryFile.isDirectory()) {
             // this is the initialization state of the wizard
             return null;
         }
         String rootDirectory = rootDirectoryFile.getCanonicalPath();
-        BazelPackageInfo workspace = new BazelPackageInfo(rootDirectoryFile);
+        BazelPackageInfoOld workspace = new BazelPackageInfoOld(rootDirectoryFile);
 
         // TODO the correct way to do this is put the scan on another thread, and allow it to update the progress monitor.
         // Do it on-thread for now as it is easiest.
@@ -151,7 +151,7 @@ public class BazelWorkspaceScanner {
             }
 
             // instantiate the project info object, which will automatically hook itself to the appropriate parents
-            new BazelPackageInfo(workspace, relativePath);
+            new BazelPackageInfoOld(workspace, relativePath);
         }
 
         return workspace;

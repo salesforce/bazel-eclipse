@@ -40,7 +40,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
@@ -157,7 +157,7 @@ public class BazelEclipseProjectFactoryFTest {
         for (String id : natureIds) {
             if (id.equals(JavaCore.NATURE_ID)) {
                 hasJava = true;
-            } else if (id.equals(BazelCorePluginSharedContstants.BAZEL_NATURE_ID)) {
+            } else if (id.equals(BazelCoreSharedContstants.BAZEL_NATURE_ID)) {
                 hasBazel = true;
             } else {
                 fail("Unexpected nature [" + id + "] on project " + projectName);

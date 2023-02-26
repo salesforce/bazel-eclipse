@@ -22,8 +22,11 @@ You may have multiple Eclipse workspaces associated with a single Eclipse instal
 
 It is useful to explain how terminology maps between the Bazel and Eclipse worlds when using the Bazel Eclipse Feature.
 
-- A single Bazel **workspace** can be imported into an Eclipse **workspace**
-- Each imported Bazel **package** is imported as an Eclipse **project**
+- Many Bazel **workspaces** can be imported into an Eclipse **workspace**
+- Each Bazel **workspace** is represented as an Eclipse **project** (*the workspace project*)
+- A Bazel **target** (or **package**) is represented as an Eclipse **project** (*a package/target project*)
+- The Eclipse **workspace** must not be created within a Bazel **workspace**
+- The main driver for what's visible in the IDE is a `.bazelproject` file (project view).
 
 Consult the feature roadmap for questions about support for nested Bazel workspaces, external Bazel repositories,
   non-Java packages, etc.
@@ -51,7 +54,7 @@ But to do this, the JDT components need to be provided:
 - Target JDKs and other environment config
 
 For this, they rely on build-specific features/plugins like this Bazel Eclipse feature and [M2Eclipse](http://www.eclipse.org/m2e/).
-The Bazel Eclipse Feature sits alongside the JDT componentns in Eclipse to be the bridge between
+The Bazel Eclipse Feature sits alongside the JDT components in Eclipse to be the bridge between
   Bazel Java projects and the JDT.
 It hooks into Bazel to compute classpaths and find Java source files.
 
@@ -66,6 +69,11 @@ It actually constructs a Bazel command line pattern, and invokes it in a shell.
 The output streams back to the Console view.
 
 Because it does the build in this way, it honors your *.bazelrc* file and other local config.
+
+On some operating systems (hello MacOS) Eclipse may be launched with a different environment that a shell/terminal.
+This will confuse Bazel and cause cache misses because of changing cache keys (eg., PATH environment).
+The Bazel Eclipse Feature does an attempt to minimize this but may not be successful.
+
 
 ### Uses Bazel Aspects to introspect topology
 
@@ -105,8 +113,10 @@ It makes sense to look over the fence at the Maven plugins to see how they have 
 ### The plugins that compose the Bazel Eclipse Feature
 
 Internally, the Bazel Eclipse Feature is implemented using several Eclipse plugins.
-Not only does this separate concerns, but it makes unit testing simpler.
-Only one plugin (the *plugin-core*) has access to Eclipse APIs.
+It does this separate concerns, and shares code between the UI integartion (Eclipse IDE) and the language server (Eclipse JDT LS).
+The Eclipse plug-ins have access to Eclipse APIs depending on their scope.
 
-- **com.salesforce.bazel.eclipse.core**: this plugin is the one that is integrated with Eclipse APIs, and contains classes such as the activator
-- **com.salesforce.bazel-java-sdk**: handles model abstractions and command execution for Bazel. This is a vendored copy of the [Bazel Java SDK](https://github.com/salesforce/bazel-java-sdk) which is a general purpose SDK for Bazel.
+- **com.salesforce.bazel.eclipse.core**: plug-in is supposed to be headless only, i.e. must not access anything in `org.eclipse.swt`, `org.eclipse.jface` and `org.eclipse.ui`.
+- **com.salesforce.bazel.eclipse.ui**: plug-in with integrating into Eclipse IDE (UI)
+- **com.salesforce.bazel.eclipse.jdtls**: plug-in with integrating into Eclipse JDT LS
+- **com.salesforce.bazel-java-sdk**: handles some abstractions and command execution for Bazel.

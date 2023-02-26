@@ -49,8 +49,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
-import com.salesforce.bazel.eclipse.core.resources.BazelNature;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
@@ -191,7 +191,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public Preferences getProjectBazelPreferences(IProject project) {
         IScopeContext eclipseProjectScope = new ProjectScope(project);
-        Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(BazelCorePluginSharedContstants.PLUGIN_ID);
+        Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(BazelCoreSharedContstants.PLUGIN_ID);
 
         if (eclipseProjectPrefs == null) {
             LOG.debug("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
@@ -257,7 +257,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public boolean isBazelRootProject(IProject project) {
         // fix to not be based on string comparison?
-        return project.getName().startsWith(BazelNature.BAZELWORKSPACE_PROJECT_BASENAME);
+        return project.getName().startsWith(BazelProject.BAZELWORKSPACE_PROJECT_BASENAME);
     }
 
     @Override

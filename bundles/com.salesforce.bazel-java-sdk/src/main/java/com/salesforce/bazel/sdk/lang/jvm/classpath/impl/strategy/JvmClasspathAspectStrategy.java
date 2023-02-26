@@ -44,7 +44,7 @@ import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHe
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.project.BazelProject;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
@@ -132,7 +132,7 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
                 }
 
                 List<String> sourcePaths = jvmTargetInfo.getSources();
-                BazelProject otherProject = getSourceProjectForSourcePaths(sourcePaths);
+                BazelProjectOld otherProject = getSourceProjectForSourcePaths(sourcePaths);
                 if (otherProject == null) {
                     // no project found that houses the sources of this bazel target, add the jars to the classpath
                     // this means that this is an external jar, or a jar produced by a bazel target that was not imported
@@ -146,9 +146,9 @@ public class JvmClasspathAspectStrategy extends JvmClasspathStrategy {
                     if (!request.bazelProject.name.equals(otherBazelProjectName)) {
                         // add the referenced project to the classpath, directly as a project classpath entry
                         if (!projectsAddedToClasspath.contains(otherBazelProjectName)) {
-                            BazelProject otherBazelProject = bazelProjectManager.getProject(otherBazelProjectName);
+                            BazelProjectOld otherBazelProject = bazelProjectManager.getProject(otherBazelProjectName);
                             if (otherBazelProject == null) {
-                                otherBazelProject = new BazelProject(otherBazelProjectName);
+                                otherBazelProject = new BazelProjectOld(otherBazelProjectName);
                             }
                             JvmClasspathEntry cpEntry = new JvmClasspathEntry(otherBazelProject);
                             addOrUpdateClasspathEntry(bazelWorkspaceCmdRunner, request.targetLabel, cpEntry, isTestTarget, request.classpathData);

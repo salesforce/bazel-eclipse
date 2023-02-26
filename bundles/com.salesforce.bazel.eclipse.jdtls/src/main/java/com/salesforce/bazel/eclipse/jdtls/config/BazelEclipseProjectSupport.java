@@ -45,7 +45,7 @@ import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.jdtls.BazelJdtLsPlugin;
 
 /**
@@ -142,7 +142,7 @@ public final class BazelEclipseProjectSupport {
 
     private static boolean isBazelProject(IProject project) {
         try {
-            return project.getNature(BazelCorePluginSharedContstants.BAZEL_NATURE_ID) != null;
+            return project.getNature(BazelCoreSharedContstants.BAZEL_NATURE_ID) != null;
         } catch (CoreException ex) {
             return false;
         }

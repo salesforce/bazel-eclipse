@@ -53,8 +53,6 @@ import com.salesforce.bazel.eclipse.projectimport.flow.LoadAspectsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.LoadTargetsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.OrderProjectsFlow;
 import com.salesforce.bazel.eclipse.projectimport.flow.SetupClasspathContainersFlow;
-import com.salesforce.bazel.eclipse.projectimport.flow.SetupProjectBuildersFlow;
-import com.salesforce.bazel.eclipse.projectimport.flow.SetupRootClasspathContainerFlow;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolverImpl;
@@ -77,7 +75,6 @@ public class ProjectImporterFactory {
             new LoadTargetsFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
             new CreateRootProjectFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
             new OrderProjectsFlow(), new CreateProjectsFlow(bazelCommandManager, bazelProjectManager, resourceHelper),
-            new SetupProjectBuildersFlow(), new SetupRootClasspathContainerFlow(),
             new SetupClasspathContainersFlow(bazelCommandManager, bazelProjectManager, resourceHelper,
                     ComponentContext.getInstance().getJavaCoreHelper())));
     }

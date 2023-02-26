@@ -1,6 +1,6 @@
 package com.salesforce.bazel.eclipse.core.classpath;
 
-import static com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants.BAZEL_NATURE_ID;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
