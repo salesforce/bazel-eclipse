@@ -11,7 +11,7 @@
  * Contributors:
  *      Salesforce - adapted from MavenClasspathContainerSaveHelper
  */
-package com.salesforce.bazel.eclipse.classpath;
+package com.salesforce.bazel.eclipse.core.classpath;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -171,9 +171,11 @@ public class BazelClasspathContainerSaveHelper {
                 }
                 if (o instanceof ClasspathAttributeReplace classpathAttribute) {
                     return classpathAttribute.getAttribute();
-                } else if (o instanceof AccessRuleReplace accessRule) {
+                }
+                if (o instanceof AccessRuleReplace accessRule) {
                     return accessRule.getAccessRule();
-                } else if (o instanceof PathReplace path) {
+                }
+                if (o instanceof PathReplace path) {
                     return path.getPath();
                 }
                 return super.resolveObject(o);

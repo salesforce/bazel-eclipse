@@ -12,10 +12,10 @@
  *      Salesforce - Adapted from M2E
 */
 
-package com.salesforce.bazel.eclipse.classpath;
+package com.salesforce.bazel.eclipse.core.classpath;
 
-import static com.salesforce.bazel.eclipse.classpath.BazelClasspathScope.DEFAULT_CLASSPATH;
-import static com.salesforce.bazel.eclipse.classpath.IClasspathContainerConstants.CONTAINER_ID;
+import static com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope.DEFAULT_CLASSPATH;
+import static com.salesforce.bazel.eclipse.core.classpath.IClasspathContainerConstants.CONTAINER_ID;
 import static java.util.Objects.requireNonNull;
 
 import java.io.BufferedInputStream;
@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectStreamException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -34,7 +35,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -46,6 +46,8 @@ import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
@@ -66,6 +68,8 @@ import com.salesforce.bazel.sdk.project.BazelProjectManager;
  */
 public class BazelClasspathManager {
 
+    private static Logger LOG = LoggerFactory.getLogger(BazelClasspathManager.class);
+
     private static final String PROPERTY_SRC_ROOT = ".srcRoot"; //$NON-NLS-1$
     private static final String PROPERTY_SRC_ENCODING = ".srcEncoding"; //$NON-NLS-1$
     private static final String PROPERTY_SRC_PATH = ".srcPath"; //$NON-NLS-1$
@@ -80,11 +84,14 @@ public class BazelClasspathManager {
     IClasspathEntry[] computeClasspath(BazelProject bazelProject, BazelClasspathScope scope, Properties props,
             boolean eliminateDuplicateEntries, IProgressMonitor monitor) throws CoreException {
         try {
-            // create the classpath computation engine
             JvmClasspathData jcmClasspathData;
             try {
-                jcmClasspathData = JvmUnionClasspath
-                        .withAspectStrategy(bazelProject, getBazelWorkspace(), getBazelCommandManager())
+                var bazelWorkspace = getBazelWorkspace();
+                // make sure we don't use any caching here
+                var commandManager = getBazelCommandManager();
+                commandManager.getWorkspaceCommandRunner(bazelWorkspace).flushAspectInfoCache();
+                // compute classpath from Bazel
+                jcmClasspathData = JvmUnionClasspath.withAspectStrategy(bazelProject, bazelWorkspace, commandManager)
                         .getClasspathEntries(new EclipseWorkProgressMonitor(monitor));
             } catch (Exception e) {
                 throw new CoreException(
@@ -256,7 +263,12 @@ public class BazelClasspathManager {
 
         try (var is = new FileInputStream(containerStateFile)) {
             return new BazelClasspathContainerSaveHelper().readContainer(is);
-        } catch (IOException | ClassNotFoundException ex) {
+        } catch (ObjectStreamException | ClassNotFoundException ex) {
+            LOG.warn(
+                "Discarding classpath container state for project '{}' due to de-serialization incompatibilities. {}",
+                project.getName(), ex.getMessage(), ex);
+            return null;
+        } catch (IOException ex) {
             throw new CoreException(Status.error("Can't read classpath container state for " + project.getName(), ex));
         }
     }
@@ -267,37 +279,6 @@ public class BazelClasspathManager {
 
     File getSourceAttachmentPropertiesFile(IProject project) {
         return new File(stateLocationDirectory, project.getName() + ".sources"); //$NON-NLS-1$
-    }
-
-    public void initializeMissingClasspaths(IWorkspace workspace, IProgressMonitor monitor) throws CoreException {
-        try {
-            var projects = workspace.getRoot().getProjects();
-            var subMonitor = SubMonitor.convert(monitor, projects.length);
-            nextProject: for (IProject project : projects) {
-                // we only process Java projects
-                if (project.hasNature(JavaCore.NATURE_ID)) {
-                    var javaProject = JavaCore.create(project);
-                    var containerEntry = getBazelContainerEntry(javaProject);
-                    // ensure the project has a Bazel container
-                    if (containerEntry != null) {
-                        var savedContainer = getSavedContainer(project);
-                        if (savedContainer == null) {
-                            // there is no saved container; i.e. this is a project setup/imported before the classpath container rework
-                            // initialize the classpath
-                            subMonitor.setTaskName(project.getName());
-                            updateClasspath(javaProject, subMonitor.newChild(1));
-                            continue nextProject;
-                        }
-                    }
-                }
-
-                subMonitor.worked(1);
-            }
-        } finally {
-            if (monitor != null) {
-                monitor.done();
-            }
-        }
     }
 
     IClasspathEntry newLibraryEntry(IPath jarPath, IPath srcJarPath, IPath srcJarRootPath, boolean isTestJar) {

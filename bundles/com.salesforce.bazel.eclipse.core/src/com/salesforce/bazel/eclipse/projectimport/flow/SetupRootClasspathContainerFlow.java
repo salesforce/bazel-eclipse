@@ -32,9 +32,9 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 
-import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
+import com.salesforce.bazel.eclipse.core.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.index.CodeIndexReporter;
 import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndexer;

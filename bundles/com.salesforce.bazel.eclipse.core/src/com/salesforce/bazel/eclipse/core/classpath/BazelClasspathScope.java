@@ -1,4 +1,4 @@
-package com.salesforce.bazel.eclipse.classpath;
+package com.salesforce.bazel.eclipse.core.classpath;
 
 /**
  * The different possible classpath scopes

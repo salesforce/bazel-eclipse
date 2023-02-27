@@ -33,8 +33,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
-import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
 import com.salesforce.bazel.eclipse.mock.MockIProjectFactory;
 import com.salesforce.bazel.eclipse.mock.MockResourceHelper;
 
@@ -65,7 +65,7 @@ public class MockTest {
         assertNotNull(proj.getNature("greenNature"));
         assertNotNull(proj.getNature("redNature"));
         // verify standard natures are added by default
-        assertNotNull(proj.getNature(BazelNature.BAZEL_NATURE_ID));
+        assertNotNull(proj.getNature(BazelCorePluginSharedContstants.BAZEL_NATURE_ID));
         assertNotNull(proj.getNature("org.eclipse.jdt.core.javanature"));
     }
 }

@@ -2,7 +2,7 @@ package com.salesforce.bazel.eclipse.component;
 
 import java.io.File;
 
-import com.salesforce.bazel.eclipse.classpath.BazelGlobalSearchClasspathContainer;
+import com.salesforce.bazel.eclipse.core.classpath.BazelGlobalSearchClasspathContainer;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.PreferenceStoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;

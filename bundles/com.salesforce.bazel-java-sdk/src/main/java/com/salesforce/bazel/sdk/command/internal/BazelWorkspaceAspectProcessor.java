@@ -419,28 +419,28 @@ public class BazelWorkspaceAspectProcessor {
 
             // Strip out the artifact list, keeping the xyz.bzljavasdk-data.json files (located in subdirs in the bazel-out path)
             // Line must start with >>> and end with the aspect file suffix
-            LOG.info("Running command to generate aspect file for labels indexed [" + startTargetIndex + "] through ["
+            LOG.debug("Running command to generate aspect file for labels indexed [" + startTargetIndex + "] through ["
                     + (startTargetIndex + 25) + "] out of the total [" + (lastValidTargetIndex + 1) + "]");
             Function<String, String> filter = (t) -> {
                 LOG.info("Aspect output line: " + t);
                 String r = null;
                 if (t.startsWith(">>>")) {
                     if (t.endsWith(AspectTargetInfoFactory.ASPECT_FILENAME_SUFFIX)) {
-                        LOG.info("  Aspect output (json file): {}", t);
+                        LOG.debug("  Aspect output (json file): {}", t);
                         r = t.substring(3);
                     } else {
-                        LOG.info("  Aspect output (ignored): {}", t);
+                        LOG.debug("  Aspect output (ignored): {}", t);
                         r = null;
                     }
                 } else {
-                    LOG.info("  Aspect output (ignored): {}", t);
+                    LOG.debug("  Aspect output (ignored): {}", t);
                     r = null;
                 }
                 return r;
             };
 
             List<String> partialListOfGeneratedFilePaths =
-                    bazelCommandExecutor.runBazelAndGetErrorLinesIgnoringExitCode(ConsoleType.WORKSPACE, bazelWorkspaceRootDirectory,
+                    bazelCommandExecutor.runBazelAndGetErrorLines(ConsoleType.WORKSPACE, bazelWorkspaceRootDirectory,
                         null, args, filter, BazelCommandExecutor.TIMEOUT_INFINITE);
             listOfGeneratedFilePaths.addAll(partialListOfGeneratedFilePaths);
         }

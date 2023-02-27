@@ -34,7 +34,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
 
-import com.salesforce.bazel.eclipse.BazelNature;
+import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
+import com.salesforce.bazel.eclipse.core.resources.BazelNature;
 import com.salesforce.bazel.eclipse.projectimport.flow.ImportContext;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -217,7 +218,7 @@ public class EclipseProjectCreator {
 
         var bazelProject = bazelProjectManager.getProject(projectName);
         try {
-            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelNature.BAZEL_NATURE_ID, resourceHelper);
+            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelCorePluginSharedContstants.BAZEL_NATURE_ID, resourceHelper);
             EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID, resourceHelper);
             bazelProjectManager.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(),
                 packageFSPath, bazelTargets, new ArrayList<>()); // TODO pass buildFlags

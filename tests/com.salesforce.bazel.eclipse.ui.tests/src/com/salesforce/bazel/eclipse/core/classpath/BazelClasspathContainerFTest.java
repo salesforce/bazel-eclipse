@@ -33,7 +33,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.eclipse.classpath;
+package com.salesforce.bazel.eclipse.core.classpath;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -57,6 +57,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathManager;
+import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.mock.EclipseFunctionalTestEnvironmentFactory;
 import com.salesforce.bazel.eclipse.mock.MockEclipse;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;

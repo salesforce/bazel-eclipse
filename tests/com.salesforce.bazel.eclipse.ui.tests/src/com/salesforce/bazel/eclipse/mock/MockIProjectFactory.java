@@ -40,8 +40,9 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
+import com.salesforce.bazel.eclipse.core.resources.BazelNature;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
@@ -79,7 +80,7 @@ public class MockIProjectFactory {
         // note that there are two ways to ask for the natures, one is project.getNature() and the other is via the project description
         // which makes this convoluted
         if (bom.hasBazelNature) {
-            bom.customNatures.put(BazelNature.BAZEL_NATURE_ID, new BazelNature());
+            bom.customNatures.put(BazelCorePluginSharedContstants.BAZEL_NATURE_ID, new BazelNature());
         }
         if (bom.hasJavaNature) {
             bom.customNatures.put(JavaCore.NATURE_ID, Mockito.mock(IProjectNature.class));

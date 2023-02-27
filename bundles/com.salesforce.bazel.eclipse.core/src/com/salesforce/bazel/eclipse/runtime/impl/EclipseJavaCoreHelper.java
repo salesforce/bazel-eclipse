@@ -40,8 +40,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
-import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 
 /**
@@ -59,7 +59,7 @@ public class EclipseJavaCoreHelper implements JavaCoreHelper {
             List<IJavaProject> bazelProjects = new ArrayList<>(javaProjects.length);
             for (IJavaProject candidate : javaProjects) {
                 var p = candidate.getProject();
-                if (p.getNature(BazelNature.BAZEL_NATURE_ID) != null) {
+                if (p.getNature(BazelCorePluginSharedContstants.BAZEL_NATURE_ID) != null) {
                     var isRootProject = ComponentContext.getInstance().getResourceHelper().isBazelRootProject(p);
                     if (includeBazelWorkspaceRootProject || !isRootProject) {
                         bazelProjects.add(candidate);

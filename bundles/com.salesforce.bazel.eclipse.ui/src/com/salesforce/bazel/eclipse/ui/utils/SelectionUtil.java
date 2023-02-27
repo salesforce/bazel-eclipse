@@ -26,8 +26,8 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkingSet;
 
-import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 
@@ -56,7 +56,7 @@ public class SelectionUtil {
         var project = getType(element, IProject.class);
         if (project != null) {
             try {
-                if (project.hasNature(BazelNature.BAZEL_NATURE_ID)) {
+                if (project.hasNature(BazelCorePluginSharedContstants.BAZEL_NATURE_ID)) {
                     return PROJECT_WITH_NATURE;
                 }
                 return PROJECT_WITHOUT_NATURE;
@@ -181,7 +181,7 @@ public class SelectionUtil {
 
     private static void safeAdd(IProject project, List<IProject> projectList) {
         try {
-            if ((project != null) && project.isAccessible() && project.hasNature(BazelNature.BAZEL_NATURE_ID)
+            if ((project != null) && project.isAccessible() && project.hasNature(BazelCorePluginSharedContstants.BAZEL_NATURE_ID)
                     && !projectList.contains(project)) {
                 projectList.add(project);
             }

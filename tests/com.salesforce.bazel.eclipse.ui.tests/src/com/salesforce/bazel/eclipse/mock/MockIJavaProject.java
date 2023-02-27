@@ -48,8 +48,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.eval.IEvaluationContext;
 
-import com.salesforce.bazel.eclipse.classpath.BazelClasspathManager;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
+import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathManager;
 
 public class MockIJavaProject implements IJavaProject {
     private static final String UOE_MSG =

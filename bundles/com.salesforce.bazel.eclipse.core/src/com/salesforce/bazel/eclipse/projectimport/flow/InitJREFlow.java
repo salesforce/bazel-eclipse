@@ -28,7 +28,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.internal.launching.JREContainerInitializer;
 
-import com.salesforce.bazel.eclipse.classpath.EclipseSourceClasspathUtil;
+import com.salesforce.bazel.eclipse.core.classpath.EclipseSourceClasspathUtil;
 
 /**
  * This logic has to run once per Eclipse lifetime. It is indirectly triggered when we setup the VM for the classpath

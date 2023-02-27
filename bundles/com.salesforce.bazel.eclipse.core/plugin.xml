@@ -4,62 +4,81 @@
    <extension-point id="com.salesforce.bazel.consolefactory" name="Bazel Console Factory" schema="schema/com.salesforce.bazel.consolefactory.exsd"/>
 
    <extension
-         id="com.salesforce.bazel.eclipse.bazelNature"
-         point="org.eclipse.core.resources.natures">
-      <runtime>
-         <run
-               class="com.salesforce.bazel.eclipse.BazelNature">
-         </run>
-      </runtime>
-   </extension>
-
-   <extension
-         point="org.eclipse.jdt.core.classpathContainerInitializer">
-      <classpathContainerInitializer
-            class="com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer"
-            id="com.salesforce.bazel.eclipse.BAZEL_CONTAINER">
-      </classpathContainerInitializer>
-   </extension>
-   <extension
-         point="org.eclipse.jdt.core.classpathContainerInitializer">
-      <classpathContainerInitializer
-            class="com.salesforce.bazel.eclipse.classpath.BazelClasspathContainerInitializer"
-            id="com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER">
-      </classpathContainerInitializer>
-   </extension>
-   <extension
-         point="com.salesforce.bazel.consolefactory">
-      <commandConsoleFactory
-            class="com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory"
-            priority="100">
-      </commandConsoleFactory>
-   </extension>
-
-   <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
             class="com.salesforce.bazel.eclipse.preferences.BazelPreferenceInitializer">
       </initializer>
    </extension>
 
-   <extension id="com.salesforce.bazel.eclipse.bazelmarker"
-         point="org.eclipse.core.resources.markers">
-         <super type="org.eclipse.core.resources.problemmarker"/>
-         <persistent value="false"/>
-    </extension>
+   <extension
+         id="com.salesforce.bazel.eclipse.bazelNature"
+         name="Bazel Project Nature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="com.salesforce.bazel.eclipse.core.resources.BazelNature">
+         </run>
+      </runtime>
+      <requires-nature
+            id="org.eclipse.jdt.core.javanature">
+      </requires-nature>
+      <builder
+            id="com.salesforce.bazel.eclipse.builder">
+      </builder>
+   </extension>
 
    <extension
          id="com.salesforce.bazel.eclipse.builder"
+         name="Bazel Project Builder"
          point="org.eclipse.core.resources.builders">
       <builder
-            callOnEmptyDelta="false"
-            hasNature="false"
+            callOnEmptyDelta="true"
+            hasNature="true"
             isConfigurable="false"
             supportsConfigurations="false">
          <run
                class="com.salesforce.bazel.eclipse.builder.BazelBuilder">
          </run>
       </builder>
+   </extension>
+
+   <extension
+         id="problem"
+         name="Bazel Problem"
+         point="org.eclipse.core.resources.markers">
+         <super type="org.eclipse.core.resources.problemmarker"/>
+         <super type="org.eclipse.core.resources.textmarker"/>
+         <persistent value="true"/>
+   </extension>
+   <extension
+         id="buildpath_problem"
+         name="Bazel Build Path Problem"
+         point="org.eclipse.core.resources.markers">
+         <super type="org.eclipse.core.resources.problemmarker"/>
+         <super type="org.eclipse.core.resources.textmarker"/>
+         <persistent value="true"/>
+   </extension>
+   <extension 
+         id="transient_problem"
+         name="Transient Bazel Problem"
+         point="org.eclipse.core.resources.markers">
+         <super type="org.eclipse.core.resources.textmarker"/>
+         <persistent value="false"/>
+   </extension>
+
+   <extension
+         point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="com.salesforce.bazel.eclipse.core.classpath.BazelClasspathContainerInitializer"
+            id="com.salesforce.bazel.eclipse.BAZEL_CONTAINER">
+      </classpathContainerInitializer>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="com.salesforce.bazel.eclipse.core.classpath.BazelClasspathContainerInitializer"
+            id="com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER">
+      </classpathContainerInitializer>
    </extension>
 
    <extension point="org.eclipse.core.expressions.propertyTesters">
@@ -70,5 +89,12 @@
         properties="isTestJavaElement"
         class="com.salesforce.bazel.eclipse.util.JavaElementPropertyTester">
      </propertyTester>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.consolefactory">
+      <commandConsoleFactory
+            class="com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory"
+            priority="100">
+      </commandConsoleFactory>
    </extension>
 </plugin>

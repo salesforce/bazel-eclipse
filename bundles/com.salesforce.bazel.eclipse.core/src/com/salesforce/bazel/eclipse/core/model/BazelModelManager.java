@@ -20,9 +20,10 @@ import org.osgi.service.prefs.BackingStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.salesforce.bazel.eclipse.classpath.BazelClasspathManager;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
+import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathManager;
+import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 
 /**
  * The Bazel model manager is responsible for managing the mapping state of the Bazel model into the IDE.
@@ -91,7 +92,7 @@ public class BazelModelManager implements BazelCorePluginSharedContstants {
      */
     public BazelModelManager(IPath stateLocation) {
         this.stateLocation = stateLocation;
-        resourceChangeProcessor = new ResourceChangeProcessor();
+        resourceChangeProcessor = new ResourceChangeProcessor(this);
     }
 
     /**
@@ -127,23 +128,9 @@ public class BazelModelManager implements BazelCorePluginSharedContstants {
 
         // initialize the classpath
         classpathManager = new BazelClasspathManager(stateLocation.toFile());
-        var refreshClasspath = new Job("Computing build path of Bazel projects") {
-            @Override
-            public boolean belongsTo(Object family) {
-                return PLUGIN_ID.equals(family);
-            }
-
-            @Override
-            protected IStatus run(IProgressMonitor monitor) {
-                try {
-                    classpathManager.initializeMissingClasspaths(getWorkspace(), monitor);
-                } catch (CoreException e) {
-                    return e.getStatus();
-                }
-                return Status.OK_STATUS;
-            }
-        };
-        refreshClasspath.setPriority(Job.BUILD); // process after others
+        var projects = getWorkspace().getRoot().getProjects();
+        var refreshClasspath = new InitializeOrRefreshClasspathJob(projects, classpathManager,
+                false /* only when classpath is missing */);
         refreshClasspath.schedule();
 
         // insert our global resource listener into the workspace
@@ -162,7 +149,7 @@ public class BazelModelManager implements BazelCorePluginSharedContstants {
                     // we must process the POST_CHANGE events before the Java model
                     // for the container classpath update to proceed smoothly
                     JavaCore.addPreProcessingResourceChangedListener(resourceChangeProcessor,
-                        IResourceChangeEvent.POST_CHANGE);
+                        IResourceChangeEvent.PRE_DELETE | IResourceChangeEvent.POST_CHANGE);
 
                     // add save participant and process delta atomically
                     // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=59937

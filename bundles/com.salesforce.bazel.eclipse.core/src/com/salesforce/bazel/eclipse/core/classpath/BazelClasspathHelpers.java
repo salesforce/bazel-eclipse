@@ -12,7 +12,7 @@
  *      Salesforce - Adapted from M2E
 */
 
-package com.salesforce.bazel.eclipse.classpath;
+package com.salesforce.bazel.eclipse.core.classpath;
 
 import java.util.stream.Stream;
 

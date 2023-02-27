@@ -22,8 +22,8 @@ import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 import org.eclipse.jdt.ls.core.internal.managers.IBuildSupport;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager.CHANGE_TYPE;
 
-import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
+import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
 import com.salesforce.bazel.sdk.logging.LogHelper;
 
 @SuppressWarnings("restriction")
@@ -53,7 +53,7 @@ public class BazelBuildSupport implements IBuildSupport {
     @Override
     public boolean applies(IProject project) {
         try {
-            return (project != null) && project.hasNature(BazelNature.BAZEL_NATURE_ID);
+            return (project != null) && project.hasNature(BazelCorePluginSharedContstants.BAZEL_NATURE_ID);
 
         } catch (CoreException e) {
             return false;

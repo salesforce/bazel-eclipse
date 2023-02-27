@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019, Salesforce.com, Inc. All rights reserved.
+ * Copyright (c) 2020, Salesforce.com, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
@@ -33,49 +33,47 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package com.salesforce.bazel.eclipse.classpath;
 
-import java.io.Serializable;
+package com.salesforce.bazel.eclipse.core.resources;
 
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.IClasspathContainer;
-import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectNature;
+import org.eclipse.core.runtime.CoreException;
 
 /**
- * A fully computed Bazel Classpath Container.
- * <p>
- * The container is static and managed/updated by {@link BazelClasspathManager}.
- * </p>
+ * Project nature for Bazel Eclipse plugin.
  */
-public class BazelClasspathContainer implements IClasspathContainer, Serializable {
+public class BazelNature implements IProjectNature {
+    /**
+     * We create a special Eclipse project to represent the Bazel workspace. This is the base name of the project. The
+     * actual name of the workspace is added to this string, like "Bazel Workspace (acme)"
+     */
+    public static final String BAZELWORKSPACE_PROJECT_BASENAME = "Bazel Workspace";
 
-    private static final long serialVersionUID = 390898179243551621L;
+    public static String getEclipseRootProjectName(String bazelWorkspaceName) {
+        return BazelNature.BAZELWORKSPACE_PROJECT_BASENAME + " (" + bazelWorkspaceName + ")";
+    }
 
-    private final IPath path;
-    private final IClasspathEntry[] classpath;
+    private IProject project;
 
-    public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath) {
-        this.path = path;
-        this.classpath = classpath;
+    @Override
+    public void configure() throws CoreException {
+        // TODO we aren't doing anything right now for BazelNature configure hook, seems like it should be used for something
+        //BazelPluginActivator.info("BazelNature configure hook called.");
     }
 
     @Override
-    public IClasspathEntry[] getClasspathEntries() {
-        return classpath;
+    public void deconfigure() throws CoreException {
+
     }
 
     @Override
-    public String getDescription() {
-        return "Bazel Dependencies";
+    public IProject getProject() {
+        return project;
     }
 
     @Override
-    public int getKind() {
-        return IClasspathContainer.K_APPLICATION;
-    }
-
-    @Override
-    public IPath getPath() {
-        return path;
+    public void setProject(IProject project) {
+        this.project = project;
     }
 }

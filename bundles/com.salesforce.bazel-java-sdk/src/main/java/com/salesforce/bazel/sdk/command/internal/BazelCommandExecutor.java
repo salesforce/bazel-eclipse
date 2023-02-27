@@ -123,16 +123,6 @@ public class BazelCommandExecutor {
         throw new IOException(format("Command [%s] failed with this exit code: %d", args, exitCode, command.getSelectedErrorLines().stream().collect(joining(System.lineSeparator()))));
     }
 
-    public synchronized List<String> runBazelAndGetErrorLinesIgnoringExitCode(ConsoleType consoleType, File directory,
-            WorkProgressMonitor progressMonitor, List<String> args, Function<String, String> selector, long timeoutMS)
-            throws IOException, InterruptedException, BazelCommandLineToolConfigurationException {
-
-        CommandBuilder builder = getConfiguredCommandBuilder(consoleType, directory, progressMonitor, args, timeoutMS);
-        Command command = builder.setStderrLineSelector(selector).build();
-        command.run();
-        return command.getSelectedErrorLines();
-    }
-
     // HELPERS
 
     /**

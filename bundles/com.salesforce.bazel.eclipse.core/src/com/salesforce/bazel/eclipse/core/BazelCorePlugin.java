@@ -53,7 +53,10 @@ import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 
 /**
- * The activator class controls the Bazel Eclipse plugin life cycle
+ * The activator class controls the Bazel Eclipse plugin life cycle.
+ * <p>
+ * It should not be used outside this plug-in.
+ * </p>
  */
 public class BazelCorePlugin extends Plugin implements BazelCorePluginSharedContstants {
     private static volatile BazelCorePlugin plugin;

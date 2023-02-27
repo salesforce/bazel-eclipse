@@ -45,12 +45,13 @@ import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IProcess;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.salesforce.bazel.eclipse.BazelNature;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
+import com.salesforce.bazel.eclipse.core.resources.BazelNature;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 public class EclipseResourceHelper implements ResourceHelper {
@@ -64,7 +65,7 @@ public class EclipseResourceHelper implements ResourceHelper {
         }
     }
 
-    private static final LogHelper LOG = LogHelper.log(EclipseResourceHelper.class);
+    private static Logger LOG = LoggerFactory.getLogger(EclipseResourceHelper.class);
 
     private List<DeferredProjectDescriptionUpdate> deferredProjectDescriptionUpdates = new ArrayList<>();
 
@@ -89,7 +90,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     public void createFileLink(IFile thisFile, IPath bazelWorkspaceLocation, int updateFlags,
             IProgressMonitor monitor) {
         try {
-            LOG.info("createFileLink: thisFile={} bazelWorkspaceLocation={}", thisFile.getLocation().toOSString(),
+            LOG.debug("createFileLink: thisFile={} bazelWorkspaceLocation={}", thisFile.getLocation().toOSString(),
                 bazelWorkspaceLocation.toOSString());
             thisFile.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
@@ -101,8 +102,8 @@ public class EclipseResourceHelper implements ResourceHelper {
     public void createFolderLink(IFolder thisFolder, IPath bazelWorkspaceLocation, int updateFlags,
             IProgressMonitor monitor) {
         try {
-            LOG.info("createFolderLink: thisFolder={} bazelWorkspaceLocation={}", thisFolder.getLocation().toOSString(),
-                bazelWorkspaceLocation.toOSString());
+            LOG.debug("createFolderLink: thisFolder={} bazelWorkspaceLocation={}",
+                thisFolder.getLocation().toOSString(), bazelWorkspaceLocation.toOSString());
             thisFolder.createLink(bazelWorkspaceLocation, updateFlags, monitor);
         } catch (Exception anyE) {
             throw new IllegalArgumentException(anyE);
@@ -153,7 +154,7 @@ public class EclipseResourceHelper implements ResourceHelper {
     @Override
     public IResource findMemberInWorkspace(IPath path) {
         var resource = getEclipseWorkspaceRoot().findMember(path);
-        LOG.info("findMemberInWorkspace: path={} member.location={}", path.toOSString(),
+        LOG.debug("findMemberInWorkspace: path={} member.location={}", path.toOSString(),
             getResourceAbsolutePath(resource));
         return resource;
     }
@@ -193,13 +194,13 @@ public class EclipseResourceHelper implements ResourceHelper {
         Preferences eclipseProjectPrefs = eclipseProjectScope.getNode(BazelCorePluginSharedContstants.PLUGIN_ID);
 
         if (eclipseProjectPrefs == null) {
-            LOG.info("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
+            LOG.debug("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
         }
 
         try {
             eclipseProjectPrefs.sync();
         } catch (BackingStoreException bse) {
-            LOG.info("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
+            LOG.debug("Could not find the Preferences node for the Bazel plugin for project [{}]", project.getName());
         }
 
         return eclipseProjectPrefs;
@@ -280,7 +281,7 @@ public class EclipseResourceHelper implements ResourceHelper {
         } catch (Exception ex) {
             // this is likely an issue with the resource tree being locked, so we have to defer this update
             // but it works for any type of issue
-            LOG.info("Deferring updates to project [{}] because workspace is locked.", project.getName());
+            LOG.debug("Deferring updates to project [{}] because workspace is locked.", project.getName());
             deferredProjectDescriptionUpdates.add(new DeferredProjectDescriptionUpdate(project, description));
             needsDeferredApplication = true;
         }
