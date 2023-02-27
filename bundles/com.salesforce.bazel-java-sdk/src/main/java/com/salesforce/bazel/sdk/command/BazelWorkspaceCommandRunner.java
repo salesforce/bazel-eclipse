@@ -48,6 +48,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.command.internal.BazelCommandExecutor;
@@ -55,7 +58,6 @@ import com.salesforce.bazel.sdk.command.internal.BazelQueryHelper;
 import com.salesforce.bazel.sdk.command.internal.BazelVersionChecker;
 import com.salesforce.bazel.sdk.command.internal.BazelWorkspaceAspectProcessor;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
@@ -71,7 +73,7 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceMetadataStrategy;
  * in the commands it can run. It is intended only to run commands like the Bazel version check.
  */
 public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrategy {
-    static final LogHelper LOG = LogHelper.log(BazelWorkspaceCommandRunner.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelWorkspaceCommandRunner.class);
 
     // WORKSPACE CONFIG
 
@@ -599,7 +601,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
     public String getProjectOutputPath(BazelLabel bazelLabel) {
         // bazel-bin/[PACKAGE_PATH]/_javac/[TARGET_NAME]/[TARGET_TYPE][LAST_PATH_COMP_TARGET_NAME]_classes
         File genFolder = getBazelGeneratedFilesFolder();
-        String pathToClasses = 
+        String pathToClasses =
                 bazelLabel.getPackageName() + File.separator + "_javac" + File.separator + bazelLabel.getTargetName();
         File javacFolder = new File(genFolder,pathToClasses);
         FileFilter fileFilter = file -> file.isDirectory() && file.getName().endsWith("_classes");

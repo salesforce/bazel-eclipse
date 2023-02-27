@@ -41,7 +41,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Holder for a uri to a file, and associated helper functions.
@@ -55,7 +56,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * This class is meant to model the URI property, and provide some common helper functions for working with them.
  */
 public class BEPFileUri {
-    private static final LogHelper LOG = LogHelper.log(BEPFileUri.class);
+    private static Logger LOG = LoggerFactory.getLogger(BEPFileUri.class);
 
     private final String id;
     private final String uriStr;

@@ -42,7 +42,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
@@ -75,7 +77,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
  */
 public class InMemoryDependencyGraph extends BazelDependencyGraph {
 
-    private static final LogHelper LOG = LogHelper.log(InMemoryDependencyGraph.class);
+    private static Logger LOG = LoggerFactory.getLogger(InMemoryDependencyGraph.class);
 
     // lookup maps
 

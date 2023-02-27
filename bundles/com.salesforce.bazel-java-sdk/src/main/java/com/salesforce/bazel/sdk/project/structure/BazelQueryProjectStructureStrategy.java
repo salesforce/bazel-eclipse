@@ -30,8 +30,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelSourceFile;
@@ -46,7 +48,7 @@ import com.salesforce.bazel.sdk.path.SplitSourcePath;
  * strategy, so is used as the last resort.
  */
 public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy {
-    private static final LogHelper LOG = LogHelper.log(BazelQueryProjectStructureStrategy.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelQueryProjectStructureStrategy.class);
 
     /**
      * Test source files will generally appear in a directory hierarchy that contains a directory named "test" or
@@ -124,7 +126,7 @@ public class BazelQueryProjectStructureStrategy extends ProjectStructureStrategy
                             String packageRelPathToFile =
                                     packageRelPath + File.separator + srcPathObj.sourceDirectoryPath;
 
-                            // TODO this is really fragile; we expect the user to put test code in a folder 
+                            // TODO this is really fragile; we expect the user to put test code in a folder
                             // structure that contains a directory that starts with the word 'test'
                             boolean isTestPath = FSPathHelper.doesPathContainNamedResource(
                                 srcPathObj.sourceDirectoryPath, testSourceCodeFolderMarkers, true);

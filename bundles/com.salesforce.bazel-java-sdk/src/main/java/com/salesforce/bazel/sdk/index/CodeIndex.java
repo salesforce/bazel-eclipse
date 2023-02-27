@@ -26,8 +26,10 @@ package com.salesforce.bazel.sdk.index;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * An index of types. This is the output of an indexer that knows how to traverse the file system looking for types for
@@ -47,27 +49,27 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * archive files or raw source files.
  */
 public class CodeIndex {
-    private static final LogHelper LOG = LogHelper.log(CodeIndex.class);
+    private static Logger LOG = LoggerFactory.getLogger(CodeIndex.class);
 
     /**
      * Options used when generating this index.
      */
     protected CodeIndexerOptions indexOptions;
-    
+
     /**
      * Maps artifact name (e.g. junit, hamcrest-core, slf4j-api) to index entry(s). If the same
      * artifact is found multiple times (e.g. if there are multiple versions of it) entry will
-     * list multiple locations. 
+     * list multiple locations.
      */
     public Map<String, CodeIndexEntry> artifactDictionary = new TreeMap<>();
-    // map artifact file (e.g. junit-4.12.jar) to entry(s) 
+    // map artifact file (e.g. junit-4.12.jar) to entry(s)
     public Map<String, CodeIndexEntry> fileDictionary = new TreeMap<>();
     // map class name to entry(s)
     public Map<String, CodeIndexEntry> typeDictionary = new TreeMap<>();
 
-    
+
     // SEARCH LOCATION SETUP
-    
+
     public void addArtifactLocation(String artifact, CodeLocationDescriptor location) {
         CodeIndexEntry indexEntry = artifactDictionary.get(artifact);
         if (indexEntry == null) {
@@ -97,19 +99,19 @@ public class CodeIndex {
         typeDictionary.put(typeName, indexEntry);
         LOG.debug("add type ({}): {}", typeName, location.locationOnDisk.getPath());
     }
-    
+
     // INDEXER CONFIGURATION
-    
+
     /**
      * Returns a live instance of the options. This is modifiable until the indexing
-     * operation is started. 
+     * operation is started.
      */
     public CodeIndexerOptions getOptions() {
         return this.indexOptions;
     }
-    
+
     // REPORTING
-    
+
     /**
      * Returns a report that can analyze and output the content of the index in various forms.
      */

@@ -43,8 +43,10 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.BazelProject;
@@ -57,7 +59,7 @@ import com.salesforce.bazel.sdk.project.BazelProjectTargets;
  * invoking that test via the java executable.
  */
 public class TestClasspathHelper {
-    private static final LogHelper LOG = LogHelper.log(TestClasspathHelper.class);
+    private static Logger LOG = LoggerFactory.getLogger(TestClasspathHelper.class);
 
     static final String BAZEL_DEPLOY_PARAMS_SUFFIX = "_deploy.jar-0.params";
     static final String BAZEL_SRC_DEPLOY_PARAMS_SUFFIX = "_deploy-src.jar-0.params";
@@ -139,7 +141,7 @@ public class TestClasspathHelper {
          * The ordered list of param files obtained by querying on the targets
          */
         public List<File> paramFiles = new ArrayList<>();
-        
+
         /**
          * Labels that did not resolve to a param file. Usually means the test class is not referenced by
          * a java_test target, but is a different kind of test that we don't know how to run.
@@ -287,7 +289,7 @@ public class TestClasspathHelper {
 
         return paramFiles;
     }
-    
+
     /**
      * Given the set of param files in the passed testParamFilesResult, parse each param file and extract a list
      * of jar files from the sources and output sections of each file. Then assemble a de-duplicated list of these
@@ -297,19 +299,19 @@ public class TestClasspathHelper {
      * @param testParamFiles the ordered list of discovered param files for the set of targets
      * @param includeDeployJars deploy jars contain the Bazel test runner and the full classpath of classes to run
      *              the test. For some environments, this isn't necessary because the environment externally specifies
-     *              the classpath at launch, and provides the test runner (e.g. Eclipse RemoteTestRunner) 
+     *              the classpath at launch, and provides the test runner (e.g. Eclipse RemoteTestRunner)
      * @return a List of paths to jar files; the list is ordered the same as the param files
      */
     public List<String> aggregateJarFilesFromParamFiles(List<File> testParamFiles,
             boolean includeDeployJars) {
-        
+
         // Bazel is deterministic in the ordering of classpath elements, so use a list here not a Set
         // to allow us to better model the classpath order of Bazel
         List<String> allPaths = new ArrayList<>();
-        
+
         for (File paramsFile : testParamFiles) {
             List<String> jarPaths = null;
-            try { 
+            try {
                 jarPaths = getClasspathJarsFromParamsFile(paramsFile);
             } catch (IOException ioe) {
                 LOG.warn("Failed to parse test classpath file {}", paramsFile.getAbsolutePath());
@@ -317,8 +319,8 @@ public class TestClasspathHelper {
             if (jarPaths == null) {
                 // error has already been logged, just try to soldier on
                 continue;
-            }            
-            
+            }
+
             for (String jarPath : jarPaths) {
                 if (!includeDeployJars && jarPath.endsWith("_deploy.jar")) {
                     // deploy jars are bloated and redundant for some callers, exclude them if asked to
@@ -328,8 +330,8 @@ public class TestClasspathHelper {
                     // we don't want dupes
                     continue;
                 }
-                
-                // it is important to use a Set for allPaths, as the jarPaths will contain many dupes 
+
+                // it is important to use a Set for allPaths, as the jarPaths will contain many dupes
                 // across ParamFiles and we only want each one listed once
                 allPaths.add(jarPath);
             }
@@ -343,13 +345,13 @@ public class TestClasspathHelper {
 
     /*
       EXAMPLE param file contents (redacted, only shows what we are looking for)
-    
+
       --output
       bazel-out/darwin-fastbuild/bin/projects/libs/foo/src/test/java/com/salesforce/bar/MyServiceTest_deploy.jar
       --sources
       bazel-out/darwin-fastbuild/bin/projects/libs/foo/src/test/java/com/salesforce/bar/MyServiceTest.jar,//projects/libs/foo:src/test/java/com/salesforce/bar/MyServiceTest
       bazel-out/darwin-fastbuild/bin/tools/junit5/libbazeljunit5.jar,//tools/junit5:bazeljunit5
-    
+
      */
 
     /**

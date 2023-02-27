@@ -36,23 +36,28 @@
 
 package com.salesforce.bazel.sdk.command.internal;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Utility class that understands how to run Command objects and collect output from them.
  */
 public class BazelCommandExecutor {
-    static final LogHelper LOG = LogHelper.log(BazelCommandExecutor.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelCommandExecutor.class);
 
     private final File bazelExecutable;
     private final CommandBuilder commandBuilder;
@@ -117,8 +122,7 @@ public class BazelCommandExecutor {
         if (exitCode == 0) {
             return command.getSelectedErrorLines();
         }
-        LOG.error("Command [{}] failed with this exit code: {}", args, exitCode);
-        return new ArrayList<>();
+        throw new IOException(format("Command [%s] failed with this exit code: %d", args, exitCode, command.getSelectedErrorLines().stream().collect(joining(System.lineSeparator()))));
     }
 
     // HELPERS

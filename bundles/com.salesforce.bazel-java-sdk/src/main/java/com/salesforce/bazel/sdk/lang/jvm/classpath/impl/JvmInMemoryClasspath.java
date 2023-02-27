@@ -33,14 +33,16 @@
  */
 package com.salesforce.bazel.sdk.lang.jvm.classpath.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
- * Basic implementation of JvmClasspath that uses a stored object for the classpath state. It does not have 
- * innate ability to compute classpath data; the caller that creates it must provide the classpath data at 
+ * Basic implementation of JvmClasspath that uses a stored object for the classpath state. It does not have
+ * innate ability to compute classpath data; the caller that creates it must provide the classpath data at
  * initialization.
  * <p>
  * It supports caching. If the cache timeout expires, the classpath data will be erased and this implementation
@@ -49,6 +51,9 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * As a side gig, it is also expected to be the base class of most computational JvmClasspath implementations.
  */
 public class JvmInMemoryClasspath implements JvmClasspath {
+
+    private static Logger LOG = LoggerFactory.getLogger(JvmInMemoryClasspath.class);
+
     /**
      * A logical name for the classpath instance, like the Bazel package name or project name.
      */
@@ -58,11 +63,9 @@ public class JvmInMemoryClasspath implements JvmClasspath {
     protected long cacheTimeoutMillis = 300000;
     protected long cachePutTimeMillis = 0;
 
-    protected final LogHelper logger;
-
     /**
      * Ctor to be used when the classpath data is already computed.
-     * 
+     *
      * @param classpathName
      *            a logical name for the classpath instance, like the Bazel package name or project name.
      * @param cacheTimeoutMillis
@@ -73,13 +76,11 @@ public class JvmInMemoryClasspath implements JvmClasspath {
         this.cacheTimeoutMillis = -1;
         this.cachePutTimeMillis = System.currentTimeMillis();
         this.cachedClasspath = classpath;
-
-        logger = LogHelper.log(this.getClass());
     }
 
     /**
      * Ctor to be called by subclasses.
-     * 
+     *
      * @param classpathName
      *            a logical name for the classpath instance, like the Bazel package name or project name.
      * @param cacheTimeoutMillis
@@ -88,21 +89,20 @@ public class JvmInMemoryClasspath implements JvmClasspath {
     protected JvmInMemoryClasspath(String classpathName, long cacheTimeoutMillis) {
         this.classpathName = classpathName;
         this.cacheTimeoutMillis = cacheTimeoutMillis;
-
-        logger = LogHelper.log(this.getClass());
     }
 
     // API
 
     /**
      * Provides the JVM classpath for the associated BazelProject
+     * @throws Exception
      */
     @Override
-    public JvmClasspathData getClasspathEntries(WorkProgressMonitor progressMonitor) {
+    public JvmClasspathData getClasspathEntries(WorkProgressMonitor progressMonitor) throws Exception {
         if (cachedClasspath != null && cacheTimeoutMillis == -1) {
             return cachedClasspath;
         }
-        
+
         // where the magic happens
         // in most cases, this class will be subclassed and the computeClasspath method will be overridden
         // with code that can compute the classpath using something tangible (build metadata, source files, etc).
@@ -132,8 +132,9 @@ public class JvmInMemoryClasspath implements JvmClasspath {
      * If the classpath is not cached, this method will recompute it.
      * <p>
      * For subclasses, this is the main method to implement.
+     * @throws Exception
      */
-    protected JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) {
+    protected JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor) throws Exception {
         // if this class is not subclassed, and we get here, the captive JvmClasspathData has expired
         // and we just return null. this isn't a good situation. so if you are using this class without
         // subclassing, be sure to set the timeout to -1
@@ -146,10 +147,10 @@ public class JvmInMemoryClasspath implements JvmClasspath {
         if (cachedClasspath != null) {
             long now = System.currentTimeMillis();
             if ((now - cachePutTimeMillis) <= cacheTimeoutMillis) {
-                logger.debug("  Using cached classpath for project " + classpathName);
+                LOG.debug("  Using cached classpath for project " + classpathName);
                 return cachedClasspath;
             }
-            logger.info("Evicted classpath from cache for project " + classpathName);
+            LOG.info("Evicted classpath from cache for project " + classpathName);
             cachedClasspath = null;
         }
         return null;

@@ -36,8 +36,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelBuildFile;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelLabelUtil;
@@ -50,7 +52,7 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * should be surfaced as a public class
  */
 public class BazelQueryHelper {
-    private static final LogHelper LOG = LogHelper.log(BazelQueryHelper.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelQueryHelper.class);
 
     /**
      * Underlying command invoker which takes built Command objects and executes them.

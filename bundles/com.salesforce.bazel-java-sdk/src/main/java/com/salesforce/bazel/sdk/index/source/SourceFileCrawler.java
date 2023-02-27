@@ -28,17 +28,19 @@ import java.io.FilenameFilter;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.index.CodeIndex;
 import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.index.model.CodeLocationIdentifier;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Crawler that descends into nested directories of source files and adds found files to the index.
  */
 public class SourceFileCrawler {
-    private static final LogHelper LOG = LogHelper.log(SourceFileCrawler.class);
+    private static Logger LOG = LoggerFactory.getLogger(SourceFileCrawler.class);
 
     protected final CodeIndex index;
     protected final String artifactMarkerFileName;

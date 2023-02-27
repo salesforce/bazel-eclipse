@@ -26,9 +26,10 @@ package com.salesforce.bazel.sdk.project.structure;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.lang.jvm.MavenProjectStructureStrategy;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
@@ -36,7 +37,7 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
  * Pluggable strategy for establishing the basic structure of a project. Used early during import.
  */
 public abstract class ProjectStructureStrategy {
-    private static final LogHelper LOG = LogHelper.log(MavenProjectStructureStrategy.class);
+    private static Logger LOG = LoggerFactory.getLogger(ProjectStructureStrategy.class);
 
     // STATIC UTILITIES
 

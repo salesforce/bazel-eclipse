@@ -25,8 +25,10 @@ package com.salesforce.bazel.sdk.lang.jvm;
 
 import java.io.File;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
@@ -41,7 +43,7 @@ import com.salesforce.bazel.sdk.project.structure.ProjectStructureStrategy;
  * workspaces because of this.
  */
 public class MavenProjectStructureStrategy extends ProjectStructureStrategy {
-    private static final LogHelper LOG = LogHelper.log(MavenProjectStructureStrategy.class);
+    private static Logger LOG = LoggerFactory.getLogger(MavenProjectStructureStrategy.class);
 
     @Override
     public ProjectStructure doStructureAnalysis(BazelWorkspace bazelWorkspace, BazelPackageLocation packageNode,

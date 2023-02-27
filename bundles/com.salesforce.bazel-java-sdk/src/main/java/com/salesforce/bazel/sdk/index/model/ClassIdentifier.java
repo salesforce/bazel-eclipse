@@ -23,13 +23,14 @@
  */
 package com.salesforce.bazel.sdk.index.model;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Holder object for a type: package name + class name
  */
 public class ClassIdentifier {
-    private static final LogHelper LOG = LogHelper.log(ClassIdentifier.class);
+    private static Logger LOG = LoggerFactory.getLogger(ClassIdentifier.class);
 
     public String packageName;
     public String classname;

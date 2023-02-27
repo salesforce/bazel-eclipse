@@ -50,7 +50,7 @@ jobs:
       - name: Setup Bazelisk
         uses: bazelbuild/setup-bazelisk@v2
 
-      - name: Build with tests
+      - name: Build and Test
         env:
           BUILD_ID: "${{ steps.time.outputs.time }}"
           BUILD_TYPE: "S"

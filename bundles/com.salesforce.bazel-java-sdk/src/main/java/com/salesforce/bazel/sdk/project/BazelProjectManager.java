@@ -40,9 +40,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -53,11 +55,8 @@ import com.salesforce.bazel.sdk.model.BazelWorkspace;
 public abstract class BazelProjectManager {
 
     private final Map<String, BazelProject> projectMap = new TreeMap<>();
-    private final LogHelper logger;
 
-    public BazelProjectManager() {
-        logger = LogHelper.log(this.getClass());
-    }
+    private static Logger LOG = LoggerFactory.getLogger(BazelProjectManager.class);
 
     public void addProject(BazelProject newProject) {
         BazelProject existingProject = projectMap.get(newProject.name);
@@ -99,13 +98,13 @@ public abstract class BazelProjectManager {
                 List<BazelProblem> details = bazelWorkspaceCmdRunner.runBazelBuild(targets.getConfiguredTargets(),
                     Collections.emptyList(), null);
                 for (BazelProblem detail : details) {
-                    logger.error(detail.toString());
+                    LOG.error(detail.toString());
                 }
                 return details.isEmpty();
 
             }
         } catch (Exception anyE) {
-            logger.error("Caught exception validating project [" + bazelProject.name + "]", anyE);
+            LOG.error("Caught exception validating project [" + bazelProject.name + "]", anyE);
             // just return false below
         }
         return false;
@@ -169,5 +168,20 @@ public abstract class BazelProjectManager {
         String packageLabel = getBazelLabelForProject(bazelProject);
         cmdRunner.flushAspectInfoCacheForPackage(packageLabel);
         cmdRunner.flushQueryCache(new BazelLabel(packageLabel));
+    }
+
+    public BazelProject create(String name, Object projectImpl) {
+        BazelProject bazelProject = getProject(name);
+        if (bazelProject != null) {
+            return bazelProject;
+        }
+        synchronized (this) { // FIXME: is this needed?
+            bazelProject = getProject(name);
+            if (bazelProject == null) {
+                bazelProject = new BazelProject(name, projectImpl);
+                addProject(bazelProject);
+            }
+        }
+        return bazelProject;
     }
 }

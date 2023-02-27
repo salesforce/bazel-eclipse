@@ -7,6 +7,7 @@ updates:
     target-branch: "master"
     assignees:
       - "plaird"
+      - "guw"
     commit-message:
       prefix: "Dependabot:"
     open-pull-requests-limit: 2

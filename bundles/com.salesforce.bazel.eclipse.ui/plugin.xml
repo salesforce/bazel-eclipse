@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="org.eclipse.jdt.launching.classpathProviders">
+      <classpathProvider
+          id="com.salesforce.bazel.eclipse.launchconfig.classpathProvider"
+          class="com.salesforce.bazel.eclipse.launch.BazelTestClasspathProvider"/>
+      <classpathProvider
+          id="com.salesforce.bazel.eclipse.launchconfig.sourcepathProvider"
+          class="org.eclipse.jdt.launching.StandardSourcePathProvider"/>
+   </extension>
+
+
+   <extension point="org.eclipse.ui.importWizards">
+     <category id="com.salesforce.bazel.eclipse.ui.import.category.bazel" name="Bazel"/>
+
+     <wizard id="com.salesforce.bazel.eclipse.wizard.BazelImportWizard"
+             class="com.salesforce.bazel.eclipse.wizard.BazelImportWizard"
+             icon="resources/import_bazel_workspace.gif"
+             category="com.salesforce.bazel.eclipse.ui.import.category.bazel"
+             name="Import Bazel Workspace">
+        <description>Import an existing Bazel Workspace</description>
+     </wizard>
+   </extension>
+
+
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="com.salesforce.bazel.eclipse.ui.preferences.BazelPreferencePage"
+            id="com.salesforce.bazel.eclipse.preferences"
+            name="Bazel">
+      </page>
+   </extension>
+
+   <extension
+         point="org.eclipse.jdt.ui.classpathFixProcessors">
+      <classpathFixProcessor
+            class="com.salesforce.bazel.eclipse.classpath.BazelClasspathFixProcessor"
+            id="com.salesforce.bazel.eclipse.core.bazelClasspathFixProcessor"
+            name="BazelClasspathFixProcessor">
+      </classpathFixProcessor>
+   </extension>
+
+   <extension
+         id="com.salesforce.bazel.eclipse.launch"
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            delegate="com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationDelegate"
+            id="com.salesforce.bazel.eclipse.launch"
+            modes="run,debug"
+            name="Bazel Target">
+      </launchConfigurationType>
+   </extension>
+
+   <extension
+        point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+        <launchConfigurationTypeImage
+                id="com.salesforce.bazel.eclipse.launch.image"
+                configTypeID="com.salesforce.bazel.eclipse.launch"
+                icon="resources/bazelicon.gif">
+        </launchConfigurationTypeImage>
+   </extension>
+
+   <extension
+         id="com.salesforce.bazel.eclipse.launch.tab"
+         point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+      <launchConfigurationTabGroup
+            class="com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationTabGroup"
+            id="com.salesforce.bazel.eclipse.launch.tab"
+            type="com.salesforce.bazel.eclipse.launch">
+      </launchConfigurationTabGroup>
+   </extension>
+
+   <extension
+    point="org.eclipse.debug.ui.launchShortcuts">
+        <shortcut
+            class="com.salesforce.bazel.eclipse.launch.BazelTargetLaunchShortcut"
+            icon="resources/bazelicon.gif"
+            id="com.salesforce.bazel.eclipse.launch.shortcut"
+            label="Bazel Target"
+            modes="run, debug">
+            <contextualLaunch>
+                <enablement>
+                    <with
+                        variable="selection">
+                        <count value="+">
+                        </count>
+                        <iterate>
+                           <test property="org.eclipse.debug.ui.matchesPattern" value="*.java"/>
+                           <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+                        </iterate>
+                    </with>
+                </enablement>
+            </contextualLaunch>
+        </shortcut>
+   </extension>
+
+   <extension
+         point="org.eclipse.debug.core.launchDelegates">
+      <launchDelegate
+            name="Bazel JUnit"
+            modes="run, debug"
+            delegateDescription="The Bazel JUnit Launcher *must* be used for launching JUnit tests in a Bazel workspace. See the Bazel Eclipse Feature launcher documentation for more details."
+            type="org.eclipse.jdt.junit.launchconfig"
+            delegate="com.salesforce.bazel.eclipse.launch.BazelJunitLaunchConfigurationDelegate"
+            id="bazel.junit.launcher">
+      </launchDelegate>
+   </extension>
+
+   <extension
+         point="org.eclipse.jdt.junit.testRunListeners">
+      <testRunListener
+            class="com.salesforce.bazel.eclipse.launch.BazelTestRunListener">
+      </testRunListener>
+   </extension>
+
+   <extension point="org.eclipse.ui.commands">
+      <command
+            name="Bazel Target"
+            categoryId="org.eclipse.debug.ui.category.run"
+            id="com.salesforce.bazel.eclipse.launch.shortcut.run"/>
+   </extension>
+   <extension point="org.eclipse.ui.bindings">
+     <key
+         sequence="M1+M3+X B"
+         contextId="org.eclipse.ui.contexts.window"
+         commandId="com.salesforce.bazel.eclipse.launch.shortcut.run"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+   </extension>
+
+   <extension point="org.eclipse.ui.commands">
+      <command
+            name="Bazel Target"
+            categoryId="org.eclipse.debug.ui.category.run"
+            id="com.salesforce.bazel.eclipse.launch.shortcut.debug" />
+   </extension>
+   <extension point="org.eclipse.ui.bindings">
+   <sequenceModifier
+         find="M4"
+         replace="M2"
+         platforms="gtk,motif" />
+    <key
+         sequence="M4+M1+M3+D B"
+         contextId="org.eclipse.ui.contexts.window"
+         commandId="com.salesforce.bazel.eclipse.launch.shortcut.debug"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.salesforce.bazel.eclipse.projectview.ProjectViewEditor"
+            default="false"
+            filenames="bazelproject"
+            id="com.salesforce.bazel.eclipse.projectview"
+            name="ProjectView">
+      </editor>
+   </extension>
+
+   <extension
+          point="com.salesforce.bazel.consolefactory">
+       <commandConsoleFactory
+             class="com.salesforce.bazel.eclipse.runtime.impl.EclipseConsole"
+             priority="10">
+       </commandConsoleFactory>
+    </extension>
+
+    <extension
+          point="org.eclipse.ui.menus">
+       <menuContribution
+             allPopups="false"
+             locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+          <menu
+                icon="resources/bazelicon.gif"
+                id="com.salesforce.bazel.eclipse.ui.menu"
+                label="Bazel">
+          </menu>
+       </menuContribution>
+       <menuContribution
+             allPopups="false"
+             locationURI="popup:com.salesforce.bazel.eclipse.ui.menu">
+          <command
+                commandId="com.salesforce.bazel.eclipse.ui.commands.updateClasspaths"
+                style="push">
+             <visibleWhen
+                   checkEnabled="true">
+             </visibleWhen>
+          </command>
+       </menuContribution>
+    </extension>
+    <extension
+          point="org.eclipse.ui.commands">
+       <category
+             description="Bazel Eclipse Feature Commands"
+             id="com.salesforce.bazel.eclipse.ui.commands.category"
+             name="Bazel">
+       </category>
+       <command
+             categoryId="com.salesforce.bazel.eclipse.ui.commands.category"
+             defaultHandler="com.salesforce.bazel.eclipse.ui.commands.UpdateClasspathsHandler"
+             description="Refresh Eclipse build path information from Bazel BUILD files"
+             id="com.salesforce.bazel.eclipse.ui.commands.updateClasspaths"
+             name="Update Classpaths">
+       </command>
+    </extension>
+
+</plugin>

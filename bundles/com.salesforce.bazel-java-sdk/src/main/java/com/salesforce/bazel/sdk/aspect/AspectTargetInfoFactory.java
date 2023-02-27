@@ -44,9 +44,10 @@ import java.util.Map;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfoFactoryProvider;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Factory for AspectTargetInfo instances, using the JSON emitted from the aspect. Each rule type will have a different
@@ -54,7 +55,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  */
 public class AspectTargetInfoFactory {
 
-    private static final LogHelper LOG = LogHelper.log(AspectTargetInfoFactory.class);
+    private static Logger LOG = LoggerFactory.getLogger(AspectTargetInfoFactory.class);
     public static final String ASPECT_FILENAME_SUFFIX = ".bzljavasdk-data.json";
 
     protected static List<AspectTargetInfoFactoryProvider> providers = new ArrayList<>();

@@ -42,9 +42,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandOptions;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -66,8 +68,10 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
  */
 public class ImplicitClasspathHelper {
 
+    private static Logger LOG = LoggerFactory.getLogger(ImplicitClasspathHelper.class);
+
     // TODO this is specific to the aspect classpath provider, can we make it more generic?
-    
+
     // observed location where the TestRunner is written; this is an internal Bazel detail that may change
     private static final String IMPLICIT_RUNNER = "external/bazel_tools/tools/jdk/_ijar/TestRunner"; // $SLASH_OK
 
@@ -110,9 +114,9 @@ public class ImplicitClasspathHelper {
         File bazelBinDir = bazelWorkspace.getBazelBinDirectory();
         File testRunnerDir = new File(bazelBinDir, FSPathHelper.osSeps(IMPLICIT_RUNNER));
 
-        LogHelper logger = LogHelper.log(this.getClass());
+
         if (!testRunnerDir.exists()) {
-            logger.error("Could not add implicit test deps to target [" + label.getLabelPath() + "], directory ["
+            LOG.error("Could not add implicit test deps to target [" + label.getLabelPath() + "], directory ["
                     + FSPathHelper.getCanonicalPathStringSafely(testRunnerDir) + "] does not exist.");
             return null;
         }

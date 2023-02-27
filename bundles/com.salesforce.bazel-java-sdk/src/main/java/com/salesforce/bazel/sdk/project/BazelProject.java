@@ -45,6 +45,10 @@ import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
  * A BazelProject can contain one or more Bazel packages.
  */
 public class BazelProject {
+
+    // FIXME: BazelProject is terrible; it should have proper API instead of this none-sense abstraction
+    // need IProject and IJavaProject support
+
     public String name;
 
     public List<BazelPackageInfo> bazelPackages;

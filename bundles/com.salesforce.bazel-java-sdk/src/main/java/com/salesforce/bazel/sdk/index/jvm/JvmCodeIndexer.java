@@ -37,22 +37,24 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.index.CodeIndexer;
 import com.salesforce.bazel.sdk.index.jvm.jar.JarIdentiferResolver;
 import com.salesforce.bazel.sdk.index.jvm.jar.JavaJarCrawler;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleManager;
 import com.salesforce.bazel.sdk.lang.jvm.external.BazelExternalJarRuleType;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
- * Indexes the code and dependencies in a Bazel workspace. It uses a combination of 
+ * Indexes the code and dependencies in a Bazel workspace. It uses a combination of
  * underlying crawlers to collect information.
  */
 public class JvmCodeIndexer extends CodeIndexer {
-    private static final LogHelper LOG = LogHelper.log(JvmCodeIndexer.class);
-    
+    private static Logger LOG = LoggerFactory.getLogger(JvmCodeIndexer.class);
+
     /**
      * Builds an index for an entire workspace, which can be a very expensive operation.
      */
@@ -65,11 +67,11 @@ public class JvmCodeIndexer extends CodeIndexer {
         if (index != null) {
             return index;
         }
-        
+
         LOG.info("Building the type index for workspace {}, this may take some time...", bazelWorkspace.getName());
         List<File> locations = new ArrayList<>();
         index = new JvmCodeIndex(indexerOptions);
-        
+
         // lock the options, as we don't want the caller to change them while we are indexing
         indexerOptions.setLock();
 

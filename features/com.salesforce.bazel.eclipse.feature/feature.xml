@@ -9,7 +9,7 @@
       id="com.salesforce.bazel.eclipse.feature"
       label="Bazel Eclipse Feature"
       version="1.5.4.qualifier"
-      provider-name="Bazel Eclipse">
+      provider-name="Bazel Eclipse Feature">
 
    <description url="https://github.com/salesforce/bazel-eclipse">
       The Bazel Eclipse Feature supports importing, building, and testing Java projects that are built using the Bazel build system.
@@ -274,9 +274,10 @@
          unpack="false"/>
 
    <plugin
-         id="com.salesforce.bazel.eclipse.common"
+         id="com.salesforce.bazel.eclipse.ui"
          download-size="0"
          install-size="0"
-         version="0.0.0"/>
+         version="0.0.0"
+         unpack="false"/>
 
 </feature>

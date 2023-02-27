@@ -40,8 +40,8 @@ import java.util.Set;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base model of a Build Event Protocol (BEP) event, and parsing utilities. Check for subclasses for specific event type
@@ -53,7 +53,8 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * <a href="https://docs.bazel.build/versions/master/build-event-protocol.html">BEP Documentation</a>
  */
 public class BEPEvent {
-    private static final LogHelper LOG = LogHelper.log(BEPEvent.class);
+
+    private static Logger LOG = LoggerFactory.getLogger(BEPEvent.class);
 
     // Keeping the raw JSON string for each event can be helpful during debugging, but takes a lot
     // of memory, so this disabled by default

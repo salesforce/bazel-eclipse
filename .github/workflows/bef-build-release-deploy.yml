@@ -1,4 +1,4 @@
-name: BEF Release
+name: Bazel Eclipse Feature Release
 
 on:
   # manually from the Actions tab
@@ -6,36 +6,37 @@ on:
 
 jobs:
   build-and-deploy:
-
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout 🛎
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Get Time for BUILD_ID
         id: time
         uses: nanzm/get-time-action@v1.1
         with:
-          format: 'YYYYMMDD_HHmm'
+          format: "YYYYMMDD_HHmm"
 
       - name: Get Branch name for BUILD_LABEL
         id: branch_name
         shell: bash
-        run: echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
+        run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
 
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'adopt'
+          distribution: 'temurin'
+          cache: maven
 
-      - name: Build Everything
+      - name: Setup Bazelisk
+        uses: bazelbuild/setup-bazelisk@v2
+
+      - name: Build and Test
         env:
           BUILD_ID: "${{ steps.time.outputs.time }}"
           BUILD_TYPE: "S"
           BUILD_LABEL: "CI ${{ steps.time.outputs.time }} (${{ steps.branch_name.outputs.branch }})"
-        run: mvn --batch-mode clean verify "-Dtest=\!com.salesforce.b2eclipse.*"
+        run: ./mvnw --batch-mode clean verify
 
       - name: Create the update-site layout on the filesystem
         id: create_layout
@@ -48,5 +49,5 @@ jobs:
           branch: gh-pages
           folder: bef-staging
           clean: false
-          commit-message: bef-release
+          commit-message: "Release Build ${{ steps.time.outputs.time }} (${{ steps.branch_name.outputs.branch }})"
           ssh-key: ${{ secrets.DEPLOY_KEY }}

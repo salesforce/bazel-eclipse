@@ -37,11 +37,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.bep.event.BEPEvent;
 import com.salesforce.bazel.sdk.bep.file.BEPFileContents;
 import com.salesforce.bazel.sdk.bep.file.BEPFileParser;
 import com.salesforce.bazel.sdk.bep.file.BEPMonitoredFile;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * /** Bazel build event protocol stream (BEP) for a Bazel workspace. This implementation reads a file, publishes the
@@ -61,7 +63,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * bep_test.json).
  */
 public class BazelBuildEventsFileStream extends BazelBuildEventStream {
-    private static final LogHelper LOG = LogHelper.log(BazelBuildEventsFileStream.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelBuildEventsFileStream.class);
 
     protected final List<BEPMonitoredFile> monitoredFiles = new ArrayList<>();
 

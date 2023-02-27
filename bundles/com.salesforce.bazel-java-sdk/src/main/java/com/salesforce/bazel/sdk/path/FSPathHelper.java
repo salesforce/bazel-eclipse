@@ -46,14 +46,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Constants and utils for file system paths.
  */
 public final class FSPathHelper {
-    private static final LogHelper LOG = LogHelper.log(FSPathHelper.class);
+    private static Logger LOG = LoggerFactory.getLogger(FSPathHelper.class);
 
     // Slash character for unix file paths
     public static final String UNIX_SLASH = "/";
@@ -175,7 +177,7 @@ public final class FSPathHelper {
             // 1. we need to handle the case where a path has been converted already slash->backslash, and then is passed into
             // this method, which then needs to escape each backslash in addition to converting any new slashes
             // a/b\c => a\\b\\c
-            // 2. we need to handle the case where a path has been converted and escaped already slash->backslash+backslash, 
+            // 2. we need to handle the case where a path has been converted and escaped already slash->backslash+backslash,
             // and then is passed into this method, which then needs to escape each backslash in addition to converting any new slashes
             // a/b\\c\d => a\\b\\c\\d
 
