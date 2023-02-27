@@ -40,11 +40,12 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.jdtls.managers.BazelBuildSupport;
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
@@ -68,7 +69,7 @@ public final class BazelEclipseProjectFactory {
      */
     public static final String TARGET_PROPERTY_PREFIX = "bazel.activated.target";
 
-    private static final LogHelper LOG = LogHelper.log(BazelEclipseProjectFactory.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelEclipseProjectFactory.class);
 
     /**
      * Imports a workspace. This version does not yet allow the user to be selective - it imports all Java packages that

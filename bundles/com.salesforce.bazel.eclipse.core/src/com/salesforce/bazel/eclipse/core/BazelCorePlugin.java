@@ -47,7 +47,6 @@ import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.component.EclipseComponentContextInitializer;
 import com.salesforce.bazel.eclipse.core.model.BazelModelManager;
-import com.salesforce.bazel.eclipse.logging.EclipseLoggerFacade;
 import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
 import com.salesforce.bazel.sdk.init.JvmRuleInit;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
@@ -85,9 +84,6 @@ public class BazelCorePlugin extends Plugin implements BazelCorePluginSharedCont
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
         plugin = this;
-
-        // setup the logger
-        EclipseLoggerFacade.install(getBundle());
 
         // initialize the SDK, tell it to load the JVM rules support
         BazelJavaSDKInit.initialize("Bazel Eclipse", "bzleclipse");

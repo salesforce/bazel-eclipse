@@ -19,6 +19,7 @@ Require-Bundle: org.eclipse.core.runtime,
  com.salesforce.bazel-java-sdk,
  com.salesforce.bazel.eclipse.core
 Export-Package: com.salesforce.bazel.eclipse.jdtls.managers
+Import-Package: org.slf4j;version="1.7.30"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: bin/,

@@ -41,12 +41,12 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
+import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
 import com.salesforce.bazel.eclipse.jdtls.BazelJdtLsPlugin;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Support class that provides interaction methods for existing Eclipse Bazel projects.
@@ -55,7 +55,7 @@ public final class BazelEclipseProjectSupport {
     static final String WORKSPACE_ROOT_PROPERTY = "bazel.workspace.root";
     static final String BUILDFLAG_PROPERTY_PREFIX = "bazel.build.flag";
 
-    private static final LogHelper LOG = LogHelper.log(BazelEclipseProjectSupport.class);
+    private static Logger LOG = org.slf4j.LoggerFactory.getLogger(BazelEclipseProjectSupport.class);
 
     /**
      * Returns all Java Projects that have a Bazel Nature.
@@ -70,7 +70,7 @@ public final class BazelEclipseProjectSupport {
             }
         }
         var projects = bazelProjects.toArray(new IJavaProject[bazelProjects.size()]);
-        if (LOG.isDebugLevel()) {
+        if (LOG.isDebugEnabled()) {
             LOG.debug("Bazel Java projects {} ", bazelProjects.stream().map(IJavaProject::getElementName).toArray());
         }
 

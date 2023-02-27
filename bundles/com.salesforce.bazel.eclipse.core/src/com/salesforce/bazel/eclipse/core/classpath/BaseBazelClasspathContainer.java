@@ -48,6 +48,8 @@ import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
@@ -55,7 +57,6 @@ import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -67,13 +68,14 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * Computes the classpath for a Bazel package and provides it to the JDT tooling in Eclipse.
  */
 public abstract class BaseBazelClasspathContainer implements IClasspathContainer {
+    private static Logger LOG = LoggerFactory.getLogger(BaseBazelClasspathContainer.class);
+
     protected final BazelProjectManager bazelProjectManager;
     protected BazelProject bazelProject;
     protected final IPath eclipseProjectPath;
     protected final boolean eclipseProjectIsRoot;
     protected final JavaCoreHelper javaCoreHelper;
     protected final OperatingEnvironmentDetectionStrategy osDetector;
-    protected final LogHelper logger;
     protected final BazelWorkspace bazelWorkspace;
     protected IClasspathEntry[] lastComputedClasspath = null;
 
@@ -94,9 +96,6 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
             bazelProject = new BazelProject(eclipseProject.getName(), eclipseProject);
             bazelProjectManager.addProject(bazelProject);
         }
-
-        logger = LogHelper.log(this.getClass());
-
     }
 
     protected abstract JvmClasspathData computeClasspath(WorkProgressMonitor progressMonitor);
@@ -223,7 +222,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
             var msg = "Problem adding jar to project [" + bazelProject.name
                     + "] because it does not exist on the filesystem(2), searched paths: " + searchedLocations
                     + " classpath impl: " + this.getClass().getName();
-            logger.error(msg);
+            LOG.error(msg);
             continueOrThrow(new IllegalArgumentException(msg));
             return null;
         }
@@ -242,7 +241,7 @@ public abstract class BaseBazelClasspathContainer implements IClasspathContainer
                 // https://github.com/salesforce/bazel-eclipse/issues/113 $SLASH_OK url
                 var msg = "Problem adding jar to project [" + bazelProject.name
                         + "] because it does not exist on the filesystem(1): " + absolutePath;
-                logger.error(msg);
+                LOG.error(msg);
                 continueOrThrow(new IllegalArgumentException(msg, ex));
             }
         }

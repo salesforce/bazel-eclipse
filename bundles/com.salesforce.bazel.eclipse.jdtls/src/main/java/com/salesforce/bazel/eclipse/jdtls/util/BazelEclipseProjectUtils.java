@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
@@ -16,10 +18,9 @@ import com.salesforce.bazel.eclipse.core.resources.BazelNature;
 import com.salesforce.bazel.eclipse.jdtls.config.BazelEclipseProjectSupport;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class BazelEclipseProjectUtils {
-    private static final LogHelper LOG = LogHelper.log(BazelEclipseProjectUtils.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelEclipseProjectUtils.class);
 
     public static Set<IProject> calculateProjectReferences(IProject eclipseProject) {
         try {

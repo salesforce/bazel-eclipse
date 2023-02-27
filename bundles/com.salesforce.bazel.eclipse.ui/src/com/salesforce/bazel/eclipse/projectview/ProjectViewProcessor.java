@@ -33,12 +33,13 @@
  */
 package com.salesforce.bazel.eclipse.projectview;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.ProjectView;
 import com.salesforce.bazel.sdk.project.ProjectViewPackageLocation;
@@ -46,7 +47,7 @@ import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
 final class ProjectViewProcessor {
 
-    private static final LogHelper LOG = LogHelper.log(ProjectViewProcessor.class);
+    private static Logger LOG = LoggerFactory.getLogger(ProjectViewProcessor.class);
 
     /**
      * Expands parent directories in the specified ProjectView to concrete Bazel Packages.

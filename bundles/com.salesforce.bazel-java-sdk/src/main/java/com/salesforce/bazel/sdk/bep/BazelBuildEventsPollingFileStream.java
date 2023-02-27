@@ -35,8 +35,10 @@ package com.salesforce.bazel.sdk.bep;
 
 import java.io.File;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.bep.file.BEPMonitoredFile;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Bazel build event protocol stream (BEP) for a Bazel workspace. A BEP stream allows you to monitor and react to build
@@ -57,7 +59,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  * bep_test.json).
  */
 public class BazelBuildEventsPollingFileStream extends BazelBuildEventsFileStream {
-    private static final LogHelper LOG = LogHelper.log(BazelBuildEventsPollingFileStream.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelBuildEventsPollingFileStream.class);
 
     public int filePollerIntervalSeconds = 5;
     private FilePoller filePoller = null;

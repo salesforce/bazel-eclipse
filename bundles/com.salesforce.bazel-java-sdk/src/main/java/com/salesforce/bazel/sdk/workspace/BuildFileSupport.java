@@ -20,7 +20,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
@@ -41,19 +41,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Set;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
  * Helper to parse BUILD files.
  */
 public class BuildFileSupport {
-    static final LogHelper LOG = LogHelper.log(BuildFileSupport.class);
+    private static Logger LOG = LoggerFactory.getLogger(BuildFileSupport.class);
 
     /**
      * Parses a File, presumed to be a Bazel BUILD file, looking for indications that it contains rules kinds that are
      * registered with the SDK (and therefore interesting).
-     * 
+     *
      * @param buildFile
      * @return true if it contains at least one registered rule, false if not
      */
@@ -75,7 +77,7 @@ public class BuildFileSupport {
     /**
      * Parses an InputStream, presumed to be the contents of a Bazel BUILD file, looking for indications that it
      * contains rules of registered kinds.
-     * 
+     *
      * @param is
      * @return true if it contains at least one rule of a registered kind, false if not
      */

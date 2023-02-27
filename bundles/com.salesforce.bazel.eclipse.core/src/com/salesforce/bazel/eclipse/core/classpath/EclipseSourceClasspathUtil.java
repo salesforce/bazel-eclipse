@@ -47,10 +47,11 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
@@ -60,7 +61,7 @@ import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
  * system.
  */
 public final class EclipseSourceClasspathUtil {
-    private static final LogHelper LOG = LogHelper.log(EclipseSourceClasspathUtil.class);
+    private static Logger LOG = LoggerFactory.getLogger(EclipseSourceClasspathUtil.class);
 
     public static final String STANDARD_VM_CONTAINER_PREFIX = "org.eclipse.jdt.launching.JRE_CONTAINER/"
             + "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-";

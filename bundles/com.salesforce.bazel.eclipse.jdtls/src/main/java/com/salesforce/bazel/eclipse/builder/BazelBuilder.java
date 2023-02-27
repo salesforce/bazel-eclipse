@@ -46,30 +46,21 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.ClasspathContainerInitializer;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.slf4j.Logger;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.core.classpath.IClasspathContainerConstants;
 import com.salesforce.bazel.eclipse.project.EclipseProjectUtils;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
-import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelProblem;
-import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProject;
-import com.salesforce.bazel.sdk.project.BazelProjectManager;
-import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
@@ -83,7 +74,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
     public static final String BUILDER_NAME = "com.salesforce.bazel.eclipse.builder";
 
-    private static final LogHelper LOG = LogHelper.log(BazelBuilder.class);
+    private static Logger LOG = org.slf4j.LoggerFactory.getLogger(BazelBuilder.class);
 
     private static List<String> getAllBazelBuildFlags(Collection<IProject> projects) {
         List<String> buildFlags = new ArrayList<>();
@@ -110,8 +101,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
         if (bazelWorkspace == null) {
             return new IProject[] {};
         }
-        var bazelWorkspaceCmdRunner =
-                bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
+        var bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
         if (bazelWorkspaceCmdRunner == null) {
             return new IProject[] {};
         }
@@ -123,8 +113,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
                 var allImportedProjects = javaCoreHelper.getAllBazelJavaProjects(true);
                 var rootWorkspaceProject = Arrays.stream(allImportedProjects)
                         .filter(p -> resourceHelper.isBazelRootProject(p.getProject())).findFirst().get().getProject();
-                var downstreamProjects =
-                        EclipseProjectUtils.getDownstreamProjectsOf(project, allImportedProjects);
+                var downstreamProjects = EclipseProjectUtils.getDownstreamProjectsOf(project, allImportedProjects);
                 buildProjects(bazelWorkspaceCmdRunner, downstreamProjects, progressMonitor);
 
                 maybeUpdateClasspathContainer(project, javaCoreHelper);
@@ -179,8 +168,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
 
         var bazelCommandManager = ComponentContext.getInstance().getBazelCommandManager();
         var bazelWorkspace = EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
-        var bazelWorkspaceCmdRunner =
-                bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
+        var bazelWorkspaceCmdRunner = bazelCommandManager.getWorkspaceCommandRunner(bazelWorkspace);
 
         if (bazelWorkspaceCmdRunner == null) {
             super.clean(monitor);
@@ -197,8 +185,7 @@ public class BazelBuilder extends IncrementalProjectBuilder {
             // we request a classpath container update only if detect a BUILD file change
             // this should also consider added or removed BUILD files (?)
             var javaProject = javaCoreHelper.getJavaProjectForProject(project);
-            var cpInit =
-                    JavaCore.getClasspathContainerInitializer(IClasspathContainerConstants.CONTAINER_ID);
+            var cpInit = JavaCore.getClasspathContainerInitializer(IClasspathContainerConstants.CONTAINER_ID);
             cpInit.requestClasspathContainerUpdate(Path.fromPortableString(IClasspathContainerConstants.CONTAINER_ID),
                 javaProject, null);
         }

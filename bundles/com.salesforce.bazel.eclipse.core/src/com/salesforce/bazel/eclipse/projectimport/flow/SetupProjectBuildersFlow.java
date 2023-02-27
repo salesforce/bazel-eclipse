@@ -29,16 +29,17 @@ import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.SubMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.builder.BazelBuilder;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Configures the builders for each project.
  */
 public class SetupProjectBuildersFlow implements ImportFlow {
 
-    private static final LogHelper LOG = LogHelper.log(SetupProjectBuildersFlow.class);
+    private static Logger LOG = LoggerFactory.getLogger(SetupProjectBuildersFlow.class);
 
     private static void setBuilder(IProject project) throws CoreException {
         var projectDescription = project.getDescription();

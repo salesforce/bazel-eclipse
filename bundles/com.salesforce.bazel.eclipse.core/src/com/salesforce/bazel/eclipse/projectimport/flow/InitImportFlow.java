@@ -27,6 +27,8 @@ import java.io.File;
 import java.util.Objects;
 
 import org.eclipse.core.runtime.SubMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
@@ -36,7 +38,6 @@ import com.salesforce.bazel.eclipse.projectimport.ProjectImporterFactory;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.lang.jvm.JavaLanguageLevelHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -47,7 +48,7 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
  * Import initialization type work.
  */
 public class InitImportFlow extends AbstractImportFlowStep {
-    private static final LogHelper LOG = LogHelper.log(InitImportFlow.class);
+    private static Logger LOG = LoggerFactory.getLogger(InitImportFlow.class);
 
     // for tests only
     static BazelWorkspace existingBazelWorkspace = null;
@@ -72,7 +73,8 @@ public class InitImportFlow extends AbstractImportFlowStep {
 
             // Many collaborators need the Bazel workspace directory location, so we stash it in an accessible global location
             // currently we only support one Bazel workspace in an Eclipse workspace
-            BazelCorePlugin.getInstance().setBazelWorkspaceRootDirectory(bazelWorkspaceName, bazelWorkspaceRootDirectory);
+            BazelCorePlugin.getInstance().setBazelWorkspaceRootDirectory(bazelWorkspaceName,
+                bazelWorkspaceRootDirectory);
         } else {
             bazelWorkspaceName = bazelWorkspace.getName();
         }

@@ -40,16 +40,18 @@ import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.aspect.BazelAspectLocation;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 /**
  * API for calling bazel commands.
  */
 public class BazelCommandManager {
-    private static final LogHelper LOG = LogHelper.log(BazelCommandManager.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelCommandManager.class);
 
     private final BazelAspectLocation aspectLocation;
     private final CommandBuilder commandBuilder;

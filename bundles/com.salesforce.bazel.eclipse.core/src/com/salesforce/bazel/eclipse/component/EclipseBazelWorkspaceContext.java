@@ -2,12 +2,14 @@ package com.salesforce.bazel.eclipse.component;
 
 import java.io.File;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 
 public class EclipseBazelWorkspaceContext {
-    private static final LogHelper LOG = LogHelper.log(EclipseBazelWorkspaceContext.class);
+    private static Logger LOG = LoggerFactory.getLogger(EclipseBazelWorkspaceContext.class);
 
     private static EclipseBazelWorkspaceContext instance;
 

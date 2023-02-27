@@ -29,16 +29,17 @@ import java.util.Objects;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
 /**
  * Knows how to link files (used only during project import).
  */
 public class EclipseFileLinker {
-    private static final LogHelper LOG = LogHelper.log(EclipseFileLinker.class);
+    private static Logger LOG = LoggerFactory.getLogger(EclipseFileLinker.class);
 
     private final File bazelWorkspaceRootDirectory;
     private final ResourceHelper resourceHelper;

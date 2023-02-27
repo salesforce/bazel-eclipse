@@ -45,17 +45,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
 /**
  * Utility class that understands how to run Command objects and collect output from them.
  */
 public class BazelCommandExecutor {
-    static final LogHelper LOG = LogHelper.log(BazelCommandExecutor.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelCommandExecutor.class);
 
     private final File bazelExecutable;
     private final CommandBuilder commandBuilder;

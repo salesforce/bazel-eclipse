@@ -51,30 +51,26 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.StandardClasspathProvider;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.TestClasspathHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
-import com.salesforce.bazel.sdk.project.BazelProject;
-import com.salesforce.bazel.sdk.project.BazelProjectManager;
-import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 /**
  * Provide the classpath for JUnit tests. These are obtained from the test rule's generated param files that list the
  * exact order of jars that the bazel test runner uses.
  */
 public class BazelTestClasspathProvider extends StandardClasspathProvider {
-    private static final LogHelper LOG = LogHelper.log(BazelTestClasspathProvider.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelTestClasspathProvider.class);
 
     public static final String BAZEL_SOURCEPATH_PROVIDER =
             "com.salesforce.bazel.eclipse.launchconfig.sourcepathProvider";
@@ -159,8 +155,8 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
 
         // look for the param files for the test classname and/or targets
         // each param file contains a Bazel specific list of data used when launching the test
-        var testParamFilesResult = bazelJvmTestClasspathHelper
-                .findParamFilesForTests(bazelWorkspace, bazelProject, isSource, testClassName, targets);
+        var testParamFilesResult = bazelJvmTestClasspathHelper.findParamFilesForTests(bazelWorkspace, bazelProject,
+            isSource, testClassName, targets);
 
         return computeUnresolvedClasspathFromParamFiles(execRootDir, testParamFilesResult);
     }
@@ -177,8 +173,8 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
         // We don't want deploy jars, because those are bloated and kill performance. Eclipse passes the project classpath
         // to the RemoteTestRunner JVM so we don't need the self-contained deploy jars.
         var includeDeployJars = false;
-        var jarPaths = bazelJvmTestClasspathHelper
-                .aggregateJarFilesFromParamFiles(testParamFilesResult.paramFiles, includeDeployJars);
+        var jarPaths = bazelJvmTestClasspathHelper.aggregateJarFilesFromParamFiles(testParamFilesResult.paramFiles,
+            includeDeployJars);
         for (String rawPath : jarPaths) {
             var canonicalPath = FSPathHelper.getCanonicalPathStringSafely(new File(execRootDir, rawPath));
             IPath eachPath = new Path(canonicalPath);
@@ -256,11 +252,12 @@ public class BazelTestClasspathProvider extends StandardClasspathProvider {
                     return;
                 }
 
-                Display.getDefault().syncExec(() -> MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target",
-                    "One or more of the targets being executed are not part of a Bazel java_test target ( "
-                            + unrunnableLabelsString + "). The target(s) will be ignored.\n\n"
-                            + "Since this might be a common issue for your workspace, this dialog "
-                            + "will only be presented periodically when this happens."));
+                Display.getDefault()
+                        .syncExec(() -> MessageDialog.openError(Display.getDefault().getActiveShell(), "Unknown Target",
+                            "One or more of the targets being executed are not part of a Bazel java_test target ( "
+                                    + unrunnableLabelsString + "). The target(s) will be ignored.\n\n"
+                                    + "Since this might be a common issue for your workspace, this dialog "
+                                    + "will only be presented periodically when this happens."));
             }
         });
     }

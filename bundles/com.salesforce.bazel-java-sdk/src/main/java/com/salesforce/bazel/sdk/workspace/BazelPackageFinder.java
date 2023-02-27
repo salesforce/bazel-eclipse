@@ -46,7 +46,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
@@ -55,7 +57,7 @@ import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
  * Scanner for a Bazel workspace to locate BUILD files that contain rules that are supported by the SDK.
  */
 public class BazelPackageFinder {
-    private final LogHelper logger = LogHelper.log(this.getClass());
+    private static Logger LOG = LoggerFactory.getLogger(BazelPackageFinder.class);
 
     public BazelPackageFinder() {}
 
@@ -95,7 +97,7 @@ public class BazelPackageFinder {
                         for (String candidate : BazelConstants.WORKSPACE_FILE_NAMES) {
                             File candidateWorkspaceFile = new File(directory, candidate);
                             if (candidateWorkspaceFile.exists()) {
-                                logger.info(
+                                LOG.info(
                                     "Skipping Bazel workspace path {} because we do not support nested workspaces yet.",
                                     directory.getAbsolutePath());
                                 return FileVisitResult.SKIP_SUBTREE;
@@ -139,7 +141,7 @@ public class BazelPackageFinder {
             });
 
         } catch (Exception anyE) {
-            logger.error("ERROR scanning for Bazel packages: {}", anyE.getMessage());
+            LOG.error("ERROR scanning for Bazel packages: {}", anyE.getMessage());
         }
     }
 

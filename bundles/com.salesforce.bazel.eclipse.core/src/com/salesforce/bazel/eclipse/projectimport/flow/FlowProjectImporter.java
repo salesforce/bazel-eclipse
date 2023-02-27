@@ -34,9 +34,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.projectimport.ProjectImporter;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
@@ -45,7 +46,7 @@ import com.salesforce.bazel.sdk.workspace.ProjectOrderResolver;
  * Calls on ProjectImportFlow instances to drive project import.
  */
 public class FlowProjectImporter implements ProjectImporter {
-    private static final LogHelper LOG = LogHelper.log(FlowProjectImporter.class);
+    private static Logger LOG = LoggerFactory.getLogger(FlowProjectImporter.class);
 
     private static ImportFlow[] reversed(ImportFlow[] flows) {
         List<ImportFlow> l = new ArrayList<>(Arrays.asList(flows));

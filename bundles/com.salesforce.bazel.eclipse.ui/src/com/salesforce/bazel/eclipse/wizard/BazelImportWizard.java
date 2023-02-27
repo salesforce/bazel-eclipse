@@ -22,9 +22,10 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkingSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.ui.utils.SelectionUtil;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
@@ -32,7 +33,7 @@ import com.salesforce.bazel.sdk.model.BazelPackageLocation;
  * Entrypoint for the Bazel Workspace import wizard
  */
 public class BazelImportWizard extends Wizard implements IImportWizard {
-    static final LogHelper LOG = LogHelper.log(BazelImportWizard.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelImportWizard.class);
 
     protected IStructuredSelection selection;
     protected List<IWorkingSet> workingSets = new ArrayList<>();

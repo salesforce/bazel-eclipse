@@ -26,6 +26,9 @@ package com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy;
 import java.io.File;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.index.CodeIndexEntry;
 import com.salesforce.bazel.sdk.index.jvm.JvmCodeIndex;
@@ -33,7 +36,6 @@ import com.salesforce.bazel.sdk.index.model.CodeLocationDescriptor;
 import com.salesforce.bazel.sdk.lang.jvm.JavaSourceFile;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -47,7 +49,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * TODO this is just a stub so far, it isn't actually implemented.
  */
 public class JvmClasspathSourceDerivedStrategy extends JvmClasspathStrategy {
-    private static final LogHelper LOG = LogHelper.log(JvmClasspathSourceDerivedStrategy.class);
+    private static Logger LOG = LoggerFactory.getLogger(JvmClasspathSourceDerivedStrategy.class);
 
     public JvmClasspathSourceDerivedStrategy(BazelWorkspace bazelWorkspace, BazelProjectManager bazelProjectManager,
             ImplicitClasspathHelper implicitDependencyHelper, OperatingEnvironmentDetectionStrategy osDetector,
@@ -57,7 +59,7 @@ public class JvmClasspathSourceDerivedStrategy extends JvmClasspathStrategy {
 
     @Override
     public JvmClasspathData getClasspathForTarget(JvmClasspathStrategyRequest request) {
-        
+
         // the structure contains the file system layout of source files
         ProjectStructure fileStructure = request.bazelProject.getProjectStructure();
 

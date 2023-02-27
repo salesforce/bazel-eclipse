@@ -29,14 +29,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.model.BazelSourceFile;
 
 /**
  * Models a java source file.
  */
 public class JavaSourceFile extends BazelSourceFile {
-    static final LogHelper LOG = LogHelper.log(JavaSourceFile.class);
+    private static Logger LOG = LoggerFactory.getLogger(JavaSourceFile.class);
 
     public JavaSourceFile(File javaFile) {
         if (javaFile == null) {

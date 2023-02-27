@@ -29,12 +29,13 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.core.runtime.SubMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -46,7 +47,7 @@ import com.salesforce.bazel.sdk.project.BazelProjectManager;
  * complain about the slowness of this step, remind them to run a <i>bazel build //...</i> prior to import.
  */
 public class LoadAspectsFlow extends AbstractImportFlowStep {
-    private static final LogHelper LOG = LogHelper.log(LoadAspectsFlow.class);
+    private static Logger LOG = LoggerFactory.getLogger(LoadAspectsFlow.class);
 
     public LoadAspectsFlow(BazelCommandManager commandManager, BazelProjectManager projectManager,
             ResourceHelper resourceHelper) {

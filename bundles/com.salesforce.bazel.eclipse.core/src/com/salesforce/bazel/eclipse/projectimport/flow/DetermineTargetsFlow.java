@@ -40,10 +40,11 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.eclipse.core.runtime.SubMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -53,7 +54,7 @@ import com.salesforce.bazel.sdk.project.BazelProjectManager;
  */
 public class DetermineTargetsFlow extends AbstractImportFlowStep {
 
-    private static final LogHelper LOG = LogHelper.log(DetermineTargetsFlow.class);
+    private static Logger LOG = LoggerFactory.getLogger(DetermineTargetsFlow.class);
 
     public DetermineTargetsFlow(BazelCommandManager commandManager, BazelProjectManager projectManager,
             ResourceHelper resourceHelper) {

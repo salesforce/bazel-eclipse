@@ -49,10 +49,11 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.ls.core.internal.AbstractProjectImporter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.jdtls.BazelJdtLsPlugin;
 import com.salesforce.bazel.eclipse.jdtls.config.BazelEclipseProjectFactory;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.ProjectView;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
@@ -60,7 +61,7 @@ import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 
 @SuppressWarnings("restriction")
 public final class BazelProjectImporter extends AbstractProjectImporter {
-    private static final LogHelper LOG = LogHelper.log(BazelProjectImporter.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelProjectImporter.class);
 
     private static String readFile(String path) {
         try {

@@ -31,13 +31,14 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.core.resources.BazelNature;
 import com.salesforce.bazel.eclipse.projectview.ProjectViewUtils;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
 
@@ -45,7 +46,7 @@ import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
  * Creates the root (WORKSPACE-level) project.
  */
 public class CreateRootProjectFlow extends AbstractImportFlowStep {
-    private static final LogHelper LOG = LogHelper.log(CreateRootProjectFlow.class);
+    private static Logger LOG = LoggerFactory.getLogger(CreateRootProjectFlow.class);
 
     public CreateRootProjectFlow(BazelCommandManager commandManager, BazelProjectManager projectManager,
             ResourceHelper resourceHelper) {

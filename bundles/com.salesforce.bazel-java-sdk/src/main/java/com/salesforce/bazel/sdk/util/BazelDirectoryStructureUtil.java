@@ -41,7 +41,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class contains only static methods, that interact with the file system to provide information about bazel
@@ -49,7 +50,7 @@ import com.salesforce.bazel.sdk.logging.LogHelper;
  */
 public final class BazelDirectoryStructureUtil {
 
-    private static final LogHelper LOG = LogHelper.log(BazelDirectoryStructureUtil.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelDirectoryStructureUtil.class);
 
     public static boolean isBazelPackage(File repositoryRoot, String possiblePackagePath) {
         Path rootPath = repositoryRoot.toPath();

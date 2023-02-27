@@ -45,6 +45,8 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.service.prefs.BackingStoreException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
@@ -53,7 +55,6 @@ import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.index.jvm.BazelJvmIndexClasspath;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelConfigurationManager;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
@@ -74,7 +75,7 @@ import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
  * another.
  */
 public class BazelGlobalSearchClasspathContainer extends BaseBazelClasspathContainer {
-    private static final LogHelper LOG = LogHelper.log(BazelGlobalSearchClasspathContainer.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelGlobalSearchClasspathContainer.class);
 
     public static final String CONTAINER_NAME = "com.salesforce.bazel.eclipse.BAZEL_GLOBAL_SEARCH_CONTAINER";
 

@@ -26,18 +26,12 @@ package com.salesforce.bazel.eclipse.launch;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
-import org.eclipse.debug.core.ILaunchConfigurationType;
-import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.ui.DebugUITools;
 import org.eclipse.debug.ui.ILaunchShortcut;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -45,19 +39,18 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.jvm.JVMAspectTargetInfo;
-import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
 /**
  * Supports the Run or Debug operations for Java classes with a main method.
  */
 public class BazelTargetLaunchShortcut implements ILaunchShortcut {
-    private static final LogHelper LOG = LogHelper.log(BazelTargetLaunchShortcut.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelTargetLaunchShortcut.class);
 
     private final BazelLaunchConfigurationSupport support = new BazelLaunchConfigurationSupport();
 
@@ -96,8 +89,7 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
         var fqClassName = packageName + "." + fileName;
         LOG.info("Bazel target launcher for [{}]", fqClassName);
 
-        var eclipseWorkspaceRoot =
-                ComponentContext.getInstance().getResourceHelper().getEclipseWorkspaceRoot();
+        var eclipseWorkspaceRoot = ComponentContext.getInstance().getResourceHelper().getEclipseWorkspaceRoot();
         var eclipseJavaModel =
                 ComponentContext.getInstance().getJavaCoreHelper().getJavaModelForWorkspace(eclipseWorkspaceRoot);
         var project = eclipseJavaModel.getJavaProject(projectName).getProject();
@@ -105,10 +97,8 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
         var apis = support.getLaunchableAspectTargetInfosForProject(project);
         Collection<AspectTargetInfo> mainClassInfos = new ArrayList<>();
         for (AspectTargetInfo info : apis) {
-            if (info instanceof JVMAspectTargetInfo jvmInfo) {
-                if (fqClassName.equals(jvmInfo.getMainClass())) {
-                    mainClassInfos.add(info);
-                }
+            if ((info instanceof JVMAspectTargetInfo jvmInfo) && fqClassName.equals(jvmInfo.getMainClass())) {
+                mainClassInfos.add(info);
             }
         }
 
@@ -117,16 +107,16 @@ public class BazelTargetLaunchShortcut implements ILaunchShortcut {
             // we need a java_binary rule to specify the main_class as our target class...
             var message =
                     "Unable to find a 'java_binary' target in the BUILD file that has a 'main_class' of " + fqClassName;
-            Display.getDefault().asyncExec(() -> Display.getDefault().syncExec(() -> MessageDialog.openError(Display.getDefault().getActiveShell(), "No Launchable Target",
-                message)));
+            Display.getDefault().asyncExec(() -> Display.getDefault().syncExec(
+                () -> MessageDialog.openError(Display.getDefault().getActiveShell(), "No Launchable Target", message)));
             throw new IllegalStateException(message);
         }
         if (mainClassInfos.size() > 1) {
             // if there are multiple java_binary rules found, we don't know which one to invoke...
             var message = "Found multiple 'java_binary' targets in the BUILD file that have a 'main_class' of "
                     + fqClassName + " - create a launch configuration manually in the Run Configurations menu.";
-            Display.getDefault().asyncExec(() -> Display.getDefault().syncExec(() -> MessageDialog.openError(Display.getDefault().getActiveShell(),
-                "Multiple Launchable Targets", message)));
+            Display.getDefault().asyncExec(() -> Display.getDefault().syncExec(() -> MessageDialog
+                    .openError(Display.getDefault().getActiveShell(), "Multiple Launchable Targets", message)));
             throw new IllegalStateException(message);
         }
 

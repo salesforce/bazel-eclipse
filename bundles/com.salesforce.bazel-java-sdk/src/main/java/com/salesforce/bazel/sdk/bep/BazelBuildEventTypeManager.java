@@ -40,6 +40,8 @@ import java.util.Set;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.sdk.bep.event.BEPBuildFinishedEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPBuildMetricsEvent;
@@ -55,10 +57,9 @@ import com.salesforce.bazel.sdk.bep.event.BEPTargetConfiguredEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPTestResultEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPTestSummaryEvent;
 import com.salesforce.bazel.sdk.bep.event.BEPUnstructuredCommandLineEvent;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class BazelBuildEventTypeManager {
-    private static final LogHelper LOG = LogHelper.log(BazelBuildEventTypeManager.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelBuildEventTypeManager.class);
 
     public static final String EVENTTYPE_IGNORED = "ignored";
 

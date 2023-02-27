@@ -1,9 +1,7 @@
 package com.salesforce.bazel.eclipse.projectimport.flow;
 
-import java.util.List;
 import java.util.Optional;
 
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -11,6 +9,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IJavaProject;
+import org.slf4j.Logger;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
@@ -19,17 +18,13 @@ import com.salesforce.bazel.eclipse.core.resources.BazelNature;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
-import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.init.JvmRuleInit;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
-import com.salesforce.bazel.sdk.project.structure.ProjectStructure;
 
 public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFlow {
-    private static final LogHelper LOG = LogHelper.log(BjlsSetupClasspathContainersFlow.class);
+    private static Logger LOG = org.slf4j.LoggerFactory.getLogger(BjlsSetupClasspathContainersFlow.class);
 
     private static final String TEST_BIN_FOLDER = "/testbin";
 
@@ -106,8 +101,7 @@ public class BjlsSetupClasspathContainersFlow extends SetupClasspathContainersFl
         var importedProjects = ctx.getImportedProjects();
         for (IProject project : importedProjects) {
             var packageLocation = ctx.getPackageLocationForProject(project);
-            var structure =
-                    ctx.getProjectStructure(packageLocation, getBazelWorkspace(), getCommandManager());
+            var structure = ctx.getProjectStructure(packageLocation, getBazelWorkspace(), getCommandManager());
             var packageFSPath = packageLocation.getBazelPackageFSRelativePath();
             var javaProject = getJavaCoreHelper().getJavaProjectForProject(project);
 

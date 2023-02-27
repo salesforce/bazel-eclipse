@@ -25,10 +25,11 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkingSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 
 /**
@@ -37,7 +38,7 @@ import com.salesforce.bazel.sdk.util.BazelConstants;
  * Adapted from m2e org.eclipse.m2e.core.ui.internal.actions.SelectionUtil
  */
 public class SelectionUtil {
-    static final LogHelper LOG = LogHelper.log(SelectionUtil.class);
+    private static Logger LOG = LoggerFactory.getLogger(SelectionUtil.class);
 
     public static final int UNSUPPORTED = 0;
 
@@ -140,8 +141,7 @@ public class SelectionUtil {
             return null;
         }
 
-        var workingSet = getType(element, IWorkingSet.class);
-        return workingSet;
+        return getType(element, IWorkingSet.class);
     }
 
     /** Checks which type the given selection belongs to. */
@@ -181,7 +181,8 @@ public class SelectionUtil {
 
     private static void safeAdd(IProject project, List<IProject> projectList) {
         try {
-            if ((project != null) && project.isAccessible() && project.hasNature(BazelCorePluginSharedContstants.BAZEL_NATURE_ID)
+            if ((project != null) && project.isAccessible()
+                    && project.hasNature(BazelCorePluginSharedContstants.BAZEL_NATURE_ID)
                     && !projectList.contains(project)) {
                 projectList.add(project);
             }

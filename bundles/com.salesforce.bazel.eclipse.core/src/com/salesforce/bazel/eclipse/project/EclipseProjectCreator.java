@@ -33,13 +33,14 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
 import com.salesforce.bazel.eclipse.core.resources.BazelNature;
 import com.salesforce.bazel.eclipse.projectimport.flow.ImportContext;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
@@ -53,7 +54,7 @@ import com.salesforce.bazel.sdk.util.BazelDirectoryStructureUtil;
  */
 public class EclipseProjectCreator {
 
-    private static final LogHelper LOG = LogHelper.log(EclipseProjectCreator.class);
+    private static Logger LOG = LoggerFactory.getLogger(EclipseProjectCreator.class);
 
     private final File bazelWorkspaceRootDirectory;
     private final BazelProjectManager bazelProjectManager;
@@ -218,7 +219,8 @@ public class EclipseProjectCreator {
 
         var bazelProject = bazelProjectManager.getProject(projectName);
         try {
-            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, BazelCorePluginSharedContstants.BAZEL_NATURE_ID, resourceHelper);
+            EclipseProjectUtils.addNatureToEclipseProject(eclipseProject,
+                BazelCorePluginSharedContstants.BAZEL_NATURE_ID, resourceHelper);
             EclipseProjectUtils.addNatureToEclipseProject(eclipseProject, JavaCore.NATURE_ID, resourceHelper);
             bazelProjectManager.addSettingsToProject(bazelProject, bazelWorkspaceRootDirectory.getAbsolutePath(),
                 packageFSPath, bazelTargets, new ArrayList<>()); // TODO pass buildFlags

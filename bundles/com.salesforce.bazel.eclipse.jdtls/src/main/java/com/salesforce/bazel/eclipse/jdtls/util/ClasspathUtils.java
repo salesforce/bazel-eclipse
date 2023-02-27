@@ -9,12 +9,12 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.slf4j.Logger;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 public class ClasspathUtils {
-    private static final LogHelper LOG = LogHelper.log(ClasspathUtils.class);
+    private static Logger LOG = org.slf4j.LoggerFactory.getLogger(ClasspathUtils.class);
 
     private static IJavaProject getSourceProjectForSourcePath(String sourcePath) {
 

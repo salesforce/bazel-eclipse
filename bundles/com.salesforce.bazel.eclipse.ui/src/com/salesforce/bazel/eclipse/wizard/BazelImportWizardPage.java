@@ -18,28 +18,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PlatformUI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelPackageInfo;
-import com.salesforce.bazel.sdk.project.BazelProject;
-import com.salesforce.bazel.sdk.project.BazelProjectManager;
 import com.salesforce.bazel.sdk.workspace.BazelWorkspaceScanner;
 
 /**
  * Class that sets up the UI for the Bazel Import Workspace wizard.
  */
 public class BazelImportWizardPage extends WizardPage {
-    static final LogHelper LOG = LogHelper.log(BazelImportWizardPage.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelImportWizardPage.class);
 
     static final Object[] EMPTY = {};
 

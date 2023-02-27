@@ -36,14 +36,14 @@ package com.salesforce.bazel.eclipse.launch;
 import org.eclipse.jdt.junit.TestRunListener;
 import org.eclipse.jdt.junit.model.ITestCaseElement;
 import org.eclipse.jdt.junit.model.ITestRunSession;
-
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Logging hooks for test execution from BEF.
  */
 public class BazelTestRunListener extends TestRunListener {
-    static final LogHelper LOG = LogHelper.log(BazelTestRunListener.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelTestRunListener.class);
 
     @Override
     public void sessionFinished(ITestRunSession session) {

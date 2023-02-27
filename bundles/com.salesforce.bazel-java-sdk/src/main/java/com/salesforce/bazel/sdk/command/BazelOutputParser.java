@@ -36,7 +36,9 @@ package com.salesforce.bazel.sdk.command;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.model.BazelProblem;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 
@@ -45,7 +47,7 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
  */
 public class BazelOutputParser {
     // TODO LOGGING TO stdout/err doesnt work here because the command runner output is redirected
-    private static final LogHelper LOG = LogHelper.log(BazelOutputParser.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelOutputParser.class);
 
     private static enum FailureType {
         BUILD_FILE, JAVA_FILE, UNKNOWN;
@@ -116,9 +118,9 @@ public class BazelOutputParser {
 
     /**
      * Slice a standard error line of the form:
-     * 
+     *
      * ERROR: [filepath]:[linenumber]:[column]: [description]
-     * 
+     *
      * and create a BazelProblem and add it to the list.
      */
     public void sliceErrorLine(String line, List<BazelProblem> problemList) {

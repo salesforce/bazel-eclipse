@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -47,6 +46,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
@@ -54,12 +55,8 @@ import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.command.BazelCommandLineToolConfigurationException;
 import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
-import com.salesforce.bazel.sdk.project.BazelProject;
-import com.salesforce.bazel.sdk.project.BazelProjectManager;
-import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 
 /**
  * Supporting logic for Bazel Launch Configurations.
@@ -174,7 +171,7 @@ class BazelLaunchConfigurationSupport {
         }
     }
 
-    static final LogHelper LOG = LogHelper.log(BazelLaunchConfigurationSupport.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelLaunchConfigurationSupport.class);
 
     private static Set<BazelTargetKind> LAUNCHABLE_TARGET_KINDS = null;
 
@@ -200,8 +197,8 @@ class BazelLaunchConfigurationSupport {
             var projectName = project.getName();
             var bazelProject = bazelProjectManager.getProject(projectName);
             var targets = bazelProjectManager.getConfiguredBazelTargets(bazelProject, false);
-            var targetInfos = bazelRunner
-                    .getAspectTargetInfos(targets.getConfiguredTargets(), "launcher:computeAspectTargetInfos");
+            var targetInfos = bazelRunner.getAspectTargetInfos(targets.getConfiguredTargets(),
+                "launcher:computeAspectTargetInfos");
             return AspectTargetInfos.fromSets(targetInfos.values());
         } catch (IOException | InterruptedException | BazelCommandLineToolConfigurationException ex) {
             throw new IllegalStateException(ex);
@@ -212,8 +209,7 @@ class BazelLaunchConfigurationSupport {
      * Returns all AspectTargetInfo instances that represent targets of the specified type, for the specified project.
      */
     Collection<AspectTargetInfo> getAspectTargetInfosForProject(IProject project, Set<BazelTargetKind> targetTypes) {
-        var bazelRunner =
-                EclipseBazelWorkspaceContext.getInstance().getWorkspaceCommandRunner();
+        var bazelRunner = EclipseBazelWorkspaceContext.getInstance().getWorkspaceCommandRunner();
         var apis = computeAspectTargetInfos(project, bazelRunner);
         return apis.lookupByTargetKind(targetTypes);
     }

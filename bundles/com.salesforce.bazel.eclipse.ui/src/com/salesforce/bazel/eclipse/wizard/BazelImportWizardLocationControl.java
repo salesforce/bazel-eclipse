@@ -38,17 +38,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.preferences.BazelPreferenceKeys;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * This class encapsulates the two controls above the tree control on the first page of the import wizard. The combo box
  * which holds the chosen file system path, and the Browse button.
  */
 public class BazelImportWizardLocationControl {
-    private static final LogHelper LOG = LogHelper.log(BazelImportWizardLocationControl.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelImportWizardLocationControl.class);
 
     protected static List<String> rootDirHistoryList = new ArrayList<>();
 

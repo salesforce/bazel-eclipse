@@ -9,16 +9,17 @@ import java.util.List;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.path.FSPathHelper;
 import com.salesforce.bazel.sdk.project.BazelProject;
 
 public class EclipseProjectSettingsUtils {
-    private final static LogHelper logger = LogHelper.log(EclipseProjectSettingsUtils.class);
+    private static Logger LOG = LoggerFactory.getLogger(EclipseProjectSettingsUtils.class);
 
     /**
      * Returns true if the arrays of projects contain different projects
@@ -69,7 +70,7 @@ public class EclipseProjectSettingsUtils {
         var classpathEntries = javaCoreHelper.getRawClasspath(jProject);
 
         if (classpathEntries == null) {
-            logger.error("No classpath entries found for project [" + jProject.getElementName() + "]");
+            LOG.error("No classpath entries found for project [" + jProject.getElementName() + "]");
             return false;
         }
 

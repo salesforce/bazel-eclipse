@@ -21,10 +21,10 @@ import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 import org.eclipse.jdt.ls.core.internal.managers.IBuildSupport;
 import org.eclipse.jdt.ls.core.internal.managers.ProjectsManager.CHANGE_TYPE;
+import org.slf4j.Logger;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 @SuppressWarnings("restriction")
 public class BazelBuildSupport implements IBuildSupport {
@@ -39,7 +39,7 @@ public class BazelBuildSupport implements IBuildSupport {
 
     private static List<String> calculatedExcludedFilePatterns = new ArrayList<>();
 
-    private static final LogHelper LOG = LogHelper.log(BazelBuildSupport.class);
+    private static Logger LOG = org.slf4j.LoggerFactory.getLogger(BazelBuildSupport.class);
 
     public static void calculateExcludedFilePatterns(String bazelWorkspaceRootDirectoryPath) {
         if (calculatedExcludedFilePatterns.isEmpty()) {

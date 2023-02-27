@@ -33,7 +33,6 @@
  */
 package com.salesforce.bazel.eclipse.launch;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -51,21 +50,16 @@ import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
-import org.eclipse.debug.core.model.IProcess;
-import org.eclipse.debug.core.model.IStreamsProxy;
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.launching.IVMConnector;
 import org.eclipse.jdt.launching.JavaRuntime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
 import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.launch.BazelLaunchConfigurationSupport.BazelLaunchConfigAttributes;
-import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
-import com.salesforce.bazel.sdk.command.BazelWorkspaceCommandRunner;
-import com.salesforce.bazel.sdk.command.Command;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 
@@ -77,7 +71,7 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
     static final String ID = "com.salesforce.bazel.eclipse.launch";
     static final String DEBUG_LISTENER_MSG = "Listening for transport dt_socket at address: ";
 
-    static final LogHelper LOG = LogHelper.log(BazelLaunchConfigurationDelegate.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelLaunchConfigurationDelegate.class);
 
     private static int DEBUG_PORT = getAvailablePort();
     private static String DEBUG_HOST = "localhost";
@@ -153,8 +147,7 @@ public class BazelLaunchConfigurationDelegate implements ILaunchConfigurationDel
             project.build(IncrementalProjectBuilder.FULL_BUILD, monitor);
         }
 
-        var bazelCommandRunner =
-                EclipseBazelWorkspaceContext.getInstance().getWorkspaceCommandRunner();
+        var bazelCommandRunner = EclipseBazelWorkspaceContext.getInstance().getWorkspaceCommandRunner();
 
         var cmd = bazelCommandRunner.getBazelLauncherBuilder().setLabel(label).setTargetKind(targetKind)
                 .setArgs(allArgs).setDebugMode(isDebugMode, DEBUG_HOST, DEBUG_PORT).build();

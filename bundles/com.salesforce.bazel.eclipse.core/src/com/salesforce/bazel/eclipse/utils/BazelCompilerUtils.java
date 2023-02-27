@@ -7,9 +7,10 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import org.eclipse.core.runtime.Platform;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 public class BazelCompilerUtils {
@@ -23,7 +24,7 @@ public class BazelCompilerUtils {
 
     public static final String BAZEL_EXECUTABLE_DEFAULT_PATH = "/usr/local/bin/bazel";
 
-    private static final LogHelper LOG = LogHelper.log(BazelCompilerUtils.class);
+    private static Logger LOG = LoggerFactory.getLogger(BazelCompilerUtils.class);
 
     public static String getBazelPath() {
         var path = getEnvBazelPath();

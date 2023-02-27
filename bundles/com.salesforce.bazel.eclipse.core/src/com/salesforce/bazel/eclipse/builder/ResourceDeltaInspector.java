@@ -42,8 +42,9 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.util.BazelConstants;
 
 /**
@@ -74,7 +75,7 @@ public class ResourceDeltaInspector {
         }
     }
 
-    private static final LogHelper LOG = LogHelper.log(ResourceDeltaInspector.class);
+    private static Logger LOG = LoggerFactory.getLogger(ResourceDeltaInspector.class);
 
     public static boolean deltaHasChangedBuildFiles(IResourceDelta delta) {
         return hasChangedFiles(delta, BazelConstants.BUILD_FILE_NAMES);

@@ -38,16 +38,18 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfo;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfoFactoryProvider;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 
 /**
  * Provider that knows how to construct AspectTargetInfo objects for JVM rule kinds. (e.g. java_library)
  */
 public class JVMAspectTargetInfoFactoryProvider implements AspectTargetInfoFactoryProvider {
-    private static final LogHelper LOG = LogHelper.log(JVMAspectTargetInfoFactoryProvider.class);
+
+    private static Logger LOG = LoggerFactory.getLogger(JVMAspectTargetInfoFactoryProvider.class);
 
     @Override
     public AspectTargetInfo buildAspectTargetInfo(File aspectDataFile, JSONObject jsonObject, JSONParser jsonParser,

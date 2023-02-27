@@ -35,17 +35,19 @@ package com.salesforce.bazel.sdk.workspace;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.aspect.AspectDependencyGraphFactory;
 import com.salesforce.bazel.sdk.aspect.AspectTargetInfos;
 import com.salesforce.bazel.sdk.graph.BazelDependencyGraph;
-import com.salesforce.bazel.sdk.logging.LogHelper;
 import com.salesforce.bazel.sdk.model.BazelPackageLocation;
 
 /**
  * Orders modules for import such that upstream dependencies are imported before downstream dependencies.
  */
 public class ProjectOrderResolverImpl implements ProjectOrderResolver {
-    private static final LogHelper LOG = LogHelper.log(ProjectOrderResolverImpl.class);
+    private static Logger LOG = LoggerFactory.getLogger(ProjectOrderResolverImpl.class);
 
     public ProjectOrderResolverImpl() {}
 
