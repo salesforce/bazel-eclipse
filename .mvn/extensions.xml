@@ -3,6 +3,6 @@
   <extension>
     <groupId>org.eclipse.tycho</groupId>
     <artifactId>tycho-build</artifactId>
-    <version>${tycho.version}</version>
+    <version>${tycho.version}</version> <!-- https://github.com/eclipse-m2e/m2e-core/issues/1122 -->
   </extension>
 </extensions>
