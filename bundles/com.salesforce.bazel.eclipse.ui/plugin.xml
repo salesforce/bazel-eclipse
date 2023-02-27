@@ -157,13 +157,52 @@
             name="ProjectView">
       </editor>
    </extension>
-   
+
    <extension
           point="com.salesforce.bazel.consolefactory">
        <commandConsoleFactory
              class="com.salesforce.bazel.eclipse.runtime.impl.EclipseConsole"
              priority="10">
        </commandConsoleFactory>
+    </extension>
+
+    <extension
+          point="org.eclipse.ui.menus">
+       <menuContribution
+             allPopups="false"
+             locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+          <menu
+                icon="resources/bazelicon.gif"
+                id="com.salesforce.bazel.eclipse.ui.menu"
+                label="Bazel">
+          </menu>
+       </menuContribution>
+       <menuContribution
+             allPopups="false"
+             locationURI="popup:com.salesforce.bazel.eclipse.ui.menu">
+          <command
+                commandId="com.salesforce.bazel.eclipse.ui.commands.updateClasspaths"
+                style="push">
+             <visibleWhen
+                   checkEnabled="true">
+             </visibleWhen>
+          </command>
+       </menuContribution>
+    </extension>
+    <extension
+          point="org.eclipse.ui.commands">
+       <category
+             description="Bazel Eclipse Feature Commands"
+             id="com.salesforce.bazel.eclipse.ui.commands.category"
+             name="Bazel">
+       </category>
+       <command
+             categoryId="com.salesforce.bazel.eclipse.ui.commands.category"
+             defaultHandler="com.salesforce.bazel.eclipse.ui.commands.UpdateClasspathsHandler"
+             description="Refresh Eclipse build path information from Bazel BUILD files"
+             id="com.salesforce.bazel.eclipse.ui.commands.updateClasspaths"
+             name="Update Classpaths">
+       </command>
     </extension>
 
 </plugin>

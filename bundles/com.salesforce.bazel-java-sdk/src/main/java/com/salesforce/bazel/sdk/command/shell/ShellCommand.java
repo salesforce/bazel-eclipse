@@ -47,13 +47,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.command.BazelProcessBuilder;
 import com.salesforce.bazel.sdk.command.Command;
 import com.salesforce.bazel.sdk.command.CommandBuilder;
 import com.salesforce.bazel.sdk.console.CommandConsole;
 import com.salesforce.bazel.sdk.console.CommandConsoleFactory;
-import com.salesforce.bazel.sdk.logging.LogHelper;
-import com.salesforce.bazel.sdk.logging.LoggerFacade;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
 
@@ -69,13 +70,7 @@ public final class ShellCommand implements Command {
      * for just this class. Logging the execution of the shell commands is likely something you will want to tailor for
      * your exact use case.
      */
-    public static LogHelper LOG = LogHelper.log(ShellCommand.class);
-
-    /**
-     * Level at which ShellCommand should log the stdout/stderr lines that come from the commands. 0 = DEBUG, 1 = INFO,
-     * 2 = WARN, 3 = ERROR
-     */
-    public static int LOG_LEVEL_FOR_STDOUTERR = LoggerFacade.DEBUG;
+    private static Logger LOG = LoggerFactory.getLogger(ShellCommand.class);
 
     private final File directory;
     private final List<String> args;
@@ -179,7 +174,7 @@ public final class ShellCommand implements Command {
         for (String arg : args) {
             command = command + arg + " ";
         }
-        LOG.info("Executing command (timeout = {}): {}", timeoutMS, command);
+        LOG.debug("Executing command (timeout = {}): {}", timeoutMS, command);
         long startTimeMS = System.currentTimeMillis();
         boolean success = false;
 
@@ -209,29 +204,7 @@ public final class ShellCommand implements Command {
 
             // report results to console
             long elapsedTimeMS = System.currentTimeMillis() - startTimeMS;
-            LOG.info("Finished command ({} millis) (success={}): {}", elapsedTimeMS, success, command);
-
-            if (LOG.getLevel() <= LOG_LEVEL_FOR_STDOUTERR) {
-                StringBuffer stdoutBuffer = new StringBuffer();
-                for (String line : stdout.getLines()) {
-                    if (!line.trim().isEmpty()) {
-                        stdoutBuffer.append("  >> ");
-                        stdoutBuffer.append(line);
-                        stdoutBuffer.append("\n");
-                    }
-                }
-                LOG.log(LOG_LEVEL_FOR_STDOUTERR, "\n  >> stdout:\n{}", stdoutBuffer);
-
-                StringBuffer stderrBuffer = new StringBuffer();
-                for (String line : stderr.getLines()) {
-                    if (!line.trim().isEmpty()) {
-                        stderrBuffer.append("  >> ");
-                        stderrBuffer.append(line);
-                        stderrBuffer.append("\n");
-                    }
-                }
-                LOG.log(LOG_LEVEL_FOR_STDOUTERR, "\n  >> stderr:\n{}", stderrBuffer);
-            }
+            LOG.debug("Finished command ({} millis) (success={}): {}", elapsedTimeMS, success, command);
         }
     }
 
