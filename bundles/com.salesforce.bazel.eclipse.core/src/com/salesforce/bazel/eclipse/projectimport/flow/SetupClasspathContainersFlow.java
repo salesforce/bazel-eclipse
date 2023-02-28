@@ -30,7 +30,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 
+import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.core.classpath.EclipseSourceClasspathUtil;
+import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 import com.salesforce.bazel.eclipse.runtime.api.JavaCoreHelper;
 import com.salesforce.bazel.eclipse.runtime.api.ResourceHelper;
 import com.salesforce.bazel.sdk.command.BazelCommandManager;
@@ -95,6 +97,10 @@ public class SetupClasspathContainersFlow extends AbstractImportFlowStep {
 
             progressSubMonitor.worked(1);
         }
+
+        // initialize the classpath containers
+        new InitializeOrRefreshClasspathJob(importedProjects.toArray(new IProject[importedProjects.size()]),
+                BazelCorePlugin.getInstance().getBazelModelManager().getClasspathManager(), false).schedule();
     }
 
 }
