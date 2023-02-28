@@ -43,22 +43,22 @@ import com.salesforce.bazel.sdk.path.FSPathHelper;
 public class BazelLabel {
 
     // BAZEL PATH CONSTANTS
-    // Please use these in your code, instead of hardcoded Strings. It makes it easier to 
+    // Please use these in your code, instead of hardcoded Strings. It makes it easier to
     // reason about path manipulation code.
 
-    // Wildcard used as a target, that identifies all targets including implicit targets (_deploy.jar etc) 
+    // Wildcard used as a target, that identifies all targets including implicit targets (_deploy.jar etc)
     public static final String BAZEL_WILDCARD_ALLTARGETS_STAR = "*";
 
-    // Wildcard used as a target, that identifies all targets 
+    // Wildcard used as a target, that identifies all targets
     public static final String BAZEL_WILDCARD_ALLTARGETS = "all";
 
     // Wildcard used as a package, that identifies all packages at the current level or below
     public static final String BAZEL_WILDCARD_ALLPACKAGES = "...";
 
-    // All packages wildcard 
+    // All packages wildcard
     public static final String BAZEL_ALL_REPO_PACKAGES = "//...";
 
-    // Root package wildcard 
+    // Root package wildcard
     public static final String BAZEL_ROOT_PACKAGE_ALLTARGETS = "//:*";
 
     // Double slash characters for root of Bazel paths
@@ -72,6 +72,9 @@ public class BazelLabel {
 
     // @ symbol that precedes external repo paths
     public static final String BAZEL_EXTERNALREPO_AT = "@";
+
+    // @@ for canonical repo names (https://docs.google.com/document/d/1N81qfCa8oskCk5LqTW-LNthy6EBrDot7bdUsjz6JFC4/edit#heading=h.5mcn15i0e1ch)
+    public static final String BAZEL_CANONICAL_EXTERNALREPO_AT = "@@";
 
     // INSTANCE MEMBERS
 
@@ -102,10 +105,17 @@ public class BazelLabel {
     public BazelLabel(String labelPathStr) {
         BazelLabel.validateLabelPath(labelPathStr, true);
 
-        if (isExternalRepoPath(labelPathStr)) {
-            int i = labelPathStr.indexOf(BazelLabel.BAZEL_ROOT_SLASHES);
-            repositoryName = labelPathStr.substring(1, i);
-            labelPathStr = labelPathStr.substring(i);
+        // does this label refer to an external repo? Ex: @foo//a/b/c:d
+        if (labelPathStr.startsWith(BAZEL_EXTERNALREPO_AT)) {
+            // also deal with incompatible_unambiguous_label_stringification bazelbuild/bazel#16196 (and bzlmod)
+            labelPathStr = labelPathStr.startsWith(BAZEL_CANONICAL_EXTERNALREPO_AT) ? labelPathStr.substring(BAZEL_CANONICAL_EXTERNALREPO_AT.length()) : labelPathStr.substring(BAZEL_EXTERNALREPO_AT.length());
+            int i = labelPathStr.indexOf(BAZEL_ROOT_SLASHES);
+            if(i > 0) {
+                repositoryName = labelPathStr.substring(0, i);
+                labelPathStr = labelPathStr.substring(i);
+            } else {
+                repositoryName = null;
+            }
         } else {
             repositoryName = null;
         }
@@ -371,7 +381,7 @@ public class BazelLabel {
                 // this is a special case, it is a legal label so we will shall let it pass
                 return true;
             }
-            
+
             labelPathStr = labelPathStr.trim();
             if (labelPathStr.length() == 0) {
                 throw new IllegalArgumentException("Illegal Bazel path string: "+labelPathStr);
@@ -461,12 +471,4 @@ public class BazelLabel {
         String fullLabelStr = getFullLabelPath(externalRepositoryName, localLabelPart);
         return new BazelLabel(fullLabelStr);
     }
-
-    /**
-     * Does this label refer to an external repo? Ex: @foo//a/b/c:d
-     */
-    private static boolean isExternalRepoPath(String labelPathStr) {
-        return labelPathStr.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT);
-    }
-
 }
