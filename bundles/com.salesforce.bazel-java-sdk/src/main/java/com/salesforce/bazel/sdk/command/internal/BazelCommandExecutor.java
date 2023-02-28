@@ -130,13 +130,13 @@ public class BazelCommandExecutor {
     /**
      * Utility method to strip INFO log lines from the output lines returned when running the command
      */
-    public static List<String> stripInfoLines(List<String> outputLines) {
+    public static List<String> stripInfoAndEmptyLines(List<String> outputLines) {
         List<String> outputLinesStripped = new ArrayList<>();
         for (String line : outputLines) {
-            if (line.startsWith("INFO:")) {
+            if (line.startsWith("INFO:") || line.isBlank()) {
                 continue;
             }
-            outputLinesStripped.add(line);
+            outputLinesStripped.add(line.trim());
         }
         return outputLinesStripped;
     }

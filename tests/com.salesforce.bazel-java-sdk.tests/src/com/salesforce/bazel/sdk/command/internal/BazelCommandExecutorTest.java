@@ -101,7 +101,7 @@ public class BazelCommandExecutorTest {
         outputLines.add("INFO: result line 3");
         outputLines.add("result line 4");
 
-        List<String> result = BazelCommandExecutor.stripInfoLines(outputLines);
+        List<String> result = BazelCommandExecutor.stripInfoAndEmptyLines(outputLines);
         assertEquals(3, result.size());
         assertEquals("result line 1", result.get(0));
         assertEquals("result line 2", result.get(1));

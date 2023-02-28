@@ -36,6 +36,9 @@
 
 package com.salesforce.bazel.sdk.command;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -216,7 +219,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
 
                 List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory,
                     null, argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
-                outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
+                outputLines = BazelCommandExecutor.stripInfoAndEmptyLines(outputLines);
+                checkOutputLines(outputLines);
                 bazelExecRootDirectory = new File(String.join("", outputLines));
                 bazelExecRootDirectory = getCanonicalFileSafely(bazelExecRootDirectory);
             } catch (Exception anyE) {
@@ -272,7 +276,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
 
                 List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory,
                     null, argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
-                outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
+                outputLines = BazelCommandExecutor.stripInfoAndEmptyLines(outputLines);
+                checkOutputLines(outputLines);
                 bazelOutputBaseDirectory = new File(String.join("", outputLines));
                 bazelOutputBaseDirectory = getCanonicalFileSafely(bazelOutputBaseDirectory);
             } catch (Exception anyE) {
@@ -296,7 +301,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
 
                 List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory,
                     null, argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
-                outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
+                outputLines = BazelCommandExecutor.stripInfoAndEmptyLines(outputLines);
+                checkOutputLines(outputLines);
                 bazelBinDirectory = new File(String.join("", outputLines));
                 bazelBinDirectory = getCanonicalFileSafely(bazelBinDirectory);
             } catch (Exception anyE) {
@@ -304,6 +310,13 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
             }
         }
         return bazelBinDirectory;
+    }
+
+    private void checkOutputLines(List<String> outputLines) {
+        if (outputLines.size() != 1)
+            throw new IllegalStateException(
+                    format("Unparsable Bazel command output. Expected a single line but got:%n---%n%s%n---%n",
+                        outputLines.stream().collect(joining(System.lineSeparator()))));
     }
 
     /**
@@ -591,7 +604,8 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
 
             List<String> outputLines = bazelCommandExecutor.runBazelAndGetOutputLines(bazelWorkspaceRootDirectory, null,
                 argBuilder, t -> t, BazelCommandExecutor.TIMEOUT_INFINITE);
-            outputLines = BazelCommandExecutor.stripInfoLines(outputLines);
+            outputLines = BazelCommandExecutor.stripInfoAndEmptyLines(outputLines);
+            checkOutputLines(outputLines);
             return new File(String.join("", outputLines));
         } catch (Exception exc) {
             throw new IllegalStateException(exc);
@@ -603,7 +617,7 @@ public class BazelWorkspaceCommandRunner implements BazelWorkspaceMetadataStrate
         File genFolder = getBazelGeneratedFilesFolder();
         String pathToClasses =
                 bazelLabel.getPackageName() + File.separator + "_javac" + File.separator + bazelLabel.getTargetName();
-        File javacFolder = new File(genFolder,pathToClasses);
+        File javacFolder = new File(genFolder, pathToClasses);
         FileFilter fileFilter = file -> file.isDirectory() && file.getName().endsWith("_classes");
         File[] folders = javacFolder.listFiles(fileFilter);
         if ((folders != null) && (folders.length > 0)) {
