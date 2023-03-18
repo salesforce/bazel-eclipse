@@ -49,16 +49,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.eclipse.component.EclipseBazelWorkspaceContext;
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.runtime.impl.EclipseWorkProgressMonitor;
-import com.salesforce.bazel.sdk.command.BazelCommandManager;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathData;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.JvmClasspathEntry;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.JvmUnionClasspath;
-import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 
 /**
  * The central point for for mapping classpath between Bazel and JDT.
@@ -81,15 +79,12 @@ public class BazelClasspathManager {
         this.stateLocationDirectory = requireNonNull(stateLocationDirectory);
     }
 
-    IClasspathEntry[] computeClasspath(BazelProjectOld bazelProject, BazelClasspathScope scope, Properties props,
+    IClasspathEntry[] computeClasspath(BazelProject bazelProject, BazelClasspathScope scope, Properties props,
             boolean eliminateDuplicateEntries, IProgressMonitor monitor) throws CoreException {
         try {
             JvmClasspathData jcmClasspathData;
             try {
-                var bazelWorkspace = getBazelWorkspace();
-                // make sure we don't use any caching here
-                var commandManager = getBazelCommandManager();
-                commandManager.getWorkspaceCommandRunner(bazelWorkspace).flushAspectInfoCache();
+                var bazelWorkspace = bazelProject.getBazelWorkspace();
                 // compute classpath from Bazel
                 jcmClasspathData = JvmUnionClasspath.withAspectStrategy(bazelProject, bazelWorkspace, commandManager)
                         .getClasspathEntries(new EclipseWorkProgressMonitor(monitor));
@@ -190,20 +185,12 @@ public class BazelClasspathManager {
         return Path.fromOSString(absolutePath.toString());
     }
 
-    BazelCommandManager getBazelCommandManager() {
-        return ComponentContext.getInstanceCheckInitialized().getBazelCommandManager();
-    }
-
     IClasspathEntry getBazelContainerEntry(IJavaProject project) {
         return BazelClasspathHelpers.getBazelContainerEntry(project);
     }
 
     BazelProjectOld getBazelProject(IJavaProject project) {
         return getProjectManager().create(project.getElementName(), project.getProject());
-    }
-
-    BazelWorkspace getBazelWorkspace() {
-        return EclipseBazelWorkspaceContext.getInstance().getBazelWorkspace();
     }
 
     public IClasspathEntry[] getClasspath(IJavaProject project, BazelClasspathScope scope,
@@ -372,7 +359,8 @@ public class BazelClasspathManager {
         try {
             var subMonitor = SubMonitor.convert(monitor, 2);
             var containerEntry = getBazelContainerEntry(project);
-            var path = containerEntry != null ? containerEntry.getPath() : new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
+            var path = containerEntry != null ? containerEntry.getPath()
+                    : new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
             var classpath = getClasspath(project, subMonitor.newChild(1));
             IClasspathContainer container = new BazelClasspathContainer(path, classpath);
             JavaCore.setClasspathContainer(container.getPath(), new IJavaProject[] { project },

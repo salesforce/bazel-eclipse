@@ -23,10 +23,8 @@
  */
 package com.salesforce.bazel.sdk.lang.jvm.classpath.impl;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,12 +36,10 @@ import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy.JvmClasspathAsp
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy.JvmClasspathStrategy;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy.JvmClasspathStrategyRequest;
 import com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util.ImplicitClasspathHelper;
-import com.salesforce.bazel.sdk.model.BazelBuildFile;
-import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.model.BazelTargetKind;
 import com.salesforce.bazel.sdk.model.BazelWorkspace;
-import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectManager;
+import com.salesforce.bazel.sdk.project.BazelProjectOld;
 import com.salesforce.bazel.sdk.project.BazelProjectTargets;
 import com.salesforce.bazel.sdk.util.SimplePerfRecorder;
 import com.salesforce.bazel.sdk.util.WorkProgressMonitor;
@@ -83,7 +79,7 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
             BazelProjectOld bazelProject, ImplicitClasspathHelper implicitDependencyHelper,
             OperatingEnvironmentDetectionStrategy osDetector, BazelCommandManager bazelCommandManager,
             List<JvmClasspathStrategy> orderedClasspathStrategies) {
-        super(bazelProject.name, CLASSPATH_CACHE_TIMEOUT_MS);
+        super(bazelProject.name);
 
         this.bazelWorkspace = bazelWorkspace;
         this.bazelProjectManager = bazelProjectManager;
@@ -120,11 +116,7 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
         long startTimeMS = System.currentTimeMillis();
 
         boolean isImport = false;
-        JvmClasspathData response = getCachedEntries();
-        if (response != null) {
-            return response;
-        }
-        response = new JvmClasspathData();
+        JvmClasspathData response = new JvmClasspathData();
 
         LOG.debug("Computing classpath for project " + bazelProject.name + " (import? " + isImport + ")");
         BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner =
@@ -170,32 +162,6 @@ public class JvmUnionClasspath extends JvmInMemoryClasspath {
         SimplePerfRecorder.addTime("classpath", startTimeMS);
 
         return cachedClasspath;
-    }
-
-    // INTERNAL
-
-    private BazelBuildFile getBuildFile(BazelWorkspaceCommandRunner bazelWorkspaceCmdRunner,
-            BazelProjectTargets configuredTargetsForProject) throws Exception {
-        // TODO this code is hard to follow, why are there collections where we expect there to be a single build file?
-
-        BazelBuildFile bazelBuildFileModel = null;
-
-        // we pass the targets that are configured for the current project to bazel query
-        // typically, this is a single wildcard target, but the user may
-        // also have specified explicit targets to use
-        List<BazelLabel> labels = configuredTargetsForProject.getConfiguredTargets().stream().map(BazelLabel::new)
-                .collect(Collectors.toList());
-        Collection<BazelBuildFile> buildFiles = bazelWorkspaceCmdRunner.queryBazelTargetsInBuildFile(labels);
-        // since we only call query with labels for the same package, we expect to get a single BazelBuildFile instance back
-        if (buildFiles.isEmpty()) {
-            throw new IllegalStateException("Unexpected empty BazelBuildFile collection, this is a bug");
-        }
-        if (buildFiles.size() > 1) {
-            throw new IllegalStateException("Expected a single BazelBuildFile instance, this is a bug");
-        }
-        bazelBuildFileModel = buildFiles.iterator().next();
-
-        return bazelBuildFileModel;
     }
 
 }

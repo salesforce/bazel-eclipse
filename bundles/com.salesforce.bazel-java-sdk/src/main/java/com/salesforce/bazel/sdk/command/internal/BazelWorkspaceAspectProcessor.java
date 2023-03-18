@@ -110,7 +110,7 @@ public class BazelWorkspaceAspectProcessor {
             aspectOptions.add(
                 "--output_groups=intellij-info-generic,intellij-info-java-direct-deps,intellij-resolve-java-direct-deps");
             aspectOptions.add("--nobuild_event_binary_file_path_conversion");
-            aspectOptions.add("--noexperimental_run_validations");
+            aspectOptions.add("--norun_validations");
             aspectOptions.add("--experimental_show_artifacts");
             aspectOptions.add("--curses=no");
             aspectOptions.add("--progress_in_terminal_title=no");

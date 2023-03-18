@@ -13,11 +13,4 @@ public interface JvmClasspath {
      * @throws Exception
      */
     JvmClasspathData getClasspathEntries(WorkProgressMonitor progressMonitor) throws Exception;
-
-    /**
-     * Requests the classpath to clear all cached state such that the next call to getClasspathEntries()
-     * will rebuild internal state.
-     */
-    public void clean();
-
 }
