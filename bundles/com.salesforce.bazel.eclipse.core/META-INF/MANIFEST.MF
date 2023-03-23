@@ -5,7 +5,6 @@ Automatic-Module-Name: com.salesforce.bazel.eclipse.core
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.core;singleton:=true
 Bundle-Version: 2.0.0.qualifier
 Export-Package: com.salesforce.bazel.eclipse.builder,
- com.salesforce.bazel.eclipse.component,
  com.salesforce.bazel.eclipse.config,
  com.salesforce.bazel.eclipse.core,
  com.salesforce.bazel.eclipse.core.classpath,
@@ -19,8 +18,11 @@ Export-Package: com.salesforce.bazel.eclipse.builder,
  com.salesforce.bazel.eclipse.runtime.api,
  com.salesforce.bazel.eclipse.runtime.impl,
  com.salesforce.bazel.eclipse.util,
- com.salesforce.bazel.eclipse.utils
+ com.salesforce.bazel.eclipse.utils,
+ com.salesforce.bazel.sdk.aspect,
+ com.salesforce.bazel.sdk.aspect.jvm
 Import-Package: com.github.benmanes.caffeine.cache;version="3.1.4",
+ com.google.gson;version="2.10.1",
  com.google.protobuf;version="3.22.0",
  org.slf4j;version="1.7.30",
  org.slf4j.helpers;version="1.7.30"

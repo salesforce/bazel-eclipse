@@ -2,6 +2,7 @@ package com.salesforce.bazel.eclipse.ui.execution;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static org.fusesource.jansi.Ansi.ansi;
 import static org.fusesource.jansi.Ansi.Attribute.INTENSITY_BOLD;
@@ -103,7 +104,8 @@ public class EclipseConsoleBazelCommandExecutor extends DefaultBazelCommandExecu
             // print info about command
             consoleStream.println(ansi().a(ITALIC).a(new Date().toString()).reset().toString());
             consoleStream.println(ansi().a(INTENSITY_BOLD).a("Running Command:").reset().toString());
-            consoleStream.println(" > bazel " + command.prepareCommandLine());
+            consoleStream.println(" > bazel " + command.prepareCommandLine(requireNonNull(command.getBazelBinary(),
+                "command is expected to have a binary at this point; check the code flow").bazelVersion()));
             consoleStream.println();
 
             var fullCommandLine = processBuilder.command().stream().collect(joining(" "));

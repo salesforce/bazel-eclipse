@@ -8,6 +8,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 
+import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
+
 /**
  * A simple lookup strategy for {@link TargetDiscoveryStrategy} and {@link TargetProvisioningStrategy} implementations
  * using the Eclipse extension registry.
@@ -22,6 +24,25 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup {
     private static final String ATTR_NAME = "name";
 
     /**
+     * Convenience method reading the configured strategy for a project view and falling back to a global default if no
+     * target provision strategy is configured for the project view.
+     *
+     * @param projectView
+     *            project view for obtaining {@link BazelProjectView#targetDiscoveryStrategy()}
+     * @return the strategy (never <code>null</code>)
+     * @throws CoreException
+     *             if no strategy was found
+     */
+    public TargetDiscoveryStrategy createTargetDiscoveryStrategy(BazelProjectView projectView) throws CoreException {
+        var discoveryStrategy = projectView.targetDiscoveryStrategy();
+        if ((discoveryStrategy == null) || discoveryStrategy.equals("default")) {
+            discoveryStrategy = BazelQueryTargetDiscovery.STRATEGY_NAME;
+        }
+
+        return createTargetDiscoveryStrategy(discoveryStrategy);
+    }
+
+    /**
      * Searches the Eclipse extension registry for a strategy with the given name.
      *
      * @param name
@@ -32,6 +53,26 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup {
      */
     public TargetDiscoveryStrategy createTargetDiscoveryStrategy(String name) throws CoreException {
         return (TargetDiscoveryStrategy) findAndCreateStrategy(name, ELLEMENT_TARGET_DISCOVERY_STRATEGY);
+    }
+
+    /**
+     * Convenience method reading the configured strategy for a project view and falling back to a global default if no
+     * target provision strategy is configured for the project view.
+     *
+     * @param projectView
+     *            project view for obtaining {@link BazelProjectView#targetProvisioningStrategy()}
+     * @return the strategy (never <code>null</code>)
+     * @throws CoreException
+     *             if no strategy was found
+     */
+    public TargetProvisioningStrategy createTargetProvisioningStrategy(BazelProjectView projectView)
+            throws CoreException {
+        var provisioningStrategy = projectView.targetProvisioningStrategy();
+        if ((provisioningStrategy == null) || provisioningStrategy.equals("default")) {
+            provisioningStrategy = ProjectPerTargetProvisioningStrategy.STRATEGY_NAME;
+        }
+
+        return createTargetProvisioningStrategy(provisioningStrategy);
     }
 
     /**

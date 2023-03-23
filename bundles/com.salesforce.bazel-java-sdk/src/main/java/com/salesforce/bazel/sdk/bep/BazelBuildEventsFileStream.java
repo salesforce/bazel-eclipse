@@ -46,7 +46,7 @@ import com.salesforce.bazel.sdk.bep.file.BEPFileParser;
 import com.salesforce.bazel.sdk.bep.file.BEPMonitoredFile;
 
 /**
- * /** Bazel build event protocol stream (BEP) for a Bazel workspace. This implementation reads a file, publishes the
+ * Bazel build event protocol stream (BEP) for a Bazel workspace. This implementation reads a file, publishes the
  * events in the file to the subscriber(s), and ends the stream.
  * <p>
  * Because this stream integrates with your builds with Bazel using BEP, this stream will work with command line builds

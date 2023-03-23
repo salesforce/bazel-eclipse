@@ -199,7 +199,8 @@
     <extension
           point="com.salesforce.bazel.eclipse.core.executor">
        <commandExecutor
-             class="com.salesforce.bazel.eclipse.ui.execution.EclipseConsoleBazelCommandExecutor">
+             class="com.salesforce.bazel.eclipse.ui.execution.EclipseConsoleBazelCommandExecutor"
+             priority="1000">
        </commandExecutor>
     </extension>
 

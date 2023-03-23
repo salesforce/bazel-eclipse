@@ -32,7 +32,6 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 
-import com.salesforce.bazel.eclipse.core.model.discovery.BazelQueryTargetDiscovery;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryAndProvisioningExtensionLookup;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryStrategy;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetProvisioningStrategy;
@@ -182,21 +181,11 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     }
 
     TargetDiscoveryStrategy getTargetDiscoveryStrategy() throws CoreException {
-        var discoveryStrategy = projectView.targetDiscoveryStrategy();
-        if ((discoveryStrategy == null) || discoveryStrategy.equals("default")) {
-            discoveryStrategy = BazelQueryTargetDiscovery.STRATEGY_NAME;
-        }
-
-        return new TargetDiscoveryAndProvisioningExtensionLookup().createTargetDiscoveryStrategy(discoveryStrategy);
+        return new TargetDiscoveryAndProvisioningExtensionLookup().createTargetDiscoveryStrategy(projectView);
     }
 
     TargetProvisioningStrategy getTargetProvisioningStrategy() throws CoreException {
-        var provisioningStrategy = projectView.targetDiscoveryStrategy();
-        if ((provisioningStrategy == null) || provisioningStrategy.equals("default")) {
-            provisioningStrategy = BazelQueryTargetDiscovery.STRATEGY_NAME;
-        }
-
-        return new TargetDiscoveryAndProvisioningExtensionLookup().createTargetProvisioningStrategy(provisioningStrategy);
+        return new TargetDiscoveryAndProvisioningExtensionLookup().createTargetProvisioningStrategy(projectView);
     }
 
     IWorkspace getWorkspace() {

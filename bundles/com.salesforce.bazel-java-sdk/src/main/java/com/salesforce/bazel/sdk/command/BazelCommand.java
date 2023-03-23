@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.salesforce.bazel.sdk.BazelVersion;
+
 /**
  * A rich data structure for defining commands and parsing their output.
  * <p>
@@ -38,6 +40,7 @@ public abstract class BazelCommand<R> {
     private List<String> startupArgs;
     private List<String> commandArgs;
     private Path stdOutFile;
+    private BazelBinary bazelBinary;
 
     /**
      * Creates a command using the specified command.
@@ -57,6 +60,20 @@ public abstract class BazelCommand<R> {
     }
 
     /**
+     * {@return the Bazel binary to use (never <code>null</code>)
+     */
+    BazelBinary ensureBazelBinary() {
+        return requireNonNull(getBazelBinary(), "no Bazel binary configured; check the workflow");
+    }
+
+    /**
+     * {@return the optional Bazel binary to use for executing this command (maybe <code>null</code>)}
+     */
+    public BazelBinary getBazelBinary() {
+        return bazelBinary;
+    }
+
+    /**
      * @return the Bazel command
      */
     protected final String getCommand() {
@@ -67,7 +84,7 @@ public abstract class BazelCommand<R> {
      * @return the command args
      */
     protected final List<String> getCommandArgs() {
-        List<String> args = commandArgs;
+        var args = commandArgs;
         return args != null ? args : emptyList();
     }
 
@@ -75,7 +92,7 @@ public abstract class BazelCommand<R> {
      * @return the startup args
      */
     protected final List<String> getStartupArgs() {
-        List<String> args = startupArgs;
+        var args = startupArgs;
         return args != null ? args : emptyList();
     }
 
@@ -102,28 +119,50 @@ public abstract class BazelCommand<R> {
      * <p>
      * Note, the returned list is guaranteed to be modifiable.
      * </p>
+     * <p>
+     * The Bazel binary will be added by {@link BazelCommandExecutor} and must not be included in the returned list.
+     * </p>
      *
+     * @param bazelVersion
+     *            version of the Bazel binary (may impact flags to use)
      * @return the command line
      * @throws IOException
      *             in case of issues preparing the command line
      */
-    public List<String> prepareCommandLine() throws IOException {
-        var commandLine = new ArrayList<String>();
-        commandLine.addAll(getStartupArgs());
+    public List<String> prepareCommandLine(BazelVersion bazelVersion) throws IOException {
+        var commandLine = new ArrayList<String>(getStartupArgs());
         commandLine.add(getCommand());
         commandLine.addAll(getCommandArgs());
         return commandLine;
     }
 
     /**
-     * Called by {@link BazelCommandExecutor} to populate the command with the result of the process execution and generate the result.
+     * Called by {@link BazelCommandExecutor} to populate the command with the result of the process execution and
+     * generate the result.
      *
-     * @param exitCode exit code
-     * @param stdout output of stdout (<code>null</code> in case {@link #getStdOutFile()} was set when executing the command)
-     * @param stderr output of stderr
+     * @param exitCode
+     *            exit code
+     * @param stdout
+     *            output of stdout (<code>null</code> in case {@link #getStdOutFile()} was set when executing the
+     *            command)
+     * @param stderr
+     *            output of stderr
      * @return the command result
      */
     public abstract R processResult(int exitCode, String stdout, String stderr) throws IOException;
+
+    /**
+     * Sets an optional {@link BazelBinary} to use.
+     * <p>
+     * If a Bazel binary is set, the {@link BazelCommandExecutor} will prefer this one. Otherwise it will use a default.
+     * </p>
+     *
+     * @param bazelBinary
+     *            the Bazel binary to use for this command (maybe <code>null</code> to use a default)
+     */
+    public void setBazelBinary(BazelBinary bazelBinary) {
+        this.bazelBinary = bazelBinary;
+    }
 
     /**
      * Sets the command arguments to use for this command.

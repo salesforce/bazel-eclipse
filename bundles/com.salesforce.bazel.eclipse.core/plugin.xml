@@ -102,4 +102,11 @@
             name="bazel-query">
       </targetDiscoveryStrategy>
    </extension>
+   <extension
+         point="com.salesforce.bazel.eclipse.core.executor">
+      <commandExecutor
+            class="com.salesforce.bazel.eclipse.core.extensions.EclipseHeadlessBazelCommandExecutor"
+            priority="10">
+      </commandExecutor>
+   </extension>
 </plugin>

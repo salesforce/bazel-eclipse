@@ -1,0 +1,5 @@
+# external repo
+intellij/
+
+# bazel symlinks
+bazel-*

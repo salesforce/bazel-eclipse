@@ -17,7 +17,9 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -94,6 +96,10 @@ public class BazelProject implements IProjectNature {
      */
     public static final QualifiedName PROJECT_PROPERTY_TARGETS = new QualifiedName(PLUGIN_ID, "targets");
 
+    private static Stream<String> getLabels(String popertyValue) {
+        return Stream.of(popertyValue.trim().split("\\s*,\\s*"));
+    }
+
     /**
      * A convenience method for checking if a project has the {@link #PROJECT_PROPERTY_TARGETS} set to the given label.
      *
@@ -119,8 +125,7 @@ public class BazelProject implements IProjectNature {
         }
 
         var labelString = label.getLabelPath();
-        return Stream.of(targetsPropertyValue.trim().split("\\s*,\\s*")).filter(labelString::equals).findAny()
-                .isPresent();
+        return getLabels(targetsPropertyValue).filter(labelString::equals).findAny().isPresent();
     }
 
     /**
@@ -141,6 +146,30 @@ public class BazelProject implements IProjectNature {
         // workspace root must be set and must match the project location
         return (workspaceRootPropertyValue != null) && (workspaceRoot != null)
                 && workspaceRoot.toString().equals(workspaceRootPropertyValue);
+    }
+
+    /**
+     * A convenience method for checking how many targets a project represents.
+     *
+     * @param project
+     *            the project to check
+     * @return the number of targets
+     * @throws CoreException
+     *             if the project is closed
+     */
+    public static int numberOfTargetsinTargetProperty(IProject project) throws CoreException {
+        var targetsPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_TARGETS);
+        if ((targetsPropertyValue == null) || targetsPropertyValue.isBlank()) {
+            return 0;
+        }
+
+        var result = getLabels(targetsPropertyValue).count();
+        if (result > Integer.MAX_VALUE) {
+            throw new CoreException(Status.error(format("Error in property  '%s' on project '%s'. Too many targets: %s",
+                PROJECT_PROPERTY_TARGETS, project, targetsPropertyValue)));
+        }
+
+        return (int) result;
     }
 
     private IProject project;
@@ -221,6 +250,52 @@ public class BazelProject implements IProjectNature {
     }
 
     /**
+     * Returns the {@link BazelTarget} this project belongs to.
+     * <p>
+     * The model will be searched for the target.
+     * </p>
+     * <p>
+     * If the project does not represent a single target, the method with fail and throw a {@link CoreException}.
+     * </p>
+     *
+     * @return the target
+     * @throws CoreException
+     *             if the target project cannot be found or if this project does not represent a single target
+     */
+    public BazelTarget getBazelTarget() throws CoreException {
+        var project = getProject();
+        var targetsPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_TARGETS);
+        var targetLabels =
+                targetsPropertyValue != null ? getLabels(targetsPropertyValue).collect(toList()) : List.<String> of();
+        if (targetLabels.isEmpty()) {
+            throw new CoreException(Status.error(format("Project '%s' is not a target project", project)));
+        }
+        if (targetLabels.size() > 1) {
+            throw new CoreException(Status
+                    .error(format("Project '%s' represents more than one target (%s)", project, targetsPropertyValue)));
+        }
+
+        var label = new BazelLabel(targetLabels.stream().findFirst().get());
+
+        // search model
+        var bazelWorkspace = getBazelWorkspace();
+        var bazelPackage = bazelWorkspace.getBazelPackage(label.getPackageLabel());
+        var bazelTarget = bazelPackage.getBazelTarget(label.getTargetName());
+
+        try {
+            if (!bazelTarget.exists()) {
+                throw new CoreException(Status.error(
+                    format("Project '%s' maps to a Bazel target '%s', which does not exist!", project, label)));
+            }
+        } catch (IOException e) {
+            throw new CoreException(Status.error(
+                format("Project '%s' maps to a Bazel target '%s', which does not exist!", project, label), e));
+        }
+
+        return bazelTarget;
+    }
+
+    /**
      * Returns the {@link BazelWorkspace} this project belongs to.
      * <p>
      * The model will be searched for the workspace.
@@ -290,6 +365,16 @@ public class BazelProject implements IProjectNature {
         }
 
         return getProject().getLocation().append(projectView);
+    }
+
+    /**
+     * Indicates if this project represents a single Bazel Target.
+     *
+     * @return <code>true</code> if this project is a target project, <code>false</code> otherwise
+     * @throws CoreException
+     */
+    public boolean isSingleTargetProject() throws CoreException {
+        return numberOfTargetsinTargetProperty(getProject()) == 1;
     }
 
     /**

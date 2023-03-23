@@ -42,7 +42,7 @@ location "https://download.eclipse.org/tools/orbit/downloads/drops/R202303020146
 	org.slf4j.api
 }
 
-location "https://download.eclipse.org/jdtls/snapshots/repository/1.21.0.202303132346/" {
+location "https://download.eclipse.org/jdtls/milestones/1.21.0/repository/" {
 	org.eclipse.jdt.ls.core
 }
 
@@ -56,7 +56,7 @@ location "https://download.eclipse.org/scout/releases/4.0/testing" {
 	org.mockito.mockito-all
 }
 
-location "https://download.eclipse.org/lsp4j/updates/releases/0.20.0/" {
+location "https://download.eclipse.org/lsp4j/updates/releases/0.20.1/" {
 	org.eclipse.lsp4j.sdk.feature.group
 }
 
@@ -90,6 +90,11 @@ maven MavenDependencies scope=compile,test dependencyDepth=infinite missingManif
 		groupId="org.fusesource.jansi"
 		artifactId="jansi"
 		version="2.4.0"
+	}
+	dependency {
+		groupId="com.google.code.findbugs"
+		artifactId="jsr305"
+		version="3.0.2"
 	}
 }
 

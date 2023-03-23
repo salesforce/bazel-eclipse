@@ -6,11 +6,15 @@ import java.util.List;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.IClasspathEntry;
 
+import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.SynchronizeProjectViewJob;
+import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 
 /**
  * The target discovery strategy is responsible for provisioning targets into Eclipse as Eclipse projects.
@@ -20,6 +24,45 @@ import com.salesforce.bazel.eclipse.core.model.SynchronizeProjectViewJob;
  * </p>
  */
 public interface TargetProvisioningStrategy {
+
+    /**
+     * Computes the classpath for a project to be used by the Bazel classpath container entry.
+     * <p>
+     * In the Bazel Eclipse extension classpath computation is coupled with project provisioning. The implementation
+     * will potentially execute Bazel commands to compute the classpath.
+     * </p>
+     * <p>
+     * This operation is called outside of project provisioning, i.e. implementors can assume that the Eclipse workspace
+     * is fully provisioned. Therefore, the computed classpath only represents dependencies of the specified project
+     * (either {@link IClasspathEntry#CPE_LIBRARY} or {@link IClasspathEntry#CPE_PROJECT}). Any source folder is
+     * expected to be calculated and setup properly as part of a call to
+     * {@link #provisionProjectsForTarget(Collection, IProgressMonitor)} during project provisioning. Implementors are
+     * expected to properly connect dependencies to projects provisioned in the Eclipse workspace.
+     * </p>
+     * <p>
+     * This method is guaranteed to be called within {@link IWorkspaceRoot a workspace level lock} and allowed to modify
+     * workspace resources. Implementors should therefore not schedule any conflicting background jobs/threads which may
+     * want to obtain resource level locking. This is likely going to cause deadlocks.
+     * </p>
+     * <p>
+     * If classpath computation fails implementors are required to fail execution with a {@link CoreException}. If
+     * {@link CoreException#getStatus() the exception status} is {@link IStatus#isMultiStatus() a multi-status} then the
+     * children will be reported as classpath error markers on the project. Otherwise the implementor is expected to
+     * create error markers when necessary.
+     * </p>
+     *
+     * @param bazelProject
+     *            the project to obtain the classpath for (never <code>null</code>)
+     * @param scope
+     *            the classpath scope (never <code>null</code>)
+     * @param progress
+     *            a monitor for tracking progress and observing cancellations (never <code>null</code>)
+     * @return the computed classpath (never <code>null</code>)
+     * @throws CoreException
+     *             in case of problems computing the classpath
+     */
+    List<ClasspathEntry> computeClasspath(BazelProject bazelProject, BazelClasspathScope scope,
+            IProgressMonitor monitor) throws CoreException;
 
     /**
      * Provisions project for a collection of targets to materialize for a workspace.

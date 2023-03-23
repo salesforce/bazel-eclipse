@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.model;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static com.salesforce.bazel.eclipse.core.model.BazelProject.hasTargetPropertySetForLabel;
 import static com.salesforce.bazel.eclipse.core.model.BazelProject.hasWorkspaceRootPropertySetToLocation;
+import static com.salesforce.bazel.eclipse.core.model.BazelProject.numberOfTargetsinTargetProperty;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -50,7 +51,8 @@ public final class BazelTargetInfo extends BazelElementInfo {
                     && !workspaceProject.equals(project) // is not the workspace project
                     && hasWorkspaceRootPropertySetToLocation(project, workspaceRoot) // belongs to the workspace root
                     && hasTargetPropertySetForLabel(project, getBazelTarget().getLabel()) // represents the target
-            ) {
+                    && (numberOfTargetsinTargetProperty(project) == 1 // single target project
+                    )) {
                 return project;
             }
         }

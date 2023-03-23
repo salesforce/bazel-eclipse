@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1679011256">
+<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1679571015">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.27.0.v20230220-1431"/>
@@ -44,8 +44,8 @@
       <repository location="https://download.eclipse.org/tools/orbit/downloads/drops/R20230302014618/repository/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.jdt.ls.core" version="1.21.0.202303132346"/>
-      <repository location="https://download.eclipse.org/jdtls/snapshots/repository/1.21.0.202303132346/"/>
+      <unit id="org.eclipse.jdt.ls.core" version="1.21.0.202303161431"/>
+      <repository location="https://download.eclipse.org/jdtls/milestones/1.21.0/repository/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.xtext.xbase.lib" version="2.30.0.v20230227-1111"/>
@@ -56,8 +56,8 @@
       <repository location="https://download.eclipse.org/scout/releases/4.0/testing"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.lsp4j.sdk.feature.group" version="0.20.0.v20230216-1817"/>
-      <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.20.0/"/>
+      <unit id="org.eclipse.lsp4j.sdk.feature.group" version="0.20.1.v20230228-1533"/>
+      <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.20.1/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.m2e.feature.feature.group" version="2.1.2.20221130-2239"/>
@@ -93,6 +93,12 @@
     		<groupId>org.fusesource.jansi</groupId>
     		<artifactId>jansi</artifactId>
     		<version>2.4.0</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.google.code.findbugs</groupId>
+    		<artifactId>jsr305</artifactId>
+    		<version>3.0.2</version>
     		<type>jar</type>
     	</dependency>
     </dependencies>

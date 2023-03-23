@@ -167,8 +167,9 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
      * into the project file.
      * </p>
      *
-     * @return the project view for this workspace
+     * @return the project view for this workspace (never <code>null</code>)
      * @throws CoreException
+     *             if no project view is available for the workspace
      */
     public BazelProjectView getBazelProjectView() throws CoreException {
         return getInfo().getBazelProjectView();
@@ -220,7 +221,7 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
         try {
             return getInfo().getWorkspaceName();
         } catch (CoreException e) {
-            return format("unknown (%s)", e.getMessage());
+            throw new IllegalStateException(format("Unable to compute workspace name for workspace '%s'!", root), e);
         }
     }
 

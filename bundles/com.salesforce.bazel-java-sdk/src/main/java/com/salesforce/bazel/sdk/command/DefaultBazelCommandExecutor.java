@@ -2,6 +2,7 @@ package com.salesforce.bazel.sdk.command;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
 import java.io.ByteArrayOutputStream;
@@ -11,6 +12,7 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -39,7 +41,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
     private static final ThreadGroup pipesThreadGroup = new ThreadGroup("Bazel Command Executor Pipes");
 
     protected static Thread pipe(final InputStream src, final OutputStream dest, String threadDetails) {
-        final Thread thread = new Thread(pipesThreadGroup, (Runnable) () -> {
+        final var thread = new Thread(pipesThreadGroup, (Runnable) () -> {
             // we don't close any streams as we expect this do be done outside
             try {
                 src.transferTo(dest);
@@ -56,42 +58,63 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
     private boolean wrapExecutionIntoShell = !getSystemUtil().isWindows(); // default is yes except on Windows
     private volatile Path detectedShell;
     private volatile Map<String, String> extraEnv;
+    private volatile BazelBinary bazelBinary;
+
+    /**
+     * Detects the binary to use.
+     * <p>
+     * The default implementation checks {@link BazelCommand#getBazelBinary()} and falls back to
+     * {@link #getBazelBinary()} if the command does not request a custom binary.
+     * </p>
+     * <p>
+     * Once the proper binary is detected the command will be updated.
+     * </p>
+     *
+     * @param command
+     *            the command (must not be <code>null</code>)
+     * @return the Bazel binary to use for launching the command (never <code>null</code>)
+     */
+    protected void configureBazelBinary(BazelCommand<?> command) {
+        var binary = Optional.ofNullable(command.getBazelBinary()).orElseGet(this::getBazelBinary);
+        // ensure command has the proper binary
+        command.setBazelBinary(binary);
+    }
 
     protected Path detectShell() throws IOException {
-        if (getSystemUtil().isWindows())
+        if (getSystemUtil().isWindows()) {
             return null; // not supported
+        }
 
-        Path shell = detectedShell;
-        if (shell != null)
+        var shell = detectedShell;
+        if (shell != null) {
             return shell;
+        }
 
         synchronized (this) {
-            if (getSystemUtil().isMac())
+            if (getSystemUtil().isMac() || getSystemUtil().isUnix()) {
                 return detectedShell = new MacOsLoginShellFinder().detectLoginShell();
-            else if (getSystemUtil().isUnix())
-                return detectedShell = new MacOsLoginShellFinder().detectLoginShell();
-            else
-                throw new IOException("Unsupported OS: " + getSystemUtil().getOs());
+            }
+            throw new IOException("Unsupported OS: " + getSystemUtil().getOs());
         }
     }
 
     protected <R> R doExecuteProcess(BazelCommand<R> command, CancelationCallback cancelationCallback,
             ProcessBuilder processBuilder) throws IOException {
         // capture stdout and stderr
-        OutputStream out = command.getStdOutFile() != null ? newOutputStream(command.getStdOutFile())
+        var out = command.getStdOutFile() != null ? newOutputStream(command.getStdOutFile())
                 : new ByteArrayOutputStream();
-        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        var err = new ByteArrayOutputStream();
 
         // execute
         final int result;
         try {
-            String fullCommandLine = processBuilder.command().stream().collect(joining(" "));
+            var fullCommandLine = processBuilder.command().stream().collect(joining(" "));
             LOG.debug(fullCommandLine);
 
-            final Process process = processBuilder.start();
+            final var process = processBuilder.start();
 
-            final Thread p1 = pipe(process.getInputStream(), out, fullCommandLine);
-            final Thread p2 = pipe(process.getErrorStream(), err, fullCommandLine);
+            final var p1 = pipe(process.getInputStream(), out, fullCommandLine);
+            final var p2 = pipe(process.getErrorStream(), err, fullCommandLine);
 
             try {
                 while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
@@ -123,23 +146,30 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
     @Override
     public <R> R execute(BazelCommand<R> command, CancelationCallback cancelationCallback) throws IOException {
+        // configure binary
+        configureBazelBinary(command);
+
         // full command line
-        List<String> commandLine = prepareCommandLine(command);
+        var commandLine = prepareCommandLine(command);
 
         // start building the process
-        ProcessBuilder processBuilder = newProcessBuilder(commandLine);
+        var processBuilder = newProcessBuilder(commandLine);
 
         // run command in workspace
         processBuilder.directory(command.getWorkingDirectory().toFile());
 
         // extra environment variables
-        Map<String, String> extraEnv = this.extraEnv;
+        var extraEnv = this.extraEnv;
         if (extraEnv != null) {
             processBuilder.environment().putAll(extraEnv);
         }
 
         return doExecuteProcess(command, cancelationCallback, processBuilder);
 
+    }
+
+    public BazelBinary getBazelBinary() {
+        return requireNonNull(bazelBinary, "no Bazel binary set");
     }
 
     public Map<String, String> getExtraEnv() {
@@ -158,23 +188,38 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         return new ProcessBuilder(commandLine);
     }
 
-    protected <R> List<String> prepareCommandLine(BazelCommand<R> command) throws IOException {
-        List<String> commandLine = command.prepareCommandLine();
+    /**
+     * Prepares the full command line including the Bazel binary as well as any necessary shell wrapping.
+     * <p>
+     * Called by
+     * {@link #execute(BazelCommand, com.salesforce.bazel.sdk.command.BazelCommandExecutor.CancelationCallback)} after
+     * the binary has been detected.
+     * </p>
+     * <p>
+     * Note, this command is called after the binary has been configured on the command.
+     * </p>
+     *
+     * @param command
+     *            the command (must not be <code>null</code>)
+     * @return the full command line to pass on to {@link ProcessBuilder} (never <code>null</code>)
+     * @throws IOException
+     *             in case of IO issues creating temporary files or other resources required for command execution
+     */
+    protected List<String> prepareCommandLine(BazelCommand<?> command) throws IOException {
+        var bazelBinary = command.ensureBazelBinary();
+
+        var commandLine = command.prepareCommandLine(bazelBinary.bazelVersion());
+        commandLine.add(0, bazelBinary.executable().toString());
 
         if (isWrapExecutionIntoShell()) {
-            Path shell = detectShell();
-            if (shell != null) {
-                return switch (shell.getFileName().toString()) {
-                    case "fish", "zsh", "bash" -> getSystemUtil().isMac() // login shell on Mac
-                            ? List.of(shell.toString(), "-l", "-c", toQuotedStringForShell(commandLine))
-                            : List.of(shell.toString(), "-c", toQuotedStringForShell(commandLine));
-                    default -> throw new IOException("Unsupported shell: " + shell);
-                };
-            }
-            throw new IOException("Unable to wrap in shell. None detected!");
+            return wrapExecutionIntoShell(commandLine);
         }
 
         return commandLine;
+    }
+
+    public void setBazelBinary(BazelBinary bazelBinary) {
+        this.bazelBinary = bazelBinary;
     }
 
     public void setExtraEnv(Map<String, String> extraEnv) {
@@ -186,18 +231,34 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
     }
 
     protected String toQuotedStringForShell(List<String> commandLine) {
-        StringBuilder result = new StringBuilder();
+        var result = new StringBuilder();
         for (String arg : commandLine) {
-            if (result.length() > 0)
+            if (result.length() > 0) {
                 result.append(' ');
-            boolean quoteArg = arg.indexOf(' ') > -1 && !arg.startsWith("\\\"");
-            if (quoteArg)
+            }
+            var quoteArg = (arg.indexOf(' ') > -1) && !arg.startsWith("\\\"");
+            if (quoteArg) {
                 result.append("\"");
+            }
             result.append(arg.replace("\"", "\\\""));
-            if (quoteArg)
+            if (quoteArg) {
                 result.append("\"");
+            }
         }
         return result.toString();
+    }
+
+    protected List<String> wrapExecutionIntoShell(List<String> commandLine) throws IOException {
+        var shell = detectShell();
+        if (shell != null) {
+            return switch (shell.getFileName().toString()) {
+                case "fish", "zsh", "bash" -> getSystemUtil().isMac() // login shell on Mac
+                        ? List.of(shell.toString(), "-l", "-c", toQuotedStringForShell(commandLine))
+                        : List.of(shell.toString(), "-c", toQuotedStringForShell(commandLine));
+                default -> throw new IOException("Unsupported shell: " + shell);
+            };
+        }
+        throw new IOException("Unable to wrap in shell. None detected!");
     }
 
 }

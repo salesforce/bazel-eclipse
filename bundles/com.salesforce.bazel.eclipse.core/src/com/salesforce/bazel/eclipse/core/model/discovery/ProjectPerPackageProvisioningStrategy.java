@@ -10,8 +10,10 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
+import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 
 /**
  * Legacy implementation of {@link TargetProvisioningStrategy} which provisions a project for all targets in the same
@@ -25,6 +27,13 @@ public class ProjectPerPackageProvisioningStrategy implements TargetProvisioning
     private static Logger LOG = LoggerFactory.getLogger(ProjectPerPackageProvisioningStrategy.class);
 
     public static final String STRATEGY_NAME = "project-per-package";
+
+    @Override
+    public List<ClasspathEntry> computeClasspath(BazelProject bazelProject, BazelClasspathScope scope,
+            IProgressMonitor monitor) throws CoreException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     protected BazelProject provisionJavaBinaryProject(BazelTarget target, IProgressMonitor progress)
             throws CoreException {

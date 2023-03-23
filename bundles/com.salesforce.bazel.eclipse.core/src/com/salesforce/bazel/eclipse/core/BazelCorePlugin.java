@@ -43,7 +43,6 @@ import org.osgi.framework.BundleContext;
 
 import com.salesforce.bazel.eclipse.core.model.BazelModelManager;
 import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
-import com.salesforce.bazel.sdk.init.JvmRuleInit;
 
 /**
  * Plugin activator managing the lifecycle of the Bazel Eclipse headless plug-in.
@@ -69,9 +68,8 @@ public class BazelCorePlugin extends Plugin implements BazelCoreSharedContstants
         super.start(bundleContext);
         plugin = this;
 
-        // initialize the SDK, tell it to load the JVM rules support
+        // initialize the SDK
         BazelJavaSDKInit.initialize("Bazel Eclipse", "bzleclipse");
-        JvmRuleInit.initialize();
 
         // initialize model
         bazelModelManager = new BazelModelManager(getStateLocation());

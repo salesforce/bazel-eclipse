@@ -4,6 +4,7 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -25,10 +26,16 @@ import org.eclipse.jdt.core.JavaCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaInfo.FileEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.sdk.aspect.IntellijAspects.OutputGroup;
+import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
+import com.salesforce.bazel.sdk.command.buildresults.OutputArtifact;
+import com.salesforce.bazel.sdk.primitives.LanguageClass;
 
 /**
  * Default implementation of {@link TargetProvisioningStrategy} which provisions a single project per supported target.
@@ -74,6 +81,77 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         // TODO: create project level markers?
 
         return javaInfo;
+    }
+
+    @Override
+    public List<ClasspathEntry> computeClasspath(BazelProject bazelProject, BazelClasspathScope scope,
+            IProgressMonitor monitor) throws CoreException {
+
+        var bazelWorkspace = bazelProject.getBazelWorkspace();
+        var workspaceRoot = bazelWorkspace.getLocation().toFile().toPath();
+
+        if (bazelProject.isWorkspaceProject()) {
+            // FIXME: implement support for reading all jars from WORKSPACE
+            //
+            // For example:
+            //   1. get list of all external repos
+            //      > bazel query "//external:*"
+            //   2. query for java rules for each external repo
+            //      > bazel query "kind('java_.* rule', @evernal_repo_name//...)"
+            //
+            return List.of();
+        }
+        if (!bazelProject.isSingleTargetProject()) {
+            throw new CoreException(Status.error(format(
+                "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel target project created by the project per target strategy.",
+                bazelProject)));
+        }
+        var targets = List.of(bazelProject.getBazelTarget().getLabel());
+        var onlyDirectDeps = bazelWorkspace.getBazelProjectView().deriveTargetsFromDirectories();
+        var outputGroups = Set.of(OutputGroup.INFO);
+        var languages = Set.of(LanguageClass.JAVA);
+        var aspects = bazelWorkspace.getParent().getModelManager().getIntellijAspects();
+        var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targets, outputGroups, aspects, languages,
+                onlyDirectDeps);
+
+        var executionService = bazelWorkspace.getParent().getModelManager().getExecutionService();
+        var result = executionService.executeWithWorkspaceLock(command, bazelWorkspace,
+            List.of(bazelProject.getProject()), monitor);
+
+        var outputArtifacts = result.getOutputGroupArtifacts(OutputGroup.INFO::isPrefixOf);
+        for (OutputArtifact outputArtifact : outputArtifacts) {
+            try {
+                var info = aspects.readAspectFile(outputArtifact.getPath());
+                if (info.hasJavaIdeInfo()) {
+                    var javaIdeInfo = info.getJavaIdeInfo();
+                    var allFields = javaIdeInfo.getAllFields();
+                    LOG.debug("Help: {}", allFields);
+                }
+            } catch (IOException e) {
+                throw new CoreException(Status
+                        .error(format("Unable to compute classpath for project '%s'. Error reading aspect file '%s'.",
+                            bazelProject, outputArtifact), e));
+            }
+        }
+
+        // convert the logical entries into concrete Eclipse entries
+        //        List<IClasspathEntry> entries = new ArrayList<>();
+        //        for (JvmClasspathEntry entry : jcmClasspathData.jvmClasspathEntries) {
+        //            if (entry.pathToJar != null) {
+        //                var jarPath = getAbsoluteLocation(entry.pathToJar);
+        //                if (jarPath != null) {
+        //                    // srcJarPath must be relative to the workspace, by order of Eclipse
+        //                    var srcJarPath = getAbsoluteLocation(entry.pathToSourceJar);
+        //                    IPath srcJarRootPath = null;
+        //                    entries.add(newLibraryEntry(jarPath, srcJarPath, srcJarRootPath, entry.isTestJar));
+        //                }
+        //            } else {
+        //                entries.add(newProjectEntry(entry.bazelProject));
+        //            }
+        //        }
+
+        return null;
+
     }
 
     private void configureClasspath(BazelTarget target, BazelProject project, JavaInfo javaInfo,
@@ -298,7 +376,7 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
             // after provisioning we go over the projects a second time to
             // populate all projects with links and configure the classpath
             for (BazelProject bazelProject : result) {
-
+                computeClasspath(bazelProject, BazelClasspathScope.DEFAULT_CLASSPATH, monitor.newChild(1));
             }
 
             // done

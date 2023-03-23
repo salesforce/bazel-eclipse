@@ -88,8 +88,9 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         try {
             return bazelProjectView = new BazelProjectFileReader(projectViewLocation.toFile().toPath()).read();
         } catch (IOException e) {
-            throw new CoreException(Status
-                    .error(format("Error reading project view '%s': %s", projectViewLocation, e.getMessage()), e));
+            throw new CoreException(Status.error(format(
+                "Error reading project view '%s'. Please check the setup. Each workspace is required to have a project view to work properly in an IDE. %s",
+                projectViewLocation, e.getMessage()), e));
         }
     }
 
@@ -186,7 +187,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             var infoResult = executionService
                     .executeOutsideWorkspaceLockAsync(new BazelInfoCommand(workspaceRoot), bazelWorkspace).get();
             excutionRoot = getExpectedOutputAsPath(infoResult, "execution_root");
-            name = infoResult.get(excutionRoot.lastSegment()); // https://github.com/bazelbuild/bazel/issues/2317
+            name = excutionRoot.lastSegment(); // https://github.com/bazelbuild/bazel/issues/2317
             release = getExpectedOutput(infoResult, "release");
             repositoryCache = getExpectedOutputAsPath(infoResult, "repository_cache");
             bazelBin = getExpectedOutputAsPath(infoResult, "bazel-bin");

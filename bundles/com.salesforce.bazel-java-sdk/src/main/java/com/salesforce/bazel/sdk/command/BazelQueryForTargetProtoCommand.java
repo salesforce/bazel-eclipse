@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.google.devtools.build.lib.query2.proto.proto2api.Build;
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
+import com.salesforce.bazel.sdk.BazelVersion;
 
 /**
  * <code>bazel query --output proto</code>
@@ -24,17 +25,17 @@ public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collectio
     }
 
     @Override
-    public List<String> prepareCommandLine() throws IOException {
+    public List<String> prepareCommandLine(BazelVersion bazelVersion) throws IOException {
         // redirect output to file for parsing
         var stdoutFile = createTempFile("bazel_query_stdout_", ".bin");
         setRedirectStdOutToFile(stdoutFile);
 
         // prepare regular query command line
-        return super.prepareCommandLine();
+        return super.prepareCommandLine(bazelVersion);
     }
 
     @Override
-    protected Collection<Target> processResult(int exitCode, String stdout, String stderr) throws IOException {
+    public Collection<Target> processResult(int exitCode, String stdout, String stderr) throws IOException {
         List<Target> result = new ArrayList<>();
         try (InputStream in = newInputStream(getStdOutFile())) {
             Target target;

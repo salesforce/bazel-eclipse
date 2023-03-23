@@ -43,6 +43,7 @@ import com.salesforce.bazel.eclipse.core.model.cache.BazelElementInfoCache;
 import com.salesforce.bazel.eclipse.core.model.cache.CaffeineBasedBazelElementInfoCache;
 import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
 import com.salesforce.bazel.eclipse.core.model.execution.JobsBasedExecutionService;
+import com.salesforce.bazel.sdk.aspect.IntellijAspects;
 
 /**
  * The Bazel model manager is responsible for managing the mapping state of the Bazel model into the IDE.
@@ -108,6 +109,8 @@ public class BazelModelManager implements BazelCoreSharedContstants {
 
     private BazelClasspathManager classpathManager;
 
+    private IntellijAspects aspects;
+
     /**
      * Creates a new model manager instance
      *
@@ -138,6 +141,13 @@ public class BazelModelManager implements BazelCoreSharedContstants {
         return executionService;
     }
 
+    /**
+     * {@return the aspects used by the model}
+     */
+    public IntellijAspects getIntellijAspects() {
+        return requireNonNull(aspects, "Not initialized!");
+    }
+
     public BazelModel getModel() {
         return model;
     }
@@ -157,8 +167,10 @@ public class BazelModelManager implements BazelCoreSharedContstants {
      *
      * @param workspace
      *            the workspace
+     * @throws Exception
+     *             in case issues initializing the model
      */
-    public void initialize(IWorkspace workspace) {
+    public void initialize(IWorkspace workspace) throws Exception {
         if (!workspaceReference.compareAndSet(null, workspace)) {
             throw new IllegalStateException(
                     "Attempt to initialize a model more than once. Please verify the code flow!");
@@ -167,8 +179,12 @@ public class BazelModelManager implements BazelCoreSharedContstants {
         // configure cache
         BazelElementInfoCache.setInstance(new CaffeineBasedBazelElementInfoCache(5000));
 
+        // ensure aspects are usable
+        aspects = new IntellijAspects(stateLocation.append("intellij-aspects").toFile().toPath());
+        aspects.makeAvailable();
+
         // initialize the classpath
-        classpathManager = new BazelClasspathManager(stateLocation.toFile());
+        classpathManager = new BazelClasspathManager(stateLocation.toFile(), this);
         var projects = getWorkspace().getRoot().getProjects();
         var refreshClasspath = new InitializeOrRefreshClasspathJob(projects, classpathManager,
                 false /* only when classpath is missing */);

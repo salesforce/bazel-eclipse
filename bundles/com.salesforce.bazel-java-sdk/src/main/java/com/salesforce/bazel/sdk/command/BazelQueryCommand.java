@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+import com.salesforce.bazel.sdk.BazelVersion;
+
 /**
  * <code>bazel query</code>
  * <p>
@@ -32,8 +34,8 @@ public abstract class BazelQueryCommand<R> extends BazelCommand<R> {
     }
 
     @Override
-    public List<String> prepareCommandLine() throws IOException {
-        List<String> commandLine = super.prepareCommandLine();
+    public List<String> prepareCommandLine(BazelVersion bazelVersion) throws IOException {
+        List<String> commandLine = super.prepareCommandLine(bazelVersion);
 
         if (keepGoing) {
             commandLine.add("--keep_going");
