@@ -224,7 +224,7 @@ public final class ParsedBepOutput {
                 .flatMap(List::stream).filter(o -> pathFilter.test(o.getRelativePath())).collect(toImmutableSet());
     }
 
-    public ImmutableList<OutputArtifact> getOutputGroupArtifacts(String outputGroup, Predicate<String> pathFilter) {
+    public List<OutputArtifact> getOutputGroupArtifacts(String outputGroup, Predicate<String> pathFilter) {
         return fileSets.values().stream().filter(f -> f.outputGroups.contains(outputGroup)).map(f -> f.parsedOutputs)
                 .flatMap(List::stream).filter(o -> pathFilter.test(o.getRelativePath())).distinct()
                 .collect(toImmutableList());

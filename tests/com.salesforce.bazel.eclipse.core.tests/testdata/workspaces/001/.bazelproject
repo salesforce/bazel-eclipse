@@ -7,6 +7,10 @@
 
 directories:
   .
+  module1
+  module2
+  module3
+  -not_visible
 
 derive_targets_from_directories: true
 

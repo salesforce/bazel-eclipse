@@ -5,7 +5,6 @@ import static java.nio.file.Files.newOutputStream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -100,48 +99,42 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
     protected <R> R doExecuteProcess(BazelCommand<R> command, CancelationCallback cancelationCallback,
             ProcessBuilder processBuilder) throws IOException {
-        // capture stdout and stderr
-        var out = command.getStdOutFile() != null ? newOutputStream(command.getStdOutFile())
-                : new ByteArrayOutputStream();
-        var err = new ByteArrayOutputStream();
-
-        // execute
-        final int result;
-        try {
-            var fullCommandLine = processBuilder.command().stream().collect(joining(" "));
-            LOG.debug(fullCommandLine);
-
-            final var process = processBuilder.start();
-
-            final var p1 = pipe(process.getInputStream(), out, fullCommandLine);
-            final var p2 = pipe(process.getErrorStream(), err, fullCommandLine);
-
+        // capture stdout when needed
+        try (var out = command.getStdOutFile() != null ? newOutputStream(command.getStdOutFile()) : null) {
+            // execute
+            final int result;
             try {
-                while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
-                    if (cancelationCallback.isCanceled()) {
-                        process.destroyForcibly();
-                        throw new IOException("user cancelled");
+                var fullCommandLine = processBuilder.command().stream().collect(joining(" "));
+                LOG.debug(fullCommandLine);
+
+                final var process = processBuilder.start();
+
+                final var p1 = pipe(process.getInputStream(), out != null ? out : System.out, fullCommandLine);
+                final var p2 = pipe(process.getErrorStream(), getPreferredErrorStream(), fullCommandLine);
+
+                try {
+                    while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
+                        if (cancelationCallback.isCanceled()) {
+                            process.destroyForcibly();
+                            throw new IOException("user cancelled");
+                        }
                     }
+                } finally {
+                    // interrupt pipe threads so they'll die
+                    p1.interrupt();
+                    p2.interrupt();
                 }
-            } finally {
-                // interrupt pipe threads so they'll die
-                p1.interrupt();
-                p2.interrupt();
+
+                result = process.exitValue();
+            } catch (final InterruptedException e) {
+                // ignore, just reset interrupt flag
+                Thread.currentThread().interrupt();
+                throw new IOException("Aborted waiting for result");
             }
 
-            result = process.exitValue();
-        } catch (final InterruptedException e) {
-            // ignore, just reset interrupt flag
-            Thread.currentThread().interrupt();
-            throw new IOException("Aborted waiting for result");
+            // send result to command
+            return command.generateResult(result);
         }
-
-        // set result to command
-        String stdout = null;
-        if (out instanceof ByteArrayOutputStream) {
-            stdout = out.toString();
-        }
-        return command.processResult(result, stdout, err.toString());
     }
 
     @Override
@@ -176,8 +169,34 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         return extraEnv;
     }
 
+    /**
+     * Hook for sub classes to use a different stream.
+     * <p>
+     * Note, the stream will never be closed.
+     * </p>
+     *
+     * @return the stream for stderr, defaults to {@link System#err}
+     */
+    protected OutputStream getPreferredErrorStream() {
+        return System.err;
+    }
+
     SystemUtil getSystemUtil() {
         return SystemUtil.getInstance();
+    }
+
+    /**
+     * Hook to inject additional options into the command line.
+     * <p>
+     * Called by {@link #prepareCommandLine(BazelCommand)} before the Bazel binary or any shell wrapping is added.
+     * Default implementation does nothing.
+     * </p>
+     *
+     * @param commandLine
+     *            the command line to manipulate (never <code>null</code>)
+     */
+    protected void injectAdditionalOptions(List<String> commandLine) {
+        // empty
     }
 
     public boolean isWrapExecutionIntoShell() {
@@ -209,6 +228,9 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         var bazelBinary = command.ensureBazelBinary();
 
         var commandLine = command.prepareCommandLine(bazelBinary.bazelVersion());
+
+        injectAdditionalOptions(commandLine);
+
         commandLine.add(0, bazelBinary.executable().toString());
 
         if (isWrapExecutionIntoShell()) {

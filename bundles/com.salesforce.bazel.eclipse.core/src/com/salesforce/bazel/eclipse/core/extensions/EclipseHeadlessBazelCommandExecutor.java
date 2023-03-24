@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -111,6 +112,19 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
         return InstanceScope.INSTANCE.getNode(PLUGIN_ID);
     }
 
+    @Override
+    protected OutputStream getPreferredErrorStream() {
+        // assuming this is displayed in the Eclipse Console, using System.out avoids the red coloring
+        return System.out;
+    }
+
+    @Override
+    protected void injectAdditionalOptions(List<String> commandLine) {
+        // tweak for Eclipse Console
+        commandLine.add("--color=yes");
+        commandLine.add("--curses=no");
+    }
+
     InitBinaryJob newInitJobFromPreferences() {
         var binary = Path.of(Platform.getPreferencesService().get(PREF_KEY_BAZEL_BINARY, "bazel", preferencesLookup));
         return new InitBinaryJob(binary);
@@ -122,5 +136,4 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
             bazelBinary.bazelVersion());
         super.setBazelBinary(bazelBinary);
     }
-
 }

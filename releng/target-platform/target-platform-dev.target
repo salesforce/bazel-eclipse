@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1679571015">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1679649176">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.27.0.v20230220-1431"/>
@@ -41,6 +41,7 @@
       <unit id="org.apache.xerces" version="2.12.2.v20220131-0835"/>
       <unit id="org.apache.xalan" version="2.7.2.v20221112-0806"/>
       <unit id="org.slf4j.api" version="1.7.30.v20221112-0806"/>
+      <unit id="org.hamcrest" version="2.2.0.v20210711-0821"/>
       <repository location="https://download.eclipse.org/tools/orbit/downloads/drops/R20230302014618/repository/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">

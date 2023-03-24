@@ -3,3 +3,6 @@
 .project
 .settings/
 .eclipse/
+
+# Bazel folder
+/bazel-*

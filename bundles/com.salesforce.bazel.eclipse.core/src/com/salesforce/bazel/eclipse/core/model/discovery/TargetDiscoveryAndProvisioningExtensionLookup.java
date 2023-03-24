@@ -17,7 +17,7 @@ import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 public final class TargetDiscoveryAndProvisioningExtensionLookup {
 
     private static final String EXTENSION_POINT_TARGET_DISCOVERY_STRATEGY =
-            "com.salesforce.bazel.core.model.target.discovery";
+            "com.salesforce.bazel.eclipse.core.model.target.discovery";
     private static final String ELLEMENT_TARGET_DISCOVERY_STRATEGY = "targetDiscoveryStrategy";
     private static final String ELLEMENT_TARGET_PROVISIONING_STRATEGY = "targetProvisioningStrategy";
     private static final String ATTR_CLASS = "class";
@@ -100,7 +100,7 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup {
                 format("No extensions available providing a '%s' with name '%s'!", elementName, strategyName)));
         }
 
-        var strategy = (TargetDiscoveryStrategy) element.get().createExecutableExtension(ATTR_CLASS);
+        var strategy = element.get().createExecutableExtension(ATTR_CLASS);
         if (strategy == null) {
             throw new CoreException(
                     Status.error(format("No object returned from extension factory for name '%s'", strategyName)));

@@ -21,7 +21,7 @@ public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collectio
 
     public BazelQueryForTargetProtoCommand(Path workspaceRoot, String query, boolean keepGoing) {
         super(workspaceRoot, query, keepGoing);
-        setCommandArgs("--output", "proto", "--order_output=no");
+        setCommandArgs("--output", "streamed_proto", "--order_output=no");
     }
 
     @Override
@@ -35,13 +35,15 @@ public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collectio
     }
 
     @Override
-    public Collection<Target> processResult(int exitCode, String stdout, String stderr) throws IOException {
+    public Collection<Target> generateResult(int exitCode) throws IOException {
         List<Target> result = new ArrayList<>();
         try (InputStream in = newInputStream(getStdOutFile())) {
             Target target;
             do {
                 target = Target.parseDelimitedFrom(in);
-                result.add(target);
+                if(target != null) {
+                    result.add(target);
+                }
             } while (target != null);
         }
         return result;

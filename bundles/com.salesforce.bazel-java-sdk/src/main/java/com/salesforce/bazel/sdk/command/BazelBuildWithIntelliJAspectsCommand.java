@@ -87,7 +87,7 @@ public class BazelBuildWithIntelliJAspectsCommand extends BazelCommand<ParsedBep
     }
 
     @Override
-    public ParsedBepOutput processResult(int exitCode, String stdout, String stderr) throws IOException {
+    public ParsedBepOutput generateResult(int exitCode) throws IOException {
         return ParsedBepOutput.parseBepArtifacts(newInputStream(requireNonNull(bepFile, "unusual code flow; prepareCommandLine not called or overridden incorrectly?")));
     }
 }

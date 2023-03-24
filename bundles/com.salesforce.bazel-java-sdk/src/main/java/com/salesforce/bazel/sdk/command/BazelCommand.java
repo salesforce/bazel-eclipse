@@ -23,10 +23,12 @@ import com.salesforce.bazel.sdk.BazelVersion;
  * <li>Create command object instance</li>
  * <li>Set values for command execution</li>
  * <li>Execute command using {@link BazelCommandExecutor}</li>
- * <li>Receive result and execution details from executor</li>
- * <li>Read results from command object</li>
+ * <li>Receive exit code and execution details from executor</li>
+ * <li>Generate results</li>
+ * <li>Garbage collect / throw away (short lived)</li>
  * </ol>
- * It's expected that the command is only modified till its executed.
+ * It's expected that the command is only modified till its executed. Command objects must not be hold on for a longer
+ * time.
  * </p>
  *
  * @param <R>
@@ -65,6 +67,16 @@ public abstract class BazelCommand<R> {
     BazelBinary ensureBazelBinary() {
         return requireNonNull(getBazelBinary(), "no Bazel binary configured; check the workflow");
     }
+
+    /**
+     * Called by {@link BazelCommandExecutor} to populate the command with the result of the process execution and
+     * generate the result.
+     *
+     * @param exitCode
+     *            exit code
+     * @return the command result
+     */
+    public abstract R generateResult(int exitCode) throws IOException;
 
     /**
      * {@return the optional Bazel binary to use for executing this command (maybe <code>null</code>)}
@@ -130,26 +142,11 @@ public abstract class BazelCommand<R> {
      *             in case of issues preparing the command line
      */
     public List<String> prepareCommandLine(BazelVersion bazelVersion) throws IOException {
-        var commandLine = new ArrayList<String>(getStartupArgs());
+        var commandLine = new ArrayList<>(getStartupArgs());
         commandLine.add(getCommand());
         commandLine.addAll(getCommandArgs());
         return commandLine;
     }
-
-    /**
-     * Called by {@link BazelCommandExecutor} to populate the command with the result of the process execution and
-     * generate the result.
-     *
-     * @param exitCode
-     *            exit code
-     * @param stdout
-     *            output of stdout (<code>null</code> in case {@link #getStdOutFile()} was set when executing the
-     *            command)
-     * @param stderr
-     *            output of stderr
-     * @return the command result
-     */
-    public abstract R processResult(int exitCode, String stdout, String stderr) throws IOException;
 
     /**
      * Sets an optional {@link BazelBinary} to use.
@@ -207,7 +204,7 @@ public abstract class BazelCommand<R> {
     @Override
     public String toString() {
         var commandLine = new ArrayList<String>();
-        commandLine.add("bazel");
+        commandLine.add(getClass().getSimpleName());
         commandLine.addAll(getStartupArgs());
         commandLine.add(getCommand());
         commandLine.addAll(getCommandArgs());

@@ -14,11 +14,10 @@
 package com.salesforce.bazel.eclipse.core.model;
 
 import static java.lang.String.format;
+import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -100,9 +99,9 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     }
 
     @Override
-    public boolean exists() throws IOException {
+    public boolean exists() {
         var path = workspacePath();
-        return Files.isDirectory(path) && (findWorkspaceFile(path) != null);
+        return isDirectory(path) && (findWorkspaceFile(path) != null);
     }
 
     private Path findWorkspaceFile(Path path) {

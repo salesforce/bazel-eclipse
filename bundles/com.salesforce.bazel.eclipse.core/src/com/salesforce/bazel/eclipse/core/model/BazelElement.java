@@ -16,8 +16,6 @@ package com.salesforce.bazel.eclipse.core.model;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-import java.io.IOException;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 
@@ -41,7 +39,8 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * equal when the handle matches the same Bazel element.
  * </p>
  */
-public sealed abstract class BazelElement<I extends BazelElementInfo, P extends BazelElement<?, ?>> permits BazelModel, BazelWorkspace, BazelPackage, BazelTarget {
+public sealed abstract class BazelElement<I extends BazelElementInfo, P extends BazelElement<?, ?>>
+        permits BazelModel, BazelWorkspace, BazelPackage, BazelTarget {
 
     private static final String NO_NAME = "";
 
@@ -79,11 +78,11 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
      * </p>
      *
      * @return
-     * @throws IOException
+     * @throws CoreException
      *             in case of problems/errors accessing/reading the file system
      * @see #createInfo()
      */
-    public abstract boolean exists() throws IOException;
+    public abstract boolean exists() throws CoreException;
 
     /**
      * Returns the {@link BazelWorkspace workspace} an element is contained in.

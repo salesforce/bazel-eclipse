@@ -19,7 +19,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -282,14 +281,9 @@ public class BazelProject implements IProjectNature {
         var bazelPackage = bazelWorkspace.getBazelPackage(label.getPackageLabel());
         var bazelTarget = bazelPackage.getBazelTarget(label.getTargetName());
 
-        try {
-            if (!bazelTarget.exists()) {
-                throw new CoreException(Status.error(
-                    format("Project '%s' maps to a Bazel target '%s', which does not exist!", project, label)));
-            }
-        } catch (IOException e) {
-            throw new CoreException(Status.error(
-                format("Project '%s' maps to a Bazel target '%s', which does not exist!", project, label), e));
+        if (!bazelTarget.exists()) {
+            throw new CoreException(Status
+                    .error(format("Project '%s' maps to a Bazel target '%s', which does not exist!", project, label)));
         }
 
         return bazelTarget;

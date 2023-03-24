@@ -9,7 +9,7 @@ class DummyCommand extends BazelCommand<Void> {
     }
 
     @Override
-    public Void processResult(int exitCode, String stdout, String stderr) throws IOException {
+    public Void generateResult(int exitCode) throws IOException {
         return null;
     }
 

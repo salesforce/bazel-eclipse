@@ -40,6 +40,7 @@ location "https://download.eclipse.org/tools/orbit/downloads/drops/R202303020146
 	org.apache.xerces
 	org.apache.xalan
 	org.slf4j.api
+	org.hamcrest
 }
 
 location "https://download.eclipse.org/jdtls/milestones/1.21.0/repository/" {

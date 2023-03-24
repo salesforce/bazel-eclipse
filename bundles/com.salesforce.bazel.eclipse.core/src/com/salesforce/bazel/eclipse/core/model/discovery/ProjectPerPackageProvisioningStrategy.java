@@ -64,7 +64,7 @@ public class ProjectPerPackageProvisioningStrategy implements TargetProvisioning
     }
 
     private BazelProject provisionProjectForTarget(BazelTarget target, SubMonitor monitor) throws CoreException {
-        var ruleName = target.getRuleName();
+        var ruleName = target.getRuleClass();
         return switch (ruleName) {
             case "java_library": {
                 yield provisionJavaLibraryProject(target, monitor);

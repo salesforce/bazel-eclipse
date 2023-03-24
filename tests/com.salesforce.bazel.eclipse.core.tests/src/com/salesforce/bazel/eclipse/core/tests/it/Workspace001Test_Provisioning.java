@@ -1,21 +1,27 @@
 package com.salesforce.bazel.eclipse.core.tests.it;
 
 import static java.lang.String.format;
-import static org.junit.Assume.assumeTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.File;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.ICoreRunnable;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +37,10 @@ import com.salesforce.bazel.eclipse.core.setup.ImportBazelWorkspaceJob;
  * a plain JUnit test but needs to run in an Eclipse environment.
  * </p>
  */
-public class Workspace001Test {
+@TestMethodOrder(MethodOrderer.MethodName.class)
+public class Workspace001Test_Provisioning {
 
-    private static Logger LOG = LoggerFactory.getLogger(Workspace001Test.class);
+    private static Logger LOG = LoggerFactory.getLogger(Workspace001Test_Provisioning.class);
 
     private static IPath workspaceRoot;
 
@@ -42,8 +49,8 @@ public class Workspace001Test {
      */
     @BeforeAll
     static void setUpBeforeClass() throws Exception {
-        var testFragmentBundle = FrameworkUtil.getBundle(Workspace001Test.class);
-        assumeTrue("This test can only run inside an OSGi runtime.", testFragmentBundle != null);
+        var testFragmentBundle = FrameworkUtil.getBundle(Workspace001Test_Provisioning.class);
+        assumeTrue(testFragmentBundle != null, "This test can only run inside an OSGi runtime.");
 
         var workspaceRootUrl = FileLocator.find(testFragmentBundle, new Path("testdata/workspaces/001"));
         assertNotNull(workspaceRootUrl, () -> format("Workspace root not found in bundle '%s'!", testFragmentBundle));
@@ -69,7 +76,18 @@ public class Workspace001Test {
      * @throws java.lang.Exception
      */
     @AfterAll
-    static void tearDownAfterClass() throws Exception {}
+    static void tearDownAfterClass() throws Exception {
+        // cleanup
+        var workspace = ResourcesPlugin.getWorkspace();
+        workspace.run((ICoreRunnable) monitor -> {
+            var projects = workspace.getRoot().getProjects();
+            for (IProject project : projects) {
+                var isWithinWorkspace = workspace.getRoot().getLocation().isPrefixOf(project.getLocation());
+                project.delete(isWithinWorkspace, true, monitor);
+            }
+            workspace.save(true, monitor);
+        }, new NullProgressMonitor());
+    }
 
     /**
      * @throws java.lang.Exception
@@ -84,7 +102,7 @@ public class Workspace001Test {
     void tearDown() throws Exception {}
 
     @Test
-    void test() {
+    void test0001_check_basic_assumptions_in_the_model() {
         fail("Not yet implemented");
     }
 

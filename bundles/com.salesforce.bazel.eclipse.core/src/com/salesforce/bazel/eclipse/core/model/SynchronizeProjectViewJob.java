@@ -113,7 +113,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // we are comparing using project relative paths
             Set<IPath> allowedDirectories = projectView.directoriesToInclude().stream()
                     .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator).collect(toSet());
-            Set<IPath> explicitelyExcludedDirectories = projectView.directoriesToInclude().stream()
+            Set<IPath> explicitelyExcludedDirectories = projectView.directoriesToExclude().stream()
                     .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator).collect(toSet());
 
             monitor.beginTask("Discovering targets", allowedDirectories.size());
@@ -123,6 +123,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                 }
 
                 var bazelPackage = workspace.getBazelPackage(directory);
+                if (!bazelPackage.exists()) {
+                    continue;
+                }
                 monitor.subTask(bazelPackage.getLabel().toString());
                 var bazelTargets = targetDiscoveryStrategy.discoverTargets(bazelPackage, monitor.newChild(1));
 

@@ -1,8 +1,5 @@
 package com.salesforce.bazel.eclipse.core.model;
 
-import static java.lang.String.format;
-
-import java.io.IOException;
 import java.util.Objects;
 
 import org.eclipse.core.runtime.CoreException;
@@ -53,14 +50,8 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
     }
 
     @Override
-    public boolean exists() throws IOException {
-        try {
-            return getParent().exists() && getBazelPackage().getInfo().getTargets().contains(targetName);
-        } catch (CoreException e) {
-            throw new IOException(
-                    format("Error reading target information from the underlying package (target '%s')", getLabel()),
-                    e);
-        }
+    public boolean exists() throws CoreException {
+        return getParent().exists() && getBazelPackage().getInfo().getTargets().contains(targetName);
     }
 
     public BazelPackage getBazelPackage() {
@@ -106,12 +97,24 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
         return bazelPackage;
     }
 
+    /**
+     * {@return the attributes of the rule}
+     *
+     * @throws CoreException
+     *             in case of errors loading the rules info
+     */
     public BazelRuleAttributes getRuleAttributes() throws CoreException {
         return getInfo().getRuleAttributes();
     }
 
-    public String getRuleName() throws CoreException {
-        return getInfo().getTarget().getRule().getName();
+    /**
+     * {@return the rule class (e.g., java_library)}
+     *
+     * @throws CoreException
+     *             in case of errors loading the rules info
+     */
+    public String getRuleClass() throws CoreException {
+        return getInfo().getTarget().getRule().getRuleClass();
     }
 
     /**

@@ -9,9 +9,7 @@ import static org.fusesource.jansi.Ansi.Attribute.INTENSITY_BOLD;
 import static org.fusesource.jansi.Ansi.Attribute.INTENSITY_FAINT;
 import static org.fusesource.jansi.Ansi.Attribute.ITALIC;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -24,51 +22,15 @@ import org.eclipse.ui.console.MessageConsole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.salesforce.bazel.eclipse.core.extensions.EclipseHeadlessBazelCommandExecutor;
 import com.salesforce.bazel.eclipse.ui.BazelUIPlugin;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.BazelCommandExecutor;
-import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor;
 
 /**
  * Implementation of a {@link BazelCommandExecutor} which integrates with the Eclipse Console.
  */
-public class EclipseConsoleBazelCommandExecutor extends DefaultBazelCommandExecutor {
-
-    /**
-     * Special one that allows writing to the MessageConsole as well as capturing the output
-     */
-    static class CapturingOutputStream extends OutputStream {
-
-        private final ByteArrayOutputStream out1;
-        private final OutputStream out2;
-
-        public CapturingOutputStream(OutputStream out2) {
-            this.out1 = new ByteArrayOutputStream();
-            this.out2 = out2;
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            out1.write(b);
-            out2.write(b);
-        }
-
-        @Override
-        public void flush() throws IOException {
-            out2.flush();
-        }
-
-        @Override
-        public void close() throws IOException {
-            // out1 does not need to be closed,
-            // out2 must be closed elsewhere
-        }
-
-        @Override
-        public String toString() {
-            return out1.toString();
-        }
-    }
+public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelCommandExecutor {
 
     private static Logger LOG = LoggerFactory.getLogger(EclipseConsoleBazelCommandExecutor.class);
 
@@ -97,7 +59,9 @@ public class EclipseConsoleBazelCommandExecutor extends DefaultBazelCommandExecu
         var console = findConsole(format("Bazel Workspace (%s)", command.getWorkingDirectory()));
         showConsole(console);
 
-        try (final var consoleStream = console.newMessageStream()) {
+        try (final var consoleStream = console.newMessageStream();
+                final var stdout =
+                        command.getStdOutFile() != null ? newOutputStream(command.getStdOutFile()) : consoleStream) {
             // remove old output
             console.clearConsole();
 
@@ -111,60 +75,50 @@ public class EclipseConsoleBazelCommandExecutor extends DefaultBazelCommandExecu
             var fullCommandLine = processBuilder.command().stream().collect(joining(" "));
             LOG.debug(fullCommandLine);
 
-            try (final var stdout = command.getStdOutFile() != null ? newOutputStream(command.getStdOutFile())
-                    : new CapturingOutputStream(consoleStream)) {
-                @SuppressWarnings("resource") // not needed because consoleStream is closed seperately
-                var stderr = new CapturingOutputStream(consoleStream);
+            int result;
+            try {
+                final var process = processBuilder.start();
 
-                int result;
+                final var p1 = pipe(process.getInputStream(), stdout, fullCommandLine);
+                final var p2 = pipe(process.getErrorStream(), consoleStream, fullCommandLine);
+
                 try {
-                    final var process = processBuilder.start();
-
-                    final var p1 = pipe(process.getInputStream(), stdout, fullCommandLine);
-                    final var p2 = pipe(process.getErrorStream(), stdout, fullCommandLine);
-
-                    try {
-                        while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
-                            if (cancelationCallback.isCanceled()) {
-                                process.destroyForcibly();
-                                consoleStream.println();
-                                consoleStream.print(ansi().fgBrightMagenta().a(INTENSITY_FAINT)
-                                        .a("Operation cancelled!").reset().toString());
-                                throw new OperationCanceledException("user cancelled");
-                            }
+                    while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
+                        if (cancelationCallback.isCanceled()) {
+                            process.destroyForcibly();
+                            consoleStream.println();
+                            consoleStream.print(ansi().fgBrightMagenta().a(INTENSITY_FAINT).a("Operation cancelled!")
+                                    .reset().toString());
+                            throw new OperationCanceledException("user cancelled");
                         }
-                    } finally {
-                        // interrupt pipe threads so they'll die
-                        p1.interrupt();
-                        p2.interrupt();
                     }
+                } finally {
+                    // interrupt pipe threads so they'll die
+                    p1.interrupt();
+                    p2.interrupt();
+                }
 
-                    result = process.exitValue();
+                result = process.exitValue();
 
-                    if (result != 0) {
-                        consoleStream.println();
-                        consoleStream.println(
-                            ansi().fgBrightBlack().a("Process existed with ").a(result).reset().toString());
-                    }
-                } catch (final InterruptedException e) {
-                    // ignore, just reset interrupt flag
-                    Thread.currentThread().interrupt();
-                    throw new OperationCanceledException("user cancelled");
-                } catch (final IOException e) {
-                    consoleStream.println(ansi().fgBrightRed().a("Command Execution Failed!").reset().toString());
-                    consoleStream.println(ansi().fgRed().a(e.getMessage()).reset().toString());
+                if (result != 0) {
                     consoleStream.println();
-                    e.printStackTrace(new PrintWriter(consoleStream));
-                    throw new OperationCanceledException("operation failed: " + e.getMessage());
+                    consoleStream
+                            .println(ansi().fgBrightBlack().a("Process existed with ").a(result).reset().toString());
                 }
-
-                // set result to command
-                String stdoutContent = null;
-                if (stdout instanceof CapturingOutputStream) {
-                    stdoutContent = stdout.toString();
-                }
-                return command.processResult(result, stdoutContent, stderr.toString());
+            } catch (final InterruptedException e) {
+                // ignore, just reset interrupt flag
+                Thread.currentThread().interrupt();
+                throw new OperationCanceledException("user cancelled");
+            } catch (final IOException e) {
+                consoleStream.println(ansi().fgBrightRed().a("Command Execution Failed!").reset().toString());
+                consoleStream.println(ansi().fgRed().a(e.getMessage()).reset().toString());
+                consoleStream.println();
+                e.printStackTrace(new PrintWriter(consoleStream));
+                throw new OperationCanceledException("operation failed: " + e.getMessage());
             }
+
+            // send result to command
+            return command.generateResult(result);
         }
     }
 

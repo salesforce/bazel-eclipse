@@ -13,7 +13,6 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -52,7 +51,7 @@ public final class BazelModel extends BazelElement<BazelModelInfo, BazelElement<
     }
 
     @Override
-    public boolean exists() throws IOException {
+    public boolean exists() {
         return true;
     }
 

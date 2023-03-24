@@ -32,6 +32,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaInfo.FileEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.sdk.aspect.IntellijAspects;
 import com.salesforce.bazel.sdk.aspect.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 import com.salesforce.bazel.sdk.command.buildresults.OutputArtifact;
@@ -118,7 +119,8 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         var result = executionService.executeWithWorkspaceLock(command, bazelWorkspace,
             List.of(bazelProject.getProject()), monitor);
 
-        var outputArtifacts = result.getOutputGroupArtifacts(OutputGroup.INFO::isPrefixOf);
+        var outputArtifacts = result.getOutputGroupArtifacts(OutputGroup.INFO::isPrefixOf,
+            IntellijAspects.ASPECT_OUTPUT_FILE_PREDICATE);
         for (OutputArtifact outputArtifact : outputArtifacts) {
             try {
                 var info = aspects.readAspectFile(outputArtifact.getPath());
@@ -334,7 +336,7 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
     }
 
     protected BazelProject provisionProjectForTarget(BazelTarget target, SubMonitor monitor) throws CoreException {
-        var ruleName = target.getRuleName();
+        var ruleName = target.getRuleClass();
         return switch (ruleName) {
             case "java_library": {
                 yield provisionJavaLibraryProject(target, monitor);
@@ -346,7 +348,7 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
                 yield provisionJavaBinaryProject(target, monitor);
             }
             default: {
-                LOG.debug("Skipping provisioning of target '{}' due to unsupported rule '{}'.", target, ruleName);
+                LOG.debug("{}: Skipping provisioning due to unsupported rule '{}'.", target, ruleName);
                 yield null;
             }
         };

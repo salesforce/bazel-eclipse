@@ -25,6 +25,8 @@ import java.util.concurrent.ExecutionException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
@@ -32,6 +34,8 @@ import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 public final class BazelPackageInfo extends BazelElementInfo {
+
+    private static Logger LOG = LoggerFactory.getLogger(BazelPackageInfo.class);
 
     private final Path buildFile;
     private final Path workspaceRoot;
@@ -69,14 +73,20 @@ public final class BazelPackageInfo extends BazelElementInfo {
         // bazel query '"//foo:all"'
 
         try {
+            LOG.debug("{}: querying Bazel for list targets", getBazelPackage());
             var queryResult = executionService.executeOutsideWorkspaceLockAsync(
                 new BazelQueryForTargetProtoCommand(getWorkspaceRoot(),
                         format("\"//%s:all\"", getBazelPackage().getWorkspaceRelativePath()), true /* keep going */),
                 getBazelPackage()).get();
             Map<String, Target> indexOfTargetInfoByTargetName = new HashMap<>();
             for (Target target : queryResult) {
-                var targetName = new BazelLabel(target.getRuleOrBuilder().getName()).getTargetName();
-                indexOfTargetInfoByTargetName.put(targetName, target);
+                if (target.hasRule()) {
+                    LOG.trace("{}: found target: {}", getBazelPackage(), target);
+                    var targetName = new BazelLabel(target.getRule().getName()).getTargetName();
+                    indexOfTargetInfoByTargetName.put(targetName, target);
+                } else {
+                    LOG.trace("{}: ignoring target: {}", getBazelPackage(), target);
+                }
             }
             this.indexOfTargetInfoByTargetName = indexOfTargetInfoByTargetName;
         } catch (InterruptedException e) {

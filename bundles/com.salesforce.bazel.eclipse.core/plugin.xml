@@ -101,6 +101,10 @@
             class="com.salesforce.bazel.eclipse.core.model.discovery.BazelQueryTargetDiscovery"
             name="bazel-query">
       </targetDiscoveryStrategy>
+      <targetProvisioningStrategy
+            class="com.salesforce.bazel.eclipse.core.model.discovery.ProjectPerTargetProvisioningStrategy"
+            name="project-per-target">
+      </targetProvisioningStrategy>
    </extension>
    <extension
          point="com.salesforce.bazel.eclipse.core.executor">

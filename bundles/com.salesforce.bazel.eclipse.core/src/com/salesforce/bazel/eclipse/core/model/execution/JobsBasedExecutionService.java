@@ -96,14 +96,7 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
         }
 
         // quick cleanup of empty/no longer needed groups
-        jobGroupsByWorkspace.entrySet().removeIf(e -> {
-            try {
-                return !e.getKey().exists() && e.getValue().getActiveJobs().isEmpty();
-            } catch (IOException ioe) {
-                // keep in list
-                return false;
-            }
-        });
+        jobGroupsByWorkspace.entrySet().removeIf(e -> (!e.getKey().exists() || e.getValue().getActiveJobs().isEmpty()));
 
         return jobGroupsByWorkspace.computeIfAbsent(bazelWorkspace,
             w -> new JobGroup(w.getLocation().toString(), 2, 1));
