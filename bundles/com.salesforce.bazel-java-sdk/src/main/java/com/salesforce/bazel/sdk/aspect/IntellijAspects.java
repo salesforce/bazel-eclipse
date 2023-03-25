@@ -191,9 +191,20 @@ public class IntellijAspects {
         var archiveLocation = requireNonNull(getAspectsArchiveLocation(), "no aspects archive location");
         var stream = getClass().getClassLoader().getResourceAsStream(archiveLocation);
         if (stream == null) {
-            throw new IOException(format(
-                "Unable to find aspects archive '%s' on classpath. Please ensure packaging is correct and/or override this method to provide a custom solution.",
-                archiveLocation));
+            throw new IOException(
+                    format( // @formatter:off
+                        "Unable to find aspects archive '%s' on classpath.%n"
+                        + "Please ensure packaging is correct and/or override this method to provide a custom solution.%n"
+                        + "%n"
+                        + "Contributing to BEF? Setting up a dev environment?%n"
+                        + "%n"
+                        + "  Please run:%n"
+                        + "    cd ./bundles/com.salesforce.bazel-java-sdk/aspects/import%n"
+                        + "    ./import-and-build.sh%n"
+                        + "%n"
+                        + "%n",
+                        archiveLocation // @formatter:on
+                    ));
         }
         return stream;
     }

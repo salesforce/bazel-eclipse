@@ -50,6 +50,10 @@ jobs:
       - name: Setup Bazelisk
         uses: bazelbuild/setup-bazelisk@v2
 
+      - name: Import IntelliJ Aspects
+        working-directory: ./bundles/com.salesforce.bazel-java-sdk/aspects/import
+        run: ./import-and-build.sh
+
       - name: Build and Test
         env:
           BUILD_ID: "${{ steps.time.outputs.time }}"
