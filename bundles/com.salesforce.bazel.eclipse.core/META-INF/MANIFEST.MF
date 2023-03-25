@@ -43,7 +43,7 @@ Require-Bundle: org.eclipse.core.jobs;bundle-version="3.12.0",
  org.eclipse.jdt.launching;bundle-version="3.19.300",
  org.eclipse.text;bundle-version="3.12.0",
  org.eclipse.core.expressions;bundle-version="3.8.0",
- com.salesforce.bazel-java-sdk,
+ com.salesforce.bazel.sdk,
  org.eclipse.ltk.core.refactoring;bundle-version="3.12.0",
  org.eclipse.jdt.junit.core;bundle-version="3.11.0",
  org.eclipse.core.filesystem;bundle-version="1.9.500"
