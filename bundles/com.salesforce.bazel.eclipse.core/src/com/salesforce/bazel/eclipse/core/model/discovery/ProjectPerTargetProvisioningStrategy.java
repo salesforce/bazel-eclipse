@@ -109,7 +109,7 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         }
         var targets = List.of(bazelProject.getBazelTarget().getLabel());
         var onlyDirectDeps = bazelWorkspace.getBazelProjectView().deriveTargetsFromDirectories();
-        var outputGroups = Set.of(OutputGroup.INFO);
+        var outputGroups = Set.of(OutputGroup.INFO, OutputGroup.RESOLVE);
         var languages = Set.of(LanguageClass.JAVA);
         var aspects = bazelWorkspace.getParent().getModelManager().getIntellijAspects();
         var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targets, outputGroups, aspects, languages,
@@ -119,6 +119,12 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         var result = executionService.executeWithWorkspaceLock(command, bazelWorkspace,
             List.of(bazelProject.getProject()), monitor);
 
+        if (LOG.isDebugEnabled()) {
+            result.getOutputGroupArtifacts(OutputGroup.RESOLVE::isPrefixOf)
+                    .forEach(o -> LOG.debug("Resolve Output: {}", o));
+            result.getOutputGroupArtifacts(OutputGroup.INFO::isPrefixOf).forEach(o -> LOG.debug("Info Output: {}", o));
+        }
+
         var outputArtifacts = result.getOutputGroupArtifacts(OutputGroup.INFO::isPrefixOf,
             IntellijAspects.ASPECT_OUTPUT_FILE_PREDICATE);
         for (OutputArtifact outputArtifact : outputArtifacts) {
@@ -127,7 +133,7 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
                 if (info.hasJavaIdeInfo()) {
                     var javaIdeInfo = info.getJavaIdeInfo();
                     var allFields = javaIdeInfo.getAllFields();
-                    LOG.debug("Help: {}", allFields);
+                    //LOG.debug("Help: {}", allFields);
                 }
             } catch (IOException e) {
                 throw new CoreException(Status
@@ -294,8 +300,10 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
 
     protected BazelProject provisionJavaBinaryProject(BazelTarget target, IProgressMonitor progress)
             throws CoreException {
-        // TODO Auto-generated method stub
-        return null;
+
+        // TODO: create a shared launch configuration
+
+        return provisionJavaLibraryProject(target, progress);
     }
 
     protected BazelProject provisionJavaImportProject(BazelTarget target, IProgressMonitor progress)

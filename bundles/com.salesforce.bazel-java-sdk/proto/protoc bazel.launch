@@ -6,6 +6,6 @@
         <listEntry value="org.eclipse.ui.externaltools.launchGroup"/>
     </listAttribute>
     <stringAttribute key="org.eclipse.ui.externaltools.ATTR_LOCATION" value="/usr/local/bin/protoc"/>
-    <stringAttribute key="org.eclipse.ui.externaltools.ATTR_TOOL_ARGUMENTS" value="--proto_path=.&#10;--java_out=src-proto-bazel&#10;bazel/build_event_stream.proto&#10;bazel/command_line.proto&#10;bazel/failure_details.proto&#10;bazel/invocation_policy.proto&#10;bazel/option_filters.proto&#10;bazel/build.proto"/>
+    <stringAttribute key="org.eclipse.ui.externaltools.ATTR_TOOL_ARGUMENTS" value="--proto_path=.&#10;--java_out=src-proto-bazel&#10;bazel/build_event_stream.proto&#10;bazel/command_line.proto&#10;bazel/failure_details.proto&#10;bazel/invocation_policy.proto&#10;bazel/option_filters.proto&#10;bazel/build.proto&#10;bazel/deps.proto&#10;bazel/java_compilation.proto"/>
     <stringAttribute key="org.eclipse.ui.externaltools.ATTR_WORKING_DIRECTORY" value="${workspace_loc:/com.salesforce.bazel-java-sdk/proto}"/>
 </launchConfiguration>
