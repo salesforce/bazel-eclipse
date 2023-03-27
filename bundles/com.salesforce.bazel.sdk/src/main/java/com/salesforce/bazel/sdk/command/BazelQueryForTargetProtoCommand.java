@@ -4,7 +4,6 @@ import static java.nio.file.Files.createTempFile;
 import static java.nio.file.Files.newInputStream;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;

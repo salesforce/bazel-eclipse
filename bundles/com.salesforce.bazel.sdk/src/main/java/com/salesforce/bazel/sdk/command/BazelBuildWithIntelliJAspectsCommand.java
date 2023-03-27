@@ -12,14 +12,14 @@ import java.util.List;
 import java.util.Set;
 
 import com.salesforce.bazel.sdk.BazelVersion;
-import com.salesforce.bazel.sdk.aspect.IntellijAspects;
-import com.salesforce.bazel.sdk.aspect.IntellijAspects.OutputGroup;
+import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
+import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.buildresults.ParsedBepOutput;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.primitives.LanguageClass;
 
 /**
- * <code>bazel build</code>
+ * <code>bazel build --aspects=@intellij_aspect//:intellij_info_bundled.bzl%intellij_info_aspect --output_groups=...</code>
  * <p>
  * Runs a Bazel build with IntelliJ aspects configured and collects any information from the BuildEventStream
  * </p>

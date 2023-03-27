@@ -12,8 +12,6 @@
  */
 package com.salesforce.bazel.sdk.command.buildresults;
 
-import static com.salesforce.bazel.sdk.command.buildresults.BuildEventStreamProvider.parseNextEventFromStream;
-
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -52,17 +50,17 @@ public interface BuildEventStreamProvider {
             public BuildEvent getNext() throws BuildEventStreamException {
                 return parseNextEventFromStream(countingStream);
             }
-        };
-    }
 
-    @Nullable
-    static BuildEventStreamProtos.BuildEvent parseNextEventFromStream(InputStream stream)
-            throws BuildEventStreamException {
-        try {
-            return BuildEventStreamProtos.BuildEvent.parseDelimitedFrom(stream);
-        } catch (IOException e) {
-            throw new BuildEventStreamException(e.getMessage(), e);
-        }
+            @Nullable
+            BuildEventStreamProtos.BuildEvent parseNextEventFromStream(InputStream stream)
+                    throws BuildEventStreamException {
+                try {
+                    return BuildEventStreamProtos.BuildEvent.parseDelimitedFrom(stream);
+                } catch (IOException e) {
+                    throw new BuildEventStreamException(e.getMessage(), e);
+                }
+            }
+        };
     }
 
     long getBytesConsumed();

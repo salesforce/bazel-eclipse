@@ -16,7 +16,7 @@
    </description>
 
    <copyright url="https://github.com/salesforce/bazel-eclipse">
-      Copyright 2018-2021 Salesforce. All rights reserved.
+      Copyright 2018 Salesforce. All rights reserved.
       Copyright 2016 The Bazel Authors. All rights reserved.
    </copyright>
 
@@ -229,13 +229,14 @@
    </url>
 
    <plugin
-         id="com.salesforce.bazel.eclipse.core"
+         id="com.salesforce.bazel.sdk"
          download-size="0"
          install-size="0"
-         version="0.0.0"/>
+         version="0.0.0"
+         unpack="false"/>
 
    <plugin
-         id="com.salesforce.bazel-java-sdk"
+         id="com.salesforce.bazel.eclipse.core"
          download-size="0"
          install-size="0"
          version="0.0.0"

@@ -15,7 +15,6 @@ package com.salesforce.bazel.sdk.command.buildresults;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.List;
 
 import javax.annotation.Nullable;

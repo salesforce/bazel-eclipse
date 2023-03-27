@@ -33,8 +33,6 @@
  */
 package com.salesforce.bazel.sdk.model;
 
-import com.salesforce.bazel.sdk.path.FSPathHelper;
-
 /**
  * Answers to everything you've always wanted to ask a Bazel Label.
  * </p>
@@ -168,7 +166,7 @@ public class BazelLabel {
             if (labelPathStr.endsWith(BAZEL_SLASH)) {
                 throw new IllegalArgumentException(labelPathStr);
             }
-            if (labelPathStr.contains(FSPathHelper.WINDOWS_BACKSLASH)) {
+            if (labelPathStr.contains("\\")) {
                 // the caller is passing us a label with \ as separators, probably a bug due to Windows paths
                 throw new IllegalArgumentException("Label [" + labelPathStr
                         + "] has Windows style path delimeters. Bazel paths always have / delimiters");

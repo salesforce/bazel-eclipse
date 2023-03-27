@@ -8,7 +8,6 @@ import static java.util.stream.Collectors.joining;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MacOsLoginShellFinder {

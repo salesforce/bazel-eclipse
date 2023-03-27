@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Bazel Java SDK
+Bundle-Name: Bazel Java SDK and IntelliJ Helpers
 Bundle-SymbolicName: com.salesforce.bazel.sdk;singleton:=true
 Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: Bazel Eclipse Feature
@@ -8,38 +8,23 @@ Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: com.salesforce.bazel.eclipse.model
 Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: dir
-Export-Package: com.google.devtools.build.lib.buildeventstream,
+Export-Package: com.google.devtools.build.buildjar.proto,
+ com.google.devtools.build.lib.buildeventstream,
  com.google.devtools.build.lib.query2.proto.proto2api,
  com.google.devtools.build.lib.runtime.proto,
  com.google.devtools.build.lib.server,
+ com.google.devtools.build.lib.view.proto,
  com.google.devtools.common.options.proto,
  com.google.devtools.intellij.aspect,
  com.google.devtools.intellij.ideinfo,
  com.salesforce.bazel.sdk,
- com.salesforce.bazel.sdk.aspect,
- com.salesforce.bazel.sdk.bep,
- com.salesforce.bazel.sdk.bep.event,
- com.salesforce.bazel.sdk.bep.file,
+ com.salesforce.bazel.sdk.aspects.intellij,
  com.salesforce.bazel.sdk.command,
  com.salesforce.bazel.sdk.command.buildresults,
- com.salesforce.bazel.sdk.command.internal,
  com.salesforce.bazel.sdk.command.shell,
- com.salesforce.bazel.sdk.graph,
- com.salesforce.bazel.sdk.init,
- com.salesforce.bazel.sdk.lang.jvm,
- com.salesforce.bazel.sdk.lang.jvm.classpath,
- com.salesforce.bazel.sdk.lang.jvm.classpath.impl,
- com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy,
- com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util,
- com.salesforce.bazel.sdk.lang.jvm.classpath.persist,
- com.salesforce.bazel.sdk.lang.jvm.external,
  com.salesforce.bazel.sdk.model,
- com.salesforce.bazel.sdk.path,
  com.salesforce.bazel.sdk.primitives,
- com.salesforce.bazel.sdk.project,
- com.salesforce.bazel.sdk.project.structure,
- com.salesforce.bazel.sdk.util,
- com.salesforce.bazel.sdk.workspace
+ com.salesforce.bazel.sdk.util
 Import-Package: com.google.common.annotations;version="31.1.0",
  com.google.common.base;version="31.1.0",
  com.google.common.collect;version="31.1.0",

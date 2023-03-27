@@ -43,7 +43,7 @@ import com.salesforce.bazel.eclipse.core.model.cache.BazelElementInfoCache;
 import com.salesforce.bazel.eclipse.core.model.cache.CaffeineBasedBazelElementInfoCache;
 import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
 import com.salesforce.bazel.eclipse.core.model.execution.JobsBasedExecutionService;
-import com.salesforce.bazel.sdk.aspect.IntellijAspects;
+import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 
 /**
  * The Bazel model manager is responsible for managing the mapping state of the Bazel model into the IDE.

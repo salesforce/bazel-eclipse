@@ -74,7 +74,7 @@ public class AspectTargetInfos {
     }
 
     public static AspectTargetInfos fromSets(Collection<Set<AspectTargetInfo>> aspectTargetInfoSets) {
-        Set<AspectTargetInfo> infoList = new LinkedHashSet<>(); // with TreeSet: class com.salesforce.bazel.sdk.aspect.AspectTargetInfo cannot be cast to class java.lang.Comparable
+        Set<AspectTargetInfo> infoList = new LinkedHashSet<>(); // with TreeSet: class com.salesforce.bazel.sdk.aspects.intellij.AspectTargetInfo cannot be cast to class java.lang.Comparable
         for (Set<AspectTargetInfo> set : aspectTargetInfoSets) {
             for (AspectTargetInfo info : set) {
                 infoList.add(info);

@@ -5,7 +5,6 @@ import static java.nio.file.Files.readAllLines;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 
 public class UnixLoginShellFinder {
 
