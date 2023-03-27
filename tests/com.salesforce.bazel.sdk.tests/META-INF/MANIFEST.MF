@@ -5,7 +5,8 @@ Bundle-SymbolicName: com.salesforce.bazel.sdk.tests
 Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: Bazel Eclipse Feature
 Fragment-Host: com.salesforce.bazel.sdk;bundle-version="2.0.0.qualifier"
-Import-Package: org.junit.jupiter.api;version="5.9.2",
+Import-Package: net.bytebuddy.agent;version="1.14.0",
+ org.junit.jupiter.api;version="5.9.2",
  org.mockito;version="5.1.1"
 Automatic-Module-Name: com.salesforce.bazel.java.sdk.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-17

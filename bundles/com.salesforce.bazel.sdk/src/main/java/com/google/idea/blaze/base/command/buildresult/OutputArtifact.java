@@ -10,18 +10,13 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package com.salesforce.bazel.sdk.command.buildresults;
-
-import java.nio.file.Path;
+package com.google.idea.blaze.base.command.buildresult;
 
 /** A blaze output artifact, generated during some build action. */
-public interface OutputArtifact {
+public interface OutputArtifact extends BlazeArtifact {
 
     /** The path component related to the build configuration. */
     String getConfigurationMnemonic();
-
-    /** {@return the file system path} */
-    Path getPath();
 
     /** The blaze-out-relative path. */
     String getRelativePath();

@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package com.salesforce.bazel.sdk.command.buildresults;
+package com.google.idea.blaze.base.command.buildresult;
 
 import java.util.Collection;
 import java.util.HashSet;

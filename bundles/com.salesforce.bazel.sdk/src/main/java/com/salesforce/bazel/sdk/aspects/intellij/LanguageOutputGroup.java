@@ -12,7 +12,7 @@
  */
 package com.salesforce.bazel.sdk.aspects.intellij;
 
-import com.salesforce.bazel.sdk.primitives.LanguageClass;
+import com.google.idea.blaze.base.model.primitives.LanguageClass;
 
 /** Enumerates the sets of aspect output groups corresponding to each language */
 public enum LanguageOutputGroup {

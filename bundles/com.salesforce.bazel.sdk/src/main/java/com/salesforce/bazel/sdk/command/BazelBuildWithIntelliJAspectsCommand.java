@@ -11,12 +11,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
+import com.google.idea.blaze.base.command.buildresult.ParsedBepOutput;
+import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
-import com.salesforce.bazel.sdk.command.buildresults.ParsedBepOutput;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.primitives.LanguageClass;
 
 /**
  * <code>bazel build --aspects=@intellij_aspect//:intellij_info_bundled.bzl%intellij_info_aspect --output_groups=...</code>

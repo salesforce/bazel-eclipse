@@ -13,7 +13,6 @@
     <stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/pde-junit"/>
     <booleanAttribute key="default" value="false"/>
     <setAttribute key="deselected_workspace_bundles">
-        <setEntry value="com.salesforce.bazel-java-sdk.tests"/>
         <setEntry value="com.salesforce.bazel.eclipse.jdtls"/>
         <setEntry value="com.salesforce.bazel.eclipse.jdtls.tests"/>
         <setEntry value="com.salesforce.bazel.eclipse.ui"/>
@@ -202,16 +201,17 @@
         <setEntry value="org.w3c.dom.smil@default:default"/>
         <setEntry value="org.w3c.dom.svg@default:default"/>
         <setEntry value="slf4j.api@default:default"/>
+        <setEntry value="wrapped.com.google.errorprone.error_prone_annotations@default:default"/>
         <setEntry value="wrapped.com.google.protobuf.protobuf-java@default:default"/>
     </setAttribute>
     <setAttribute key="selected_workspace_bundles">
-        <setEntry value="com.salesforce.bazel-java-sdk@default:default"/>
-        <setEntry value="com.salesforce.bazel-java-testframework@default:default"/>
         <setEntry value="com.salesforce.bazel.eclipse.core.tests@default:false"/>
         <setEntry value="com.salesforce.bazel.eclipse.core@default:default"/>
+        <setEntry value="com.salesforce.bazel.sdk.tests@default:false"/>
+        <setEntry value="com.salesforce.bazel.sdk@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
-    <stringAttribute key="timestamp" value="1679686375121"/>
+    <stringAttribute key="timestamp" value="1679941344442"/>
     <booleanAttribute key="tracing" value="false"/>
     <booleanAttribute key="useCustomFeatures" value="false"/>
     <booleanAttribute key="useDefaultConfig" value="true"/>

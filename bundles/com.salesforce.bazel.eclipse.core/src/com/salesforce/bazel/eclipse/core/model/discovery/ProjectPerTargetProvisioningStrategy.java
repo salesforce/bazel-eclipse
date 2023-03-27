@@ -3,8 +3,10 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -26,17 +28,26 @@ import org.eclipse.jdt.core.JavaCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.devtools.build.lib.view.proto.Deps;
+import com.google.devtools.build.lib.view.proto.Deps.Dependency;
+import com.google.idea.blaze.base.command.buildresult.BlazeArtifact;
+import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
+import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
+import com.google.idea.blaze.base.model.primitives.LanguageClass;
+import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
+import com.google.idea.blaze.base.sync.workspace.ArtifactLocationDecoder;
+import com.google.idea.blaze.base.sync.workspace.ArtifactLocationDecoderImpl;
+import com.google.idea.blaze.base.sync.workspace.WorkspacePathResolverImpl;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaInfo.FileEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
-import com.salesforce.bazel.sdk.command.buildresults.OutputArtifact;
-import com.salesforce.bazel.sdk.primitives.LanguageClass;
 
 /**
  * Default implementation of {@link TargetProvisioningStrategy} which provisions a single project per supported target.
@@ -49,6 +60,20 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
 
     public static final String STRATEGY_NAME = "project-per-target";
 
+    private static boolean relevantDep(Deps.Dependency dep) {
+        // we only want explicit or implicit deps that were actually resolved by the compiler, not ones
+        // that are available for use in the same package
+        return (dep.getKind() == Deps.Dependency.Kind.EXPLICIT) || (dep.getKind() == Deps.Dependency.Kind.IMPLICIT);
+    }
+
+    private static BlazeArtifact resolveJdepsOutput(ArtifactLocationDecoder decoder, TargetIdeInfo target) {
+        var javaIdeInfo = target.getJavaIdeInfo();
+        if ((javaIdeInfo == null) || (javaIdeInfo.getJdepsFile() == null)) {
+            return null;
+        }
+        return decoder.resolveOutput(javaIdeInfo.getJdepsFile());
+    }
+
     private volatile BazelProjectFileSystemMapper fileSystemMapper;
 
     protected JavaInfo collectJavaInfo(BazelTarget target, IProgressMonitor monitor) throws CoreException {
@@ -58,6 +83,7 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         var srcs = attributes.getStringList("srcs");
         if (srcs != null) {
             for (String src : srcs) {
+                LOG.debug("{} adding src: {}", target, src);
                 javaInfo.addSrc(src);
             }
         }
@@ -65,6 +91,7 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         var deps = attributes.getStringList("deps");
         if (deps != null) {
             for (String dep : deps) {
+                LOG.debug("{} adding dep: {}", target, dep);
                 javaInfo.addDep(dep);
             }
         }
@@ -72,12 +99,20 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         var runtimeDeps = attributes.getStringList("runtime_deps");
         if (runtimeDeps != null) {
             for (String dep : runtimeDeps) {
+                LOG.debug("{} adding runtime dep: {}", target, dep);
                 javaInfo.addRuntimeDep(dep);
             }
         }
 
         // analyze for recommended project setup
         var recommendations = javaInfo.analyzeProjectRecommendations(monitor);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("{} source directories: {}", target,
+                javaInfo.hasSourceDirectories() ? javaInfo.getSourceDirectories() : "n/a");
+            LOG.debug("{} source files without root: {}", target,
+                javaInfo.hasSourceFilesWithoutCommonRoot() ? javaInfo.getSourceFilesWithoutCommonRoot() : "n/a");
+        }
 
         // TODO: create project level markers?
 
@@ -125,15 +160,28 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
             result.getOutputGroupArtifacts(OutputGroup.INFO::isPrefixOf).forEach(o -> LOG.debug("Info Output: {}", o));
         }
 
+        ArtifactLocationDecoder decoder = new ArtifactLocationDecoderImpl(new BazelWorkspaceBlazeInfo(bazelWorkspace),
+                new WorkspacePathResolverImpl(new WorkspaceRoot(workspaceRoot)));
         var outputArtifacts = result.getOutputGroupArtifacts(OutputGroup.INFO::isPrefixOf,
             IntellijAspects.ASPECT_OUTPUT_FILE_PREDICATE);
         for (OutputArtifact outputArtifact : outputArtifacts) {
             try {
-                var info = aspects.readAspectFile(outputArtifact.getPath());
-                if (info.hasJavaIdeInfo()) {
-                    var javaIdeInfo = info.getJavaIdeInfo();
-                    var allFields = javaIdeInfo.getAllFields();
-                    //LOG.debug("Help: {}", allFields);
+                var info = TargetIdeInfo.fromProto(aspects.readAspectFile(outputArtifact));
+                var javaIdeInfo = info.getJavaIdeInfo();
+                if (javaIdeInfo != null) {
+                    var jdepsFile = resolveJdepsOutput(decoder, info);
+                    if (jdepsFile instanceof OutputArtifact) {
+                        LOG.debug("parsing: {}", jdepsFile);
+                        try (InputStream in = jdepsFile.getInputStream()) {
+                            var dependencies = Deps.Dependencies.parseFrom(in);
+                            if (dependencies != null) {
+                                List<String> deps = dependencies.getDependencyList().stream()
+                                        .filter(ProjectPerTargetProvisioningStrategy::relevantDep)
+                                        .map(Dependency::getPath).collect(toList());
+                                LOG.debug("deps: {}", deps);
+                            }
+                        }
+                    }
                 }
             } catch (IOException e) {
                 throw new CoreException(Status

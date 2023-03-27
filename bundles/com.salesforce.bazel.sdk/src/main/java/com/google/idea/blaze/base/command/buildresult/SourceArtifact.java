@@ -10,39 +10,33 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package com.salesforce.bazel.sdk.command.buildresults;
+package com.google.idea.blaze.base.command.buildresult;
+
+import static java.util.Objects.requireNonNull;
 
 import java.nio.file.Path;
 import java.util.Objects;
 
-/** A blaze output artifact which exists on the local file system. */
-public class LocalFileOutputArtifact implements OutputArtifact {
+import com.google.idea.blaze.base.command.buildresult.BlazeArtifact.LocalFileArtifact;
+
+/** A source file in the blaze workspace, accessible on the local file system. */
+public class SourceArtifact implements LocalFileArtifact {
 
     private final Path path;
-    private final String blazeOutRelativePath;
-    private final String configurationMnemonic;
 
-    public LocalFileOutputArtifact(Path path, String blazeOutRelativePath, String configurationMnemonic) {
-        this.path = path;
-        this.blazeOutRelativePath = blazeOutRelativePath;
-        this.configurationMnemonic = configurationMnemonic;
+    public SourceArtifact(Path path) {
+        this.path = requireNonNull(path, "file must not be null");
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
+        if (obj == this) {
             return true;
         }
-        if ((obj == null) || (getClass() != obj.getClass())) {
+        if (!(obj instanceof SourceArtifact)) {
             return false;
         }
-        var other = (LocalFileOutputArtifact) obj;
-        return Objects.equals(path, other.path);
-    }
-
-    @Override
-    public String getConfigurationMnemonic() {
-        return configurationMnemonic;
+        return Objects.equals(path, ((SourceArtifact) obj).path);
     }
 
     @Override
@@ -51,17 +45,12 @@ public class LocalFileOutputArtifact implements OutputArtifact {
     }
 
     @Override
-    public String getRelativePath() {
-        return blazeOutRelativePath;
-    }
-
-    @Override
     public int hashCode() {
-        return Objects.hash(path);
+        return path.hashCode();
     }
 
     @Override
     public String toString() {
-        return blazeOutRelativePath;
+        return path.toString();
     }
 }

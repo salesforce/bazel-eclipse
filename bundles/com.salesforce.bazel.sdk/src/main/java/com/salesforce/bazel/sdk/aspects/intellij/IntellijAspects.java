@@ -34,9 +34,10 @@ import java.util.zip.ZipInputStream;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.intellij.ideinfo.IntellijIdeInfo;
 import com.google.devtools.intellij.ideinfo.IntellijIdeInfo.TargetIdeInfo;
+import com.google.idea.blaze.base.command.buildresult.BlazeArtifact;
+import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.google.protobuf.TextFormat;
 import com.salesforce.bazel.sdk.BazelVersion;
-import com.salesforce.bazel.sdk.primitives.LanguageClass;
 
 /**
  * Helper for deploying the IntelliJ Aspects
@@ -210,8 +211,8 @@ public class IntellijAspects {
         return stream;
     }
 
-    public TargetIdeInfo readAspectFile(Path path) throws IOException {
-        try (var inputStream = Files.newInputStream(path)) {
+    public TargetIdeInfo readAspectFile(BlazeArtifact artifact) throws IOException {
+        try (var inputStream = artifact.getInputStream()) {
             var builder = IntellijIdeInfo.TargetIdeInfo.newBuilder();
             var parser = TextFormat.Parser.newBuilder().setAllowUnknownFields(true).build();
             parser.merge(new InputStreamReader(inputStream, UTF_8), builder);

@@ -41,6 +41,7 @@ public class JavaInfo {
     public static class FileEntry extends Entry {
 
         private final IPath relativePath;
+
         private final IPath relativePathParent;
         private final IPath containingFolderPath;
         private IPath detectedPackagePath;
@@ -70,6 +71,12 @@ public class JavaInfo {
         public IPath getPathParent() {
             return relativePathParent;
         }
+
+        @Override
+        public String toString() {
+            return relativePath + " (relativePathParent=" + relativePathParent + ", containingFolderPath="
+                    + containingFolderPath + ", detectedPackagePath=" + detectedPackagePath + ")";
+        }
     }
 
     public static class LabelEntry extends Entry {
@@ -78,6 +85,11 @@ public class JavaInfo {
 
         public LabelEntry(BazelLabel label) {
             this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label.toString();
         }
 
     }
@@ -168,16 +180,15 @@ public class JavaInfo {
                 continue;
             }
 
-            var parentLocation = bazelPackage.getLocation().append(entry.getKey());
+            var entryParentLocation = bazelPackage.getLocation().append(entry.getKey()).toFile().toPath();
             try {
-                var javaFilesInParent =
-                        Files.list(parentLocation.toFile().toPath().getParent()).filter(JavaInfo::isJavaFile).count();
+                var javaFilesInParent = Files.list(entryParentLocation).filter(JavaInfo::isJavaFile).count();
                 if (javaFilesInParent != javaFilesInSrcs) {
                     foundSplitPackageConfig = true;
                     break; // abort early
                 }
             } catch (IOException e) {
-                throw new CoreException(Status.error(format("Error searching files in '%s'", parentLocation), e));
+                throw new CoreException(Status.error(format("Error searching files in '%s'", entryParentLocation), e));
             }
         }
 
@@ -222,18 +233,31 @@ public class JavaInfo {
     }
 
     private Entry fileOrLabel(String srcFileOrLabel) throws CoreException {
-        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)
-                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_COLON)
-                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)) {
-            // starts with //, @ or : then it must be treated as label
-            return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel).getLabel());
+        // test if this may be a file in this package
+        var myPackagePath = bazelPackage.getLabel().toString();
+        if (srcFileOrLabel.startsWith(myPackagePath + BazelLabel.BAZEL_COLON)) {
+            // drop the package name to identify a reference within package
+            srcFileOrLabel = srcFileOrLabel.substring(myPackagePath.length() + 1);
         }
+
+        // starts with : then it must be treated as label
+        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_COLON)) {
+            return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel.substring(1)).getLabel());
+        }
+
+        // starts with // or @ then it must be treated as label
+        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)
+                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)) {
+            return new LabelEntry(new BazelLabel(srcFileOrLabel));
+        }
+
+        // doesn't start with // but contains one, unlikely a label!
         if (srcFileOrLabel.indexOf('/') >= 1) {
-            // doesn't start with // but contains one, unlikely a label!
             return new FileEntry(new Path(srcFileOrLabel), bazelPackage.getLocation());
         }
+
+        // treat as label if package has one matching the name
         if (bazelPackage.hasBazelTarget(srcFileOrLabel)) {
-            // treat as label if package has one
             return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel).getLabel());
         }
 
@@ -278,12 +302,12 @@ public class JavaInfo {
                         if (token == ITerminalSymbols.TokenNameIdentifier) {
                             packageName = scanner.getCurrentTokenSource();
                         }
-                        break;
+                        return packageName;
                     default:
                         token = scanner.getNextToken();
                         continue;
                     case ITerminalSymbols.TokenNameEOF:
-                        break;
+                        return packageName;
                 }
             }
         } catch (InvalidInputException | IndexOutOfBoundsException | IOException e) {

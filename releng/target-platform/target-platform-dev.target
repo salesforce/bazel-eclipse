@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1679649176">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1679916980">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.27.0.v20230220-1431"/>
@@ -125,6 +125,12 @@
     		<groupId>com.google.code.findbugs</groupId>
     		<artifactId>jsr305</artifactId>
     		<version>3.0.2</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.google.errorprone</groupId>
+    		<artifactId>error_prone_annotations</artifactId>
+    		<version>2.18.0</version>
     		<type>jar</type>
     	</dependency>
     </dependencies>

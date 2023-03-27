@@ -97,5 +97,10 @@ maven MavenDependencies scope=compile,test dependencyDepth=infinite missingManif
 		artifactId="jsr305"
 		version="3.0.2"
 	}
+	dependency {
+		groupId="com.google.errorprone"
+		artifactId="error_prone_annotations"
+		version="2.18.0"
+	}
 }
 
