@@ -25,11 +25,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.core.tests.utils.LoggingProgressProviderExtension;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -39,6 +41,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * </p>
  */
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@ExtendWith(LoggingProgressProviderExtension.class)
 public class Workspace001Test_BasicModelAssumptions {
 
     private static IPath workspaceRoot;

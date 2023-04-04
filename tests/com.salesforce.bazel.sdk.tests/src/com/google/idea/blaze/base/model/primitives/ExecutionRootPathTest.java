@@ -15,18 +15,14 @@ package com.google.idea.blaze.base.model.primitives;
 import static com.google.common.truth.Truth.assertThat;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 
 /** Tests execution root path. */
 public class ExecutionRootPathTest {
-    private static File createMockDirectory(String path) {
-        var org = new File(path);
-        var spy = Mockito.spy(org);
-        Mockito.when(spy.isDirectory()).then((Answer<Boolean>) invocationOnMock -> true);
-        return spy;
+    private static Path asPath(String path) {
+        return Path.of(path);
     }
 
     @Test
@@ -38,45 +34,45 @@ public class ExecutionRootPathTest {
 
     @Test
     public void testCreateRelativePathWithOneAbsolutePathAndOneRelativePathReturnsNull1() {
-        var relativePathFragment = ExecutionRootPath.createAncestorRelativePath(
-            createMockDirectory("/code/lib/fastmath"), createMockDirectory("code/lib/fastmath/lib1"));
+        var relativePathFragment = ExecutionRootPath.createAncestorRelativePath(asPath("/code/lib/fastmath"),
+            asPath("code/lib/fastmath/lib1"));
         assertThat(relativePathFragment).isNull();
     }
 
     @Test
     public void testCreateRelativePathWithOneAbsolutePathAndOneRelativePathReturnsNull2() {
-        var relativePathFragment = ExecutionRootPath.createAncestorRelativePath(
-            createMockDirectory("code/lib/fastmath"), createMockDirectory("/code/lib/slowmath"));
+        var relativePathFragment =
+                ExecutionRootPath.createAncestorRelativePath(asPath("code/lib/fastmath"), asPath("/code/lib/slowmath"));
         assertThat(relativePathFragment).isNull();
     }
 
     @Test
     public void testCreateRelativePathWithTwoAbsolutePaths() {
-        var relativePathFragment = ExecutionRootPath.createAncestorRelativePath(
-            createMockDirectory("/code/lib/fastmath"), createMockDirectory("/code/lib/fastmath/lib1"));
+        var relativePathFragment = ExecutionRootPath.createAncestorRelativePath(asPath("/code/lib/fastmath"),
+            asPath("/code/lib/fastmath/lib1"));
         assertThat(relativePathFragment).isNotNull();
         assertThat(relativePathFragment.getAbsoluteOrRelativeFile()).isEqualTo(new File("lib1"));
     }
 
     @Test
     public void testCreateRelativePathWithTwoAbsolutePathsWithNoRelativePath() {
-        var relativePathFragment = ExecutionRootPath.createAncestorRelativePath(
-            createMockDirectory("/obj/lib/fastmath"), createMockDirectory("/code/lib/slowmath"));
+        var relativePathFragment =
+                ExecutionRootPath.createAncestorRelativePath(asPath("/obj/lib/fastmath"), asPath("/code/lib/slowmath"));
         assertThat(relativePathFragment).isNull();
     }
 
     @Test
     public void testCreateRelativePathWithTwoRelativePaths() {
-        var relativePathFragment = ExecutionRootPath.createAncestorRelativePath(
-            createMockDirectory("code/lib/fastmath"), createMockDirectory("code/lib/fastmath/lib1"));
+        var relativePathFragment = ExecutionRootPath.createAncestorRelativePath(asPath("code/lib/fastmath"),
+            asPath("code/lib/fastmath/lib1"));
         assertThat(relativePathFragment).isNotNull();
         assertThat(relativePathFragment.getAbsoluteOrRelativeFile()).isEqualTo(new File("lib1"));
     }
 
     @Test
     public void testCreateRelativePathWithTwoRelativePathsWithNoRelativePath() {
-        var relativePathFragment = ExecutionRootPath.createAncestorRelativePath(
-            createMockDirectory("obj/lib/fastmath"), createMockDirectory("code/lib/slowmath"));
+        var relativePathFragment =
+                ExecutionRootPath.createAncestorRelativePath(asPath("obj/lib/fastmath"), asPath("code/lib/slowmath"));
         assertThat(relativePathFragment).isNull();
     }
 

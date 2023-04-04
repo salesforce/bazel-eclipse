@@ -10,4 +10,5 @@ Automatic-Module-Name: com.salesforce.bazel.eclipse.core.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Import-Package: org.hamcrest;version="2.2.0",
  org.hamcrest.collection;version="2.2.0",
- org.junit.jupiter.api;version="5.9.2"
+ org.junit.jupiter.api;version="5.9.2",
+ org.junit.jupiter.api.extension;version="5.9.2"
