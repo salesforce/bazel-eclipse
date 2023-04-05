@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
-import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.setup.ImportBazelWorkspaceJob;
 
 /**
@@ -91,8 +90,7 @@ public class ProvisionWorkspaceExtension implements Extension, BeforeAllCallback
         assertTrue(bazelWorkspace.exists(), () -> format("Bazel workspace '%s' does not exists!", workspaceRoot));
 
         LOG.info("Importing workspace '{}'", workspaceRoot);
-        var workspaceJob =
-                new ImportBazelWorkspaceJob(bazelWorkspace, workspaceRoot.append(BazelProject.DEFAULT_PROJECT_VIEW));
+        var workspaceJob = new ImportBazelWorkspaceJob(bazelWorkspace);
         workspaceJob.schedule();
         workspaceJob.join();
 

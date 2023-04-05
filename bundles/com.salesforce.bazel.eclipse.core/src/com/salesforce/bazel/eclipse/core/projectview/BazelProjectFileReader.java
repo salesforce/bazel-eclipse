@@ -30,6 +30,21 @@ public class BazelProjectFileReader {
 
     static class BazelProjectViewBuilder {
 
+        class ImportHandle implements AutoCloseable {
+
+            private final Path bazelProjectFile;
+
+            public ImportHandle(Path bazelProjectFile) {
+                this.bazelProjectFile = bazelProjectFile;
+            }
+
+            @Override
+            public void close() {
+                importingFiles.remove(bazelProjectFile);
+            }
+
+        }
+
         String workspaceType;
         final LinkedHashSet<String> directories = new LinkedHashSet<>();
         final LinkedHashSet<String> targets = new LinkedHashSet<>();
@@ -38,6 +53,7 @@ public class BazelProjectFileReader {
         String javaLanguageLevel;
         LinkedHashSet<String> tsConfigRules = new LinkedHashSet<>();
         String targetDiscoveryStrategy, targetProvisioningStrategy;
+        final LinkedHashSet<Path> importingFiles = new LinkedHashSet<>();
 
         public BazelProjectView build() throws IllegalStateException {
             // check mandatory parameters
@@ -80,6 +96,15 @@ public class BazelProjectFileReader {
                     deriveTargetsFromDirectories, workspaceType, additionalLanguages, javaLanguageLevel, tsConfigRules,
                     targetDiscoveryStrategy, targetProvisioningStrategy);
         }
+
+        public ImportHandle startImporting(Path bazelProjectViewFile) throws IOException {
+            if (!importingFiles.add(bazelProjectViewFile)) {
+                throw new IOException(format("Recursive import detected for file '%s'%n%s", bazelProjectViewFile,
+                    importingFiles.stream().map(Path::toString)
+                            .collect(joining(System.lineSeparator() + "-> ", "-> ", ""))));
+            }
+            return new ImportHandle(bazelProjectViewFile);
+        }
     }
 
     private static final Pattern SECTION_HEADER_REGEX = Pattern.compile("((^[^:\\-/*\\s]+)([: ]))", Pattern.MULTILINE);
@@ -88,9 +113,17 @@ public class BazelProjectFileReader {
     private static final String EXCLUDED_ENTRY_PREFIX = "-";
 
     private final Path bazelProjectFile;
+    private final Path bazelWorkspaceRoot;
 
-    public BazelProjectFileReader(Path bazelProjectFile) {
+    /**
+     * @param bazelProjectFile
+     *            the project file to read
+     * @param bazelWorkspaceRoot
+     *            the workspace root (for resolving imports)
+     */
+    public BazelProjectFileReader(Path bazelProjectFile, Path bazelWorkspaceRoot) {
         this.bazelProjectFile = bazelProjectFile;
+        this.bazelWorkspaceRoot = bazelWorkspaceRoot;
     }
 
     /**
@@ -106,115 +139,120 @@ public class BazelProjectFileReader {
      * @throws IOException
      */
     private void parseProjectFile(Path bazelProjectFile, BazelProjectViewBuilder builder) throws IOException {
-        // read file
-        var bazelProjectFileContent = readString(bazelProjectFile);
+        // set context
+        try (var importHandle = builder.startImporting(bazelProjectFile)) {
+            // read file
+            var bazelProjectFileContent = readString(bazelProjectFile);
 
-        // remove comments
-        bazelProjectFileContent = removeComments(bazelProjectFileContent);
+            // remove comments
+            bazelProjectFileContent = removeComments(bazelProjectFileContent);
 
-        // parse into section
-        var rawSections = parseRawSections(bazelProjectFileContent);
+            // parse into section
+            var rawSections = parseRawSections(bazelProjectFileContent);
 
-        // build the model
-        // note: we go over each section one by one to ensure imports are properly handled
-        // lists compose; single values last one wins
-        for (RawSection rawSection : rawSections) {
-            switch (rawSection.getName()) {
-                case "directories": {
-                    parseSectionBodyIntoList(rawSection).forEach(builder.directories::add);
-                    break;
-                }
-                case "targets": {
-                    parseSectionBodyIntoList(rawSection).forEach(builder.targets::add);
-                    break;
-                }
-                case "derive_targets_from_directories": {
-                    var rawBody = rawSection.getRawBody();
-                    if ((rawBody != null) && !rawBody.isBlank()) {
-                        builder.deriveTargetsFromDirectories = Boolean.parseBoolean(rawBody.trim());
+            // build the model
+            // note: we go over each section one by one to ensure imports are properly handled
+            // lists compose; single values last one wins
+            for (RawSection rawSection : rawSections) {
+                switch (rawSection.getName()) {
+                    case "directories": {
+                        parseSectionBodyIntoList(rawSection).forEach(builder.directories::add);
+                        break;
                     }
-                    break;
-                }
-                case "import": {
-                    Path fileToImport;
-                    try {
-                        fileToImport = rawSection.getBodyAsPath();
-                    } catch (NullPointerException e) {
-                        throw new IOException(format("Invalid syntax in '%s': import needs a value!", bazelProjectFile),
-                                e);
+                    case "targets": {
+                        parseSectionBodyIntoList(rawSection).forEach(builder.targets::add);
+                        break;
                     }
-                    if (fileToImport.isAbsolute()) {
-                        throw new IOException(format(
-                            "Invalid import (%s) defined in '%s': imports must be relative to the file they are defined in",
-                            fileToImport, bazelProjectFile));
+                    case "derive_targets_from_directories": {
+                        var rawBody = rawSection.getRawBody();
+                        if ((rawBody != null) && !rawBody.isBlank()) {
+                            builder.deriveTargetsFromDirectories = Boolean.parseBoolean(rawBody.trim());
+                        }
+                        break;
                     }
-                    var resolvedPathOfFileToImport = bazelProjectFile.resolveSibling(fileToImport);
-                    try {
-                        // parse the import into the existing builder (this allows to implement the wanted behavior)
-                        parseProjectFile(resolvedPathOfFileToImport, builder);
-                    } catch (NoSuchFileException e) {
-                        throw new NoSuchFileException(resolvedPathOfFileToImport.toString(),
-                                bazelProjectFile.toString(), format("import '%s' not found (defined in '%s')",
-                                    resolvedPathOfFileToImport, bazelProjectFile));
+                    case "import": {
+                        Path fileToImport;
+                        try {
+                            fileToImport = rawSection.getBodyAsPath();
+                        } catch (NullPointerException e) {
+                            throw new IOException(
+                                    format("Invalid syntax in '%s': import needs a value!", bazelProjectFile), e);
+                        }
+                        if (fileToImport.isAbsolute()) {
+                            throw new IOException(format(
+                                "Invalid import (%s) defined in '%s': imports must be relative to the file they are defined in",
+                                fileToImport, bazelProjectFile));
+                        }
+                        var resolvedPathOfFileToImport = bazelWorkspaceRoot.resolve(fileToImport);
+                        try {
+                            // parse the import into the existing builder (this allows to implement the wanted behavior)
+                            parseProjectFile(resolvedPathOfFileToImport, builder);
+                        } catch (NoSuchFileException e) {
+                            throw new NoSuchFileException(resolvedPathOfFileToImport.toString(),
+                                    bazelProjectFile.toString(), format("import '%s' not found (defined in '%s')",
+                                        resolvedPathOfFileToImport, bazelProjectFile));
+                        }
+                        break;
                     }
-                    break;
-                }
-                case "workspace_type": {
-                    try {
-                        builder.workspaceType = rawSection.getBodyAsSingleValue();
-                    } catch (NullPointerException e) {
-                        throw new IOException(
-                                format("Invalid syntax in '%s': workspace_type needs a value!", bazelProjectFile), e);
+                    case "workspace_type": {
+                        try {
+                            builder.workspaceType = rawSection.getBodyAsSingleValue();
+                        } catch (NullPointerException e) {
+                            throw new IOException(
+                                    format("Invalid syntax in '%s': workspace_type needs a value!", bazelProjectFile),
+                                    e);
+                        }
+                        break;
                     }
-                    break;
-                }
-                case "additional_languages": {
-                    parseSectionBodyIntoList(rawSection).forEach(builder.additionalLanguages::add);
-                    break;
-                }
-                case "java_language_level": {
-                    try {
-                        builder.javaLanguageLevel = rawSection.getBodyAsSingleValue();
-                    } catch (NullPointerException e) {
-                        throw new IOException(
-                                format("Invalid syntax in '%s': java_language_level needs a value!", bazelProjectFile),
-                                e);
+                    case "additional_languages": {
+                        parseSectionBodyIntoList(rawSection).forEach(builder.additionalLanguages::add);
+                        break;
                     }
-                    break;
-                }
-                case "ts_config_rules": {
-                    parseSectionBodyIntoList(rawSection).forEach(builder.tsConfigRules::add);
-                    break;
-                }
-                case "target_discovery_strategy": {
-                    // extension for BEF
-                    try {
-                        builder.targetDiscoveryStrategy = rawSection.getBodyAsSingleValue();
-                    } catch (NullPointerException e) {
-                        throw new IOException(format("Invalid syntax in '%s': target_discovery_strategy needs a value!",
-                            bazelProjectFile), e);
+                    case "java_language_level": {
+                        try {
+                            builder.javaLanguageLevel = rawSection.getBodyAsSingleValue();
+                        } catch (NullPointerException e) {
+                            throw new IOException(format("Invalid syntax in '%s': java_language_level needs a value!",
+                                bazelProjectFile), e);
+                        }
+                        break;
                     }
-                    break;
-                }
-                case "target_provisioning_strategy": {
-                    // extension for BEF
-                    try {
-                        builder.targetProvisioningStrategy = rawSection.getBodyAsSingleValue();
-                    } catch (NullPointerException e) {
-                        throw new IOException(
-                                format("Invalid syntax in '%s': target_provisioning_strategy needs a value!",
-                                    bazelProjectFile),
-                                e);
+                    case "ts_config_rules": {
+                        parseSectionBodyIntoList(rawSection).forEach(builder.tsConfigRules::add);
+                        break;
                     }
-                    break;
+                    case "target_discovery_strategy": {
+                        // extension for BEF
+                        try {
+                            builder.targetDiscoveryStrategy = rawSection.getBodyAsSingleValue();
+                        } catch (NullPointerException e) {
+                            throw new IOException(
+                                    format("Invalid syntax in '%s': target_discovery_strategy needs a value!",
+                                        bazelProjectFile),
+                                    e);
+                        }
+                        break;
+                    }
+                    case "target_provisioning_strategy": {
+                        // extension for BEF
+                        try {
+                            builder.targetProvisioningStrategy = rawSection.getBodyAsSingleValue();
+                        } catch (NullPointerException e) {
+                            throw new IOException(
+                                    format("Invalid syntax in '%s': target_provisioning_strategy needs a value!",
+                                        bazelProjectFile),
+                                    e);
+                        }
+                        break;
+                    }
+                    case "import_target_output":
+                    case "exclude_target": {
+                        // ignore deprecated
+                        break;
+                    }
+                    default:
+                        throw new IllegalArgumentException("Unexpected value: " + rawSection.getName());
                 }
-                case "import_target_output":
-                case "exclude_target": {
-                    // ignore deprecated
-                    break;
-                }
-                default:
-                    throw new IllegalArgumentException("Unexpected value: " + rawSection.getName());
             }
         }
     }

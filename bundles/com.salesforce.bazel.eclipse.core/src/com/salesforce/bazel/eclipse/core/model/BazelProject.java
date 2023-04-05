@@ -31,7 +31,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 
@@ -66,11 +65,6 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 public class BazelProject implements IProjectNature {
 
     /**
-     * Default <code>.bazelproject</code> file path relative to the workspace (project) root.
-     */
-    public static final IPath DEFAULT_PROJECT_VIEW = new Path(".bazelproject");
-
-    /**
      * A {@link IResource#getPersistentProperty(QualifiedName) persistent property} set on an {@link IProject}
      * representing the workspace root directory.
      * <p>
@@ -78,14 +72,7 @@ public class BazelProject implements IProjectNature {
      * </p>
      */
     public static final QualifiedName PROJECT_PROPERTY_WORKSPACE_ROOT = new QualifiedName(PLUGIN_ID, "workspace_root");
-    /**
-     * A {@link IResource#getPersistentProperty(QualifiedName) persistent property} set on an {@link IProject}
-     * representing the project view used by the Bazel workspace.
-     * <p>
-     * The property will only be set on a project representing the Bazel workspace.
-     * </p>
-     */
-    public static final QualifiedName PROJECT_PROPERTY_PROJECT_VIEW = new QualifiedName(PLUGIN_ID, "prooject_view");
+
     /**
      * A {@link IResource#getPersistentProperty(QualifiedName) persistent property} set on an {@link IProject}
      * containing full qualified labels of all targets represented by a project.
@@ -227,13 +214,6 @@ public class BazelProject implements IProjectNature {
         return true;
     }
 
-    private void checkThisIsTheWorkspaceProject() throws CoreException {
-        if (!isWorkspaceProject()) {
-            throw new CoreException(
-                    Status.error(format("Project '%s' is not a project representing the Bazel workspace!", project)));
-        }
-    }
-
     @Override
     public void configure() throws CoreException {
         addBazelBuilder(project, project.getDescription(), null);
@@ -344,24 +324,6 @@ public class BazelProject implements IProjectNature {
     }
 
     /**
-     * Returns the absolute path in the file system to the <code>.bazelproject</code> file used by the workspace.
-     *
-     * @return the absolute path in the file system to the <code>.bazelproject</code> file (never <code>null</code>)
-     * @throws CoreException
-     *             in case of errors accessing the resources
-     */
-    public IPath getProjectViewLocation() throws CoreException {
-        checkThisIsTheWorkspaceProject();
-
-        var projectView = project.getPersistentProperty(PROJECT_PROPERTY_PROJECT_VIEW);
-        if (projectView == null) {
-            return getProject().getLocation().append(DEFAULT_PROJECT_VIEW);
-        }
-
-        return getProject().getLocation().append(projectView);
-    }
-
-    /**
      * Indicates if this project represents a single Bazel Target.
      *
      * @return <code>true</code> if this project is a target project, <code>false</code> otherwise
@@ -420,30 +382,4 @@ public class BazelProject implements IProjectNature {
     public void setProject(IProject project) {
         this.project = requireNonNull(project, "the project should never be set to null");
     }
-
-    /**
-     * Sets the absolute path in the file system to the <code>.bazelproject</code> file that is used by the workspace.
-     *
-     * @param location
-     *            the location to set (<code>null</code> will triffer the {@link #DEFAULT_PROJECT_VIEW})
-     * @throws CoreException
-     *             in case of errors accessing the resources
-     */
-    public void setProjectViewLocation(IPath location) throws CoreException {
-        checkThisIsTheWorkspaceProject();
-
-        if (location != null) {
-            var workspaceRoot = getProject().getLocation();
-            if (!location.isAbsolute() || !workspaceRoot.isPrefixOf(location)) {
-                throw new CoreException(
-                        Status.error(format("Location to project view '%s' must be within the Bazel workspace (%s)!",
-                            location, workspaceRoot)));
-            }
-            // store the property relative to the workspace root
-            location = location.removeFirstSegments(workspaceRoot.segmentCount()).makeAbsolute();
-        }
-
-        project.setPersistentProperty(PROJECT_PROPERTY_PROJECT_VIEW, location != null ? location.toString() : null);
-    }
-
 }

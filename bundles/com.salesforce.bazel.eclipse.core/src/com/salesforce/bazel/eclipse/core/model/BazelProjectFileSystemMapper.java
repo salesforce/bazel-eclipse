@@ -42,6 +42,7 @@ import org.eclipse.core.runtime.IPath;
  */
 public class BazelProjectFileSystemMapper {
 
+    private static final String DOT_ECLIPSE_FOLDER = ".eclipse";
     private final BazelWorkspace bazelWorkspace;
 
     /**
@@ -64,9 +65,27 @@ public class BazelProjectFileSystemMapper {
      * @return the absolute location in the file system (never <code>null</code>)
      */
     public IPath getProjectsArea() {
-        return getBazelWorkspace().getLocation().append(".eclipse").append("projects");
+        return getBazelWorkspace().getLocation().append(DOT_ECLIPSE_FOLDER).append("projects");
     }
 
+    /**
+     * {@return the absolute path in the file system to the <code>.bazelproject</code> file used by the workspace}
+     */
+    public IPath getProjectViewLocation() {
+        return getBazelWorkspace().getLocation().append(DOT_ECLIPSE_FOLDER).append(".bazelproject");
+    }
+
+    /**
+     * Returns the folder where source files links to sources will be created.
+     * <p>
+     * This can be used for very narrow scoped projects, i.e. projects representing a single target. For projects which
+     * combines multiple targets this method should not be used to avoid confusion.
+     * </p>
+     *
+     * @param project
+     *            the Bazel project
+     * @return the virtual source folder
+     */
     public IFolder getVirtualSourceFolder(BazelProject project) {
         return project.getProject().getFolder("srcs");
     }

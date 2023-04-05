@@ -160,10 +160,21 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     }
 
     /**
+     * {@return the {@link BazelProjectFileSystemMapper} for this workspace}
+     *
+     * @throws CoreException
+     *             if the project cannot be found in the Eclipse workspace
+     */
+    public BazelProjectFileSystemMapper getBazelProjectFileSystemMapper() throws CoreException {
+        return getInfo().getBazelProjectFileSystemMapper();
+    }
+
+    /**
      * Returns the project view for this workspace.
      * <p>
-     * The project view file is configured at the project resource level. This method reads the location and parses it
-     * into the project file.
+     * There is a single project view file used by the workspace at
+     * {@link BazelProjectFileSystemMapper#getProjectViewLocation() a defined location}. This method reads the file and
+     * returns the parsed project view.
      * </p>
      *
      * @return the project view for this workspace (never <code>null</code>)

@@ -43,6 +43,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
     private volatile IProject project;
     private volatile BazelProject bazelProject;
     private volatile BazelProjectView bazelProjectView;
+    private volatile BazelProjectFileSystemMapper bazelProjectFileSystemMapper;
 
     private IPath excutionRoot;
     private String name;
@@ -78,15 +79,26 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         return bazelProject = new BazelProject(getProject(), bazelWorkspace.getModel());
     }
 
+    public BazelProjectFileSystemMapper getBazelProjectFileSystemMapper() {
+        var cachedBazelProjectFileSystemMapper = bazelProjectFileSystemMapper;
+        if (cachedBazelProjectFileSystemMapper != null) {
+            return cachedBazelProjectFileSystemMapper;
+        }
+
+        return bazelProjectFileSystemMapper = new BazelProjectFileSystemMapper(getBazelWorkspace());
+    }
+
     public BazelProjectView getBazelProjectView() throws CoreException {
         var cachedProjectView = bazelProjectView;
         if (cachedProjectView != null) {
             return cachedProjectView;
         }
 
-        var projectViewLocation = getBazelProject().getProjectViewLocation();
+        var projectViewLocation = getBazelProjectFileSystemMapper().getProjectViewLocation();
         try {
-            return bazelProjectView = new BazelProjectFileReader(projectViewLocation.toFile().toPath()).read();
+            return bazelProjectView =
+                    new BazelProjectFileReader(projectViewLocation.toFile().toPath(), getRoot().toFile().toPath())
+                            .read();
         } catch (IOException e) {
             throw new CoreException(Status.error(format(
                 "Error reading project view '%s'. Please check the setup. Each workspace is required to have a project view to work properly in an IDE. %s",
