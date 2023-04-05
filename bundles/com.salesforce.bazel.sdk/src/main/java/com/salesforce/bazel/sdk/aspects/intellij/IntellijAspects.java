@@ -201,7 +201,7 @@ public class IntellijAspects {
                         	Contributing to BEF? Setting up a dev environment?%n\
                         	%n\
                         	  Please run:%n\
-                        	    cd ./bundles/com.salesforce.bazel-java-sdk/aspects/import%n\
+                        	    cd ./bundles/com.salesforce.bazel.sdk/aspects/import%n\
                         	    ./import-and-build.sh%n\
                         	%n\
                         	%n""",
