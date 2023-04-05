@@ -2,16 +2,16 @@ package com.salesforce.bazel.sdk.command;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import com.salesforce.bazel.sdk.BazelVersion;
-import com.salesforce.bazel.sdk.util.SystemUtil;
 
 public class DefaultBazelCommandExecutorTest {
 
@@ -32,10 +32,8 @@ public class DefaultBazelCommandExecutorTest {
     }
 
     @Test
+    @DisabledOnOs(OS.WINDOWS) // shell wrapping is not supported on Windows
     void shell_wrapping_when_enabled() throws Exception {
-        // shell wrapping is not supported on Windows
-        assumeFalse(new SystemUtil().isWindows());
-
         executor.setWrapExecutionIntoShell(true);
         var commandLine = executor.prepareCommandLine(new DummyCommand());
 
