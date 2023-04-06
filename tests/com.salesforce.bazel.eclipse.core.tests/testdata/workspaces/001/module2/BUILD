@@ -4,7 +4,10 @@ java_library (
     name = "module2",
     srcs = glob(["java/src/**/*.java"]),
     visibility = ["//module1:__pkg__"],
-    deps = ["//module3"]
+    deps = [
+        "//module3",
+        "@org_apache_commons_commons_lang3"
+    ]
 )
 
 java_test(

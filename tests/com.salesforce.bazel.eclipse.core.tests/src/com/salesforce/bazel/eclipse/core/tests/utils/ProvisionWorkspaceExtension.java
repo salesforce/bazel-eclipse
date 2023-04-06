@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.setup.ImportBazelWorkspaceJob;
 
 /**
@@ -37,7 +38,8 @@ public class ProvisionWorkspaceExtension implements Extension, BeforeAllCallback
     private final String workspaceTestDataLocation;
     private final Class<?> testClassForObtainingBundle;
 
-    private volatile Path workspaceRoot;
+    private Path workspaceRoot;
+    private BazelWorkspace bazelWorkspace;
 
     /**
      * Create a new extension.
@@ -60,6 +62,7 @@ public class ProvisionWorkspaceExtension implements Extension, BeforeAllCallback
         // cleanup
         var workspace = ResourcesPlugin.getWorkspace();
         workspace.run((ICoreRunnable) monitor -> {
+            // delete all projects
             var projects = workspace.getRoot().getProjects();
             for (IProject project : projects) {
                 var isWithinWorkspace = workspace.getRoot().getLocation().isPrefixOf(project.getLocation());
@@ -85,8 +88,7 @@ public class ProvisionWorkspaceExtension implements Extension, BeforeAllCallback
                     e);
         }
 
-        // import the workspace project
-        var bazelWorkspace = BazelCore.getModel().getBazelWorkspace(workspaceRoot);
+        bazelWorkspace = BazelCore.getModel().getBazelWorkspace(workspaceRoot);
         assertTrue(bazelWorkspace.exists(), () -> format("Bazel workspace '%s' does not exists!", workspaceRoot));
 
         LOG.info("Importing workspace '{}'", workspaceRoot);
