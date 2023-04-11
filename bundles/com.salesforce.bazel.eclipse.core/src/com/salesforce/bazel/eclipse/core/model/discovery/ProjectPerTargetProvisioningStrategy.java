@@ -277,6 +277,7 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         rawClasspath.add(JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)));
 
         // FIXME: detect JRE from target
+        // bazel cquery "@bazel_tools//tools/jdk:current_java_toolchain" --output starlark --starlark:expr 'providers(target)["JavaToolchainInfo"].source_version'
         rawClasspath.add(JavaRuntime.getDefaultJREContainerEntry());
 
         var javaProject = JavaCore.create(project.getProject());
