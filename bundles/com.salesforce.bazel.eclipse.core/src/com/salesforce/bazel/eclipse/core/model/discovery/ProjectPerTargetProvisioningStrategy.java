@@ -1,6 +1,8 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDPATH_PROBLEM_MARKER;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -9,22 +11,30 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.launching.JavaRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +48,7 @@ import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
 import com.google.idea.blaze.base.sync.workspace.ArtifactLocationDecoder;
 import com.google.idea.blaze.base.sync.workspace.ArtifactLocationDecoderImpl;
 import com.google.idea.blaze.base.sync.workspace.WorkspacePathResolverImpl;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
@@ -76,7 +87,25 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
 
     private volatile BazelProjectFileSystemMapper fileSystemMapper;
 
-    protected JavaInfo collectJavaInfo(BazelTarget target, IProgressMonitor monitor) throws CoreException {
+    /**
+     * Collects base Java information for a given target.
+     * <p>
+     * This uses the target info from the model (as returned by <code>bazel query</code>) to discover source directories
+     * and project level dependencies. This does not compute the classpath. Instead a classpath container is applied to
+     * defer classpath computation when project provisioning is completed for a workspace.
+     * </p>
+     *
+     * @param target
+     *            the target to collect Java information for (must not be <code>null</code>)
+     * @param project
+     *            the provisioned Bazel project (must not be <code>null</code>)
+     * @param monitor
+     *            the progress monitor for checking cancellation (must not be <code>null</code>)
+     * @return the collected Java info (never <code>null</code>)
+     * @throws CoreException
+     */
+    protected JavaInfo collectJavaInfo(BazelTarget target, BazelProject project, IProgressMonitor monitor)
+            throws CoreException {
         var javaInfo = new JavaInfo(target.getBazelPackage(), target.getBazelWorkspace());
 
         var attributes = target.getRuleAttributes();
@@ -114,7 +143,26 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
                 javaInfo.hasSourceFilesWithoutCommonRoot() ? javaInfo.getSourceFilesWithoutCommonRoot() : "n/a");
         }
 
-        // TODO: create project level markers?
+        // delete existing markers
+        project.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
+
+        // abort if canceled
+        if (monitor.isCanceled()) {
+            createMarker(getEclipseWorkspaceRoot(), BUILDPATH_PROBLEM_MARKER, Status
+                    .warning("Bazel project provisioning was canceled. The Eclipse workspace may not build properly."));
+            throw new OperationCanceledException();
+        }
+
+        // create project level markers
+        if (!recommendations.isOK()) {
+            if (recommendations.isMultiStatus()) {
+                for (IStatus status : recommendations.getChildren()) {
+                    createBuildPathProblem(project, status);
+                }
+            } else {
+                createBuildPathProblem(project, recommendations);
+            }
+        }
 
         return javaInfo;
     }
@@ -210,10 +258,43 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
 
     }
 
-    private void configureClasspath(BazelTarget target, BazelProject project, JavaInfo javaInfo,
-            IProgressMonitor progress) {
-        // TODO Auto-generated method stub
+    private void configureRawClasspath(BazelTarget target, BazelProject project, JavaInfo javaInfo,
+            IProgressMonitor progress) throws CoreException {
+        List<IClasspathEntry> rawClasspath = new ArrayList<>();
 
+        if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
+            rawClasspath
+                    .add(JavaCore.newSourceEntry(getFileSystemMapper().getVirtualSourceFolder(project).getFullPath()));
+        }
+
+        if (javaInfo.hasSourceDirectories()) {
+            for (FileEntry dir : javaInfo.getSourceDirectories()) {
+                var sourceFolder = project.getProject().getFolder(dir.getPath());
+                rawClasspath.add(JavaCore.newSourceEntry(sourceFolder.getFullPath()));
+            }
+        }
+
+        rawClasspath.add(JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)));
+
+        // FIXME: detect JRE from target
+        rawClasspath.add(JavaRuntime.getDefaultJREContainerEntry());
+
+        var javaProject = JavaCore.create(project.getProject());
+        javaProject.setRawClasspath(rawClasspath.toArray(new IClasspathEntry[rawClasspath.size()]), true, progress);
+    }
+
+    /**
+     * Creates a problem marker of type {@link BazelCoreSharedContstants#BUILDPATH_PROBLEM_MARKER} for the given status.
+     *
+     * @param project
+     *            the project to create the marker at (must not be <code>null</code>)
+     * @param status
+     *            the status to create the marker for (must not be <code>null</code>)
+     * @return the created marker (never <code>null</code>)
+     * @throws CoreException
+     */
+    protected IMarker createBuildPathProblem(BazelProject project, IStatus status) throws CoreException {
+        return createMarker(project.getProject(), BUILDPATH_PROBLEM_MARKER, status);
     }
 
     protected void createFolderAndParents(final IContainer folder, IProgressMonitor progress) throws CoreException {
@@ -236,6 +317,33 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         } finally {
             progress.done();
         }
+    }
+
+    private IMarker createMarker(IResource resource, String type, IStatus status) throws CoreException {
+        var message = status.getMessage();
+        if (status.isMultiStatus()) {
+            var children = status.getChildren();
+            if ((children != null) && (children.length > 0)) {
+                message = children[0].getMessage();
+            }
+        }
+        if ((message == null) && (status.getException() != null)) {
+            message = status.getException().getMessage();
+        }
+
+        Map<String, Object> markerAttributes = new HashMap<>();
+        markerAttributes.put(IMarker.MESSAGE, message);
+        markerAttributes.put(IMarker.SOURCE_ID, "Bazel Project Provisioning");
+
+        if (status.matches(IStatus.ERROR)) {
+            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_ERROR));
+        } else if (status.matches(IStatus.WARNING)) {
+            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_WARNING));
+        } else if (status.matches(IStatus.INFO)) {
+            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_INFO));
+        }
+
+        return resource.createMarker(type, markerAttributes);
     }
 
     protected void deleteAllFilesNotInAllowList(IFolder folder, Set<IFile> allowList, IProgressMonitor progress)
@@ -377,13 +485,13 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
             var project = provisionTargetProject(target, monitor.newChild(1));
 
             // build the Java information
-            var javaInfo = collectJavaInfo(target, monitor.newChild(1));
+            var javaInfo = collectJavaInfo(target, project, monitor.newChild(1));
 
             // configure links
             linkJavaSourcesIntoProject(target, project, javaInfo, monitor.newChild(1));
 
             // configure classpath
-            configureClasspath(target, project, javaInfo, monitor.newChild(1));
+            configureRawClasspath(target, project, javaInfo, monitor.newChild(1));
 
             return project;
         } finally {
@@ -415,6 +523,10 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
             throws CoreException {
         try {
             var monitor = SubMonitor.convert(progress, "Provisioning projects", targets.size());
+
+            // cleanup markers at workspace level
+            getEclipseWorkspaceRoot().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
+
             List<BazelProject> result = new ArrayList<>();
             for (BazelTarget target : targets) {
                 monitor.subTask(target.getLabel().toString());

@@ -52,6 +52,13 @@ public class JavaInfo {
             relativePathParent = relativePath.removeLastSegments(1);
         }
 
+        /**
+         * {@return absolute location of of the container of this path entry}
+         */
+        public IPath getContainingFolderPath() {
+            return containingFolderPath;
+        }
+
         public IPath getDetectedPackagePath() {
             return requireNonNull(detectedPackagePath, "no package path detected");
         }
@@ -64,10 +71,16 @@ public class JavaInfo {
             return relativePathParent.removeLastSegments(getDetectedPackagePath().segmentCount());
         }
 
+        /**
+         * {@return the relative path within the container}
+         */
         public IPath getPath() {
             return relativePath;
         }
 
+        /**
+         * {@return the parent folder path of <code>#getPath()</code>}
+         */
         public IPath getPathParent() {
             return relativePathParent;
         }
@@ -265,6 +278,10 @@ public class JavaInfo {
         return new FileEntry(new Path(srcFileOrLabel), bazelPackage.getLocation());
     }
 
+    public BazelWorkspace getBazelWorkspace() {
+        return bazelWorkspace;
+    }
+
     public List<FileEntry> getSourceDirectories() {
         return requireNonNull(sourceDirectories, "no source directories discovered");
     }
@@ -281,6 +298,7 @@ public class JavaInfo {
         return (sourceFilesWithoutCommonRoot != null) && !sourceFilesWithoutCommonRoot.isEmpty();
     }
 
+    @SuppressWarnings("deprecation") // use of TokenNameIdentifier is ok here
     private char[] readPackageName(FileEntry fileEntry) {
         char[] packageName = {};
 
