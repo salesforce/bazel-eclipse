@@ -36,8 +36,9 @@ public interface TargetProvisioningStrategy {
      * is fully provisioned. Therefore, the computed classpath only represents dependencies of the specified project
      * (either {@link IClasspathEntry#CPE_LIBRARY} or {@link IClasspathEntry#CPE_PROJECT}). Any source folder is
      * expected to be calculated and setup properly as part of a call to
-     * {@link #provisionProjectsForTarget(Collection, IProgressMonitor)} during project provisioning. Implementors are
-     * expected to properly connect dependencies to projects provisioned in the Eclipse workspace.
+     * {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)} during project
+     * provisioning. Implementors are expected to properly connect dependencies to projects provisioned in the Eclipse
+     * workspace.
      * </p>
      * <p>
      * This method is guaranteed to be called within {@link IWorkspaceRoot a workspace level lock} and allowed to modify
@@ -65,7 +66,7 @@ public interface TargetProvisioningStrategy {
             IProgressMonitor monitor) throws CoreException;
 
     /**
-     * Provisions project for a collection of targets to materialize for a workspace.
+     * Provisions projects in Eclipse for a collection of targets to materialize for a workspace.
      * <p>
      * The provisioning operation will convert the given targets into a list of {@link BazelProject Bazel projects}.
      * When this method completes, the underlying resources are guaranteed to exist in the Eclipse workspace and the
@@ -100,12 +101,14 @@ public interface TargetProvisioningStrategy {
      *
      * @param targets
      *            the targets to provision (never <code>null</code>)
+     * @param workspace
+     *            the workspace all targets belong to (never <code>null</code>)
      * @param progress
      *            a monitor for tracking progress and observing cancellations (never <code>null</code>)
      * @return a list of provisioned projects or <code>null</code> if not project should be provisioned for the given
      *         target
      */
-    List<BazelProject> provisionProjectsForTarget(Collection<BazelTarget> targets, IProgressMonitor progress)
-            throws CoreException;
+    List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets, BazelWorkspace workspace,
+            IProgressMonitor progress) throws CoreException;
 
 }

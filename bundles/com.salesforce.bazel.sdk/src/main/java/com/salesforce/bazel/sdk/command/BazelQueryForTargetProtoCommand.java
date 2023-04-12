@@ -1,5 +1,6 @@
 package com.salesforce.bazel.sdk.command;
 
+import static java.lang.String.format;
 import static java.nio.file.Files.createTempFile;
 import static java.nio.file.Files.newInputStream;
 
@@ -14,7 +15,7 @@ import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.sdk.BazelVersion;
 
 /**
- * <code>bazel query --output proto</code>
+ * <code>bazel query --output streamed_proto --order_output=no</code>
  */
 public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collection<Build.Target>> {
 
@@ -25,6 +26,11 @@ public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collectio
 
     @Override
     public Collection<Target> generateResult(int exitCode) throws IOException {
+        if (exitCode != 0) {
+            throw new IOException(
+                    format("Bazel query command failed with exit code %d. Please check command output", exitCode));
+        }
+
         List<Target> result = new ArrayList<>();
         try (var in = newInputStream(getStdOutFile())) {
             Target target;

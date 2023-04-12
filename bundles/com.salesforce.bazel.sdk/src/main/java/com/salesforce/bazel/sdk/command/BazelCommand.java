@@ -75,6 +75,8 @@ public abstract class BazelCommand<R> {
      * @param exitCode
      *            exit code
      * @return the command result
+     * @throws IOException
+     *             if the command execution failed in a way where no output could be produced
      */
     public abstract R generateResult(int exitCode) throws IOException;
 

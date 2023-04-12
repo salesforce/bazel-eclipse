@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 
 /**
@@ -83,7 +84,7 @@ public class ProjectPerPackageProvisioningStrategy implements TargetProvisioning
     }
 
     @Override
-    public List<BazelProject> provisionProjectsForTarget(Collection<BazelTarget> targets, IProgressMonitor progress)
+    public List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets, BazelWorkspace workspace, IProgressMonitor progress)
             throws CoreException {
         try {
             var monitor = SubMonitor.convert(progress, "Provisioning projects", targets.size());

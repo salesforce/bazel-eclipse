@@ -248,7 +248,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private List<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, SubMonitor monitor)
             throws CoreException {
-        return getTargetProvisioningStrategy().provisionProjectsForTarget(targets, monitor);
+        return getTargetProvisioningStrategy().provisionProjectsForSelectedTargets(targets, workspace, monitor);
     }
 
     private void removeObsoleteProjects(List<BazelProject> provisionedProjects, SubMonitor monitor)

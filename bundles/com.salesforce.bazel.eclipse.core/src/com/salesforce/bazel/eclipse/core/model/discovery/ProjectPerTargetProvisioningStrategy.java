@@ -15,7 +15,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.concurrent.ExecutionException;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -34,6 +37,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,12 +57,14 @@ import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaInfo.FileEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
+import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand;
 
 /**
  * Default implementation of {@link TargetProvisioningStrategy} which provisions a single project per supported target.
@@ -86,6 +92,11 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
     }
 
     private volatile BazelProjectFileSystemMapper fileSystemMapper;
+
+    private IVMInstall javaToolchainVm;
+
+    private String javaToolchainSourceVersion;
+    private String javaToolchainTargetVersion;
 
     /**
      * Collects base Java information for a given target.
@@ -148,8 +159,9 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
 
         // abort if canceled
         if (monitor.isCanceled()) {
-            createMarker(getEclipseWorkspaceRoot(), BUILDPATH_PROBLEM_MARKER, Status
-                    .warning("Bazel project provisioning was canceled. The Eclipse workspace may not build properly."));
+            createMarker(target.getBazelWorkspace().getBazelProject().getProject(), BUILDPATH_PROBLEM_MARKER,
+                Status.warning(
+                    "Bazel project provisioning for this workspace was canceled. The Eclipse workspace may not build properly."));
             throw new OperationCanceledException();
         }
 
@@ -276,12 +288,24 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
 
         rawClasspath.add(JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)));
 
-        // FIXME: detect JRE from target
-        // bazel cquery "@bazel_tools//tools/jdk:current_java_toolchain" --output starlark --starlark:expr 'providers(target)["JavaToolchainInfo"].source_version'
-        rawClasspath.add(JavaRuntime.getDefaultJREContainerEntry());
+        if (javaToolchainVm != null) {
+            rawClasspath.add(JavaCore.newContainerEntry(JavaRuntime.newJREContainerPath(javaToolchainVm)));
+        } else {
+            rawClasspath.add(JavaRuntime.getDefaultJREContainerEntry());
+        }
 
         var javaProject = JavaCore.create(project.getProject());
         javaProject.setRawClasspath(rawClasspath.toArray(new IClasspathEntry[rawClasspath.size()]), true, progress);
+
+        if (javaToolchainVm != null) {
+            new JvmConfigurator().configureJVMSettings(javaProject, javaToolchainVm);
+        }
+        if (javaToolchainSourceVersion != null) {
+            javaProject.setOption(JavaCore.COMPILER_SOURCE, javaToolchainSourceVersion);
+        }
+        if (javaToolchainTargetVersion != null) {
+            javaProject.setOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, javaToolchainTargetVersion);
+        }
     }
 
     /**
@@ -369,6 +393,75 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         } finally {
             progress.done();
         }
+    }
+
+    private void detectDefaultJavaToolchain(BazelWorkspace workspace) throws CoreException {
+        var command = new BazelCQueryWithStarlarkExpressionCommand(workspace.getLocation().toFile().toPath(),
+                "@bazel_tools//tools/jdk:current_java_toolchain",
+                "providers(target)['JavaToolchainInfo'].source_version + '::' + providers(target)['JavaToolchainInfo'].target_version + '::' + providers(target)['JavaToolchainInfo'].java_runtime.java_home",
+                false);
+        try {
+            var result = workspace.getParent().getModelManager().getExecutionService()
+                    .executeOutsideWorkspaceLockAsync(command, workspace).get();
+            try {
+                var tokenizer = new StringTokenizer(result, "::");
+                javaToolchainSourceVersion = tokenizer.nextToken();
+                javaToolchainTargetVersion = tokenizer.nextToken();
+                var javaHome = tokenizer.nextToken();
+                LOG.debug("source_level: {}, target_level: {}, java_home: {}", javaToolchainSourceVersion,
+                    javaToolchainTargetVersion, javaHome);
+
+                // sanitize versions
+                try {
+                    if (Integer.parseInt(javaToolchainSourceVersion) < 9) {
+                        javaToolchainSourceVersion = "1." + javaToolchainSourceVersion;
+                    }
+                } catch (NumberFormatException e) {
+                    throw new CoreException(Status.error(
+                        format("Unable to detect Java Toolchain information. Error parsing source level (%s)",
+                            javaToolchainSourceVersion),
+                        e));
+                }
+                try {
+                    if (Integer.parseInt(javaToolchainTargetVersion) < 9) {
+                        javaToolchainTargetVersion = "1." + javaToolchainTargetVersion;
+                    }
+                } catch (NumberFormatException e) {
+                    throw new CoreException(Status.error(
+                        format("Unable to detect Java Toolchain information. Error parsing target level (%s)",
+                            javaToolchainTargetVersion),
+                        e));
+                }
+
+                // resolve java home
+                var resolvedJavaHomePath = java.nio.file.Path.of(javaHome);
+                if (!resolvedJavaHomePath.isAbsolute()) {
+                    if (!javaHome.startsWith("external/")) {
+                        throw new CoreException(Status.error(format(
+                            "Unable to resolved java_home of '%s' into something meaningful. Please report as reproducible bug!",
+                            javaHome)));
+                    }
+                    resolvedJavaHomePath = new BazelWorkspaceBlazeInfo(workspace).getOutputBase().resolve(javaHome);
+                }
+
+                javaToolchainVm = new JvmConfigurator().configureVMInstall(resolvedJavaHomePath, workspace);
+            } catch (NoSuchElementException e) {
+                throw new CoreException(Status.error(
+                    format("Unable to detect Java Toolchain information. Error parsing output of bazel cquery (%s)",
+                        result),
+                    e));
+            }
+        } catch (ExecutionException e) {
+            var cause = e.getCause();
+            if (cause != null) {
+                throw new CoreException(Status.error(cause.getMessage(), cause));
+            }
+
+            throw new CoreException(Status.error(e.getMessage(), e));
+        } catch (InterruptedException e) {
+            throw new OperationCanceledException("Interrupted while waiting for bazel cquery output to complete.");
+        }
+
     }
 
     protected IWorkspace getEclipseWorkspace() {
@@ -520,13 +613,17 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
     }
 
     @Override
-    public List<BazelProject> provisionProjectsForTarget(Collection<BazelTarget> targets, IProgressMonitor progress)
-            throws CoreException {
+    public List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets,
+            BazelWorkspace workspace, IProgressMonitor progress) throws CoreException {
         try {
             var monitor = SubMonitor.convert(progress, "Provisioning projects", targets.size());
 
             // cleanup markers at workspace level
-            getEclipseWorkspaceRoot().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
+            workspace.getBazelProject().getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true,
+                IResource.DEPTH_ZERO);
+
+            // detect default Java level
+            detectDefaultJavaToolchain(workspace);
 
             List<BazelProject> result = new ArrayList<>();
             for (BazelTarget target : targets) {
@@ -534,7 +631,7 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
 
                 // ensure there is a mapper
                 if (fileSystemMapper == null) {
-                    fileSystemMapper = new BazelProjectFileSystemMapper(target.getBazelWorkspace());
+                    fileSystemMapper = new BazelProjectFileSystemMapper(workspace);
                 }
 
                 // provision project

@@ -1,5 +1,6 @@
 package com.salesforce.bazel.sdk.command;
 
+import static java.lang.String.format;
 import static java.nio.file.Files.createTempFile;
 import static java.nio.file.Files.writeString;
 
@@ -20,11 +21,19 @@ import com.salesforce.bazel.sdk.BazelVersion;
  */
 public abstract class BazelQueryCommand<R> extends BazelCommand<R> {
 
+    protected enum QueryCommand {
+        query, cquery
+    }
+
     private final String query;
     private final boolean keepGoing;
 
     public BazelQueryCommand(Path workspaceRoot, String query, boolean keepGoing) {
-        super("query", workspaceRoot);
+        this(QueryCommand.query, workspaceRoot, query, keepGoing);
+    }
+
+    protected BazelQueryCommand(QueryCommand queryCommand, Path workspaceRoot, String query, boolean keepGoing) {
+        super(queryCommand.name(), workspaceRoot);
         this.query = query;
         this.keepGoing = keepGoing;
     }
@@ -41,12 +50,19 @@ public abstract class BazelQueryCommand<R> extends BazelCommand<R> {
             commandLine.add("--keep_going");
         }
 
-        // write query into file and use that
-        var queryFile = createTempFile("bazel_query_", ".txt");
-        writeString(queryFile, query);
+        // check version for cquery (https://github.com/bazelbuild/bazel/issues/12924)
+        var canUseQueryFile = getCommand().equals(QueryCommand.query.name()) || bazelVersion.isAtLeast(6, 2, 0);
 
-        commandLine.add("--query_file");
-        commandLine.add(queryFile.toString());
+        if (canUseQueryFile) {
+            // write query into file and use that
+            var queryFile = createTempFile(format("bazel_%s_", getCommand()), ".query.txt");
+            writeString(queryFile, query);
+
+            commandLine.add("--query_file");
+            commandLine.add(queryFile.toString());
+        } else {
+            commandLine.add(query);
+        }
 
         return commandLine;
     }

@@ -36,6 +36,7 @@ public final class ArtifactLocationDecoderImpl implements ArtifactLocationDecode
             return pathResolver.resolveToFile(artifactLocation.getRelativePath());
         }
 
+        // resolve from execution root
         // doesn't require file-system operations -- no attempt to resolve symlinks.
         return blazeInfo.getExecutionRoot().resolve(artifactLocation.getExecutionRootRelativePath());
     }
