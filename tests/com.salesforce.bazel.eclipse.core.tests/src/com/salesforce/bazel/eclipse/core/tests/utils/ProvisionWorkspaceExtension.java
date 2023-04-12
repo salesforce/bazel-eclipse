@@ -102,10 +102,15 @@ public class ProvisionWorkspaceExtension implements Extension, BeforeAllCallback
         }
     }
 
+    public BazelWorkspace getBazelWorkspace() {
+        var bazelWorkspace = BazelCore.getModel().getBazelWorkspace(getWorkspaceRoot());
+        assertTrue(bazelWorkspace.exists(), () -> format("Bazel workspace '%s' does not exists!", getWorkspaceRoot()));
+        return bazelWorkspace;
+    }
+
     public Path getWorkspaceRoot() {
         var workspaceRoot = this.workspaceRoot;
         assertNotNull(workspaceRoot, "Bazel test workspace was not properly initialized!");
         return workspaceRoot;
     }
-
 }
