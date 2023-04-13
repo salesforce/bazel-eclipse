@@ -13,6 +13,9 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
+
 /**
  * The information representing a {@link BazelElement} after it has been read/queried from Bazel.
  * <p>
@@ -20,6 +23,11 @@ package com.salesforce.bazel.eclipse.core.model;
  * open a discussion thread with the SDK team for lack of API in the {@link BazelElement} model.
  * </p>
  */
-public abstract sealed class BazelElementInfo permits BazelWorkspaceInfo, BazelPackageInfo, BazelTargetInfo, BazelModelInfo {
+public abstract sealed class BazelElementInfo
+        permits BazelWorkspaceInfo, BazelPackageInfo, BazelTargetInfo, BazelModelInfo {
+
+    IWorkspaceRoot getEclipseWorkspaceRoot() {
+        return ResourcesPlugin.getWorkspace().getRoot();
+    }
 
 }

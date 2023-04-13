@@ -85,16 +85,6 @@
       </classpathContainerInitializer>
    </extension>
 
-   <extension point="org.eclipse.core.expressions.propertyTesters">
-    <propertyTester
-        id="org.eclipse.jdt.ui.IJavaElementTypeExtender"
-        type="org.eclipse.jdt.core.IJavaElement"
-        namespace="com.salesforce.bazel.eclipse"
-        properties="isTestJavaElement"
-        class="com.salesforce.bazel.eclipse.util.JavaElementPropertyTester">
-     </propertyTester>
-   </extension>
-
    <extension
          point="com.salesforce.bazel.eclipse.core.model.target.discovery">
       <targetDiscoveryStrategy

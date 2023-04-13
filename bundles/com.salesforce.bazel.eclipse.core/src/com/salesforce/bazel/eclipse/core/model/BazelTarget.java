@@ -61,8 +61,7 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
     /**
      * The {@link BazelProject Bazel project} for this target
      * <p>
-     * This method performs a search in the Eclipse workspace for a matching project representing this target. The
-     * returned project may represent multiple targets.
+     * This method performs a search in the Eclipse workspace for a matching project representing this target.
      * </p>
      *
      * @return the Bazel target project

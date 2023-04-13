@@ -84,6 +84,21 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
     }
 
     /**
+     * The {@link BazelProject Bazel project} for this package
+     * <p>
+     * This method performs a search in the Eclipse workspace for a matching project representing this package. The
+     * returned project typically represents multiple targets.
+     * </p>
+     *
+     * @return the Bazel package project
+     * @throws CoreException
+     *             if the project cannot be found in the Eclipse workspace
+     */
+    public BazelProject getBazelProject() throws CoreException {
+        return getInfo().getBazelProject();
+    }
+
+    /**
      * Returns a Bazel target for the given name.
      * <p>
      * This is a handle-only method. The underlying target may or may not exist in the package.
@@ -179,6 +194,10 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
      */
     public IPath getWorkspaceRelativePath() {
         return packagePath;
+    }
+
+    public boolean hasBazelProject() throws CoreException {
+        return getInfo().findProject() != null;
     }
 
     public boolean hasBazelTarget(String name) throws CoreException {

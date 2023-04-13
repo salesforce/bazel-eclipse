@@ -430,6 +430,18 @@ public class BazelLabel {
     }
 
     /**
+     * @return <code>true</code> if this target is concrete ({@link #isConcrete()} returns <code>true</code>) and has a
+     *         target component, <code>false</code> otherwise
+     */
+    public boolean hasTarget() {
+        if (!isConcrete()) {
+            return false;
+        }
+        var i = localLabelPart.lastIndexOf(BazelLabel.BAZEL_COLON);
+        return i > -1;
+    }
+
+    /**
      * If a label refers to a single Bazel Target, is it concrete. If it using wildcard syntax, it is not concrete. For
      * the purposes of this method, a label using the default target (//a/b/c) is concrete.
      *

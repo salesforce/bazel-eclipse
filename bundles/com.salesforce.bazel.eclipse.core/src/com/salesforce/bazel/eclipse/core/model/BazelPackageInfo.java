@@ -13,6 +13,9 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
+import static com.salesforce.bazel.eclipse.core.model.BazelProject.hasOwnerPropertySetForLabel;
+import static com.salesforce.bazel.eclipse.core.model.BazelProject.hasWorkspaceRootPropertySetToLocation;
 import static java.lang.String.format;
 
 import java.nio.file.Path;
@@ -22,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
@@ -42,6 +46,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
     private final BazelPackage bazelPackage;
 
     private Map<String, Target> indexOfTargetInfoByTargetName;
+    private volatile BazelProject bazelProject;
 
     public BazelPackageInfo(Path buildFile, Path workspaceRoot, BazelPackage bazelPackage) {
         this.buildFile = buildFile;
@@ -49,8 +54,41 @@ public final class BazelPackageInfo extends BazelElementInfo {
         this.bazelPackage = bazelPackage;
     }
 
+    IProject findProject() throws CoreException {
+        var workspaceProject = getBazelPackage().getBazelWorkspace().getBazelProject().getProject();
+        var workspaceRoot = getBazelPackage().getBazelWorkspace().getLocation();
+        // we don't care about the actual project name - we look for the property
+        var projects = getEclipseWorkspaceRoot().getProjects();
+        for (IProject project : projects) {
+            if (project.hasNature(BAZEL_NATURE_ID) // is a Bazel project
+                    && !workspaceProject.equals(project) // is not the workspace project
+                    && hasWorkspaceRootPropertySetToLocation(project, workspaceRoot) // belongs to the workspace root
+                    && hasOwnerPropertySetForLabel(project, getBazelPackage().getLabel()) // represents the target
+            ) {
+                return project;
+            }
+        }
+
+        return null;
+    }
+
     public BazelPackage getBazelPackage() {
         return bazelPackage;
+    }
+
+    public BazelProject getBazelProject() throws CoreException {
+        var cachedProject = bazelProject;
+        if (cachedProject != null) {
+            return cachedProject;
+        }
+
+        var project = findProject();
+        if (project == null) {
+            throw new CoreException(Status.error(format(
+                "Unable to find project for Bazel package '%s' in the Eclipse workspace. Please check the workspace setup!",
+                getBazelPackage().getLabel())));
+        }
+        return bazelProject = new BazelProject(project, getBazelPackage().getModel());
     }
 
     public Path getBuildFile() {

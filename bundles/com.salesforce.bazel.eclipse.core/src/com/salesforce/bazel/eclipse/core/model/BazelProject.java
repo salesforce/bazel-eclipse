@@ -17,7 +17,6 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,17 +76,26 @@ public class BazelProject implements IProjectNature {
      * A {@link IResource#getPersistentProperty(QualifiedName) persistent property} set on an {@link IProject}
      * containing full qualified labels of all targets represented by a project.
      * <p>
-     * The property will be set on Bazel target projects only.
+     * The property will be set on Bazel target and package projects. The value is a list of labels separated by comma.
      * </p>
      */
     public static final QualifiedName PROJECT_PROPERTY_TARGETS = new QualifiedName(PLUGIN_ID, "targets");
+
+    /**
+     * A {@link IResource#getPersistentProperty(QualifiedName) persistent property} set on an {@link IProject}
+     * containing the full qualified label of the package or target a project was created for
+     * <p>
+     * The property will be set on Bazel target and package projects.
+     * </p>
+     */
+    public static final QualifiedName PROJECT_PROPERTY_OWNER = new QualifiedName(PLUGIN_ID, "owner");
 
     private static Stream<String> getLabels(String popertyValue) {
         return Stream.of(popertyValue.trim().split("\\s*,\\s*"));
     }
 
     /**
-     * A convenience method for checking if a project has the {@link #PROJECT_PROPERTY_TARGETS} set to the given label.
+     * A convenience method for checking if a project has the {@link #PROJECT_PROPERTY_OWNER} set to the given label.
      *
      * @param project
      *            the project to check
@@ -97,21 +105,21 @@ public class BazelProject implements IProjectNature {
      * @throws CoreException
      *             if the project is closed
      */
-    public static boolean hasTargetPropertySetForLabel(IProject project, BazelLabel label) throws CoreException {
-        // prevent non-concrete, default and external repo labels
-        if (!label.isConcrete() || label.isDefaultTarget() || label.isExternalRepoLabel()) {
+    public static boolean hasOwnerPropertySetForLabel(IProject project, BazelLabel label) throws CoreException {
+        // prevent non-concrete and external repo labels
+        if (!label.isConcrete() || label.isExternalRepoLabel()) {
             throw new IllegalArgumentException(format(
-                "Invalid label '%s': Label must befully qualified non default and without external repo identifier",
+                "Invalid label '%s': Label must be concrete target or a package and without external repo identifier",
                 label));
         }
 
-        var targetsPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_TARGETS);
-        if ((targetsPropertyValue == null) || targetsPropertyValue.isBlank()) {
+        var ownerValue = project.getPersistentProperty(PROJECT_PROPERTY_OWNER);
+        if ((ownerValue == null) || ownerValue.isBlank()) {
             return false;
         }
 
         var labelString = label.getLabelPath();
-        return getLabels(targetsPropertyValue).filter(labelString::equals).findAny().isPresent();
+        return ownerValue.equals(labelString);
     }
 
     /**
@@ -243,18 +251,16 @@ public class BazelProject implements IProjectNature {
      */
     public BazelTarget getBazelTarget() throws CoreException {
         var project = getProject();
-        var targetsPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_TARGETS);
-        var targetLabels =
-                targetsPropertyValue != null ? getLabels(targetsPropertyValue).collect(toList()) : List.<String> of();
-        if (targetLabels.isEmpty()) {
-            throw new CoreException(Status.error(format("Project '%s' is not a target project", project)));
-        }
-        if (targetLabels.size() > 1) {
-            throw new CoreException(Status
-                    .error(format("Project '%s' represents more than one target (%s)", project, targetsPropertyValue)));
+        var ownerPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_OWNER);
+        if ((ownerPropertyValue == null) || ownerPropertyValue.isEmpty()) {
+            throw new CoreException(Status.error(format("Project '%s' is not owned by a Bazel element.", project)));
         }
 
-        var label = new BazelLabel(targetLabels.stream().findFirst().get());
+        var label = new BazelLabel(ownerPropertyValue);
+        if (!label.hasTarget()) {
+            throw new CoreException(
+                    Status.error(format("Project '%s' does not map to a Bazel target but to '%s'.", project, label)));
+        }
 
         // search model
         var bazelWorkspace = getBazelWorkspace();

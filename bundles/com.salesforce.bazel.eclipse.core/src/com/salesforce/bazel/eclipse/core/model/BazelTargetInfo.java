@@ -14,15 +14,12 @@
 package com.salesforce.bazel.eclipse.core.model;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
-import static com.salesforce.bazel.eclipse.core.model.BazelProject.hasTargetPropertySetForLabel;
+import static com.salesforce.bazel.eclipse.core.model.BazelProject.hasOwnerPropertySetForLabel;
 import static com.salesforce.bazel.eclipse.core.model.BazelProject.hasWorkspaceRootPropertySetToLocation;
-import static com.salesforce.bazel.eclipse.core.model.BazelProject.numberOfTargetsinTargetProperty;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Status;
 
@@ -50,9 +47,8 @@ public final class BazelTargetInfo extends BazelElementInfo {
             if (project.hasNature(BAZEL_NATURE_ID) // is a Bazel project
                     && !workspaceProject.equals(project) // is not the workspace project
                     && hasWorkspaceRootPropertySetToLocation(project, workspaceRoot) // belongs to the workspace root
-                    && hasTargetPropertySetForLabel(project, getBazelTarget().getLabel()) // represents the target
-                    && (numberOfTargetsinTargetProperty(project) == 1 // single target project
-                    )) {
+                    && hasOwnerPropertySetForLabel(project, getBazelTarget().getLabel()) // represents the target
+            ) {
                 return project;
             }
         }
@@ -77,10 +73,6 @@ public final class BazelTargetInfo extends BazelElementInfo {
 
     public BazelTarget getBazelTarget() {
         return bazelTarget;
-    }
-
-    IWorkspaceRoot getEclipseWorkspaceRoot() {
-        return ResourcesPlugin.getWorkspace().getRoot();
     }
 
     public BazelRuleAttributes getRuleAttributes() throws CoreException {
