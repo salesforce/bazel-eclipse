@@ -1,29 +1,17 @@
 package com.salesforce.bazel.eclipse.core.tests.utils;
 
-import static java.lang.String.format;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.io.File;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.ICoreRunnable;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.Extension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.salesforce.bazel.eclipse.core.BazelCore;
-import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.setup.ImportBazelWorkspaceJob;
+import com.salesforce.bazel.sdk.BazelVersion;
 
 /**
  * JUnit extension for provisioning a workspace.
@@ -31,15 +19,9 @@ import com.salesforce.bazel.eclipse.core.setup.ImportBazelWorkspaceJob;
  * This extension is best used as static field in a test class with {@link RegisterExtension} annotation.
  * </p>
  */
-public class ProvisionWorkspaceExtension implements Extension, BeforeAllCallback, AfterAllCallback {
+public class ProvisionWorkspaceExtension extends BazelWorkspaceExtension implements AfterAllCallback {
 
     private static Logger LOG = LoggerFactory.getLogger(ProvisionWorkspaceExtension.class);
-
-    private final String workspaceTestDataLocation;
-    private final Class<?> testClassForObtainingBundle;
-
-    private Path workspaceRoot;
-    private BazelWorkspace bazelWorkspace;
 
     /**
      * Create a new extension.
@@ -52,47 +34,52 @@ public class ProvisionWorkspaceExtension implements Extension, BeforeAllCallback
      *             in case of problems resolving the workspace URL
      */
     public ProvisionWorkspaceExtension(String workspaceTestDataLocation, Class<?> testClassForObtainingBundle) {
-        // just store values here and initialize lated to avoid exceptions during class initializations
-        this.workspaceTestDataLocation = workspaceTestDataLocation;
-        this.testClassForObtainingBundle = testClassForObtainingBundle;
+        super(workspaceTestDataLocation, testClassForObtainingBundle);
+    }
+
+    /**
+     * Create a new extension.
+     *
+     * @param workspaceTestDataLocation
+     *            the location within an Eclipse test bundle to the Bazel workspace
+     * @param testClassForObtainingBundle
+     *            the class of the Eclipse test bundle to search for the {@code workspaceTestDataLocation}
+     * @param bazelVersion
+     *            an optional Bazel version for generating a <code>.bazelversion</code> file. (maybe null)
+     * @throws Exception
+     *             in case of problems resolving the workspace URL
+     */
+    public ProvisionWorkspaceExtension(String workspaceTestDataLocation, Class<?> testClassForObtainingBundle,
+            BazelVersion bazelVersion) {
+        super(workspaceTestDataLocation, testClassForObtainingBundle, bazelVersion);
     }
 
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
-        // cleanup
-        var workspace = ResourcesPlugin.getWorkspace();
-        workspace.run((ICoreRunnable) monitor -> {
-            // delete all projects
-            var projects = workspace.getRoot().getProjects();
-            for (IProject project : projects) {
-                var isWithinWorkspace = workspace.getRoot().getLocation().isPrefixOf(project.getLocation());
-                project.delete(isWithinWorkspace, true, monitor);
-            }
-            workspace.save(true, monitor);
-        }, new NullProgressMonitor());
+        try {
+            // cleanup
+            var workspace = ResourcesPlugin.getWorkspace();
+            workspace.run((ICoreRunnable) monitor -> {
+                // delete all projects
+                var projects = workspace.getRoot().getProjects();
+                for (IProject project : projects) {
+                    var isWithinWorkspace = workspace.getRoot().getLocation().isPrefixOf(project.getLocation());
+                    project.delete(isWithinWorkspace, true, monitor);
+                }
+                workspace.save(true, monitor);
+            }, new NullProgressMonitor());
+        } finally {
+            // ensure model cache is cleared
+            super.afterAll(context);
+        }
     }
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        var testFragmentBundle = FrameworkUtil.getBundle(testClassForObtainingBundle);
-        assertNotNull(testFragmentBundle, "This test can only run inside an OSGi runtime.");
+        super.beforeAll(context);
 
-        var workspaceRootUrl = FileLocator.find(testFragmentBundle, new Path(workspaceTestDataLocation));
-        assertNotNull(workspaceRootUrl, () -> format("Workspace root not found in bundle '%s'!", testFragmentBundle));
-        try {
-            workspaceRoot = new Path(new File(FileLocator.toFileURL(workspaceRootUrl).toURI()).getAbsolutePath());
-        } catch (Exception e) {
-            throw new AssertionError(
-                    format("Error obtaining file path to test workspace '%s' using uri '%s' in bundle '%s'",
-                        workspaceTestDataLocation, workspaceRootUrl, testFragmentBundle),
-                    e);
-        }
-
-        bazelWorkspace = BazelCore.getModel().getBazelWorkspace(workspaceRoot);
-        assertTrue(bazelWorkspace.exists(), () -> format("Bazel workspace '%s' does not exists!", workspaceRoot));
-
-        LOG.info("Importing workspace '{}'", workspaceRoot);
-        var workspaceJob = new ImportBazelWorkspaceJob(bazelWorkspace);
+        LOG.info("Importing workspace '{}'", getWorkspaceRoot());
+        var workspaceJob = new ImportBazelWorkspaceJob(getBazelWorkspace());
         workspaceJob.schedule();
         workspaceJob.join();
 
@@ -100,17 +87,5 @@ public class ProvisionWorkspaceExtension implements Extension, BeforeAllCallback
         if (!result.isOK()) {
             throw new AssertionError(result.getMessage(), result.getException());
         }
-    }
-
-    public BazelWorkspace getBazelWorkspace() {
-        var bazelWorkspace = BazelCore.getModel().getBazelWorkspace(getWorkspaceRoot());
-        assertTrue(bazelWorkspace.exists(), () -> format("Bazel workspace '%s' does not exists!", getWorkspaceRoot()));
-        return bazelWorkspace;
-    }
-
-    public Path getWorkspaceRoot() {
-        var workspaceRoot = this.workspaceRoot;
-        assertNotNull(workspaceRoot, "Bazel test workspace was not properly initialized!");
-        return workspaceRoot;
     }
 }

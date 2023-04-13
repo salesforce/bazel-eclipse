@@ -6,3 +6,6 @@
 
 # Bazel folder
 /bazel-*
+
+# ignore the Bazel version file
+.bazelversion

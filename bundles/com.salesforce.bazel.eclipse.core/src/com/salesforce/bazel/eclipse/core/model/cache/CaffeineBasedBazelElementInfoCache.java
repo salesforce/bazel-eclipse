@@ -89,6 +89,11 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
         return String.valueOf(workspaceLocationHash) + label.toString();
     }
 
+    @Override
+    public void invalidateAll() {
+        cache.invalidateAll();
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <I extends BazelElementInfo> I putOrGetCached(BazelElement<I, ?> bazelElement, I info) {
