@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.concurrent.ExecutionException;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -91,10 +90,12 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         return decoder.resolveOutput(javaIdeInfo.getJdepsFile());
     }
 
-    private volatile BazelProjectFileSystemMapper fileSystemMapper;
+    private BazelProjectFileSystemMapper fileSystemMapper;
 
-    private IVMInstall javaToolchainVm;
-
+    /**
+     * Eclipse VM representing the current
+     */
+    protected IVMInstall javaToolchainVm;
     private String javaToolchainSourceVersion;
     private String javaToolchainTargetVersion;
 
@@ -210,8 +211,7 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targets, outputGroups, aspects, languages,
                 onlyDirectDeps);
 
-        var executionService = bazelWorkspace.getParent().getModelManager().getExecutionService();
-        var result = executionService.executeWithWorkspaceLock(command, bazelWorkspace,
+        var result = bazelWorkspace.getCommandExecutor().runDirectlyWithWorkspaceLock(command,
             List.of(bazelProject.getProject()), monitor);
 
         if (LOG.isDebugEnabled()) {
@@ -395,73 +395,121 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         }
     }
 
+    /**
+     * Queries <code>@bazel_tools//tools/jdk:current_java_toolchain</code> for extracting information about the default
+     * Java toolchain used by the workspace.
+     * <p>
+     * After this method {@link #javaToolchainVm}, {@link #javaToolchainSourceVersion} and
+     * {@link #javaToolchainTargetVersion} should be initialized.
+     * </p>
+     *
+     * @param workspace
+     *            the workspace for querying
+     * @throws CoreException
+     */
     private void detectDefaultJavaToolchain(BazelWorkspace workspace) throws CoreException {
         var command = new BazelCQueryWithStarlarkExpressionCommand(workspace.getLocation().toFile().toPath(),
                 "@bazel_tools//tools/jdk:current_java_toolchain",
                 "providers(target)['JavaToolchainInfo'].source_version + '::' + providers(target)['JavaToolchainInfo'].target_version + '::' + providers(target)['JavaToolchainInfo'].java_runtime.java_home",
                 false);
+        var result = workspace.getCommandExecutor().runQueryWithoutLock(command);
         try {
-            var result = workspace.getParent().getModelManager().getExecutionService()
-                    .executeOutsideWorkspaceLockAsync(command, workspace).get();
+            var tokenizer = new StringTokenizer(result, "::");
+            javaToolchainSourceVersion = tokenizer.nextToken();
+            javaToolchainTargetVersion = tokenizer.nextToken();
+            var javaHome = tokenizer.nextToken();
+            LOG.debug("source_level: {}, target_level: {}, java_home: {}", javaToolchainSourceVersion,
+                javaToolchainTargetVersion, javaHome);
+
+            // sanitize versions
             try {
-                var tokenizer = new StringTokenizer(result, "::");
-                javaToolchainSourceVersion = tokenizer.nextToken();
-                javaToolchainTargetVersion = tokenizer.nextToken();
-                var javaHome = tokenizer.nextToken();
-                LOG.debug("source_level: {}, target_level: {}, java_home: {}", javaToolchainSourceVersion,
-                    javaToolchainTargetVersion, javaHome);
-
-                // sanitize versions
-                try {
-                    if (Integer.parseInt(javaToolchainSourceVersion) < 9) {
-                        javaToolchainSourceVersion = "1." + javaToolchainSourceVersion;
-                    }
-                } catch (NumberFormatException e) {
-                    throw new CoreException(Status.error(
-                        format("Unable to detect Java Toolchain information. Error parsing source level (%s)",
-                            javaToolchainSourceVersion),
-                        e));
+                if (Integer.parseInt(javaToolchainSourceVersion) < 9) {
+                    javaToolchainSourceVersion = "1." + javaToolchainSourceVersion;
                 }
-                try {
-                    if (Integer.parseInt(javaToolchainTargetVersion) < 9) {
-                        javaToolchainTargetVersion = "1." + javaToolchainTargetVersion;
-                    }
-                } catch (NumberFormatException e) {
-                    throw new CoreException(Status.error(
-                        format("Unable to detect Java Toolchain information. Error parsing target level (%s)",
-                            javaToolchainTargetVersion),
-                        e));
-                }
-
-                // resolve java home
-                var resolvedJavaHomePath = java.nio.file.Path.of(javaHome);
-                if (!resolvedJavaHomePath.isAbsolute()) {
-                    if (!javaHome.startsWith("external/")) {
-                        throw new CoreException(Status.error(format(
-                            "Unable to resolved java_home of '%s' into something meaningful. Please report as reproducible bug!",
-                            javaHome)));
-                    }
-                    resolvedJavaHomePath = new BazelWorkspaceBlazeInfo(workspace).getOutputBase().resolve(javaHome);
-                }
-
-                javaToolchainVm = new JvmConfigurator().configureVMInstall(resolvedJavaHomePath, workspace);
-            } catch (NoSuchElementException e) {
-                throw new CoreException(Status.error(
-                    format("Unable to detect Java Toolchain information. Error parsing output of bazel cquery (%s)",
-                        result),
-                    e));
+            } catch (NumberFormatException e) {
+                throw new CoreException(Status
+                        .error(format("Unable to detect Java Toolchain information. Error parsing source level (%s)",
+                            javaToolchainSourceVersion), e));
             }
-        } catch (ExecutionException e) {
-            var cause = e.getCause();
-            if (cause != null) {
-                throw new CoreException(Status.error(cause.getMessage(), cause));
+            try {
+                if (Integer.parseInt(javaToolchainTargetVersion) < 9) {
+                    javaToolchainTargetVersion = "1." + javaToolchainTargetVersion;
+                }
+            } catch (NumberFormatException e) {
+                throw new CoreException(Status
+                        .error(format("Unable to detect Java Toolchain information. Error parsing target level (%s)",
+                            javaToolchainTargetVersion), e));
             }
 
-            throw new CoreException(Status.error(e.getMessage(), e));
-        } catch (InterruptedException e) {
-            throw new OperationCanceledException("Interrupted while waiting for bazel cquery output to complete.");
+            // resolve java home
+            var resolvedJavaHomePath = java.nio.file.Path.of(javaHome);
+            if (!resolvedJavaHomePath.isAbsolute()) {
+                if (!javaHome.startsWith("external/")) {
+                    throw new CoreException(Status.error(format(
+                        "Unable to resolved java_home of '%s' into something meaningful. Please report as reproducible bug!",
+                        javaHome)));
+                }
+                resolvedJavaHomePath = new BazelWorkspaceBlazeInfo(workspace).getOutputBase().resolve(javaHome);
+            }
+
+            javaToolchainVm = new JvmConfigurator().configureVMInstall(resolvedJavaHomePath, workspace);
+        } catch (NoSuchElementException e) {
+            throw new CoreException(Status.error(format(
+                "Unable to detect Java Toolchain information. Error parsing output of bazel cquery (%s)", result), e));
         }
+    }
 
+    /**
+     * Called by {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)} after the
+     * projects were created.
+     * <p>
+     * After all projects were created we go over them a second time to run the aspects and initialize the classpaths.
+     * This is needed to allow proper wiring of dependencies to source projects in Eclipse.
+     * </p>
+     *
+     * @param projects
+     *            list of provisioned projects
+     * @param progress
+     *            monitor for reporting progress and checking cancellation
+     * @throws CoreException
+     */
+    protected void doInitializeClasspaths(Collection<BazelProject> projects, IProgressMonitor progress)
+            throws CoreException {
+        try {
+            var monitor = SubMonitor.convert(progress, "Initializing classpaths", projects.size());
+            for (BazelProject bazelProject : projects) {
+                computeClasspath(bazelProject, BazelClasspathScope.DEFAULT_CLASSPATH, monitor.newChild(1));
+            }
+        } finally {
+            progress.done();
+        }
+    }
+
+    /**
+     * Called by {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)} after base
+     * workspace information has been detected.
+     * <p>
+     * Implementors can expect
+     * </p>
+     *
+     * @param targets
+     * @param monitor
+     * @return
+     * @throws CoreException
+     */
+    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, SubMonitor monitor)
+            throws CoreException {
+        List<BazelProject> result = new ArrayList<>();
+        for (BazelTarget target : targets) {
+            monitor.subTask(target.getLabel().toString());
+
+            // provision project
+            var project = provisionProjectForTarget(target, monitor.newChild(1));
+            if (project != null) {
+                result.add(project);
+            }
+        }
+        return result;
     }
 
     protected IWorkspace getEclipseWorkspace() {
@@ -473,7 +521,8 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
     }
 
     /**
-     * @return the {@link BazelProjectFileSystemMapper} (only set during provisioning of a single target)
+     * @return the {@link BazelProjectFileSystemMapper} (only set during
+     *         {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)})
      */
     protected BazelProjectFileSystemMapper getFileSystemMapper() {
         return requireNonNull(fileSystemMapper,
@@ -618,6 +667,11 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
         try {
             var monitor = SubMonitor.convert(progress, "Provisioning projects", targets.size());
 
+            // ensure there is a mapper
+            if (fileSystemMapper == null) {
+                fileSystemMapper = new BazelProjectFileSystemMapper(workspace);
+            }
+
             // cleanup markers at workspace level
             workspace.getBazelProject().getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true,
                 IResource.DEPTH_ZERO);
@@ -625,27 +679,11 @@ public class ProjectPerTargetProvisioningStrategy implements TargetProvisioningS
             // detect default Java level
             detectDefaultJavaToolchain(workspace);
 
-            List<BazelProject> result = new ArrayList<>();
-            for (BazelTarget target : targets) {
-                monitor.subTask(target.getLabel().toString());
+            // create projects
+            var result = doProvisionProjects(targets, monitor);
 
-                // ensure there is a mapper
-                if (fileSystemMapper == null) {
-                    fileSystemMapper = new BazelProjectFileSystemMapper(workspace);
-                }
-
-                // provision project
-                var project = provisionProjectForTarget(target, monitor.newChild(1));
-                if (project != null) {
-                    result.add(project);
-                }
-            }
-
-            // after provisioning we go over the projects a second time to
-            // populate all projects with links and configure the classpath
-            for (BazelProject bazelProject : result) {
-                computeClasspath(bazelProject, BazelClasspathScope.DEFAULT_CLASSPATH, monitor.newChild(1));
-            }
+            // after provisioning we go over the projects a second time to initialize the classpaths
+            doInitializeClasspaths(result, monitor);
 
             // done
             return result;

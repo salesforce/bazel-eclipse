@@ -211,7 +211,7 @@
         <setEntry value="com.salesforce.bazel.sdk@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
-    <stringAttribute key="timestamp" value="1680690216525"/>
+    <stringAttribute key="timestamp" value="1681378524655"/>
     <booleanAttribute key="tracing" value="false"/>
     <booleanAttribute key="useCustomFeatures" value="false"/>
     <booleanAttribute key="useDefaultConfig" value="true"/>

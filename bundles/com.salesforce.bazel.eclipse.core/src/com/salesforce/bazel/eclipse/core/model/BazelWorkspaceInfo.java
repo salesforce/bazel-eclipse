@@ -33,9 +33,12 @@ import org.eclipse.core.runtime.Status;
 import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectFileReader;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
+import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.command.BazelInfoCommand;
 
 public final class BazelWorkspaceInfo extends BazelElementInfo {
+
+    private static final String RELEASE_VERSION_PREFIX = "release ";
 
     private final IPath root;
     private final Path workspaceFile;
@@ -55,6 +58,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
     private IPath commandLog;
     private IPath outputBase;
     private IPath outputPath;
+    private BazelVersion bazelVersion;
 
     public BazelWorkspaceInfo(IPath root, Path workspaceFile, BazelWorkspace bazelWorkspace) {
         this.root = root;
@@ -108,6 +112,10 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
 
     public IPath getBazelTestlogs() {
         return bazelTestlogs;
+    }
+
+    public BazelVersion getBazelVersion() {
+        return bazelVersion;
     }
 
     public BazelWorkspace getBazelWorkspace() {
@@ -196,6 +204,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
     public void load(BazelModelCommandExecutionService executionService) throws CoreException {
         var workspaceRoot = getWorkspaceFile().getParent();
         try {
+            // we use the BazelModelCommandExecutionService directly because info is not a query
             var infoResult = executionService
                     .executeOutsideWorkspaceLockAsync(new BazelInfoCommand(workspaceRoot), bazelWorkspace).get();
             excutionRoot = getExpectedOutputAsPath(infoResult, "execution_root");
@@ -208,6 +217,10 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             commandLog = getExpectedOutputAsPath(infoResult, "command_log");
             outputBase = getExpectedOutputAsPath(infoResult, "output_base");
             outputPath = getExpectedOutputAsPath(infoResult, "output_path");
+
+            if (release.startsWith(RELEASE_VERSION_PREFIX)) {
+                bazelVersion = BazelVersion.parseVersion(release.substring(RELEASE_VERSION_PREFIX.length()));
+            }
         } catch (InterruptedException e) {
             throw new OperationCanceledException("cancelled");
         } catch (ExecutionException e) {

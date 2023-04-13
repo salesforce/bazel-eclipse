@@ -10,6 +10,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 
+import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.BazelCommandExecutor;
 
@@ -67,5 +68,14 @@ public final class ExtensibleCommandExecutor implements BazelCommandExecutor {
 
         return requireNonNull((BazelCommandExecutor) elements[0].createExecutableExtension(ATTR_CLASS),
             "No object returned from extension factory");
+    }
+
+    @Override
+    public BazelBinary getBazelBinary() throws NullPointerException {
+        try {
+            return ensureDelegate().getBazelBinary();
+        } catch (CoreException e) {
+            throw new IllegalStateException("Error creating command executor!", e);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.salesforce.bazel.sdk.command;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -62,6 +63,17 @@ public abstract class BazelCommand<R> {
     }
 
     /**
+     * Called by {@link #generateResult(int)} when the exit code is zero.
+     * <p>
+     * Implementors are expected to read the command output (either {@link #getStdOutFile()} or some other output
+     * produced by the command) and process is into the desired result.
+     *
+     * @return the command result (never <code>null</code>)
+     * @throws IOException
+     */
+    protected abstract R doGenerateResult() throws IOException;
+
+    /**
      * {@return the Bazel binary to use (never <code>null</code>)
      */
     BazelBinary ensureBazelBinary() {
@@ -71,6 +83,10 @@ public abstract class BazelCommand<R> {
     /**
      * Called by {@link BazelCommandExecutor} to populate the command with the result of the process execution and
      * generate the result.
+     * <p>
+     * The default implementation checks the exit code and if ok, calls {@link #doGenerateResult()}. If the exit code is
+     * none zero a failure will be raised.
+     * </p>
      *
      * @param exitCode
      *            exit code
@@ -78,7 +94,15 @@ public abstract class BazelCommand<R> {
      * @throws IOException
      *             if the command execution failed in a way where no output could be produced
      */
-    public abstract R generateResult(int exitCode) throws IOException;
+    public R generateResult(int exitCode) throws IOException {
+        if (exitCode != 0) {
+            throw new IOException(
+                    format("Bazel %s failed with exit code %d. Please check command output", getCommand(), exitCode));
+        }
+
+        return requireNonNull(doGenerateResult(),
+            () -> format("Invalid command implementation '%s'. null result not allowed", BazelCommand.this.getClass()));
+    }
 
     /**
      * {@return the optional Bazel binary to use for executing this command (maybe <code>null</code>)}

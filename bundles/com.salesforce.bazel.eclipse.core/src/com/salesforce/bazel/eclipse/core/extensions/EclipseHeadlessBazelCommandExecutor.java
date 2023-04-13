@@ -2,11 +2,14 @@ package com.salesforce.bazel.eclipse.core.extensions;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
+import static java.nio.file.Files.readAllLines;
+import static java.nio.file.Files.readString;
+import static java.util.stream.Collectors.joining;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -27,6 +30,9 @@ import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor;
 
+/**
+ * Headless version initializing the Bazel binary from Eclipse preferences.
+ */
 public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExecutor {
 
     private final class InitBinaryJob extends Job {
@@ -47,18 +53,24 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
                     commandLine = wrapExecutionIntoShell(commandLine);
                 }
                 var pb = new ProcessBuilder(commandLine);
-                pb.redirectErrorStream();
                 var stdoutFile = File.createTempFile("bazel_version_", ".txt");
                 pb.redirectOutput(stdoutFile);
+                var stderrFile = File.createTempFile("bazel_version_", ".err.txt");
+                pb.redirectError(stderrFile);
                 var result = pb.start().waitFor();
-                if (result == 0) {
-                    var lines = Files.readAllLines(stdoutFile.toPath());
-                    for (String potentialVersion : lines) {
-                        if (potentialVersion.startsWith(BAZEL_VERSION_PREFIX)) {
-                            setBazelBinary(new BazelBinary(binary, BazelVersion
-                                    .parseVersion(potentialVersion.substring(BAZEL_VERSION_PREFIX.length()))));
-                            return Status.OK_STATUS;
-                        }
+                if (result != 0) {
+                    var out = readString(stderrFile.toPath(), Charset.defaultCharset());
+                    LOG.debug("Error executing '{}'. Process exited with code {}: {}",
+                        commandLine.stream().collect(joining(" ")), result, out);
+                    setBazelBinary(UNKNOWN_BAZEL_BINARY);
+                    return Status.error(format("Unable to detect Bazel version of '%s'! %n%s", binary, out));
+                }
+                var lines = readAllLines(stdoutFile.toPath(), Charset.defaultCharset());
+                for (String potentialVersion : lines) {
+                    if (potentialVersion.startsWith(BAZEL_VERSION_PREFIX)) {
+                        setBazelBinary(new BazelBinary(binary,
+                                BazelVersion.parseVersion(potentialVersion.substring(BAZEL_VERSION_PREFIX.length()))));
+                        return Status.OK_STATUS;
                     }
                 }
                 setBazelBinary(UNKNOWN_BAZEL_BINARY);

@@ -22,7 +22,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
-import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.tests.utils.LoggingProgressProviderExtension;
 import com.salesforce.bazel.eclipse.core.tests.utils.ProvisionWorkspaceExtension;
 

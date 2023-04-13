@@ -1,6 +1,5 @@
 package com.salesforce.bazel.sdk.command;
 
-import static java.lang.String.format;
 import static java.nio.file.Files.createTempFile;
 import static java.nio.file.Files.newInputStream;
 
@@ -25,12 +24,7 @@ public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collectio
     }
 
     @Override
-    public Collection<Target> generateResult(int exitCode) throws IOException {
-        if (exitCode != 0) {
-            throw new IOException(
-                    format("Bazel query command failed with exit code %d. Please check command output", exitCode));
-        }
-
+    protected Collection<Target> doGenerateResult() throws IOException {
         List<Target> result = new ArrayList<>();
         try (var in = newInputStream(getStdOutFile())) {
             Target target;

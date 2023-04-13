@@ -1,6 +1,5 @@
 package com.salesforce.bazel.sdk.command;
 
-import static java.lang.String.format;
 import static java.nio.file.Files.createTempFile;
 import static java.nio.file.Files.readString;
 
@@ -25,12 +24,7 @@ public class BazelCQueryWithStarlarkExpressionCommand extends BazelCQueryCommand
     }
 
     @Override
-    public String generateResult(int exitCode) throws IOException {
-        if (exitCode != 0) {
-            throw new IOException(
-                    format("Bazel cquery command failed with exit code %d. Please check command output", exitCode));
-        }
-
+    protected String doGenerateResult() throws IOException {
         return readString(getStdOutFile(), Charset.defaultCharset());
     }
 

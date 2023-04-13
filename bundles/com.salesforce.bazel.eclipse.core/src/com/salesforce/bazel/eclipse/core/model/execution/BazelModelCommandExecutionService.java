@@ -28,6 +28,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
 import com.salesforce.bazel.eclipse.core.model.BazelModel;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 
 /**
@@ -136,4 +137,12 @@ public interface BazelModelCommandExecutionService {
      */
     <R> Future<R> executeWithWorkspaceLockAsync(BazelCommand<R> command, BazelElement<?, ?> executionContext,
             ISchedulingRule rule, List<IResource> resourcesToRefresh) throws CoreException;
+
+    /**
+     * {@return the current Bazel binary used by the command executor}
+     *
+     * @throws NullPointerException
+     *             if the command executor has no Bazel binary
+     */
+    BazelBinary getBazelBinary() throws NullPointerException;
 }

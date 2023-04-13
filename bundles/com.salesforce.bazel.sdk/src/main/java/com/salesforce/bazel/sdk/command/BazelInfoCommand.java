@@ -21,7 +21,7 @@ public class BazelInfoCommand extends BazelCommand<Map<String, String>> {
     }
 
     @Override
-    public Map<String, String> generateResult(int exitCode) throws IOException {
+    protected Map<String, String> doGenerateResult() throws IOException {
         var result = new HashMap<String, String>();
 
         var lines = readAllLines(getStdOutFile());

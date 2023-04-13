@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.BazelCommandExecutor;
 
@@ -89,6 +90,11 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
         return future;
     }
 
+    @Override
+    public BazelBinary getBazelBinary() {
+        return executor.getBazelBinary();
+    }
+
     JobGroup getJobGroup(BazelElement<?, ?> executionContext) {
         var bazelWorkspace = executionContext.getBazelWorkspace();
         if (bazelWorkspace == null) {
@@ -113,5 +119,4 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
             }
         }
     }
-
 }

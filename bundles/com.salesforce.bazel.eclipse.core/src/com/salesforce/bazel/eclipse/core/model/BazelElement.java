@@ -43,6 +43,8 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
 
     private static final String NO_NAME = "";
 
+    private volatile BazelElementCommandExecutor commandExecutor;
+
     /**
      * Opens the underlying Bazel element and returns the populated {@link BazelElementInfo}.
      * <p>
@@ -89,6 +91,17 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
      * @return the {@link BazelWorkspace} (maybe <code>null</code> in case of {@link BazelModel})
      */
     public abstract BazelWorkspace getBazelWorkspace();
+
+    /**
+     * {@return the executor for this element}
+     */
+    public BazelElementCommandExecutor getCommandExecutor() {
+        var executor = commandExecutor;
+        if (executor != null) {
+            return executor;
+        }
+        return commandExecutor = new BazelElementCommandExecutor(this);
+    }
 
     /**
      * Returns the {@link BazelElementInfo}, {@link #createInfo() opening the element if none exists in the cache}.

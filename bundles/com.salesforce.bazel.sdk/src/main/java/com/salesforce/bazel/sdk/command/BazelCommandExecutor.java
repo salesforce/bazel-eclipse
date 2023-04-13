@@ -37,4 +37,12 @@ public interface BazelCommandExecutor {
      */
     <R> R execute(BazelCommand<R> command, CancelationCallback cancellationCallback) throws IOException;
 
+    /**
+     * {@return the bazel binary used by the command executor}
+     *
+     * @throws NullPointerException
+     *             if the command executor has no Bazel binary
+     */
+    BazelBinary getBazelBinary() throws NullPointerException;
+
 }

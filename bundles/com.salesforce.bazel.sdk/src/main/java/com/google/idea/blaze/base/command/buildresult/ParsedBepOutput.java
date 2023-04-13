@@ -17,6 +17,7 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import java.io.InputStream;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -42,9 +42,9 @@ import com.google.common.collect.Queues;
 import com.google.common.collect.SetMultimap;
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.BuildEvent;
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.BuildEventId.NamedSetOfFilesId;
-import com.google.idea.blaze.base.command.buildresult.BuildEventStreamProvider.BuildEventStreamException;
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.NamedSetOfFiles;
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.OutputGroup;
+import com.google.idea.blaze.base.command.buildresult.BuildEventStreamProvider.BuildEventStreamException;
 import com.google.protobuf.Timestamp;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
@@ -122,7 +122,7 @@ public final class ParsedBepOutput {
      */
     private static ImmutableMap<String, FileSet> fillInTransitiveFileSetData(Map<String, FileSet.Builder> fileSets,
             Set<String> topLevelFileSets, Map<String, String> configIdToMnemonic, Timestamp startTime) {
-        Queue<String> toVisit = Queues.newArrayDeque(topLevelFileSets);
+        Deque<String> toVisit = Queues.newArrayDeque(topLevelFileSets);
         Set<String> visited = new HashSet<>(topLevelFileSets);
         while (!toVisit.isEmpty()) {
             var setId = toVisit.remove();
@@ -236,8 +236,7 @@ public final class ParsedBepOutput {
         if (emptyBuildEventStream) {
             throw new BuildEventStreamException("No build events found");
         }
-        var filesMap =
-                fillInTransitiveFileSetData(fileSets, topLevelFileSets, configIdToMnemonic, startTime);
+        var filesMap = fillInTransitiveFileSetData(fileSets, topLevelFileSets, configIdToMnemonic, startTime);
         return new ParsedBepOutput(buildId, localExecRoot, filesMap, targetToFileSets.build(), startTime, buildResult,
                 stream.getBytesConsumed());
     }

@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
+import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -204,6 +205,10 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     public BazelTarget getBazelTarget(BazelLabel label) {
         checkIsRootedAtThisWorkspace(label);
         return getBazelPackage(label).getBazelTarget(label.getTargetName());
+    }
+
+    public BazelVersion getBazelVersion() throws CoreException {
+        return getInfo().getBazelVersion();
     }
 
     @Override
