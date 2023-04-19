@@ -12,74 +12,40 @@
 
 package com.salesforce.bazel.eclipse.wizard;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkingSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.eclipse.ui.statushandlers.StatusAdapter;
+import org.eclipse.ui.statushandlers.StatusManager;
 
-import com.salesforce.bazel.eclipse.ui.utils.SelectionUtil;
-import com.salesforce.bazel.sdk.model.BazelPackageInfoOld;
-import com.salesforce.bazel.sdk.model.BazelPackageLocation;
+import com.salesforce.bazel.eclipse.core.BazelCore;
+import com.salesforce.bazel.eclipse.core.setup.ImportBazelWorkspaceJob;
 
 /**
  * Entrypoint for the Bazel Workspace import wizard
  */
 public class BazelImportWizard extends Wizard implements IImportWizard {
-    private static Logger LOG = LoggerFactory.getLogger(BazelImportWizard.class);
 
     protected IStructuredSelection selection;
     protected List<IWorkingSet> workingSets = new ArrayList<>();
 
-    private boolean initialized = false;
-
-    private BazelImportWizardPage page;
-
-    public BazelImportWizard() {
-        setNeedsProgressMonitor(true);
-        setWindowTitle("Import Bazel Workspace");
-    }
+    private BazelImportWizardMainPage mainPage;
 
     @Override
     public void addPages() {
-        if (!initialized) {
-            init(null, null);
-        }
-        LOG.info("BazelImportWizard.addPages");
-
-        page = new BazelImportWizardPage();
-        if ((selection != null) && (selection.size() == 1)) {
-            // can't use SelectionUtil.getSelectedWorkingSet because it also looks at
-            // selected IResource
-            var workingSet = SelectionUtil.getType(selection.getFirstElement(), IWorkingSet.class);
-
-            // https://bugs.eclipse.org/bugs/show_bug.cgi?id=427205
-            // ideally, this should be contributed by m2e jdt.ui, but this looks like
-            // overkill
-            var JDT_OTHER_PROJECTS = "org.eclipse.jdt.internal.ui.OthersWorkingSet";
-            if ((workingSet != null) && !JDT_OTHER_PROJECTS.equals(workingSet.getId())) {
-                page.workingSetControl.setWorkingSetName(workingSet.getName());
-            }
-        }
-        addPage(page);
-    }
-
-    @Override
-    public void init(IWorkbench workbench, IStructuredSelection selection) {
-        LOG.info("BazelImportWizard.init");
-        this.selection = selection;
-        var workingSet = SelectionUtil.getSelectedWorkingSet(selection);
-        if (workingSet != null) {
-            workingSets.add(workingSet);
-        }
-        initialized = true;
+        mainPage = new BazelImportWizardMainPage();
+        addPage(mainPage);
     }
 
     @Override
@@ -89,19 +55,53 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
 
     @Override
     public boolean performFinish() {
-        // the first node in the project tree is the root node - for now we'll always import this root node regardless of what the user actually selected
-        var workspaceRootProject = page.workspaceRootPackage;
+        var workspaceRoot = mainPage.getBazelWorkspaceRoot();
+        var projectView = mainPage.getBazelProjectView();
 
-        var selectedBazelPackages = page.projectTree.projectTreeViewer.getCheckedElements();
-        List<Object> grayedBazelPackages = Arrays.asList(page.projectTree.projectTreeViewer.getGrayedElements());
+        var bazelWorkspace = BazelCore.getModel().getBazelWorkspace(workspaceRoot);
 
-        List<BazelPackageLocation> bazelPackagesToImport =
-                Arrays.asList(selectedBazelPackages).stream().filter(bpi -> !grayedBazelPackages.contains(bpi))
-                        .map(bpi -> (BazelPackageInfoOld) bpi).collect(Collectors.toList());
+        var importBazelWorkspaceJob = new ImportBazelWorkspaceJob(bazelWorkspace, projectView);
 
-        BazelProjectImporter.run(workspaceRootProject, bazelPackagesToImport, getContainer());
+        // although this is a job, we don't run it in the background but in the wizard
+
+        try {
+            getContainer().run(true, true, monitor -> {
+                try {
+                    ResourcesPlugin.getWorkspace().run(progress -> {
+                        var status = importBazelWorkspaceJob.runInWorkspace(progress);
+                        if (status == Status.CANCEL_STATUS) {
+                            throw new OperationCanceledException();
+                        }
+                        if (!status.isOK()) {
+                            throw new CoreException(status);
+                        }
+                    }, monitor);
+                } catch (CoreException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (InterruptedException e) {
+            MessageDialog.openInformation(getShell(), "Bazel Import Canceled",
+                "The Bazel workspace import was canceled. Your workspace might be in an incomplete state. Please perform any necessary cleanups yourself.");
+            return true; // close wizard
+        } catch (InvocationTargetException e) {
+            var cause = e.getCause();
+            if ((cause instanceof RuntimeException) && (cause.getCause() != null)) {
+                cause = cause.getCause();
+            }
+
+            var status = new StatusAdapter(Status.error("Bazel Workspace Import Failed", e));
+            StatusManager.getManager().handle(status, StatusManager.BLOCK | StatusManager.LOG);
+            return false; // keep wizard open
+        }
 
         return true;
+    }
+
+    @Override
+    public void init(IWorkbench workbench, IStructuredSelection selection) {
+        setNeedsProgressMonitor(true);
+        setWindowTitle("Import Bazel Workspace");
     }
 
 }

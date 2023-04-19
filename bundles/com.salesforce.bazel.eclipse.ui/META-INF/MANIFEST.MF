@@ -32,10 +32,7 @@ Require-Bundle: org.eclipse.ui,
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: com.salesforce.bazel.eclipse.ui
 Bundle-ActivationPolicy: lazy
-Export-Package: com.salesforce.bazel.eclipse.classpath,
- com.salesforce.bazel.eclipse.launch,
- com.salesforce.bazel.eclipse.project,
- com.salesforce.bazel.eclipse.projectview,
+Export-Package: com.salesforce.bazel.eclipse.launch,
  com.salesforce.bazel.eclipse.ui,
  com.salesforce.bazel.eclipse.ui.commands,
  com.salesforce.bazel.eclipse.ui.execution,

@@ -47,7 +47,29 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  */
 public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, BazelModel> {
 
+    /**
+     * Utility function to find a <code>WORKSPACE.bazel</code>, <code>WORKSPACE</code> or <code>WORKSPACE.bzlmod</code>
+     * file in a directory.
+     * <p>
+     * This method is used by {@link BazelWorkspace#exists()} to determine whether a workspace exists.
+     * </p>
+     *
+     * @param path
+     *            the path to check
+     * @return the found workspace file (maybe <code>null</code> if none exist)
+     */
+    public static Path findWorkspaceFile(Path path) {
+        for (String workspaceFile : List.of("WORKSPACE.bazel", "WORKSPACE", "WORKSPACE.bzlmod" /* bzlmod is last */)) {
+            var workspaceFilePath = path.resolve(workspaceFile);
+            if (isRegularFile(workspaceFilePath)) {
+                return workspaceFilePath;
+            }
+        }
+        return null;
+    }
+
     private final IPath root;
+
     private final BazelModel parent;
 
     /**
@@ -103,16 +125,6 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     public boolean exists() {
         var path = workspacePath();
         return isDirectory(path) && (findWorkspaceFile(path) != null);
-    }
-
-    private Path findWorkspaceFile(Path path) {
-        for (String workspaceFile : List.of("WORKSPACE.bazel", "WORKSPACE", "WORKSPACE.bzlmod" /* bzlmod is last */)) {
-            var workspaceFilePath = path.resolve(workspaceFile);
-            if (isRegularFile(workspaceFilePath)) {
-                return workspaceFilePath;
-            }
-        }
-        return null;
     }
 
     /**
