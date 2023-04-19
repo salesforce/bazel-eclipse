@@ -131,6 +131,10 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
         return parent;
     }
 
+    public IPath getBuildFileLocation() throws CoreException {
+        return getLocation().append(getInfo().getBuildFile().getFileName().toString());
+    }
+
     @Override
     public BazelLabel getLabel() {
         return label;

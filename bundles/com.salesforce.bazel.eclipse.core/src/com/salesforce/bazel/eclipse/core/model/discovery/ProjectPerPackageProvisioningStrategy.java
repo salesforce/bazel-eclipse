@@ -1,5 +1,6 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 
@@ -11,14 +12,14 @@ import java.util.Map.Entry;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
+import com.salesforce.bazel.eclipse.core.model.discovery.JavaInfo.FileEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
@@ -27,11 +28,15 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * package.
  * <p>
  * This strategy implements the BEF behavior in versions 1.x.
+ * <ul>
+ * <li>All <code>java_*</code> targets in the same package are merged into a single Eclipse project.</li>
+ * <li>The build path is merged so Eclipse does not have proper visibility in potentially unsupported imports.</li>
+ * <li>Projects are created directly in the package location.</li>
+ * <li>The root (empty) package <code>//</code> is not supported.</li>
+ * </ul>
  * </p>
  */
 public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrategy {
-
-    private static Logger LOG = LoggerFactory.getLogger(ProjectPerPackageProvisioningStrategy.class);
 
     public static final String STRATEGY_NAME = "project-per-package";
 
@@ -50,7 +55,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             Map<BazelPackage, List<BazelTarget>> targetsByPackage =
                     targets.stream().filter(this::isSupported).collect(groupingBy(BazelTarget::getBazelPackage));
 
-            var monitor = SubMonitor.convert(progress, "Provisioning projects", targetsByPackage.size() * 2);
+            var monitor = SubMonitor.convert(progress, "Provisioning projects", targetsByPackage.size() * 3);
 
             var result = new ArrayList<BazelProject>();
             for (Entry<BazelPackage, List<BazelTarget>> entry : targetsByPackage.entrySet()) {
@@ -61,10 +66,28 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 var project = provisionPackageProject(bazelPackage, packageTargets, monitor.newChild(1));
 
                 // build the Java information
-                var javaInfo = collectJavaInfo(packageTargets, project, monitor.newChild(1));
+                var javaInfo = collectJavaInfo(project, packageTargets, monitor.newChild(1));
+
+                // sanity check
+                if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
+                    for (FileEntry file : javaInfo.getSourceFilesWithoutCommonRoot()) {
+                        createBuildPathProblem(project, Status.warning(format(
+                            "File '%s' could not be mapped into a common source directory. The project may not build successful in Eclipse.",
+                            file.getPath())));
+                    }
+                }
+                if (!javaInfo.hasSourceDirectories()) {
+                    createBuildPathProblem(project,
+                        Status.error(format(
+                            "No source directories detected when analyzihng package '%s' using targets '%s'",
+                            bazelPackage.getLabel().getPackagePath(), packageTargets.stream().map(BazelTarget::getLabel)
+                                    .map(BazelLabel::getLabelPath).collect(joining(", ")))));
+                }
+
+                // configure classpath
+                configureRawClasspath(project, javaInfo, monitor.newChild(1));
 
                 result.add(project);
-
             }
             return result;
         } finally {
@@ -105,7 +128,10 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         var label = bazelPackage.getLabel();
         var projectName = label.getPackagePath().replace('/', '.');
 
-        var project = createProjectForElement(projectName, bazelPackage, progress);
+        // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
+        var projectLocation = bazelPackage.getLocation();
+
+        var project = createProjectForElement(projectName, projectLocation, bazelPackage, progress);
         project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_TARGETS,
             targets.stream().map(BazelTarget::getLabel).map(BazelLabel::getLabelPath).collect(joining(",")));
 

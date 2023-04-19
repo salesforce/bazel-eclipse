@@ -8,6 +8,7 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDP
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,8 +30,10 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
@@ -44,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
+import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
@@ -69,6 +73,85 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     protected String javaToolchainSourceVersion;
     protected String javaToolchainTargetVersion;
 
+    /**
+     * Collects base Java information for a given project and the targets it represents.
+     * <p>
+     * This uses the target info from the model (as returned by <code>bazel query</code>) to discover source directories
+     * and project level dependencies.
+     * </p>
+     * <p>
+     * Note, the caller is responsible for supplying only targets mapped to the project. The behavior is undefined
+     * otherwise and may result into non-working information.
+     * </p>
+     *
+     * @param project
+     *            the provisioned Bazel project (must not be <code>null</code>)
+     * @param targets
+     *            the list of targets to collect Java information for (must not be <code>null</code>)
+     * @param monitor
+     *            the progress monitor for checking cancellation (must not be <code>null</code>)
+     *
+     * @return the collected Java info (never <code>null</code>)
+     * @throws CoreException
+     */
+    protected JavaInfo collectJavaInfo(BazelProject project, Collection<BazelTarget> targets, IProgressMonitor monitor)
+            throws CoreException {
+        // find common package
+        var bazelPackage = expectCommonBazelPackage(targets);
+
+        var javaInfo = new JavaInfo(bazelPackage);
+
+        // process targets in the given order
+        for (BazelTarget bazelTarget : targets) {
+            javaInfo.addInfoFromTarget(bazelTarget);
+        }
+
+        // analyze for recommended project setup
+        var recommendations = javaInfo.analyzeProjectRecommendations(monitor);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("{} source directories: {}", targets,
+                javaInfo.hasSourceDirectories() ? javaInfo.getSourceDirectories() : "n/a");
+            LOG.debug("{} source files without root: {}", targets,
+                javaInfo.hasSourceFilesWithoutCommonRoot() ? javaInfo.getSourceFilesWithoutCommonRoot() : "n/a");
+        }
+
+        // delete existing markers
+        project.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
+
+        // abort if canceled
+        if (monitor.isCanceled()) {
+            createBuildPathProblem(bazelPackage.getBazelWorkspace().getBazelProject(), Status.warning(
+                "Bazel project provisioning for this workspace was canceled. The Eclipse workspace may not build properly."));
+            throw new OperationCanceledException();
+        }
+
+        // create project level markers
+        if (!recommendations.isOK()) {
+            if (recommendations.isMultiStatus()) {
+                for (IStatus status : recommendations.getChildren()) {
+                    createBuildPathProblem(project, status);
+                }
+            } else {
+                createBuildPathProblem(project, recommendations);
+            }
+        }
+
+        return javaInfo;
+    }
+
+    /**
+     * Configures the raw classpath for a project based on the {@link JavaInfo}.
+     * <p>
+     * This does not compute the classpath. Instead a classpath container is applied later to defer classpath
+     * computation when project provisioning is completed for a workspace.
+     * </p>
+     *
+     * @param project
+     * @param javaInfo
+     * @param progress
+     * @throws CoreException
+     */
     protected void configureRawClasspath(BazelProject project, JavaInfo javaInfo, IProgressMonitor progress)
             throws CoreException {
         List<IClasspathEntry> rawClasspath = new ArrayList<>();
@@ -173,10 +256,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     /**
      * Creates an Eclipse project representing the specified owner.
      * <p>
-     * The project will be created within the projects area of the workspace. Thus the {@link #getFileSystemMapper()
-     * file system mapper} is expected to be initialized at this point.
-     * </p>
-     * <p>
      * The {@link BazelProject#PROJECT_PROPERTY_OWNER} property will be set to the given owner'S label.
      * </p>
      *
@@ -189,14 +268,13 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @return the created Eclipse {@link IProject}
      * @throws CoreException
      */
-    protected IProject createProjectForElement(String projectName, BazelElement<?, ?> owner, IProgressMonitor progress)
-            throws CoreException {
+    protected IProject createProjectForElement(String projectName, IPath projectLocation, BazelElement<?, ?> owner,
+            IProgressMonitor progress) throws CoreException {
         try {
             var monitor = SubMonitor.convert(progress, 3);
             var projectDescription = getEclipseWorkspace().newProjectDescription(projectName);
 
             // place the project into the Bazel workspace project area
-            var projectLocation = getFileSystemMapper().getProjectsArea().append(projectName);
             projectDescription.setLocation(projectLocation);
             projectDescription.setComment(format("Bazel project representing '%s'", owner.getLabel()));
 
@@ -358,6 +436,17 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     protected abstract List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets,
             IProgressMonitor progress) throws CoreException;
 
+    protected BazelPackage expectCommonBazelPackage(Collection<BazelTarget> targets) throws CoreException {
+        List<BazelPackage> allPackages =
+                targets.stream().map(BazelTarget::getBazelPackage).distinct().collect(toList());
+        if (allPackages.size() != 1) {
+            throw new IllegalArgumentException(format(
+                "Cannot process targets from different packages. Unable to detect common package. Expected 1 got %d.",
+                allPackages.size()));
+        }
+        return allPackages.get(0); // BazelTarget::getBazelPackage guaranteed to not return null
+    }
+
     protected IWorkspace getEclipseWorkspace() {
         return ResourcesPlugin.getWorkspace();
     }
@@ -373,6 +462,87 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     protected BazelProjectFileSystemMapper getFileSystemMapper() {
         return requireNonNull(fileSystemMapper,
             "file system mapper not initialized, check code flow/implementation (likely a bug)");
+    }
+
+    /**
+     * Creates Eclipse virtual files/folders for sources collected in the {@link JavaInfo}.
+     *
+     * @param project
+     * @param javaInfo
+     * @param progress
+     * @throws CoreException
+     */
+    protected void linkSourcesIntoProject(BazelProject project, JavaInfo javaInfo, IProgressMonitor progress)
+            throws CoreException {
+        var monitor = SubMonitor.convert(progress, 100);
+        try {
+            if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
+                var virtualSourceFolder = getFileSystemMapper().getVirtualSourceFolder(project);
+                if (!virtualSourceFolder.exists()) {
+                    virtualSourceFolder.create(IResource.NONE, true, monitor.newChild(1));
+                }
+                var files = javaInfo.getSourceFilesWithoutCommonRoot();
+                Set<IFile> linkedFiles = new HashSet<>();
+                for (FileEntry fileEntry : files) {
+                    // peek at Java package to find proper "root"
+                    var packagePath = fileEntry.getDetectedPackagePath();
+                    var packageFolder = virtualSourceFolder.getFolder(packagePath);
+                    if (!packageFolder.exists()) {
+                        createFolderAndParents(packageFolder, monitor.newChild(1));
+                    }
+
+                    // create link to file
+                    var file = packageFolder.getFile(fileEntry.getPath().lastSegment());
+                    file.createLink(fileEntry.getLocation(), IResource.REPLACE, monitor.newChild(1));
+
+                    // remember for cleanup
+                    linkedFiles.add(file);
+                }
+
+                // remove all files not created as part of this loop
+                deleteAllFilesNotInAllowList(virtualSourceFolder, linkedFiles, monitor.newChild(1));
+            }
+
+            if (javaInfo.hasSourceDirectories()) {
+                var directories = javaInfo.getSourceDirectories();
+                NEXT_FOLDER: for (FileEntry dir : directories) {
+                    var sourceFolder = project.getProject().getFolder(dir.getPath());
+                    if (sourceFolder.exists() && !sourceFolder.isLinked()) {
+                        // check if there is any linked parent we can remove
+                        var parent = sourceFolder.getParent();
+                        while ((parent != null) && (parent.getType() != IResource.PROJECT)) {
+                            if (parent.isLinked()) {
+                                parent.delete(true, monitor.newChild(1));
+                                break;
+                            }
+                            parent = parent.getParent();
+                        }
+                        if (sourceFolder.exists()) {
+                            // TODO create problem marker
+                            continue NEXT_FOLDER;
+                        }
+                    }
+
+                    // ensure the parent exists
+                    if (!sourceFolder.getParent().exists()) {
+                        createFolderAndParents(sourceFolder.getParent(), monitor.newChild(1));
+                    }
+
+                    // create link to folder
+                    sourceFolder.createLink(dir.getLocation(), IResource.REPLACE, monitor.newChild(1));
+                }
+            }
+
+            // ensure the BUILD file is linked
+            var buildFileLocation = javaInfo.getBazelPackage().getBuildFileLocation();
+            var buildFile = project.getProject().getFile(buildFileLocation.lastSegment());
+            if (buildFile.exists() && !buildFile.isLinked()) {
+                buildFile.delete(true, monitor.newChild(1));
+            }
+            buildFile.createLink(buildFileLocation, IResource.REPLACE, monitor.newChild(1));
+        } finally {
+            progress.done();
+        }
     }
 
     @Override

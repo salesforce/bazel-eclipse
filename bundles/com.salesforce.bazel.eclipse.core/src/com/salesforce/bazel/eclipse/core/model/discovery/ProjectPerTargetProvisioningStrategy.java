@@ -1,6 +1,5 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDPATH_PROBLEM_MARKER;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
@@ -8,16 +7,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.slf4j.Logger;
@@ -37,7 +31,6 @@ import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaInfo.FileEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
@@ -45,6 +38,15 @@ import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 
 /**
  * Default implementation of {@link TargetProvisioningStrategy} which provisions a single project per supported target.
+ * <p>
+ * <ul>
+ * <li>One Eclipse project is created per supported <code>java_*</code> target per package.</li>
+ * <li>The build path is setup specifically for that target, allowing for best support in the IDE.</li>
+ * <li>Projects are created in a project area (<code>.eclipse/projects</code> folder inside the workspace) and files are
+ * created as links. This makes SCM not really functional for these.</li>
+ * <li>Targets inside the root (empty) package <code>//:*</code> are supported.</li>
+ * </ul>
+ * </p>
  *
  * @since 2.0
  */
@@ -68,86 +70,6 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         return decoder.resolveOutput(javaIdeInfo.getJdepsFile());
     }
 
-    /**
-     * Collects base Java information for a given target.
-     * <p>
-     * This uses the target info from the model (as returned by <code>bazel query</code>) to discover source directories
-     * and project level dependencies. This does not compute the classpath. Instead a classpath container is applied to
-     * defer classpath computation when project provisioning is completed for a workspace.
-     * </p>
-     *
-     * @param target
-     *            the target to collect Java information for (must not be <code>null</code>)
-     * @param project
-     *            the provisioned Bazel project (must not be <code>null</code>)
-     * @param monitor
-     *            the progress monitor for checking cancellation (must not be <code>null</code>)
-     * @return the collected Java info (never <code>null</code>)
-     * @throws CoreException
-     */
-    protected JavaInfo collectJavaInfo(BazelTarget target, BazelProject project, IProgressMonitor monitor)
-            throws CoreException {
-        var javaInfo = new JavaInfo(target.getBazelPackage(), target.getBazelWorkspace());
-
-        var attributes = target.getRuleAttributes();
-        var srcs = attributes.getStringList("srcs");
-        if (srcs != null) {
-            for (String src : srcs) {
-                LOG.debug("{} adding src: {}", target, src);
-                javaInfo.addSrc(src);
-            }
-        }
-
-        var deps = attributes.getStringList("deps");
-        if (deps != null) {
-            for (String dep : deps) {
-                LOG.debug("{} adding dep: {}", target, dep);
-                javaInfo.addDep(dep);
-            }
-        }
-
-        var runtimeDeps = attributes.getStringList("runtime_deps");
-        if (runtimeDeps != null) {
-            for (String dep : runtimeDeps) {
-                LOG.debug("{} adding runtime dep: {}", target, dep);
-                javaInfo.addRuntimeDep(dep);
-            }
-        }
-
-        // analyze for recommended project setup
-        var recommendations = javaInfo.analyzeProjectRecommendations(monitor);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("{} source directories: {}", target,
-                javaInfo.hasSourceDirectories() ? javaInfo.getSourceDirectories() : "n/a");
-            LOG.debug("{} source files without root: {}", target,
-                javaInfo.hasSourceFilesWithoutCommonRoot() ? javaInfo.getSourceFilesWithoutCommonRoot() : "n/a");
-        }
-
-        // delete existing markers
-        project.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
-
-        // abort if canceled
-        if (monitor.isCanceled()) {
-            createBuildPathProblem(target.getBazelWorkspace().getBazelProject(), Status.warning(
-                "Bazel project provisioning for this workspace was canceled. The Eclipse workspace may not build properly."));
-            throw new OperationCanceledException();
-        }
-
-        // create project level markers
-        if (!recommendations.isOK()) {
-            if (recommendations.isMultiStatus()) {
-                for (IStatus status : recommendations.getChildren()) {
-                    createBuildPathProblem(project, status);
-                }
-            } else {
-                createBuildPathProblem(project, recommendations);
-            }
-        }
-
-        return javaInfo;
-    }
-
     @Override
     public List<ClasspathEntry> computeClasspath(BazelProject bazelProject, BazelClasspathScope scope,
             IProgressMonitor monitor) throws CoreException {
@@ -162,7 +84,11 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             //   1. get list of all external repos
             //      > bazel query "//external:*"
             //   2. query for java rules for each external repo
-            //      > bazel query "kind('java_.* rule', @evernal_repo_name//...)"
+            //      > bazel query "kind('java_.* rule', @exernal_repo_name//...)"
+            //
+            // or:
+            //   1. specific support for jvm_import_external
+            //      > bazel query "kind(jvm_import_external, //external:*)"
             //
             return List.of();
         }
@@ -259,71 +185,6 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         }
     }
 
-    protected void linkJavaSourcesIntoProject(BazelProject project, JavaInfo javaInfo, IProgressMonitor progress)
-            throws CoreException {
-        var monitor = SubMonitor.convert(progress);
-        try {
-            if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
-                var virtualSourceFolder = getFileSystemMapper().getVirtualSourceFolder(project);
-                if (!virtualSourceFolder.exists()) {
-                    virtualSourceFolder.create(IResource.NONE, true, monitor.newChild(1));
-                }
-                var files = javaInfo.getSourceFilesWithoutCommonRoot();
-                Set<IFile> linkedFiles = new HashSet<>();
-                for (FileEntry fileEntry : files) {
-                    // peek at Java package to find proper "root"
-                    var packagePath = fileEntry.getDetectedPackagePath();
-                    var packageFolder = virtualSourceFolder.getFolder(packagePath);
-                    if (!packageFolder.exists()) {
-                        createFolderAndParents(packageFolder, monitor.newChild(1));
-                    }
-
-                    // create link to file
-                    var file = packageFolder.getFile(fileEntry.getPath().lastSegment());
-                    file.createLink(fileEntry.getLocation(), IResource.REPLACE, monitor.newChild(1));
-
-                    // remember for cleanup
-                    linkedFiles.add(file);
-                }
-
-                // remove all files not created as part of this loop
-                deleteAllFilesNotInAllowList(virtualSourceFolder, linkedFiles, monitor.newChild(1));
-            }
-
-            if (javaInfo.hasSourceDirectories()) {
-                var directories = javaInfo.getSourceDirectories();
-                NEXT_FOLDER: for (FileEntry dir : directories) {
-                    var sourceFolder = project.getProject().getFolder(dir.getPath());
-                    if (sourceFolder.exists() && !sourceFolder.isLinked()) {
-                        // check if there is any linked parent we can remove
-                        var parent = sourceFolder.getParent();
-                        while ((parent != null) && (parent.getType() != IResource.PROJECT)) {
-                            if (parent.isLinked()) {
-                                parent.delete(true, monitor.newChild(1));
-                                break;
-                            }
-                            parent = parent.getParent();
-                        }
-                        if (sourceFolder.exists()) {
-                            // TODO create problem marker
-                            continue NEXT_FOLDER;
-                        }
-                    }
-
-                    // ensure the parent exists
-                    if (!sourceFolder.getParent().exists()) {
-                        createFolderAndParents(sourceFolder.getParent(), monitor.newChild(1));
-                    }
-
-                    // create link to folder
-                    sourceFolder.createLink(dir.getLocation(), IResource.REPLACE, monitor.newChild(1));
-                }
-            }
-        } finally {
-            progress.done();
-        }
-    }
-
     protected BazelProject provisionJavaBinaryProject(BazelTarget target, IProgressMonitor progress)
             throws CoreException {
 
@@ -355,10 +216,10 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             var project = provisionTargetProject(target, monitor.newChild(1));
 
             // build the Java information
-            var javaInfo = collectJavaInfo(target, project, monitor.newChild(1));
+            var javaInfo = collectJavaInfo(project, List.of(target), monitor.newChild(1));
 
             // configure links
-            linkJavaSourcesIntoProject(project, javaInfo, monitor.newChild(1));
+            linkSourcesIntoProject(project, javaInfo, monitor.newChild(1));
 
             // configure classpath
             configureRawClasspath(project, javaInfo, monitor.newChild(1));
@@ -395,8 +256,9 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
 
         var label = target.getLabel();
         var projectName = format("%s:%s", label.getPackagePath().replace('/', '.'), label.getTargetName());
+        var projectLocation = getFileSystemMapper().getProjectsArea().append(projectName);
 
-        var project = createProjectForElement(projectName, target, progress);
+        var project = createProjectForElement(projectName, projectLocation, target, progress);
         project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_TARGETS, target.getLabel().getLabelPath());
 
         // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
