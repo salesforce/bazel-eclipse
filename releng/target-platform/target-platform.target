@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1679916980">
+<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1681936001">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.27.0.v20230220-1431"/>
@@ -59,6 +59,10 @@
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.lsp4j.sdk.feature.group" version="0.20.1.v20230228-1533"/>
       <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.20.1/"/>
+    </location>
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
+      <unit id="org.eclipse.lsp4j.sdk.feature.group" version="0.19.1.v20230411-1516"/>
+      <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.19.1/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.m2e.feature.feature.group" version="2.1.2.20221130-2239"/>

@@ -90,7 +90,7 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
                 cause = cause.getCause();
             }
 
-            var status = new StatusAdapter(Status.error("Bazel Workspace Import Failed", e));
+            var status = new StatusAdapter(Status.error("Bazel Workspace Import Failed", cause));
             StatusManager.getManager().handle(status, StatusManager.BLOCK | StatusManager.LOG);
             return false; // keep wizard open
         }

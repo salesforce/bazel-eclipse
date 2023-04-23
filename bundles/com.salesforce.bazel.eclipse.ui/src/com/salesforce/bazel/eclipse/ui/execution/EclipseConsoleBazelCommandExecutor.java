@@ -103,7 +103,7 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
                 if (result != 0) {
                     consoleStream.println();
                     consoleStream
-                            .println(ansi().fgBrightBlack().a("Process existed with ").a(result).reset().toString());
+                            .println(ansi().fgBrightBlack().a("Process exited with ").a(result).reset().toString());
                 }
             } catch (final InterruptedException e) {
                 // ignore, just reset interrupt flag

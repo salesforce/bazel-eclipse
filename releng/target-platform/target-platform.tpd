@@ -58,8 +58,14 @@ location "https://download.eclipse.org/scout/releases/4.0/testing" {
 }
 
 location "https://download.eclipse.org/lsp4j/updates/releases/0.20.1/" {
-	org.eclipse.lsp4j.sdk.feature.group
+//	org.eclipse.lsp4j.sdk.feature.group [0.20.1,0.21.0)
 }
+
+// https://github.com/eclipse-lsp4j/lsp4j/issues/702
+location "https://download.eclipse.org/lsp4j/updates/releases/0.19.1/" {
+	org.eclipse.lsp4j.sdk.feature.group [0.19.1,0.20.0)
+}
+
 
 location "https://download.eclipse.org/technology/m2e/releases/2.1.2/" {
 	org.eclipse.m2e.feature.feature.group

@@ -54,7 +54,7 @@ public final class ExtensibleCommandExecutor implements BazelCommandExecutor {
                 var p1 = safeParse(o1.getAttribute(ATTR_PRIORITY));
                 var p2 = safeParse(o2.getAttribute(ATTR_PRIORITY));
 
-                return p1 - p2;
+                return p2 - p1; // higher priority is more important
             }
 
             private int safeParse(String priority) {

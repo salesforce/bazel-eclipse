@@ -15,7 +15,11 @@
 package com.salesforce.bazel.eclipse.wizard;
 
 import static java.nio.file.Files.isRegularFile;
+import static org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil.setHorizontalGrabbing;
+import static org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil.setWidthHint;
 import static org.eclipse.jface.dialogs.Dialog.applyDialogFont;
+
+import java.io.IOException;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -24,13 +28,16 @@ import org.eclipse.jdt.internal.ui.wizards.dialogfields.IDialogFieldListener;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.IStringButtonAdapter;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.StringButtonDialogField;
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.StringDialogField;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Text;
 
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.core.projectview.BazelProjectFileReader;
 
 /**
  * Class that sets up the UI for the Bazel Import Workspace wizard.
@@ -56,6 +63,8 @@ public class BazelImportWizardMainPage extends WizardPage {
     }
 
     private final StringButtonDialogField projectViewDialogField;
+    private StringDialogField workspaceInfoField;
+
     private IPath bazelWorkspaceRoot;
     private IPath bazelProjectView;
 
@@ -76,9 +85,19 @@ public class BazelImportWizardMainPage extends WizardPage {
         var adapter = new ProjectViewAdapter();
 
         projectViewDialogField = new StringButtonDialogField(adapter);
+        projectViewDialogField.setLabelText("Project View:");
         projectViewDialogField.setButtonLabel("Bro&wse...");
         projectViewDialogField.setDialogFieldListener(adapter);
 
+        workspaceInfoField = new StringDialogField() {
+            @Override
+            protected Text createTextControl(Composite parent) {
+                return new Text(parent, SWT.READ_ONLY | SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+            }
+        };
+        workspaceInfoField.setLabelText("Workspace:");
+
+        doStatusLineUpdate();
     }
 
     protected void doChangeControlPressed() {
@@ -107,7 +126,7 @@ public class BazelImportWizardMainPage extends WizardPage {
         dialog.setText("Select Project View");
         dialog.setFilterPath(System.getProperty("user.home"));
         dialog.setFilterExtensions(new String[] { "*.projectview", "*.*" });
-        dialog.setFilterNames(new String[] { "Bazel Project View" });
+        dialog.setFilterNames(new String[] { "Bazel Project View  (*.projectview)" });
 
         var selectedFile = dialog.open();
         return selectedFile != null ? new Path(selectedFile) : null;
@@ -120,8 +139,13 @@ public class BazelImportWizardMainPage extends WizardPage {
     private boolean detectPageComplete() {
         bazelProjectView = null;
         bazelWorkspaceRoot = null;
+        workspaceInfoField.setText("");
 
         var projectViewValue = projectViewDialogField.getText();
+        if (projectViewValue.isBlank()) {
+            setMessage("Select a Project View (.projectview file) to import.");
+            return false;
+        }
         if (!Path.isValidWindowsPath(projectViewValue) && !Path.isValidPosixPath(projectViewValue)) {
             setMessage("Invalid path value. Please enter a valid path!");
             return false;
@@ -129,14 +153,23 @@ public class BazelImportWizardMainPage extends WizardPage {
 
         var projectViewPath = new Path(projectViewValue);
         if (!isRegularFile(projectViewPath.toFile().toPath())) {
-            setMessage("Project view not found!");
+            setMessage("Project View not found!");
             return false;
         }
 
         var workspaceRoot = findWorkspaceRoot(projectViewPath);
         if (workspaceRoot == null) {
             setMessage(
-                "Project view outside Bazel workspace. Please select a .projectview file which is located within a Bazel workspace!");
+                "Project View outside Bazel workspace. Please select a .projectview file which is located within a Bazel workspace!");
+            return false;
+        }
+
+        try {
+            var info = readWorkspaceInfo(projectViewPath, workspaceRoot);
+            workspaceInfoField.setText(info.toString());
+        } catch (IOException e) {
+            workspaceInfoField.setText(e.getMessage());
+            setMessage("Error reading Project View. Please select a different one!");
             return false;
         }
 
@@ -148,6 +181,39 @@ public class BazelImportWizardMainPage extends WizardPage {
         return true;
     }
 
+    private StringBuilder readWorkspaceInfo(Path projectViewPath, IPath workspaceRoot) throws IOException {
+        var projectView =
+                new BazelProjectFileReader(projectViewPath.toFile().toPath(), workspaceRoot.toFile().toPath()).read();
+        var info = new StringBuilder();
+        info.append("Location:").append(System.lineSeparator()).append("  ").append(workspaceRoot)
+                .append(System.lineSeparator());
+        info.append("Targets:").append(System.lineSeparator());
+        if (projectView.deriveTargetsFromDirectories()) {
+            info.append("  ").append("derive from directories").append(System.lineSeparator());
+        } else if (projectView.targetsToInclude().isEmpty()) {
+            info.append("  ").append("none").append(System.lineSeparator());
+        } else {
+            for (String target : projectView.targetsToInclude()) {
+                info.append("  ").append(target).append(System.lineSeparator());
+            }
+            for (String target : projectView.targetsToExclude()) {
+                info.append("  -").append(target).append(System.lineSeparator());
+            }
+        }
+        info.append("Directories:").append(System.lineSeparator());
+        if (projectView.directoriesToInclude().isEmpty()) {
+            info.append("  ").append(".").append(System.lineSeparator());
+        } else {
+            for (String target : projectView.directoriesToInclude()) {
+                info.append("  ").append(target).append(System.lineSeparator());
+            }
+        }
+        for (String target : projectView.directoriesToExclude()) {
+            info.append("  ").append(target).append(System.lineSeparator());
+        }
+        return info;
+    }
+
     @Override
     public void createControl(Composite parent) {
         initializeDialogUnits(parent);
@@ -156,11 +222,15 @@ public class BazelImportWizardMainPage extends WizardPage {
         composite.setLayout(GridLayoutFactory.swtDefaults().numColumns(3).create());
 
         projectViewDialogField.doFillIntoGrid(composite, 3);
-
-        LayoutUtil.setHorizontalGrabbing(projectViewDialogField.getTextControl(null));
-        LayoutUtil.setWidthHint(projectViewDialogField.getTextControl(null), convertWidthInCharsToPixels(50));
+        setHorizontalGrabbing(projectViewDialogField.getTextControl(null));
+        setWidthHint(projectViewDialogField.getTextControl(null), convertWidthInCharsToPixels(50));
 
         projectViewDialogField.postSetFocusOnDialogField(composite.getDisplay());
+
+        workspaceInfoField.doFillIntoGrid(composite, 3);
+        setHorizontalGrabbing(workspaceInfoField.getTextControl(null));
+        LayoutUtil.setVerticalGrabbing(workspaceInfoField.getTextControl(null));
+        setWidthHint(workspaceInfoField.getTextControl(null), convertWidthInCharsToPixels(50));
 
         setControl(composite);
         applyDialogFont(composite);
