@@ -43,15 +43,31 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         final var thread = new Thread(pipesThreadGroup, (Runnable) () -> {
             // we don't close any streams as we expect this do be done outside
             try {
-                src.transferTo(dest);
+                var transfered = src.transferTo(dest);
+                LOG.debug("Transfered {} bytes in pipe '{}'", transfered, threadDetails);
             } catch (final IOException e) {
-                // ignore
+                LOG.error("IO error while processing command output in pipe '{}': {}", threadDetails, e.getMessage(),
+                    e);
             }
         }, format("Bazel Command Executor Pipe (%s)", threadDetails));
         thread.setDaemon(true);
         thread.start();
 
         return thread;
+    }
+
+    protected static void waitForPipeToFinish(Thread pipe, CancelationCallback cancelationCallback)
+            throws IOException, InterruptedException {
+        var delay = 0L;
+        var sleepTime = 100L;
+        while (pipe.isAlive() && !cancelationCallback.isCanceled()) {
+            Thread.onSpinWait();
+            Thread.sleep(sleepTime);
+            if ((delay += sleepTime) >= 60000L) {
+                throw new IOException(
+                        format("Pipe '%s' did not finish writing within expected timeout!", pipe.getName()));
+            }
+        }
     }
 
     private boolean wrapExecutionIntoShell = !getSystemUtil().isWindows(); // default is yes except on Windows
@@ -114,11 +130,16 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
                 try {
                     while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
+                        Thread.onSpinWait();
                         if (cancelationCallback.isCanceled()) {
                             process.destroyForcibly();
                             throw new IOException("user cancelled");
                         }
                     }
+
+                    // wait for pipes to finish
+                    waitForPipeToFinish(p1, cancelationCallback);
+                    waitForPipeToFinish(p2, cancelationCallback);
                 } finally {
                     // interrupt pipe threads so they'll die
                     p1.interrupt();
@@ -130,6 +151,11 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
                 // ignore, just reset interrupt flag
                 Thread.currentThread().interrupt();
                 throw new IOException("Aborted waiting for result");
+            }
+
+            // close stdout file before processing result
+            if (out != null) {
+                out.close();
             }
 
             // send result to command
@@ -161,6 +187,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
     }
 
+    @Override
     public BazelBinary getBazelBinary() {
         return requireNonNull(bazelBinary, "no Bazel binary set");
     }

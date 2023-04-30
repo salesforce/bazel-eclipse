@@ -18,10 +18,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.core.tests.utils.BazelWorkspaceExtension;
-import com.salesforce.bazel.eclipse.core.tests.utils.LoggingProgressProviderExtension;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.model.BazelLabel;
+
+import testdata.SharedTestData;
+import testdata.utils.BazelWorkspaceExtension;
+import testdata.utils.LoggingProgressProviderExtension;
 
 /**
  * Integration tests using the 001 test workspace.
@@ -37,7 +39,7 @@ public class Workspace001Test_BasicModelAssumptions {
 
     @RegisterExtension
     static BazelWorkspaceExtension bazelWorkspaceExtension =
-            new BazelWorkspaceExtension("testdata/workspaces/001", Workspace001Test_Provisioning.class, BAZEL_VERSION);
+            new BazelWorkspaceExtension(SharedTestData.WORKSPACE_001, SharedTestData.class, BAZEL_VERSION);
 
     private BazelPackage assertPackage(BazelWorkspace bazelWorkspace, String packageLabel) {
         var bazelPackage = bazelWorkspace.getBazelPackage(new BazelLabel(packageLabel));

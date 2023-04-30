@@ -1,6 +1,7 @@
 package com.salesforce.bazel.sdk.command;
 
 import static java.io.File.createTempFile;
+import static java.lang.String.format;
 import static java.nio.file.Files.readAllLines;
 
 import java.io.IOException;
@@ -25,6 +26,10 @@ public class BazelInfoCommand extends BazelCommand<Map<String, String>> {
         var result = new HashMap<String, String>();
 
         var lines = readAllLines(getStdOutFile());
+        if ((lines == null) || lines.isEmpty()) {
+            throw new IOException(format("No output from 'bazel info'"));
+        }
+
         for (String line : lines) {
             var separatorPos = line.indexOf(':');
             if (separatorPos > 0) {

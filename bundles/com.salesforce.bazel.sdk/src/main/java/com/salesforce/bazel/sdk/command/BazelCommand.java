@@ -77,7 +77,8 @@ public abstract class BazelCommand<R> {
      * {@return the Bazel binary to use (never <code>null</code>)
      */
     BazelBinary ensureBazelBinary() {
-        return requireNonNull(getBazelBinary(), "no Bazel binary configured; check the workflow");
+        return requireNonNull(getBazelBinary(),
+            "no Bazel binary configured; check code logic - it should be set to a default by the executor");
     }
 
     /**

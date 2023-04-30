@@ -22,9 +22,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
-import com.salesforce.bazel.eclipse.core.tests.utils.LoggingProgressProviderExtension;
-import com.salesforce.bazel.eclipse.core.tests.utils.ProvisionWorkspaceExtension;
 import com.salesforce.bazel.sdk.BazelVersion;
+
+import testdata.SharedTestData;
+import testdata.utils.LoggingProgressProviderExtension;
+import testdata.utils.ProvisionWorkspaceExtension;
 
 /**
  * Integration tests using the 001 test workspace.
@@ -40,8 +42,8 @@ public class Workspace001Test_Provisioning {
     private static final BazelVersion BAZEL_VERSION = new BazelVersion(6, 1, 1);
 
     @RegisterExtension
-    static ProvisionWorkspaceExtension provisionedWorkspace = new ProvisionWorkspaceExtension("testdata/workspaces/001",
-            Workspace001Test_Provisioning.class, BAZEL_VERSION);
+    static ProvisionWorkspaceExtension provisionedWorkspace =
+            new ProvisionWorkspaceExtension(SharedTestData.WORKSPACE_001, SharedTestData.class, BAZEL_VERSION);
 
     private void assertProjectWithProperNatures(IProject project) throws CoreException {
         assertTrue(project.exists(), format("Project '%s' expected to exist!", project.getName()));

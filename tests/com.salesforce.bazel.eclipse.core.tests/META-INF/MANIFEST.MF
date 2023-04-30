@@ -5,10 +5,11 @@ Bundle-SymbolicName: com.salesforce.bazel.eclipse.core.tests
 Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: Salesforce
 Fragment-Host: com.salesforce.bazel.eclipse.core;bundle-version="2.0.0"
-Eclipse-BundleShape: dir
 Automatic-Module-Name: com.salesforce.bazel.eclipse.core.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Import-Package: org.hamcrest;version="2.2.0",
  org.hamcrest.collection;version="2.2.0",
  org.junit.jupiter.api;version="5.9.2",
- org.junit.jupiter.api.extension;version="5.9.2"
+ org.junit.jupiter.api.extension;version="5.9.2",
+ org.junit.jupiter.api.io;version="5.9.2"
+Require-Bundle: testdata;bundle-version="1.0.0"

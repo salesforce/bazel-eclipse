@@ -126,6 +126,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         return commandLog;
     }
 
+    @Override
     IWorkspaceRoot getEclipseWorkspaceRoot() {
         return ResourcesPlugin.getWorkspace().getRoot();
     }
@@ -207,6 +208,15 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             // we use the BazelModelCommandExecutionService directly because info is not a query
             var infoResult = executionService
                     .executeOutsideWorkspaceLockAsync(new BazelInfoCommand(workspaceRoot), bazelWorkspace).get();
+
+            // sanity check
+            if (infoResult.isEmpty()) {
+                throw new CoreException(Status.error(format(
+                    "bazel info did not return any output in workspace '%s'. Please check the bazel output and binary setup/configuration!",
+                    root)));
+
+            }
+
             excutionRoot = getExpectedOutputAsPath(infoResult, "execution_root");
             name = excutionRoot.lastSegment(); // https://github.com/bazelbuild/bazel/issues/2317
             release = getExpectedOutput(infoResult, "release");
@@ -229,8 +239,9 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
                 throw new CoreException(Status.error(
                     format("bazel info failed in workspace '%s' for with unknown reason", workspaceRoot), e));
             }
-            throw new CoreException(Status.error(
-                format("bazel info failed in workspace '%s': %s", workspaceRoot, cause.getMessage()), cause));
+            throw new CoreException(Status.error(format(
+                "bazel info failed in workspace '%s': %s%n Please check the bazel output and binary setup/configuration!",
+                workspaceRoot, cause.getMessage()), cause));
         }
     }
 }

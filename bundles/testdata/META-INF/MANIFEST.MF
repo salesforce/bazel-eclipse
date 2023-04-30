@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Bazel Eclipe Test Data Plug-in (only for testing, never deploy!!!)
+Bundle-SymbolicName: testdata
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: Bazel Eclipse Feature
+Automatic-Module-Name: testdata
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Eclipse-BundleShape: dir
+Export-Package: testdata;x-friends:="com.salesforce.bazel.eclipse.core.tests,com.salesforce.bazel.eclipse.jdtls.tests,com.salesforce.bazel.eclipse.ui.tests",
+ testdata.utils
+Import-Package: org.hamcrest;version="2.2.0",
+ org.hamcrest.collection;version="2.2.0",
+ org.junit.jupiter.api;version="5.9.2",
+ org.junit.jupiter.api.extension;version="5.9.2",
+ org.junit.jupiter.api.io;version="5.9.2",
+ org.slf4j;version="1.7.30"
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.26.100",
+ org.eclipse.core.resources;bundle-version="3.18.200",
+ com.salesforce.bazel.sdk;bundle-version="2.0.0",
+ com.salesforce.bazel.eclipse.core;bundle-version="2.0.0"

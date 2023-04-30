@@ -35,10 +35,16 @@ import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor;
  */
 public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExecutor {
 
-    private final class InitBinaryJob extends Job {
+    /**
+     * Calls <code>bazel --version</code> on a provided binary to identify the version use.
+     * <p>
+     * Calls {@link EclipseHeadlessBazelCommandExecutor#setBazelBinary(BazelBinary)} when done.
+     * </p>
+     */
+    protected final class DetectBazelVersionAndSetBinaryJob extends Job {
         private final Path binary;
 
-        private InitBinaryJob(Path binary) {
+        private DetectBazelVersionAndSetBinaryJob(Path binary) {
             super(format("Detecting Bazel version...", binary));
             this.binary = binary;
             setSystem(true);
@@ -100,20 +106,12 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
 
     private final IEclipsePreferences[] preferencesLookup = { getInstanceScopeNode(), getDefaultScopeNode() };
 
+    /**
+     * Creates a new command executor initializing the Bazel binary from the preferences and spawning a background job
+     * to detect its version.
+     */
     public EclipseHeadlessBazelCommandExecutor() {
-        // start with a simple default
-        setBazelBinary(UNKNOWN_BAZEL_BINARY);
-        // add listener to instance scope
-        // note: we never unregister because we do expect BazelCorePlugin lifetime to match that of the IDE process
-        preferencesLookup[0].addPreferenceChangeListener(preferencesListener);
-        // schedule initial initialization sync
-        var job = newInitJobFromPreferences();
-        job.schedule();
-        try {
-            job.join();
-        } catch (InterruptedException e) {
-            throw new OperationCanceledException("Interrupted waiting for Bazel binary initialization to happen");
-        }
+        initializeBazelBinary();
     }
 
     IEclipsePreferences getDefaultScopeNode() {
@@ -130,16 +128,50 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
         return System.out;
     }
 
-    @Override
-    protected void injectAdditionalOptions(List<String> commandLine) {
-        // tweak for Eclipse Console
-        commandLine.add("--color=yes");
-        commandLine.add("--curses=no");
+    /**
+     * Called by {@link EclipseHeadlessBazelCommandExecutor#EclipseHeadlessBazelCommandExecutor() default constructor}
+     * to initializing the Bazel binary from the preferences.
+     * <p>
+     * First the binary is set to {@link #UNKNOWN_BAZEL_BINARY}. Then the preferences are checked. If a setting is
+     * available the value will be submitted to {@link #newInitJobFromPreferences()} for detecting its version.
+     * </p>
+     * <p>
+     * Additionally, a preference listener will be installed which will ensure the version is detected again when the
+     * setting changes.
+     * </p>
+     * <p>
+     * Subclasses may override to provide a custom initialization logic. This is not a standard use-case, though. It's
+     * intended for tests only.
+     * </p>
+     */
+    protected void initializeBazelBinary() {
+        // start with a simple default
+        setBazelBinary(UNKNOWN_BAZEL_BINARY);
+        // add listener to instance scope
+        // note: we never unregister because we do expect BazelCorePlugin lifetime to match that of the IDE process
+        preferencesLookup[0].addPreferenceChangeListener(preferencesListener);
+        // schedule initial initialization sync
+        var job = newInitJobFromPreferences();
+        job.schedule();
+        try {
+            job.join();
+        } catch (InterruptedException e) {
+            throw new OperationCanceledException("Interrupted waiting for Bazel binary initialization to happen");
+        }
     }
 
-    InitBinaryJob newInitJobFromPreferences() {
+    /**
+     * Called by {@link #initializeBazelBinary()} and by the {@link #preferencesListener}. *
+     * <p>
+     * Subclasses may override to provide a custom Job. This is not a standard use-case, though. It's intended for tests
+     * only.
+     * </p>
+     *
+     * @return an Eclipse {@link Job} for initializing the Bazel version.
+     */
+    protected Job newInitJobFromPreferences() {
         var binary = Path.of(Platform.getPreferencesService().get(PREF_KEY_BAZEL_BINARY, "bazel", preferencesLookup));
-        return new InitBinaryJob(binary);
+        return new DetectBazelVersionAndSetBinaryJob(binary);
     }
 
     @Override

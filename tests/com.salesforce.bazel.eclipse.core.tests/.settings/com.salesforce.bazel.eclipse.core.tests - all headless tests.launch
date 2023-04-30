@@ -52,7 +52,7 @@
         <setEntry value="ch.qos.logback.classic@default:default"/>
         <setEntry value="ch.qos.logback.core@default:default"/>
         <setEntry value="com.github.ben-manes.caffeine@default:default"/>
-        <setEntry value="com.google.gson*2.10.1.v20230109-0753@default:default"/>
+        <setEntry value="com.google.gson@default:default"/>
         <setEntry value="com.google.guava*31.1.0.jre@default:default"/>
         <setEntry value="com.google.guava.failureaccess@default:default"/>
         <setEntry value="com.googlecode.json-simple@default:default"/>
@@ -174,7 +174,6 @@
         <setEntry value="org.eclipse.xtext.logging@default:false"/>
         <setEntry value="org.hamcrest.core@default:default"/>
         <setEntry value="org.hamcrest@default:default"/>
-        <setEntry value="org.jsr-305@default:default"/>
         <setEntry value="org.junit@default:default"/>
         <setEntry value="org.mockito.mockito-core@default:default"/>
         <setEntry value="org.objenesis@default:default"/>
@@ -209,9 +208,10 @@
         <setEntry value="com.salesforce.bazel.eclipse.core@default:default"/>
         <setEntry value="com.salesforce.bazel.sdk.tests@default:false"/>
         <setEntry value="com.salesforce.bazel.sdk@default:default"/>
+        <setEntry value="org.jsr-305@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
-    <stringAttribute key="timestamp" value="1681909806511"/>
+    <stringAttribute key="timestamp" value="1682896979626"/>
     <booleanAttribute key="tracing" value="false"/>
     <booleanAttribute key="useCustomFeatures" value="false"/>
     <booleanAttribute key="useDefaultConfig" value="true"/>
