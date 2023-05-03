@@ -7,9 +7,14 @@ Bundle-Vendor: Bazel Eclipse Feature
 Automatic-Module-Name: com.salesforce.bazel.eclipse.ui.tests
 Fragment-Host: com.salesforce.bazel.eclipse.ui;bundle-version="2.0.0.qualifier"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
-Import-Package: org.hamcrest;version="2.2.0",
+Import-Package: net.bytebuddy.agent;version="1.14.0",
+ org.hamcrest;version="2.2.0",
  org.hamcrest.collection;version="2.2.0",
  org.junit.jupiter.api;version="5.9.2",
  org.junit.jupiter.api.extension;version="5.9.2",
- org.junit.jupiter.api.io;version="5.9.2"
+ org.junit.jupiter.api.function;version="5.9.2",
+ org.junit.jupiter.api.io;version="5.9.2",
+ org.junit.jupiter.params;version="5.9.2",
+ org.junit.jupiter.params.provider;version="5.9.2",
+ org.mockito;version="5.1.1"
 Require-Bundle: testdata;bundle-version="1.0.0"

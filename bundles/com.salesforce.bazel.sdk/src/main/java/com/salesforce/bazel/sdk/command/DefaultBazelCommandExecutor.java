@@ -1,7 +1,6 @@
 package com.salesforce.bazel.sdk.command;
 
 import static java.lang.String.format;
-import static java.nio.file.Files.newOutputStream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
@@ -115,52 +114,56 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
     protected <R> R doExecuteProcess(BazelCommand<R> command, CancelationCallback cancelationCallback,
             ProcessBuilder processBuilder) throws IOException {
-        // capture stdout when needed
-        try (var out = command.getStdOutFile() != null ? newOutputStream(command.getStdOutFile()) : null) {
-            // execute
-            final int result;
+        // execute
+        final int result;
+        try {
+            var fullCommandLine = processBuilder.command().stream().collect(joining(" "));
+            LOG.debug(fullCommandLine);
+
+            // redirect standard out (otherwise we will pipe to System.out after starting the process)
+            if (command.getStdOutFile() != null) {
+                processBuilder.redirectOutput(command.getStdOutFile().toFile());
+            }
+
+            // start process
+            final var process = processBuilder.start();
+
+            // forward to console if not redirected to file
+            final var p1 = command.getStdOutFile() == null ? pipe(process.getInputStream(), System.out, fullCommandLine)
+                    : null;
+            final var p2 = pipe(process.getErrorStream(), getProcessErrorStream(), fullCommandLine);
+
             try {
-                var fullCommandLine = processBuilder.command().stream().collect(joining(" "));
-                LOG.debug(fullCommandLine);
-
-                final var process = processBuilder.start();
-
-                final var p1 = pipe(process.getInputStream(), out != null ? out : System.out, fullCommandLine);
-                final var p2 = pipe(process.getErrorStream(), getPreferredErrorStream(), fullCommandLine);
-
-                try {
-                    while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
-                        Thread.onSpinWait();
-                        if (cancelationCallback.isCanceled()) {
-                            process.destroyForcibly();
-                            throw new IOException("user cancelled");
-                        }
+                while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
+                    Thread.onSpinWait();
+                    if (cancelationCallback.isCanceled()) {
+                        process.destroyForcibly();
+                        throw new IOException("user cancelled");
                     }
-
-                    // wait for pipes to finish
-                    waitForPipeToFinish(p1, cancelationCallback);
-                    waitForPipeToFinish(p2, cancelationCallback);
-                } finally {
-                    // interrupt pipe threads so they'll die
-                    p1.interrupt();
-                    p2.interrupt();
                 }
 
-                result = process.exitValue();
-            } catch (final InterruptedException e) {
-                // ignore, just reset interrupt flag
-                Thread.currentThread().interrupt();
-                throw new IOException("Aborted waiting for result");
+                // wait for pipes to finish
+                if (p1 != null) {
+                    waitForPipeToFinish(p1, cancelationCallback);
+                }
+                waitForPipeToFinish(p2, cancelationCallback);
+            } finally {
+                // interrupt pipe threads so they'll die
+                if (p1 != null) {
+                    p1.interrupt();
+                }
+                p2.interrupt();
             }
 
-            // close stdout file before processing result
-            if (out != null) {
-                out.close();
-            }
-
-            // send result to command
-            return command.generateResult(result);
+            result = process.exitValue();
+        } catch (final InterruptedException e) {
+            // ignore, just reset interrupt flag
+            Thread.currentThread().interrupt();
+            throw new IOException("Aborted waiting for result");
         }
+
+        // send result to command
+        return command.generateResult(result);
     }
 
     @Override
@@ -197,14 +200,14 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
     }
 
     /**
-     * Hook for sub classes to use a different stream.
+     * Hook for sub classes to use a different stream to which the process' STDERR output should go to.
      * <p>
      * Note, the stream will never be closed.
      * </p>
      *
      * @return the stream for stderr, defaults to {@link System#err}
      */
-    protected OutputStream getPreferredErrorStream() {
+    protected OutputStream getProcessErrorStream() {
         return System.err;
     }
 

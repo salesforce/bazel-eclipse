@@ -123,7 +123,7 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
     }
 
     @Override
-    protected OutputStream getPreferredErrorStream() {
+    protected OutputStream getProcessErrorStream() {
         // assuming this is displayed in the Eclipse Console, using System.out avoids the red coloring
         return System.out;
     }

@@ -1,8 +1,6 @@
 package com.salesforce.bazel.eclipse.ui.execution;
 
 import static java.lang.String.format;
-import static java.nio.file.Files.lines;
-import static java.nio.file.Files.newOutputStream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static org.fusesource.jansi.Ansi.ansi;
@@ -29,7 +27,6 @@ import com.salesforce.bazel.eclipse.core.extensions.EclipseHeadlessBazelCommandE
 import com.salesforce.bazel.eclipse.ui.BazelUIPlugin;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.BazelCommandExecutor;
-import com.salesforce.bazel.sdk.command.FileCapturingOutputStream;
 
 /**
  * Implementation of a {@link BazelCommandExecutor} which integrates with the Eclipse Console.
@@ -46,9 +43,8 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
         showConsole(console);
 
         try (final var consoleStream = console.newMessageStream();
-                final var stdout =
-                        command.getStdOutFile() != null ? newOutputStream(command.getStdOutFile()) : consoleStream;
-                final var stderr = new FileCapturingOutputStream(getPreferredErrorStream())) {
+                final var errorStream =
+                        new CapturingLiniesAndForwardingOutputStream(consoleStream, Charset.defaultCharset(), 4)) {
             // remove old output
             console.clearConsole();
 
@@ -66,10 +62,18 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
 
             int result;
             try {
+                // redirect standard out (otherwise we will pipe to System.out after starting the process)
+                if (command.getStdOutFile() != null) {
+                    processBuilder.redirectOutput(command.getStdOutFile().toFile());
+                }
+
+                // start process
                 final var process = processBuilder.start();
 
-                final var p1 = pipe(process.getInputStream(), stdout, fullCommandLine);
-                final var p2 = pipe(process.getErrorStream(), stderr, fullCommandLine);
+                // forward to console if not redirected to file
+                final var p1 = command.getStdOutFile() == null
+                        ? pipe(process.getInputStream(), consoleStream, fullCommandLine) : null;
+                final var p2 = pipe(process.getErrorStream(), errorStream, fullCommandLine);
 
                 try {
                     while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
@@ -84,11 +88,15 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
                     }
 
                     // wait for pipes to finish
-                    waitForPipeToFinish(p1, cancelationCallback);
+                    if (p1 != null) {
+                        waitForPipeToFinish(p1, cancelationCallback);
+                    }
                     waitForPipeToFinish(p2, cancelationCallback);
                 } finally {
                     // interrupt pipe threads so they'll die
-                    p1.interrupt();
+                    if (p1 != null) {
+                        p1.interrupt();
+                    }
                     p2.interrupt();
                 }
 
@@ -111,24 +119,19 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
                 throw new OperationCanceledException("operation failed: " + e.getMessage());
             }
 
-            // close streams file before processing result
-            stdout.close();
-            stderr.close();
-
             // send result to command
             try {
                 return command.generateResult(result);
             } catch (IOException e) {
-                // count available lines
-                var numberOfLines = lines(stderr.getFile(), Charset.defaultCharset()).count();
-                // only collect last 10 lines
-                var linesToSkip = Math.max(numberOfLines - 10L, 0L);
-                var stderrLines = lines(stderr.getFile(), Charset.defaultCharset()).skip(Math.max(linesToSkip, 0L))
+                errorStream.close();
+                var stderrLines = errorStream.getCapturedLines().stream()
                         .map(s -> s.replaceAll("\u001B\\[[;\\d]*m", "")).collect(joining(System.lineSeparator()));
-
-                throw new IOException(format(
-                    "%s%n---- Begin of Captured Error Output %s----%n%s---- End of Captured Error Output ----%n",
-                    e.getMessage(), linesToSkip > 0L ? "(cropped to last lines) " : "", stderrLines), e);
+                if (stderrLines.length() > 0) {
+                    throw new IOException(format(
+                        "%s%n---- Begin of Captured Error Output (last %d lines)----%n%s---- End of Captured Error Output ----%n",
+                        e.getMessage(), errorStream.getLinesToCapture(), stderrLines), e);
+                }
+                throw new IOException(format("%s%n(no error output was captured)", e.getMessage()), e);
             }
         }
     }

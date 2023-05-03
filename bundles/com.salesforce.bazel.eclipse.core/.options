@@ -1,1 +1,1 @@
-com.salesforce.bazel.eclipse.core/debug=true
+com.salesforce.bazel.eclipse.core/debugLog=true

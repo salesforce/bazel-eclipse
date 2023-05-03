@@ -82,7 +82,7 @@ public class BazelWorkspaceExtension implements BeforeAllCallback, AfterAllCallb
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        var testFragmentBundle = FrameworkUtil.getBundle(testClassForObtainingBundle);
+		var testFragmentBundle = FrameworkUtil.getBundle(testClassForObtainingBundle);
         assertNotNull(testFragmentBundle, "This test can only run inside an OSGi runtime.");
 
         var workspaceRootUrl = FileLocator.find(testFragmentBundle, new org.eclipse.core.runtime.Path(workspaceTestDataLocation));

@@ -210,12 +210,12 @@
         <setEntry value="org.jsr-305@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
-    <stringAttribute key="timestamp" value="1682890089828"/>
+    <stringAttribute key="timestamp" value="1683029586596"/>
     <booleanAttribute key="tracing" value="true"/>
     <mapAttribute key="tracingOptions">
-        <mapEntry key="com.salesforce.bazel.eclipse.core/debug" value="true"/>
-        <mapEntry key="com.salesforce.bazel.eclipse.ui/debug" value="true"/>
-        <mapEntry key="com.salesforce.bazel.sdk/debug" value="true"/>
+        <mapEntry key="com.salesforce.bazel.eclipse.core/debugLog" value="true"/>
+        <mapEntry key="com.salesforce.bazel.eclipse.ui/debugLog" value="true"/>
+        <mapEntry key="com.salesforce.bazel.sdk/debugLog" value="true"/>
         <mapEntry key="org.aspectj.osgi.service.caching.j9/debug" value="false"/>
         <mapEntry key="org.eclipse.buildship.core/trace/classpath" value="false"/>
         <mapEntry key="org.eclipse.buildship.core/trace/preferences" value="false"/>
