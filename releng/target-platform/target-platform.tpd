@@ -99,14 +99,33 @@ maven MavenDependencies scope=compile,test dependencyDepth=infinite missingManif
 		version="2.4.0"
 	}
 	dependency {
-		groupId="com.google.code.findbugs"
-		artifactId="jsr305"
-		version="3.0.2"
-	}
-	dependency {
 		groupId="com.google.errorprone"
 		artifactId="error_prone_annotations"
 		version="2.18.0"
 	}
 }
 
+// https://github.com/eclipse-platform/eclipse.platform.ui/issues/727#issuecomment-1519129237
+// make sure manual bnd instructions are maintained
+/*
+
+ 		  <instructions><![CDATA[
+Bundle-Name:           Bundle derived from maven artifact ${mvnGroupId}:${mvnArtifactId}:${mvnVersion}
+version:               ${version_cleanup;${mvnVersion}}
+Bundle-SymbolicName:   wrapped.${mvnGroupId}.${mvnArtifactId}
+Bundle-Version:        ${version}
+Import-Package:        *;resolution:=optional
+Export-Package:        *;version="${version}";-noimport:=true
+DynamicImport-Package: *
+Require-Bundle:        javax.annotation;bundle-version="1.3.5";resolution:=optional;visibility:=reexport
+]]></instructions>
+
+*/
+
+maven MavenDependenciesFindBugs scope=compile,test dependencyDepth=infinite missingManifest=generate includeSources {
+	dependency {
+		groupId="com.google.code.findbugs"
+		artifactId="jsr305"
+		version="3.0.2"
+	}
+}

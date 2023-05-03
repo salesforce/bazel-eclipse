@@ -174,6 +174,7 @@
         <setEntry value="org.eclipse.xtext.logging@default:false"/>
         <setEntry value="org.hamcrest.core@default:default"/>
         <setEntry value="org.hamcrest@default:default"/>
+        <setEntry value="org.jsr-305@default:default"/>
         <setEntry value="org.junit@default:default"/>
         <setEntry value="org.mockito.mockito-core@default:default"/>
         <setEntry value="org.objenesis@default:default"/>
@@ -208,8 +209,6 @@
         <setEntry value="com.salesforce.bazel.eclipse.core@default:default"/>
         <setEntry value="com.salesforce.bazel.sdk.tests@default:false"/>
         <setEntry value="com.salesforce.bazel.sdk@default:default"/>
-        <setEntry value="org.eclipse.m2e.logback@default:false"/>
-        <setEntry value="org.jsr-305@default:default"/>
         <setEntry value="testdata@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1681939792">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1683117989">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.27.0.v20230220-1431"/>
@@ -98,6 +98,26 @@
       <unit id="org.eclipse.mylyn.wikitext.markdown.ui" version="3.0.46.202301111837"/>
       <repository location="https://download.eclipse.org/mylyn/docs/releases/3.0.46/"/>
     </location>
+    <location includeDependencyDepth="infinite" includeDependencyScopes="compile,test" includeSource="true" missingManifest="generate" type="Maven" label="MavenDependenciesFindBugs">
+    <dependencies>
+    	<dependency>
+    		<groupId>com.google.code.findbugs</groupId>
+    		<artifactId>jsr305</artifactId>
+    		<version>3.0.2</version>
+    		<type>jar</type>
+    	</dependency>
+        <instructions><![CDATA[
+Bundle-Name:           Bundle derived from maven artifact ${mvnGroupId}:${mvnArtifactId}:${mvnVersion}
+version:               ${version_cleanup;${mvnVersion}}
+Bundle-SymbolicName:   wrapped.${mvnGroupId}.${mvnArtifactId}
+Bundle-Version:        ${version}
+Import-Package:        *;resolution:=optional
+Export-Package:        *;version="${version}";-noimport:=true
+DynamicImport-Package: *
+Require-Bundle:        javax.annotation;bundle-version="1.3.5";resolution:=optional;visibility:=reexport
+]]></instructions>
+    </dependencies>
+    </location>
     <location includeDependencyDepth="infinite" includeDependencyScopes="compile,test" includeSource="true" missingManifest="generate" type="Maven" label="MavenDependencies">
     <dependencies>
     	<dependency>
@@ -122,12 +142,6 @@
     		<groupId>org.fusesource.jansi</groupId>
     		<artifactId>jansi</artifactId>
     		<version>2.4.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>com.google.code.findbugs</groupId>
-    		<artifactId>jsr305</artifactId>
-    		<version>3.0.2</version>
     		<type>jar</type>
     	</dependency>
     	<dependency>
