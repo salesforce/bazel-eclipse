@@ -19,12 +19,18 @@ location "https://download.eclipse.org/egit/updates/" {
 }
 
 // NOTE: this location needs to match with the Eclipse version above, otherwise EMF will fail to resolve
+location "https://download.eclipse.org/modeling/emf/emf/builds/release/2.32/" {
+	// EMF & Co
+//    org.eclipse.emf.ecore.xcore.sdk.feature.group
+//    org.eclipse.emf.sdk.feature.group
+}
 location "https://download.eclipse.org/releases/2023-03/" {
 	// EMF & Co
-    org.eclipse.emf.ecore.xcore.sdk.feature.group
-    org.eclipse.emf.sdk.feature.group
-    org.eclipse.gef.sdk.feature.group
-    org.eclipse.xsd.sdk.feature.group
+//    org.eclipse.emf.ecore.xcore.sdk.feature.group
+//    org.eclipse.emf.sdk.feature.group
+
+//    org.eclipse.gef.sdk.feature.group
+//    org.eclipse.xsd.sdk.feature.group
 
     // Docker Tools
     org.eclipse.linuxtools.docker.feature.feature.group
@@ -34,8 +40,8 @@ location "https://download.eclipse.org/releases/2023-03/" {
     org.eclipse.tm4e.feature.feature.group
 
 	// Xtext
-    org.eclipse.xtend.sdk.feature.group
-    org.eclipse.xtext.sdk.feature.group
+//    org.eclipse.xtend.sdk.feature.group
+//    org.eclipse.xtext.sdk.feature.group
 }
 
 location "https://download.eclipse.org/mylyn/docs/releases/3.0.46/" {
