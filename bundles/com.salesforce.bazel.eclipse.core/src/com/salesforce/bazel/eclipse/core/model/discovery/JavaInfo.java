@@ -67,7 +67,7 @@ public class JavaInfo {
                 }
 
                 path = path.removeLastSegments(1);
-                lastSegments.removeLastSegments(1);
+                lastSegments = lastSegments.removeLastSegments(1);
             }
 
             // all last segments match at this point
@@ -377,7 +377,7 @@ public class JavaInfo {
         // assume empty by default
         IPath packagePath = Path.EMPTY;
         var packageName = readPackageName(fileEntry);
-        if (packageName.length > 0) {
+        if (packageName.length() > 0) {
             var packageNameSegments = new StringTokenizer(new String(packageName), ".");
             while (packageNameSegments.hasMoreElements()) {
                 packagePath = packagePath.append(packageNameSegments.nextToken());
@@ -447,8 +447,8 @@ public class JavaInfo {
     }
 
     @SuppressWarnings("deprecation") // use of TokenNameIdentifier is ok here
-    private char[] readPackageName(FileEntry fileEntry) {
-        char[] packageName = {};
+    private String readPackageName(FileEntry fileEntry) {
+        var packageName = new StringBuilder();
 
         var scanner = ToolFactory.createScanner( //
             false, // tokenizeComments
@@ -465,13 +465,19 @@ public class JavaInfo {
                 switch (token) {
                     case ITerminalSymbols.TokenNamepackage:
                         token = scanner.getNextToken();
-                        if (token == ITerminalSymbols.TokenNameIdentifier) {
-                            packageName = scanner.getCurrentTokenSource();
+                        while (token == ITerminalSymbols.TokenNameIdentifier) {
+                            var packageNameChars = scanner.getCurrentTokenSource();
+                            packageName.append(packageNameChars);
+                            token = scanner.getNextToken();
+                            if (token == ITerminalSymbols.TokenNameDOT) {
+                                packageName.append('.');
+                                token = scanner.getNextToken();
+                            }
                         }
-                        return packageName;
+                        continue;
                     case ITerminalSymbols.TokenNameimport: // stop at imports
                     case ITerminalSymbols.TokenNameEOF: // stop at EOF
-                        return packageName;
+                        return packageName.toString();
                     default:
                         token = scanner.getNextToken();
                         continue;
@@ -480,7 +486,7 @@ public class JavaInfo {
         } catch (InvalidInputException | IndexOutOfBoundsException | IOException e) {
             // ignore
         }
-        return packageName;
+        return packageName.toString();
     }
 
 }

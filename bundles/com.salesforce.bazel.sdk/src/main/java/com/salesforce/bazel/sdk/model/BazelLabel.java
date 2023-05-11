@@ -160,6 +160,11 @@ public class BazelLabel {
             }
 
             labelPathStr = labelPathStr.trim();
+
+            if (labelPathStr.endsWith(BAZEL_ROOT_SLASHES) && labelPathStr.startsWith(BAZEL_EXTERNALREPO_AT)) {
+                // this is a special case, it is a legal label so we will shall let it pass
+                return true;
+            }
             if ((labelPathStr.length() == 0) || labelPathStr.endsWith(BAZEL_COLON)) {
                 throw new IllegalArgumentException("Illegal Bazel path string: " + labelPathStr);
             }

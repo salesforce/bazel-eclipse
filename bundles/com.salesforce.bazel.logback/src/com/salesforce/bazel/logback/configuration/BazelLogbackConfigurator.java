@@ -80,7 +80,7 @@ public class BazelLogbackConfigurator extends BasicConfigurator implements Confi
         }
 
         try {
-            bundle.stop();
+            bundle.uninstall();
         } catch (BundleException e) {
             LOG.warn("Unable to stop bundle: " + bundle.getSymbolicName(), e);
         }

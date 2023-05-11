@@ -16,8 +16,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.filesystem.URIUtil;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -116,19 +118,28 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             Set<IPath> explicitelyExcludedDirectories = projectView.directoriesToExclude().stream()
                     .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator).collect(toSet());
 
+            // query workspace for all targets
+            var bazelPackages = targetDiscoveryStrategy.discoverPackages(workspace, monitor);
+
+            // if the '.' is listed in the project view it literal means include "everything"
+            var includeEverything = allowedDirectories.contains(Path.EMPTY);
+
             monitor.beginTask("Discovering targets", allowedDirectories.size());
-            for (IPath directory : allowedDirectories) {
+            for (BazelPackage bazelPackage : bazelPackages) {
+                // filter packages based in includes
+                var directory = bazelPackage.getWorkspaceRelativePath();
+                if (!includeEverything && !findPathOrAnyParentInSet(directory, allowedDirectories)) {
+                    continue;
+                }
+                // filter based on excludes
                 if (findPathOrAnyParentInSet(directory, explicitelyExcludedDirectories)) {
                     continue;
                 }
-
-                var bazelPackage = workspace.getBazelPackage(directory);
-                if (!bazelPackage.exists()) {
-                    continue;
-                }
+                // get targets
                 monitor.subTask(bazelPackage.getLabel().toString());
                 var bazelTargets = targetDiscoveryStrategy.discoverTargets(bazelPackage, monitor.newChild(1));
 
+                // add only targets not explicitly excluded
                 bazelTargets.stream().filter(t -> !targetsToExclude.contains(t.getLabel())).forEach(result::add);
             }
         }
@@ -211,7 +222,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
         Set<IPath> alwaysAllowedFolders = Set.of(new Path(".settings"), new Path(".eclipse"), new Path(".bazel"));
 
-        workspaceProject.accept(resource -> {
+        IResourceVisitor visitor = resource -> {
             // we only hide folders, i.e. all files contained in the project remain visible
             if (resource.getType() == IResource.FOLDER) {
                 var path = resource.getProjectRelativePath();
@@ -241,7 +252,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
             // we cannot make a decision, continue searching
             return true;
-        });
+        };
+        workspaceProject.accept(visitor, IResource.DEPTH_INFINITE,
+            IContainer.INCLUDE_HIDDEN /* visit hidden ones so we can un-hide if necessary */);
 
         monitor.done();
     }

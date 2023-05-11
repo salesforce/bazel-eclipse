@@ -33,8 +33,8 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
     private final IPath packagePath;
 
     BazelPackage(BazelWorkspace parent, IPath packagePath) throws NullPointerException, IllegalArgumentException {
-        this.packagePath = requireNonNull(packagePath, "No package path specified").makeAbsolute().makeRelative()
-                .removeTrailingSeparator();
+        this.packagePath =
+                requireNonNull(packagePath, "No package path specified").makeRelative().removeTrailingSeparator();
         this.parent = requireNonNull(parent, "No workspace provided!");
         label = new BazelLabel("//" + this.packagePath.toString());
     }
@@ -189,6 +189,11 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
      * <p>
      * Workspace-relative paths are recommended over absolute paths, since the former are not affected if the workspace
      * is renamed/relocated/moved.
+     * </p>
+     * <p>
+     * By definition, a workspace relative path is never absolute and never has a trailing slash, i.e.
+     * {@link IPath#isAbsolute()} returns <code>false</code> and {@link IPath#hasTrailingSeparator()} returns
+     * <code>false</code>.
      * </p>
      *
      * @return the relative path of this element with respect to its workspace

@@ -9,6 +9,8 @@ import java.util.Comparator;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.command.BazelCommand;
@@ -19,27 +21,30 @@ import com.salesforce.bazel.sdk.command.BazelCommandExecutor;
  */
 public final class ExtensibleCommandExecutor implements BazelCommandExecutor {
 
+    private static Logger LOG = LoggerFactory.getLogger(ExtensibleCommandExecutor.class);
+
     private static final String EXTENSION_POINT_COMMAND_EXECUTOR = "com.salesforce.bazel.eclipse.core.executor";
     private static final String ATTR_CLASS = "class";
     private static final String ATTR_PRIORITY = "priority";
 
     private volatile BazelCommandExecutor delegate;
 
-    BazelCommandExecutor ensureDelegate() throws CoreException {
-        var commandExecutor = delegate;
-        while (commandExecutor == null) {
-            commandExecutor = delegate = findCommandExecutor();
+    BazelCommandExecutor ensureDelegate() throws IOException {
+        try {
+            var commandExecutor = delegate;
+            while (commandExecutor == null) {
+                commandExecutor = delegate = findCommandExecutor();
+            }
+            return commandExecutor;
+        } catch (CoreException e) {
+            LOG.debug("Error creating command executor.", e);
+            throw new IOException("Error creating command executor!", e);
         }
-        return commandExecutor;
     }
 
     @Override
     public <R> R execute(BazelCommand<R> command, CancelationCallback cancellationCallback) throws IOException {
-        try {
-            return ensureDelegate().execute(command, cancellationCallback);
-        } catch (CoreException | RuntimeException e) {
-            throw new IOException("Error creating command executor!", e);
-        }
+        return ensureDelegate().execute(command, cancellationCallback);
     }
 
     private BazelCommandExecutor findCommandExecutor() throws CoreException {
@@ -74,7 +79,7 @@ public final class ExtensibleCommandExecutor implements BazelCommandExecutor {
     public BazelBinary getBazelBinary() throws NullPointerException {
         try {
             return ensureDelegate().getBazelBinary();
-        } catch (CoreException e) {
+        } catch (IOException e) {
             throw new IllegalStateException("Error creating command executor!", e);
         }
     }
