@@ -12,7 +12,7 @@
 
 // adapted from M2Eclipse org.eclipse.m2e.core.ui.internal.wizards.MavenImportWizardPage
 
-package com.salesforce.bazel.eclipse.wizard;
+package com.salesforce.bazel.eclipse.ui.wizards;
 
 import static java.nio.file.Files.isRegularFile;
 import static org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil.setHorizontalGrabbing;

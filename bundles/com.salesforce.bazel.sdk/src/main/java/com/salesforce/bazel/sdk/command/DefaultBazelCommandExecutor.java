@@ -7,7 +7,6 @@ import static java.util.stream.Collectors.joining;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.salesforce.bazel.sdk.command.shell.MacOsLoginShellFinder;
+import com.salesforce.bazel.sdk.command.shell.ShellUtil;
 import com.salesforce.bazel.sdk.util.SystemUtil;
 
 /**
@@ -70,7 +69,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
     }
 
     private boolean wrapExecutionIntoShell = !getSystemUtil().isWindows(); // default is yes except on Windows
-    private volatile Path detectedShell;
+    private final ShellUtil shellUtil = new ShellUtil(); // login shell change requires Eclipse restart
     private volatile Map<String, String> extraEnv;
     private volatile BazelBinary bazelBinary;
 
@@ -92,24 +91,6 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         var binary = Optional.ofNullable(command.getBazelBinary()).orElseGet(this::getBazelBinary);
         // ensure command has the proper binary
         command.setBazelBinary(binary);
-    }
-
-    protected Path detectShell() throws IOException {
-        if (getSystemUtil().isWindows()) {
-            return null; // not supported
-        }
-
-        var shell = detectedShell;
-        if (shell != null) {
-            return shell;
-        }
-
-        synchronized (this) {
-            if (getSystemUtil().isMac() || getSystemUtil().isUnix()) {
-                return detectedShell = new MacOsLoginShellFinder().detectLoginShell();
-            }
-            throw new IOException("Unsupported OS: " + getSystemUtil().getOs());
-        }
     }
 
     protected <R> R doExecuteProcess(BazelCommand<R> command, CancelationCallback cancelationCallback,
@@ -211,7 +192,16 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         return System.err;
     }
 
-    SystemUtil getSystemUtil() {
+    protected ShellUtil getShellUtil() {
+        return shellUtil;
+    }
+
+    /**
+     * The {@link SystemUtil} instance to use
+     *
+     * @return {@link SystemUtil#getInstance()}
+     */
+    protected SystemUtil getSystemUtil() {
         return SystemUtil.getInstance();
     }
 
@@ -264,7 +254,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         commandLine.add(0, bazelBinary.executable().toString());
 
         if (isWrapExecutionIntoShell()) {
-            return wrapExecutionIntoShell(commandLine);
+            return getShellUtil().wrapExecutionIntoShell(commandLine);
         }
 
         return commandLine;
@@ -280,37 +270,6 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
     public void setWrapExecutionIntoShell(boolean wrapExecutionIntoShell) {
         this.wrapExecutionIntoShell = wrapExecutionIntoShell;
-    }
-
-    protected String toQuotedStringForShell(List<String> commandLine) {
-        var result = new StringBuilder();
-        for (String arg : commandLine) {
-            if (result.length() > 0) {
-                result.append(' ');
-            }
-            var quoteArg = (arg.indexOf(' ') > -1) && !arg.startsWith("\\\"");
-            if (quoteArg) {
-                result.append("\"");
-            }
-            result.append(arg.replace("\"", "\\\""));
-            if (quoteArg) {
-                result.append("\"");
-            }
-        }
-        return result.toString();
-    }
-
-    protected List<String> wrapExecutionIntoShell(List<String> commandLine) throws IOException {
-        var shell = detectShell();
-        if (shell != null) {
-            return switch (shell.getFileName().toString()) {
-                case "fish", "zsh", "bash" -> getSystemUtil().isMac() // login shell on Mac
-                        ? List.of(shell.toString(), "-l", "-c", toQuotedStringForShell(commandLine))
-                        : List.of(shell.toString(), "-c", toQuotedStringForShell(commandLine));
-                default -> throw new IOException("Unsupported shell: " + shell);
-            };
-        }
-        throw new IOException("Unable to wrap in shell. None detected!");
     }
 
 }

@@ -10,7 +10,7 @@
 
 // adapted from M2Eclipse org.eclipse.m2e.core.ui.internal.wizards.MavenImportWizard
 
-package com.salesforce.bazel.eclipse.wizard;
+package com.salesforce.bazel.eclipse.ui.wizards;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;

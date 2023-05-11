@@ -40,13 +40,15 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 
+import com.salesforce.bazel.sdk.util.SystemUtil;
+
 /**
- * Initialize the preferences of Bazel plugins. See the BazelPreferenceKeys class for the supported preferences.
+ * Initialize the preferences of Bazel plugins. See the BazelCorePreferenceKeys class for the supported preferences.
  */
 public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
     @Override
     public void initializeDefaultPreferences() {
         var node = DefaultScope.INSTANCE.getNode(PLUGIN_ID);
-        node.putBoolean(BazelPreferenceKeys.BAZEL_USE_SHELL_ENVIRONMENT_PREF_NAME, true);
+        node.putBoolean(BazelCorePreferenceKeys.PREF_KEY_USE_SHELL_ENVIRONMENT, !SystemUtil.getInstance().isWindows());
     }
 }

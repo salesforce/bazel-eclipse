@@ -151,7 +151,7 @@ public class BazelProject implements IProjectNature {
      * @throws CoreException
      *             if the project is closed
      */
-    public static int numberOfTargetsinTargetProperty(IProject project) throws CoreException {
+    public static int numberOfTargetsInTargetProperty(IProject project) throws CoreException {
         var targetsPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_TARGETS);
         if ((targetsPropertyValue == null) || targetsPropertyValue.isBlank()) {
             return 0;
@@ -336,7 +336,7 @@ public class BazelProject implements IProjectNature {
      * @throws CoreException
      */
     public boolean isSingleTargetProject() throws CoreException {
-        return numberOfTargetsinTargetProperty(getProject()) == 1;
+        return numberOfTargetsInTargetProperty(getProject()) == 1;
     }
 
     /**

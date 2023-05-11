@@ -34,9 +34,10 @@
 package com.salesforce.bazel.eclipse.preferences;
 
 /**
- * Names of the preference keys. Preferences
+ * Names of the preference keys.
  */
-public class BazelPreferenceKeys {
+public interface BazelCorePreferenceKeys {
 
-    public static final String BAZEL_USE_SHELL_ENVIRONMENT_PREF_NAME = "BAZEL_USE_SHELL_ENVIRONMENT";
+    String PREF_KEY_USE_SHELL_ENVIRONMENT = "useShellEnvironment";
+    String PREF_KEY_BAZEL_BINARY = "bazelBinary";
 }
