@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.idea.blaze.base.command.buildresult.ParsedBepOutput;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -18,6 +21,8 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * <code>--build_event_binary_file=bazel_build_bep.txt --nobuild_event_binary_file_path_conversion</code>
  */
 public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
+
+    private static Logger LOG = LoggerFactory.getLogger(BazelBuildCommand.class);
 
     private Path bepFile;
     private final boolean keepGoing;
@@ -47,6 +52,7 @@ public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
         // collect BEP file for parsing output
         bepFile = createTempFile("bazel_build_bep_", ".txt");
         commandLine.add(format("--build_event_binary_file=%s", bepFile));
+        LOG.debug("Collecting BEP to: {}", bepFile);
 
         // instructs BEP to use local file paths (file://...)
         commandLine.add("--nobuild_event_binary_file_path_conversion");

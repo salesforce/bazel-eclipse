@@ -161,6 +161,10 @@ public abstract class BazelCommand<R> {
      * <p>
      * The Bazel binary will be added by {@link BazelCommandExecutor} and must not be included in the returned list.
      * </p>
+     * <p>
+     * Implementors can assume that this method is called at most once during the lifecycle of a command. This is
+     * important so that temporary files can be created without complicating the implementation.
+     * </p>
      *
      * @param bazelVersion
      *            version of the Bazel binary (may impact flags to use)

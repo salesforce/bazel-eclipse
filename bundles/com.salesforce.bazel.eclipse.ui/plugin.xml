@@ -2,6 +2,23 @@
 <?eclipse version="3.4"?>
 <plugin>
 
+    <extension
+          point="com.salesforce.bazel.eclipse.core.executor">
+       <commandExecutor
+             class="com.salesforce.bazel.eclipse.ui.execution.EclipseConsoleBazelCommandExecutor"
+             priority="1000">
+       </commandExecutor>
+    </extension>
+
+    <extension
+         point="org.eclipse.ui.preferencePages">
+       <page
+            class="com.salesforce.bazel.eclipse.ui.preferences.BazelPreferencePage"
+            id="com.salesforce.bazel.eclipse.preferences"
+            name="Bazel">
+       </page>
+    </extension>
+
     <extension point="org.eclipse.ui.importWizards">
        <category id="com.salesforce.bazel.eclipse.ui.import.category.bazel" name="Bazel"/>
 
@@ -16,15 +33,6 @@
     </extension>
 
     <extension
-         point="org.eclipse.ui.preferencePages">
-       <page
-            class="com.salesforce.bazel.eclipse.ui.preferences.BazelPreferencePage"
-            id="com.salesforce.bazel.eclipse.preferences"
-            name="Bazel">
-       </page>
-    </extension>
-
-    <extension
           point="org.eclipse.ui.commands">
        <category
              description="Bazel Eclipse Feature Commands"
@@ -34,18 +42,17 @@
        <command
              categoryId="com.salesforce.bazel.eclipse.ui.commands.category"
              defaultHandler="com.salesforce.bazel.eclipse.ui.commands.UpdateClasspathsHandler"
-             description="Refresh Eclipse build path information from Bazel BUILD files"
+             description="Refresh Eclipse build path information from Bazel BUILD files."
              id="com.salesforce.bazel.eclipse.ui.commands.updateClasspaths"
              name="Update Classpaths">
        </command>
-    </extension>
-
-    <extension
-          point="com.salesforce.bazel.eclipse.core.executor">
-       <commandExecutor
-             class="com.salesforce.bazel.eclipse.ui.execution.EclipseConsoleBazelCommandExecutor"
-             priority="1000">
-       </commandExecutor>
+       <command
+             categoryId="com.salesforce.bazel.eclipse.ui.commands.category"
+             defaultHandler="com.salesforce.bazel.eclipse.ui.commands.SynchronizeProjectsHandler"
+             description="Refresh Eclipse workspace project configuration from Bazel BUILD files according to the configured project view."
+             id="com.salesforce.bazel.eclipse.ui.commands.syncProjects"
+             name="Sync Projects">
+       </command>
     </extension>
 
 </plugin>

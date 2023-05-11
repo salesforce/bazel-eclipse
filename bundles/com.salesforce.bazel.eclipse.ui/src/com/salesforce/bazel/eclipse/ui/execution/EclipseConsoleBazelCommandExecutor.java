@@ -1,7 +1,6 @@
 package com.salesforce.bazel.eclipse.ui.execution;
 
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static org.fusesource.jansi.Ansi.ansi;
 import static org.fusesource.jansi.Ansi.Attribute.INTENSITY_BOLD;
@@ -37,7 +36,7 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
 
     @Override
     protected <R> R doExecuteProcess(BazelCommand<R> command, CancelationCallback cancelationCallback,
-            ProcessBuilder processBuilder) throws IOException {
+            ProcessBuilder processBuilder, PreparedCommandLine commandLine) throws IOException {
 
         var console = findConsole(format("Bazel Workspace (%s)", command.getWorkingDirectory()));
         showConsole(console);
@@ -46,15 +45,14 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
                 final var errorStream =
                         new CapturingLiniesAndForwardingOutputStream(consoleStream, Charset.defaultCharset(), 4)) {
             // remove old output
-            console.clearConsole();
+            //console.clearConsole();
+            consoleStream.println();
 
             // print info about command
             consoleStream.println(ansi().a(ITALIC).a(new Date().toString()).reset().toString());
             consoleStream.println(ansi().a(INTENSITY_BOLD).a("Running Command:").reset().toString());
-            consoleStream.println(" > bazel " + command
-                    .prepareCommandLine(requireNonNull(command.getBazelBinary(),
-                        "command is expected to have a binary at this point; check the code flow").bazelVersion())
-                    .stream().collect(joining()));
+            consoleStream.println(
+                " > bazel " + commandLine.commandLineWithoutBinaryAsPreparedByCommand().stream().collect(joining(" ")));
             consoleStream.println();
 
             var fullCommandLine = processBuilder.command().stream().collect(joining(" "));
@@ -102,8 +100,11 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
 
                 result = process.exitValue();
 
+                consoleStream.println();
+                consoleStream
+                        .println(ansi().a(ITALIC).a("Process finished ").a(new Date().toString()).reset().toString());
+
                 if (result != 0) {
-                    consoleStream.println();
                     consoleStream
                             .println(ansi().fgBrightBlack().a("Process exited with ").a(result).reset().toString());
                 }

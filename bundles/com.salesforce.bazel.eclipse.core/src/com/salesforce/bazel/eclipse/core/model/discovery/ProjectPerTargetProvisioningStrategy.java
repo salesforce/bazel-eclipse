@@ -160,7 +160,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         //            }
         //        }
 
-        return null;
+        return List.of();
 
     }
 

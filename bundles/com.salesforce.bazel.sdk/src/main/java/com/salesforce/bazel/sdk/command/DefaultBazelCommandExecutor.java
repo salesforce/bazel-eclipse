@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.joining;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +33,11 @@ import com.salesforce.bazel.sdk.util.SystemUtil;
  * </p>
  */
 public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
+
+    protected static record PreparedCommandLine(
+            List<String> fullCommandLineWithOptionalShellWrappingAndBinary,
+            List<String> commandLineWithoutBinaryAsPreparedByCommand) {
+    }
 
     private static Logger LOG = LoggerFactory.getLogger(DefaultBazelCommandExecutor.class);
 
@@ -94,7 +100,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
     }
 
     protected <R> R doExecuteProcess(BazelCommand<R> command, CancelationCallback cancelationCallback,
-            ProcessBuilder processBuilder) throws IOException {
+            ProcessBuilder processBuilder, PreparedCommandLine commandLine) throws IOException {
         // execute
         final int result;
         try {
@@ -156,7 +162,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         var commandLine = prepareCommandLine(command);
 
         // start building the process
-        var processBuilder = newProcessBuilder(commandLine);
+        var processBuilder = newProcessBuilder(commandLine.fullCommandLineWithOptionalShellWrappingAndBinary());
 
         // run command in workspace
         processBuilder.directory(command.getWorkingDirectory().toFile());
@@ -167,7 +173,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
             processBuilder.environment().putAll(extraEnv);
         }
 
-        return doExecuteProcess(command, cancelationCallback, processBuilder);
+        return doExecuteProcess(command, cancelationCallback, processBuilder, commandLine);
 
     }
 
@@ -244,20 +250,21 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
      * @throws IOException
      *             in case of IO issues creating temporary files or other resources required for command execution
      */
-    protected List<String> prepareCommandLine(BazelCommand<?> command) throws IOException {
+    protected PreparedCommandLine prepareCommandLine(BazelCommand<?> command) throws IOException {
         var bazelBinary = command.ensureBazelBinary();
-
         var commandLine = command.prepareCommandLine(bazelBinary.bazelVersion());
 
-        injectAdditionalOptions(commandLine);
+        var fullCommandLine = new ArrayList<>(commandLine);
 
-        commandLine.add(0, bazelBinary.executable().toString());
+        injectAdditionalOptions(fullCommandLine);
+
+        fullCommandLine.add(0, bazelBinary.executable().toString());
 
         if (isWrapExecutionIntoShell()) {
-            return getShellUtil().wrapExecutionIntoShell(commandLine);
+            return new PreparedCommandLine(getShellUtil().wrapExecutionIntoShell(fullCommandLine), commandLine);
         }
 
-        return commandLine;
+        return new PreparedCommandLine(fullCommandLine, commandLine);
     }
 
     public void setBazelBinary(BazelBinary bazelBinary) {
