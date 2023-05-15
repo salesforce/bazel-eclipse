@@ -121,9 +121,6 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             IProgressMonitor monitor) throws CoreException {
         LOG.debug("Computing classpath for project: {}", bazelProject);
 
-        var bazelWorkspace = bazelProject.getBazelWorkspace();
-        var workspaceRoot = bazelWorkspace.getLocation().toFile().toPath();
-
         if (bazelProject.isWorkspaceProject()) {
             // FIXME: implement support for reading all jars from WORKSPACE
             //
@@ -139,6 +136,10 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             //
             return List.of();
         }
+
+        var bazelWorkspace = bazelProject.getBazelWorkspace();
+        var workspaceRoot = bazelWorkspace.getLocation().toFile().toPath();
+
         if (!bazelProject.isSingleTargetProject()) {
             throw new CoreException(Status.error(format(
                 "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel target project created by the project per target strategy.",

@@ -217,7 +217,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         // we are comparing using project relative paths
         Set<IPath> allowedDirectories = projectView.directoriesToInclude().stream()
                 .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator).collect(toSet());
-        Set<IPath> explicitelyExcludedDirectories = projectView.directoriesToInclude().stream()
+        Set<IPath> explicitelyExcludedDirectories = projectView.directoriesToExclude().stream()
                 .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator).collect(toSet());
 
         Set<IPath> alwaysAllowedFolders = Set.of(new Path(".settings"), new Path(".eclipse"), new Path(".bazel"));
@@ -255,6 +255,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         };
         workspaceProject.accept(visitor, IResource.DEPTH_INFINITE,
             IContainer.INCLUDE_HIDDEN /* visit hidden ones so we can un-hide if necessary */);
+
+        workspaceProject.refreshLocal(IResource.DEPTH_INFINITE, monitor.newChild(1));
 
         monitor.done();
     }
