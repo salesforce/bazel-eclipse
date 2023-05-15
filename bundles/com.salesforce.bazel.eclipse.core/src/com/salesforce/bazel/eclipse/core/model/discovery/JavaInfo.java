@@ -1,6 +1,7 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
+import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.Files.readString;
 import static java.util.Objects.requireNonNull;
@@ -30,6 +31,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
@@ -201,6 +204,8 @@ public class JavaInfo {
 
     private static final Path INVALID = new Path("_not_following_ide_standards_");
 
+    private static Logger LOG = LoggerFactory.getLogger(JavaInfo.class);
+
     static boolean isJavaFile(java.nio.file.Path file) {
         return isRegularFile(file) && file.getFileName().toString().endsWith(".java");
     }
@@ -209,9 +214,10 @@ public class JavaInfo {
     private final List<Entry> srcs = new ArrayList<>();
     private final List<LabelEntry> deps = new ArrayList<>();
     private final List<LabelEntry> runtimeDeps = new ArrayList<>();
-    private final Map<IPath, IPath> detectedPackagePathsByFileEntryPathParent = new HashMap<>();
 
+    private final Map<IPath, IPath> detectedPackagePathsByFileEntryPathParent = new HashMap<>();
     private List<FileEntry> sourceDirectories;
+
     private List<FileEntry> sourceFilesWithoutCommonRoot;
 
     public JavaInfo(BazelPackage bazelPackage) {
@@ -326,23 +332,26 @@ public class JavaInfo {
         // (this is a strong split-package indication)
         Set<IPath> potentialSplitPackageFolders = new HashSet<>();
         for (Map.Entry<IPath, List<FileEntry>> entry : sourceEntriesByParentFolder.entrySet()) {
-            var declaredJavaFilesInFolder = entry.getValue().size();
-            if (declaredJavaFilesInFolder == 0) {
-                continue; // don't look at folders without Java files
-            }
-
             var entryParentPath = entry.getKey();
             var entryParentLocation = bazelPackage.getLocation().append(entryParentPath).toFile().toPath();
+            var declaredJavaFilesInFolder = entry.getValue().size();
             try {
-                var javaFilesInParent = Files.list(entryParentLocation).filter(JavaInfo::isJavaFile).count();
-                if (javaFilesInParent != declaredJavaFilesInFolder) {
-                    if (potentialSplitPackageFolders.add(entryParentPath)) {
-                        result.add(Status.warning(format(
-                            "Folder '%s' contains more Java source files then configured in Bazel. This is a split-package scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies or packages.",
-                            entryParentPath)));
+                // when there are declared Java files, expect them to match
+                if (declaredJavaFilesInFolder > 0) {
+                    var javaFilesInParent = Files.list(entryParentLocation).filter(JavaInfo::isJavaFile).count();
+                    if (javaFilesInParent != declaredJavaFilesInFolder) {
+                        if (potentialSplitPackageFolders.add(entryParentPath)) {
+                            result.add(Status.warning(format(
+                                "Folder '%s' contains more Java source files then configured in Bazel. This is a split-package scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies or packages.",
+                                entryParentPath)));
+                        }
+                        continue; // continue with next so we capture all possible warnings (we could also abort, though)
                     }
-                    continue; // continue with next so we capture all possible warnings (we could also abort, though)
                 }
+
+                // check that there are no unexpected package fragments
+                detectUnexpectedPackageFragments(result, sourceEntriesByParentFolder, potentialSplitPackageFolders,
+                    entryParentPath, entryParentLocation);
             } catch (IOException e) {
                 throw new CoreException(Status.error(format("Error searching files in '%s'", entryParentLocation), e));
             }
@@ -388,6 +397,39 @@ public class JavaInfo {
         detectedPackagePathsByFileEntryPathParent.put(fileEntry.getPathParent(), packagePath);
 
         return packagePath;
+    }
+
+    private boolean detectUnexpectedPackageFragments(MultiStatus result,
+            Map<IPath, List<FileEntry>> sourceEntriesByParentFolder, Set<IPath> potentialSplitPackageFolders,
+            IPath folderPath, java.nio.file.Path folderLocation) throws IOException {
+        var packageFragmentsInParent = Files.list(folderLocation).filter(Files::isDirectory)
+                .map(java.nio.file.Path::getFileName).map(java.nio.file.Path::toString).collect(toList());
+        for (String packageFragment : packageFragmentsInParent) {
+            if (!sourceEntriesByParentFolder.containsKey(folderPath.append(packageFragment))) {
+                // this is ok if there are only non-java files
+                var potentialPackageFragmentLocation =
+                        bazelPackage.getLocation().append(folderPath.append(packageFragment)).toFile().toPath();
+                var javaFilesInFolder =
+                        Files.list(potentialPackageFragmentLocation).filter(JavaInfo::isJavaFile).count();
+                if (javaFilesInFolder > 0) {
+                    if (potentialSplitPackageFolders.add(folderPath)) {
+                        result.add(Status.warning(format(
+                            "Folder '%s' contains more Java packages then configured in Bazel. This is a split-package scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies or packages.",
+                            folderPath)));
+                    }
+                    return true; // abort early
+                }
+                // now we need to recursively scan for more
+                if (detectUnexpectedPackageFragments(result, sourceEntriesByParentFolder, potentialSplitPackageFolders,
+                    folderPath.append(packageFragment), potentialPackageFragmentLocation)) {
+                    return true; // abort early
+                }
+            } else {
+                // if there *is* a match, we don't do anything here but expect the outer logic to do the correct comparison
+            }
+        }
+
+        return false;
     }
 
     private Entry fileOrLabel(String srcFileOrLabel) throws CoreException {
@@ -436,6 +478,18 @@ public class JavaInfo {
 
     public List<FileEntry> getSourceFilesWithoutCommonRoot() {
         return requireNonNull(sourceFilesWithoutCommonRoot, "no source files analyzed");
+    }
+
+    private boolean hasAnyOnlyNonJavaFiles(java.nio.file.Path folderLocation) throws IOException {
+        return Files.list(folderLocation).anyMatch(p -> {
+            try {
+                return isDirectory(p) ? hasAnyOnlyNonJavaFiles(p) : !isJavaFile(p);
+            } catch (IOException e) {
+                // give up
+                LOG.error("Error scanning folder '{}' for Java files.", p, e);
+                return false;
+            }
+        });
     }
 
     public boolean hasSourceDirectories() {

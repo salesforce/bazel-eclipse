@@ -12,6 +12,7 @@
  */
 package com.google.idea.blaze.base.ideinfo;
 
+import java.util.List;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -153,7 +154,7 @@ public final class JavaIdeInfo implements ProtoWrapper<IntellijIdeInfo.JavaIdeIn
     }
 
     /** A jar containing annotation processing. */
-    public ImmutableList<LibraryArtifact> getGeneratedJars() {
+    public List<LibraryArtifact> getGeneratedJars() {
         return generatedJars;
     }
 
@@ -163,7 +164,7 @@ public final class JavaIdeInfo implements ProtoWrapper<IntellijIdeInfo.JavaIdeIn
      * <p>
      * Usually this will be a single jar, but java_imports support importing multiple jars.
      */
-    public ImmutableList<LibraryArtifact> getJars() {
+    public List<LibraryArtifact> getJars() {
         return jars;
     }
 

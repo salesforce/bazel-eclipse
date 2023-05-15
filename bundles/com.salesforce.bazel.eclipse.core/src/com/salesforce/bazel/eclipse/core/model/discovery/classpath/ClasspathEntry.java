@@ -1,3 +1,16 @@
+/*-
+ * Copyright (c) 2023 Salesforce and others.
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *      Salesforce - Adapted from M2E
+*/
 package com.salesforce.bazel.eclipse.core.model.discovery.classpath;
 
 import static java.util.Objects.requireNonNull;

@@ -20,6 +20,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.eclipse.core.resources.ICommand;
@@ -232,6 +233,21 @@ public class BazelProject implements IProjectNature {
         removeBazelBuilder(project, project.getDescription(), null);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        var other = (BazelProject) obj;
+        return Objects.equals(bazelModel, other.bazelModel) && Objects.equals(project, other.project);
+    }
+
     BazelModel getBazelModel() {
         return requireNonNull(bazelModel, "not properly initialized - missing Bazel element");
     }
@@ -329,6 +345,11 @@ public class BazelProject implements IProjectNature {
         return requireNonNull(project, "not properly initialized");
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(bazelModel, project);
+    }
+
     /**
      * Indicates if this project represents a single Bazel Target.
      *
@@ -387,5 +408,25 @@ public class BazelProject implements IProjectNature {
     @Override
     public void setProject(IProject project) {
         this.project = requireNonNull(project, "the project should never be set to null");
+    }
+
+    @Override
+    public String toString() {
+        var result = new StringBuilder();
+        result.append("BazelProject [");
+        result.append(project);
+        result.append(", ");
+        try {
+            result.append(", workspace=");
+            result.append(project.getPersistentProperty(PROJECT_PROPERTY_WORKSPACE_ROOT));
+            result.append(", owner=");
+            result.append(project.getPersistentProperty(PROJECT_PROPERTY_OWNER));
+            result.append(", targets=");
+            result.append(project.getPersistentProperty(PROJECT_PROPERTY_TARGETS));
+        } catch (CoreException e) {
+            result.append(e);
+        }
+        result.append("]");
+        return result.toString();
     }
 }

@@ -14,6 +14,8 @@ package com.google.idea.blaze.base.ideinfo;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import com.google.common.base.Objects;
@@ -105,7 +107,7 @@ public final class LibraryArtifact implements ProtoWrapper<IntellijIdeInfo.Libra
         return interfaceJar;
     }
 
-    public ImmutableList<ArtifactLocation> getSourceJars() {
+    public List<ArtifactLocation> getSourceJars() {
         return sourceJars;
     }
 

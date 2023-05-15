@@ -142,8 +142,8 @@ public class BazelClasspathManager {
 
     public IClasspathEntry[] getClasspath(IJavaProject project, BazelClasspathScope scope, IProgressMonitor monitor)
             throws CoreException {
-        var facade = getBazelProject(project);
-        if (facade == null) {
+        var bazelProject = getBazelProject(project);
+        if (bazelProject == null) {
             return new IClasspathEntry[0];
         }
         try {
@@ -154,7 +154,7 @@ public class BazelClasspathManager {
                     props.load(is);
                 }
             }
-            return computeClasspath(facade, scope, props, monitor);
+            return computeClasspath(bazelProject, scope, props, monitor);
         } catch (IOException e) {
             throw new CoreException(Status.error("Can't read classpath container data", e));
         }

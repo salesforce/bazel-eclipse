@@ -163,7 +163,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         if (javaInfo.hasSourceDirectories()) {
             for (FileEntry dir : javaInfo.getSourceDirectories()) {
-                var sourceFolder = project.getProject().getFolder(dir.getPath());
+                var sourceFolder =
+                        dir.getPath().isEmpty() ? project.getProject() : project.getProject().getFolder(dir.getPath());
                 rawClasspath.add(JavaCore.newSourceEntry(sourceFolder.getFullPath()));
             }
         }
@@ -506,7 +507,32 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             if (javaInfo.hasSourceDirectories()) {
                 var directories = javaInfo.getSourceDirectories();
                 NEXT_FOLDER: for (FileEntry dir : directories) {
-                    var sourceFolder = project.getProject().getFolder(dir.getPath());
+                    IFolder sourceFolder;
+                    if (dir.getPath().isEmpty()) {
+                        // special case ... source is directly within the project
+                        // in this case we need to link it via the virtual source folder
+                        sourceFolder = getFileSystemMapper().getVirtualSourceFolder(project);
+                        if (directories.size() > 1) {
+                            // TODO create problem marker?
+                            LOG.warn(
+                                "Impossible to support project '{}' - found multiple source directory which seems to be nested!",
+                                project);
+                            continue NEXT_FOLDER;
+                        }
+                        if (sourceFolder.exists()) {
+                            if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
+                                // TODO create problem marker?
+                                LOG.warn(
+                                    "Impossible to support project '{}' - found mix of multiple source files and empty package fragment root!",
+                                    project);
+                                continue NEXT_FOLDER;
+                            }
+                            // it's not needed otherwise so just delete it
+                            sourceFolder.delete(true, monitor.newChild(1));
+                        }
+                    } else {
+                        sourceFolder = project.getProject().getFolder(dir.getPath());
+                    }
                     if (sourceFolder.exists() && !sourceFolder.isLinked()) {
                         // check if there is any linked parent we can remove
                         var parent = sourceFolder.getParent();
@@ -519,6 +545,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         }
                         if (sourceFolder.exists()) {
                             // TODO create problem marker
+                            LOG.warn(
+                                "Impossible to support project '{}' - found existing source directoy which cannot be deleted!",
+                                project);
                             continue NEXT_FOLDER;
                         }
                     }

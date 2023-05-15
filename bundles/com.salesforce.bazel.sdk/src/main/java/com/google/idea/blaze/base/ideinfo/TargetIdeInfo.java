@@ -15,6 +15,7 @@ package com.google.idea.blaze.base.ideinfo;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -236,7 +237,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
         return buildFile;
     }
 
-    public ImmutableList<Dependency> getDependencies() {
+    public List<Dependency> getDependencies() {
         return dependencies;
     }
 

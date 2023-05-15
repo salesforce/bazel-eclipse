@@ -15,6 +15,7 @@ package com.google.idea.blaze.java;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import java.util.Arrays;
+import java.util.Set;
 import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
@@ -60,7 +61,7 @@ public final class JavaBlazeRules implements Kind.Provider {
         }
     }
 
-    public static ImmutableSet<Kind> getJavaProtoLibraryKinds() {
+    public static Set<Kind> getJavaProtoLibraryKinds() {
         return ImmutableSet.of(RuleTypes.JAVA_PROTO_LIBRARY.getKind(), RuleTypes.JAVA_LITE_PROTO_LIBRARY.getKind(),
             RuleTypes.JAVA_MUTABLE_PROTO_LIBRARY.getKind());
     }

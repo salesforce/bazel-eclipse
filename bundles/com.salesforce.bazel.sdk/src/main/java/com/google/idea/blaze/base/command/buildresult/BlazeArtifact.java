@@ -28,7 +28,7 @@ import com.google.errorprone.annotations.MustBeClosed;
 public interface BlazeArtifact {
 
     /** A file artifact available on the local file system. */
-    interface LocalFileArtifact extends BlazeArtifact {
+    public interface LocalFileArtifact extends BlazeArtifact {
         @Override
         @MustBeClosed
         default BufferedInputStream getInputStream() throws IOException {

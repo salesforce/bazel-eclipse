@@ -33,6 +33,8 @@
  */
 package com.salesforce.bazel.sdk.model;
 
+import com.google.idea.blaze.base.model.primitives.Label;
+
 /**
  * Answers to everything you've always wanted to ask a Bazel Label.
  * </p>
@@ -477,6 +479,10 @@ public class BazelLabel {
      */
     public boolean isExternalRepoLabel() {
         return fullLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT);
+    }
+
+    public Label toPrimitive() {
+        return Label.create(fullLabel);
     }
 
     @Override

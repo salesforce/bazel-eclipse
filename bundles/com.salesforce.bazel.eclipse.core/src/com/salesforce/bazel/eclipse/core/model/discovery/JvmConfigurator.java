@@ -35,7 +35,6 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
  * A tool for configuration of JVM installations in Eclipse.
  */
 @SuppressWarnings("restriction")
-
 public class JvmConfigurator {
 
     private static Logger LOG = LoggerFactory.getLogger(JvmConfigurator.class);
