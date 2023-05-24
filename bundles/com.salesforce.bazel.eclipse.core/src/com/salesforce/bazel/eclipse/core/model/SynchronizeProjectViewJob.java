@@ -51,10 +51,12 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     private final BazelWorkspace workspace;
     private final BazelProjectView projectView;
 
-    public SynchronizeProjectViewJob(BazelWorkspace workspace, BazelProjectView projectView) {
+    public SynchronizeProjectViewJob(BazelWorkspace workspace) throws CoreException {
         super(format("Synchronizing project view for workspace: %s", workspace.getName()));
         this.workspace = workspace;
-        this.projectView = projectView;
+
+        // trigger loading of the project view
+        this.projectView = workspace.getBazelProjectView();
 
         // lock the full workspace (to prevent concurrent build activity)
         setRule(getWorkspaceRoot());
@@ -212,7 +214,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private void hideFoldersNotVisibleAccordingToProjectView(IProject workspaceProject, SubMonitor monitor)
             throws CoreException {
-        monitor.beginTask("Hiding non visible folders", 1);
+        monitor.beginTask("Hiding non visible folders", 10);
 
         // we are comparing using project relative paths
         Set<IPath> allowedDirectories = projectView.directoriesToInclude().stream()
@@ -225,6 +227,15 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         IResourceVisitor visitor = resource -> {
             // we only hide folders, i.e. all files contained in the project remain visible
             if (resource.getType() == IResource.FOLDER) {
+                // hide the bazel symlinks (performance killer)
+                if (resource.getName().startsWith("bazel-")) {
+                    var resourceAttributes = resource.getResourceAttributes();
+                    if ((resourceAttributes != null) && resourceAttributes.isSymbolicLink()) {
+                        resource.setHidden(true);
+                        return false;
+                    }
+                }
+
                 var path = resource.getProjectRelativePath();
                 if (findPathOrAnyParentInSet(path, alwaysAllowedFolders)) {
                     // never hide those

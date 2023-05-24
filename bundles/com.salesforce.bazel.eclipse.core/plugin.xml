@@ -38,7 +38,7 @@
             isConfigurable="false"
             supportsConfigurations="false">
          <run
-               class="com.salesforce.bazel.eclipse.builder.BazelBuilder">
+               class="com.salesforce.bazel.eclipse.core.builder.BazelProjectBuilder">
          </run>
          <dynamicReference
                class="com.salesforce.bazel.eclipse.core.resources.BazelProjectReferencesProvider">

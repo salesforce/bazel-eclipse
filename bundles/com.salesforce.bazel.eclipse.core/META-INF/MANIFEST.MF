@@ -4,10 +4,11 @@ Bundle-Name: Bazel Eclipse Feature Core Plugin
 Automatic-Module-Name: com.salesforce.bazel.eclipse.core
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.core;singleton:=true
 Bundle-Version: 2.0.0.qualifier
-Export-Package: com.salesforce.bazel.eclipse.builder,
- com.salesforce.bazel.eclipse.core,
+Export-Package: com.salesforce.bazel.eclipse.core,
+ com.salesforce.bazel.eclipse.core.builder,
  com.salesforce.bazel.eclipse.core.classpath,
  com.salesforce.bazel.eclipse.core.extensions,
+ com.salesforce.bazel.eclipse.core.launching,
  com.salesforce.bazel.eclipse.core.model,
  com.salesforce.bazel.eclipse.core.model.cache,
  com.salesforce.bazel.eclipse.core.model.discovery,
@@ -16,15 +17,7 @@ Export-Package: com.salesforce.bazel.eclipse.builder,
  com.salesforce.bazel.eclipse.core.projectview,
  com.salesforce.bazel.eclipse.core.resources,
  com.salesforce.bazel.eclipse.core.setup,
- com.salesforce.bazel.eclipse.preferences,
- com.salesforce.bazel.sdk.aspect,
- com.salesforce.bazel.sdk.aspect.jvm,
- com.salesforce.bazel.sdk.lang.jvm,
- com.salesforce.bazel.sdk.lang.jvm.classpath,
- com.salesforce.bazel.sdk.lang.jvm.classpath.impl,
- com.salesforce.bazel.sdk.lang.jvm.classpath.impl.strategy,
- com.salesforce.bazel.sdk.lang.jvm.classpath.impl.util,
- com.salesforce.bazel.sdk.lang.jvm.external
+ com.salesforce.bazel.eclipse.preferences
 Import-Package: com.github.benmanes.caffeine.cache;version="3.1.4",
  com.google.gson;version="2.10.1",
  com.google.protobuf;version="3.22.0",

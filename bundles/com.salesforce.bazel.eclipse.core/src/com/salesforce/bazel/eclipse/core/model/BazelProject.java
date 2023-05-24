@@ -21,7 +21,6 @@ import static java.util.Objects.requireNonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
@@ -59,7 +58,8 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * targets according to the {@link BazelProjectView Bazel project view} configured for a Bazel workspace. Those projects
  * will be virtual, i.e. their location maybe physically within a Bazel workspace or outside/external (eg., in the
  * Eclipse workspace area). This is an implementation detail which clients must take into account, i.e. we never must
- * assume such a project has a location which does not match the target or package it is representing.
+ * assume such a project has a location which does not match the target or package it is representing. The
+ * {@link BazelProjectFileSystemMapper} implements this detail.
  * </p>
  */
 public class BazelProject implements IProjectNature {
@@ -75,25 +75,12 @@ public class BazelProject implements IProjectNature {
 
     /**
      * A {@link IResource#getPersistentProperty(QualifiedName) persistent property} set on an {@link IProject}
-     * containing full qualified labels of all targets represented by a project.
-     * <p>
-     * The property will be set on Bazel target and package projects. The value is a list of labels separated by comma.
-     * </p>
-     */
-    public static final QualifiedName PROJECT_PROPERTY_TARGETS = new QualifiedName(PLUGIN_ID, "targets");
-
-    /**
-     * A {@link IResource#getPersistentProperty(QualifiedName) persistent property} set on an {@link IProject}
      * containing the full qualified label of the package or target a project was created for
      * <p>
      * The property will be set on Bazel target and package projects.
      * </p>
      */
     public static final QualifiedName PROJECT_PROPERTY_OWNER = new QualifiedName(PLUGIN_ID, "owner");
-
-    private static Stream<String> getLabels(String popertyValue) {
-        return Stream.of(popertyValue.trim().split("\\s*,\\s*"));
-    }
 
     /**
      * A convenience method for checking if a project has the {@link #PROJECT_PROPERTY_OWNER} set to the given label.
@@ -141,30 +128,6 @@ public class BazelProject implements IProjectNature {
         // workspace root must be set and must match the project location
         return (workspaceRootPropertyValue != null) && (workspaceRoot != null)
                 && workspaceRoot.toString().equals(workspaceRootPropertyValue);
-    }
-
-    /**
-     * A convenience method for checking how many targets a project represents.
-     *
-     * @param project
-     *            the project to check
-     * @return the number of targets
-     * @throws CoreException
-     *             if the project is closed
-     */
-    public static int numberOfTargetsInTargetProperty(IProject project) throws CoreException {
-        var targetsPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_TARGETS);
-        if ((targetsPropertyValue == null) || targetsPropertyValue.isBlank()) {
-            return 0;
-        }
-
-        var result = getLabels(targetsPropertyValue).count();
-        if (result > Integer.MAX_VALUE) {
-            throw new CoreException(Status.error(format("Error in property  '%s' on project '%s'. Too many targets: %s",
-                PROJECT_PROPERTY_TARGETS, project, targetsPropertyValue)));
-        }
-
-        return (int) result;
     }
 
     private IProject project;
@@ -253,6 +216,38 @@ public class BazelProject implements IProjectNature {
     }
 
     /**
+     * Returns the {@link BazelPackage} this project belongs to.
+     * <p>
+     * The model will be searched for the package.
+     * </p>
+     * <p>
+     * If the project does not represent a package, the method with fail and throw a {@link CoreException}.
+     * </p>
+     *
+     * @return the target
+     * @throws CoreException
+     *             if the target project cannot be found or if this project does not represent a package
+     */
+    public BazelPackage getBazelPackage() throws CoreException {
+        var label = getOwnerLabel();
+        if ((label == null) || label.hasTarget()) {
+            throw new CoreException(Status.error(
+                format("Project '%s' does not map to a Bazel packagage (owner label is '%s').", project, label)));
+        }
+
+        // search model
+        var bazelWorkspace = getBazelWorkspace();
+        var bazelPackage = bazelWorkspace.getBazelPackage(label.getPackageLabel());
+
+        if (!bazelPackage.exists()) {
+            throw new CoreException(Status
+                    .error(format("Project '%s' maps to a Bazel package '%s', which does not exist!", project, label)));
+        }
+
+        return bazelPackage;
+    }
+
+    /**
      * Returns the {@link BazelTarget} this project belongs to.
      * <p>
      * The model will be searched for the target.
@@ -266,16 +261,10 @@ public class BazelProject implements IProjectNature {
      *             if the target project cannot be found or if this project does not represent a single target
      */
     public BazelTarget getBazelTarget() throws CoreException {
-        var project = getProject();
-        var ownerPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_OWNER);
-        if ((ownerPropertyValue == null) || ownerPropertyValue.isEmpty()) {
-            throw new CoreException(Status.error(format("Project '%s' is not owned by a Bazel element.", project)));
-        }
-
-        var label = new BazelLabel(ownerPropertyValue);
-        if (!label.hasTarget()) {
-            throw new CoreException(
-                    Status.error(format("Project '%s' does not map to a Bazel target but to '%s'.", project, label)));
+        var label = getOwnerLabel();
+        if ((label == null) || !label.hasTarget()) {
+            throw new CoreException(Status.error(
+                format("Project '%s' does not map to a Bazel target (owner label is '%s').", project, label)));
         }
 
         // search model
@@ -340,6 +329,23 @@ public class BazelProject implements IProjectNature {
         return requireNonNull(getProject().getLocation(), "unsupported project: getLocation() returned null");
     }
 
+    /**
+     * Returns the label of the owning Bazel element of this project.
+     * <p>
+     * The owner is either a {@link BazelPackage} or a {@link BazelLabel}. Callers can use
+     * {@link BazelLabel#hasTarget()} to check.
+     * </p>
+     *
+     * @return the label of the owner of this project (maybe <code>null</code> if this is the workspace project)
+     * @throws CoreException
+     *             if the project does not exist
+     */
+    public BazelLabel getOwnerLabel() throws CoreException {
+        var project = getProject();
+        var ownerPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_OWNER);
+        return ownerPropertyValue != null ? new BazelLabel(ownerPropertyValue) : null;
+    }
+
     @Override
     public IProject getProject() {
         return requireNonNull(project, "not properly initialized");
@@ -351,13 +357,25 @@ public class BazelProject implements IProjectNature {
     }
 
     /**
-     * Indicates if this project represents a single Bazel Target.
+     * Indicates if this project represents a single {@link BazelPackage}.
+     *
+     * @return <code>true</code> if this project is a package project, <code>false</code> otherwise
+     * @throws CoreException
+     */
+    public boolean isPackageProject() throws CoreException {
+        var label = getOwnerLabel();
+        return (label != null) && !label.hasTarget();
+    }
+
+    /**
+     * Indicates if this project represents a single {@link BazelTarget}.
      *
      * @return <code>true</code> if this project is a target project, <code>false</code> otherwise
      * @throws CoreException
      */
-    public boolean isSingleTargetProject() throws CoreException {
-        return numberOfTargetsInTargetProperty(getProject()) == 1;
+    public boolean isTargetProject() throws CoreException {
+        var label = getOwnerLabel();
+        return (label != null) && label.hasTarget();
     }
 
     /**
@@ -421,8 +439,6 @@ public class BazelProject implements IProjectNature {
             result.append(project.getPersistentProperty(PROJECT_PROPERTY_WORKSPACE_ROOT));
             result.append(", owner=");
             result.append(project.getPersistentProperty(PROJECT_PROPERTY_OWNER));
-            result.append(", targets=");
-            result.append(project.getPersistentProperty(PROJECT_PROPERTY_TARGETS));
         } catch (CoreException e) {
             result.append(e);
         }

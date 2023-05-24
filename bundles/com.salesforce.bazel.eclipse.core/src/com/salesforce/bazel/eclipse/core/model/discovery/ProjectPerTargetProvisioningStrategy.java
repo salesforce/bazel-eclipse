@@ -140,7 +140,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         var bazelWorkspace = bazelProject.getBazelWorkspace();
         var workspaceRoot = bazelWorkspace.getLocation().toFile().toPath();
 
-        if (!bazelProject.isSingleTargetProject()) {
+        if (!bazelProject.isTargetProject()) {
             throw new CoreException(Status.error(format(
                 "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel target project created by the project per target strategy.",
                 bazelProject)));
@@ -345,8 +345,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         var projectName = format("%s:%s", label.getPackagePath().replace('/', '.'), label.getTargetName());
         var projectLocation = getFileSystemMapper().getProjectsArea().append(projectName);
 
-        var project = createProjectForElement(projectName, projectLocation, target, progress);
-        project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_TARGETS, target.getLabel().getLabelPath());
+        createProjectForElement(projectName, projectLocation, target, progress);
 
         // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
         return target.getBazelProject();

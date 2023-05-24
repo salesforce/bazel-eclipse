@@ -26,4 +26,19 @@ public interface BazelCoreSharedContstants {
     /** the Bazel classpath container ID */
     String CLASSPATH_CONTAINER_ID = "com.salesforce.bazel.eclipse.BAZEL_CONTAINER";
 
+    /** {@code WORKSPACE.bazel} */
+    String FILE_NAME_WORKSPACE_BAZEL = "WORKSPACE.bazel";
+
+    /** {@code WORKSPACE} */
+    String FILE_NAME_WORKSPACE = "WORKSPACE";
+
+    /** {@code WORKSPACE.bzlmod} */
+    String FILE_NAME_WORKSPACE_BZLMOD = "WORKSPACE.bzlmod";
+
+    /** {@code BUILD.bazel} */
+    String FILE_NAME_BUILD_BAZEL = "BUILD.bazel";
+
+    /** {@code BUILD} */
+    String FILE_NAME_BUILD = "BUILD";
+
 }

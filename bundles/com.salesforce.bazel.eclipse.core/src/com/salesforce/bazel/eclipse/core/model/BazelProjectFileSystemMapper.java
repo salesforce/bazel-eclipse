@@ -35,9 +35,9 @@ import org.eclipse.core.runtime.IPath;
  * </p>
  * <p>
  * Note, callers of this class must ensure their usage allows the return value of any location in this class to
- * change/evolve over time. This specifically means that location s should only be used/queried at creation/provisioning
+ * change/evolve over time. This specifically means that locations should only be used/queried at creation/provisioning
  * time of projects. It should not be used for computing locations and discovery during day to day use. Instead other
- * means of the Bazel modal must be used.
+ * means of the Bazel model must be used.
  * </p>
  */
 public class BazelProjectFileSystemMapper {

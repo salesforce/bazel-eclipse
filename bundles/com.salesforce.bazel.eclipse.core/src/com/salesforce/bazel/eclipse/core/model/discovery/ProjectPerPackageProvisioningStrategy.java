@@ -116,13 +116,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,
             IProgressMonitor progress) throws CoreException {
         if (bazelPackage.hasBazelProject()) {
-            var project = bazelPackage.getBazelProject();
-
-            // update the list of targets
-            project.getProject().setPersistentProperty(BazelProject.PROJECT_PROPERTY_TARGETS,
-                targets.stream().map(BazelTarget::getLabel).map(BazelLabel::getLabelPath).collect(joining(",")));
-
-            return project;
+            return bazelPackage.getBazelProject();
         }
 
         var label = bazelPackage.getLabel();
@@ -131,9 +125,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
         var projectLocation = bazelPackage.getLocation();
 
-        var project = createProjectForElement(projectName, projectLocation, bazelPackage, progress);
-        project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_TARGETS,
-            targets.stream().map(BazelTarget::getLabel).map(BazelLabel::getLabelPath).collect(joining(",")));
+        createProjectForElement(projectName, projectLocation, bazelPackage, progress);
 
         // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
         return bazelPackage.getBazelProject();

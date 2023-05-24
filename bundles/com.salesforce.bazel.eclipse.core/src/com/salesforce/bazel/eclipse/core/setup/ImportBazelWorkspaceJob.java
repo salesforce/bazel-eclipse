@@ -94,8 +94,14 @@ public class ImportBazelWorkspaceJob extends WorkspaceJob {
 
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
-        var projectView = createWorkspaceProjectView();
-        return new SynchronizeProjectViewJob(workspace, projectView).runInWorkspace(monitor);
+        // create the default project view (overwriting and existing one)
+        // TODO: we need to implement importing in case one already exists (perhaps with a different constructor)
+        createWorkspaceProjectView();
+
+        // at this point the workspace lock has been acquired because the import job used the workspace root as scheduling rule
+        // thus, it's safe to call runInWorkspace directly
+
+        return new SynchronizeProjectViewJob(workspace).runInWorkspace(monitor);
     }
 
 }

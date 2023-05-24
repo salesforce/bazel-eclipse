@@ -1,5 +1,7 @@
 package com.salesforce.bazel.eclipse.core.model;
 
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD_BAZEL;
 import static java.lang.String.format;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
@@ -28,8 +30,48 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  */
 public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWorkspace> {
 
+    /**
+     * Utility function to find a <code>BUILD.bazel</code> or <code>BUILD</code> file in a directory.
+     * <p>
+     * This method is used by {@link BazelPackage#exists()} to determine whether a workspace exists.
+     * </p>
+     *
+     * @param path
+     *            the path to check
+     * @return the found workspace file (maybe <code>null</code> if none exist)
+     * @see #isBuildFileName(String)
+     */
+    public static Path findBuildFile(Path path) {
+        for (String packageFile : List.of(FILE_NAME_BUILD_BAZEL, FILE_NAME_BUILD)) {
+            var packageFilePath = path.resolve(packageFile);
+            if (isRegularFile(packageFilePath)) {
+                return packageFilePath;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Utility function to check whether a given file name is <code>BUILD.bazel</code> or <code>BUILD</code>.
+     *
+     * @param fileName
+     *            the file name to check
+     * @return <code>true</code> if the file name is either <code>BUILD.bazel</code> or <code>BUILD</code>,
+     *         <code>false</code> otherwise
+     * @see #findBuildFile(Path)
+     */
+    public static boolean isBuildFileName(String fileName) {
+        for (String packageFile : List.of(FILE_NAME_BUILD_BAZEL, FILE_NAME_BUILD)) {
+            if (packageFile.equals(fileName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private final BazelWorkspace parent;
     private final BazelLabel label;
+
     private final IPath packagePath;
 
     BazelPackage(BazelWorkspace parent, IPath packagePath) throws NullPointerException, IllegalArgumentException {
@@ -71,16 +113,6 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
     public boolean exists() {
         var path = packagePath();
         return isDirectory(path) && (findBuildFile(path) != null);
-    }
-
-    private Path findBuildFile(Path path) {
-        for (String packageFile : List.of("BUILD.bazel", "BUILD")) {
-            var packageFilePath = path.resolve(packageFile);
-            if (isRegularFile(packageFilePath)) {
-                return packageFilePath;
-            }
-        }
-        return null;
     }
 
     /**
@@ -131,6 +163,22 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
         return parent;
     }
 
+    /**
+     * {@return the absolute path to the BUILD file used by this package}
+     *
+     * @throws CoreException
+     *             if the package does not exist
+     */
+    public Path getBuildFile() throws CoreException {
+        return getInfo().getBuildFile();
+    }
+
+    /**
+     * {@return the absolute location to the BUILD file used by this package}
+     *
+     * @throws CoreException
+     *             if the package does not exist
+     */
     public IPath getBuildFileLocation() throws CoreException {
         return getLocation().append(getInfo().getBuildFile().getFileName().toString());
     }

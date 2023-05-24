@@ -13,6 +13,11 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD_BAZEL;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BAZEL;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BZLMOD;
 import static java.lang.String.format;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
@@ -57,15 +62,38 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
      * @param path
      *            the path to check
      * @return the found workspace file (maybe <code>null</code> if none exist)
+     * @see #isWorkspaceFileName(String)
      */
     public static Path findWorkspaceFile(Path path) {
-        for (String workspaceFile : List.of("WORKSPACE.bazel", "WORKSPACE", "WORKSPACE.bzlmod" /* bzlmod is last */)) {
+        for (String workspaceFile : List.of( //
+            FILE_NAME_WORKSPACE_BAZEL, // prefer WORKSPACE.bazel
+            FILE_NAME_WORKSPACE, // then WORKSPACE
+            FILE_NAME_WORKSPACE_BZLMOD /* bzlmod is last */)) {
             var workspaceFilePath = path.resolve(workspaceFile);
             if (isRegularFile(workspaceFilePath)) {
                 return workspaceFilePath;
             }
         }
         return null;
+    }
+
+    /**
+     * Utility function to check whether a given file name is <code>WORKSPACE.bazel</code>, <code>WORKSPACE</code> or
+     * <code>WORKSPACE.bzlmod</code>.
+     *
+     * @param fileName
+     *            the file name to check
+     * @return <code>true</code> if the file name is either <code>WORKSPACE.bazel</code>, <code>WORKSPACE</code> or
+     *         <code>WORKSPACE.bzlmod</code>, <code>false</code> otherwise
+     * @see #findWorkspaceFile(Path)
+     */
+    public static boolean isWorkspaceFileName(String fileName) {
+        for (String packageFile : List.of(FILE_NAME_BUILD_BAZEL, FILE_NAME_BUILD)) {
+            if (packageFile.equals(fileName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private final IPath root;
@@ -219,6 +247,12 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
         return getBazelPackage(label).getBazelTarget(label.getTargetName());
     }
 
+    /**
+     * {@return the Bazel version used by this workspace}
+     *
+     * @throws CoreException
+     *             if the workspace does not exist
+     */
     public BazelVersion getBazelVersion() throws CoreException {
         return getInfo().getBazelVersion();
     }
@@ -255,6 +289,26 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     @Override
     public BazelModel getParent() {
         return parent;
+    }
+
+    /**
+     * {@return the absolute path to the WORKSPACE file used by this workspace}
+     *
+     * @throws CoreException
+     *             if the workspace does not exist
+     */
+    public Path getWorkspaceFile() throws CoreException {
+        return getInfo().getWorkspaceFile();
+    }
+
+    /**
+     * {@return the absolute location to the WORKSPACE file used by this workspace}
+     *
+     * @throws CoreException
+     *             if the workspace does not exist
+     */
+    public IPath getWorkspaceFileLocation() throws CoreException {
+        return getLocation().append(getInfo().getWorkspaceFile().getFileName().toString());
     }
 
     @Override
