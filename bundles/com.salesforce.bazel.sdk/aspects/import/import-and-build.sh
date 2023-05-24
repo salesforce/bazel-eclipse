@@ -10,6 +10,18 @@ rm -rf intellij_platform_sdk/
 mkdir -p intellij
 mkdir -p intellij_platform_sdk
 
+if [ "$(uname)" == "Darwin" ]; then
+    tar="gtar"
+else;
+    tar="tar"
+fi
+
+if ! command -v $tar &> /dev/null
+then
+    echo "$tar could not be found"
+    exit 1
+fi
+
 # download & extract
 #
 #   Note, wehn updating:
