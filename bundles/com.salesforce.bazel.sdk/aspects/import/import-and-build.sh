@@ -12,12 +12,12 @@ mkdir -p intellij_platform_sdk
 
 if [ "$(uname)" == "Darwin" ]; then
     tar="gtar"
-else;
+    echo "Using '$tar' on Darwin!"
+else
     tar="tar"
 fi
 
-if ! command -v $tar &> /dev/null
-then
+if ! command -v $tar &> /dev/null; then
     echo "$tar could not be found"
     exit 1
 fi
@@ -30,7 +30,7 @@ fi
 #
 git_sha="37813e607ad26716c4d1ccf4bc3e7163b2188658"
 git_sha_short=${git_sha::6}
-curl -L https://github.com/bazelbuild/intellij/archive/${git_sha}.tar.gz | gtar --strip-components 1 -C intellij -xz
+curl -L https://github.com/bazelbuild/intellij/archive/${git_sha}.tar.gz | ${tar} --strip-components 1 -C intellij -xz
 cp -r intellij/intellij_platform_sdk/* intellij_platform_sdk/
 
 # generate tarball
