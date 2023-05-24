@@ -65,6 +65,7 @@ jobs:
 
       - name: Import IntelliJ Aspects
         working-directory: ./bundles/com.salesforce.bazel.sdk/aspects/import
+        shell: bash
         run: ./import-and-build.sh
 
       - name: Build and Test
