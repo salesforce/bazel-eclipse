@@ -1,8 +1,8 @@
 name: Build Everything
 
 concurrency: 
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
     
 on:
   push:
