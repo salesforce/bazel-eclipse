@@ -73,24 +73,21 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private IProject createWorkspaceProject(IPath workspaceRoot, String workspaceName, SubMonitor monitor)
             throws CoreException {
-        monitor.beginTask(format("Creating %s", workspaceName), 4);
+        monitor.setWorkRemaining(4);
 
-        monitor.subTask("Creating project");
         var projectDescription = getWorkspace().newProjectDescription(workspaceName);
         projectDescription.setLocation(workspaceRoot);
         projectDescription.setComment(format(
             "Bazel Workspace Project managed by Bazel Eclipse Feature for Bazel workspace at '%s'", workspaceRoot));
         var project = getWorkspaceRoot().getProject(workspaceName);
-        project.create(projectDescription, monitor.newChild(1));
+        project.create(projectDescription, monitor.split(1));
 
-        monitor.subTask("Opening project");
-        project.open(monitor.newChild(1));
+        project.open(monitor.split(1));
 
         // set natures separately in order to ensure they are configured properly
-        monitor.subTask("Configuring natures");
         projectDescription = project.getDescription();
         projectDescription.setNatureIds(new String[] { JavaCore.NATURE_ID, BAZEL_NATURE_ID });
-        project.setDescription(projectDescription, monitor.newChild(1));
+        project.setDescription(projectDescription, monitor.split(1));
 
         // set properties
         project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT, workspaceRoot.toString());
@@ -99,13 +96,15 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         var javaProject = JavaCore.create(project);
         javaProject.setRawClasspath(
             new IClasspathEntry[] { JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)) }, true,
-            monitor.newChild(1));
+            monitor.split(1));
 
         return project;
     }
 
     private Set<BazelTarget> detectTargetsToMaterializeInEclipse(IProject workspaceProject, SubMonitor monitor)
             throws CoreException {
+        monitor.setWorkRemaining(2);
+
         Set<BazelTarget> result = new HashSet<>();
 
         var targetsToExclude = projectView.targetsToExclude().stream().map(BazelLabel::new).collect(toSet());
@@ -121,12 +120,12 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                     .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator).collect(toSet());
 
             // query workspace for all targets
-            var bazelPackages = targetDiscoveryStrategy.discoverPackages(workspace, monitor);
+            var bazelPackages = targetDiscoveryStrategy.discoverPackages(workspace, monitor.split(1));
 
             // if the '.' is listed in the project view it literal means include "everything"
             var includeEverything = allowedDirectories.contains(Path.EMPTY);
 
-            monitor.beginTask("Discovering targets", allowedDirectories.size());
+            monitor.setWorkRemaining(allowedDirectories.size());
             for (BazelPackage bazelPackage : bazelPackages) {
                 // filter packages based in includes
                 var directory = bazelPackage.getWorkspaceRelativePath();
@@ -139,7 +138,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                 }
                 // get targets
                 monitor.subTask(bazelPackage.getLabel().toString());
-                var bazelTargets = targetDiscoveryStrategy.discoverTargets(bazelPackage, monitor.newChild(1));
+                var bazelTargets = targetDiscoveryStrategy.discoverTargets(bazelPackage, monitor.split(1));
 
                 // add only targets not explicitly excluded
                 bazelTargets.stream().filter(t -> !targetsToExclude.contains(t.getLabel())).forEach(result::add);
@@ -153,7 +152,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             }
         }
 
-        monitor.done();
         return result;
     }
 
@@ -214,7 +212,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private void hideFoldersNotVisibleAccordingToProjectView(IProject workspaceProject, SubMonitor monitor)
             throws CoreException {
-        monitor.beginTask("Hiding non visible folders", 10);
+        monitor.setWorkRemaining(10);
 
         // we are comparing using project relative paths
         Set<IPath> allowedDirectories = projectView.directoriesToInclude().stream()
@@ -267,9 +265,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         workspaceProject.accept(visitor, IResource.DEPTH_INFINITE,
             IContainer.INCLUDE_HIDDEN /* visit hidden ones so we can un-hide if necessary */);
 
-        workspaceProject.refreshLocal(IResource.DEPTH_INFINITE, monitor.newChild(1));
-
-        monitor.done();
+        workspaceProject.refreshLocal(IResource.DEPTH_INFINITE, monitor.split(1));
     }
 
     private List<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, SubMonitor monitor)
@@ -301,46 +297,45 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
 
         if (obsoleteProjects.size() > 0) {
-            monitor.beginTask("Removing obsolete projects", obsoleteProjects.size());
+            monitor.setWorkRemaining(obsoleteProjects.size());
             for (IProject project : obsoleteProjects) {
-                project.delete(ALWAYS_DELETE_PROJECT_CONTENT | FORCE, monitor.newChild(1));
+                project.delete(ALWAYS_DELETE_PROJECT_CONTENT | FORCE, monitor.split(1));
             }
         }
-
-        monitor.done();
     }
 
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
         try {
-            var progress = SubMonitor.convert(monitor, "Synchronizing", 10);
 
             // ensure workspace project exists
             var workspaceName = workspace.getName();
             var workspaceRoot = workspace.getLocation();
 
+            var progress = SubMonitor.convert(monitor, format("Synchronizing '%s'", workspaceName), 10);
+
             // we don't care about the actual project name - we look for the path
             var workspaceProject = findProjectForLocation(workspaceRoot);
             if (workspaceProject == null) {
-                workspaceProject = createWorkspaceProject(workspaceRoot, workspaceName, progress.newChild(1));
+                workspaceProject = createWorkspaceProject(workspaceRoot, workspaceName, progress.split(1));
             } else if (!workspaceProject.isOpen()) {
-                workspaceProject.open(progress.newChild(1));
+                workspaceProject.open(progress.split(1));
             }
 
             // ensure it's latest
-            workspaceProject.refreshLocal(IResource.DEPTH_INFINITE, progress.newChild(1));
+            workspaceProject.refreshLocal(IResource.DEPTH_INFINITE, progress.split(1));
 
             // apply excludes
-            hideFoldersNotVisibleAccordingToProjectView(workspaceProject, progress.newChild(1));
+            hideFoldersNotVisibleAccordingToProjectView(workspaceProject, progress.split(1));
 
             // detect targets
-            var targets = detectTargetsToMaterializeInEclipse(workspaceProject, progress.newChild(1));
+            var targets = detectTargetsToMaterializeInEclipse(workspaceProject, progress.split(1));
 
             // ensure project exists
-            var targetProjects = provisionProjectsForTarget(targets, progress.newChild(1));
+            var targetProjects = provisionProjectsForTarget(targets, progress.split(1));
 
             // remove no longer needed projects
-            removeObsoleteProjects(targetProjects, progress.newChild(1));
+            removeObsoleteProjects(targetProjects, progress.split(1));
 
             return Status.OK_STATUS;
         } finally {
