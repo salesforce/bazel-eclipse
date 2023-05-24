@@ -43,7 +43,6 @@ public class DefaultBazelCommandExecutorTest {
         var command = new TestCommand();
         command.setRedirectStdOutToFile(stdOutFile);
 
-        executor.setWrapExecutionIntoShell(true);
         var exitCode = executor.execute(command, () -> false);
         assertEquals(0, exitCode);
 

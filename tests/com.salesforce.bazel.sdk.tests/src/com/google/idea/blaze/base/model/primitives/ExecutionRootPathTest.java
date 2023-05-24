@@ -18,8 +18,11 @@ import java.io.File;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 /** Tests execution root path. */
+@DisabledOnOs(OS.WINDOWS) // windows uses backslash
 public class ExecutionRootPathTest {
     private static Path asPath(String path) {
         return Path.of(path);

@@ -76,3 +76,12 @@ jobs:
           BUILD_LABEL: "CI ${{ steps.time.outputs.time }} (${{ steps.branch_name.outputs.branch }})"
         with:
           run: ./mvnw --batch-mode --no-transfer-progress --strict-checksums --fail-at-end -update-snapshots --show-version --errors clean verify
+          
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}
+          if-no-files-found: warn
+          path: |
+            ${{ github.workspace }}/**/target/surefire-reports/*.xml
