@@ -24,11 +24,9 @@
     <!-- test setting -->
     <jacoco.version>0.8.8</jacoco.version>
     <surefire-reports-directory>${project.build.directory}/surefire-reports</surefire-reports-directory>
-    <test.vmparams></test.vmparams>
+    <test.vmparams>-Xmx1024m</test.vmparams>
     <coretest.vmparams></coretest.vmparams>
-    <uitest.vmparams>-Dorg.eclipse.swtbot.search.timeout=30000 -Dorg.eclipse.swtbot.screenshots.dir=target/screenshots
-      -Xmx1024m
-      -XX:MaxPermSize=150m</uitest.vmparams>
+    <uitest.vmparams>-Dorg.eclipse.swtbot.search.timeout=30000 -Dorg.eclipse.swtbot.screenshots.dir=target/screenshots</uitest.vmparams>
 
     <tycho.version>3.0.4</tycho.version>
 
@@ -39,9 +37,7 @@
     <!-- property for generating Eclipse source reference bundle headers -->
     <!-- (note, this needs to be overridden by module poms in other Git repos) -->
     <tycho.scmUrl>scm:git:https://github.com/salesforce/bazel-eclipse.git</tycho.scmUrl>
-
-    <!-- allow to build with dirty working tree -->
-    <jgit.dirtyWorkingTree>warning</jgit.dirtyWorkingTree>
+    <jgit.dirtyWorkingTree>error</jgit.dirtyWorkingTree>
   </properties>
 
   <!-- common plug-in repos for all modules -->
@@ -393,6 +389,9 @@
             <systemProperties>
               <osgi.console>1234</osgi.console>
             </systemProperties>
+            <useUIHarness>true</useUIHarness>
+            <useUIThread>true</useUIThread>
+            <argLine>${ui.test.vmargs}</argLine>
           </configuration>
         </plugin>
         <plugin>

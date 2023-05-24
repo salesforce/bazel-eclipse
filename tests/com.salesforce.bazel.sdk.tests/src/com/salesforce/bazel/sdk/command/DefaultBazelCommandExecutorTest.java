@@ -33,7 +33,7 @@ public class DefaultBazelCommandExecutorTest {
 
         executor.setWrapExecutionIntoShell(false);
         var commandLine = executor.prepareCommandLine(command);
-        assertEquals(List.of("echo", "dummy"), commandLine);
+        assertEquals(List.of("echo", "dummy"), commandLine.fullCommandLineWithOptionalShellWrappingAndBinary());
     }
 
     @Test
