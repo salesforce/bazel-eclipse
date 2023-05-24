@@ -10,12 +10,13 @@ rm -rf intellij_platform_sdk/
 mkdir -p intellij
 mkdir -p intellij_platform_sdk
 
+# use proper tar
 if [ "$(uname)" == "Darwin" ]; then
     tar="gtar"
-    echo "Using '$tar' on Darwin!"
 else
     tar="tar"
 fi
+echo "Using '$tar' on $(uname)!"
 
 if ! command -v $tar &> /dev/null; then
     echo "$tar could not be found"
@@ -30,6 +31,14 @@ fi
 #
 git_sha="37813e607ad26716c4d1ccf4bc3e7163b2188658"
 git_sha_short=${git_sha::6}
+
+# abort if file already exists
+if test -f "../aspects-${git_sha_short}.zip"; then
+    echo "aspects-${git_sha_short}.zip already there; delete it force re-import"
+    exit 0
+fi
+
+# download repo
 curl -L https://github.com/bazelbuild/intellij/archive/${git_sha}.tar.gz | ${tar} --strip-components 1 -C intellij -xz
 cp -r intellij/intellij_platform_sdk/* intellij_platform_sdk/
 

@@ -53,7 +53,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./bundles/com.salesforce.bazel.sdk/aspects
-          key: ${{ runner.os }}-aspects-${{ matrix.os }}-${{ hashFiles('**/aspects/import/*.sh') }}
+          key: ${{ runner.os }}-aspects-${{ matrix.os }}-${{ hashFiles('**/aspects/import/import-and-build.sh', '**/aspects/import/WORKSPACE') }}
           restore-keys: |
             ${{ runner.os }}-aspects-${{ matrix.os }}-
 
