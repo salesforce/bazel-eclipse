@@ -30,13 +30,17 @@ Starting in 2019, a small team within Salesforce took up development of BEF as a
   which continues to this day (Peter Laird, Simon Toens, Blaine Buxton, Nishant D'Souza, Di Sang).
 BEF is almost entirely a passion project - most hours are invested from personal time on evenings and weekends.
 
+In 2023, the project experience a major rewrite to re-use as much code as possible from the Bazel IntelliJ plug-in and better integrate with Eclipse APIs.
+
 ### Bazel Java SDK
 
 BEF was architected from the early days recognizing that most of the code required for BEF is actually not
   specific to Eclipse.
 While that code was born inside of BEF, it was kept as a separate Eclipse plugin with the intention to split
-  it out as a separate top level project - the [Bazel Java SDK](../dev/bazeljavasdk.md).
+  it out as a separate top level project - the Bazel Java SDK.
 The formal separation occurred in early 2021.
+In 2023 the decision was made to discontinue with the abstraction.
+Instead priority is now a focus on better and efficient integration with proper Eclipse APIs.
 
 ### Build Implementation History
 
