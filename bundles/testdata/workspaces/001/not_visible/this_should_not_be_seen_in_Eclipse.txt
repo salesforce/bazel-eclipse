@@ -1,0 +1,1 @@
+The project view is configured to exclude this folder.

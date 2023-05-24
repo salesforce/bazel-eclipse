@@ -1,6 +1,6 @@
 package com.salesforce.bazel.eclipse.ui.utils;
 
-import static com.salesforce.bazel.eclipse.core.BazelCorePluginSharedContstants.BAZEL_NATURE_ID;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 
 import java.util.ArrayList;
 import java.util.List;

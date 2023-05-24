@@ -1,16 +1,16 @@
-name: Matrix Build
+name: Build Everything
 
+concurrency: 
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+    
 on:
   push:
     branches:
-      - master
+      - 'main'
   pull_request:
     branches:
-      - master
-  schedule:
-    - cron: "0 11 * * *"
-  repository_dispatch:
-  # manually from the Actions tab
+      - 'main'
   workflow_dispatch:
 
 jobs:
@@ -18,13 +18,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - displayTargetName: ubuntu
-            os: ubuntu-latest
-          - displayTargetName: macos
-            os: macos-latest
-          - displayTargetName: windows
-            os: windows-latest
+        fail-fast: false
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v3
@@ -45,14 +40,28 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-tycho4m39-${{ matrix.os }}-${{ hashFiles('**/pom.xml', '**/*.target') }}
+          restore-keys: |
+            ${{ runner.os }}-tycho4m39-${{ matrix.os }}-
 
       - name: Setup Bazelisk
         uses: bazelbuild/setup-bazelisk@v2
+
+      - name: Print Maven toolchains.xml
+        run: cat ~/.m2/toolchains.xml
+
+      - name: Import IntelliJ Aspects
+        working-directory: ./bundles/com.salesforce.bazel.sdk/aspects/import
+        run: ./import-and-build.sh
 
       - name: Build and Test
         env:
           BUILD_ID: "${{ steps.time.outputs.time }}"
           BUILD_TYPE: "S"
           BUILD_LABEL: "CI ${{ steps.time.outputs.time }} (${{ steps.branch_name.outputs.branch }})"
-        run: ./mvnw --batch-mode clean verify
+        run: ./mvnw --batch-mode --no-transfer-progress --strict-checksums --fail-at-end -update-snapshots --show-version --errors clean verify

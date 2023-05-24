@@ -22,6 +22,8 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
+
 public class BazelClasspathHelpers {
 
     public static String getAttribute(IClasspathEntry entry, String key) {
@@ -51,6 +53,6 @@ public class BazelClasspathHelpers {
 
     public static boolean isBazelClasspathContainer(IPath containerPath) {
         return (containerPath != null) && (containerPath.segmentCount() > 0)
-                && IClasspathContainerConstants.CONTAINER_ID.equals(containerPath.segment(0));
+                && BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID.equals(containerPath.segment(0));
     }
 }

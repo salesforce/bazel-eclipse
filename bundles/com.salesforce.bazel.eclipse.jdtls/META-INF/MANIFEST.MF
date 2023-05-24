@@ -2,9 +2,9 @@ Manifest-Version: 1.0
 Eclipse-BundleShape: dir
 Bundle-ManifestVersion: 2
 Automatic-Module-Name: com.salesforce.bazel.eclipse.jdtls
-Bundle-Name: Bazel Java Language Server Plugin
+Bundle-Name: Bazel Java Language Server Plug-In
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.jdtls;singleton:=true
-Bundle-Version: 1.5.4.qualifier
+Bundle-Version: 2.0.0.qualifier
 Bundle-Activator: com.salesforce.bazel.eclipse.jdtls.BazelJdtLsPlugin
 Bundle-Vendor: Bazel Eclipse Feature
 Require-Bundle: org.eclipse.core.runtime,
@@ -16,7 +16,7 @@ Require-Bundle: org.eclipse.core.runtime,
  com.google.guava;bundle-version="27.1.0",
  org.eclipse.jdt.ls.core,
  org.apache.commons.lang3;bundle-version="3.1.0",
- com.salesforce.bazel-java-sdk,
+ com.salesforce.bazel.sdk,
  com.salesforce.bazel.eclipse.core
 Export-Package: com.salesforce.bazel.eclipse.jdtls.managers
 Import-Package: org.slf4j;version="1.7.30"

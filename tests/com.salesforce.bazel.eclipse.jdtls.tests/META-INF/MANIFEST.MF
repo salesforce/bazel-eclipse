@@ -1,23 +1,15 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Automatic-Module-Name: com.salesforce.bazel.eclipse.jdtls.tests
-Bundle-Name: Bazel Java Lanaguage Server Tests
+Bundle-Name: Bazel Java Lanaguage Server Plug-In Tests
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.jdtls.tests;singleton:=true
-Bundle-Version: 1.5.4.qualifier
-Bundle-Activator: com.salesforce.bazel.eclipse.jdtls.B2eclipseTestPlugin
+Bundle-Version: 2.0.0.qualifier
+Fragment-Host: com.salesforce.bazel.eclipse.jdtls;bundle-version="2.0.0"
 Bundle-Vendor: Bazel Eclipse Feature
-Require-Bundle: com.salesforce.bazel.eclipse.jdtls,
- org.eclipse.core.runtime,
- org.eclipse.core.resources,
- org.eclipse.jdt.core,
- org.junit;bundle-version="4.12.0",
- org.mockito.mockito-all;bundle-version="1.9.5",
- org.eclipse.jdt.ls.core;bundle-version="0.54.0",
- org.eclipse.m2e.core;bundle-version="1.15.0",
- org.apache.commons.io,
- com.google.gson,
- com.google.guava;bundle-version="27.1.0",
- com.salesforce.bazel.eclipse.core
 Bundle-RequiredExecutionEnvironment: JavaSE-17
-Bundle-ActivationPolicy: lazy
-
+Import-Package: org.hamcrest;version="2.2.0",
+ org.hamcrest.collection;version="2.2.0",
+ org.junit.jupiter.api;version="5.9.2",
+ org.junit.jupiter.api.extension;version="5.9.2",
+ org.junit.jupiter.api.io;version="5.9.2"
+Require-Bundle: testdata;bundle-version="1.0.0"

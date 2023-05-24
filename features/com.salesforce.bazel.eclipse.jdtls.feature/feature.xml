@@ -8,7 +8,7 @@
 <feature
       id="com.salesforce.bazel.eclipse.jdtls.feature"
       label="Bazel Java Language Server Feature"
-      version="1.5.4.qualifier"
+      version="2.0.0.qualifier"
       provider-name="Bazel Eclipse Feature">
 
    <description url="https://github.com/salesforce/bazel-eclipse">
@@ -235,7 +235,7 @@
          version="0.0.0"/>
 
    <plugin
-         id="com.salesforce.bazel-java-sdk"
+         id="com.salesforce.bazel.sdk"
          download-size="0"
          install-size="0"
          version="0.0.0"

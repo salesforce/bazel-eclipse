@@ -35,15 +35,13 @@
  */
 package com.salesforce.bazel.eclipse.core.classpath;
 
-import static java.lang.String.format;
-
+import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IJavaProject;
@@ -78,16 +76,10 @@ public class BazelClasspathContainerInitializer extends ClasspathContainerInitia
     @Override
     public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject project,
             IClasspathContainer containerSuggestion) throws CoreException {
-        new Job("Saving Bazel Classpath Container") {
+        new WorkspaceJob("Saving Bazel Classpath Container") {
             @Override
-            protected IStatus run(IProgressMonitor monitor) {
-                try {
-                    getClasspathManager().persistAttachedSourcesAndJavadoc(project, containerSuggestion, monitor);
-                } catch (CoreException ex) {
-                    return Status
-                            .error(format("An error occured saving the Bazel classpath container for project '%s'.",
-                                project.getElementName()), ex);
-                }
+            public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
+                getClasspathManager().persistAttachedSourcesAndJavadoc(project, containerSuggestion, monitor);
                 return Status.OK_STATUS;
             }
         }.schedule();

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension-point id="com.salesforce.bazel.consolefactory" name="Bazel Console Factory" schema="schema/com.salesforce.bazel.consolefactory.exsd"/>
+   <extension-point id="com.salesforce.bazel.eclipse.core.executor" name="Bazel Command Executor" schema="schema/com.salesforce.bazel.eclipse.core.executor.exsd"/>
+   <extension-point id="com.salesforce.bazel.eclipse.core.model.target.discovery" name="Bazel Target Discovery Strategy" schema="schema/com.salesforce.bazel.eclipse.core.model.target.discovery.exsd"/>
 
    <extension
          point="org.eclipse.core.runtime.preferences">
@@ -16,7 +17,7 @@
          point="org.eclipse.core.resources.natures">
       <runtime>
          <run
-               class="com.salesforce.bazel.eclipse.core.resources.BazelNature">
+               class="com.salesforce.bazel.eclipse.core.model.BazelProject">
          </run>
       </runtime>
       <requires-nature
@@ -37,8 +38,11 @@
             isConfigurable="false"
             supportsConfigurations="false">
          <run
-               class="com.salesforce.bazel.eclipse.builder.BazelBuilder">
+               class="com.salesforce.bazel.eclipse.core.builder.BazelProjectBuilder">
          </run>
+         <dynamicReference
+               class="com.salesforce.bazel.eclipse.core.resources.BazelProjectReferencesProvider">
+         </dynamicReference>
       </builder>
    </extension>
 
@@ -58,7 +62,7 @@
          <super type="org.eclipse.core.resources.textmarker"/>
          <persistent value="true"/>
    </extension>
-   <extension 
+   <extension
          id="transient_problem"
          name="Transient Bazel Problem"
          point="org.eclipse.core.resources.markers">
@@ -81,20 +85,22 @@
       </classpathContainerInitializer>
    </extension>
 
-   <extension point="org.eclipse.core.expressions.propertyTesters">
-    <propertyTester
-        id="org.eclipse.jdt.ui.IJavaElementTypeExtender"
-        type="org.eclipse.jdt.core.IJavaElement"
-        namespace="com.salesforce.bazel.eclipse"
-        properties="isTestJavaElement"
-        class="com.salesforce.bazel.eclipse.util.JavaElementPropertyTester">
-     </propertyTester>
+   <extension
+         point="com.salesforce.bazel.eclipse.core.model.target.discovery">
+      <targetDiscoveryStrategy
+            class="com.salesforce.bazel.eclipse.core.model.discovery.BazelQueryTargetDiscovery"
+            name="bazel-query">
+      </targetDiscoveryStrategy>
+      <targetProvisioningStrategy
+            class="com.salesforce.bazel.eclipse.core.model.discovery.ProjectPerTargetProvisioningStrategy"
+            name="project-per-target">
+      </targetProvisioningStrategy>
    </extension>
    <extension
-         point="com.salesforce.bazel.consolefactory">
-      <commandConsoleFactory
-            class="com.salesforce.bazel.sdk.console.StandardCommandConsoleFactory"
-            priority="100">
-      </commandConsoleFactory>
+         point="com.salesforce.bazel.eclipse.core.executor">
+      <commandExecutor
+            class="com.salesforce.bazel.eclipse.core.extensions.EclipseHeadlessBazelCommandExecutor"
+            priority="10">
+      </commandExecutor>
    </extension>
 </plugin>

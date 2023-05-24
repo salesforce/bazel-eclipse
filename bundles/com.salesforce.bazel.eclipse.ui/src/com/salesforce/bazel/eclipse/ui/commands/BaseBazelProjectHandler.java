@@ -4,11 +4,13 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.expressions.IEvaluationContext;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.ISources;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.statushandlers.StatusManager;
 
 import com.salesforce.bazel.eclipse.ui.utils.BazelProjectUtilitis;
 
@@ -22,12 +24,18 @@ public abstract class BaseBazelProjectHandler extends BaseJobBasedHandler {
         if (projects.size() != 1) {
             MessageDialog.openError(HandlerUtil.getActiveShell(event), "Cannot Execute",
                 "Please select only one Bazel projects!");
+            throw new ExecutionException("No Bazel project selected");
         }
 
-        return createJob(projects.get(0), event);
+        try {
+            return createJob(projects.get(0), event);
+        } catch (CoreException e) {
+            StatusManager.getManager().handle(e.getStatus(), StatusManager.SHOW | StatusManager.LOG);
+            throw new ExecutionException("Unable to initialize command!", e);
+        }
     }
 
-    protected abstract Job createJob(IProject project, ExecutionEvent event);
+    protected abstract Job createJob(IProject project, ExecutionEvent event) throws CoreException;
 
     @Override
     public void setEnabled(final Object evaluationContext) {

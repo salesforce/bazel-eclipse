@@ -116,7 +116,7 @@
         <setEntry value="org.slf4j.api@default:default"/>
     </setAttribute>
     <setAttribute key="selected_workspace_bundles">
-        <setEntry value="com.salesforce.bazel-java-sdk@default:default"/>
+        <setEntry value="com.salesforce.bazel.sdk@default:default"/>
         <setEntry value="com.salesforce.bazel.eclipse.common@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>

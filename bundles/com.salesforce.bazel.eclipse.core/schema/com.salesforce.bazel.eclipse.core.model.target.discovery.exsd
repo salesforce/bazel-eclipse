@@ -1,0 +1,118 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="com.salesforce.bazel.eclipse.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="com.salesforce.bazel.eclipse.core" id="com.salesforce.bazel.eclipse.core.model.target.discovery" name="Bazel Target Discovery Strategy"/>
+      </appinfo>
+      <documentation>
+         This extension point allows to contribute custom TargetDiscoveryStrategy implementations to be used when translating &lt;code&gt;.bazelproject&lt;/code&gt; files (project views) into Eclipse projects
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+      </annotation>
+      <complexType>
+         <choice minOccurs="1" maxOccurs="unbounded">
+            <element ref="targetDiscoveryStrategy"/>
+            <element ref="targetProvisioningStrategy"/>
+         </choice>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="targetDiscoveryStrategy">
+      <annotation>
+         <documentation>
+            Defines a new target discovery strategy.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Name of the strategy (used within project views to refere to the strategy)
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Implementation of &lt;code&gt;com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryStrategy&lt;/code&gt;
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryStrategy"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="targetProvisioningStrategy">
+      <annotation>
+         <documentation>
+            Defines a new target provisioning strategy.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Implementation of &lt;code&gt;com.salesforce.bazel.eclipse.core.model.discovery.TargetProvisioningStrategy&lt;/code&gt;
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":com.salesforce.bazel.eclipse.core.model.discovery.TargetProvisioningStrategy"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Name of the strategy (used within project views to refere to the strategy)
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+
+
+
+   <annotation>
+      <appinfo>
+         <meta.section type="implementation"/>
+      </appinfo>
+      <documentation>
+         The default &lt;code&gt;bazel-query&lt;/code&gt; strategy uses Bazel query and aspects to discover targets and translate those into projects.
+      </documentation>
+   </annotation>
+
+
+</schema>

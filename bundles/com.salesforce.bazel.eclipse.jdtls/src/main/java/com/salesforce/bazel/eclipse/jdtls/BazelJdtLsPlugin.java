@@ -35,90 +35,22 @@
  */
 package com.salesforce.bazel.eclipse.jdtls;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
-import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.prefs.Preferences;
-
-import com.salesforce.bazel.eclipse.component.ComponentContext;
-import com.salesforce.bazel.sdk.workspace.OperatingEnvironmentDetectionStrategy;
 
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
  */
-@SuppressWarnings("restriction")
-public class BazelJdtLsPlugin extends Plugin {
+public class BazelJdtLsPlugin extends Plugin implements BazelJdtLsSharedContstants {
 
-    // The plug-in ID
-    public static final String PLUGIN_ID = "com.salesforce.bazel.eclipse.jdtls"; //$NON-NLS-1$
     private static BazelJdtLsPlugin plugin;
 
-    // GLOBAL COLLABORATORS
-    // TODO move the collaborators to some other place, perhaps a dedicated static context object
-
-    public static final String PREFERENCE_WORKSPACE_ROOT_DIRECTORY = "bazelWorkspaceRootDirectory";
-
-    private static Preferences pluginPreferences =
-            Platform.getPreferencesService().getRootNode().node(InstanceScope.SCOPE).node(PLUGIN_ID);
-
-    // Command to find bazel path on windows
-    public static final String WIN_BAZEL_FINDE_COMMAND = "where bazel";
-
-    // Command to find bazel path on linux or mac
-    public static final String LINUX_BAZEL_FINDE_COMMAND = "which bazel";
-
-    public static final String BAZEL_EXECUTABLE_ENV_VAR = "BAZEL_EXECUTABLE";
-
-    public static final String BAZEL_EXECUTABLE_DEFAULT_PATH = "/usr/local/bin/bazel";
-
-    // LIFECYCLE
-
-    public static File getBazelWorkspaceRootDirectoryOnStart() {
-        var path = pluginPreferences.get(PREFERENCE_WORKSPACE_ROOT_DIRECTORY, null);
-        return path != null ? new File(path) : null;
+    public static BazelJdtLsPlugin getInstabnce() {
+        return requireNonNull(plugin, "not initialized");
     }
 
-    public static BazelJdtLsPlugin getDefault() {
-        return plugin;
-    }
-
-    public static String getEnvBazelPath() {
-        return System.getenv(BAZEL_EXECUTABLE_ENV_VAR);
-    }
-
-    /**
-     * Provides details of the operating environment (OS, real vs. tests, etc)
-     */
-    public static OperatingEnvironmentDetectionStrategy getOperatingEnvironmentDetectionStrategy() {
-        return ComponentContext.getInstance().getOsStrategy();
-    }
-
-    /**
-     * The constructor
-     */
-    public BazelJdtLsPlugin() {
-
-    }
-
-    public Map<String, Object> getJdtLsPreferences() {
-        var prefs = JavaLanguageServerPlugin.getPreferencesManager().getPreferences().asMap();
-        return Objects.nonNull(prefs) ? prefs : Collections.emptyMap();
-    }
-
-    // COLLABORATORS
-    // TODO move the collaborators to some other place, perhaps a dedicated static context object
-
-    /*
-     * (non-Javadoc)
-     * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
-     */
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
@@ -127,6 +59,7 @@ public class BazelJdtLsPlugin extends Plugin {
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        plugin = null;
         super.stop(context);
     }
 
