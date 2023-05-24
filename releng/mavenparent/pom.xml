@@ -239,8 +239,8 @@
           <artifactId>tycho-compiler-plugin</artifactId>
           <version>${tycho.version}</version>
           <configuration>
-            <!-- disable some warnings for all projects (they are fine in the IDE) -->
-            <compilerArgument>-warn:-deprecation,raw,unchecked,nullAnnot,null</compilerArgument>
+            <!-- disable all warnings for all projects (they are fine in the IDE) -->
+            <compilerArgument>-warn:none</compilerArgument>
             <compilerArguments>
               <!-- use compiler settings from project (if available) -->
               <properties>${project.basedir}/.settings/org.eclipse.jdt.core.prefs</properties>
