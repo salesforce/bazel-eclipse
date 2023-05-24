@@ -45,17 +45,17 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ matrix.os }}-${{ hashFiles('**/pom.xml', '**/*.target') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml', '**/*.target') }}
           restore-keys: |
-            ${{ runner.os }}-maven-${{ matrix.os }}-
+            ${{ runner.os }}-m2
 
       - name: Cache IntelliJ Aspects
         uses: actions/cache@v3
         with:
           path: ./bundles/com.salesforce.bazel.sdk/aspects
-          key: ${{ runner.os }}-aspects-${{ matrix.os }}-${{ hashFiles('**/aspects/import/import-and-build.sh', '**/aspects/import/WORKSPACE') }}
+          key: ${{ runner.os }}-aspects-${{ hashFiles('**/aspects/import/import-and-build.sh', '**/aspects/import/WORKSPACE') }}
           restore-keys: |
-            ${{ runner.os }}-aspects-${{ matrix.os }}-
+            ${{ runner.os }}-aspects
 
       - name: Setup Bazelisk
         uses: bazelbuild/setup-bazelisk@v2
@@ -69,8 +69,10 @@ jobs:
         run: ./import-and-build.sh
 
       - name: Build and Test
+        uses: coactions/setup-xvfb@v1
         env:
           BUILD_ID: "${{ steps.time.outputs.time }}"
           BUILD_TYPE: "S"
           BUILD_LABEL: "CI ${{ steps.time.outputs.time }} (${{ steps.branch_name.outputs.branch }})"
-        run: ./mvnw --batch-mode --no-transfer-progress --strict-checksums --fail-at-end -update-snapshots --show-version --errors clean verify
+        with:
+          run: ./mvnw --batch-mode --no-transfer-progress --strict-checksums --fail-at-end -update-snapshots --show-version --errors clean verify
