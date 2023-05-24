@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Bazel Eclipse Feature UI
+Bundle-Name: Bazel Eclipse Feature UI Plug-In
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.ui;singleton:=true
 Bundle-Version: 2.0.0.qualifier
 Import-Package: org.fusesource.jansi;version="2.4.0",

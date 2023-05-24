@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Bazel Java SDK Tests
+Bundle-Name: Bazel Java SDK and IntelliJ Helper Tests
 Bundle-SymbolicName: com.salesforce.bazel.sdk.tests
 Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: Bazel Eclipse Feature

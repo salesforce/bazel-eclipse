@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Bazel Eclipse Feature UI Tests
+Bundle-Name: Bazel Eclipse Feature UI Plug-In Tests
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.ui.tests;singleton:=true
 Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: Bazel Eclipse Feature

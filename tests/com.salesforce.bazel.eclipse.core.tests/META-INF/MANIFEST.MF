@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Tests
+Bundle-Name: Bazel Eclipse Feature Core Plug-In Tests
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.core.tests
 Bundle-Version: 2.0.0.qualifier
-Bundle-Vendor: Salesforce
+Bundle-Vendor: Bazel Eclipse Feature
 Fragment-Host: com.salesforce.bazel.eclipse.core;bundle-version="2.0.0"
 Automatic-Module-Name: com.salesforce.bazel.eclipse.core.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-17
