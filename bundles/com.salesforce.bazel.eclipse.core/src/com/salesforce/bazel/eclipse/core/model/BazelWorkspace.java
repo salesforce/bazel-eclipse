@@ -227,6 +227,16 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     }
 
     /**
+     * {@return the absolute path to the <code>.bazelproject</code> file used by this workspace}
+     *
+     * @throws CoreException
+     *             if the workspace does not exist
+     */
+    public Path getBazelProjectViewFile() throws CoreException {
+        return getInfo().getBazelProjectFileSystemMapper().getProjectViewLocation().toFile().toPath();
+    }
+
+    /**
      * Returns a {@link BazelTarget} handle for a given label.
      * <p>
      * If the label points to a package, the default target will be returned. Per Bazel documentation, the default

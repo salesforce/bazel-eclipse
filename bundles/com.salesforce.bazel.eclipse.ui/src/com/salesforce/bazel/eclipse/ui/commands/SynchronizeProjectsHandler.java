@@ -15,6 +15,6 @@ public class SynchronizeProjectsHandler extends BaseBazelProjectHandler {
         var bazelProject = BazelCore.create(project);
         var bazelWorkspace = bazelProject.getBazelWorkspace();
 
-        return new SynchronizeProjectViewJob(bazelWorkspace, bazelWorkspace.getBazelProjectView());
+        return new SynchronizeProjectViewJob(bazelWorkspace);
     }
 }

@@ -31,6 +31,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 
@@ -99,6 +100,38 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             monitor.split(1));
 
         return project;
+    }
+
+    /**
+     * Checks whether the current rule contains the scheduling rule for running this job directly and returns any
+     * missing rule.
+     * <p>
+     * This method can be used if the caller wants to run the job directly in this thread by calling
+     * {@link #runInWorkspace(IProgressMonitor)} but is unsure about the proper rule acquisition. The returned result
+     * can directly be passed to
+     * {@link IWorkspace#run(org.eclipse.core.runtime.ICoreRunnable, ISchedulingRule, int, IProgressMonitor)}. For
+     * example:
+     *
+     * <pre>
+     * IWorkspace workspace = ...
+     * var projectViewJob = new SynchronizeProjectViewJob(bazelWorkspace);
+     *
+     * // don't schedule the job but execute it directly with the required rule
+     * var rule = projectViewJob.detectMissingRule();
+     * workspace.run(projectViewJob::runInWorkspace, rule, IWorkspace.AVOID_UPDATE, monitor);
+     * </pre>
+     * </p>
+     *
+     * @return the required scheduling rule for calling {@link #runInWorkspace(IProgressMonitor)} directly (maybe
+     *         <code>null</code> in case none is missing)
+     */
+    public ISchedulingRule detectMissingRule() {
+        var requiredRule = getRule();
+        var currentRule = getJobManager().currentRule();
+        if ((currentRule != null) && !currentRule.contains(requiredRule)) {
+            return requiredRule;
+        }
+        return null;
     }
 
     private Set<BazelTarget> detectTargetsToMaterializeInEclipse(IProject workspaceProject, SubMonitor monitor)
