@@ -12,4 +12,4 @@ The update is a bit automated.
 1. Grab the Git SHA you want to update to
 2. Update `import/import-and-build.sh` with the SHA.
 3. Run `import/import-and-build.sh` (` cd import && ./import-and-build.sh`)
-4. Update [IntelliJAspects.java](../src/main/java/com/salesforce/bazel/sdk/aspect/IntellijAspects.java) to point to the new `aspects-<sha>.zip` file
+4. Update [IntelliJAspects.java](../src/main/java/com/salesforce/bazel/sdk/aspects/intellij/IntellijAspects.java) to point to the new `aspects-<sha>.zip` file
