@@ -1,0 +1,38 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+      
+permissions: {}
+
+jobs:
+  publish-latest-update-site:
+    name: Publish Latest Update Site # (from main branch only)
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion != 'skipped' && github.repository == 'salesforce/bazel-eclipse' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download and Extract p2 Repository
+        uses: actions/download-artifact@v3
+        with:
+          name: p2-repository
+          path: bazel-eclipse-latest
+
+      - name: Deploy Update Site 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: bazel-eclipse-latest
+          target-folder: bazel-eclipse-latest
+          clean: false
+          clean-exclude: |
+            index.html
+            update-site*
+          single-commit: true
+          
