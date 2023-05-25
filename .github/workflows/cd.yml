@@ -19,8 +19,9 @@ jobs:
 
     steps:
       - name: Download and Extract p2 Repository
-        uses: actions/download-artifact@v3
+        uses: dawidd6/action-download-artifact@v2
         with:
+          run_id: ${{ github.event.workflow_run.id }}
           name: p2-repository
           path: bazel-eclipse-latest
 
