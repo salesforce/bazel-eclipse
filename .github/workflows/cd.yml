@@ -12,7 +12,9 @@ jobs:
   publish-latest-update-site:
     name: Publish Latest Update Site # (from main branch only)
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion != 'skipped' && github.repository == 'salesforce/bazel-eclipse' && github.ref == 'refs/heads/main'
+    
+    # we are very restrictive when this runs, i.e. only on main, only on success and only with the bazel-eclipse repository (not on forks)
+    if: github.event.workflow_run.conclusion == 'success' && github.repository == 'salesforce/bazel-eclipse' && github.ref == 'refs/heads/main'
 
     permissions:
       contents: write
