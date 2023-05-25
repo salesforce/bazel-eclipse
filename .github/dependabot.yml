@@ -4,9 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    target-branch: "master"
+    target-branch: "main"
     assignees:
-      - "plaird"
       - "guw"
     commit-message:
       prefix: "Dependabot:"
