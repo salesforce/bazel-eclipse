@@ -20,12 +20,18 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
       - name: Download and Extract p2 Repository
         uses: dawidd6/action-download-artifact@v2
         with:
           run_id: ${{ github.event.workflow_run.id }}
           name: p2-repository
           path: bazel-eclipse-latest
+
+      - name: Display structure of downloaded files
+        run: ls -R
 
       - name: Deploy Update Site 🚀
         uses: JamesIves/github-pages-deploy-action@v4

@@ -27,7 +27,7 @@ jobs:
           name: (test-results.*|ci-event-file)
           name_is_regexp: true
           path: artifacts
-
+  
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
