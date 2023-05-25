@@ -14,14 +14,13 @@ All of them assume you have already [installed your toolchain](install.md).
 **Modifying the Bazel Eclipse Feature**
 
 Once you are comfortable with using the feature, you may want to contribute to it.
-If so, please see our [Developer's Guide](../dev/dev_guide.md) for instructions.
+If so, please see our [Contribution Guide](../../CONTRIBUTING.md) for instructions.
 
 
 **Issues**
 
 If you have any problems using BEF, please review these pages:
 
-- [BEF Known Issues doc](issues.md)
 - [BEF Issues on GitHub](https://github.com/salesforce/bazel-eclipse/issues)
 
 If you don't see your issue listed, please file a new Issue on GitHub and we will try to help.

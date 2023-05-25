@@ -3,65 +3,29 @@
 This page documents how to get up and running with Eclipse and the Bazel Eclipse feature.
 These instructions are for **users that just want to use** the Bazel Eclipse feature.
 
- 👷There is [a different installation process](../dev/dev_guide.md) if you want to actually make changes to the feature.
-
-This section will eventually contain a matrix of supported configurations.
-But at this point, we are not that organized.
-Install a recent copy of whatever is asked for below, unless a specific version is noted.
 
 ### Supported Platforms
 
 We will support you on:
-- Mac - reasonably recent OS versions, with issues [noted on this page](macos.md).
+- Mac - reasonably recent OS versions
 - Linux - reasonably recent OS version of a major distro (Ubuntu, Mint, etc)
-- Windows - supported, but [we are looking for expertise](windows.md) to support this better.
+- Windows - best-effort, we are looking for expertise/help
 
-Other platforms (yo, OS/2 user!) may also work, but you may need to contribute patches if there are issues.
 
-### Installing a JDK
+### Supported Eclipse
 
-At this time, we don't have specific guidance on what JDK version you should be using.
-Any JDK11 or above should work.
-If you find one that does NOT work, let us know.
-
-Bazel generally has not been strong with hermetic Java configuration and relies on *JAVA_HOME*
-   in unexpected ways.
-If your build relies on *JAVA_HOME* being set, you will likely have problems with BEF.
-See [this issue](https://github.com/salesforce/bazel-eclipse/issues/417) for additional configuration steps
-   you will need to perform as workarounds.
-
-More details of our JDK support strategy can be [found here](../dev/jdk.md).
-
-### Installing Eclipse
-
-Download the latest release of [Eclipse IDE for Java Developers](https://www.eclipse.org/downloads/packages/release/2018-09/r/eclipse-ide-java-developers).
-The feature is built against a of the Eclipse SDK, so older versions won't work.
-
-**Launching Eclipse**
-
-This seems like it is a no-brainer.
-Eclipse has been around for two decades, so it should launch with no issues.
-But it doesn't launch in some cases, at least on Macs.
-Consult [this doc](macos.md) if your Eclipse fails to launch on Mac.
+We recommend the latest release of [Eclipse IDE for Java Developers](https://www.eclipse.org/downloads/packages/).
+Given the language server is our priority, we may need to adopt new APIs quickly.
 
 ### Installing Bazel
 
 The Bazel Eclipse Feature does not come with an embedded install of Bazel.
-You must have Bazel installed on your machine and in your shell path.
+You must have Bazel binary (`bazel`) installed on your machine and in your shell path.
 
-The BazelVersionChecker class has a version check when setting the Bazel executable in the Eclipse preferences.
-Choose a version of Bazel that is at least as high as that check.
+We recommend Bazelisk.
+
 
 ### Installing the Bazel Eclipse feature into Eclipse
-
-**Quick Installation**
-
-Drag the _Install_ button and drop on your running Eclipse IDE, and search for _Bazel_.
-It is that easy!
-
-<a href="http://marketplace.eclipse.org/marketplace-client-intro?mpc_install=5403450" class="drag" title="Drag to your running Eclipse workspace.">
-  <img style="width:80px;" typeof="foaf:Image" class="img-responsive" src="https://marketplace.eclipse.org/sites/all/themes/solstice/public/images/marketplace/btn-install.svg" alt="Drag to your running Eclipse workspace." />
-</a>
 
 **Manually Install the Bazel Eclipse feature into Eclipse:**
 
@@ -89,10 +53,8 @@ Otherwise, you can install older versions of BEF using the archive zip files tha
 
 ### Known Issues
 
-Now is a good time to browse the [known issues](issues.md) page which covers
-  some common problems.
 If you have a problem, searching the full [Issues list](https://github.com/salesforce/bazel-eclipse/issues)
-  is also a good thing to do.
+  is a good thing to do.
 
 ### Updating your Bazel Eclipse feature
 
