@@ -31,15 +31,15 @@ jobs:
           path: bazel-eclipse-latest
 
       - name: Display structure of downloaded files
-        run: ls -R
+        run: ls -R  bazel-eclipse-latest
 
       - name: Deploy Update Site 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: bazel-eclipse-latest
-          target-folder: bazel-eclipse-latest
-          clean: false
+          target-folder: latest # use a simpler name
+          clean: true
           clean-exclude: |
             index.html
             update-site*
