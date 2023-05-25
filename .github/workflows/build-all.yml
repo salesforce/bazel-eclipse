@@ -61,6 +61,7 @@ jobs:
         uses: bazelbuild/setup-bazelisk@v2
 
       - name: Print Maven toolchains.xml
+        shell: bash
         run: cat ~/.m2/toolchains.xml
 
       - name: Import IntelliJ Aspects
@@ -75,6 +76,7 @@ jobs:
           BUILD_TYPE: "S"
           BUILD_LABEL: "CI ${{ steps.time.outputs.time }} (${{ steps.branch_name.outputs.branch }})"
         with:
+          shell: bash
           run: ./mvnw --batch-mode --no-transfer-progress --strict-checksums --fail-at-end -update-snapshots --show-version --errors clean verify
           
       - name: Upload Test Results
