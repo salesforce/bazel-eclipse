@@ -1,4 +1,4 @@
-name: Build Everything
+name: CI
 
 concurrency: 
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,17 +12,22 @@ on:
     branches:
       - 'main'
   workflow_dispatch:
+  
+permissions: {}
 
 jobs:
-  build:
+  build-and-test:
+    name: Build and Test (OS ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest] #, windows-latest] # https://github.com/coactions/setup-xvfb/issues/18
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Get Time for BUILD_ID
         id: time
@@ -84,6 +89,17 @@ jobs:
         if: always()
         with:
           name: test-results-${{ matrix.os }}
-          if-no-files-found: warn
           path: |
             ${{ github.workspace }}/**/target/surefire-reports/*.xml
+            
+  event_file:
+    name: "Event File" 
+    runs-on: ubuntu-latest
+    
+    # needed for publishing test results from forks
+    steps:
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: ci-event-file
+          path: ${{ github.event_path }}
