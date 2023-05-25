@@ -5,8 +5,6 @@ Technically, there are still two build systems - Eclipse PDE and Maven Tycho.
 However, they use one single source of truth - Eclipse PDE.
 Thus, you don't have to worry about maintaining Maven POM.xml files.
 
-The [Dev Guide](dev_guide.md) explains how to set up the Eclipse SDK and Bazel.
-This document explains how they work together.
 
 
 ### Eclipse PDE (SDK and Self-Hosting)
