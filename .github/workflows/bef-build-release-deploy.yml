@@ -12,7 +12,7 @@ jobs:
 
       - name: Get Time for BUILD_ID
         id: time
-        uses: nanzm/get-time-action@v1.1
+        uses: nanzm/get-time-action@v2.0
         with:
           format: "YYYYMMDD_HHmm"
 
