@@ -5,7 +5,7 @@ environment JavaSE-17
 //location "https://download.eclipse.org/eclipse/updates/4.27/" {
 // https://github.com/eclipse-platform/eclipse.platform.ui/pull/738
 // https://github.com/eclipse-platform/eclipse.platform.ui/issues/727
-location "https://download.eclipse.org/eclipse/updates/4.28-I-builds/I20230502-2040/" {
+location "https://download.eclipse.org/eclipse/updates/4.28-I-builds/I20230525-0350/" {
     org.eclipse.e4.rcp.feature.group
     org.eclipse.ecf.core.feature.feature.group
     org.eclipse.ecf.core.ssl.feature.feature.group
@@ -33,7 +33,7 @@ location "https://download.eclipse.org/eclipse/updates/4.28-I-builds/I20230502-2
     org.eclipse.sdk.feature.group
 }
 
-location "https://download.eclipse.org/tools/orbit/downloads/drops/R20230302014618/repository/" {
+location "https://download.eclipse.org/tools/orbit/downloads/drops/S20230516204213/repository/" {
 	com.google.gson
 	com.google.guava
 	com.google.javascript
@@ -52,13 +52,13 @@ location "https://download.eclipse.org/tools/orbit/downloads/latest-I/" {
 	javax.annotation
 }
 
-location "https://download.eclipse.org/jdtls/milestones/1.21.0/repository/" {
+location "https://download.eclipse.org/jdtls/milestones/1.23.0/repository/" {
 	org.eclipse.jdt.ls.core
 }
 
 // locations below taken from eclipse.jdt.ls project (to allow building the JDT LS in same workspace)
 
-location "https://download.eclipse.org/releases/2023-03/" {
+location "https://download.eclipse.org/releases/2023-06/" {
 	org.eclipse.xtext.xbase.lib
 }
 
@@ -67,16 +67,16 @@ location "https://download.eclipse.org/scout/releases/4.0/testing" {
 }
 
 location "https://download.eclipse.org/lsp4j/updates/releases/0.20.1/" {
-//	org.eclipse.lsp4j.sdk.feature.group [0.20.1,0.21.0)
+	org.eclipse.lsp4j.sdk.feature.group
 }
 
 // https://github.com/eclipse-lsp4j/lsp4j/issues/702
 location "https://download.eclipse.org/lsp4j/updates/releases/0.19.1/" {
-	org.eclipse.lsp4j.sdk.feature.group [0.19.1,0.20.0)
+//	org.eclipse.lsp4j.sdk.feature.group [0.19.1,0.20.0)
 }
 
 
-location "https://download.eclipse.org/technology/m2e/releases/2.1.2/" {
+location "https://download.eclipse.org/technology/m2e/releases/2.3.0/" {
 	org.eclipse.m2e.feature.feature.group
 	org.eclipse.m2e.logback.feature.feature.group
 	org.eclipse.m2e.sdk.feature.feature.group
