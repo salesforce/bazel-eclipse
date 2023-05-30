@@ -49,6 +49,17 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
         return Objects.equals(bazelPackage, other.bazelPackage) && Objects.equals(targetName, other.targetName);
     }
 
+    /**
+     * Indicates if the {@link #getParent() package} has an entry in its BUILD file for this target.
+     * <p>
+     * This method may trigger Bazel process execution if the parent package is not loaded yet.
+     * </p>
+     *
+     * @return <code>true</code> if the parant package has an entry for this target in its BUILD file,
+     *         <code>false</code> otherwise
+     * @throws CoreException
+     *             if the BUILD file could not be loaded.
+     */
     @Override
     public boolean exists() throws CoreException {
         return getParent().exists() && getBazelPackage().getInfo().getTargets().contains(targetName);

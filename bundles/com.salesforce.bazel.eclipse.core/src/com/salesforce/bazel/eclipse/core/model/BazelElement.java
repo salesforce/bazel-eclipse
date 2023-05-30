@@ -31,7 +31,10 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * <p>
  * Because Bazel elements are handles only, the real information is captured in {@link BazelElementInfo} type hierarchy.
  * This information is maintained in a {@link BazelElementInfoCache}. The model cannot be used without
- * {@link BazelElementInfoCache#setInstance(BazelElementInfoCache) initializing} the cache first.
+ * {@link BazelElementInfoCache#setInstance(BazelElementInfoCache) initializing} the cache first. Most methods on
+ * {@link BazelElement} and its subclasses require {@link #createInfo() #getInfo()} the element. Loading an element is
+ * potentially expensive because it may trigger Bazel process execution. Thus, unless otherwise state, assume any call
+ * to a method, which throws {@link CoreException} may be expensive.
  * </p>
  * <p>
  * All elements in the Bazel model properly implement {@link #hashCode()} and {@link #equals(Object)} to ensure they are
@@ -75,7 +78,8 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
      * Indicates whether a model element exists in the file system.
      * <p>
      * This most certainly involves IO operations. It may require reading the underlying element information but there
-     * might be optimized implementations which do not require reading the full element info.
+     * might be optimized implementations which do not require reading the full element info. Please check the Java doc
+     * on a subclass method for details.
      * </p>
      *
      * @return
@@ -203,6 +207,25 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
 
     public boolean hasParent() {
         return getParent() != null;
+    }
+
+    /**
+     * Returns the {@link BazelElementInfo}, opening the element with the given info if none exists in the cache.
+     *
+     * @return the loaded element info (may be cached)
+     * @throws CoreException
+     *             in case of problems {@link #createInfo() loading} the element info.
+     */
+    protected final I openIfNecessary(I info) throws CoreException {
+        // ensure the parent is loaded
+        if (hasParent()) {
+            getParent().getInfo();
+        }
+
+        var infoCache = getInfoCache();
+
+        // ensure there is at most one info in the cache and this is what we use
+        return infoCache.putOrGetCached(this, requireNonNull(info, "null info not allowed"));
     }
 
     @Override

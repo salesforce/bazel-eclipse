@@ -50,6 +50,9 @@ public final class BazelModel extends BazelElement<BazelModelInfo, BazelElement<
         return (obj != null) && obj.getClass().equals(BazelModel.class);
     }
 
+    /**
+     * {@return <code>true</code> because the model always exists}
+     */
     @Override
     public boolean exists() {
         return true;

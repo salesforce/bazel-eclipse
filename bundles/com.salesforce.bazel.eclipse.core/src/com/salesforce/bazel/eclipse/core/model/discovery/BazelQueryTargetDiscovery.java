@@ -4,11 +4,13 @@ import static com.salesforce.bazel.eclipse.core.model.BazelWorkspace.findWorkspa
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +31,20 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
     @Override
     public Collection<BazelPackage> discoverPackages(BazelWorkspace bazelWorkspace, IProgressMonitor progress)
             throws CoreException {
+        var monitor = SubMonitor.convert(progress, 100);
+
         // bazel query 'buildfiles(//...)' --output package
         Collection<String> labels =
                 bazelWorkspace.getCommandExecutor().runQueryWithoutLock(new BazelQueryForPackagesCommand(
                         bazelWorkspace.getLocation().toFile().toPath(), "buildfiles(//...)", true));
+
+        monitor.worked(1);
+        monitor.setWorkRemaining(labels.size());
+
         var result = new ArrayList<BazelPackage>();
         for (String label : labels) {
+            monitor.worked(1);
+
             // ignore external packages
             if (label.startsWith("@")) {
                 LOG.debug("Ignored external package during discover: {}", label);
@@ -61,10 +71,17 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
     }
 
     @Override
-    public Collection<BazelTarget> discoverTargets(BazelPackage bazelPackage, IProgressMonitor progress)
-            throws CoreException {
-        // use the BazelPackageInfo as it may be cached already
-        return bazelPackage.getBazelTargets();
+    public Collection<BazelTarget> discoverTargets(BazelWorkspace bazelWorkspace,
+            Collection<BazelPackage> bazelPackages, IProgressMonitor progress) throws CoreException {
+        // open all packages at once
+        bazelWorkspace.open(bazelPackages);
+
+        List<BazelTarget> targets = new ArrayList<>();
+        for (BazelPackage bazelPackage : bazelPackages) {
+            targets.addAll(bazelPackage.getBazelTargets());
+        }
+        return targets;
+
     }
 
     /**

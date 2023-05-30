@@ -18,19 +18,24 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_N
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BAZEL;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BZLMOD;
+import static com.salesforce.bazel.eclipse.core.model.BazelPackageInfo.queryForTargets;
 import static java.lang.String.format;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 
+import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -149,6 +154,12 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
         return Objects.equals(parent, other.parent) && Objects.equals(root, other.root);
     }
 
+    /**
+     * Indicates if the {@link #getLocation() location} points to a directory with one of the supported Bazel WORKSPACE
+     * files.
+     *
+     * @return <code>true</code> if the workspace exists in the file system.
+     */
     @Override
     public boolean exists() {
         var path = workspacePath();
@@ -345,6 +356,29 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
         }
 
         return getName().equals(externalRepositoryName);
+    }
+
+    /**
+     * Opens the given list of {@link BazelPackage packages} and ensures they are loaded.
+     * <p>
+     * This method may be more efficient then looking up packages individually. When possible it combines multiple
+     * queries to Bazel into a fewer invocations.
+     * </p>
+     *
+     * @param bazelPackages
+     *            the collection of packages to open
+     * @throws CoreException
+     *             in case of errors loading packages
+     */
+    public void open(Collection<BazelPackage> bazelPackages) throws CoreException {
+        var targets = queryForTargets(this, bazelPackages, getModelManager().getExecutionService());
+        for (Entry<BazelPackage, Map<String, Target>> queryResult : targets.entrySet()) {
+            var bazelPackage = queryResult.getKey();
+            bazelPackage.openIfNecessary(new BazelPackageInfo(
+                    requireNonNull(bazelPackage.findBuildFile(),
+                        () -> format("non-existing Bazel package: %s", bazelPackage.getLabel())),
+                    bazelPackage, queryResult.getValue()));
+        }
     }
 
     Path workspacePath() {
