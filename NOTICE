@@ -9,3 +9,6 @@ An early version of this software was developed by Google Inc. using the attribu
 This product includes software developed at
 The Eclipse Foundation (http://www.eclipse.org/).
 The relevant files contain an EPL header as well as SPDX-License-Identifier: EPL-2.0.
+
+The original Bazel Eclipse Feature code from Google is licensed Apache-2.0.
+The relevant files contain an SPDX-License-Identifier: Apache-2.0.
