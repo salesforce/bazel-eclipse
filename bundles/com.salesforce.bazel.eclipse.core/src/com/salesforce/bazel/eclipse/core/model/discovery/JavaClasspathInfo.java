@@ -14,8 +14,6 @@
 */
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
-import static com.google.devtools.intellij.ideinfo.IntellijIdeInfo.Dependency.DependencyType.COMPILE_TIME;
-import static com.google.devtools.intellij.ideinfo.IntellijIdeInfo.Dependency.DependencyType.RUNTIME;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
@@ -190,14 +188,34 @@ public class JavaClasspathInfo {
                 if (javaIdeInfo.getFilteredGenJar() != null) {
                     addLibrary(new BlazeJarLibrary(javaIdeInfo.getFilteredGenJar(), targetKey));
                 }
-                // special handling for protobuf targets
-                if (isJavaProtoTarget(targetIdeInfo)) {
-                    // add generated jars from all proto library targets in the project
-                    LOG.debug("proto: {}", targetIdeInfo);
-                }
 
             } catch (IOException e) {
                 throw new CoreException(Status.error(format("Error reading aspect file '%s'.", outputArtifact), e));
+            }
+        }
+    }
+
+    private void addDirectDependency(Dependency directDependency) {
+        switch (directDependency.getDependencyType()) {
+            case COMPILE_TIME: {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Found direct compile dependency: {}", directDependency.getTargetKey());
+                }
+                directDeps.add(directDependency.getTargetKey());
+                break;
+            }
+            case RUNTIME: {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Found direct runtime dependency: {}", directDependency.getTargetKey());
+                }
+                runtimeDeps.add(directDependency.getTargetKey());
+                break;
+            }
+            default: {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Ignoring dependency: {}", directDependency.getTargetKey());
+                }
+                break;
             }
         }
     }
@@ -291,22 +309,25 @@ public class JavaClasspathInfo {
         }
 
         // process direct dependencies
-        targetIdeInfo.getDependencies().stream().filter(d -> d.getDependencyType() == COMPILE_TIME)
-                .map(Dependency::getTargetKey).forEach(d -> {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Found direct compile dependency: {}", d);
-                    }
-                    directDeps.add(d);
-                });
+        for (Dependency directDependency : targetIdeInfo.getDependencies()) {
+            var dependencyIdeInfo = ideInfoByTargetKey.get(directDependency.getTargetKey());
+            if (dependencyIdeInfo == null) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Ignoring dependency without IDE info: {}", directDependency.getTargetKey());
+                }
+                continue;
+            }
 
-        // process runtime dependencies
-        targetIdeInfo.getDependencies().stream().filter(d -> d.getDependencyType() == RUNTIME)
-                .map(Dependency::getTargetKey).forEach(d -> {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Found direct runtime dependency: {}", d);
-                    }
-                    runtimeDeps.add(d);
-                });
+            addDirectDependency(directDependency);
+
+            // special handling for protobuf targets
+            if (isJavaProtoTarget(dependencyIdeInfo)) {
+                // add all their dependencies as direct dependencies as well
+                // this is needed to address an indirection created by bazel_java_proto_aspect
+                // note: ideally this would already be part of the jdeps file; however, it's not (see libbuildjar.jdeps in https://github.com/salesforce/bazel-jdt-java-toolchain/blob/main/compiler/BUILD)
+                dependencyIdeInfo.getDependencies().forEach(this::addDirectDependency);
+            }
+        }
     }
 
     /**
@@ -350,7 +371,7 @@ public class JavaClasspathInfo {
                     entry.getAccessRules().add(new AccessRule(PATTERN_EVERYTHING, IAccessRule.K_ACCESSIBLE));
                     result.put(entry.getPath(), entry);
                 }
-            } else {
+            } else if (LOG.isDebugEnabled()) {
                 LOG.warn("Unable to resolve compile jar: {}", jdepsDependency);
             }
         }
@@ -365,13 +386,17 @@ public class JavaClasspathInfo {
 
             var jars = librariesByTargetKey.get(targetKey);
             if (jars == null) {
-                LOG.warn("Unable to locate compile jars in index for dependency: {}", targetKey);
+                if (LOG.isDebugEnabled()) {
+                    LOG.warn("Unable to locate compile jars in index for dependency: {}", targetKey);
+                }
                 continue;
             }
             for (BlazeJarLibrary library : jars) {
                 var jarEntry = resolveJar(library.libraryArtifact);
                 if (jarEntry == null) {
-                    LOG.warn("Unable to resolve compile jar: {}", library.libraryArtifact);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.warn("Unable to resolve compile jar: {}", library.libraryArtifact);
+                    }
                     continue;
                 }
                 result.put(jarEntry.getPath(), jarEntry);
@@ -382,7 +407,9 @@ public class JavaClasspathInfo {
         for (BlazeJarLibrary library : generatedSourceJars) {
             var jarEntry = resolveJar(library.libraryArtifact);
             if (jarEntry == null) {
-                LOG.warn("Unable to resolve generated source jar: {}", library.libraryArtifact);
+                if (LOG.isDebugEnabled()) {
+                    LOG.warn("Unable to resolve generated source jar: {}", library.libraryArtifact);
+                }
                 continue;
             }
             result.put(jarEntry.getPath(), jarEntry);
@@ -432,13 +459,17 @@ public class JavaClasspathInfo {
             var sourceJar = jar.getSourceJars().stream().findFirst();
             if (!sourceJar.isPresent()) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("{}' -> jar '{}' without source", jar, jarPath);
+                    LOG.debug("Found jar for '{}': {} without source",
+                        new Path(jarArtifactForIde.getExecutionRootRelativePath()).lastSegment(), jarPath);
                 }
                 return ClasspathEntry.newLibraryEntry(jarPath, null, null, false /* test only */);
             }
 
             IPath srcJarPath = new Path(locationDecoder.resolveSource(sourceJar.get()).toString());
-            LOG.debug("jar '{}' (source '{}')", jar, jarPath, srcJarPath);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Found jar for '{}': {} (source {})",
+                    new Path(jarArtifactForIde.getExecutionRootRelativePath()).lastSegment(), jarPath, srcJarPath);
+            }
             return ClasspathEntry.newLibraryEntry(jarPath, srcJarPath, null, false /* test only */);
         }
         var jarArtifact = locationDecoder.resolveOutput(jarArtifactForIde);
@@ -447,7 +478,7 @@ public class JavaClasspathInfo {
             var sourceJar = jar.getSourceJars().stream().findFirst();
             if (!sourceJar.isPresent()) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("'{}' -> jar '{}' without source", jar, jarPath);
+                    LOG.debug("Found jar for '{}': {} without source", localJar.getPath().getFileName(), jarPath);
                 }
                 return ClasspathEntry.newLibraryEntry(jarPath, null, null, false /* test only */);
             }
@@ -455,7 +486,8 @@ public class JavaClasspathInfo {
             if (srcJarArtifact instanceof LocalFileArtifact localSrcJar) {
                 IPath srcJarPath = new Path(localSrcJar.getPath().toString());
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("'{}' -> jar '{}' (source '{}')", jar, jarPath, srcJarPath);
+                    LOG.debug("Found jar for '{}': {} (source {})", localJar.getPath().getFileName(), jarPath,
+                        srcJarPath);
                 }
                 return ClasspathEntry.newLibraryEntry(jarPath, srcJarPath, null, false /* test only */);
             }
