@@ -55,6 +55,7 @@ public final class LibraryArtifact implements ProtoWrapper<IntellijIdeInfo.Libra
         return new Builder();
     }
 
+    @SuppressWarnings("deprecation")
     public static LibraryArtifact fromProto(IntellijIdeInfo.LibraryArtifact proto) {
         return ProjectDataInterner.intern(
             new LibraryArtifact(proto.hasInterfaceJar() ? ArtifactLocation.fromProto(proto.getInterfaceJar()) : null,
@@ -71,10 +72,10 @@ public final class LibraryArtifact implements ProtoWrapper<IntellijIdeInfo.Libra
     @Nullable
     private final ArtifactLocation classJar;
 
-    private final ImmutableList<ArtifactLocation> sourceJars;
+    private final List<ArtifactLocation> sourceJars;
 
     public LibraryArtifact(@Nullable ArtifactLocation interfaceJar, @Nullable ArtifactLocation classJar,
-            ImmutableList<ArtifactLocation> sourceJars) {
+            List<ArtifactLocation> sourceJars) {
         if ((interfaceJar == null) && (classJar == null)) {
             throw new IllegalArgumentException("Interface and class jars cannot both be null.");
         }

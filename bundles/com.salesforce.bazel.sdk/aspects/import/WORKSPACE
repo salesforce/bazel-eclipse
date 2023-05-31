@@ -55,9 +55,10 @@ rules_proto_dependencies()
 rules_proto_toolchains()
 
 # referenced by '@intellij//intellij_platform_sdk:guava_for_external_binaries'
+# (copied from https://github.com/bazelbuild/intellij/blob/master/WORKSPACE)
 http_archive(
-    name = "intellij_ce_2022_1",
-    build_file = "@//intellij_platform_sdk:BUILD.idea221",
-    sha256 = "dc45e4c689a76c3022191a96fc3461333f177d62ab8d3e57e2cb2cc916ed9080",
-    url = "https://www.jetbrains.com/intellij-repository/releases/com/jetbrains/intellij/idea/ideaIC/2022.1.3/ideaIC-2022.1.3.zip",
+    name = "intellij_ce_2022_3",
+    build_file = "@//intellij_platform_sdk:BUILD.idea223",
+    sha256 = "f6ea9aee6dec73b55ea405b37402394095be3c658d1c2707a8f30ac848974eac",
+    url = "https://www.jetbrains.com/intellij-repository/releases/com/jetbrains/intellij/idea/ideaIC/2022.3/ideaIC-2022.3.zip",
 )

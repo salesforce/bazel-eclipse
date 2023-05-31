@@ -62,7 +62,7 @@ public interface TargetProvisioningStrategy {
      * @throws CoreException
      *             in case of problems computing the classpath
      */
-    List<ClasspathEntry> computeClasspath(BazelProject bazelProject, BazelClasspathScope scope,
+    Collection<ClasspathEntry> computeClasspath(BazelProject bazelProject, BazelClasspathScope scope,
             IProgressMonitor monitor) throws CoreException;
 
     /**

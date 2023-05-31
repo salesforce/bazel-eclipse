@@ -19,7 +19,7 @@ import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaInfo.FileEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.FileEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 

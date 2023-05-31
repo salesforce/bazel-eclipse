@@ -93,7 +93,6 @@ public class Kind {
         }
 
         private ImmutableList<Provider> getExtensions() {
-            // TODO Auto-generated method stub
             return extensions;
         }
     }

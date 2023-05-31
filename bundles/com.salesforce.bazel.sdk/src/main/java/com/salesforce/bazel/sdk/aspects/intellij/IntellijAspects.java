@@ -59,7 +59,7 @@ public class IntellijAspects {
         }
     }
 
-    public static final String ASPECTS_VERSION = "37813e";
+    public static final String ASPECTS_VERSION = "3e0ba2";
 
     public static final String OVERRIDE_REPOSITORY_FLAG = "--override_repository=intellij_aspect";
 

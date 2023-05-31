@@ -3103,6 +3103,50 @@ public final class IntellijIdeInfo {
      */
     com.google.devtools.intellij.ideinfo.IntellijIdeInfo.LibraryArtifactOrBuilder getPluginProcessorJarsOrBuilder(
         int index);
+
+    /**
+     * <pre>
+     * Pass transitive jar artifact location without parsing jdeps
+     * </pre>
+     *
+     * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+     */
+    @java.lang.Deprecated java.util.List<com.google.devtools.intellij.aspect.Common.ArtifactLocation> 
+        getTransitiveCompileTimeJarsList();
+    /**
+     * <pre>
+     * Pass transitive jar artifact location without parsing jdeps
+     * </pre>
+     *
+     * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+     */
+    @java.lang.Deprecated com.google.devtools.intellij.aspect.Common.ArtifactLocation getTransitiveCompileTimeJars(int index);
+    /**
+     * <pre>
+     * Pass transitive jar artifact location without parsing jdeps
+     * </pre>
+     *
+     * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+     */
+    @java.lang.Deprecated int getTransitiveCompileTimeJarsCount();
+    /**
+     * <pre>
+     * Pass transitive jar artifact location without parsing jdeps
+     * </pre>
+     *
+     * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+     */
+    @java.lang.Deprecated java.util.List<? extends com.google.devtools.intellij.aspect.Common.ArtifactLocationOrBuilder> 
+        getTransitiveCompileTimeJarsOrBuilderList();
+    /**
+     * <pre>
+     * Pass transitive jar artifact location without parsing jdeps
+     * </pre>
+     *
+     * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+     */
+    @java.lang.Deprecated com.google.devtools.intellij.aspect.Common.ArtifactLocationOrBuilder getTransitiveCompileTimeJarsOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code blaze.JavaIdeInfo}
@@ -3123,6 +3167,7 @@ public final class IntellijIdeInfo {
       mainClass_ = "";
       testClass_ = "";
       pluginProcessorJars_ = java.util.Collections.emptyList();
+      transitiveCompileTimeJars_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -3470,6 +3515,67 @@ public final class IntellijIdeInfo {
       return pluginProcessorJars_.get(index);
     }
 
+    public static final int TRANSITIVE_COMPILE_TIME_JARS_FIELD_NUMBER = 10;
+    @SuppressWarnings("serial")
+    private java.util.List<com.google.devtools.intellij.aspect.Common.ArtifactLocation> transitiveCompileTimeJars_;
+    /**
+     * <pre>
+     * Pass transitive jar artifact location without parsing jdeps
+     * </pre>
+     *
+     * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+     */
+    @java.lang.Override
+    @java.lang.Deprecated public java.util.List<com.google.devtools.intellij.aspect.Common.ArtifactLocation> getTransitiveCompileTimeJarsList() {
+      return transitiveCompileTimeJars_;
+    }
+    /**
+     * <pre>
+     * Pass transitive jar artifact location without parsing jdeps
+     * </pre>
+     *
+     * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+     */
+    @java.lang.Override
+    @java.lang.Deprecated public java.util.List<? extends com.google.devtools.intellij.aspect.Common.ArtifactLocationOrBuilder> 
+        getTransitiveCompileTimeJarsOrBuilderList() {
+      return transitiveCompileTimeJars_;
+    }
+    /**
+     * <pre>
+     * Pass transitive jar artifact location without parsing jdeps
+     * </pre>
+     *
+     * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+     */
+    @java.lang.Override
+    @java.lang.Deprecated public int getTransitiveCompileTimeJarsCount() {
+      return transitiveCompileTimeJars_.size();
+    }
+    /**
+     * <pre>
+     * Pass transitive jar artifact location without parsing jdeps
+     * </pre>
+     *
+     * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+     */
+    @java.lang.Override
+    @java.lang.Deprecated public com.google.devtools.intellij.aspect.Common.ArtifactLocation getTransitiveCompileTimeJars(int index) {
+      return transitiveCompileTimeJars_.get(index);
+    }
+    /**
+     * <pre>
+     * Pass transitive jar artifact location without parsing jdeps
+     * </pre>
+     *
+     * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+     */
+    @java.lang.Override
+    @java.lang.Deprecated public com.google.devtools.intellij.aspect.Common.ArtifactLocationOrBuilder getTransitiveCompileTimeJarsOrBuilder(
+        int index) {
+      return transitiveCompileTimeJars_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -3510,6 +3616,9 @@ public final class IntellijIdeInfo {
       }
       for (int i = 0; i < pluginProcessorJars_.size(); i++) {
         output.writeMessage(9, pluginProcessorJars_.get(i));
+      }
+      for (int i = 0; i < transitiveCompileTimeJars_.size(); i++) {
+        output.writeMessage(10, transitiveCompileTimeJars_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -3554,6 +3663,10 @@ public final class IntellijIdeInfo {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, pluginProcessorJars_.get(i));
       }
+      for (int i = 0; i < transitiveCompileTimeJars_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(10, transitiveCompileTimeJars_.get(i));
+      }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
@@ -3596,6 +3709,8 @@ public final class IntellijIdeInfo {
           .equals(other.getTestClass())) return false;
       if (!getPluginProcessorJarsList()
           .equals(other.getPluginProcessorJarsList())) return false;
+      if (!getTransitiveCompileTimeJarsList()
+          .equals(other.getTransitiveCompileTimeJarsList())) return false;
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -3638,6 +3753,10 @@ public final class IntellijIdeInfo {
       if (getPluginProcessorJarsCount() > 0) {
         hash = (37 * hash) + PLUGIN_PROCESSOR_JARS_FIELD_NUMBER;
         hash = (53 * hash) + getPluginProcessorJarsList().hashCode();
+      }
+      if (getTransitiveCompileTimeJarsCount() > 0) {
+        hash = (37 * hash) + TRANSITIVE_COMPILE_TIME_JARS_FIELD_NUMBER;
+        hash = (53 * hash) + getTransitiveCompileTimeJarsList().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -3813,6 +3932,13 @@ public final class IntellijIdeInfo {
           pluginProcessorJarsBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000100);
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          transitiveCompileTimeJars_ = java.util.Collections.emptyList();
+        } else {
+          transitiveCompileTimeJars_ = null;
+          transitiveCompileTimeJarsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -3881,6 +4007,15 @@ public final class IntellijIdeInfo {
           result.pluginProcessorJars_ = pluginProcessorJars_;
         } else {
           result.pluginProcessorJars_ = pluginProcessorJarsBuilder_.build();
+        }
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          if (((bitField0_ & 0x00000200) != 0)) {
+            transitiveCompileTimeJars_ = java.util.Collections.unmodifiableList(transitiveCompileTimeJars_);
+            bitField0_ = (bitField0_ & ~0x00000200);
+          }
+          result.transitiveCompileTimeJars_ = transitiveCompileTimeJars_;
+        } else {
+          result.transitiveCompileTimeJars_ = transitiveCompileTimeJarsBuilder_.build();
         }
       }
 
@@ -4076,6 +4211,32 @@ public final class IntellijIdeInfo {
             }
           }
         }
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          if (!other.transitiveCompileTimeJars_.isEmpty()) {
+            if (transitiveCompileTimeJars_.isEmpty()) {
+              transitiveCompileTimeJars_ = other.transitiveCompileTimeJars_;
+              bitField0_ = (bitField0_ & ~0x00000200);
+            } else {
+              ensureTransitiveCompileTimeJarsIsMutable();
+              transitiveCompileTimeJars_.addAll(other.transitiveCompileTimeJars_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.transitiveCompileTimeJars_.isEmpty()) {
+            if (transitiveCompileTimeJarsBuilder_.isEmpty()) {
+              transitiveCompileTimeJarsBuilder_.dispose();
+              transitiveCompileTimeJarsBuilder_ = null;
+              transitiveCompileTimeJars_ = other.transitiveCompileTimeJars_;
+              bitField0_ = (bitField0_ & ~0x00000200);
+              transitiveCompileTimeJarsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getTransitiveCompileTimeJarsFieldBuilder() : null;
+            } else {
+              transitiveCompileTimeJarsBuilder_.addAllMessages(other.transitiveCompileTimeJars_);
+            }
+          }
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
@@ -4185,6 +4346,19 @@ public final class IntellijIdeInfo {
                 }
                 break;
               } // case 74
+              case 82: {
+                com.google.devtools.intellij.aspect.Common.ArtifactLocation m =
+                    input.readMessage(
+                        com.google.devtools.intellij.aspect.Common.ArtifactLocation.parser(),
+                        extensionRegistry);
+                if (transitiveCompileTimeJarsBuilder_ == null) {
+                  ensureTransitiveCompileTimeJarsIsMutable();
+                  transitiveCompileTimeJars_.add(m);
+                } else {
+                  transitiveCompileTimeJarsBuilder_.addMessage(m);
+                }
+                break;
+              } // case 82
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -5661,6 +5835,318 @@ public final class IntellijIdeInfo {
           pluginProcessorJars_ = null;
         }
         return pluginProcessorJarsBuilder_;
+      }
+
+      private java.util.List<com.google.devtools.intellij.aspect.Common.ArtifactLocation> transitiveCompileTimeJars_ =
+        java.util.Collections.emptyList();
+      private void ensureTransitiveCompileTimeJarsIsMutable() {
+        if (!((bitField0_ & 0x00000200) != 0)) {
+          transitiveCompileTimeJars_ = new java.util.ArrayList<com.google.devtools.intellij.aspect.Common.ArtifactLocation>(transitiveCompileTimeJars_);
+          bitField0_ |= 0x00000200;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          com.google.devtools.intellij.aspect.Common.ArtifactLocation, com.google.devtools.intellij.aspect.Common.ArtifactLocation.Builder, com.google.devtools.intellij.aspect.Common.ArtifactLocationOrBuilder> transitiveCompileTimeJarsBuilder_;
+
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public java.util.List<com.google.devtools.intellij.aspect.Common.ArtifactLocation> getTransitiveCompileTimeJarsList() {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(transitiveCompileTimeJars_);
+        } else {
+          return transitiveCompileTimeJarsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public int getTransitiveCompileTimeJarsCount() {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          return transitiveCompileTimeJars_.size();
+        } else {
+          return transitiveCompileTimeJarsBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public com.google.devtools.intellij.aspect.Common.ArtifactLocation getTransitiveCompileTimeJars(int index) {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          return transitiveCompileTimeJars_.get(index);
+        } else {
+          return transitiveCompileTimeJarsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public Builder setTransitiveCompileTimeJars(
+          int index, com.google.devtools.intellij.aspect.Common.ArtifactLocation value) {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTransitiveCompileTimeJarsIsMutable();
+          transitiveCompileTimeJars_.set(index, value);
+          onChanged();
+        } else {
+          transitiveCompileTimeJarsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public Builder setTransitiveCompileTimeJars(
+          int index, com.google.devtools.intellij.aspect.Common.ArtifactLocation.Builder builderForValue) {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          ensureTransitiveCompileTimeJarsIsMutable();
+          transitiveCompileTimeJars_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          transitiveCompileTimeJarsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public Builder addTransitiveCompileTimeJars(com.google.devtools.intellij.aspect.Common.ArtifactLocation value) {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTransitiveCompileTimeJarsIsMutable();
+          transitiveCompileTimeJars_.add(value);
+          onChanged();
+        } else {
+          transitiveCompileTimeJarsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public Builder addTransitiveCompileTimeJars(
+          int index, com.google.devtools.intellij.aspect.Common.ArtifactLocation value) {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTransitiveCompileTimeJarsIsMutable();
+          transitiveCompileTimeJars_.add(index, value);
+          onChanged();
+        } else {
+          transitiveCompileTimeJarsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public Builder addTransitiveCompileTimeJars(
+          com.google.devtools.intellij.aspect.Common.ArtifactLocation.Builder builderForValue) {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          ensureTransitiveCompileTimeJarsIsMutable();
+          transitiveCompileTimeJars_.add(builderForValue.build());
+          onChanged();
+        } else {
+          transitiveCompileTimeJarsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public Builder addTransitiveCompileTimeJars(
+          int index, com.google.devtools.intellij.aspect.Common.ArtifactLocation.Builder builderForValue) {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          ensureTransitiveCompileTimeJarsIsMutable();
+          transitiveCompileTimeJars_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          transitiveCompileTimeJarsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public Builder addAllTransitiveCompileTimeJars(
+          java.lang.Iterable<? extends com.google.devtools.intellij.aspect.Common.ArtifactLocation> values) {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          ensureTransitiveCompileTimeJarsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, transitiveCompileTimeJars_);
+          onChanged();
+        } else {
+          transitiveCompileTimeJarsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public Builder clearTransitiveCompileTimeJars() {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          transitiveCompileTimeJars_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000200);
+          onChanged();
+        } else {
+          transitiveCompileTimeJarsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public Builder removeTransitiveCompileTimeJars(int index) {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          ensureTransitiveCompileTimeJarsIsMutable();
+          transitiveCompileTimeJars_.remove(index);
+          onChanged();
+        } else {
+          transitiveCompileTimeJarsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public com.google.devtools.intellij.aspect.Common.ArtifactLocation.Builder getTransitiveCompileTimeJarsBuilder(
+          int index) {
+        return getTransitiveCompileTimeJarsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public com.google.devtools.intellij.aspect.Common.ArtifactLocationOrBuilder getTransitiveCompileTimeJarsOrBuilder(
+          int index) {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          return transitiveCompileTimeJars_.get(index);  } else {
+          return transitiveCompileTimeJarsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public java.util.List<? extends com.google.devtools.intellij.aspect.Common.ArtifactLocationOrBuilder> 
+           getTransitiveCompileTimeJarsOrBuilderList() {
+        if (transitiveCompileTimeJarsBuilder_ != null) {
+          return transitiveCompileTimeJarsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(transitiveCompileTimeJars_);
+        }
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public com.google.devtools.intellij.aspect.Common.ArtifactLocation.Builder addTransitiveCompileTimeJarsBuilder() {
+        return getTransitiveCompileTimeJarsFieldBuilder().addBuilder(
+            com.google.devtools.intellij.aspect.Common.ArtifactLocation.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public com.google.devtools.intellij.aspect.Common.ArtifactLocation.Builder addTransitiveCompileTimeJarsBuilder(
+          int index) {
+        return getTransitiveCompileTimeJarsFieldBuilder().addBuilder(
+            index, com.google.devtools.intellij.aspect.Common.ArtifactLocation.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Pass transitive jar artifact location without parsing jdeps
+       * </pre>
+       *
+       * <code>repeated .blaze.ArtifactLocation transitive_compile_time_jars = 10 [deprecated = true];</code>
+       */
+      @java.lang.Deprecated public java.util.List<com.google.devtools.intellij.aspect.Common.ArtifactLocation.Builder> 
+           getTransitiveCompileTimeJarsBuilderList() {
+        return getTransitiveCompileTimeJarsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          com.google.devtools.intellij.aspect.Common.ArtifactLocation, com.google.devtools.intellij.aspect.Common.ArtifactLocation.Builder, com.google.devtools.intellij.aspect.Common.ArtifactLocationOrBuilder> 
+          getTransitiveCompileTimeJarsFieldBuilder() {
+        if (transitiveCompileTimeJarsBuilder_ == null) {
+          transitiveCompileTimeJarsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              com.google.devtools.intellij.aspect.Common.ArtifactLocation, com.google.devtools.intellij.aspect.Common.ArtifactLocation.Builder, com.google.devtools.intellij.aspect.Common.ArtifactLocationOrBuilder>(
+                  transitiveCompileTimeJars_,
+                  ((bitField0_ & 0x00000200) != 0),
+                  getParentForChildren(),
+                  isClean());
+          transitiveCompileTimeJars_ = null;
+        }
+        return transitiveCompileTimeJarsBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -12383,7 +12869,7 @@ java.lang.String defaultValue) {
      *
      * <code>repeated string resources = 2 [deprecated = true];</code>
      * @deprecated blaze.ResFolderLocation.resources is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=103
+     *     See intellij/intellij_ide_info.proto;l=106
      * @return A list containing the resources.
      */
     @java.lang.Deprecated java.util.List<java.lang.String>
@@ -12397,7 +12883,7 @@ java.lang.String defaultValue) {
      *
      * <code>repeated string resources = 2 [deprecated = true];</code>
      * @deprecated blaze.ResFolderLocation.resources is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=103
+     *     See intellij/intellij_ide_info.proto;l=106
      * @return The count of resources.
      */
     @java.lang.Deprecated int getResourcesCount();
@@ -12410,7 +12896,7 @@ java.lang.String defaultValue) {
      *
      * <code>repeated string resources = 2 [deprecated = true];</code>
      * @deprecated blaze.ResFolderLocation.resources is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=103
+     *     See intellij/intellij_ide_info.proto;l=106
      * @param index The index of the element to return.
      * @return The resources at the given index.
      */
@@ -12424,7 +12910,7 @@ java.lang.String defaultValue) {
      *
      * <code>repeated string resources = 2 [deprecated = true];</code>
      * @deprecated blaze.ResFolderLocation.resources is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=103
+     *     See intellij/intellij_ide_info.proto;l=106
      * @param index The index of the value to return.
      * @return The bytes of the resources at the given index.
      */
@@ -12553,7 +13039,7 @@ java.lang.String defaultValue) {
      *
      * <code>repeated string resources = 2 [deprecated = true];</code>
      * @deprecated blaze.ResFolderLocation.resources is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=103
+     *     See intellij/intellij_ide_info.proto;l=106
      * @return A list containing the resources.
      */
     @java.lang.Deprecated public com.google.protobuf.ProtocolStringList
@@ -12569,7 +13055,7 @@ java.lang.String defaultValue) {
      *
      * <code>repeated string resources = 2 [deprecated = true];</code>
      * @deprecated blaze.ResFolderLocation.resources is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=103
+     *     See intellij/intellij_ide_info.proto;l=106
      * @return The count of resources.
      */
     @java.lang.Deprecated public int getResourcesCount() {
@@ -12584,7 +13070,7 @@ java.lang.String defaultValue) {
      *
      * <code>repeated string resources = 2 [deprecated = true];</code>
      * @deprecated blaze.ResFolderLocation.resources is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=103
+     *     See intellij/intellij_ide_info.proto;l=106
      * @param index The index of the element to return.
      * @return The resources at the given index.
      */
@@ -12600,7 +13086,7 @@ java.lang.String defaultValue) {
      *
      * <code>repeated string resources = 2 [deprecated = true];</code>
      * @deprecated blaze.ResFolderLocation.resources is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=103
+     *     See intellij/intellij_ide_info.proto;l=106
      * @param index The index of the value to return.
      * @return The bytes of the resources at the given index.
      */
@@ -13238,7 +13724,7 @@ java.lang.String defaultValue) {
        *
        * <code>repeated string resources = 2 [deprecated = true];</code>
        * @deprecated blaze.ResFolderLocation.resources is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=103
+       *     See intellij/intellij_ide_info.proto;l=106
        * @return A list containing the resources.
        */
       @java.lang.Deprecated public com.google.protobuf.ProtocolStringList
@@ -13254,7 +13740,7 @@ java.lang.String defaultValue) {
        *
        * <code>repeated string resources = 2 [deprecated = true];</code>
        * @deprecated blaze.ResFolderLocation.resources is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=103
+       *     See intellij/intellij_ide_info.proto;l=106
        * @return The count of resources.
        */
       @java.lang.Deprecated public int getResourcesCount() {
@@ -13269,7 +13755,7 @@ java.lang.String defaultValue) {
        *
        * <code>repeated string resources = 2 [deprecated = true];</code>
        * @deprecated blaze.ResFolderLocation.resources is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=103
+       *     See intellij/intellij_ide_info.proto;l=106
        * @param index The index of the element to return.
        * @return The resources at the given index.
        */
@@ -13285,7 +13771,7 @@ java.lang.String defaultValue) {
        *
        * <code>repeated string resources = 2 [deprecated = true];</code>
        * @deprecated blaze.ResFolderLocation.resources is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=103
+       *     See intellij/intellij_ide_info.proto;l=106
        * @param index The index of the value to return.
        * @return The bytes of the resources at the given index.
        */
@@ -13302,7 +13788,7 @@ java.lang.String defaultValue) {
        *
        * <code>repeated string resources = 2 [deprecated = true];</code>
        * @deprecated blaze.ResFolderLocation.resources is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=103
+       *     See intellij/intellij_ide_info.proto;l=106
        * @param index The index to set the value at.
        * @param value The resources to set.
        * @return This builder for chaining.
@@ -13324,7 +13810,7 @@ java.lang.String defaultValue) {
        *
        * <code>repeated string resources = 2 [deprecated = true];</code>
        * @deprecated blaze.ResFolderLocation.resources is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=103
+       *     See intellij/intellij_ide_info.proto;l=106
        * @param value The resources to add.
        * @return This builder for chaining.
        */
@@ -13345,7 +13831,7 @@ java.lang.String defaultValue) {
        *
        * <code>repeated string resources = 2 [deprecated = true];</code>
        * @deprecated blaze.ResFolderLocation.resources is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=103
+       *     See intellij/intellij_ide_info.proto;l=106
        * @param values The resources to add.
        * @return This builder for chaining.
        */
@@ -13366,7 +13852,7 @@ java.lang.String defaultValue) {
        *
        * <code>repeated string resources = 2 [deprecated = true];</code>
        * @deprecated blaze.ResFolderLocation.resources is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=103
+       *     See intellij/intellij_ide_info.proto;l=106
        * @return This builder for chaining.
        */
       @java.lang.Deprecated public Builder clearResources() {
@@ -13384,7 +13870,7 @@ java.lang.String defaultValue) {
        *
        * <code>repeated string resources = 2 [deprecated = true];</code>
        * @deprecated blaze.ResFolderLocation.resources is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=103
+       *     See intellij/intellij_ide_info.proto;l=106
        * @param value The bytes of the resources to add.
        * @return This builder for chaining.
        */
@@ -17478,14 +17964,14 @@ java.lang.String defaultValue) {
     /**
      * <code>string library_label = 3 [deprecated = true];</code>
      * @deprecated blaze.GoIdeInfo.library_label is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=152
+     *     See intellij/intellij_ide_info.proto;l=155
      * @return The libraryLabel.
      */
     @java.lang.Deprecated java.lang.String getLibraryLabel();
     /**
      * <code>string library_label = 3 [deprecated = true];</code>
      * @deprecated blaze.GoIdeInfo.library_label is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=152
+     *     See intellij/intellij_ide_info.proto;l=155
      * @return The bytes for libraryLabel.
      */
     @java.lang.Deprecated com.google.protobuf.ByteString
@@ -17494,14 +17980,14 @@ java.lang.String defaultValue) {
     /**
      * <code>string library_kind = 4 [deprecated = true];</code>
      * @deprecated blaze.GoIdeInfo.library_kind is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=153
+     *     See intellij/intellij_ide_info.proto;l=156
      * @return The libraryKind.
      */
     @java.lang.Deprecated java.lang.String getLibraryKind();
     /**
      * <code>string library_kind = 4 [deprecated = true];</code>
      * @deprecated blaze.GoIdeInfo.library_kind is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=153
+     *     See intellij/intellij_ide_info.proto;l=156
      * @return The bytes for libraryKind.
      */
     @java.lang.Deprecated com.google.protobuf.ByteString
@@ -17663,7 +18149,7 @@ java.lang.String defaultValue) {
     /**
      * <code>string library_label = 3 [deprecated = true];</code>
      * @deprecated blaze.GoIdeInfo.library_label is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=152
+     *     See intellij/intellij_ide_info.proto;l=155
      * @return The libraryLabel.
      */
     @java.lang.Override
@@ -17682,7 +18168,7 @@ java.lang.String defaultValue) {
     /**
      * <code>string library_label = 3 [deprecated = true];</code>
      * @deprecated blaze.GoIdeInfo.library_label is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=152
+     *     See intellij/intellij_ide_info.proto;l=155
      * @return The bytes for libraryLabel.
      */
     @java.lang.Override
@@ -17706,7 +18192,7 @@ java.lang.String defaultValue) {
     /**
      * <code>string library_kind = 4 [deprecated = true];</code>
      * @deprecated blaze.GoIdeInfo.library_kind is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=153
+     *     See intellij/intellij_ide_info.proto;l=156
      * @return The libraryKind.
      */
     @java.lang.Override
@@ -17725,7 +18211,7 @@ java.lang.String defaultValue) {
     /**
      * <code>string library_kind = 4 [deprecated = true];</code>
      * @deprecated blaze.GoIdeInfo.library_kind is deprecated.
-     *     See intellij/intellij_ide_info.proto;l=153
+     *     See intellij/intellij_ide_info.proto;l=156
      * @return The bytes for libraryKind.
      */
     @java.lang.Override
@@ -18579,7 +19065,7 @@ java.lang.String defaultValue) {
       /**
        * <code>string library_label = 3 [deprecated = true];</code>
        * @deprecated blaze.GoIdeInfo.library_label is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=152
+       *     See intellij/intellij_ide_info.proto;l=155
        * @return The libraryLabel.
        */
       @java.lang.Deprecated public java.lang.String getLibraryLabel() {
@@ -18597,7 +19083,7 @@ java.lang.String defaultValue) {
       /**
        * <code>string library_label = 3 [deprecated = true];</code>
        * @deprecated blaze.GoIdeInfo.library_label is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=152
+       *     See intellij/intellij_ide_info.proto;l=155
        * @return The bytes for libraryLabel.
        */
       @java.lang.Deprecated public com.google.protobuf.ByteString
@@ -18616,7 +19102,7 @@ java.lang.String defaultValue) {
       /**
        * <code>string library_label = 3 [deprecated = true];</code>
        * @deprecated blaze.GoIdeInfo.library_label is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=152
+       *     See intellij/intellij_ide_info.proto;l=155
        * @param value The libraryLabel to set.
        * @return This builder for chaining.
        */
@@ -18631,7 +19117,7 @@ java.lang.String defaultValue) {
       /**
        * <code>string library_label = 3 [deprecated = true];</code>
        * @deprecated blaze.GoIdeInfo.library_label is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=152
+       *     See intellij/intellij_ide_info.proto;l=155
        * @return This builder for chaining.
        */
       @java.lang.Deprecated public Builder clearLibraryLabel() {
@@ -18643,7 +19129,7 @@ java.lang.String defaultValue) {
       /**
        * <code>string library_label = 3 [deprecated = true];</code>
        * @deprecated blaze.GoIdeInfo.library_label is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=152
+       *     See intellij/intellij_ide_info.proto;l=155
        * @param value The bytes for libraryLabel to set.
        * @return This builder for chaining.
        */
@@ -18661,7 +19147,7 @@ java.lang.String defaultValue) {
       /**
        * <code>string library_kind = 4 [deprecated = true];</code>
        * @deprecated blaze.GoIdeInfo.library_kind is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=153
+       *     See intellij/intellij_ide_info.proto;l=156
        * @return The libraryKind.
        */
       @java.lang.Deprecated public java.lang.String getLibraryKind() {
@@ -18679,7 +19165,7 @@ java.lang.String defaultValue) {
       /**
        * <code>string library_kind = 4 [deprecated = true];</code>
        * @deprecated blaze.GoIdeInfo.library_kind is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=153
+       *     See intellij/intellij_ide_info.proto;l=156
        * @return The bytes for libraryKind.
        */
       @java.lang.Deprecated public com.google.protobuf.ByteString
@@ -18698,7 +19184,7 @@ java.lang.String defaultValue) {
       /**
        * <code>string library_kind = 4 [deprecated = true];</code>
        * @deprecated blaze.GoIdeInfo.library_kind is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=153
+       *     See intellij/intellij_ide_info.proto;l=156
        * @param value The libraryKind to set.
        * @return This builder for chaining.
        */
@@ -18713,7 +19199,7 @@ java.lang.String defaultValue) {
       /**
        * <code>string library_kind = 4 [deprecated = true];</code>
        * @deprecated blaze.GoIdeInfo.library_kind is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=153
+       *     See intellij/intellij_ide_info.proto;l=156
        * @return This builder for chaining.
        */
       @java.lang.Deprecated public Builder clearLibraryKind() {
@@ -18725,7 +19211,7 @@ java.lang.String defaultValue) {
       /**
        * <code>string library_kind = 4 [deprecated = true];</code>
        * @deprecated blaze.GoIdeInfo.library_kind is deprecated.
-       *     See intellij/intellij_ide_info.proto;l=153
+       *     See intellij/intellij_ide_info.proto;l=156
        * @param value The bytes for libraryKind to set.
        * @return This builder for chaining.
        */
@@ -31688,7 +32174,7 @@ java.lang.String defaultValue) {
       "n\022.\n\rinterface_jar\030\002 \001(\0132\027.blaze.Artifac" +
       "tLocation\022/\n\nsource_jar\030\003 \001(\0132\027.blaze.Ar" +
       "tifactLocationB\002\030\001\022,\n\013source_jars\030\004 \003(\0132" +
-      "\027.blaze.ArtifactLocation\"\371\002\n\013JavaIdeInfo" +
+      "\027.blaze.ArtifactLocation\"\274\003\n\013JavaIdeInfo" +
       "\022$\n\004jars\030\001 \003(\0132\026.blaze.LibraryArtifact\022." +
       "\n\016generated_jars\030\002 \003(\0132\026.blaze.LibraryAr" +
       "tifact\0221\n\020package_manifest\030\003 \001(\0132\027.blaze" +
@@ -31698,97 +32184,99 @@ java.lang.String defaultValue) {
       "\006 \001(\0132\026.blaze.LibraryArtifact\022\022\n\nmain_cl" +
       "ass\030\007 \001(\t\022\022\n\ntest_class\030\010 \001(\t\0225\n\025plugin_" +
       "processor_jars\030\t \003(\0132\026.blaze.LibraryArti" +
-      "fact\"\274\002\n\010CIdeInfo\022\'\n\006source\030\001 \003(\0132\027.blaz" +
-      "e.ArtifactLocation\022$\n\034transitive_include" +
-      "_directory\030\003 \003(\t\022*\n\"transitive_quote_inc" +
-      "lude_directory\030\004 \003(\t\022\031\n\021transitive_defin" +
-      "e\030\005 \003(\t\022+\n#transitive_system_include_dir" +
-      "ectory\030\006 \003(\t\022\023\n\013target_copt\030\007 \003(\t\022\'\n\006hea" +
-      "der\030\010 \003(\0132\027.blaze.ArtifactLocation\022/\n\016te" +
-      "xtual_header\030\t \003(\0132\027.blaze.ArtifactLocat" +
-      "ion\"\214\005\n\016AndroidIdeInfo\022*\n\tresources\030\001 \003(" +
-      "\0132\027.blaze.ArtifactLocation\022$\n\003apk\030\002 \001(\0132" +
-      "\027.blaze.ArtifactLocation\022/\n\016dependency_a" +
-      "pk\030\003 \003(\0132\027.blaze.ArtifactLocation\022)\n\010man" +
-      "ifest\030\004 \001(\0132\027.blaze.ArtifactLocation\022\024\n\014" +
-      "java_package\030\005 \001(\t\022\027\n\017has_idl_sources\030\006 " +
-      "\001(\010\022\'\n\007idl_jar\030\007 \001(\0132\026.blaze.LibraryArti" +
-      "fact\022\037\n\027generate_resource_class\030\010 \001(\010\022\030\n" +
-      "\020legacy_resources\030\t \001(\t\022,\n\014resource_jar\030" +
-      "\n \001(\0132\026.blaze.LibraryArtifact\022\027\n\017idl_imp" +
-      "ort_root\030\013 \001(\t\022B\n\017manifest_values\030\014 \003(\0132" +
-      ").blaze.AndroidIdeInfo.ManifestValuesEnt" +
-      "ry\022-\n\013res_folders\030\r \003(\0132\030.blaze.ResFolde" +
-      "rLocation\022\023\n\013instruments\030\016 \001(\t\0223\n\022render" +
-      "_resolve_jar\030\017 \001(\0132\027.blaze.ArtifactLocat" +
-      "ion\0325\n\023ManifestValuesEntry\022\013\n\003key\030\001 \001(\t\022" +
-      "\r\n\005value\030\002 \001(\t:\0028\001\"w\n\021ResFolderLocation\022" +
-      "%\n\004root\030\001 \001(\0132\027.blaze.ArtifactLocation\022\025" +
-      "\n\tresources\030\002 \003(\tB\002\030\001\022$\n\003aar\030\003 \001(\0132\027.bla" +
-      "ze.ArtifactLocation\"A\n\021AndroidSdkIdeInfo" +
-      "\022,\n\013android_jar\030\001 \001(\0132\027.blaze.ArtifactLo" +
-      "cation\"O\n\021AndroidAarIdeInfo\022$\n\003aar\030\001 \001(\013" +
-      "2\027.blaze.ArtifactLocation\022\024\n\014java_packag" +
-      "e\030\002 \001(\t\"E\n\032AndroidInstrumentationInfo\022\020\n" +
-      "\010test_app\030\001 \001(\t\022\025\n\rtarget_device\030\002 \001(\t\"\352" +
-      "\002\n\tPyIdeInfo\022(\n\007sources\030\001 \003(\0132\027.blaze.Ar" +
-      "tifactLocation\022\020\n\010launcher\030\002 \001(\t\0226\n\016pyth" +
-      "on_version\030\003 \001(\0162\036.blaze.PyIdeInfo.Pytho" +
-      "nVersion\0228\n\014srcs_version\030\004 \001(\0162\".blaze.P" +
-      "yIdeInfo.PythonSrcsVersion\022\014\n\004args\030\005 \003(\t" +
-      "\".\n\rPythonVersion\022\013\n\007UNKNOWN\020\000\022\007\n\003PY2\020\001\022" +
-      "\007\n\003PY3\020\002\"q\n\021PythonSrcsVersion\022\017\n\013SRC_UNK" +
-      "NOWN\020\000\022\013\n\007SRC_PY2\020\001\022\013\n\007SRC_PY3\020\002\022\017\n\013SRC_" +
-      "PY2AND3\020\003\022\017\n\013SRC_PY2ONLY\020\004\022\017\n\013SRC_PY3ONL" +
-      "Y\020\005\"\227\001\n\tGoIdeInfo\022(\n\007sources\030\001 \003(\0132\027.bla" +
-      "ze.ArtifactLocation\022\023\n\013import_path\030\002 \001(\t" +
-      "\022\031\n\rlibrary_label\030\003 \001(\tB\002\030\001\022\030\n\014library_k" +
-      "ind\030\004 \001(\tB\002\030\001\022\026\n\016library_labels\030\005 \003(\t\"5\n" +
-      "\tJsIdeInfo\022(\n\007sources\030\001 \003(\0132\027.blaze.Arti" +
-      "factLocation\"5\n\tTsIdeInfo\022(\n\007sources\030\001 \003" +
-      "(\0132\027.blaze.ArtifactLocation\"7\n\013DartIdeIn" +
-      "fo\022(\n\007sources\030\001 \003(\0132\027.blaze.ArtifactLoca" +
-      "tion\"\212\001\n\021CToolchainIdeInfo\022\023\n\013target_nam" +
-      "e\030\001 \001(\t\022\022\n\ncpp_option\030\002 \003(\t\022\020\n\010c_option\030" +
-      "\003 \003(\t\022\026\n\016cpp_executable\030\004 \001(\t\022\"\n\032built_i" +
-      "n_include_directory\030\005 \003(\t\"\030\n\010TestInfo\022\014\n" +
-      "\004size\030\001 \001(\t\"s\n\024JavaToolchainIdeInfo\022\026\n\016s" +
-      "ource_version\030\001 \001(\t\022\026\n\016target_version\030\002 " +
-      "\001(\t\022+\n\njavac_jars\030\004 \003(\0132\027.blaze.Artifact" +
-      "Location\"u\n\026KotlinToolchainIdeInfo\022\030\n\020la" +
-      "nguage_version\030\001 \001(\t\022\033\n\023sdk_library_targ" +
-      "ets\030\002 \003(\t\022$\n\034kotlin_compiler_common_flag" +
-      "s\030\003 \003(\t\".\n\tTargetKey\022\r\n\005label\030\001 \001(\t\022\022\n\na" +
-      "spect_ids\030\003 \003(\t\"\232\001\n\nDependency\022 \n\006target" +
-      "\030\001 \001(\0132\020.blaze.TargetKey\0229\n\017dependency_t" +
-      "ype\030\002 \001(\0162 .blaze.Dependency.DependencyT" +
-      "ype\"/\n\016DependencyType\022\020\n\014COMPILE_TIME\020\000\022" +
-      "\013\n\007RUNTIME\020\001\"\274\007\n\rTargetIdeInfo\022\023\n\013kind_s" +
-      "tring\030\001 \001(\t\022\035\n\003key\030\002 \001(\0132\020.blaze.TargetK" +
-      "ey\022=\n\034build_file_artifact_location\030\003 \001(\013" +
-      "2\027.blaze.ArtifactLocation\022\037\n\004deps\030\004 \003(\0132" +
-      "\021.blaze.Dependency\022\014\n\004tags\030\005 \003(\t\022\020\n\010feat" +
-      "ures\030\006 \003(\t\022\"\n\ttest_info\030\007 \001(\0132\017.blaze.Te" +
-      "stInfo\022\030\n\020sync_time_millis\030\024 \001(\003\022)\n\rjava" +
-      "_ide_info\030d \001(\0132\022.blaze.JavaIdeInfo\022<\n\027j" +
-      "ava_toolchain_ide_info\030e \001(\0132\033.blaze.Jav" +
-      "aToolchainIdeInfo\022/\n\020android_ide_info\030n " +
-      "\001(\0132\025.blaze.AndroidIdeInfo\0226\n\024android_aa" +
-      "r_ide_info\030o \001(\0132\030.blaze.AndroidAarIdeIn" +
-      "fo\0226\n\024android_sdk_ide_info\030p \001(\0132\030.blaze" +
-      ".AndroidSdkIdeInfo\022G\n\034android_instrument" +
-      "ation_info\030q \001(\0132!.blaze.AndroidInstrume" +
-      "ntationInfo\022#\n\nc_ide_info\030x \001(\0132\017.blaze." +
-      "CIdeInfo\0226\n\024c_toolchain_ide_info\030y \001(\0132\030" +
-      ".blaze.CToolchainIdeInfo\022&\n\013py_ide_info\030" +
-      "\202\001 \001(\0132\020.blaze.PyIdeInfo\022&\n\013go_ide_info\030" +
-      "\214\001 \001(\0132\020.blaze.GoIdeInfo\022&\n\013js_ide_info\030" +
-      "\226\001 \001(\0132\020.blaze.JsIdeInfo\022&\n\013ts_ide_info\030" +
-      "\240\001 \001(\0132\020.blaze.TsIdeInfo\022*\n\rdart_ide_inf" +
-      "o\030\252\001 \001(\0132\022.blaze.DartIdeInfo\022=\n\025kt_toolc" +
-      "hain_ide_info\030\264\001 \001(\0132\035.blaze.KotlinToolc" +
-      "hainIdeInfoB&\n$com.google.devtools.intel" +
-      "lij.ideinfob\006proto3"
+      "fact\022A\n\034transitive_compile_time_jars\030\n \003" +
+      "(\0132\027.blaze.ArtifactLocationB\002\030\001\"\274\002\n\010CIde" +
+      "Info\022\'\n\006source\030\001 \003(\0132\027.blaze.ArtifactLoc" +
+      "ation\022$\n\034transitive_include_directory\030\003 " +
+      "\003(\t\022*\n\"transitive_quote_include_director" +
+      "y\030\004 \003(\t\022\031\n\021transitive_define\030\005 \003(\t\022+\n#tr" +
+      "ansitive_system_include_directory\030\006 \003(\t\022" +
+      "\023\n\013target_copt\030\007 \003(\t\022\'\n\006header\030\010 \003(\0132\027.b" +
+      "laze.ArtifactLocation\022/\n\016textual_header\030" +
+      "\t \003(\0132\027.blaze.ArtifactLocation\"\214\005\n\016Andro" +
+      "idIdeInfo\022*\n\tresources\030\001 \003(\0132\027.blaze.Art" +
+      "ifactLocation\022$\n\003apk\030\002 \001(\0132\027.blaze.Artif" +
+      "actLocation\022/\n\016dependency_apk\030\003 \003(\0132\027.bl" +
+      "aze.ArtifactLocation\022)\n\010manifest\030\004 \001(\0132\027" +
+      ".blaze.ArtifactLocation\022\024\n\014java_package\030" +
+      "\005 \001(\t\022\027\n\017has_idl_sources\030\006 \001(\010\022\'\n\007idl_ja" +
+      "r\030\007 \001(\0132\026.blaze.LibraryArtifact\022\037\n\027gener" +
+      "ate_resource_class\030\010 \001(\010\022\030\n\020legacy_resou" +
+      "rces\030\t \001(\t\022,\n\014resource_jar\030\n \001(\0132\026.blaze" +
+      ".LibraryArtifact\022\027\n\017idl_import_root\030\013 \001(" +
+      "\t\022B\n\017manifest_values\030\014 \003(\0132).blaze.Andro" +
+      "idIdeInfo.ManifestValuesEntry\022-\n\013res_fol" +
+      "ders\030\r \003(\0132\030.blaze.ResFolderLocation\022\023\n\013" +
+      "instruments\030\016 \001(\t\0223\n\022render_resolve_jar\030" +
+      "\017 \001(\0132\027.blaze.ArtifactLocation\0325\n\023Manife" +
+      "stValuesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(" +
+      "\t:\0028\001\"w\n\021ResFolderLocation\022%\n\004root\030\001 \001(\013" +
+      "2\027.blaze.ArtifactLocation\022\025\n\tresources\030\002" +
+      " \003(\tB\002\030\001\022$\n\003aar\030\003 \001(\0132\027.blaze.ArtifactLo" +
+      "cation\"A\n\021AndroidSdkIdeInfo\022,\n\013android_j" +
+      "ar\030\001 \001(\0132\027.blaze.ArtifactLocation\"O\n\021And" +
+      "roidAarIdeInfo\022$\n\003aar\030\001 \001(\0132\027.blaze.Arti" +
+      "factLocation\022\024\n\014java_package\030\002 \001(\t\"E\n\032An" +
+      "droidInstrumentationInfo\022\020\n\010test_app\030\001 \001" +
+      "(\t\022\025\n\rtarget_device\030\002 \001(\t\"\352\002\n\tPyIdeInfo\022" +
+      "(\n\007sources\030\001 \003(\0132\027.blaze.ArtifactLocatio" +
+      "n\022\020\n\010launcher\030\002 \001(\t\0226\n\016python_version\030\003 " +
+      "\001(\0162\036.blaze.PyIdeInfo.PythonVersion\0228\n\014s" +
+      "rcs_version\030\004 \001(\0162\".blaze.PyIdeInfo.Pyth" +
+      "onSrcsVersion\022\014\n\004args\030\005 \003(\t\".\n\rPythonVer" +
+      "sion\022\013\n\007UNKNOWN\020\000\022\007\n\003PY2\020\001\022\007\n\003PY3\020\002\"q\n\021P" +
+      "ythonSrcsVersion\022\017\n\013SRC_UNKNOWN\020\000\022\013\n\007SRC" +
+      "_PY2\020\001\022\013\n\007SRC_PY3\020\002\022\017\n\013SRC_PY2AND3\020\003\022\017\n\013" +
+      "SRC_PY2ONLY\020\004\022\017\n\013SRC_PY3ONLY\020\005\"\227\001\n\tGoIde" +
+      "Info\022(\n\007sources\030\001 \003(\0132\027.blaze.ArtifactLo" +
+      "cation\022\023\n\013import_path\030\002 \001(\t\022\031\n\rlibrary_l" +
+      "abel\030\003 \001(\tB\002\030\001\022\030\n\014library_kind\030\004 \001(\tB\002\030\001" +
+      "\022\026\n\016library_labels\030\005 \003(\t\"5\n\tJsIdeInfo\022(\n" +
+      "\007sources\030\001 \003(\0132\027.blaze.ArtifactLocation\"" +
+      "5\n\tTsIdeInfo\022(\n\007sources\030\001 \003(\0132\027.blaze.Ar" +
+      "tifactLocation\"7\n\013DartIdeInfo\022(\n\007sources" +
+      "\030\001 \003(\0132\027.blaze.ArtifactLocation\"\212\001\n\021CToo" +
+      "lchainIdeInfo\022\023\n\013target_name\030\001 \001(\t\022\022\n\ncp" +
+      "p_option\030\002 \003(\t\022\020\n\010c_option\030\003 \003(\t\022\026\n\016cpp_" +
+      "executable\030\004 \001(\t\022\"\n\032built_in_include_dir" +
+      "ectory\030\005 \003(\t\"\030\n\010TestInfo\022\014\n\004size\030\001 \001(\t\"s" +
+      "\n\024JavaToolchainIdeInfo\022\026\n\016source_version" +
+      "\030\001 \001(\t\022\026\n\016target_version\030\002 \001(\t\022+\n\njavac_" +
+      "jars\030\004 \003(\0132\027.blaze.ArtifactLocation\"u\n\026K" +
+      "otlinToolchainIdeInfo\022\030\n\020language_versio" +
+      "n\030\001 \001(\t\022\033\n\023sdk_library_targets\030\002 \003(\t\022$\n\034" +
+      "kotlin_compiler_common_flags\030\003 \003(\t\".\n\tTa" +
+      "rgetKey\022\r\n\005label\030\001 \001(\t\022\022\n\naspect_ids\030\003 \003" +
+      "(\t\"\232\001\n\nDependency\022 \n\006target\030\001 \001(\0132\020.blaz" +
+      "e.TargetKey\0229\n\017dependency_type\030\002 \001(\0162 .b" +
+      "laze.Dependency.DependencyType\"/\n\016Depend" +
+      "encyType\022\020\n\014COMPILE_TIME\020\000\022\013\n\007RUNTIME\020\001\"" +
+      "\274\007\n\rTargetIdeInfo\022\023\n\013kind_string\030\001 \001(\t\022\035" +
+      "\n\003key\030\002 \001(\0132\020.blaze.TargetKey\022=\n\034build_f" +
+      "ile_artifact_location\030\003 \001(\0132\027.blaze.Arti" +
+      "factLocation\022\037\n\004deps\030\004 \003(\0132\021.blaze.Depen" +
+      "dency\022\014\n\004tags\030\005 \003(\t\022\020\n\010features\030\006 \003(\t\022\"\n" +
+      "\ttest_info\030\007 \001(\0132\017.blaze.TestInfo\022\030\n\020syn" +
+      "c_time_millis\030\024 \001(\003\022)\n\rjava_ide_info\030d \001" +
+      "(\0132\022.blaze.JavaIdeInfo\022<\n\027java_toolchain" +
+      "_ide_info\030e \001(\0132\033.blaze.JavaToolchainIde" +
+      "Info\022/\n\020android_ide_info\030n \001(\0132\025.blaze.A" +
+      "ndroidIdeInfo\0226\n\024android_aar_ide_info\030o " +
+      "\001(\0132\030.blaze.AndroidAarIdeInfo\0226\n\024android" +
+      "_sdk_ide_info\030p \001(\0132\030.blaze.AndroidSdkId" +
+      "eInfo\022G\n\034android_instrumentation_info\030q " +
+      "\001(\0132!.blaze.AndroidInstrumentationInfo\022#" +
+      "\n\nc_ide_info\030x \001(\0132\017.blaze.CIdeInfo\0226\n\024c" +
+      "_toolchain_ide_info\030y \001(\0132\030.blaze.CToolc" +
+      "hainIdeInfo\022&\n\013py_ide_info\030\202\001 \001(\0132\020.blaz" +
+      "e.PyIdeInfo\022&\n\013go_ide_info\030\214\001 \001(\0132\020.blaz" +
+      "e.GoIdeInfo\022&\n\013js_ide_info\030\226\001 \001(\0132\020.blaz" +
+      "e.JsIdeInfo\022&\n\013ts_ide_info\030\240\001 \001(\0132\020.blaz" +
+      "e.TsIdeInfo\022*\n\rdart_ide_info\030\252\001 \001(\0132\022.bl" +
+      "aze.DartIdeInfo\022=\n\025kt_toolchain_ide_info" +
+      "\030\264\001 \001(\0132\035.blaze.KotlinToolchainIdeInfoB&" +
+      "\n$com.google.devtools.intellij.ideinfob\006" +
+      "proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -31818,7 +32306,7 @@ java.lang.String defaultValue) {
     internal_static_blaze_JavaIdeInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_blaze_JavaIdeInfo_descriptor,
-        new java.lang.String[] { "Jars", "GeneratedJars", "PackageManifest", "Sources", "Jdeps", "FilteredGenJar", "MainClass", "TestClass", "PluginProcessorJars", });
+        new java.lang.String[] { "Jars", "GeneratedJars", "PackageManifest", "Sources", "Jdeps", "FilteredGenJar", "MainClass", "TestClass", "PluginProcessorJars", "TransitiveCompileTimeJars", });
     internal_static_blaze_CIdeInfo_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_blaze_CIdeInfo_fieldAccessorTable = new

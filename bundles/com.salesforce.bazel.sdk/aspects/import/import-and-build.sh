@@ -29,7 +29,7 @@ fi
 #     1. replace the hash with the one you want to update to
 #     2. check WORKSPACE for any repo that needs updates
 #
-git_sha="37813e607ad26716c4d1ccf4bc3e7163b2188658"
+git_sha="3e0ba27b841bcb9f2d8d2145667c48b6ff0ab341"
 git_sha_short=${git_sha::6}
 
 # abort if file already exists
