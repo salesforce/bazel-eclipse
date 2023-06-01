@@ -352,8 +352,8 @@ public class JavaProjectInfo {
                     if (javaFilesInParent != declaredJavaFilesInFolder) {
                         if (potentialSplitPackageOrSubsetFolders.add(entryParentPath)) {
                             result.add(Status.warning(format(
-                                "Folder '%s' contains more Java source files then configured in Bazel. This is a split-package scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
-                                entryParentPath)));
+                                "Folder '%s' contains more Java files then configured in Bazel. This is a split-package scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
+                                entryParentLocation)));
                         }
                         continue; // continue with next so we capture all possible warnings (we could also abort, though)
                     }
@@ -379,7 +379,7 @@ public class JavaProjectInfo {
                         && potentialSplitPackageOrSubsetFolders.add(potentialSourceRoot)) {
                     result.add(Status.warning(format(
                         "Folder '%s' contains more Java files then configured in Bazel. This is a scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
-                        potentialSourceRoot)));
+                        potentialSourceRootPath)));
                 }
             } catch (IOException e) {
                 throw new CoreException(
@@ -402,6 +402,14 @@ public class JavaProjectInfo {
             // (if there are multiple source roots we could do an extra effort and try to filter the ones without split packages; but is this worth supporting?)
             sourceFilesWithoutCommonRoot =
                     srcs.stream().filter(FileEntry.class::isInstance).map(FileEntry.class::cast).collect(toList());
+        }
+
+        // check if the source has label dependencies
+        List<LabelEntry> labelSrcs =
+                srcs.stream().filter(LabelEntry.class::isInstance).map(LabelEntry.class::cast).collect(toList());
+        for (LabelEntry labelEntry : labelSrcs) {
+            result.add(Status.info(format(
+                "Found source label reference '%s'. The project may not be fully supported in the IDE.", labelEntry)));
         }
 
         return result.isOK() ? Status.OK_STATUS : result;
