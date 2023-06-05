@@ -33,23 +33,18 @@ location "https://download.eclipse.org/eclipse/updates/4.28-I-builds/I20230525-0
     org.eclipse.sdk.feature.group
 }
 
-location "https://download.eclipse.org/tools/orbit/downloads/drops/S20230516204213/repository/" {
+location "https://download.eclipse.org/tools/orbit/downloads/drops/R20230531010532/repository/" {
 	com.google.gson
 	com.google.guava
 	com.google.javascript
 	com.google.protobuf
+	javax.annotation
 	org.apache.commons.lang3
 	org.apache.commons.io
 	org.apache.xerces
 	org.apache.xalan
 	org.slf4j.api
 	org.hamcrest
-}
-
-// https://github.com/eclipse-platform/eclipse.platform.ui/pull/738
-// https://github.com/eclipse-platform/eclipse.platform.ui/issues/727
-location "https://download.eclipse.org/tools/orbit/downloads/latest-I/" {
-	javax.annotation
 }
 
 location "https://download.eclipse.org/jdtls/milestones/1.23.0/repository/" {

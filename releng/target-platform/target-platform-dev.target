@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1685950076">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1685954129">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.28.0.v20230525-0648"/>
@@ -36,17 +36,14 @@
       <unit id="com.google.guava" version="30.1.0.v20221112-0806"/>
       <unit id="com.google.javascript" version="0.0.20160315.v20161124-1903"/>
       <unit id="com.google.protobuf" version="2.4.1.v20220404-1934"/>
+      <unit id="javax.annotation" version="1.3.5.v20230504-0748"/>
       <unit id="org.apache.commons.lang3" version="3.12.0.v20221221-1931"/>
       <unit id="org.apache.commons.io" version="2.8.0.v20210415-0900"/>
       <unit id="org.apache.xerces" version="2.12.2.v20220131-0835"/>
       <unit id="org.apache.xalan" version="2.7.2.v20221112-0806"/>
       <unit id="org.slf4j.api" version="1.7.30.v20221112-0806"/>
       <unit id="org.hamcrest" version="2.2.0.v20210711-0821"/>
-      <repository location="https://download.eclipse.org/tools/orbit/downloads/drops/S20230516204213/repository/"/>
-    </location>
-    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="javax.annotation" version="1.3.5.v20230504-0748"/>
-      <repository location="https://download.eclipse.org/tools/orbit/downloads/latest-I/"/>
+      <repository location="https://download.eclipse.org/tools/orbit/downloads/drops/R20230531010532/repository/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.jdt.ls.core" version="1.23.0.202304271346"/>
