@@ -2,10 +2,13 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
+import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
@@ -20,9 +23,11 @@ import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Default implementation of {@link TargetProvisioningStrategy} which provisions a single project per supported target.
@@ -45,70 +50,79 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
     public static final String STRATEGY_NAME = "project-per-target";
 
     @Override
-    public Collection<ClasspathEntry> computeClasspath(BazelProject bazelProject, BazelClasspathScope scope,
-            IProgressMonitor monitor) throws CoreException {
-        LOG.debug("Computing classpath for project: {}", bazelProject);
+    public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
+            BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor monitor) throws CoreException {
+        LOG.debug("Computing classpath for projects: {}", bazelProjects);
 
-        if (bazelProject.isWorkspaceProject()) {
-            // FIXME: implement support for reading all jars from WORKSPACE
-            //
-            // For example:
-            //   1. get list of all external repos
-            //      > bazel query "//external:*"
-            //   2. query for java rules for each external repo
-            //      > bazel query "kind('java_.* rule', @exernal_repo_name//...)"
-            //
-            // or:
-            //   1. specific support for jvm_import_external
-            //      > bazel query "kind(jvm_import_external, //external:*)"
-            //
-            return List.of();
+        List<BazelLabel> targetsToBuild = new ArrayList<>(bazelProjects.size());
+        for (BazelProject bazelProject : bazelProjects) {
+            if (!bazelProject.isTargetProject()) {
+                throw new CoreException(Status.error(format(
+                    "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel target project created by the project per target strategy.",
+                    bazelProjects)));
+            }
+
+            targetsToBuild.add(bazelProject.getBazelTarget().getLabel());
         }
 
-        var bazelWorkspace = bazelProject.getBazelWorkspace();
-        var workspaceRoot = bazelWorkspace.getLocation().toFile().toPath();
-
-        if (!bazelProject.isTargetProject()) {
-            throw new CoreException(Status.error(format(
-                "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel target project created by the project per target strategy.",
-                bazelProject)));
-        }
+        //        if (bazelProjects.isWorkspaceProject()) {
+        //            // FIXME: implement support for reading all jars from WORKSPACE
+        //            //
+        //            // For example:
+        //            //   1. get list of all external repos
+        //            //      > bazel query "//external:*"
+        //            //   2. query for java rules for each external repo
+        //            //      > bazel query "kind('java_.* rule', @exernal_repo_name//...)"
+        //            //
+        //            // or:
+        //            //   1. specific support for jvm_import_external
+        //            //      > bazel query "kind(jvm_import_external, //external:*)"
+        //            //
+        //            return List.of();
+        //        }
+        //
+        var workspaceRoot = workspace.getLocation().toFile().toPath();
 
         // run the aspect to compute all required information
-        var targets = List.of(bazelProject.getBazelTarget().getLabel());
-        var onlyDirectDeps = bazelWorkspace.getBazelProjectView().deriveTargetsFromDirectories();
+        var onlyDirectDeps = workspace.getBazelProjectView().deriveTargetsFromDirectories();
         var outputGroups = Set.of(OutputGroup.INFO, OutputGroup.RESOLVE);
         var languages = Set.of(LanguageClass.JAVA);
-        var aspects = bazelWorkspace.getParent().getModelManager().getIntellijAspects();
-        var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targets, outputGroups, aspects, languages,
-                onlyDirectDeps);
+        var aspects = workspace.getParent().getModelManager().getIntellijAspects();
+        var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targetsToBuild, outputGroups, aspects,
+                languages, onlyDirectDeps);
 
-        var result = bazelWorkspace.getCommandExecutor().runDirectlyWithWorkspaceLock(command,
-            List.of(bazelProject.getProject()), monitor);
+        var result = workspace.getCommandExecutor().runDirectlyWithWorkspaceLock(command,
+            bazelProjects.stream().map(BazelProject::getProject).collect(toList()), monitor);
 
-        // build index of classpath info
-        var classpathInfo = new JavaClasspathInfo(result, bazelProject.getBazelWorkspace());
+        // populate map from result
+        Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
+        for (BazelProject bazelProject : bazelProjects) {
+            // build index of classpath info
+            var classpathInfo = new JavaClasspathInfo(result, workspace);
 
-        // add the target
-        classpathInfo.addTarget(bazelProject.getBazelTarget());
+            // add the target
+            classpathInfo.addTarget(bazelProject.getBazelTarget());
 
-        // compute the classpath
-        var classpath = classpathInfo.compute();
+            // compute the classpath
+            var classpath = classpathInfo.compute();
 
-        // check for non existing jars
-        for (ClasspathEntry entry : classpath) {
-            if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
-                continue;
+            // check for non existing jars
+            for (ClasspathEntry entry : classpath) {
+                if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
+                    continue;
+                }
+
+                if (!isRegularFile(entry.getPath().toFile().toPath())) {
+                    createBuildPathProblem(bazelProject,
+                        Status.error("There are missing library. Please consider running 'bazel fetch'"));
+                    break;
+                }
             }
 
-            if (!isRegularFile(entry.getPath().toFile().toPath())) {
-                createBuildPathProblem(bazelProject,
-                    Status.error("There are missing library. Please consider running 'bazel fetch'"));
-                break;
-            }
+            classpathsByProject.put(bazelProject, classpath);
         }
 
-        return classpath;
+        return classpathsByProject;
     }
 
     @Override

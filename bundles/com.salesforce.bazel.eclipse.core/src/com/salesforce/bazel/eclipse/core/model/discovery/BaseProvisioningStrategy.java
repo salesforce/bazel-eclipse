@@ -94,8 +94,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @return the collected Java info (never <code>null</code>)
      * @throws CoreException
      */
-    protected JavaProjectInfo collectJavaInfo(BazelProject project, Collection<BazelTarget> targets, IProgressMonitor monitor)
-            throws CoreException {
+    protected JavaProjectInfo collectJavaInfo(BazelProject project, Collection<BazelTarget> targets,
+            IProgressMonitor monitor) throws CoreException {
         // find common package
         var bazelPackage = expectCommonBazelPackage(targets);
 
@@ -399,22 +399,22 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * </p>
      * <p>
      * The default implementation simply loops over all projects and calls
-     * {@link #computeClasspath(BazelProject, BazelClasspathScope, IProgressMonitor)}. Sub classes may override if there
-     * is a more efficient way of if this is not needed at all with a specific strategy.
+     * {@link #computeClasspaths(Collection, BazelWorkspace, BazelClasspathScope, IProgressMonitor)}. Sub classes may
+     * override if there is a more efficient way of if this is not needed at all with a specific strategy.
      * </p>
      *
      * @param projects
      *            list of provisioned projects
+     * @param workspace
+     *            the workspace
      * @param progress
      *            monitor for reporting progress and checking cancellation
      * @throws CoreException
      */
-    protected void doInitializeClasspaths(List<BazelProject> projects, IProgressMonitor progress) throws CoreException {
+    protected void doInitializeClasspaths(List<BazelProject> projects, BazelWorkspace workspace,
+            IProgressMonitor progress) throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, "Initializing classpaths", projects.size());
-            for (BazelProject bazelProject : projects) {
-                computeClasspath(bazelProject, BazelClasspathScope.DEFAULT_CLASSPATH, monitor.newChild(1));
-            }
+            computeClasspaths(projects, workspace, BazelClasspathScope.DEFAULT_CLASSPATH, progress);
         } finally {
             progress.done();
         }
@@ -594,7 +594,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             var result = doProvisionProjects(targets, monitor);
 
             // after provisioning we go over the projects a second time to initialize the classpaths
-            doInitializeClasspaths(result, monitor);
+            doInitializeClasspaths(result, workspace, monitor);
 
             // done
             return result;
