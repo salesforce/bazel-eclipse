@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.OutputStream;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -79,8 +80,10 @@ public class BazelClasspathManager {
         try {
             var strategy = getTargetProvisioningStrategy(bazelProject);
             // compute classpath from Bazel
+            var classpathResult = strategy.computeClasspaths(List.of(bazelProject), bazelProject.getBazelWorkspace(),
+                scope, requireNonNull(monitor, "missing IProgressMonitor"));
             var projectClasspath =
-                    strategy.computeClasspath(bazelProject, scope, requireNonNull(monitor, "missing IProgressMonitor"));
+                    requireNonNull(classpathResult.get(bazelProject), "no classpath returned, this is unexpected here");
 
             // eliminate duplicates
             Map<IPath, ClasspathEntry> paths = new LinkedHashMap<>();

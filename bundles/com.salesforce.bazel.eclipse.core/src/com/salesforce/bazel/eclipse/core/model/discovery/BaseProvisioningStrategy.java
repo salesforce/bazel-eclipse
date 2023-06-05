@@ -53,7 +53,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaInfo.FileEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.FileEntry;
 import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand;
 
 /**
@@ -94,12 +94,12 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @return the collected Java info (never <code>null</code>)
      * @throws CoreException
      */
-    protected JavaInfo collectJavaInfo(BazelProject project, Collection<BazelTarget> targets, IProgressMonitor monitor)
-            throws CoreException {
+    protected JavaProjectInfo collectJavaInfo(BazelProject project, Collection<BazelTarget> targets,
+            IProgressMonitor monitor) throws CoreException {
         // find common package
         var bazelPackage = expectCommonBazelPackage(targets);
 
-        var javaInfo = new JavaInfo(bazelPackage);
+        var javaInfo = new JavaProjectInfo(bazelPackage);
 
         // process targets in the given order
         for (BazelTarget bazelTarget : targets) {
@@ -141,7 +141,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     /**
-     * Configures the raw classpath for a project based on the {@link JavaInfo}.
+     * Configures the raw classpath for a project based on the {@link JavaProjectInfo}.
      * <p>
      * This does not compute the classpath. Instead a classpath container is applied later to defer classpath
      * computation when project provisioning is completed for a workspace.
@@ -152,7 +152,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @param progress
      * @throws CoreException
      */
-    protected void configureRawClasspath(BazelProject project, JavaInfo javaInfo, IProgressMonitor progress)
+    protected void configureRawClasspath(BazelProject project, JavaProjectInfo javaInfo, IProgressMonitor progress)
             throws CoreException {
         List<IClasspathEntry> rawClasspath = new ArrayList<>();
 
@@ -399,22 +399,22 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * </p>
      * <p>
      * The default implementation simply loops over all projects and calls
-     * {@link #computeClasspath(BazelProject, BazelClasspathScope, IProgressMonitor)}. Sub classes may override if there
-     * is a more efficient way of if this is not needed at all with a specific strategy.
+     * {@link #computeClasspaths(Collection, BazelWorkspace, BazelClasspathScope, IProgressMonitor)}. Sub classes may
+     * override if there is a more efficient way of if this is not needed at all with a specific strategy.
      * </p>
      *
      * @param projects
      *            list of provisioned projects
+     * @param workspace
+     *            the workspace
      * @param progress
      *            monitor for reporting progress and checking cancellation
      * @throws CoreException
      */
-    protected void doInitializeClasspaths(List<BazelProject> projects, IProgressMonitor progress) throws CoreException {
+    protected void doInitializeClasspaths(List<BazelProject> projects, BazelWorkspace workspace,
+            IProgressMonitor progress) throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, "Initializing classpaths", projects.size());
-            for (BazelProject bazelProject : projects) {
-                computeClasspath(bazelProject, BazelClasspathScope.DEFAULT_CLASSPATH, monitor.newChild(1));
-            }
+            computeClasspaths(projects, workspace, BazelClasspathScope.DEFAULT_CLASSPATH, progress);
         } finally {
             progress.done();
         }
@@ -466,14 +466,14 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     /**
-     * Creates Eclipse virtual files/folders for sources collected in the {@link JavaInfo}.
+     * Creates Eclipse virtual files/folders for sources collected in the {@link JavaProjectInfo}.
      *
      * @param project
      * @param javaInfo
      * @param progress
      * @throws CoreException
      */
-    protected void linkSourcesIntoProject(BazelProject project, JavaInfo javaInfo, IProgressMonitor progress)
+    protected void linkSourcesIntoProject(BazelProject project, JavaProjectInfo javaInfo, IProgressMonitor progress)
             throws CoreException {
         var monitor = SubMonitor.convert(progress, 100);
         try {
@@ -594,7 +594,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             var result = doProvisionProjects(targets, monitor);
 
             // after provisioning we go over the projects a second time to initialize the classpaths
-            doInitializeClasspaths(result, monitor);
+            doInitializeClasspaths(result, workspace, monitor);
 
             // done
             return result;

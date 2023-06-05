@@ -14,5 +14,4 @@ Import-Package: net.bytebuddy.agent;version="1.14.0",
  org.mockito;version="5.1.1"
 Automatic-Module-Name: com.salesforce.bazel.java.sdk.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-17
-Bundle-ClassPath: lib/truth-0.31.jar,
- .
+Bundle-ClassPath: .

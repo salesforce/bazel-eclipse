@@ -9,12 +9,14 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.core.model.SynchronizeProjectViewJob;
 
 /**
  * The target discovery strategy is responsible for identifying targets to be materialized into Eclipse.
  * <p>
- * Implementors should not persist state in instances of this class. It's expected that any method invocation is
- * hermetic and idempotent. The objects maybe short lived.
+ * Implementors may persist state in instances of this class. However, it's expected that the overall use of the
+ * strategy is consistent. The strategy objects are generally short lived, i.e. they will not be re-used across
+ * different synchronization/discovery cycles.
  * </p>
  */
 public interface TargetDiscoveryStrategy {
@@ -30,18 +32,24 @@ public interface TargetDiscoveryStrategy {
      * This method will be called at most once per {@link TargetDiscoveryStrategy} object instance. Implementors should
      * ensure to release any resources when this method returns to allow proper garbage collection.
      * </p>
+     * <p>
+     * This method is typically called by {@link SynchronizeProjectViewJob} before
+     * {@link #discoverTargets(BazelWorkspace, Collection, IProgressMonitor)} is called. However, the list of packages
+     * may be further reduced.
+     * </p>
      *
      * @param bazelWorkspace
      *            the Bazel workspace
      * @param progress
-     *            a monitor for tracking progress and observing cancellations (never <code>null</code>)
+     *            a monitor for tracking progress and observing cancellations (never <code>null</code>); implementors do
+     *            not need to call {@link IProgressMonitor#done()}
      * @return the found packages (never <code>null</code>)
      */
     Collection<BazelPackage> discoverPackages(BazelWorkspace bazelWorkspace, IProgressMonitor progress)
             throws CoreException;
 
     /**
-     * Obtains all interesting targets for a given {@link BazelPackage}.
+     * Obtains all interesting targets for a given collection of {@link BazelPackage packages}.
      * <p>
      * This method is guaranteed to be called within {@link IWorkspaceRoot a workspace level lock} and allowed to modify
      * workspace resources. Implementors should therefore not schedule any conflicting background jobs/threads which may
@@ -52,11 +60,16 @@ public interface TargetDiscoveryStrategy {
      * ensure to release any resources when this method returns to allow proper garbage collection.
      * </p>
      *
-     * @param bazelPackage
-     *            the Bazel package
+     * @param bazelWorkspace
+     *            the workspace the packages belong to
+     * @param bazelPackages
+     *            the collection of Bazel packages to obtain targets for
      * @param progress
-     *            a monitor for tracking progress and observing cancellations (never <code>null</code>)
+     *            a monitor for tracking progress and observing cancellations (never <code>null</code>); implementors do
+     *            not need to call {@link IProgressMonitor#done()}
+     *
      * @return the found targets (never <code>null</code>)
      */
-    Collection<BazelTarget> discoverTargets(BazelPackage bazelPackage, IProgressMonitor progress) throws CoreException;
+    Collection<BazelTarget> discoverTargets(BazelWorkspace bazelWorkspace, Collection<BazelPackage> bazelPackages,
+            IProgressMonitor progress) throws CoreException;
 }

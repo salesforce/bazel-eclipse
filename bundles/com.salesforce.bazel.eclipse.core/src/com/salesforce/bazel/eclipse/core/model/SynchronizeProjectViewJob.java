@@ -6,6 +6,7 @@ package com.salesforce.bazel.eclipse.core.model;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.eclipse.core.resources.IResource.ALWAYS_DELETE_PROJECT_CONTENT;
 import static org.eclipse.core.resources.IResource.FORCE;
@@ -158,26 +159,29 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // if the '.' is listed in the project view it literal means include "everything"
             var includeEverything = allowedDirectories.contains(Path.EMPTY);
 
-            monitor.setWorkRemaining(allowedDirectories.size());
-            for (BazelPackage bazelPackage : bazelPackages) {
+            // filter packages to remove excludes
+            bazelPackages = bazelPackages.stream().filter(bazelPackage -> {
                 // filter packages based in includes
                 var directory = bazelPackage.getWorkspaceRelativePath();
                 if (!includeEverything && !findPathOrAnyParentInSet(directory, allowedDirectories)) {
-                    continue;
+                    return false;
                 }
                 // filter based on excludes
                 if (findPathOrAnyParentInSet(directory, explicitelyExcludedDirectories)) {
-                    continue;
+                    return false;
                 }
-                // get targets
-                monitor.subTask(bazelPackage.getLabel().toString());
-                var bazelTargets = targetDiscoveryStrategy.discoverTargets(bazelPackage, monitor.split(1));
 
-                // add only targets not explicitly excluded
-                bazelTargets.stream().filter(t -> !targetsToExclude.contains(t.getLabel())).forEach(result::add);
-            }
+                return true;
+            }).collect(toList());
+
+            // get targets
+            var bazelTargets = targetDiscoveryStrategy.discoverTargets(workspace, bazelPackages, monitor.split(1));
+
+            // add only targets not explicitly excluded
+            bazelTargets.stream().filter(t -> !targetsToExclude.contains(t.getLabel())).forEach(result::add);
         }
 
+        // add any explicitly configured target
         for (String targetToInclude : projectView.targetsToInclude()) {
             var label = new BazelLabel(targetToInclude);
             if (!targetsToExclude.contains(label)) {

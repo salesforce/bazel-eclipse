@@ -83,15 +83,14 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
 
     @Override
     protected BazelPackageInfo createInfo() throws CoreException {
-        var buildFile = findBuildFile(packagePath());
+        var buildFile = findBuildFile();
         if (buildFile == null) {
             throw new CoreException(
                     Status.error(format("Package '%s' does not exist in workspace '%s'!", label, parent.getName())));
         }
 
-        var info = new BazelPackageInfo(buildFile, getBazelWorkspace().workspacePath(), this);
-        info.load(getModelManager().getExecutionService());
-        return info;
+        var targets = BazelPackageInfo.queryForTargets(this, getModelManager().getExecutionService());
+        return new BazelPackageInfo(buildFile, this, targets);
     }
 
     @Override
@@ -109,10 +108,29 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
         return Objects.equals(parent, other.parent) && Objects.equals(packagePath, other.packagePath);
     }
 
+    /**
+     * Indicates if the {@link #getLocation() location} points to a directory with one of the supported Bazel BUILD
+     * files.
+     *
+     * @return <code>true</code> if the package exists in the file system.
+     */
     @Override
     public boolean exists() {
         var path = packagePath();
         return isDirectory(path) && (findBuildFile(path) != null);
+    }
+
+    /**
+     * Searches the packages directory for a build file and returns it.
+     * <p>
+     * Note: this method should not be used regularly. It's a helper useful during <i>loading</i> of the package. The
+     * preferred method is {@link #getBuildFile()}, which will return the file found when the package was loaded.
+     * </p>
+     *
+     * @return the found build file (maybe <code>null</code>)
+     */
+    Path findBuildFile() {
+        return findBuildFile(packagePath());
     }
 
     /**

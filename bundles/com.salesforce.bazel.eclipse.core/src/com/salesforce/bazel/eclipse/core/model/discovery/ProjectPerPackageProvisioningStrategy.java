@@ -19,7 +19,8 @@ import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaInfo.FileEntry;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.FileEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
@@ -41,8 +42,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     public static final String STRATEGY_NAME = "project-per-package";
 
     @Override
-    public List<ClasspathEntry> computeClasspath(BazelProject bazelProject, BazelClasspathScope scope,
-            IProgressMonitor monitor) throws CoreException {
+    public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects, BazelWorkspace workspace,
+            BazelClasspathScope scope, IProgressMonitor monitor) throws CoreException {
         // TODO Auto-generated method stub
         return null;
     }

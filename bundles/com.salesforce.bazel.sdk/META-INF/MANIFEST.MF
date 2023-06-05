@@ -8,35 +8,14 @@ Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: com.salesforce.bazel.eclipse.model
 Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: dir
-Export-Package: com.google.devtools.build.buildjar.proto,
- com.google.devtools.build.lib.buildeventstream,
- com.google.devtools.build.lib.query2.proto.proto2api,
- com.google.devtools.build.lib.runtime.proto,
- com.google.devtools.build.lib.server,
- com.google.devtools.build.lib.view.proto,
- com.google.devtools.common.options.proto,
- com.google.devtools.intellij.aspect,
- com.google.devtools.intellij.ideinfo,
- com.google.idea.blaze.base.command.buildresult,
- com.google.idea.blaze.base.command.info,
- com.google.idea.blaze.base.dependencies,
- com.google.idea.blaze.base.ideinfo,
- com.google.idea.blaze.base.model.primitives,
- com.google.idea.blaze.base.sync.workspace,
- com.google.idea.blaze.java,
- com.salesforce.bazel.sdk,
+Export-Package: com.salesforce.bazel.sdk,
  com.salesforce.bazel.sdk.aspects.intellij,
  com.salesforce.bazel.sdk.command,
  com.salesforce.bazel.sdk.command.shell,
  com.salesforce.bazel.sdk.init,
  com.salesforce.bazel.sdk.model,
  com.salesforce.bazel.sdk.util
-Import-Package: com.google.common.annotations;version="31.1.0",
- com.google.common.base;version="31.1.0",
- com.google.common.collect;version="31.1.0",
- com.google.common.io;version="31.1.0",
- com.google.errorprone.annotations;version="2.18.0",
+Import-Package: com.google.common.collect;version="31.1.0",
  com.google.protobuf;version="3.22.0",
- javax.annotation;version="3.0.2",
- javax.annotation.concurrent;version="3.0.2",
  org.slf4j;version="1.7.30"
+Require-Bundle: com.salesforce.bazel.importedsource;bundle-version="2.0.0";visibility:=reexport

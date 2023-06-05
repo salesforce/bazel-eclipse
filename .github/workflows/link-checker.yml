@@ -1,11 +1,12 @@
 name: Check Links
 
 on:
-  pull_request:
-    branches:
-      - main
+  #pull_request:
+  #  branches:
+  #    - main
+  # manually from the Actions tab
   workflow_dispatch:
-
+  
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest

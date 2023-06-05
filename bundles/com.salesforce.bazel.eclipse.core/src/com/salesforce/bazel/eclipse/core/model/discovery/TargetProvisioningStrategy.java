@@ -2,6 +2,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
@@ -26,7 +27,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntr
 public interface TargetProvisioningStrategy {
 
     /**
-     * Computes the classpath for a project to be used by the Bazel classpath container entry.
+     * Computes the classpath for a list of projects to be used by the Bazel classpath container entry.
      * <p>
      * In the Bazel Eclipse extension classpath computation is coupled with project provisioning. The implementation
      * will potentially execute Bazel commands to compute the classpath.
@@ -48,22 +49,25 @@ public interface TargetProvisioningStrategy {
      * <p>
      * If classpath computation fails implementors are required to fail execution with a {@link CoreException}. If
      * {@link CoreException#getStatus() the exception status} is {@link IStatus#isMultiStatus() a multi-status} then the
-     * children will be reported as classpath error markers on the project. Otherwise the implementor is expected to
-     * create error markers when necessary.
+     * children will be reported as classpath error markers on the workspace project. In general, implementor is
+     * expected to create more detailed error markers when applicable.
      * </p>
      *
-     * @param bazelProject
-     *            the project to obtain the classpath for (never <code>null</code>)
+     * @param bazelProjects
+     *            the list of project to obtain the classpath for (never <code>null</code>)
+     * @param workspace TODO
      * @param scope
      *            the classpath scope (never <code>null</code>)
+     * @param workspace
+     *            the workspace all targets belong to (never <code>null</code>)
      * @param progress
      *            a monitor for tracking progress and observing cancellations (never <code>null</code>)
-     * @return the computed classpath (never <code>null</code>)
+     * @return the computed classpath entries by project (never <code>null</code>)
      * @throws CoreException
      *             in case of problems computing the classpath
      */
-    List<ClasspathEntry> computeClasspath(BazelProject bazelProject, BazelClasspathScope scope,
-            IProgressMonitor monitor) throws CoreException;
+    Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
+            BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor monitor) throws CoreException;
 
     /**
      * Provisions projects in Eclipse for a collection of targets to materialize for a workspace.
