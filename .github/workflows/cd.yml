@@ -29,12 +29,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       
-      - name: Debug
-        shell: bash
-        run: |
-          echo "${{ github.event.workflow_run.event }}"
-          echo "${{ github.event.workflow_run.head_branch }}"
-
       - name: Download and Extract p2 Repository
         uses: dawidd6/action-download-artifact@v2
         with:
