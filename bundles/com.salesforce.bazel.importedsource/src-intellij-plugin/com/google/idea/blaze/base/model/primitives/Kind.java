@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.devtools.intellij.ideinfo.IntellijIdeInfo;
-import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
 
 /**
  * A set of recognized blaze rule names, together with {@link LanguageClass} and {@link RuleType}. Language-specific
@@ -57,7 +56,7 @@ public class Kind {
         }
 
         /**
-         * Don't call this method directly. It should only be called by {@link BazelJavaSDKInit}.
+         * Don't call this method directly. It should only be called by {@code com.salesforce.bazel.sdk.init.BazelJavaSDKInit}.
          *
          * @param applicationState
          */

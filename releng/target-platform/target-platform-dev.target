@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1685430848">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1685950076">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.28.0.v20230525-0648"/>
@@ -85,10 +85,10 @@
       <repository location="https://download.eclipse.org/modeling/emf/emf/builds/release/2.32/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.linuxtools.docker.feature.feature.group" version="5.11.0.202305241956"/>
-      <unit id="org.eclipse.linuxtools.docker.editor.ls.feature.feature.group" version="5.11.0.202305241956"/>
+      <unit id="org.eclipse.linuxtools.docker.feature.feature.group" version="5.11.0.202305301839"/>
+      <unit id="org.eclipse.linuxtools.docker.editor.ls.feature.feature.group" version="5.11.0.202305301839"/>
       <unit id="org.eclipse.tm4e.feature.feature.group" version="0.5.2.202211261320"/>
-      <unit id="org.eclipse.xtext.xbase.lib" version="2.31.0.v20230522-0532"/>
+      <unit id="org.eclipse.xtext.xbase.lib" version="2.31.0.v20230529-0659"/>
       <repository location="https://download.eclipse.org/releases/2023-06/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
@@ -104,7 +104,13 @@
     	<dependency>
     		<groupId>com.github.ben-manes.caffeine</groupId>
     		<artifactId>caffeine</artifactId>
-    		<version>3.1.4</version>
+    		<version>3.1.6</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.github.ben-manes.caffeine</groupId>
+    		<artifactId>guava</artifactId>
+    		<version>3.1.6</version>
     		<type>jar</type>
     	</dependency>
     	<dependency>

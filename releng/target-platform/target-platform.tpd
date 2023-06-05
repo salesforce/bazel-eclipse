@@ -90,7 +90,12 @@ maven MavenDependencies scope=compile,test dependencyDepth=infinite missingManif
 	dependency {
 		groupId="com.github.ben-manes.caffeine"
 		artifactId="caffeine"
-		version="3.1.4"
+		version="3.1.6"
+	}
+	dependency {
+		groupId="com.github.ben-manes.caffeine"
+		artifactId="guava"
+		version="3.1.6"
 	}
 	dependency {
 		groupId="com.google.protobuf"

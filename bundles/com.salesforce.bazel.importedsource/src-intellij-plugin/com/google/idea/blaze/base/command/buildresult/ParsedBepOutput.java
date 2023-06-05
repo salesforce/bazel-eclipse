@@ -45,8 +45,8 @@ import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.Bui
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.NamedSetOfFiles;
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.OutputGroup;
 import com.google.idea.blaze.base.command.buildresult.BuildEventStreamProvider.BuildEventStreamException;
+import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.protobuf.Timestamp;
-import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /** A data class representing blaze's build event protocol (BEP) output for a build. */
 public final class ParsedBepOutput {
@@ -297,7 +297,7 @@ public final class ParsedBepOutput {
     }
 
     /** Returns the set of artifacts directly produced by the given target. */
-    public ImmutableSet<OutputArtifact> getDirectArtifactsForTarget(BazelLabel label, Predicate<String> pathFilter) {
+    public ImmutableSet<OutputArtifact> getDirectArtifactsForTarget(Label label, Predicate<String> pathFilter) {
         return targetFileSets.get(label.toString()).stream().map(s -> fileSets.get(s).parsedOutputs)
                 .flatMap(List::stream).filter(o -> pathFilter.test(o.getRelativePath())).collect(toImmutableSet());
     }
