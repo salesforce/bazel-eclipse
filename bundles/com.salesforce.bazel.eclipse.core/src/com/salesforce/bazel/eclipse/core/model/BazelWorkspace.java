@@ -244,7 +244,7 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
      *             if the workspace does not exist
      */
     public Path getBazelProjectViewFile() throws CoreException {
-        return getInfo().getBazelProjectFileSystemMapper().getProjectViewLocation().toFile().toPath();
+        return getInfo().getBazelProjectFileSystemMapper().getProjectViewLocation().toPath();
     }
 
     /**
@@ -382,6 +382,6 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     }
 
     Path workspacePath() {
-        return root.toFile().toPath();
+        return root.toPath();
     }
 }

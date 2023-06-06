@@ -141,7 +141,7 @@ public class BazelImportWizardMainPage extends WizardPage {
         }
 
         var projectViewPath = new Path(projectViewValue);
-        if (!isRegularFile(projectViewPath.toFile().toPath())) {
+        if (!isRegularFile(projectViewPath.toPath())) {
             setMessage("Project View not found!");
             return false;
         }
@@ -182,7 +182,7 @@ public class BazelImportWizardMainPage extends WizardPage {
     }
 
     private IPath findWorkspaceRoot(IPath projectView) {
-        var workspaceRoot = projectView.toFile().toPath().getParent();
+        var workspaceRoot = projectView.toPath().getParent();
 
         while (workspaceRoot != null) {
             if (BazelWorkspace.findWorkspaceFile(workspaceRoot) != null) {
@@ -205,7 +205,7 @@ public class BazelImportWizardMainPage extends WizardPage {
 
     private StringBuilder readWorkspaceInfo(Path projectViewPath, IPath workspaceRoot) throws IOException {
         var projectView =
-                new BazelProjectFileReader(projectViewPath.toFile().toPath(), workspaceRoot.toFile().toPath()).read();
+                new BazelProjectFileReader(projectViewPath.toPath(), workspaceRoot.toPath()).read();
         var info = new StringBuilder();
         info.append("Location:").append(System.lineSeparator()).append("  ").append(workspaceRoot)
                 .append(System.lineSeparator());

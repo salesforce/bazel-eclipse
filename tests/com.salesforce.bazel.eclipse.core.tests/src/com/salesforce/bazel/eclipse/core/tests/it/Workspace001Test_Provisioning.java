@@ -5,6 +5,8 @@ import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static testdata.SharedTestData.BAZELPROJECT_FILE;
+import static testdata.SharedTestData.WORKSPACE_001;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -43,7 +45,7 @@ public class Workspace001Test_Provisioning {
 
     @RegisterExtension
     static ProvisionWorkspaceExtension provisionedWorkspace =
-            new ProvisionWorkspaceExtension(SharedTestData.WORKSPACE_001, SharedTestData.class, BAZEL_VERSION);
+            new ProvisionWorkspaceExtension(WORKSPACE_001, SharedTestData.class, BAZELPROJECT_FILE, BAZEL_VERSION);
 
     private void assertProjectWithProperNatures(IProject project) throws CoreException {
         assertTrue(project.exists(), format("Project '%s' expected to exist!", project.getName()));

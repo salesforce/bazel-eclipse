@@ -294,7 +294,7 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
     }
 
     private java.nio.file.Path packagePath() {
-        return getLocation().toFile().toPath();
+        return getLocation().toPath();
     }
 
 }

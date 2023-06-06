@@ -344,7 +344,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
         try {
-
             // ensure workspace project exists
             var workspaceName = workspace.getName();
             var workspaceRoot = workspace.getLocation();

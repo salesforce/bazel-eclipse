@@ -101,7 +101,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         var projectViewLocation = getBazelProjectFileSystemMapper().getProjectViewLocation();
         try {
             return bazelProjectView =
-                    new BazelProjectFileReader(projectViewLocation.toFile().toPath(), getRoot().toFile().toPath())
+                    new BazelProjectFileReader(projectViewLocation.toPath(), getRoot().toPath())
                             .read();
         } catch (IOException e) {
             throw new CoreException(Status.error(format(

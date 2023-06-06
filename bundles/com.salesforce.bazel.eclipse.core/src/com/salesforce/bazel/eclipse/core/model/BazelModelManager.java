@@ -180,7 +180,7 @@ public class BazelModelManager implements BazelCoreSharedContstants {
         BazelElementInfoCache.setInstance(new CaffeineBasedBazelElementInfoCache(5000));
 
         // ensure aspects are usable
-        aspects = new IntellijAspects(stateLocation.append("intellij-aspects").toFile().toPath());
+        aspects = new IntellijAspects(stateLocation.append("intellij-aspects").toPath());
         aspects.makeAvailable();
 
         // initialize the classpath

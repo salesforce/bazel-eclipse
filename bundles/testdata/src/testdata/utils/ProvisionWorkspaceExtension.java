@@ -1,8 +1,12 @@
 package testdata.utils;
 
+import static java.util.Objects.requireNonNull;
+import static org.eclipse.core.runtime.IPath.fromPath;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.ICoreRunnable;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -14,7 +18,7 @@ import com.salesforce.bazel.eclipse.core.setup.ImportBazelWorkspaceJob;
 import com.salesforce.bazel.sdk.BazelVersion;
 
 /**
- * JUnit extension for provisioning a workspace.
+ * JUnit extension for provisioning a workspace into Eclipse.
  * <p>
  * This extension is best used as static field in a test class with {@link RegisterExtension} annotation.
  * </p>
@@ -22,6 +26,7 @@ import com.salesforce.bazel.sdk.BazelVersion;
 public class ProvisionWorkspaceExtension extends BazelWorkspaceExtension implements AfterAllCallback {
 
     private static Logger LOG = LoggerFactory.getLogger(ProvisionWorkspaceExtension.class);
+    private final IPath pathToProjectViewFileInsideBazelWorkspace;
 
     /**
      * Create a new extension.
@@ -30,11 +35,16 @@ public class ProvisionWorkspaceExtension extends BazelWorkspaceExtension impleme
      *            the location within an Eclipse test bundle to the Bazel workspace
      * @param testClassForObtainingBundle
      *            the class of the Eclipse test bundle to search for the {@code workspaceTestDataLocation}
+     * @param pathToProjectViewFileInsideBazelWorkspace
+     *            the path to the <code>.bazelproject</code> file to import/provision (relative inside the Bazel
+     *            workspace)
      * @throws Exception
      *             in case of problems resolving the workspace URL
      */
-    public ProvisionWorkspaceExtension(String workspaceTestDataLocation, Class<?> testClassForObtainingBundle) {
+    public ProvisionWorkspaceExtension(String workspaceTestDataLocation, Class<?> testClassForObtainingBundle,
+            IPath pathToProjectViewFileInsideBazelWorkspace) {
         super(workspaceTestDataLocation, testClassForObtainingBundle);
+        this.pathToProjectViewFileInsideBazelWorkspace = pathToProjectViewFileInsideBazelWorkspace;
     }
 
     /**
@@ -44,14 +54,18 @@ public class ProvisionWorkspaceExtension extends BazelWorkspaceExtension impleme
      *            the location within an Eclipse test bundle to the Bazel workspace
      * @param testClassForObtainingBundle
      *            the class of the Eclipse test bundle to search for the {@code workspaceTestDataLocation}
+     * @param pathToProjectViewFileInsideBazelWorkspace
+     *            the path to the <code>.bazelproject</code> file to import/provision (relative inside the Bazel
+     *            workspace)
      * @param bazelVersion
      *            an optional Bazel version for generating a <code>.bazelversion</code> file. (maybe null)
      * @throws Exception
      *             in case of problems resolving the workspace URL
      */
     public ProvisionWorkspaceExtension(String workspaceTestDataLocation, Class<?> testClassForObtainingBundle,
-            BazelVersion bazelVersion) {
+            IPath pathToProjectViewFileInsideBazelWorkspace, BazelVersion bazelVersion) {
         super(workspaceTestDataLocation, testClassForObtainingBundle, bazelVersion);
+        this.pathToProjectViewFileInsideBazelWorkspace = pathToProjectViewFileInsideBazelWorkspace;
     }
 
     @Override
@@ -77,9 +91,13 @@ public class ProvisionWorkspaceExtension extends BazelWorkspaceExtension impleme
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         super.beforeAll(context);
-
         LOG.info("Importing workspace '{}'", getWorkspaceRoot());
-        var workspaceJob = new ImportBazelWorkspaceJob(getBazelWorkspace());
+
+        var projectViewLocation =
+                fromPath(getWorkspaceRoot()).append(requireNonNull(pathToProjectViewFileInsideBazelWorkspace,
+                    "error in test: no .bazelproject file path specified for provision workspace extension"));
+
+        var workspaceJob = new ImportBazelWorkspaceJob(getBazelWorkspace(), projectViewLocation);
         workspaceJob.schedule();
         workspaceJob.join();
 

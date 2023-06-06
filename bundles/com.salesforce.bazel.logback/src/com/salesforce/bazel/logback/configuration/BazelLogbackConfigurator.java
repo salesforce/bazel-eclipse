@@ -163,7 +163,7 @@ public class BazelLogbackConfigurator extends BasicConfigurator implements Confi
             disableBundle(Platform.getBundle("org.eclipse.m2e.logback"));
 
             var bundle = Platform.getBundle("com.salesforce.bazel.logback"); // This is a fragment -> FrameworkUtil.getBundle() returns host
-            var stateDir = Platform.getStateLocation(bundle).toFile().toPath();
+            var stateDir = Platform.getStateLocation(bundle).toPath();
             var configFile = stateDir.resolve("logback." + bundle.getVersion() + ".xml"); //$NON-NLS-1$  //$NON-NLS-2$
             LOG.info("Logback config file: " + configFile.toAbsolutePath()); //$NON-NLS-1$
 

@@ -25,6 +25,10 @@ import com.salesforce.bazel.sdk.BazelVersion;
 /**
  * JUnit extension for providing access to a Bazel workspace.
  * <p>
+ * This extension does not import or synchronize any projects into Eclipse. It only ensures a workspace from test data
+ * location from the classpath is extracted during test execution and available for the tests to use.
+ * </p>
+ * <p>
  * This extension is best used as static field in a test class with {@link RegisterExtension} annotation.
  * </p>
  */
@@ -65,7 +69,8 @@ public class BazelWorkspaceExtension implements BeforeAllCallback, AfterAllCallb
      */
     public BazelWorkspaceExtension(String workspaceTestDataLocation, Class<?> testClassForObtainingBundle,
             BazelVersion bazelVersion) {
-        // just store values here and initialize lated to avoid exceptions during class initializations
+        // just store values here and initialize lated to avoid exceptions during class
+        // initializations
         this.workspaceTestDataLocation = workspaceTestDataLocation;
         this.testClassForObtainingBundle = testClassForObtainingBundle;
         this.bazelVersion = bazelVersion;
@@ -75,17 +80,18 @@ public class BazelWorkspaceExtension implements BeforeAllCallback, AfterAllCallb
     public void afterAll(ExtensionContext context) throws Exception {
         BazelElementInfoCache.getInstance().invalidateAll();
 
-        if (bazelVersion != null && workspaceRoot != null) {
+        if ((bazelVersion != null) && (workspaceRoot != null)) {
             Files.delete(workspaceRoot.resolve(".bazelversion"));
         }
     }
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-		var testFragmentBundle = FrameworkUtil.getBundle(testClassForObtainingBundle);
+        var testFragmentBundle = FrameworkUtil.getBundle(testClassForObtainingBundle);
         assertNotNull(testFragmentBundle, "This test can only run inside an OSGi runtime.");
 
-        var workspaceRootUrl = FileLocator.find(testFragmentBundle, new org.eclipse.core.runtime.Path(workspaceTestDataLocation));
+        var workspaceRootUrl =
+                FileLocator.find(testFragmentBundle, new org.eclipse.core.runtime.Path(workspaceTestDataLocation));
         assertNotNull(workspaceRootUrl, () -> format("Workspace root not found in bundle '%s'!", testFragmentBundle));
         try {
             workspaceRoot = Path.of(FileLocator.toFileURL(workspaceRootUrl).toURI());
@@ -97,11 +103,12 @@ public class BazelWorkspaceExtension implements BeforeAllCallback, AfterAllCallb
         }
 
         if (bazelVersion != null) {
-            writeString(workspaceRoot.resolve(".bazelversion"), bazelVersion.toString(),
-                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            writeString(workspaceRoot.resolve(".bazelversion"), bazelVersion.toString(), StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING);
         }
 
-        bazelWorkspace = BazelCore.getModel().getBazelWorkspace(new org.eclipse.core.runtime.Path(workspaceRoot.toString()));
+        bazelWorkspace =
+                BazelCore.getModel().getBazelWorkspace(new org.eclipse.core.runtime.Path(workspaceRoot.toString()));
         assertTrue(bazelWorkspace.exists(), () -> format("Bazel workspace '%s' does not exists!", workspaceRoot));
         if (bazelVersion != null) {
             assertEquals(bazelVersion, bazelWorkspace.getBazelVersion(),

@@ -57,7 +57,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
             throws CoreException {
         // bazel query '"//foo:all" + "//bar:all"'
 
-        var workspaceRoot = bazelWorkspace.getLocation().toFile().toPath();
+        var workspaceRoot = bazelWorkspace.getLocation().toPath();
         var query = bazelPackages.stream()
                 .map(bazelPackage -> format("\"//%s:all\"", bazelPackage.getWorkspaceRelativePath()))
                 .collect(joining(" + "));

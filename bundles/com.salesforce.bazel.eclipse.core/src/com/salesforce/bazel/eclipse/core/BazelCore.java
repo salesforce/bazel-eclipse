@@ -14,9 +14,11 @@
 package com.salesforce.bazel.eclipse.core;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 
 import com.salesforce.bazel.eclipse.core.model.BazelModel;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 
 /**
  * The main entry point into the Bazel Eclipse headless extension.
@@ -39,6 +41,20 @@ public class BazelCore {
      */
     public static BazelProject create(IProject project) {
         return BazelCorePlugin.getInstance().getBazelModelManager().getBazelProject(project);
+    }
+
+    /**
+     * Returns a new {@link BazelWorkspace} handle for a given workspace root location.
+     * <p>
+     * This is a handle only method. The returns workspace may not exist.
+     * </p>
+     *
+     * @param workspaceRoot
+     *            the workspace root.
+     * @return
+     */
+    public static BazelWorkspace createWorkspace(IPath workspaceRoot) {
+        return BazelCorePlugin.getInstance().getBazelModelManager().getModel().getBazelWorkspace(workspaceRoot);
     }
 
     /**

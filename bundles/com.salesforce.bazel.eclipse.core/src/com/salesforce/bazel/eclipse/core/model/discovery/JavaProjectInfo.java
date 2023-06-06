@@ -343,7 +343,7 @@ public class JavaProjectInfo {
         Set<IPath> potentialSplitPackageOrSubsetFolders = new HashSet<>();
         for (Map.Entry<IPath, List<FileEntry>> entry : sourceEntriesByParentFolder.entrySet()) {
             var entryParentPath = entry.getKey();
-            var entryParentLocation = bazelPackage.getLocation().append(entryParentPath).toFile().toPath();
+            var entryParentLocation = bazelPackage.getLocation().append(entryParentPath).toPath();
             var declaredJavaFilesInFolder = entry.getValue().size();
             try {
                 // when there are declared Java files, expect them to match
@@ -371,7 +371,7 @@ public class JavaProjectInfo {
                 continue;
             }
 
-            var potentialSourceRootPath = bazelPackage.getLocation().append(potentialSourceRoot).toFile().toPath();
+            var potentialSourceRootPath = bazelPackage.getLocation().append(potentialSourceRoot).toPath();
             try {
                 var foundJavaFilesInSourceRoot = find(potentialSourceRootPath, Integer.MAX_VALUE,
                     (p, a) -> isJavaFile(p), FileVisitOption.FOLLOW_LINKS).count();
@@ -509,7 +509,7 @@ public class JavaProjectInfo {
             false // recordLineSeparator
         );
         try {
-            var content = readString(fileEntry.getLocation().toFile().toPath());
+            var content = readString(fileEntry.getLocation().toPath());
             scanner.setSource(content.toCharArray());
 
             var token = scanner.getNextToken();

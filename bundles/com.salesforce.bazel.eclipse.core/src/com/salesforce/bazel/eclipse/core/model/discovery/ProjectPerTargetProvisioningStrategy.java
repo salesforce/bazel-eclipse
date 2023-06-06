@@ -81,7 +81,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         //            return List.of();
         //        }
         //
-        var workspaceRoot = workspace.getLocation().toFile().toPath();
+        var workspaceRoot = workspace.getLocation().toPath();
 
         // run the aspect to compute all required information
         var onlyDirectDeps = workspace.getBazelProjectView().deriveTargetsFromDirectories();
@@ -112,7 +112,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                     continue;
                 }
 
-                if (!isRegularFile(entry.getPath().toFile().toPath())) {
+                if (!isRegularFile(entry.getPath().toPath())) {
                     createBuildPathProblem(bazelProject,
                         Status.error("There are missing library. Please consider running 'bazel fetch'"));
                     break;

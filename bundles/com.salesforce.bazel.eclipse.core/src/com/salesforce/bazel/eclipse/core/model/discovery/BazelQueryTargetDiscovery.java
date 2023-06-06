@@ -36,7 +36,7 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
         // bazel query 'buildfiles(//...)' --output package
         Collection<String> labels =
                 bazelWorkspace.getCommandExecutor().runQueryWithoutLock(new BazelQueryForPackagesCommand(
-                        bazelWorkspace.getLocation().toFile().toPath(), "buildfiles(//...)", true));
+                        bazelWorkspace.getLocation().toPath(), "buildfiles(//...)", true));
 
         monitor.worked(1);
         monitor.setWorkRemaining(labels.size());
@@ -111,7 +111,7 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
 
         // there should be no other WORKSPACE file in either the package nor any of its parents
         var locationToCheck = bazelWorkspace.getLocation().append(packagePath);
-        var workspaceFile = findWorkspaceFile(locationToCheck.toFile().toPath());
+        var workspaceFile = findWorkspaceFile(locationToCheck.toPath());
         if (workspaceFile != null) {
             return locationToCheck;
         }

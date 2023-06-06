@@ -27,8 +27,8 @@ public class BazelWorkspaceBlazeInfo implements BlazeInfo {
         bazelBin = new ExecutionRootPath(info.getBazelBin().toFile().getPath());
         bazelGenfiles = new ExecutionRootPath(info.getBazelGenfiles().toFile().getPath());
         bazelTestlogs = new ExecutionRootPath(info.getBazelTestlogs().toFile().getPath());
-        executionRoot = info.getExcutionRoot().toFile().toPath();
-        outputBase = info.getOutputBase().toFile().toPath();
+        executionRoot = info.getExcutionRoot().toPath();
+        outputBase = info.getOutputBase().toPath();
     }
 
     @Override

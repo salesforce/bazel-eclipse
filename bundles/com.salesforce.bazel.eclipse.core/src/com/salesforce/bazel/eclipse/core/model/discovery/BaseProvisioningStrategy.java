@@ -339,7 +339,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @throws CoreException
      */
     protected void detectDefaultJavaToolchain(BazelWorkspace workspace) throws CoreException {
-        var command = new BazelCQueryWithStarlarkExpressionCommand(workspace.getLocation().toFile().toPath(),
+        var command = new BazelCQueryWithStarlarkExpressionCommand(workspace.getLocation().toPath(),
                 "@bazel_tools//tools/jdk:current_java_toolchain",
                 "providers(target)['JavaToolchainInfo'].source_version + '::' + providers(target)['JavaToolchainInfo'].target_version + '::' + providers(target)['JavaToolchainInfo'].java_runtime.java_home",
                 false);
