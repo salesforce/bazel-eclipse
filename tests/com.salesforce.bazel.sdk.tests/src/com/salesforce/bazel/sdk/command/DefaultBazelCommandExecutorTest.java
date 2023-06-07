@@ -33,7 +33,8 @@ public class DefaultBazelCommandExecutorTest {
 
         executor.setWrapExecutionIntoShell(false);
         var commandLine = executor.prepareCommandLine(command);
-        assertEquals(List.of("echo", "dummy"), commandLine.fullCommandLineWithOptionalShellWrappingAndBinary());
+        assertEquals(List.of("echo", "dummy", "--tool_tag=java:sdk:test"),
+            commandLine.fullCommandLineWithOptionalShellWrappingAndBinary());
     }
 
     @Test
@@ -48,12 +49,17 @@ public class DefaultBazelCommandExecutorTest {
 
         var output = readString(stdOutFile, Charset.defaultCharset());
         assertNotNull(output);
-        assertEquals("dummy" + System.lineSeparator(), output);
+        assertEquals("dummy --tool_tag=java:sdk:test" + System.lineSeparator(), output);
     }
 
     @BeforeEach
     void setup() {
-        executor = new DefaultBazelCommandExecutor();
+        executor = new DefaultBazelCommandExecutor() {
+            @Override
+            protected String getToolTagArgument() {
+                return "--tool_tag=java:sdk:test";
+            }
+        };
         executor.setBazelBinary(bazelBinary);
     }
 
