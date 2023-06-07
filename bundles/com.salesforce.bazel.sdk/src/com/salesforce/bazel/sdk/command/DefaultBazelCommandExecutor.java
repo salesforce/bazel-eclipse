@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.salesforce.bazel.sdk.BazelJavaSdkPlugin;
 import com.salesforce.bazel.sdk.command.shell.ShellUtil;
 import com.salesforce.bazel.sdk.util.SystemUtil;
 
@@ -78,6 +79,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
     private final ShellUtil shellUtil = new ShellUtil(); // login shell change requires Eclipse restart
     private volatile Map<String, String> extraEnv;
     private volatile BazelBinary bazelBinary;
+    protected volatile String cachedToolTagArgument;
 
     /**
      * Detects the binary to use.
@@ -212,17 +214,30 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
     }
 
     /**
+     * {@return the <code>--tool_tag=...</code> argument to be added to every Bazel command}
+     */
+    protected String getToolTagArgument() {
+        var toolTagArgument = this.cachedToolTagArgument;
+        if (toolTagArgument != null) {
+            return toolTagArgument;
+        }
+        return this.cachedToolTagArgument = format("--tool_tag=java:sdk:%s", BazelJavaSdkPlugin.getBundleVersion());
+    }
+
+    /**
      * Hook to inject additional options into the command line.
      * <p>
      * Called by {@link #prepareCommandLine(BazelCommand)} before the Bazel binary or any shell wrapping is added.
-     * Default implementation does nothing.
+     * Default implementation adds the <code>--tool_tag</code> argument. Subclasses should call <code>super</code> to
+     * retain that behavior.
      * </p>
      *
      * @param commandLine
      *            the command line to manipulate (never <code>null</code>)
      */
     protected void injectAdditionalOptions(List<String> commandLine) {
-        // empty
+        // add --tool_tag
+        commandLine.add(getToolTagArgument());
     }
 
     public boolean isWrapExecutionIntoShell() {
@@ -256,8 +271,10 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
         var fullCommandLine = new ArrayList<>(commandLine);
 
+        // inject more options required by executor implementation
         injectAdditionalOptions(fullCommandLine);
 
+        // the binary must be the first argument
         fullCommandLine.add(0, bazelBinary.executable().toString());
 
         if (isWrapExecutionIntoShell()) {

@@ -22,6 +22,11 @@ public class EclipseConsoleBazelCommandExecutorTest {
     static EclipseConsoleBazelCommandExecutor newExecutorWithStaticBinary(BazelBinary binary) {
         return new EclipseConsoleBazelCommandExecutor() {
             @Override
+            protected String getToolTagArgument() {
+                return "--tool_tag=eclipse:test";
+            }
+
+            @Override
             protected void initializeBazelBinary() {
                 setBazelBinary(binary);
             }
@@ -45,7 +50,7 @@ public class EclipseConsoleBazelCommandExecutorTest {
 
         var output = readString(stdOutFile, Charset.defaultCharset());
         assertNotNull(output);
-        assertEquals("dummy --color=yes --curses=no" + System.lineSeparator(), output);
+        assertEquals("dummy --tool_tag=eclipse:test --color=yes --curses=no" + System.lineSeparator(), output);
     }
 
     @BeforeEach

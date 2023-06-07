@@ -33,6 +33,8 @@
  */
 package com.salesforce.bazel.sdk.init;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.collect.ImmutableList;
 import com.google.idea.blaze.base.model.primitives.GenericBlazeRules;
 import com.google.idea.blaze.base.model.primitives.Kind;
@@ -41,51 +43,30 @@ import com.google.idea.blaze.java.JavaBlazeRules;
 
 public class BazelJavaSDKInit {
 
-    private static String toolName = "bazel-java-sdk";
-    private static String toolFilenamePrefix = "bzljavasdk";
-
-    /**
-     * Filename friendly prefix for this tool, may be used in log files and Aspect files.
-     */
-    public static String getToolFilenamePrefix() {
-        return toolFilenamePrefix;
-    }
+    private static String toolName;
 
     /**
      * Human friendly tool name, may appear in log messages for example.
      */
     public static String getToolName() {
-        return toolName;
+        return requireNonNull(toolName, "tool name has not been initialized properly; please call BazelJavaDSKInit");
     }
 
     /**
+     * initializes the SDK
      *
      * @param toolName
      *            Human friendly tool name, may appear in log messages for example.
-     * @param toolFilenamePrefix
-     *            Filename friendly prefix for this tool, may be used in log files and Aspect files.
      */
-    public static void initialize(String toolName, String toolFilenamePrefix) {
-        BazelJavaSDKInit.toolName = toolName;
-        BazelJavaSDKInit.toolFilenamePrefix = toolFilenamePrefix;
+    public static void initialize(String toolName) {
+        if (BazelJavaSDKInit.toolName != null) {
+            throw new IllegalStateException(
+                    "The tool cannot be changed at runtime! Please call BazelJavaDSKInit only once.");
+        }
+        BazelJavaSDKInit.toolName = requireNonNull(toolName);
 
         // initialize Bazel IntelliJ Singletons
         Kind.ApplicationState
                 .setInstance(new ApplicationState(ImmutableList.of(new GenericBlazeRules(), new JavaBlazeRules())));
     }
-
-    /**
-     * Filename friendly prefix for this tool, may be used in log files and Aspect files.
-     */
-    public static void setToolFilenamePrefix(String toolFilenamePrefix) {
-        BazelJavaSDKInit.toolFilenamePrefix = toolFilenamePrefix;
-    }
-
-    /**
-     * Human friendly tool name, may appear in log messages for example.
-     */
-    public static void setToolName(String toolName) {
-        BazelJavaSDKInit.toolName = toolName;
-    }
-
 }

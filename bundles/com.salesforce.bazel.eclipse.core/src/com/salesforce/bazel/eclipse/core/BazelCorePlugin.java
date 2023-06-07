@@ -53,6 +53,12 @@ import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
 public class BazelCorePlugin extends Plugin implements BazelCoreSharedContstants {
     private static volatile BazelCorePlugin plugin;
 
+    private static String bundleVersion;
+
+    public static String getBundleVersion() {
+        return requireNonNull(bundleVersion, "Bundle version not initialized. Is the Core bundle properly started?");
+    }
+
     public static BazelCorePlugin getInstance() {
         return requireNonNull(plugin, "not initialized");
     }
@@ -67,9 +73,10 @@ public class BazelCorePlugin extends Plugin implements BazelCoreSharedContstants
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
         plugin = this;
+        bundleVersion = bundleContext.getBundle().getVersion().toString();
 
         // initialize the SDK
-        BazelJavaSDKInit.initialize("Bazel Eclipse", "bzleclipse");
+        BazelJavaSDKInit.initialize("Bazel Eclipse Feature");
 
         // initialize model
         bazelModelManager = new BazelModelManager(getStateLocation());

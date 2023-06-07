@@ -22,6 +22,11 @@ public class EclipseHeadlessBazelCommandExecutorTest {
     static EclipseHeadlessBazelCommandExecutor newExecutorWithStaticBinary(BazelBinary binary) {
         return new EclipseHeadlessBazelCommandExecutor() {
             @Override
+            protected String getToolTagArgument() {
+                return "--tool_tag=eclipse:test";
+            }
+
+            @Override
             protected void initializeBazelBinary() {
                 setBazelBinary(binary);
             }
@@ -46,7 +51,7 @@ public class EclipseHeadlessBazelCommandExecutorTest {
 
         var output = readString(stdOutFile, Charset.defaultCharset());
         assertNotNull(output);
-        assertEquals("dummy" + System.lineSeparator(), output);
+        assertEquals("dummy --tool_tag=eclipse:test" + System.lineSeparator(), output);
     }
 
     @BeforeEach

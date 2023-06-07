@@ -1,5 +1,7 @@
 package com.salesforce.bazel.eclipse.ui;
 
+import static java.util.Objects.requireNonNull;
+
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -17,6 +19,12 @@ public class BazelUIPlugin extends AbstractUIPlugin {
 
     public static final String ICON_BAZEL = "icon_bazel";
 
+    private static String bundleVersion;
+
+    public static String getBundleVersion() {
+        return requireNonNull(bundleVersion, "Bundle version not initialized. Is the UI bundle properly started?");
+    }
+
     /**
      * Returns the shared instance
      *
@@ -32,19 +40,20 @@ public class BazelUIPlugin extends AbstractUIPlugin {
     public BazelUIPlugin() {}
 
     @Override
+    protected void initializeImageRegistry(ImageRegistry reg) {
+        reg.put(ICON_BAZEL, imageDescriptorFromPlugin(PLUGIN_ID, "resources/bazelicon.gif"));
+    }
+
+    @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
         plugin = this;
+        bundleVersion = context.getBundle().getVersion().toString();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         plugin = null;
         super.stop(context);
-    }
-
-    @Override
-    protected void initializeImageRegistry(ImageRegistry reg) {
-        reg.put(ICON_BAZEL, imageDescriptorFromPlugin(PLUGIN_ID, "resources/bazelicon.gif"));
     }
 }

@@ -156,7 +156,18 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
     }
 
     @Override
+    protected String getToolTagArgument() {
+        var toolTagArgument = this.cachedToolTagArgument;
+        if (toolTagArgument != null) {
+            return toolTagArgument;
+        }
+        return this.cachedToolTagArgument = format("--tool_tag=eclipse:ui:%s", BazelUIPlugin.getBundleVersion());
+    }
+
+    @Override
     protected void injectAdditionalOptions(List<String> commandLine) {
+        super.injectAdditionalOptions(commandLine);
+
         // tweak for Eclipse Console
         commandLine.add("--color=yes");
         commandLine.add("--curses=no");

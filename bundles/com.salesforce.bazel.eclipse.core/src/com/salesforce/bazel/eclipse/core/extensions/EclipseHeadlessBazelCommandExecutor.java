@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.preferences.BazelCorePreferenceKeys;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.command.BazelBinary;
@@ -52,8 +53,7 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
         @Override
         protected IStatus run(IProgressMonitor monitor) {
             try {
-                var bazelVersion =
-                        new BazelBinaryVersionDetector(binary, isWrapExecutionIntoShell()).detectVersion();
+                var bazelVersion = new BazelBinaryVersionDetector(binary, isWrapExecutionIntoShell()).detectVersion();
                 setBazelBinary(new BazelBinary(binary, bazelVersion));
                 return Status.OK_STATUS;
             } catch (IOException e) {
@@ -101,6 +101,16 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
     protected OutputStream getProcessErrorStream() {
         // assuming this is displayed in the Eclipse Console, using System.out avoids the red coloring
         return System.out;
+    }
+
+    @Override
+    protected String getToolTagArgument() {
+        var toolTagArgument = this.cachedToolTagArgument;
+        if (toolTagArgument != null) {
+            return toolTagArgument;
+        }
+        return this.cachedToolTagArgument =
+                format("--tool_tag=eclipse:headless:%s", BazelCorePlugin.getBundleVersion());
     }
 
     /**
