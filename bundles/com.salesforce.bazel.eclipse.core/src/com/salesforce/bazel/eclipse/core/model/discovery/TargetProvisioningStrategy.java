@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -34,12 +35,18 @@ public interface TargetProvisioningStrategy {
      * </p>
      * <p>
      * This operation is called outside of project provisioning, i.e. implementors can assume that the Eclipse workspace
-     * is fully provisioned. Therefore, the computed classpath only represents dependencies of the specified project
+     * is fully provisioned. Therefore, the computed classpath only represents dependencies of the specified projects
      * (either {@link IClasspathEntry#CPE_LIBRARY} or {@link IClasspathEntry#CPE_PROJECT}). Any source folder is
      * expected to be calculated and setup properly as part of a call to
      * {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)} during project
      * provisioning. Implementors are expected to properly connect dependencies to projects provisioned in the Eclipse
-     * workspace.
+     * workspace, i.e. use {@link IClasspathEntry#CPE_PROJECT} when a dependency exists as target in the workspace.
+     * </p>
+     * <p>
+     * This method is guaranteed to be called with a collection of projects belonging to the same
+     * {@link BazelWorkspace}. Calling this method with a list of projects belonging to different workspaces is an error
+     * and will produce unexpected results. Implementors are allowed to assume all given projects share a single
+     * {@link BazelWorkspace}.
      * </p>
      * <p>
      * This method is guaranteed to be called within {@link IWorkspaceRoot a workspace level lock} and allowed to modify
@@ -55,7 +62,8 @@ public interface TargetProvisioningStrategy {
      *
      * @param bazelProjects
      *            the list of project to obtain the classpath for (never <code>null</code>)
-     * @param workspace TODO
+     * @param workspace
+     *            the workspace all projects belong to.
      * @param scope
      *            the classpath scope (never <code>null</code>)
      * @param workspace
@@ -94,6 +102,12 @@ public interface TargetProvisioningStrategy {
      * unexpected results. Implementors are allowed to assume all given targets share a single {@link BazelWorkspace}.
      * </p>
      * <p>
+     * When this method is called the {@link IProject project} for the {@link BazelWorkspace} has already been
+     * provisioned. It must not be included in the returned list of provisioned targets. However, any project (whether
+     * it was created or already existed) provisioned by this implementation must be returned. Otherwise it may be
+     * removed by the ongoing synchronization.
+     * </p>
+     * <p>
      * This method is guaranteed to be called within {@link IWorkspaceRoot a workspace level lock} and allowed to modify
      * workspace resources. Implementors should therefore not schedule any conflicting background jobs/threads which may
      * want to obtain resource level locking. This is likely going to cause deadlocks.
@@ -109,8 +123,7 @@ public interface TargetProvisioningStrategy {
      *            the workspace all targets belong to (never <code>null</code>)
      * @param progress
      *            a monitor for tracking progress and observing cancellations (never <code>null</code>)
-     * @return a list of provisioned projects or <code>null</code> if not project should be provisioned for the given
-     *         target
+     * @return a list of provisioned projects (never <code>null</code>)
      */
     List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets, BazelWorkspace workspace,
             IProgressMonitor progress) throws CoreException;
