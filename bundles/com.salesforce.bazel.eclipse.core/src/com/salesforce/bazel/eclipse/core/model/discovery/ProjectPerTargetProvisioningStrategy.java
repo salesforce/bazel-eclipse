@@ -65,22 +65,6 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             targetsToBuild.add(bazelProject.getBazelTarget().getLabel());
         }
 
-        //        if (bazelProjects.isWorkspaceProject()) {
-        //            // FIXME: implement support for reading all jars from WORKSPACE
-        //            //
-        //            // For example:
-        //            //   1. get list of all external repos
-        //            //      > bazel query "//external:*"
-        //            //   2. query for java rules for each external repo
-        //            //      > bazel query "kind('java_.* rule', @exernal_repo_name//...)"
-        //            //
-        //            // or:
-        //            //   1. specific support for jvm_import_external
-        //            //      > bazel query "kind(jvm_import_external, //external:*)"
-        //            //
-        //            return List.of();
-        //        }
-        //
         var workspaceRoot = workspace.getLocation().toPath();
 
         // run the aspect to compute all required information

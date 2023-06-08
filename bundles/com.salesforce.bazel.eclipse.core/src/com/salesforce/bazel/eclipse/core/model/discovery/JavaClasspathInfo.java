@@ -40,7 +40,6 @@ import com.google.devtools.build.lib.view.proto.Deps;
 import com.google.devtools.build.lib.view.proto.Deps.Dependency.Kind;
 import com.google.idea.blaze.base.bazel.BazelBuildSystemProvider;
 import com.google.idea.blaze.base.command.buildresult.BlazeArtifact;
-import com.google.idea.blaze.base.command.buildresult.BlazeArtifact.LocalFileArtifact;
 import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
 import com.google.idea.blaze.base.command.buildresult.ParsedBepOutput;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
@@ -49,16 +48,11 @@ import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
 import com.google.idea.blaze.base.ideinfo.TargetKey;
 import com.google.idea.blaze.base.model.primitives.GenericBlazeRules;
-import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
-import com.google.idea.blaze.base.sync.workspace.ArtifactLocationDecoder;
-import com.google.idea.blaze.base.sync.workspace.ArtifactLocationDecoderImpl;
-import com.google.idea.blaze.base.sync.workspace.WorkspacePathResolverImpl;
 import com.google.idea.blaze.java.JavaBlazeRules;
 import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.AccessRule;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
@@ -72,7 +66,7 @@ import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
  * with aspects result}. This result will be used for computing classpath.
  * </p>
  */
-public class JavaClasspathInfo {
+public class JavaClasspathInfo extends JavaClasspathJarInfo {
 
     static record JdepsDependency(
             ArtifactLocation artifactLocation,
@@ -114,11 +108,7 @@ public class JavaClasspathInfo {
                         || target.getKind().equals(GenericBlazeRules.RuleTypes.PROTO_LIBRARY.getKind()));
     }
 
-    final BazelWorkspace bazelWorkspace;
-
     final ParsedBepOutput aspectsBuildResult;
-    final WorkspaceRoot workspaceRoot;
-    final ArtifactLocationDecoder locationDecoder;
 
     /** index of all aspects loaded from the build output */
     final Map<TargetKey, TargetIdeInfo> ideInfoByTargetKey;
@@ -142,12 +132,8 @@ public class JavaClasspathInfo {
     final Set<TargetKey> runtimeDeps = new LinkedHashSet<>();
 
     public JavaClasspathInfo(ParsedBepOutput aspectsBuildResult, BazelWorkspace bazelWorkspace) throws CoreException {
+        super(bazelWorkspace);
         this.aspectsBuildResult = aspectsBuildResult;
-        this.bazelWorkspace = bazelWorkspace;
-
-        workspaceRoot = new WorkspaceRoot(bazelWorkspace.getLocation().toPath());
-        locationDecoder = new ArtifactLocationDecoderImpl(new BazelWorkspaceBlazeInfo(bazelWorkspace),
-                new WorkspacePathResolverImpl(workspaceRoot));
 
         // build maps
         ideInfoByTargetKey = new HashMap<>();
@@ -450,49 +436,6 @@ public class JavaClasspathInfo {
         // we only want explicit or implicit deps that were actually resolved by the compiler, not ones
         // that are available for use in the same package
         return (dep.getKind() == Deps.Dependency.Kind.EXPLICIT) || (dep.getKind() == Deps.Dependency.Kind.IMPLICIT);
-    }
-
-    private ClasspathEntry resolveJar(LibraryArtifact jar) {
-        var jarArtifactForIde = jar.jarForIntellijLibrary();
-        if (jarArtifactForIde.isMainWorkspaceSourceArtifact()) {
-            IPath jarPath = new Path(locationDecoder.resolveSource(jarArtifactForIde).toString());
-            var sourceJar = jar.getSourceJars().stream().findFirst();
-            if (!sourceJar.isPresent()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Found jar for '{}': {} without source",
-                        new Path(jarArtifactForIde.getExecutionRootRelativePath()).lastSegment(), jarPath);
-                }
-                return ClasspathEntry.newLibraryEntry(jarPath, null, null, false /* test only */);
-            }
-
-            IPath srcJarPath = new Path(locationDecoder.resolveSource(sourceJar.get()).toString());
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Found jar for '{}': {} (source {})",
-                    new Path(jarArtifactForIde.getExecutionRootRelativePath()).lastSegment(), jarPath, srcJarPath);
-            }
-            return ClasspathEntry.newLibraryEntry(jarPath, srcJarPath, null, false /* test only */);
-        }
-        var jarArtifact = locationDecoder.resolveOutput(jarArtifactForIde);
-        if (jarArtifact instanceof LocalFileArtifact localJar) {
-            IPath jarPath = new Path(localJar.getPath().toString());
-            var sourceJar = jar.getSourceJars().stream().findFirst();
-            if (!sourceJar.isPresent()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Found jar for '{}': {} without source", localJar.getPath().getFileName(), jarPath);
-                }
-                return ClasspathEntry.newLibraryEntry(jarPath, null, null, false /* test only */);
-            }
-            var srcJarArtifact = locationDecoder.resolveOutput(sourceJar.get());
-            if (srcJarArtifact instanceof LocalFileArtifact localSrcJar) {
-                IPath srcJarPath = new Path(localSrcJar.getPath().toString());
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Found jar for '{}': {} (source {})", localJar.getPath().getFileName(), jarPath,
-                        srcJarPath);
-                }
-                return ClasspathEntry.newLibraryEntry(jarPath, srcJarPath, null, false /* test only */);
-            }
-        }
-        return null;
     }
 
     protected BlazeArtifact resolveJdepsOutput(TargetIdeInfo target) {

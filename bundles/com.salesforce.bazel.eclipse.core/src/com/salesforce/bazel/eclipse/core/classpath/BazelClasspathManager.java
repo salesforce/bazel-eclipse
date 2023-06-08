@@ -50,6 +50,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelModelManager;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryAndProvisioningExtensionLookup;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetProvisioningStrategy;
+import com.salesforce.bazel.eclipse.core.model.discovery.WorkspaceClasspathStrategy;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 
 /**
@@ -210,6 +211,9 @@ public class BazelClasspathManager {
     }
 
     TargetProvisioningStrategy getTargetProvisioningStrategy(BazelProject bazelProject) throws CoreException {
+        if (bazelProject.isWorkspaceProject()) {
+            return new WorkspaceClasspathStrategy();
+        }
         return new TargetDiscoveryAndProvisioningExtensionLookup()
                 .createTargetProvisioningStrategy(bazelProject.getBazelWorkspace().getBazelProjectView());
     }
