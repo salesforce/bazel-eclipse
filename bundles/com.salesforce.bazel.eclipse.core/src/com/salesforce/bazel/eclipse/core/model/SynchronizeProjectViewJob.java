@@ -5,21 +5,27 @@ package com.salesforce.bazel.eclipse.core.model;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.eclipse.core.resources.IResource.ALWAYS_DELETE_PROJECT_CONTENT;
+import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 import static org.eclipse.core.resources.IResource.FORCE;
+import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.eclipse.core.filesystem.URIUtil;
+import org.eclipse.core.resources.FileInfoMatcherDescription;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceFilterDescription;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -54,7 +60,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     private final BazelProjectView projectView;
 
     public SynchronizeProjectViewJob(BazelWorkspace workspace) throws CoreException {
-        super(format("Synchronizing project view for workspace: %s", workspace.getName()));
+        super(format("Synchronizing project view for workspace '%s'", workspace.getName()));
         this.workspace = workspace;
 
         // trigger loading of the project view
@@ -62,6 +68,26 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
         // lock the full workspace (to prevent concurrent build activity)
         setRule(getWorkspaceRoot());
+    }
+
+    private void configureFiltersAndRefresh(IProject workspaceProject, SubMonitor monitor) throws CoreException {
+        monitor.beginTask("Configuring workspace project", 1);
+
+        var filterExists = Stream.of(workspaceProject.getFilters()).anyMatch(f -> {
+            var matcher = f.getFileInfoMatcherDescription();
+            return RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID.equals(matcher.getId());
+        });
+
+        if (!filterExists) {
+            // create filter will trigger a refresh - we perform it in this thread to ensure everything is good to continue
+            workspaceProject.createFilter(
+                IResourceFilterDescription.EXCLUDE_ALL | IResourceFilterDescription.FILES
+                        | IResourceFilterDescription.FOLDERS,
+                new FileInfoMatcherDescription(RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID, null), NONE, monitor);
+        } else {
+            // filter exists, just refresh the project
+            workspaceProject.refreshLocal(DEPTH_INFINITE, monitor);
+        }
     }
 
     private IPath convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator(String path) {
@@ -75,7 +101,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private IProject createWorkspaceProject(IPath workspaceRoot, String workspaceName, SubMonitor monitor)
             throws CoreException {
-        monitor.setWorkRemaining(4);
+        monitor.beginTask("Creating workspace project", 4);
 
         var projectDescription = getWorkspace().newProjectDescription(workspaceName);
         projectDescription.setLocation(workspaceRoot);
@@ -137,7 +163,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private Set<BazelTarget> detectTargetsToMaterializeInEclipse(IProject workspaceProject, SubMonitor monitor)
             throws CoreException {
-        monitor.setWorkRemaining(2);
+        monitor.beginTask("Detecting targets", 2);
 
         Set<BazelTarget> result = new HashSet<>();
 
@@ -249,7 +275,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private void hideFoldersNotVisibleAccordingToProjectView(IProject workspaceProject, SubMonitor monitor)
             throws CoreException {
-        monitor.setWorkRemaining(10);
+        monitor.beginTask("Configuring visible folders", 10);
 
         // we are comparing using project relative paths
         Set<IPath> allowedDirectories = projectView.directoriesToInclude().stream()
@@ -262,18 +288,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         IResourceVisitor visitor = resource -> {
             // we only hide folders, i.e. all files contained in the project remain visible
             if (resource.getType() == IResource.FOLDER) {
-                // hide the bazel symlinks (performance killer)
-                if (resource.getName().startsWith("bazel-")) {
-                    var resourceAttributes = resource.getResourceAttributes();
-                    if ((resourceAttributes != null) && resourceAttributes.isSymbolicLink()) {
-                        resource.setHidden(true);
-                        return false;
-                    }
-                }
-
                 var path = resource.getProjectRelativePath();
                 if (findPathOrAnyParentInSet(path, alwaysAllowedFolders)) {
-                    // never hide those
+                    // never hide those in the always allowed folders
                     resource.setHidden(false);
                     return false;
                 }
@@ -299,10 +316,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // we cannot make a decision, continue searching
             return true;
         };
-        workspaceProject.accept(visitor, IResource.DEPTH_INFINITE,
+        workspaceProject.accept(visitor, DEPTH_INFINITE,
             IContainer.INCLUDE_HIDDEN /* visit hidden ones so we can un-hide if necessary */);
-
-        workspaceProject.refreshLocal(IResource.DEPTH_INFINITE, monitor.split(1));
     }
 
     private List<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, SubMonitor monitor)
@@ -334,7 +349,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
 
         if (obsoleteProjects.size() > 0) {
-            monitor.setWorkRemaining(obsoleteProjects.size());
+            monitor.beginTask("Cleaning up", obsoleteProjects.size());
             for (IProject project : obsoleteProjects) {
                 project.delete(ALWAYS_DELETE_PROJECT_CONTENT | FORCE, monitor.split(1));
             }
@@ -348,30 +363,31 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             var workspaceName = workspace.getName();
             var workspaceRoot = workspace.getLocation();
 
-            var progress = SubMonitor.convert(monitor, format("Synchronizing '%s'", workspaceName), 10);
+            var progress = SubMonitor.convert(monitor, format("Synchronizing workspace %s", workspaceName), 10);
 
             // we don't care about the actual project name - we look for the path
             var workspaceProject = findProjectForLocation(workspaceRoot);
             if (workspaceProject == null) {
-                workspaceProject = createWorkspaceProject(workspaceRoot, workspaceName, progress.split(1));
+                workspaceProject =
+                        createWorkspaceProject(workspaceRoot, workspaceName, progress.split(1, SUPPRESS_NONE));
             } else if (!workspaceProject.isOpen()) {
-                workspaceProject.open(progress.split(1));
+                workspaceProject.open(progress.split(1, SUPPRESS_NONE));
             }
 
-            // ensure it's latest
-            workspaceProject.refreshLocal(IResource.DEPTH_INFINITE, progress.split(1));
+            // ensure Bazel symlinks are filtered
+            configureFiltersAndRefresh(workspaceProject, progress.split(1, SUPPRESS_NONE));
 
             // apply excludes
-            hideFoldersNotVisibleAccordingToProjectView(workspaceProject, progress.split(1));
+            hideFoldersNotVisibleAccordingToProjectView(workspaceProject, progress.split(1, SUPPRESS_NONE));
 
             // detect targets
-            var targets = detectTargetsToMaterializeInEclipse(workspaceProject, progress.split(1));
+            var targets = detectTargetsToMaterializeInEclipse(workspaceProject, progress.split(1, SUPPRESS_NONE));
 
             // ensure project exists
-            var targetProjects = provisionProjectsForTarget(targets, progress.split(1));
+            var targetProjects = provisionProjectsForTarget(targets, progress.split(1, SUPPRESS_NONE));
 
             // remove no longer needed projects
-            removeObsoleteProjects(targetProjects, progress.split(1));
+            removeObsoleteProjects(targetProjects, progress.split(1, SUPPRESS_NONE));
 
             return Status.OK_STATUS;
         } finally {

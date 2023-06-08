@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.classpath;
 
 import java.util.stream.Stream;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -23,6 +24,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
 
 public class BazelClasspathHelpers {
 
@@ -54,5 +56,14 @@ public class BazelClasspathHelpers {
     public static boolean isBazelClasspathContainer(IPath containerPath) {
         return (containerPath != null) && (containerPath.segmentCount() > 0)
                 && BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID.equals(containerPath.segment(0));
+    }
+
+    public static boolean isWorkspaceProjectExcludeFailing(BazelProject p) {
+        try {
+            return p.isWorkspaceProject();
+        } catch (CoreException e) {
+            // exclude
+            return false;
+        }
     }
 }

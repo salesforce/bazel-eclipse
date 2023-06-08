@@ -1,6 +1,11 @@
 package com.salesforce.bazel.eclipse.core.classpath;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
+import static java.util.stream.Collectors.groupingBy;
+
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -16,8 +21,13 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.JavaCore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.model.BazelModelManager;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 
 /**
  * A {@link WorkspaceJob} for refreshing the classpath of Bazel projects.
@@ -26,6 +36,9 @@ import com.salesforce.bazel.eclipse.core.model.BazelModelManager;
  * </p>
  */
 public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
+
+    private static Logger LOG = LoggerFactory.getLogger(InitializeOrRefreshClasspathJob.class);
+
     private final IProject[] projects;
     private final BazelClasspathManager classpathManager;
     private final boolean forceRefresh;
@@ -64,6 +77,33 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
         return ResourcesPlugin.getWorkspace().getRuleFactory();
     }
 
+    boolean isBazelProject(IProject p) {
+        try {
+            return p.hasNature(BAZEL_NATURE_ID);
+        } catch (CoreException e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Error accessing project {}", p, e);
+            }
+            // exclude
+            return false;
+        }
+    }
+
+    boolean needsRefresh(BazelProject p) {
+        if (forceRefresh) {
+            return true;
+        }
+        var containerEntry = BazelClasspathHelpers.getBazelContainerEntry(JavaCore.create(p.getProject()));
+        try {
+            return (containerEntry != null) && (getClasspathManager().getSavedContainer(p.getProject()) == null);
+        } catch (CoreException e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Error accessing saved container for project {}", p, e);
+            }
+            return true;
+        }
+    }
+
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
         try {
@@ -71,30 +111,31 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
             var status =
                     new MultiStatus(BazelModelManager.PLUGIN_ID, 0, "Some Bazel build paths could not be initialized.");
 
-            nextProject: for (IProject project : projects) {
-                try {
-                    // we only process Java projects
-                    if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)
-                            && project.hasNature(BAZEL_NATURE_ID)) {
-                        var javaProject = JavaCore.create(project);
-                        // ensure the project has a Bazel container
-                        var containerEntry = BazelClasspathHelpers.getBazelContainerEntry(javaProject);
-                        if (containerEntry != null) {
-                            var savedContainer = forceRefresh ? null : getClasspathManager().getSavedContainer(project);
-                            if (forceRefresh || (savedContainer == null)) {
-                                // there is no saved container; i.e. this is a project setup/imported before the classpath container rework
-                                // initialize the classpath
-                                subMonitor.setTaskName(project.getName());
-                                getClasspathManager().updateClasspath(javaProject, subMonitor.newChild(1));
-                                continue nextProject;
-                            }
+            var bazelProjects = Stream.of(projects).filter(this::isBazelProject).map(BazelCore::create)
+                    .filter(this::needsRefresh).collect(groupingBy(p -> {
+                        try {
+                            return p.getBazelWorkspace();
+                        } catch (CoreException e) {
+                            // invalid
+                            return null;
                         }
+                    }));
+
+            nextProjectSet: for (Entry<BazelWorkspace, List<BazelProject>> projectSet : bazelProjects.entrySet()) {
+                try {
+                    // we only process projects with a valid workspace
+                    if (projectSet.getKey() == null) {
+                        continue nextProjectSet;
                     }
+
+                    getClasspathManager().updateClasspath(projectSet.getKey(), projectSet.getValue(),
+                        subMonitor.newChild(1));
                 } catch (CoreException e) {
                     status.add(e.getStatus());
 
-                    // create a marker to user is aware
-                    var marker = project.createMarker(IJavaModelMarker.BUILDPATH_PROBLEM_MARKER);
+                    // create a marker so user is aware
+                    var marker = projectSet.getKey().getBazelProject().getProject()
+                            .createMarker(IJavaModelMarker.BUILDPATH_PROBLEM_MARKER);
                     marker.setAttributes( // @formatter:off
                         new String[] {
                             IMarker.MESSAGE,

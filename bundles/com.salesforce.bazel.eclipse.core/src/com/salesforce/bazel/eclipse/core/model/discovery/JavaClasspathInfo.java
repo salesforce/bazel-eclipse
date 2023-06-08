@@ -150,6 +150,12 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
                     LOG.debug("Processing aspect: {}", outputArtifact);
                 }
                 var targetIdeInfo = TargetIdeInfo.fromProto(getAspects().readAspectFile(outputArtifact));
+                if (targetIdeInfo == null) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Skipping empty aspect: {}", outputArtifact);
+                    }
+                    continue NEXT_ASPECT;
+                }
                 var javaIdeInfo = targetIdeInfo.getJavaIdeInfo();
                 if (javaIdeInfo == null) {
                     if (LOG.isDebugEnabled()) {

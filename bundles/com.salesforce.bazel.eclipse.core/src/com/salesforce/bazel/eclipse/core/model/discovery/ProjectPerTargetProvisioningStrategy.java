@@ -51,95 +51,100 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
 
     @Override
     public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
-            BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor monitor) throws CoreException {
+            BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
+        try {
+            var monitor = SubMonitor.convert(progress, "Computing classpaths...", 1 + bazelProjects.size());
 
-        List<BazelLabel> targetsToBuild = new ArrayList<>(bazelProjects.size());
-        for (BazelProject bazelProject : bazelProjects) {
-            if (!bazelProject.isTargetProject()) {
-                throw new CoreException(Status.error(format(
-                    "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel target project created by the project per target strategy.",
-                    bazelProjects)));
-            }
-
-            targetsToBuild.add(bazelProject.getBazelTarget().getLabel());
-        }
-
-        var workspaceRoot = workspace.getLocation().toPath();
-
-        // run the aspect to compute all required information
-        var onlyDirectDeps = workspace.getBazelProjectView().deriveTargetsFromDirectories();
-        var outputGroups = Set.of(OutputGroup.INFO, OutputGroup.RESOLVE);
-        var languages = Set.of(LanguageClass.JAVA);
-        var aspects = workspace.getParent().getModelManager().getIntellijAspects();
-        var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targetsToBuild, outputGroups, aspects,
-                languages, onlyDirectDeps);
-
-        var result = workspace.getCommandExecutor().runDirectlyWithWorkspaceLock(command,
-            bazelProjects.stream().map(BazelProject::getProject).collect(toList()), monitor);
-
-        // populate map from result
-        Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
-        for (BazelProject bazelProject : bazelProjects) {
-            // build index of classpath info
-            var classpathInfo = new JavaClasspathInfo(result, workspace);
-
-            // add the target
-            classpathInfo.addTarget(bazelProject.getBazelTarget());
-
-            // compute the classpath
-            var classpath = classpathInfo.compute();
-
-            // check for non existing jars
-            for (ClasspathEntry entry : classpath) {
-                if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
-                    continue;
+            List<BazelLabel> targetsToBuild = new ArrayList<>(bazelProjects.size());
+            for (BazelProject bazelProject : bazelProjects) {
+                if (!bazelProject.isTargetProject()) {
+                    throw new CoreException(Status.error(format(
+                        "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel target project created by the project per target strategy.",
+                        bazelProjects)));
                 }
 
-                if (!isRegularFile(entry.getPath().toPath())) {
-                    createBuildPathProblem(bazelProject,
-                        Status.error("There are missing library. Please consider running 'bazel fetch'"));
-                    break;
-                }
+                targetsToBuild.add(bazelProject.getBazelTarget().getLabel());
             }
 
-            classpathsByProject.put(bazelProject, classpath);
-        }
+            var workspaceRoot = workspace.getLocation().toPath();
 
-        return classpathsByProject;
+            // run the aspect to compute all required information
+            var onlyDirectDeps = workspace.getBazelProjectView().deriveTargetsFromDirectories();
+            var outputGroups = Set.of(OutputGroup.INFO, OutputGroup.RESOLVE);
+            var languages = Set.of(LanguageClass.JAVA);
+            var aspects = workspace.getParent().getModelManager().getIntellijAspects();
+            var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targetsToBuild, outputGroups, aspects,
+                    languages, onlyDirectDeps);
+
+            monitor.subTask("Running Bazel...");
+            var result = workspace.getCommandExecutor().runDirectlyWithWorkspaceLock(command,
+                bazelProjects.stream().map(BazelProject::getProject).collect(toList()), monitor.split(1));
+
+            // populate map from result
+            Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
+            for (BazelProject bazelProject : bazelProjects) {
+                monitor.subTask("Analzing: " + bazelProject);
+
+                // build index of classpath info
+                var classpathInfo = new JavaClasspathInfo(result, workspace);
+
+                // add the target
+                classpathInfo.addTarget(bazelProject.getBazelTarget());
+
+                // compute the classpath
+                var classpath = classpathInfo.compute();
+
+                // check for non existing jars
+                for (ClasspathEntry entry : classpath) {
+                    if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
+                        continue;
+                    }
+
+                    if (!isRegularFile(entry.getPath().toPath())) {
+                        createBuildPathProblem(bazelProject,
+                            Status.error("There are missing library. Please consider running 'bazel fetch'"));
+                        break;
+                    }
+                }
+
+                classpathsByProject.put(bazelProject, classpath);
+                monitor.worked(1);
+            }
+
+            return classpathsByProject;
+        } finally {
+            if (progress != null) {
+                progress.done();
+            }
+        }
     }
 
     @Override
-    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, IProgressMonitor progress)
+    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, SubMonitor monitor)
             throws CoreException {
-        try {
-            var monitor = SubMonitor.convert(progress, "Provisioning projects", targets.size());
-            List<BazelProject> result = new ArrayList<>();
-            for (BazelTarget target : targets) {
-                monitor.subTask(target.getLabel().toString());
+        monitor.beginTask("Provisioning projects", targets.size());
+        List<BazelProject> result = new ArrayList<>();
+        for (BazelTarget target : targets) {
+            monitor.subTask(target.getLabel().toString());
 
-                // provision project
-                var project = provisionProjectForTarget(target, monitor.newChild(1));
-                if (project != null) {
-                    result.add(project);
-                }
+            // provision project
+            var project = provisionProjectForTarget(target, monitor.split(1));
+            if (project != null) {
+                result.add(project);
             }
-            return result;
-        } finally {
-            progress.done();
         }
+        return result;
     }
 
-    protected BazelProject provisionJavaBinaryProject(BazelTarget target, IProgressMonitor progress)
-            throws CoreException {
+    protected BazelProject provisionJavaBinaryProject(BazelTarget target, SubMonitor monitor) throws CoreException {
 
         // TODO: create a shared launch configuration
 
-        return provisionJavaLibraryProject(target, progress);
+        return provisionJavaLibraryProject(target, monitor);
     }
 
-    protected BazelProject provisionJavaImportProject(BazelTarget target, IProgressMonitor progress)
-            throws CoreException {
+    protected BazelProject provisionJavaImportProject(BazelTarget target, SubMonitor monitor) throws CoreException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -154,25 +159,21 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
      * @return the provisioned project
      * @throws CoreException
      */
-    protected BazelProject provisionJavaLibraryProject(BazelTarget target, IProgressMonitor progress)
-            throws CoreException {
-        var monitor = SubMonitor.convert(progress, format("Provision project for target %s", target.getLabel()), 4);
-        try {
-            var project = provisionTargetProject(target, monitor.newChild(1));
+    protected BazelProject provisionJavaLibraryProject(BazelTarget target, SubMonitor monitor) throws CoreException {
+        monitor.beginTask(format("Provision project for target %s", target.getLabel()), 4);
 
-            // build the Java information
-            var javaInfo = collectJavaInfo(project, List.of(target), monitor.newChild(1));
+        var project = provisionTargetProject(target, monitor.split(1));
 
-            // configure links
-            linkSourcesIntoProject(project, javaInfo, monitor.newChild(1));
+        // build the Java information
+        var javaInfo = collectJavaInfo(project, List.of(target), monitor.split(1));
 
-            // configure classpath
-            configureRawClasspath(project, javaInfo, monitor.newChild(1));
+        // configure links
+        linkSourcesIntoProject(project, javaInfo, monitor.split(1));
 
-            return project;
-        } finally {
-            progress.done();
-        }
+        // configure classpath
+        configureRawClasspath(project, javaInfo, monitor.split(1));
+
+        return project;
     }
 
     protected BazelProject provisionProjectForTarget(BazelTarget target, SubMonitor monitor) throws CoreException {
@@ -194,7 +195,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         };
     }
 
-    protected BazelProject provisionTargetProject(BazelTarget target, IProgressMonitor progress) throws CoreException {
+    protected BazelProject provisionTargetProject(BazelTarget target, SubMonitor monitor) throws CoreException {
         if (target.hasBazelProject()) {
             return target.getBazelProject();
         }
@@ -203,7 +204,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         var projectName = format("%s:%s", label.getPackagePath().replace('/', '.'), label.getTargetName());
         var projectLocation = getFileSystemMapper().getProjectsArea().append(projectName);
 
-        createProjectForElement(projectName, projectLocation, target, progress);
+        createProjectForElement(projectName, projectLocation, target, monitor);
 
         // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
         return target.getBazelProject();

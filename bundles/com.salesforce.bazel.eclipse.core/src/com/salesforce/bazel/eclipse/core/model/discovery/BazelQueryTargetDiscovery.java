@@ -34,9 +34,8 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
         var monitor = SubMonitor.convert(progress, 100);
 
         // bazel query 'buildfiles(//...)' --output package
-        Collection<String> labels =
-                bazelWorkspace.getCommandExecutor().runQueryWithoutLock(new BazelQueryForPackagesCommand(
-                        bazelWorkspace.getLocation().toPath(), "buildfiles(//...)", true));
+        Collection<String> labels = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(
+            new BazelQueryForPackagesCommand(bazelWorkspace.getLocation().toPath(), "buildfiles(//...)", true));
 
         monitor.worked(1);
         monitor.setWorkRemaining(labels.size());
@@ -73,15 +72,31 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
     @Override
     public Collection<BazelTarget> discoverTargets(BazelWorkspace bazelWorkspace,
             Collection<BazelPackage> bazelPackages, IProgressMonitor progress) throws CoreException {
-        // open all packages at once
-        bazelWorkspace.open(bazelPackages);
+        try {
+            var monitor = SubMonitor.convert(progress, "Quering targets", 2);
 
-        List<BazelTarget> targets = new ArrayList<>();
-        for (BazelPackage bazelPackage : bazelPackages) {
-            targets.addAll(bazelPackage.getBazelTargets());
+            // open all packages at once
+            monitor.subTask("Loading package info");
+            bazelWorkspace.open(bazelPackages);
+
+            // collect targets
+            monitor.worked(1);
+            monitor.subTask("Collecting targets");
+            List<BazelTarget> targets = new ArrayList<>();
+            for (BazelPackage bazelPackage : bazelPackages) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Discovered targets in package '{}': {}", bazelPackage.getLabel(),
+                        bazelPackage.getBazelTargets());
+                }
+                targets.addAll(bazelPackage.getBazelTargets());
+            }
+
+            return targets;
+        } finally {
+            if (progress != null) {
+                progress.done();
+            }
         }
-        return targets;
-
     }
 
     /**

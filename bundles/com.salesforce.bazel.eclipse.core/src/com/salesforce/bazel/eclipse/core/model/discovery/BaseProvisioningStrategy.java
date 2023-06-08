@@ -270,36 +270,32 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @throws CoreException
      */
     protected IProject createProjectForElement(String projectName, IPath projectLocation, BazelElement<?, ?> owner,
-            IProgressMonitor progress) throws CoreException {
-        try {
-            var monitor = SubMonitor.convert(progress, 3);
-            var projectDescription = getEclipseWorkspace().newProjectDescription(projectName);
+            SubMonitor monitor) throws CoreException {
+        monitor.setWorkRemaining(2);
+        var projectDescription = getEclipseWorkspace().newProjectDescription(projectName);
 
-            // place the project into the Bazel workspace project area
-            projectDescription.setLocation(projectLocation);
-            projectDescription.setComment(format("Bazel project representing '%s'", owner.getLabel()));
+        // place the project into the Bazel workspace project area
+        projectDescription.setLocation(projectLocation);
+        projectDescription.setComment(format("Bazel project representing '%s'", owner.getLabel()));
 
-            // create project
-            var project = getEclipseWorkspaceRoot().getProject(projectName);
-            project.create(projectDescription, monitor.newChild(1));
+        // create project
+        var project = getEclipseWorkspaceRoot().getProject(projectName);
+        project.create(projectDescription, monitor.split(1));
 
-            // open project
-            project.open(monitor.newChild(1));
+        // open project
+        project.open(monitor.split(1));
 
-            // set natures separately in order to ensure they are configured properly
-            projectDescription = project.getDescription();
-            projectDescription.setNatureIds(new String[] { JavaCore.NATURE_ID, BAZEL_NATURE_ID });
-            project.setDescription(projectDescription, monitor.newChild(1));
+        // set natures separately in order to ensure they are configured properly
+        projectDescription = project.getDescription();
+        projectDescription.setNatureIds(new String[] { JavaCore.NATURE_ID, BAZEL_NATURE_ID });
+        project.setDescription(projectDescription, monitor.newChild(1));
 
-            // set properties
-            project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT,
-                getFileSystemMapper().getBazelWorkspace().getLocation().toString());
-            project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_OWNER, owner.getLabel().getLabelPath());
+        // set properties
+        project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT,
+            getFileSystemMapper().getBazelWorkspace().getLocation().toString());
+        project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_OWNER, owner.getLabel().getLabelPath());
 
-            return project;
-        } finally {
-            progress.done();
-        }
+        return project;
     }
 
     protected void deleteAllFilesNotInAllowList(IFolder folder, Set<IFile> allowList, IProgressMonitor progress)
@@ -407,16 +403,16 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      *            list of provisioned projects
      * @param workspace
      *            the workspace
-     * @param progress
+     * @param monitor
      *            monitor for reporting progress and checking cancellation
      * @throws CoreException
      */
-    protected void doInitializeClasspaths(List<BazelProject> projects, BazelWorkspace workspace,
-            IProgressMonitor progress) throws CoreException {
+    protected void doInitializeClasspaths(List<BazelProject> projects, BazelWorkspace workspace, SubMonitor monitor)
+            throws CoreException {
         try {
-            computeClasspaths(projects, workspace, BazelClasspathScope.DEFAULT_CLASSPATH, progress);
+            computeClasspaths(projects, workspace, BazelClasspathScope.DEFAULT_CLASSPATH, monitor);
         } finally {
-            progress.done();
+            monitor.done();
         }
     }
 
@@ -429,13 +425,13 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      *
      * @param targets
      *            collection of targets
-     * @param progress
+     * @param monitor
      *            monitor for reporting progress
      * @return list of provisioned projects
      * @throws CoreException
      */
-    protected abstract List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets,
-            IProgressMonitor progress) throws CoreException;
+    protected abstract List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, SubMonitor monitor)
+            throws CoreException;
 
     protected BazelPackage expectCommonBazelPackage(Collection<BazelTarget> targets) throws CoreException {
         List<BazelPackage> allPackages =
@@ -578,7 +574,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     public List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets,
             BazelWorkspace workspace, IProgressMonitor progress) throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, "Provisioning projects", targets.size());
+            var monitor = SubMonitor.convert(progress, "Provisioning projects", 2);
 
             // ensure there is a mapper
             fileSystemMapper = new BazelProjectFileSystemMapper(workspace);
@@ -591,10 +587,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             detectDefaultJavaToolchain(workspace);
 
             // create projects
-            var result = doProvisionProjects(targets, monitor);
+            var result = doProvisionProjects(targets, monitor.split(1));
 
             // after provisioning we go over the projects a second time to initialize the classpaths
-            doInitializeClasspaths(result, workspace, monitor);
+            doInitializeClasspaths(result, workspace, monitor.split(1));
 
             // done
             return result;

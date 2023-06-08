@@ -307,6 +307,16 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
         }
     }
 
+    /**
+     * {@return absolute file system location to the Bazel output base}
+     *
+     * @throws CoreException
+     *             if the workspace does not exist
+     */
+    public IPath getOutputBaseLocation() throws CoreException {
+        return getInfo().getOutputBase();
+    }
+
     @Override
     public BazelModel getParent() {
         return parent;

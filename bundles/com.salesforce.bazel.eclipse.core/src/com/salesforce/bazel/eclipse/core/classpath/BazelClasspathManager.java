@@ -15,6 +15,8 @@ package com.salesforce.bazel.eclipse.core.classpath;
 
 import static com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope.DEFAULT_CLASSPATH;
 import static java.util.Objects.requireNonNull;
+import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.toList;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -25,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.model.BazelModelManager;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryAndProvisioningExtensionLookup;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetProvisioningStrategy;
 import com.salesforce.bazel.eclipse.core.model.discovery.WorkspaceClasspathStrategy;
@@ -74,33 +78,6 @@ public class BazelClasspathManager {
     public BazelClasspathManager(File stateLocationDirectory, BazelModelManager bazelModelManager) {
         this.bazelModelManager = bazelModelManager;
         this.stateLocationDirectory = requireNonNull(stateLocationDirectory);
-    }
-
-    IClasspathEntry[] computeClasspath(BazelProject bazelProject, BazelClasspathScope scope, Properties props,
-            IProgressMonitor monitor) throws CoreException {
-        try {
-            var strategy = getTargetProvisioningStrategy(bazelProject);
-            // compute classpath from Bazel
-            var classpathResult = strategy.computeClasspaths(List.of(bazelProject), bazelProject.getBazelWorkspace(),
-                scope, requireNonNull(monitor, "missing IProgressMonitor"));
-            var projectClasspath =
-                    requireNonNull(classpathResult.get(bazelProject), "no classpath returned, this is unexpected here");
-
-            // eliminate duplicates
-            Map<IPath, ClasspathEntry> paths = new LinkedHashMap<>();
-            for (ClasspathEntry entry : projectClasspath) {
-                if (!paths.containsKey(entry.getPath())) {
-                    // add manually configured properties
-                    configureAttachedSourcesAndJavadoc(entry, props);
-
-                    // put into map
-                    paths.put(entry.getPath(), entry);
-                }
-            }
-            return paths.values().stream().map(ClasspathEntry::build).toArray(IClasspathEntry[]::new);
-        } finally {
-            monitor.done();
-        }
     }
 
     private void configureAttachedSourcesAndJavadoc(ClasspathEntry entry, Properties sourceAttachment) {
@@ -132,6 +109,26 @@ public class BazelClasspathManager {
         }
     }
 
+    IClasspathEntry[] configureClasspathWithSourceAttachments(Collection<ClasspathEntry> projectClasspath,
+            Properties props, IProgressMonitor monitor) throws CoreException {
+        try {
+            // eliminate duplicates
+            Map<IPath, ClasspathEntry> paths = new LinkedHashMap<>();
+            for (ClasspathEntry entry : projectClasspath) {
+                if (!paths.containsKey(entry.getPath())) {
+                    // add manually configured properties
+                    configureAttachedSourcesAndJavadoc(entry, props);
+
+                    // put into map
+                    paths.put(entry.getPath(), entry);
+                }
+            }
+            return paths.values().stream().map(ClasspathEntry::build).toArray(IClasspathEntry[]::new);
+        } finally {
+            monitor.done();
+        }
+    }
+
     IClasspathEntry getBazelContainerEntry(IJavaProject project) {
         return BazelClasspathHelpers.getBazelContainerEntry(project);
     }
@@ -142,30 +139,6 @@ public class BazelClasspathManager {
 
     BazelProject getBazelProject(IJavaProject project) {
         return getBazelModelManager().getBazelProject(project.getProject());
-    }
-
-    public IClasspathEntry[] getClasspath(IJavaProject project, BazelClasspathScope scope, IProgressMonitor monitor)
-            throws CoreException {
-        var bazelProject = getBazelProject(project);
-        if (bazelProject == null) {
-            return new IClasspathEntry[0];
-        }
-        try {
-            var props = new Properties();
-            var file = getSourceAttachmentPropertiesFile(project.getProject());
-            if (file.canRead()) {
-                try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
-                    props.load(is);
-                }
-            }
-            return computeClasspath(bazelProject, scope, props, monitor);
-        } catch (IOException e) {
-            throw new CoreException(Status.error("Can't read classpath container data", e));
-        }
-    }
-
-    public IClasspathEntry[] getClasspath(IJavaProject project, IProgressMonitor monitor) throws CoreException {
-        return getClasspath(project, DEFAULT_CLASSPATH, monitor);
     }
 
     File getContainerStateFile(IProject project) {
@@ -206,16 +179,28 @@ public class BazelClasspathManager {
         return BazelClasspathHelpers.getAttribute(entry, IClasspathAttribute.SOURCE_ATTACHMENT_ENCODING);
     }
 
+    Properties getSourceAttachmentProperties(BazelProject bazelProject) throws CoreException {
+        try {
+            var props = new Properties();
+            var file = getSourceAttachmentPropertiesFile(bazelProject.getProject());
+            if (file.canRead()) {
+                try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+                    props.load(is);
+                }
+            }
+            return props;
+        } catch (IOException e) {
+            throw new CoreException(Status.error("Can't read classpath container data", e));
+        }
+    }
+
     File getSourceAttachmentPropertiesFile(IProject project) {
         return new File(stateLocationDirectory, project.getName() + ".sources"); //$NON-NLS-1$
     }
 
-    TargetProvisioningStrategy getTargetProvisioningStrategy(BazelProject bazelProject) throws CoreException {
-        if (bazelProject.isWorkspaceProject()) {
-            return new WorkspaceClasspathStrategy();
-        }
+    TargetProvisioningStrategy getTargetProvisioningStrategy(BazelWorkspace bazelWorkspace) throws CoreException {
         return new TargetDiscoveryAndProvisioningExtensionLookup()
-                .createTargetProvisioningStrategy(bazelProject.getBazelWorkspace().getBazelProjectView());
+                .createTargetProvisioningStrategy(bazelWorkspace.getBazelProjectView());
     }
 
     /**
@@ -225,67 +210,79 @@ public class BazelClasspathManager {
      *            project owning the container
      * @param containerSuggestion
      *            the suggested updates
-     * @param monitor
+     * @param progress
      *            progress monitor
      */
     public void persistAttachedSourcesAndJavadoc(IJavaProject project, IClasspathContainer containerSuggestion,
-            IProgressMonitor monitor) throws CoreException {
-        var facade = getBazelProject(project);
-        if (facade == null) {
-            return;
-        }
+            IProgressMonitor progress) throws CoreException {
+        try {
+            var monitor = SubMonitor.convert(progress, 2);
+            var bazelProject = getBazelProject(project);
+            if (bazelProject == null) {
+                return;
+            }
 
-        // collect all source/javadoc attachement
-        var props = new Properties();
-        var entries = containerSuggestion.getClasspathEntries();
-        for (IClasspathEntry entry : entries) {
-            if (IClasspathEntry.CPE_LIBRARY == entry.getEntryKind()) {
-                var path = entry.getPath().toPortableString();
-                if (entry.getSourceAttachmentPath() != null) {
-                    props.put(path + PROPERTY_SRC_PATH, entry.getSourceAttachmentPath().toPortableString());
-                }
-                if (entry.getSourceAttachmentRootPath() != null) {
-                    props.put(path + PROPERTY_SRC_ROOT, entry.getSourceAttachmentRootPath().toPortableString());
-                }
-                var sourceAttachmentEncoding = getSourceAttachmentEncoding(entry);
-                if (sourceAttachmentEncoding != null) {
-                    props.put(path + PROPERTY_SRC_ENCODING, sourceAttachmentEncoding);
-                }
-                var javadocUrl = getJavadocLocation(entry);
-                if (javadocUrl != null) {
-                    props.put(path + PROPERTY_JAVADOC_URL, javadocUrl);
+            // collect all source/javadoc attachement
+            var props = new Properties();
+            var entries = containerSuggestion.getClasspathEntries();
+            for (IClasspathEntry entry : entries) {
+                if (IClasspathEntry.CPE_LIBRARY == entry.getEntryKind()) {
+                    var path = entry.getPath().toPortableString();
+                    if (entry.getSourceAttachmentPath() != null) {
+                        props.put(path + PROPERTY_SRC_PATH, entry.getSourceAttachmentPath().toPortableString());
+                    }
+                    if (entry.getSourceAttachmentRootPath() != null) {
+                        props.put(path + PROPERTY_SRC_ROOT, entry.getSourceAttachmentRootPath().toPortableString());
+                    }
+                    var sourceAttachmentEncoding = getSourceAttachmentEncoding(entry);
+                    if (sourceAttachmentEncoding != null) {
+                        props.put(path + PROPERTY_SRC_ENCODING, sourceAttachmentEncoding);
+                    }
+                    var javadocUrl = getJavadocLocation(entry);
+                    if (javadocUrl != null) {
+                        props.put(path + PROPERTY_JAVADOC_URL, javadocUrl);
+                    }
                 }
             }
-        }
 
-        // eliminate all "standard" source/javadoc attachement we get from local repo
-        entries = computeClasspath(facade, DEFAULT_CLASSPATH, null /* no props */, monitor);
-        for (IClasspathEntry entry : entries) {
-            if (IClasspathEntry.CPE_LIBRARY == entry.getEntryKind()) {
-                var path = entry.getPath().toPortableString();
-                var value = (String) props.get(path + PROPERTY_SRC_PATH);
-                if ((value != null) && (entry.getSourceAttachmentPath() != null)
-                        && value.equals(entry.getSourceAttachmentPath().toPortableString())) {
-                    props.remove(path + PROPERTY_SRC_PATH);
-                }
-                value = (String) props.get(path + PROPERTY_SRC_ROOT);
-                if ((value != null) && (entry.getSourceAttachmentRootPath() != null)
-                        && value.equals(entry.getSourceAttachmentRootPath().toPortableString())) {
-                    props.remove(path + PROPERTY_SRC_ROOT);
+            // now we need to re-compute the classpath so we can
+            // eliminate all "standard" source/javadoc attachement we get from local repo
+            var strategy = getTargetProvisioningStrategy(bazelProject.getBazelWorkspace());
+            var classpaths = strategy.computeClasspaths(List.of(bazelProject), bazelProject.getBazelWorkspace(),
+                DEFAULT_CLASSPATH, monitor.split(1));
+            entries =
+                    configureClasspathWithSourceAttachments(classpaths.get(bazelProject), null /* no props */, monitor);
+            for (IClasspathEntry entry : entries) {
+                if (IClasspathEntry.CPE_LIBRARY == entry.getEntryKind()) {
+                    var path = entry.getPath().toPortableString();
+                    var value = (String) props.get(path + PROPERTY_SRC_PATH);
+                    if ((value != null) && (entry.getSourceAttachmentPath() != null)
+                            && value.equals(entry.getSourceAttachmentPath().toPortableString())) {
+                        props.remove(path + PROPERTY_SRC_PATH);
+                    }
+                    value = (String) props.get(path + PROPERTY_SRC_ROOT);
+                    if ((value != null) && (entry.getSourceAttachmentRootPath() != null)
+                            && value.equals(entry.getSourceAttachmentRootPath().toPortableString())) {
+                        props.remove(path + PROPERTY_SRC_ROOT);
+                    }
                 }
             }
-        }
 
-        // persist custom source/javadoc attachement info
-        var file = getSourceAttachmentPropertiesFile(project.getProject());
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-            props.store(os, null);
-        } catch (IOException e) {
-            throw new CoreException(Status.error("Can't save classpath container changes", e));
-        }
+            // persist custom source/javadoc attachement info
+            var file = getSourceAttachmentPropertiesFile(project.getProject());
+            try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                props.store(os, null);
+            } catch (IOException e) {
+                throw new CoreException(Status.error("Can't save classpath container changes", e));
+            }
 
-        // update classpath container (this will re-set classpath on JavaProject)
-        updateClasspath(project, monitor);
+            // update classpath container (this will re-set classpath on JavaProject)
+            updateClasspath(bazelProject.getBazelWorkspace(), List.of(bazelProject), monitor.split(1));
+        } finally {
+            if (progress != null) {
+                progress.done();
+            }
+        }
     }
 
     void saveContainerState(IProject project, IClasspathContainer container) throws CoreException {
@@ -297,20 +294,62 @@ public class BazelClasspathManager {
         }
     }
 
-    public void updateClasspath(IJavaProject project, IProgressMonitor monitor) throws CoreException {
+    /**
+     * Updates the classpath of multiple projects belonging to a single {@link BazelWorkspace}.
+     * <p>
+     * Grouping updates by workspace may allow for more efficient implementation.
+     * </p>
+     *
+     * @param bazelWorkspace
+     * @param projects
+     * @param progress
+     * @throws CoreException
+     */
+    void updateClasspath(BazelWorkspace bazelWorkspace, List<BazelProject> projects, IProgressMonitor progress)
+            throws CoreException {
         try {
-            var subMonitor = SubMonitor.convert(monitor, 2);
-            var containerEntry = getBazelContainerEntry(project);
-            var path = containerEntry != null ? containerEntry.getPath()
-                    : new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
-            var classpath = getClasspath(project, subMonitor.newChild(1));
-            IClasspathContainer container = new BazelClasspathContainer(path, classpath);
-            JavaCore.setClasspathContainer(container.getPath(), new IJavaProject[] { project },
-                new IClasspathContainer[] { container }, subMonitor.newChild(1));
-            saveContainerState(project.getProject(), container);
+            var monitor = SubMonitor.convert(progress, 2 + projects.size());
+
+            // we need to refresh the workspace project differently
+            var workspaceProject = bazelWorkspace.getBazelProject();
+            var workspaceProjectClasspath = projects.contains(workspaceProject) ? new WorkspaceClasspathStrategy()
+                    .computeClasspath(workspaceProject, bazelWorkspace, DEFAULT_CLASSPATH, monitor.split(1)) : null;
+
+            // compute classpaths for all non-workspace projects
+            monitor.subTask("Computing classpaths...");
+            List<BazelProject> nonWorkspaceProjects = projects.stream()
+                    .filter(not(BazelClasspathHelpers::isWorkspaceProjectExcludeFailing)).collect(toList());
+            var strategy = getTargetProvisioningStrategy(bazelWorkspace);
+            var classpaths = strategy.computeClasspaths(nonWorkspaceProjects, bazelWorkspace, DEFAULT_CLASSPATH,
+                monitor.split(1));
+
+            // apply classpaths for each projecht
+            for (BazelProject bazelProject : projects) {
+                var javaProject = JavaCore.create(bazelProject.getProject());
+                monitor.subTask("Setting classpath: " + javaProject.getElementName());
+                var containerEntry = getBazelContainerEntry(javaProject);
+                var path = containerEntry != null ? containerEntry.getPath()
+                        : new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
+                var projectClasspath =
+                        bazelProject.isWorkspaceProject() ? workspaceProjectClasspath : classpaths.get(bazelProject);
+                if (projectClasspath == null) {
+                    LOG.error("No classpath return for project '{}'", bazelProject);
+                    continue;
+                }
+
+                var sourceAttachmentProperties = getSourceAttachmentProperties(bazelProject);
+                IClasspathContainer container =
+                        new BazelClasspathContainer(path, configureClasspathWithSourceAttachments(projectClasspath,
+                            sourceAttachmentProperties, progress));
+
+                JavaCore.setClasspathContainer(container.getPath(), new IJavaProject[] { javaProject },
+                    new IClasspathContainer[] { container }, monitor.newChild(1));
+                saveContainerState(bazelProject.getProject(), container);
+
+            }
         } finally {
-            if (monitor != null) {
-                monitor.done();
+            if (progress != null) {
+                progress.done();
             }
         }
     }

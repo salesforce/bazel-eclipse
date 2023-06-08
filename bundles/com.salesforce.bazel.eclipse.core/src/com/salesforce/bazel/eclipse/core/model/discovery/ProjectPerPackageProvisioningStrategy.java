@@ -42,58 +42,54 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     public static final String STRATEGY_NAME = "project-per-package";
 
     @Override
-    public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects, BazelWorkspace workspace,
-            BazelClasspathScope scope, IProgressMonitor monitor) throws CoreException {
+    public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
+            BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor monitor) throws CoreException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, IProgressMonitor progress)
+    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, SubMonitor monitor)
             throws CoreException {
-        try {
-            // group into packages
-            Map<BazelPackage, List<BazelTarget>> targetsByPackage =
-                    targets.stream().filter(this::isSupported).collect(groupingBy(BazelTarget::getBazelPackage));
+        // group into packages
+        Map<BazelPackage, List<BazelTarget>> targetsByPackage =
+                targets.stream().filter(this::isSupported).collect(groupingBy(BazelTarget::getBazelPackage));
 
-            var monitor = SubMonitor.convert(progress, "Provisioning projects", targetsByPackage.size() * 3);
+        monitor.beginTask("Provisioning projects", targetsByPackage.size() * 3);
 
-            var result = new ArrayList<BazelProject>();
-            for (Entry<BazelPackage, List<BazelTarget>> entry : targetsByPackage.entrySet()) {
-                var bazelPackage = entry.getKey();
-                var packageTargets = entry.getValue();
+        var result = new ArrayList<BazelProject>();
+        for (Entry<BazelPackage, List<BazelTarget>> entry : targetsByPackage.entrySet()) {
+            var bazelPackage = entry.getKey();
+            var packageTargets = entry.getValue();
 
-                // create the project for the package
-                var project = provisionPackageProject(bazelPackage, packageTargets, monitor.newChild(1));
+            // create the project for the package
+            var project = provisionPackageProject(bazelPackage, packageTargets, monitor.split(1));
 
-                // build the Java information
-                var javaInfo = collectJavaInfo(project, packageTargets, monitor.newChild(1));
+            // build the Java information
+            var javaInfo = collectJavaInfo(project, packageTargets, monitor.split(1));
 
-                // sanity check
-                if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
-                    for (FileEntry file : javaInfo.getSourceFilesWithoutCommonRoot()) {
-                        createBuildPathProblem(project, Status.warning(format(
-                            "File '%s' could not be mapped into a common source directory. The project may not build successful in Eclipse.",
-                            file.getPath())));
-                    }
+            // sanity check
+            if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
+                for (FileEntry file : javaInfo.getSourceFilesWithoutCommonRoot()) {
+                    createBuildPathProblem(project, Status.warning(format(
+                        "File '%s' could not be mapped into a common source directory. The project may not build successful in Eclipse.",
+                        file.getPath())));
                 }
-                if (!javaInfo.hasSourceDirectories()) {
-                    createBuildPathProblem(project,
-                        Status.error(format(
-                            "No source directories detected when analyzihng package '%s' using targets '%s'",
+            }
+            if (!javaInfo.hasSourceDirectories()) {
+                createBuildPathProblem(project,
+                    Status.error(
+                        format("No source directories detected when analyzihng package '%s' using targets '%s'",
                             bazelPackage.getLabel().getPackagePath(), packageTargets.stream().map(BazelTarget::getLabel)
                                     .map(BazelLabel::getLabelPath).collect(joining(", ")))));
-                }
-
-                // configure classpath
-                configureRawClasspath(project, javaInfo, monitor.newChild(1));
-
-                result.add(project);
             }
-            return result;
-        } finally {
-            progress.done();
+
+            // configure classpath
+            configureRawClasspath(project, javaInfo, monitor.split(1));
+
+            result.add(project);
         }
+        return result;
     }
 
     private boolean isSupported(BazelTarget bazeltarget) {
@@ -115,7 +111,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     }
 
     protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,
-            IProgressMonitor progress) throws CoreException {
+            SubMonitor monitor) throws CoreException {
         if (bazelPackage.hasBazelProject()) {
             return bazelPackage.getBazelProject();
         }
@@ -126,7 +122,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
         var projectLocation = bazelPackage.getLocation();
 
-        createProjectForElement(projectName, projectLocation, bazelPackage, progress);
+        createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
 
         // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
         return bazelPackage.getBazelProject();
