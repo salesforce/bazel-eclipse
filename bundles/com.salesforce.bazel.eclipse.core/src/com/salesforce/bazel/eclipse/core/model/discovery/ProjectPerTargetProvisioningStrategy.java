@@ -201,7 +201,8 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         }
 
         var label = target.getLabel();
-        var projectName = format("%s:%s", label.getPackagePath().replace('/', '.'), label.getTargetName());
+        var projectName =
+                format("%s:%s", label.getPackagePath().replace('/', '.'), label.getTargetName().replace('/', '.'));
         var projectLocation = getFileSystemMapper().getProjectsArea().append(projectName);
 
         createProjectForElement(projectName, projectLocation, target, monitor);

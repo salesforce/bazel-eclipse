@@ -47,10 +47,10 @@ public class BazelLabel {
     // reason about path manipulation code.
 
     // Wildcard used as a target, that identifies all targets including implicit targets (_deploy.jar etc)
-    public static final String BAZEL_WILDCARD_ALLTARGETS_STAR = "*";
+    public static final String BAZEL_WILDCARD_ALLTARGETS_STAR = ":*";
 
     // Wildcard used as a target, that identifies all targets
-    public static final String BAZEL_WILDCARD_ALLTARGETS = "all";
+    public static final String BAZEL_WILDCARD_ALLTARGETS = ":all";
 
     // Wildcard used as a package, that identifies all packages at the current level or below
     public static final String BAZEL_WILDCARD_ALLPACKAGES = "...";

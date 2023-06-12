@@ -584,6 +584,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 IResource.DEPTH_ZERO);
 
             // detect default Java level
+            monitor.subTask("Detecting Java Toolchain");
             detectDefaultJavaToolchain(workspace);
 
             // create projects
