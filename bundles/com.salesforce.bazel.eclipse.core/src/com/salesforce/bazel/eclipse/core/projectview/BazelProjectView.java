@@ -3,6 +3,9 @@ package com.salesforce.bazel.eclipse.core.projectview;
 import java.util.Collection;
 import java.util.Collections;
 
+import com.google.idea.blaze.base.model.primitives.TargetExpression;
+import com.google.idea.blaze.base.model.primitives.WorkspacePath;
+
 /**
  * A holder of all information of a <a href="https://ij.bazel.build/docs/project-views.html">Bazel Project View</a>.
  * <p>
@@ -19,10 +22,9 @@ import java.util.Collections;
  * </p>
  */
 public record BazelProjectView(
-        Collection<String> directoriesToInclude,
-        Collection<String> directoriesToExclude,
-        Collection<String> targetsToInclude,
-        Collection<String> targetsToExclude,
+        Collection<WorkspacePath> directoriesToImport,
+        Collection<WorkspacePath> directoriesToExclude,
+        Collection<TargetExpression> targets,
         boolean deriveTargetsFromDirectories,
         String workspaceType,
         Collection<String> additionalLanguages,
@@ -32,10 +34,9 @@ public record BazelProjectView(
         String targetProvisioningStrategy) {
 
     public BazelProjectView {
-        directoriesToInclude = Collections.unmodifiableCollection(directoriesToInclude);
+        directoriesToImport = Collections.unmodifiableCollection(directoriesToImport);
         directoriesToExclude = Collections.unmodifiableCollection(directoriesToExclude);
-        targetsToInclude = Collections.unmodifiableCollection(targetsToInclude);
-        targetsToExclude = Collections.unmodifiableCollection(targetsToExclude);
+        targets = Collections.unmodifiableCollection(targets);
         additionalLanguages = Collections.unmodifiableCollection(additionalLanguages);
         tsConfigRules = Collections.unmodifiableCollection(tsConfigRules);
     }

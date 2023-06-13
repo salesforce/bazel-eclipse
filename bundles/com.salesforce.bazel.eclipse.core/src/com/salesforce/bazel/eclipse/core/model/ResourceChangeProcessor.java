@@ -24,6 +24,11 @@
 package com.salesforce.bazel.eclipse.core.model;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD_BAZEL;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BAZEL;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BZLMOD;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -55,7 +60,12 @@ class ResourceChangeProcessor implements IResourceChangeListener {
     private void checkProjectsAndClasspathChanges(IResourceDelta delta) {
         // check for classpath changes
         Set<IProject> affectedProjects = new HashSet<>();
-        collectProjectsAffectedByPossibleClasspathChange(delta, affectedProjects);
+        Set<IProject> projectViewProjects = new HashSet<>();
+        collectProjectsAffectedByPossibleClasspathChange(delta, affectedProjects, projectViewProjects);
+
+        // flush the caches for the affected project
+        affectedProjects.stream().forEach(this::invalidateCache);
+        projectViewProjects.stream().forEach(this::invalidateBazelWorkspaceCache);
 
         // if we have some, we need to refresh classpaths
         // but we do this asynchronously and *only* when the workspace is in auto-build mode
@@ -68,7 +78,7 @@ class ResourceChangeProcessor implements IResourceChangeListener {
     }
 
     private void collectProjectsAffectedByPossibleClasspathChange(IResourceDelta delta,
-            Set<IProject> affectedProjects) {
+            Set<IProject> affectedProjectsWithClasspathChange, Set<IProject> affectedProjectsWithProjectViewChange) {
         var resource = delta.getResource();
         var processChildren = false;
         switch (resource.getType()) {
@@ -89,13 +99,13 @@ class ResourceChangeProcessor implements IResourceChangeListener {
                 switch (kind) {
                     case IResourceDelta.ADDED:
                         processChildren = isBazelProject;
-                        affectedProjects.add(project);
+                        affectedProjectsWithClasspathChange.add(project);
                         break;
                     case IResourceDelta.CHANGED:
                         processChildren = isBazelProject;
                         if ((delta.getFlags() & IResourceDelta.OPEN) != 0) {
                             // project opened or closed
-                            affectedProjects.add(project);
+                            affectedProjectsWithClasspathChange.add(project);
                         } else if ((delta.getFlags() & IResourceDelta.DESCRIPTION) != 0) {
                             // TODO: search if there was a mapping
                             //                            boolean wasBazelProject = ...
@@ -108,7 +118,7 @@ class ResourceChangeProcessor implements IResourceChangeListener {
                         }
                         break;
                     case IResourceDelta.REMOVED:
-                        affectedProjects.add(project);
+                        affectedProjectsWithClasspathChange.add(project);
                         break;
                 }
                 break;
@@ -116,9 +126,14 @@ class ResourceChangeProcessor implements IResourceChangeListener {
                 /* check BUILD files change */
                 var file = (IFile) resource;
                 var fileName = file.getName();
-                if (fileName.equals("BUILD.bazel") || fileName.equals("BUILD") || fileName.equals("WORKSPACE.bazel")
-                        || fileName.equals("WORKSPACE") || fileName.equals("WORKSPACE.bzlmod")) {
-                    affectedProjects.add(file.getProject());
+                if (fileName.equals(FILE_NAME_BUILD_BAZEL) || fileName.equals(FILE_NAME_BUILD)
+                        || fileName.equals(FILE_NAME_WORKSPACE_BAZEL) || fileName.equals(FILE_NAME_WORKSPACE)
+                        || fileName.equals(FILE_NAME_WORKSPACE_BZLMOD)) {
+                    affectedProjectsWithClasspathChange.add(file.getProject());
+                }
+                var fileExtension = file.getFileExtension();
+                if (fileExtension.equals("bazelproject")) {
+                    affectedProjectsWithProjectViewChange.add(file.getProject());
                 }
                 break;
             case IResource.FOLDER:
@@ -129,14 +144,39 @@ class ResourceChangeProcessor implements IResourceChangeListener {
         if (processChildren) {
             var children = delta.getAffectedChildren();
             for (IResourceDelta child : children) {
-                collectProjectsAffectedByPossibleClasspathChange(child, affectedProjects);
+                collectProjectsAffectedByPossibleClasspathChange(child, affectedProjectsWithClasspathChange,
+                    affectedProjectsWithProjectViewChange);
             }
         }
     }
 
     private void deleting(IProject resource) {
         // invalidate the
+    }
 
+    private void invalidateBazelWorkspaceCache(IProject project) {
+        var bazelProject = modelManager.getBazelProject(project);
+        try {
+            bazelProject.getBazelWorkspace().invalidateInfo();
+        } catch (CoreException e) {
+            // ignore
+        }
+    }
+
+    private void invalidateCache(IProject project) {
+        var bazelProject = modelManager.getBazelProject(project);
+        try {
+            if (bazelProject.isWorkspaceProject()) {
+                bazelProject.getBazelWorkspace().invalidateInfo();
+            } else if (bazelProject.isPackageProject()) {
+                bazelProject.getBazelPackage().invalidateInfo();
+            } else if (bazelProject.isTargetProject()) {
+                // validate the whole package
+                bazelProject.getBazelPackage().invalidateInfo();
+            }
+        } catch (CoreException e) {
+            // ignore
+        }
     }
 
     /**

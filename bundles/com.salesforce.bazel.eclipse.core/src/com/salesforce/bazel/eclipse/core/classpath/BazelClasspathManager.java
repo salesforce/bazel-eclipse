@@ -29,9 +29,11 @@ import java.io.ObjectStreamException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -50,6 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.model.BazelModelManager;
+import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryAndProvisioningExtensionLookup;
@@ -135,6 +138,21 @@ public class BazelClasspathManager {
 
     BazelModelManager getBazelModelManager() {
         return bazelModelManager;
+    }
+
+    private Set<BazelPackage> getBazelPackages(BazelWorkspace bazelWorkspace, List<BazelProject> nonWorkspaceProjects)
+            throws CoreException {
+        Set<BazelPackage> result = new LinkedHashSet<>();
+        for (BazelProject project : nonWorkspaceProjects) {
+            var ownerLabel = project.getOwnerLabel();
+            if (ownerLabel == null) {
+                continue;
+            }
+
+            result.add(
+                bazelWorkspace.getBazelPackage(ownerLabel.hasTarget() ? ownerLabel.getPackageLabel() : ownerLabel));
+        }
+        return result;
     }
 
     BazelProject getBazelProject(IJavaProject project) {
@@ -315,10 +333,16 @@ public class BazelClasspathManager {
             var workspaceProjectClasspath = projects.contains(workspaceProject) ? new WorkspaceClasspathStrategy()
                     .computeClasspath(workspaceProject, bazelWorkspace, DEFAULT_CLASSPATH, monitor.split(1)) : null;
 
-            // compute classpaths for all non-workspace projects
-            monitor.subTask("Computing classpaths...");
+            // extract all non workspace projects
             List<BazelProject> nonWorkspaceProjects = projects.stream()
                     .filter(not(BazelClasspathHelpers::isWorkspaceProjectExcludeFailing)).collect(toList());
+
+            // ensure the packages are opened efficiently
+            monitor.subTask("Reading packages...");
+            bazelWorkspace.open(getBazelPackages(bazelWorkspace, nonWorkspaceProjects));
+
+            // compute classpaths for all non-workspace projects
+            monitor.subTask("Computing classpaths...");
             var strategy = getTargetProvisioningStrategy(bazelWorkspace);
             var classpaths = strategy.computeClasspaths(nonWorkspaceProjects, bazelWorkspace, DEFAULT_CLASSPATH,
                 monitor.split(1));

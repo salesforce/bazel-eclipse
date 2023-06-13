@@ -210,6 +210,14 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
     }
 
     /**
+     * Invalidates this elements loaded info from the cache.
+     */
+    final void invalidateInfo() {
+        var infoCache = getInfoCache();
+        infoCache.invalidate(this);
+    }
+
+    /**
      * Returns the {@link BazelElementInfo}, opening the element with the given info if none exists in the cache.
      *
      * @return the loaded element info (may be cached)

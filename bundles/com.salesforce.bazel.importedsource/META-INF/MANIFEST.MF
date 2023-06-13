@@ -17,6 +17,7 @@ Import-Package: com.github.benmanes.caffeine;version="3.1.6",
  com.google.protobuf;version="3.22.0",
  javax.annotation;version="3.0.2",
  javax.annotation.concurrent;version="3.0.2"
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.27.0"
 Export-Package: com.google.devtools.build.buildjar.proto,
  com.google.devtools.build.lib.buildeventstream,
  com.google.devtools.build.lib.collect.compacthashset,
@@ -36,9 +37,11 @@ Export-Package: com.google.devtools.build.buildjar.proto,
  com.google.idea.blaze.base.ideinfo,
  com.google.idea.blaze.base.model.primitives,
  com.google.idea.blaze.base.sync.workspace,
+ com.google.idea.blaze.base.util,
  com.google.idea.blaze.java,
  com.google.idea.blaze.java.sync.importer,
  com.google.idea.blaze.java.sync.model,
+ com.intellij.openapi.util.io;x-internal:=true,
  com.intellij.openapi.util.text;x-internal:=true
 Bundle-Vendor: Bazel Eclipse Feature
 Automatic-Module-Name: com.salesforce.bazel.eclipse.vendoredsource

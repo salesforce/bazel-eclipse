@@ -14,6 +14,10 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import com.google.idea.blaze.base.model.primitives.InvalidTargetException;
+import com.google.idea.blaze.base.model.primitives.TargetExpression;
+import com.google.idea.blaze.base.model.primitives.WorkspacePath;
+
 /**
  * A reader for <code>.bazelproject</code> files.
  * <p>
@@ -65,34 +69,33 @@ public class BazelProjectFileReader {
                         "no targets specified; this is a required section unless derive_targets_from_directories is set");
             }
 
-            List<String> directoriesToInclude = new ArrayList<>();
-            List<String> directoriesToExclude = new ArrayList<>();
+            List<WorkspacePath> directoriesToImport = new ArrayList<>();
+            List<WorkspacePath> directoriesToExclude = new ArrayList<>();
             for (String d : directories) {
                 if (d.startsWith(EXCLUDED_ENTRY_PREFIX)) {
-                    directoriesToExclude.add(d);
+                    directoriesToExclude.add(new WorkspacePath(d.substring(EXCLUDED_ENTRY_PREFIX.length())));
                 } else {
-                    directoriesToInclude.add(d);
+                    directoriesToImport.add(new WorkspacePath(d));
                 }
             }
-            if (directoriesToInclude.isEmpty()) {
+            if (directoriesToImport.isEmpty()) {
                 throw new IllegalStateException("directories contains only excludes; at least one include is required");
             }
 
-            List<String> targetsToInclude = new ArrayList<>();
-            List<String> targetsToExclude = new ArrayList<>();
+            List<TargetExpression> targetsList = new ArrayList<>();
             for (String t : targets) {
-                if (t.startsWith(EXCLUDED_ENTRY_PREFIX)) {
-                    targetsToExclude.add(t);
-                } else {
-                    targetsToInclude.add(t);
+                try {
+                    targetsList.add(TargetExpression.fromString(t));
+                } catch (InvalidTargetException e) {
+                    new IllegalStateException(e.getMessage(), e);
                 }
             }
-            if (!deriveTargetsFromDirectories && targetsToInclude.isEmpty()) {
+            if (!deriveTargetsFromDirectories && !targetsList.stream().anyMatch(not(TargetExpression::isExcluded))) {
                 throw new IllegalStateException(
-                        "targets contains only excludes; at least one include is required unless derive_targets_from_directories is set");
+                        "at least one target to include is required unless derive_targets_from_directories is set");
             }
 
-            return new BazelProjectView(directoriesToInclude, directoriesToExclude, targetsToInclude, targetsToExclude,
+            return new BazelProjectView(directoriesToImport, directoriesToExclude, targetsList,
                     deriveTargetsFromDirectories, workspaceType, additionalLanguages, javaLanguageLevel, tsConfigRules,
                     targetDiscoveryStrategy, targetProvisioningStrategy);
         }

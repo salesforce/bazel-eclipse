@@ -15,8 +15,10 @@ Export-Package: com.salesforce.bazel.sdk,
  com.salesforce.bazel.sdk.command.shell,
  com.salesforce.bazel.sdk.init,
  com.salesforce.bazel.sdk.model,
+ com.salesforce.bazel.sdk.projectview,
  com.salesforce.bazel.sdk.util
-Import-Package: com.google.common.collect;version="31.1.0",
+Import-Package: com.google.common.annotations;version="31.1.0",
+ com.google.common.collect;version="31.1.0",
  com.google.protobuf;version="3.22.0",
  org.slf4j;version="1.7.30"
 Require-Bundle: com.salesforce.bazel.importedsource;bundle-version="2.0.0";visibility:=reexport,

@@ -58,6 +58,8 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
 
             List<BazelLabel> targetsToBuild = new ArrayList<>(bazelProjects.size());
             for (BazelProject bazelProject : bazelProjects) {
+                monitor.checkCanceled();
+
                 if (!bazelProject.isTargetProject()) {
                     throw new CoreException(Status.error(format(
                         "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel target project created by the project per target strategy.",
@@ -85,6 +87,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.subTask("Analyzing: " + bazelProject);
+                monitor.checkCanceled();
 
                 // build index of classpath info
                 var classpathInfo = new JavaClasspathInfo(result, workspace);
@@ -103,7 +106,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
 
                     if (!isRegularFile(entry.getPath().toPath())) {
                         createBuildPathProblem(bazelProject,
-                            Status.error("There are missing library. Please consider running 'bazel fetch'"));
+                            Status.error("There are missing libraries. Please consider running 'bazel fetch'"));
                         break;
                     }
                 }

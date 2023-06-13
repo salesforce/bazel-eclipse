@@ -90,6 +90,11 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
     }
 
     @Override
+    public void invalidate(BazelElement<?, ?> bazelElement) {
+        cache.invalidate(getStableCacheKey(bazelElement));
+    }
+
+    @Override
     public void invalidateAll() {
         cache.invalidateAll();
     }

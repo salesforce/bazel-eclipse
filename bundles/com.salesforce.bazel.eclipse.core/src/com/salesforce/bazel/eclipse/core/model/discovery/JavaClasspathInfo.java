@@ -252,15 +252,20 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
 
         var targetIdeInfo = ideInfoByTargetKey.get(targetKey);
         if (targetIdeInfo == null) {
-            throw new CoreException(Status.error(format(
-                "Unable to compute classpath for target '%s' because of missing IDE info!", bazelTarget.getLabel())));
+            //  this could be a failing build, abort with a warning
+            LOG.warn(
+                "Unable to compute classpath for target '{}' because of missing IDE info! Please check the Bazel build for problems building the target.",
+                bazelTarget.getLabel());
+            return;
         }
 
         var javaIdeInfo = targetIdeInfo.getJavaIdeInfo();
         if (javaIdeInfo == null) {
-            throw new CoreException(
-                    Status.error(format("Unable to compute classpath for target '%s' because of missing Java IDE info!",
-                        bazelTarget.getLabel())));
+            //  this could be a failing build, abort with a warning
+            LOG.warn(
+                "Unable to compute classpath for target '{}' because of missing Java IDE info! Please check the Bazel build for problems building the target.",
+                bazelTarget.getLabel());
+            return;
         }
 
         // the following is inspired from IJ BlazeJavaWorkspaceImporter

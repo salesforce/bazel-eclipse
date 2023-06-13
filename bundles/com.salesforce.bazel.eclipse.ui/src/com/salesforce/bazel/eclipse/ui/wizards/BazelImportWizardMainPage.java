@@ -36,6 +36,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Text;
 
+import com.google.idea.blaze.base.model.primitives.TargetExpression;
+import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectFileReader;
 
@@ -204,33 +206,29 @@ public class BazelImportWizardMainPage extends WizardPage {
     }
 
     private StringBuilder readWorkspaceInfo(Path projectViewPath, IPath workspaceRoot) throws IOException {
-        var projectView =
-                new BazelProjectFileReader(projectViewPath.toPath(), workspaceRoot.toPath()).read();
+        var projectView = new BazelProjectFileReader(projectViewPath.toPath(), workspaceRoot.toPath()).read();
         var info = new StringBuilder();
         info.append("Location:").append(System.lineSeparator()).append("  ").append(workspaceRoot)
                 .append(System.lineSeparator());
         info.append("Targets:").append(System.lineSeparator());
         if (projectView.deriveTargetsFromDirectories()) {
             info.append("  ").append("derive from directories").append(System.lineSeparator());
-        } else if (projectView.targetsToInclude().isEmpty()) {
+        } else if (projectView.targets().isEmpty()) {
             info.append("  ").append("none").append(System.lineSeparator());
         } else {
-            for (String target : projectView.targetsToInclude()) {
+            for (TargetExpression target : projectView.targets()) {
                 info.append("  ").append(target).append(System.lineSeparator());
-            }
-            for (String target : projectView.targetsToExclude()) {
-                info.append("  -").append(target).append(System.lineSeparator());
             }
         }
         info.append("Directories:").append(System.lineSeparator());
-        if (projectView.directoriesToInclude().isEmpty()) {
+        if (projectView.directoriesToImport().isEmpty()) {
             info.append("  ").append(".").append(System.lineSeparator());
         } else {
-            for (String target : projectView.directoriesToInclude()) {
+            for (WorkspacePath target : projectView.directoriesToImport()) {
                 info.append("  ").append(target).append(System.lineSeparator());
             }
         }
-        for (String target : projectView.directoriesToExclude()) {
+        for (WorkspacePath target : projectView.directoriesToExclude()) {
             info.append("  ").append(target).append(System.lineSeparator());
         }
         return info;

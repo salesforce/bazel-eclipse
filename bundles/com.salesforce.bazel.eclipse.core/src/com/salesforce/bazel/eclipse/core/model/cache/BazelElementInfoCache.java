@@ -77,6 +77,24 @@ public abstract sealed class BazelElementInfoCache permits CaffeineBasedBazelEle
     public abstract <I extends BazelElementInfo> I getIfPresent(BazelElement<I, ?> bazelElement);
 
     /**
+     * Discards an entry for the specified element from the cache.
+     * <p>
+     * The behavior of this operation is undefined for an entry that is being loaded (or reloaded) and is otherwise not
+     * present.
+     * </p>
+     * <p>
+     * This method is exposed for <code>com.salesforce.bazel.eclipse.core.model.ResourceChangeProcessor</code>. It
+     * should not be called by anyone else because in Eclipse everything is tight to a
+     * <code>IResourceChangeEvent</code>. Thus, when you find a situation where a cache flush is needed, please write a
+     * test and then fix the implementation by adding support for the missing event into
+     * <code>com.salesforce.bazel.eclipse.core.model.ResourceChangeProcessor</code>
+     * </p>
+     *
+     * @param bazelElement
+     */
+    public abstract void invalidate(BazelElement<?, ?> bazelElement);
+
+    /**
      * Discards all entries in the cache.
      * <p>
      * The behavior of this operation is undefined for an entry that is being loaded (or reloaded) and is otherwise not
