@@ -423,6 +423,9 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
         // load jdeps file
         var jdepsFile = resolveJdepsOutput(targetIdeInfo);
         if (jdepsFile instanceof OutputArtifact) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Loading jdeps file '{}' for: {}", jdepsFile, targetIdeInfo.getKey());
+            }
             try (InputStream inputStream = jdepsFile.getInputStream()) {
                 var dependencies = Deps.Dependencies.parseFrom(inputStream);
                 if (dependencies != null) {

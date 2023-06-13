@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
+import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
@@ -427,7 +428,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     protected void doInitializeClasspaths(List<BazelProject> projects, BazelWorkspace workspace, SubMonitor monitor)
             throws CoreException {
         try {
-            computeClasspaths(projects, workspace, BazelClasspathScope.DEFAULT_CLASSPATH, monitor);
+            // use the job to properly trigger the classpath manager
+            new InitializeOrRefreshClasspathJob(projects.stream(),
+                    workspace.getParent().getModelManager().getClasspathManager(), true).runInWorkspace(monitor);
         } finally {
             monitor.done();
         }

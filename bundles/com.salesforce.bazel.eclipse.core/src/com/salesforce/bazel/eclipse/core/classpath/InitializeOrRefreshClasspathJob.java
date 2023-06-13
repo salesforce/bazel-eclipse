@@ -4,6 +4,7 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_
 import static java.util.stream.Collectors.groupingBy;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
@@ -39,15 +40,28 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
 
     private static Logger LOG = LoggerFactory.getLogger(InitializeOrRefreshClasspathJob.class);
 
-    private final IProject[] projects;
+    static boolean isBazelProject(IProject p) {
+        try {
+            return p.hasNature(BAZEL_NATURE_ID);
+        } catch (CoreException e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Error accessing project {}", p, e);
+            }
+            // exclude
+            return false;
+        }
+    }
+
+    private final Map<BazelWorkspace, List<BazelProject>> bazelProjects;
     private final BazelClasspathManager classpathManager;
+
     private final boolean forceRefresh;
 
     /**
      * Create a new job instance
      *
      * @param projects
-     *            the list of projects to refresh
+     *            the list of Eclipse projects to refresh
      * @param classpathManager
      *            the classpath manager instance
      * @param forceRefresh
@@ -56,10 +70,36 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
      */
     public InitializeOrRefreshClasspathJob(IProject[] projects, BazelClasspathManager classpathManager,
             boolean forceRefresh) {
+        this(Stream.of(projects).filter(InitializeOrRefreshClasspathJob::isBazelProject).map(BazelCore::create),
+                classpathManager, forceRefresh);
+    }
+
+    /**
+     * Create a new job instance
+     *
+     * @param projects
+     *            the list of Bazel projects to refresh
+     * @param classpathManager
+     *            the classpath manager instance
+     * @param forceRefresh
+     *            <code>true</code> if a refresh should be forced, <code>false</code> if the classpath should only be
+     *            computed when it's missing (no previously persisted state)
+     */
+    public InitializeOrRefreshClasspathJob(Stream<BazelProject> projects, BazelClasspathManager classpathManager,
+            boolean forceRefresh) {
         super("Computing build path of Bazel projects");
-        this.projects = projects;
+        // store those first for needsRefresh(..)
         this.classpathManager = classpathManager;
         this.forceRefresh = forceRefresh;
+        // group by workspace
+        this.bazelProjects = projects.filter(this::needsRefresh).collect(groupingBy(p -> {
+            try {
+                return p.getBazelWorkspace();
+            } catch (CoreException e) {
+                // invalid
+                return null;
+            }
+        }));
         setPriority(Job.BUILD); // process after others
         setRule(getRuleFactory().buildRule()); // ensure not build is running in parallel
     }
@@ -75,18 +115,6 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
 
     IResourceRuleFactory getRuleFactory() {
         return ResourcesPlugin.getWorkspace().getRuleFactory();
-    }
-
-    boolean isBazelProject(IProject p) {
-        try {
-            return p.hasNature(BAZEL_NATURE_ID);
-        } catch (CoreException e) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Error accessing project {}", p, e);
-            }
-            // exclude
-            return false;
-        }
     }
 
     boolean needsRefresh(BazelProject p) {
@@ -107,19 +135,9 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
         try {
-            var subMonitor = SubMonitor.convert(monitor, projects.length);
+            var subMonitor = SubMonitor.convert(monitor, bazelProjects.size());
             var status =
                     new MultiStatus(BazelModelManager.PLUGIN_ID, 0, "Some Bazel build paths could not be initialized.");
-
-            var bazelProjects = Stream.of(projects).filter(this::isBazelProject).map(BazelCore::create)
-                    .filter(this::needsRefresh).collect(groupingBy(p -> {
-                        try {
-                            return p.getBazelWorkspace();
-                        } catch (CoreException e) {
-                            // invalid
-                            return null;
-                        }
-                    }));
 
             nextProjectSet: for (Entry<BazelWorkspace, List<BazelProject>> projectSet : bazelProjects.entrySet()) {
                 try {
