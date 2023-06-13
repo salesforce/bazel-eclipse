@@ -8,6 +8,7 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDP
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.Predicate;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -162,9 +164,11 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         if (javaInfo.hasSourceDirectories()) {
-            for (FileEntry dir : javaInfo.getSourceDirectories()) {
-                var sourceFolder =
-                        dir.getPath().isEmpty() ? project.getProject() : project.getProject().getFolder(dir.getPath());
+            for (IPath dir : javaInfo.getSourceDirectories()) {
+                // when the directory is empty, the virtual "srcs" container must be used
+                // this logic here requires proper linking support in linkSourcesIntoProject method
+                var sourceFolder = dir.isEmpty() ? getFileSystemMapper().getVirtualSourceFolder(project)
+                        : project.getProject().getFolder(dir);
                 rawClasspath.add(JavaCore.newSourceEntry(sourceFolder.getFullPath()));
             }
         }
@@ -298,12 +302,12 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         return project;
     }
 
-    protected void deleteAllFilesNotInAllowList(IFolder folder, Set<IFile> allowList, IProgressMonitor progress)
+    private void deleteAllFilesMatchingPredicate(IFolder root, Predicate<IFile> selector, IProgressMonitor progress)
             throws CoreException {
         try {
             Set<IFile> toRemove = new HashSet<>();
-            folder.accept(r -> {
-                if ((r.getType() == IResource.FILE) && !allowList.contains(r)) {
+            root.accept(r -> {
+                if ((r.getType() == IResource.FILE) && selector.test((IFile) r)) {
                     toRemove.add((IFile) r);
                 }
                 return true;
@@ -320,6 +324,19 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         } finally {
             progress.done();
         }
+    }
+
+    protected void deleteAllFilesNotInAllowList(IFolder root, Set<IFile> allowList, IProgressMonitor progress)
+            throws CoreException {
+        deleteAllFilesMatchingPredicate(root, not(allowList::contains), progress);
+    }
+
+    protected void deleteAllFilesNotInFolderList(IFolder root, IFolder folderToKeep, IProgressMonitor progress)
+            throws CoreException {
+        var folderLocation =
+                requireNonNull(folderToKeep.getLocation(), () -> format("folder '%s' has no location", folderToKeep));
+        deleteAllFilesMatchingPredicate(root,
+            f -> (f.getLocation() != null) && !folderLocation.isPrefixOf(f.getLocation()), progress);
     }
 
     /**
@@ -474,10 +491,12 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         var monitor = SubMonitor.convert(progress, 100);
         try {
             if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
+                // create the "srcs" folder
                 var virtualSourceFolder = getFileSystemMapper().getVirtualSourceFolder(project);
                 if (!virtualSourceFolder.exists()) {
                     virtualSourceFolder.create(IResource.NONE, true, monitor.newChild(1));
                 }
+                // build emulated Java package structure and link files
                 var files = javaInfo.getSourceFilesWithoutCommonRoot();
                 Set<IFile> linkedFiles = new HashSet<>();
                 for (FileEntry fileEntry : files) {
@@ -502,33 +521,68 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
             if (javaInfo.hasSourceDirectories()) {
                 var directories = javaInfo.getSourceDirectories();
-                NEXT_FOLDER: for (FileEntry dir : directories) {
+                NEXT_FOLDER: for (IPath dir : directories) {
                     IFolder sourceFolder;
-                    if (dir.getPath().isEmpty()) {
+                    if (dir.isEmpty()) {
                         // special case ... source is directly within the project
-                        // in this case we need to link it via the virtual source folder
-                        sourceFolder = getFileSystemMapper().getVirtualSourceFolder(project);
+                        // this is usually the case when the Bazel package is a Java package
+                        // in this case we need to link (emulate) its package structure
+                        // however, we can only support this properly if this is the only folder
                         if (directories.size() > 1) {
                             // TODO create problem marker?
                             LOG.warn(
-                                "Impossible to support project '{}' - found multiple source directory which seems to be nested!",
+                                "Impossible to support project '{}' - found multiple source directories which seems to be nested!",
                                 project);
                             continue NEXT_FOLDER;
                         }
-                        if (sourceFolder.exists()) {
-                            if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
-                                // TODO create problem marker?
-                                LOG.warn(
-                                    "Impossible to support project '{}' - found mix of multiple source files and empty package fragment root!",
-                                    project);
-                                continue NEXT_FOLDER;
-                            }
-                            // it's not needed otherwise so just delete it
-                            sourceFolder.delete(true, monitor.newChild(1));
+                        // and there aren't any other source files to be linked
+                        if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
+                            // TODO create problem marker?
+                            LOG.warn(
+                                "Impossible to support project '{}' - found mix of multiple source files and empty package fragment root!",
+                                project);
+                            continue NEXT_FOLDER;
                         }
-                    } else {
-                        sourceFolder = project.getProject().getFolder(dir.getPath());
+                        // check this maps to a single Java package
+                        var detectedJavaPackagesForSourceDirectory =
+                                javaInfo.getDetectedJavaPackagesForSourceDirectory(dir);
+                        if (detectedJavaPackagesForSourceDirectory.size() != 1) {
+                            // TODO create problem marker?
+                            LOG.warn(
+                                "Impossible to support project '{}' - an empty package fragment root must map to one Java package (got '{}')!",
+                                project, detectedJavaPackagesForSourceDirectory);
+                            continue NEXT_FOLDER;
+                        }
+
+                        // create the "srcs" folder
+                        var virtualSourceFolder = getFileSystemMapper().getVirtualSourceFolder(project);
+                        if (virtualSourceFolder.exists() && virtualSourceFolder.isLinked()) {
+                            // delete it to ensure we start fresh
+                            virtualSourceFolder.delete(true, monitor.split(1));
+                        }
+                        if (!virtualSourceFolder.exists()) {
+                            virtualSourceFolder.create(IResource.NONE, true, monitor.split(1));
+                        }
+
+                        // build emulated Java package structure and link the directory
+                        var packagePath = detectedJavaPackagesForSourceDirectory.iterator().next();
+                        var packageFolder = virtualSourceFolder.getFolder(packagePath);
+                        if (!packageFolder.getParent().exists()) {
+                            createFolderAndParents(packageFolder.getParent(), monitor.split(1));
+                        }
+                        if (packageFolder.exists() && !packageFolder.isLinked()) {
+                            packageFolder.delete(true, monitor.split(1));
+                        }
+                        packageFolder.createLink(javaInfo.getBazelPackage().getLocation(), IResource.REPLACE,
+                            monitor.split(1));
+
+                        // remove all files not created as part of this loop
+                        deleteAllFilesNotInFolderList(virtualSourceFolder, packageFolder, monitor.newChild(1));
+
+                        // done
+                        break;
                     }
+                    sourceFolder = project.getProject().getFolder(dir);
                     if (sourceFolder.exists() && !sourceFolder.isLinked()) {
                         // check if there is any linked parent we can remove
                         var parent = sourceFolder.getParent();
@@ -554,7 +608,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                     }
 
                     // create link to folder
-                    sourceFolder.createLink(dir.getLocation(), IResource.REPLACE, monitor.newChild(1));
+                    sourceFolder.createLink(javaInfo.getBazelPackage().getLocation().append(dir), IResource.REPLACE,
+                        monitor.newChild(1));
                 }
             }
 

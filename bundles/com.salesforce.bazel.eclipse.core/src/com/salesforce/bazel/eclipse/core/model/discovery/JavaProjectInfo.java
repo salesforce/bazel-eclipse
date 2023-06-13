@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -215,7 +216,7 @@ public class JavaProjectInfo {
     private final List<LabelEntry> pluginDeps = new ArrayList<>();
 
     private final Map<IPath, IPath> detectedPackagePathsByFileEntryPathParent = new HashMap<>();
-    private List<FileEntry> sourceDirectories;
+    private Map<IPath, List<FileEntry>> sourceDirectoriesWithFiles;
 
     private List<FileEntry> sourceFilesWithoutCommonRoot;
 
@@ -389,14 +390,14 @@ public class JavaProjectInfo {
 
         // when there are no split packages we found a good setup
         if (potentialSplitPackageOrSubsetFolders.isEmpty()) {
-            // create source directories
-            this.sourceDirectories = sourceEntriesBySourceRoot.keySet().stream().filter(p -> p != INVALID)
-                    .map(p -> new FileEntry(p, bazelPackage.getLocation())).collect(toList());
-
             // collect remaining files without a root
             if (sourceEntriesBySourceRoot.containsKey(INVALID)) {
-                sourceFilesWithoutCommonRoot = sourceEntriesBySourceRoot.get(INVALID).stream().collect(toList());
+                sourceFilesWithoutCommonRoot = sourceEntriesBySourceRoot.remove(INVALID);
             }
+
+            // create source directories
+            this.sourceDirectoriesWithFiles = sourceEntriesBySourceRoot;
+
         } else {
             // treat all sources as if they don't have a directory
             // (if there are multiple source roots we could do an extra effort and try to filter the ones without split packages; but is this worth supporting?)
@@ -472,14 +473,29 @@ public class JavaProjectInfo {
     }
 
     /**
-     * @return the Bazel package used for computing paths
+     * {@return the Bazel package used for computing paths}
      */
     public BazelPackage getBazelPackage() {
         return bazelPackage;
     }
 
-    public List<FileEntry> getSourceDirectories() {
-        return requireNonNull(sourceDirectories, "no source directories discovered");
+    /**
+     * @param sourceDirectory
+     *            the source directory (must be contained in {@link #getSourceDirectories()})
+     * @return all detected Java packages for the specified source directory (collected from found files)
+     */
+    public Collection<IPath> getDetectedJavaPackagesForSourceDirectory(IPath sourceDirectory) {
+        return requireNonNull(
+            requireNonNull(sourceDirectoriesWithFiles, "no source directories discovered").get(sourceDirectory),
+            () -> format("source directory '%s' unknown", sourceDirectory)).stream()
+                    .map(FileEntry::getDetectedPackagePath).distinct().collect(toList());
+    }
+
+    /**
+     * {@return the list of detected source directories (relative to #getBazelPackage())}
+     */
+    public Collection<IPath> getSourceDirectories() {
+        return requireNonNull(sourceDirectoriesWithFiles, "no source directories discovered").keySet();
     }
 
     public List<FileEntry> getSourceFilesWithoutCommonRoot() {
@@ -491,7 +507,7 @@ public class JavaProjectInfo {
     }
 
     public boolean hasSourceDirectories() {
-        return (sourceDirectories != null) && !sourceDirectories.isEmpty();
+        return (sourceDirectoriesWithFiles != null) && !sourceDirectoriesWithFiles.isEmpty();
     }
 
     public boolean hasSourceFilesWithoutCommonRoot() {
