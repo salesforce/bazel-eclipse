@@ -73,22 +73,23 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
     public Collection<BazelTarget> discoverTargets(BazelWorkspace bazelWorkspace,
             Collection<BazelPackage> bazelPackages, IProgressMonitor progress) throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, "Quering targets", 2);
+            var monitor = SubMonitor.convert(progress, "Quering targets", 1 + bazelPackages.size());
 
             // open all packages at once
             monitor.subTask("Loading package info");
             bazelWorkspace.open(bazelPackages);
 
             // collect targets
-            monitor.worked(1);
             monitor.subTask("Collecting targets");
             List<BazelTarget> targets = new ArrayList<>();
             for (BazelPackage bazelPackage : bazelPackages) {
+                monitor.checkCanceled();
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Discovered targets in package '{}': {}", bazelPackage.getLabel(),
                         bazelPackage.getBazelTargets());
                 }
                 targets.addAll(bazelPackage.getBazelTargets());
+                monitor.worked(1);
             }
 
             return targets;
