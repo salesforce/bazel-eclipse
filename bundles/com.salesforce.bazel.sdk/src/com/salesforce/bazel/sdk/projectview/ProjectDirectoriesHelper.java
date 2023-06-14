@@ -50,4 +50,13 @@ class ProjectDirectoriesHelper {
         }
         return included && !excluded;
     }
+
+    public boolean isExcluded(WorkspacePath workspacePath) {
+        for (WorkspacePath excludeDirectory : excludeDirectories) {
+            if (isSubdirectory(excludeDirectory, workspacePath)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

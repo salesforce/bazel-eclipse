@@ -134,7 +134,12 @@ public final class ImportRoots {
         if (label.isExternal()) {
             return false;
         }
+        // note:the condition below will allow all packages if project directories contains "."?
         return projectDirectories.containsWorkspacePath(label.blazePackage()) || targetInProject(label);
+    }
+
+    public boolean isExcluded(WorkspacePath workspacePath) {
+        return projectDirectories.isExcluded(workspacePath);
     }
 
     public boolean packageInProjectTargets(WorkspacePath packagePath) {

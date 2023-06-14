@@ -15,6 +15,7 @@ import static org.eclipse.core.resources.IResource.FORCE;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,13 +46,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.TargetExpression;
-import com.google.idea.blaze.base.model.primitives.WildcardTargetPattern;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryAndProvisioningExtensionLookup;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryStrategy;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetProvisioningStrategy;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
+import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.projectview.ImportRoots;
 
@@ -65,8 +66,55 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private static Logger LOG = LoggerFactory.getLogger(SynchronizeProjectViewJob.class);
 
+    static ImportRoots createImportRoots(BazelWorkspace workspace) throws CoreException {
+        var builder = ImportRoots.builder(new WorkspaceRoot(workspace.workspacePath()));
+        var projectView = workspace.getBazelProjectView();
+        builder.setDeriveTargetsFromDirectories(projectView.deriveTargetsFromDirectories());
+        projectView.directoriesToImport().forEach(builder::addRootDirectory);
+        projectView.directoriesToExclude().forEach(builder::addExcludeDirectory);
+        projectView.targets().forEach(builder::addTarget);
+        return builder.build();
+    }
+
+    /**
+     * Creates a query to run target lists through Bazel.
+     * <p>
+     * Copied from WildcardTargetExpander IJ plug-in.
+     * </p>
+     *
+     * @param targets
+     * @return
+     */
+    private static String queryForTargets(Collection<TargetExpression> targets) {
+        var builder = new StringBuilder();
+        for (TargetExpression target : targets) {
+            var excluded = target.isExcluded();
+            if (builder.length() == 0) {
+                if (excluded) {
+                    continue; // an excluded target at the start of the list has no effect
+                }
+                builder.append("'").append(target).append("'");
+            } else if (excluded) {
+                builder.append(" - ");
+                // trim leading '-'
+                var excludedTarget = target.toString();
+                builder.append("'").append(excludedTarget, 1, excludedTarget.length()).append("'");
+            } else {
+                builder.append(" + ");
+                builder.append("'").append(target).append("'");
+            }
+        }
+        var targetList = builder.toString();
+        if (targetList.isEmpty()) {
+            return targetList;
+        }
+
+        return String.format("attr('tags', '^((?!manual).)*$', %s)", targetList);
+    }
+
     private final BazelWorkspace workspace;
     private final BazelProjectView projectView;
+
     private final ImportRoots importRoots;
 
     public SynchronizeProjectViewJob(BazelWorkspace workspace) throws CoreException {
@@ -75,7 +123,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
         // trigger loading of the project view
         this.projectView = workspace.getBazelProjectView();
-        importRoots = createImportRoots();
+        importRoots = createImportRoots(workspace);
 
         // lock the full workspace (to prevent concurrent build activity)
         setRule(getWorkspaceRoot());
@@ -108,15 +156,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
 
         return new Path(path.relativePath()).makeRelative().removeTrailingSeparator();
-    }
-
-    private ImportRoots createImportRoots() {
-        var builder = ImportRoots.builder(new WorkspaceRoot(workspace.workspacePath()));
-        builder.setDeriveTargetsFromDirectories(projectView.deriveTargetsFromDirectories());
-        projectView.directoriesToImport().forEach(builder::addRootDirectory);
-        projectView.directoriesToExclude().forEach(builder::addExcludeDirectory);
-        projectView.targets().forEach(builder::addTarget);
-        return builder.build();
     }
 
     private IProject createWorkspaceProject(IPath workspaceRoot, String workspaceName, SubMonitor monitor)
@@ -234,20 +273,15 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
 
         // add any explicitly configured target
-        for (TargetExpression target : projectView.targets()) {
-            if (target.isExcluded()) {
-                continue;
+        var manualTargetsQuery = queryForTargets(projectView.targets());
+        if (!manualTargetsQuery.isBlank()) {
+            var queryCommand =
+                    new BazelQueryForLabelsCommand(workspace.workspacePath(), manualTargetsQuery, true);
+            Collection<String> labels = workspace.getCommandExecutor().runQueryWithoutLock(queryCommand);
+            for (String label : labels) {
+                var bazelLabel = new BazelLabel(label.toString());
+                result.add(workspace.getBazelTarget(bazelLabel));
             }
-
-            var wildcardTarget = WildcardTargetPattern.fromExpression(target);
-            if (wildcardTarget != null) {
-                // FIXME: need something similar to WildcardTargetExpander
-                LOG.warn("Wildcard target pattern for synchronizing not yet supported: {}", wildcardTarget);
-                continue;
-            }
-
-            var label = new BazelLabel(target.toString());
-            result.add(workspace.getBazelTarget(label));
         }
 
         return result;
@@ -313,12 +347,20 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         monitor.beginTask("Configuring visible folders", 10);
 
         // we are comparing using project relative paths
-        Set<IPath> allowedDirectories = projectView.directoriesToImport().stream()
-                .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator).collect(toSet());
-        Set<IPath> explicitelyExcludedDirectories = projectView.directoriesToExclude().stream()
-                .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator).collect(toSet());
-
         Set<IPath> alwaysAllowedFolders = Set.of(new Path(".settings"), new Path(".eclipse"));
+
+        // build a tree of visible paths
+        var foundWorkspaceRoot = importRoots.rootDirectories().stream().anyMatch(WorkspacePath::isWorkspaceRoot);
+
+        // collect path and all its parents
+        Set<IPath> visiblePaths = new HashSet<>();
+        for (WorkspacePath dir : importRoots.rootDirectories()) {
+            var directoryPath = IPath.fromPath(dir.asPath());
+            while (!directoryPath.isEmpty()) {
+                visiblePaths.add(directoryPath);
+                directoryPath = directoryPath.removeLastSegments(1);
+            }
+        }
 
         IResourceVisitor visitor = resource -> {
             // we only hide folders, i.e. all files contained in the project remain visible
@@ -330,22 +372,17 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                     return false;
                 }
 
-                var isIncluded = findPathOrAnyParentInSet(path, allowedDirectories);
-                if (isIncluded) {
-                    // hide when explicitly excluded (otherwise don't hide)
-                    var isExcluded = findPathOrAnyParentInSet(path, explicitelyExcludedDirectories);
-                    resource.setHidden(isExcluded);
+                // we need to check three things
+                // 1. if workspace root '.' is listed, everything should be visible by default
+                // 2. if a parent is in visiblePaths it should be visible
+                // 3. if a sub-sub-sub directory is in importRoots then it should be visible as well
+                var visible = foundWorkspaceRoot || visiblePaths.contains(resource.getProjectRelativePath())
+                        || importRoots.containsWorkspacePath(new WorkspacePath(path.toString()));
+                // but an explicit exclude dominates
+                var excluded = importRoots.isExcluded(new WorkspacePath(path.toString()));
 
-                    // continue checking the hierarchy for additional excludes
-                    // (this is only needed when the folder is visible and not excluded so far)
-                    return !isExcluded;
-                }
-
-                // resource is not included, hide it
-                resource.setHidden(true);
-
-                // no need to continue searching
-                return false;
+                resource.setHidden(excluded || !visible);
+                return visible && !excluded; // no need to continue looking if it's not visible
             }
 
             // we cannot make a decision, continue searching
