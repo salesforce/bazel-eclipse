@@ -2,10 +2,7 @@ target "bazel-eclipse-feature-target-platform" with source configurePhase requir
 
 environment JavaSE-17
 
-//location "https://download.eclipse.org/eclipse/updates/4.27/" {
-// https://github.com/eclipse-platform/eclipse.platform.ui/pull/738
-// https://github.com/eclipse-platform/eclipse.platform.ui/issues/727
-location "https://download.eclipse.org/eclipse/updates/4.28-I-builds/I20230525-0350/" {
+location "https://download.eclipse.org/eclipse/updates/4.28/" {
     org.eclipse.e4.rcp.feature.group
     org.eclipse.ecf.core.feature.feature.group
     org.eclipse.ecf.core.ssl.feature.feature.group
