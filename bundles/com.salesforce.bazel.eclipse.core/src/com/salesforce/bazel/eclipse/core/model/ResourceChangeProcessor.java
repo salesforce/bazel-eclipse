@@ -132,7 +132,7 @@ class ResourceChangeProcessor implements IResourceChangeListener {
                     affectedProjectsWithClasspathChange.add(file.getProject());
                 }
                 var fileExtension = file.getFileExtension();
-                if (fileExtension.equals("bazelproject")) {
+                if ("bazelproject".equals(fileExtension)) {
                     affectedProjectsWithProjectViewChange.add(file.getProject());
                 }
                 break;
