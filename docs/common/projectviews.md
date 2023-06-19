@@ -33,9 +33,18 @@ Customize how targets are discovered when `derive_targets_from_directories` is s
 Does nothing when `derive_targets_from_directories` is not set or set to `false`.
 
 The default value is `default`, which maps to `bazel-query` and will use `bazel query` to discover targets.
-See [BazelQueryTargetDiscovery.java](../../bundles/com.salesforce.bazel.eclipse.core/src/com/salesforce/bazel/eclipse/core/model/discovery/BazelQueryTargetDiscovery.java) to read more about default discovery behavior.
-
 It's possible to add custom strategies via an extension point.
+
+#### `bazel query`
+
+This performs a `bazel query` to obtain all list of all `BUILD` files.
+The list is then processed and directory information is translated into a list of Bazel packages.
+The list of packages is further refined with the project view information.
+Directories without an anchor in the `directories` list will be discarded.
+Directories with an anchor explicitely excluded will also be discarded.
+The remaining list of packages is queried again using `bazel query` to obtain all possible targets.
+
+See [BazelQueryTargetDiscovery.java](../../bundles/com.salesforce.bazel.eclipse.core/src/com/salesforce/bazel/eclipse/core/model/discovery/BazelQueryTargetDiscovery.java) to read more about default discovery behavior.
 
 ### `target_provisioning_strategy`
 
