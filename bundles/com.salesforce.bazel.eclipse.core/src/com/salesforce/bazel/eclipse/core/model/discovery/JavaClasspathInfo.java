@@ -19,9 +19,7 @@ import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -41,7 +39,6 @@ import com.google.devtools.build.lib.view.proto.Deps.Dependency.Kind;
 import com.google.idea.blaze.base.bazel.BazelBuildSystemProvider;
 import com.google.idea.blaze.base.command.buildresult.BlazeArtifact;
 import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
-import com.google.idea.blaze.base.command.buildresult.ParsedBepOutput;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.Dependency;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
@@ -55,8 +52,6 @@ import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.AccessRule;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
-import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
-import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 
 /**
@@ -66,7 +61,7 @@ import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
  * with aspects result}. This result will be used for computing classpath.
  * </p>
  */
-public class JavaClasspathInfo extends JavaClasspathJarInfo {
+public class JavaClasspathInfo extends JavaClasspathJarLocationResolver {
 
     static record JdepsDependency(
             ArtifactLocation artifactLocation,
@@ -108,16 +103,7 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
                         || target.getKind().equals(GenericBlazeRules.RuleTypes.PROTO_LIBRARY.getKind()));
     }
 
-    final ParsedBepOutput aspectsBuildResult;
-
-    /** index of all aspects loaded from the build output */
-    final Map<TargetKey, TargetIdeInfo> ideInfoByTargetKey;
-
-    /** index of all jars belonging to a target */
-    final Map<TargetKey, List<BlazeJarLibrary>> librariesByTargetKey;
-
-    /** index of jars based on their root relative path allows lookup of jdeps entries */
-    final Map<String, BlazeJarLibrary> libraryByJdepsRootRelativePath;
+    final JavaClasspathAspectsInfo aspectsInfo;
 
     /** set of generated source jars (maintaining insertion order) */
     final Set<BlazeJarLibrary> generatedSourceJars = new LinkedHashSet<>();
@@ -131,60 +117,9 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
     /** set of runtime dependencies (maintaining insertion order) */
     final Set<TargetKey> runtimeDeps = new LinkedHashSet<>();
 
-    public JavaClasspathInfo(ParsedBepOutput aspectsBuildResult, BazelWorkspace bazelWorkspace) throws CoreException {
+    public JavaClasspathInfo(JavaClasspathAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace) throws CoreException {
         super(bazelWorkspace);
-        this.aspectsBuildResult = aspectsBuildResult;
-
-        // build maps
-        ideInfoByTargetKey = new HashMap<>();
-        librariesByTargetKey = new HashMap<>();
-        libraryByJdepsRootRelativePath = new HashMap<>();
-
-        // index all the info from each aspect
-        var outputArtifacts = aspectsBuildResult.getOutputGroupArtifacts(OutputGroup.INFO::isPrefixOf,
-            IntellijAspects.ASPECT_OUTPUT_FILE_PREDICATE);
-        NEXT_ASPECT: for (OutputArtifact outputArtifact : outputArtifacts) {
-            try {
-                // parse the aspect
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Processing aspect: {}", outputArtifact);
-                }
-                var targetIdeInfo = TargetIdeInfo.fromProto(getAspects().readAspectFile(outputArtifact));
-                if (targetIdeInfo == null) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Skipping empty aspect: {}", outputArtifact);
-                    }
-                    continue NEXT_ASPECT;
-                }
-                var javaIdeInfo = targetIdeInfo.getJavaIdeInfo();
-                if (javaIdeInfo == null) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Skipping aspect without Java info: {}", outputArtifact);
-                    }
-                    continue NEXT_ASPECT;
-                }
-
-                var targetKey = targetIdeInfo.getKey();
-                ideInfoByTargetKey.put(targetKey, targetIdeInfo);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Indexing target: {}", targetKey);
-                }
-
-                // add all jars to our index (so we can map them back later)
-                for (var jar : javaIdeInfo.getJars()) {
-                    addLibrary(new BlazeJarLibrary(jar, targetKey));
-                }
-                for (var jar : javaIdeInfo.getGeneratedJars()) {
-                    addLibrary(new BlazeJarLibrary(jar, targetKey));
-                }
-                if (javaIdeInfo.getFilteredGenJar() != null) {
-                    addLibrary(new BlazeJarLibrary(javaIdeInfo.getFilteredGenJar(), targetKey));
-                }
-
-            } catch (IOException e) {
-                throw new CoreException(Status.error(format("Error reading aspect file '%s'.", outputArtifact), e));
-            }
-        }
+        this.aspectsInfo = aspectsInfo;
     }
 
     private void addDirectDependency(Dependency directDependency) {
@@ -212,25 +147,6 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
         }
     }
 
-    private void addLibrary(BlazeJarLibrary library) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Indexing jar: {}", library);
-        }
-
-        librariesByTargetKey.computeIfAbsent(library.targetKey, t -> new ArrayList<>());
-        librariesByTargetKey.get(library.targetKey).add(library);
-
-        var libraryArtifact = library.libraryArtifact;
-        var interfaceJar = libraryArtifact.getInterfaceJar();
-        if (interfaceJar != null) {
-            libraryByJdepsRootRelativePath.put(interfaceJar.getRelativePath(), library);
-        }
-        var classJar = libraryArtifact.getClassJar();
-        if (classJar != null) {
-            libraryByJdepsRootRelativePath.put(classJar.getRelativePath(), library);
-        }
-    }
-
     /**
      * Adds a target to be resolved.
      * <p>
@@ -250,7 +166,7 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
             LOG.debug("Adding target '{}' to classpath", targetLabel);
         }
 
-        var targetIdeInfo = ideInfoByTargetKey.get(targetKey);
+        var targetIdeInfo = aspectsInfo.get(targetKey);
         if (targetIdeInfo == null) {
             //  this could be a failing build, abort with a warning
             LOG.warn(
@@ -307,7 +223,7 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
 
         // process direct dependencies
         for (Dependency directDependency : targetIdeInfo.getDependencies()) {
-            var dependencyIdeInfo = ideInfoByTargetKey.get(directDependency.getTargetKey());
+            var dependencyIdeInfo = aspectsInfo.get(directDependency.getTargetKey());
             if (dependencyIdeInfo == null) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Ignoring dependency without IDE info: {}", directDependency.getTargetKey());
@@ -347,7 +263,7 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
         // Collect jars from jdep references
         for (JdepsDependency jdepsDependency : jdepsCompileJars) {
             var artifact = jdepsDependency.artifactLocation();
-            var library = libraryByJdepsRootRelativePath.get(artifact.getRelativePath());
+            var library = aspectsInfo.getLibraryByJdepsRootRelativePath(artifact.getRelativePath());
             if (library == null) {
                 // It's in the target's jdeps, but our aspect never attached to the target building it.
                 // Perhaps it's an implicit dependency, or not referenced in an attribute we propagate
@@ -381,7 +297,7 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
                 continue;
             }
 
-            var jars = librariesByTargetKey.get(targetKey);
+            var jars = aspectsInfo.getLibraries(targetKey);
             if (jars == null) {
                 if (LOG.isDebugEnabled()) {
                     LOG.warn("Unable to locate compile jars in index for dependency: {}", targetKey);
@@ -413,10 +329,6 @@ public class JavaClasspathInfo extends JavaClasspathJarInfo {
         }
 
         return result.values();
-    }
-
-    public IntellijAspects getAspects() {
-        return bazelWorkspace.getParent().getModelManager().getIntellijAspects();
     }
 
     private List<JdepsDependency> loadJdeps(TargetIdeInfo targetIdeInfo) throws CoreException {

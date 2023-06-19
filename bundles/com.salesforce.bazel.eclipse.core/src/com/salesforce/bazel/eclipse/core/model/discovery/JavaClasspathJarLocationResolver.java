@@ -18,23 +18,34 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 
 /**
- * A utility for collecting jar information from Bazel for Eclipse classpath computation.
+ * A utility for resolving jar information from Bazel for Eclipse classpath computation.
  */
-public class JavaClasspathJarInfo {
+public class JavaClasspathJarLocationResolver {
 
-    private static Logger LOG = LoggerFactory.getLogger(JavaClasspathJarInfo.class);
+    private static Logger LOG = LoggerFactory.getLogger(JavaClasspathJarLocationResolver.class);
 
     protected final BazelWorkspace bazelWorkspace;
     protected WorkspaceRoot workspaceRoot;
     protected ArtifactLocationDecoder locationDecoder;
 
-    public JavaClasspathJarInfo(BazelWorkspace bazelWorkspace) throws CoreException {
+    public JavaClasspathJarLocationResolver(BazelWorkspace bazelWorkspace) throws CoreException {
         this.bazelWorkspace = bazelWorkspace;
 
         workspaceRoot = new WorkspaceRoot(bazelWorkspace.getLocation().toPath());
         locationDecoder = new ArtifactLocationDecoderImpl(new BazelWorkspaceBlazeInfo(bazelWorkspace),
                 new WorkspacePathResolverImpl(workspaceRoot));
+    }
 
+    public BazelWorkspace getBazelWorkspace() {
+        return bazelWorkspace;
+    }
+
+    public ArtifactLocationDecoder getLocationDecoder() {
+        return locationDecoder;
+    }
+
+    public WorkspaceRoot getWorkspaceRoot() {
+        return workspaceRoot;
     }
 
     /**
@@ -90,5 +101,4 @@ public class JavaClasspathJarInfo {
         }
         return null;
     }
-
 }

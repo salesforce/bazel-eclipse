@@ -123,7 +123,7 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
                 format("kind('java_import rule', set( %s ))", setOfExternalsToQuery), false);
         Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
 
-        var jarInfo = new JavaClasspathJarInfo(bazelWorkspace);
+        var jarInfo = new JavaClasspathJarLocationResolver(bazelWorkspace);
 
         var needsFetch = false;
         Set<ClasspathEntry> result = new LinkedHashSet<>();
