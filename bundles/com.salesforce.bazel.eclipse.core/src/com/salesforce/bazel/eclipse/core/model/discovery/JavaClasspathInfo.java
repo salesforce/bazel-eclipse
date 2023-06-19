@@ -48,6 +48,7 @@ import com.google.idea.blaze.base.model.primitives.GenericBlazeRules;
 import com.google.idea.blaze.java.JavaBlazeRules;
 import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.AccessRule;
@@ -358,6 +359,13 @@ public class JavaClasspathInfo extends JavaClasspathJarLocationResolver {
         return List.of();
     }
 
+    protected ClasspathEntry newProjectReference(TargetKey targetKey, BazelProject bazelProject) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Found workspace reference for '{}': {}", targetKey, bazelProject.getProject());
+        }
+        return ClasspathEntry.newProjectEntry(bazelProject.getProject());
+    }
+
     protected boolean relevantDep(Deps.Dependency dep) {
         // we only want explicit or implicit deps that were actually resolved by the compiler, not ones
         // that are available for use in the same package
@@ -385,17 +393,19 @@ public class JavaClasspathInfo extends JavaClasspathJarLocationResolver {
         return resolveJar(library.libraryArtifact);
     }
 
-    private ClasspathEntry resolveProject(TargetKey targetKey) throws CoreException {
+    protected ClasspathEntry resolveProject(TargetKey targetKey) throws CoreException {
         if (targetKey.isPlainTarget() && !targetKey.getLabel().isExternal()) {
             var bazelPackage =
                     bazelWorkspace.getBazelPackage(new Path(targetKey.getLabel().blazePackage().relativePath()));
             var bazelTarget = bazelPackage.getBazelTarget(targetKey.getLabel().targetName().toString());
             if (bazelTarget.hasBazelProject()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Found workspace reference for '{}': {}", targetKey,
-                        bazelTarget.getBazelProject().getProject());
-                }
-                return ClasspathEntry.newProjectEntry(bazelTarget.getBazelProject().getProject());
+                // a direct target match is preferred
+                return newProjectReference(targetKey, bazelTarget.getBazelProject());
+            }
+            if (bazelPackage.hasBazelProject()) {
+                // at this point we *assume* the package is a valid project reference and includes the given target
+                // if this assumption doesn't hold true we need to customize/override this behavior per override
+                return newProjectReference(targetKey, bazelPackage.getBazelProject());
             }
         }
         return null;
