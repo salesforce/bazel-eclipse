@@ -3,53 +3,9 @@
 To work on your Bazel Workspace you must first import it.
 Note that there is no IDE support for creating a new Bazel Workspace from the IDE, it must already exist.
 
-### Limitations
+### Prerequisite: Project Views
 
-There are a set of known limitations and known issues with Bazel package import.
-The work item that will address each limitation is linked from each section.
-
-#### Limitation: Only one Bazel workspace can be imported in an Eclipse workspace
-
-At this time, the feature only supports a single Bazel workspace in an Eclipse workspace.
-If you do development in multiple Bazel workspaces, you will need to have multiple Eclipse workspaces.
-
-This issue tracks this limitation: [Support multiple Bazel workspaces in a single Eclipse workspace](https://github.com/salesforce/bazel-eclipse/issues/25)
-
-#### Limitation: Global Java Compiler Compliance Level is not Updated
-
-Note also that BEF does not currently configure the *Eclipse Compiler Preferences* during import, which is a global setting for the Eclipse workspace.
-If you launch your Eclipse using JDK8, the default *Compiler Compliance Level* will be set to JDK8 regardless of your Bazel workspace.
-You can manually change this in the Eclipse preferences in *Eclipse -> Preferences -> Java -> Compiler*.
-This will be improved with [Update Eclipse workspace Java compiler compliance level based on Bazel workspace .bazelrc](https://github.com/salesforce/bazel-eclipse/issues/184).
-
-#### Limitation: Only the Bazel Workspace JRE Source Level is Honored
-
-Currently, only the Bazel workspace global *javacopt* setting will be honored when configuring the JRE for each imported project.
-If not present, JRE 11 will be assumed.
-For example, if this is in your *.bazelrc* file, JRE 8 will be in every Eclipse project's build path after import:
-
-```
-build --javacopt=-source 8 -target 10
-```
-
-After import, you are free to [change the JRE](using_the_feature_classpath.md) for each project using the Eclipse *Build Path* user interface.
-Please see [Support package level JDK configuration for Build Path](https://github.com/salesforce/bazel-eclipse/issues/89) for status on improvement.
-
-#### Limitation: Only Import Conforming Java Packages
-
-Before you proceed, please note that at this time the feature is not robust enough to build just any Bazel package.
-The feature only supports what we call *Conforming Java Packages*.
-
-Please see the [Conforming Java Packages explainer](conforming_java_packages.md) for more details.
-
-#### Known Issue: Import of a Bazel Workspace is Slow
-
-Be aware that importing a large number of Bazel packages into Eclipse is slow.
-BEF currently computes the classpath for each Java target in each imported package.
-Because Java packages tend to have many *java_test* targets, this can take a long time.
-This is done [for specific reasons](https://github.com/salesforce/bazel-eclipse/issues/29), but is ripe for optimization.
-
-This issue is tracked as: [Improve performance of Bazel workspace import](https://github.com/salesforce/bazel-eclipse/issues/4)
+Please read [all about Project Views and how they work](../common/projectviews.md) to understand how projects are created in Eclipse.
 
 
 ### Steps to Import Your Bazel Workspace into Eclipse
@@ -60,7 +16,7 @@ Import will fail if there are build errors in the workspace because import uses 
 
 ```
 bazel build //...
-```  
+```
 
 Then, in the IDE, the flow for import matches the familiar Maven import process:
 

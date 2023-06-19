@@ -39,7 +39,7 @@ public interface TargetDiscoveryStrategy {
      * </p>
      *
      * @param bazelWorkspace
-     *            the Bazel workspace
+     *            the Bazel workspace (never <code>null</code>)
      * @param progress
      *            a monitor for tracking progress and observing cancellations (never <code>null</code>); implementors do
      *            not need to call {@link IProgressMonitor#done()}
@@ -61,9 +61,9 @@ public interface TargetDiscoveryStrategy {
      * </p>
      *
      * @param bazelWorkspace
-     *            the workspace the packages belong to
+     *            the workspace the packages belong to (never <code>null</code>)
      * @param bazelPackages
-     *            the collection of Bazel packages to obtain targets for
+     *            the collection of Bazel packages to obtain targets for (never <code>null</code>)
      * @param progress
      *            a monitor for tracking progress and observing cancellations (never <code>null</code>); implementors do
      *            not need to call {@link IProgressMonitor#done()}

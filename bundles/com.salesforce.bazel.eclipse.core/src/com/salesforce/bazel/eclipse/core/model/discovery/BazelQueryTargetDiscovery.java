@@ -21,6 +21,11 @@ import com.salesforce.bazel.sdk.command.BazelQueryForPackagesCommand;
 
 /**
  * Default implementation of {@link TargetDiscoveryStrategy} using <code>bazel query</code> to discovery targets.
+ * <p>
+ * Discovery is a two step process. In the first step, the workspace is queries for <strong>all</strong> available
+ * packages. In the second step, a list of packages is queried for available targets. The list may be filtered (eg.,
+ * based on list of directories in the project view).
+ * </p>
  */
 public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
 

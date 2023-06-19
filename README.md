@@ -2,7 +2,7 @@
 
 This Git repository contains two [Bazel](http://bazel.io) IDE projects.
 They share a large amount of code and therefore live together here.
-Both provide IDE integrations for projects built by the [Bazel](https://bazel.build) build system.
+Both provide IDE integrations for Java projects built by the [Bazel](https://bazel.build) build system.
 
 :octocat: Please do us a huge favor. If you think these projects could be useful for you, now or in the future, please hit the **Star** button at the top. That helps us advocate for more resources on this project. Thanks!
 

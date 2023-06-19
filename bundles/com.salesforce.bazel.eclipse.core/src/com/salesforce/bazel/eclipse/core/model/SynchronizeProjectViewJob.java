@@ -164,8 +164,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
         var projectDescription = getWorkspace().newProjectDescription(workspaceName);
         projectDescription.setLocation(workspaceRoot);
-        projectDescription.setComment(format(
-            "Bazel Workspace Project managed by Bazel Eclipse Feature for Bazel workspace at '%s'", workspaceRoot));
+        projectDescription.setComment(getWorkspaceProjectComment(workspaceRoot));
         var project = getWorkspaceRoot().getProject(workspaceName);
         project.create(projectDescription, monitor.split(1));
 
@@ -275,8 +274,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         // add any explicitly configured target
         var manualTargetsQuery = queryForTargets(projectView.targets());
         if (!manualTargetsQuery.isBlank()) {
-            var queryCommand =
-                    new BazelQueryForLabelsCommand(workspace.workspacePath(), manualTargetsQuery, true);
+            var queryCommand = new BazelQueryForLabelsCommand(workspace.workspacePath(), manualTargetsQuery, true);
             Collection<String> labels = workspace.getCommandExecutor().runQueryWithoutLock(queryCommand);
             for (String label : labels) {
                 var bazelLabel = new BazelLabel(label.toString());
@@ -336,6 +334,11 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     IWorkspace getWorkspace() {
         return ResourcesPlugin.getWorkspace();
+    }
+
+    private String getWorkspaceProjectComment(IPath workspaceRoot) {
+        return format("Bazel Workspace Project managed by Bazel Eclipse Feature for Bazel workspace at '%s'",
+            workspaceRoot);
     }
 
     IWorkspaceRoot getWorkspaceRoot() {
@@ -440,10 +443,21 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // we don't care about the actual project name - we look for the path
             var workspaceProject = findProjectForLocation(workspaceRoot);
             if (workspaceProject == null) {
+                // create new project
                 workspaceProject =
                         createWorkspaceProject(workspaceRoot, workspaceName, progress.split(1, SUPPRESS_NONE));
-            } else if (!workspaceProject.isOpen()) {
-                workspaceProject.open(progress.split(1, SUPPRESS_NONE));
+            } else {
+                // open existing
+                if (!workspaceProject.isOpen()) {
+                    workspaceProject.open(progress.split(1, SUPPRESS_NONE));
+                }
+                // fix name
+                if (!workspaceName.equals(workspaceProject.getName())) {
+                    var projectDescription = workspaceProject.getDescription();
+                    projectDescription.setName(workspaceName);
+                    projectDescription.setComment(getWorkspaceProjectComment(workspaceRoot));
+                    workspaceProject.move(projectDescription, true, progress.split(1, SUPPRESS_NONE));
+                }
             }
 
             // ensure Bazel symlinks are filtered
