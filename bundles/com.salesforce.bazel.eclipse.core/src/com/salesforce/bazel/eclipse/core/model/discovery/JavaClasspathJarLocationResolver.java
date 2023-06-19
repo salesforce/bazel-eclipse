@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.command.buildresult.BlazeArtifact.LocalFileArtifact;
+import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
 import com.google.idea.blaze.base.sync.workspace.ArtifactLocationDecoder;
@@ -25,19 +26,24 @@ public class JavaClasspathJarLocationResolver {
     private static Logger LOG = LoggerFactory.getLogger(JavaClasspathJarLocationResolver.class);
 
     protected final BazelWorkspace bazelWorkspace;
-    protected WorkspaceRoot workspaceRoot;
-    protected ArtifactLocationDecoder locationDecoder;
+    protected final BlazeInfo blazeInfo;
+    protected final WorkspaceRoot workspaceRoot;
+    protected final ArtifactLocationDecoder locationDecoder;
 
     public JavaClasspathJarLocationResolver(BazelWorkspace bazelWorkspace) throws CoreException {
         this.bazelWorkspace = bazelWorkspace;
 
+        blazeInfo = new BazelWorkspaceBlazeInfo(bazelWorkspace);
         workspaceRoot = new WorkspaceRoot(bazelWorkspace.getLocation().toPath());
-        locationDecoder = new ArtifactLocationDecoderImpl(new BazelWorkspaceBlazeInfo(bazelWorkspace),
-                new WorkspacePathResolverImpl(workspaceRoot));
+        locationDecoder = new ArtifactLocationDecoderImpl(blazeInfo, new WorkspacePathResolverImpl(workspaceRoot));
     }
 
     public BazelWorkspace getBazelWorkspace() {
         return bazelWorkspace;
+    }
+
+    public BlazeInfo getBlazeInfo() {
+        return blazeInfo;
     }
 
     public ArtifactLocationDecoder getLocationDecoder() {

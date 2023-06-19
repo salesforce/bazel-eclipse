@@ -27,6 +27,7 @@ import com.google.devtools.build.lib.query2.proto.proto2api.Build;
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Rule;
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.google.idea.blaze.base.bazel.BazelBuildSystemProvider;
+import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.google.idea.blaze.base.model.primitives.Label;
@@ -53,13 +54,14 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
 
     private static final String PREFIX_EXTERNAL = "//external:";
 
-    public static ArtifactLocation externalJarImportToArtifactLocation(WorkspaceRoot workspaceRoot, String jar) {
+    public static ArtifactLocation externalJarToArtifactLocation(String jar, boolean isGenerated,
+            WorkspaceRoot workspaceRoot, BlazeInfo blazeInfo) {
         if ((jar == null) || jar.isBlank()) {
             return null;
         }
         if (Label.validate(jar) != null) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Ignoring invalid lable: {}", jar);
+                LOG.debug("Ignoring invalid label: {}", jar);
             }
             return null;
         }
@@ -74,6 +76,17 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
                 ? format("external/%s/%s", jarLabel.externalWorkspaceName(), jarLabel.targetName())
                 : format("external/%s/%s/%s", jarLabel.externalWorkspaceName(), jarLabel.blazePackage(),
                     jarLabel.targetName());
+
+        if (isGenerated) {
+            /*
+             * The jar file may be generated, in which case we cannot consume it directlry from <execroot>/external/...
+             * Instead we have to consume it from bazel-out/mnemonic/bin/external/...
+             */
+            var bazelOutPrefix =
+                    blazeInfo.getExecutionRoot().relativize(blazeInfo.getBlazeBin().getAbsoluteOrRelativePath());
+            executionRootRelativePath = format("%s/%s", bazelOutPrefix, executionRootRelativePath);
+        }
+
         return ExecutionPathHelper.parse(workspaceRoot, BazelBuildSystemProvider.BAZEL, executionRootRelativePath);
     }
 
@@ -111,57 +124,12 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
         //      > bazel query "kind(jvm_import_external, //external:*)"
         //
 
-        // get list of all external repos
         var workspaceRoot = new WorkspaceRoot(bazelWorkspace.getLocation().toPath());
-        var allExternalQuery = new BazelQueryForLabelsCommand(workspaceRoot.directory(),
-                "kind(jvm_import_external, //external:*)", false);
-        Collection<String> externals = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
-
-        var setOfExternalsToQuery = externals.stream().filter(s -> s.startsWith(PREFIX_EXTERNAL))
-                .map(s -> s.substring(PREFIX_EXTERNAL.length())).map(s -> format("@%s//...", s)).collect(joining(" "));
-        var javaImportQuery = new BazelQueryForTargetProtoCommand(workspaceRoot.directory(),
-                format("kind('java_import rule', set( %s ))", setOfExternalsToQuery), false);
-        Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
-
         var jarInfo = new JavaClasspathJarLocationResolver(bazelWorkspace);
-
-        var needsFetch = false;
         Set<ClasspathEntry> result = new LinkedHashSet<>();
-        for (Target target : javaImportTargets) {
-            var srcJar = findSingleJar(target.getRule(), "srcjar", workspaceRoot);
 
-            List<ArtifactLocation> jars = new ArrayList<>();
-            target.getRule().getAttributeList().stream().filter(a -> a.getName().equals("jars"))
-                    .map(Build.Attribute::getStringListValueList).collect(toList())
-                    .forEach(list -> list.forEach(jar -> {
-                        var jarArtifact = externalJarImportToArtifactLocation(workspaceRoot, jar);
-                        if (jarArtifact != null) {
-                            jars.add(jarArtifact);
-                        }
-                    }));
-
-            var testOnly = target.getRule().getAttributeList().stream().filter(a -> a.getName().equals("testonly"))
-                    .map(Build.Attribute::getBooleanValue).findAny();
-
-            for (ArtifactLocation artifactLocation : jars) {
-                var library = LibraryArtifact.builder().setClassJar(artifactLocation);
-                if (srcJar != null) {
-                    library.addSourceJar(srcJar);
-                }
-                var classpath = jarInfo.resolveJar(library.build());
-                if (classpath != null) {
-                    if (isRegularFile(classpath.getPath().toPath())) {
-                        if (testOnly.isPresent() && testOnly.get()) {
-                            classpath.getExtraAttributes().put(IClasspathAttribute.TEST, Boolean.TRUE.toString());
-                        }
-                        classpath.getExtraAttributes().put("bazel-target-name", target.getRule().getName());
-                        result.add(classpath);
-                    } else {
-                        needsFetch = true;
-                    }
-                }
-            }
-        }
+        var needsFetch = queryForJvmImportExternal(bazelWorkspace, workspaceRoot, jarInfo, result);
+        needsFetch = queryForRulesJvmExternalJars(bazelWorkspace, workspaceRoot, jarInfo, result) || needsFetch;
 
         if (needsFetch) {
             createBuildPathProblem(workspaceProject, Status.info(
@@ -187,13 +155,142 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
         throw new IllegalStateException("this method must not be called");
     }
 
-    private ArtifactLocation findSingleJar(Rule rule, String attributeName, WorkspaceRoot workspaceRoot) {
+    private ArtifactLocation findSingleJar(Rule rule, String attributeName, boolean isGenerated,
+            WorkspaceRoot workspaceRoot, BlazeInfo blazeInfo) {
         var attribute = rule.getAttributeList().stream().filter(a -> a.getName().equals(attributeName)).findAny();
         if (attribute.isEmpty()) {
             return null;
         }
 
-        return externalJarImportToArtifactLocation(workspaceRoot, attribute.get().getStringValue());
+        return externalJarToArtifactLocation(attribute.get().getStringValue(), isGenerated, workspaceRoot, blazeInfo);
+    }
+
+    private boolean queryForJvmImportExternal(BazelWorkspace bazelWorkspace, WorkspaceRoot workspaceRoot,
+            JavaClasspathJarLocationResolver locationResolver, Set<ClasspathEntry> result) throws CoreException {
+
+        // detect missing jars
+        var needsFetch = false;
+
+        // get list of all external repos
+        var allExternalQuery = new BazelQueryForLabelsCommand(workspaceRoot.directory(),
+                "kind(jvm_import_external, //external:*)", false);
+        Collection<String> externals = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
+
+        // get java_import details from each external
+        var setOfExternalsToQuery = externals.stream().filter(s -> s.startsWith(PREFIX_EXTERNAL))
+                .map(s -> s.substring(PREFIX_EXTERNAL.length())).map(s -> format("@%s//...", s)).collect(joining(" "));
+        var javaImportQuery = new BazelQueryForTargetProtoCommand(workspaceRoot.directory(),
+                format("kind('java_import rule', set( %s ))", setOfExternalsToQuery), false);
+        Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
+
+        // parse info from each found target
+        for (Target target : javaImportTargets) {
+            var srcJar = findSingleJar(target.getRule(), "srcjar", false /* not generated */, workspaceRoot,
+                locationResolver.getBlazeInfo());
+
+            List<ArtifactLocation> jars = new ArrayList<>();
+            target.getRule().getAttributeList().stream().filter(a -> a.getName().equals("jars"))
+                    .map(Build.Attribute::getStringListValueList).collect(toList())
+                    .forEach(list -> list.forEach(jar -> {
+                        var jarArtifact = externalJarToArtifactLocation(jar, false /* not generated */, workspaceRoot,
+                            locationResolver.getBlazeInfo());
+                        if (jarArtifact != null) {
+                            jars.add(jarArtifact);
+                        }
+                    }));
+
+            var testOnly = target.getRule().getAttributeList().stream().filter(a -> a.getName().equals("testonly"))
+                    .map(Build.Attribute::getBooleanValue).findAny();
+
+            for (ArtifactLocation artifactLocation : jars) {
+                var library = LibraryArtifact.builder().setClassJar(artifactLocation);
+                if (srcJar != null) {
+                    library.addSourceJar(srcJar);
+                }
+                var classpath = locationResolver.resolveJar(library.build());
+                if (classpath != null) {
+                    if (isRegularFile(classpath.getPath().toPath())) {
+                        if (testOnly.isPresent() && testOnly.get()) {
+                            classpath.getExtraAttributes().put(IClasspathAttribute.TEST, Boolean.TRUE.toString());
+                        }
+                        classpath.getExtraAttributes().put("bazel-target-name", target.getRule().getName());
+                        result.add(classpath);
+                    } else {
+                        needsFetch = true;
+                    }
+                }
+            }
+        }
+        return needsFetch;
+    }
+
+    private boolean queryForRulesJvmExternalJars(BazelWorkspace bazelWorkspace, WorkspaceRoot workspaceRoot,
+            JavaClasspathJarLocationResolver locationResolver, Set<ClasspathEntry> result) throws CoreException {
+
+        // detect missing jars
+        var needsFetch = false;
+
+        // get list of all external repos
+        var allExternalQuery = new BazelQueryForLabelsCommand(workspaceRoot.directory(),
+                "kind('.*coursier_fetch', //external:*)", false);
+        Collection<String> externals = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
+
+        // ignore "unpinned" repositories
+        var setOfExternalsToQuery = externals.stream()
+                .filter(s -> s.startsWith(PREFIX_EXTERNAL) && !s.contains(":unpinned_"))
+                .map(s -> s.substring(PREFIX_EXTERNAL.length())).map(s -> format("@%s//...", s)).collect(joining(" "));
+
+        // get jv_import details from each external
+        var javaImportQuery = new BazelQueryForTargetProtoCommand(workspaceRoot.directory(),
+                format("kind('jvm_import rule', set( %s ))", setOfExternalsToQuery), false);
+        Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
+
+        /*
+         * RJE (maven_install) consumes the jar from bazel-out/mnemonic/bin directory because it's generated
+         *
+         * We therefore prefix all locations from the rule to point to the bazel-bin/externals/... directory.
+         * The depends on internal implementation design of maven_install, which is ok at this time.
+         */
+
+        // parse info from each found target
+        for (Target target : javaImportTargets) {
+            var srcJar = findSingleJar(target.getRule(), "srcjar", true /* generated */, workspaceRoot,
+                locationResolver.getBlazeInfo());
+
+            List<ArtifactLocation> jars = new ArrayList<>();
+            target.getRule().getAttributeList().stream().filter(a -> a.getName().equals("jars"))
+                    .map(Build.Attribute::getStringListValueList).collect(toList())
+                    .forEach(list -> list.forEach(jar -> {
+                        var jarArtifact = externalJarToArtifactLocation(jar, true /* generated */, workspaceRoot,
+                            locationResolver.getBlazeInfo());
+                        if (jarArtifact != null) {
+                            jars.add(jarArtifact);
+                        }
+                    }));
+
+            var testOnly = target.getRule().getAttributeList().stream().filter(a -> a.getName().equals("testonly"))
+                    .map(Build.Attribute::getBooleanValue).findAny();
+
+            for (ArtifactLocation artifactLocation : jars) {
+                var library = LibraryArtifact.builder().setClassJar(artifactLocation);
+                if (srcJar != null) {
+                    library.addSourceJar(srcJar);
+                }
+                var classpath = locationResolver.resolveJar(library.build());
+                if (classpath != null) {
+                    if (isRegularFile(classpath.getPath().toPath())) {
+                        if (testOnly.isPresent() && testOnly.get()) {
+                            classpath.getExtraAttributes().put(IClasspathAttribute.TEST, Boolean.TRUE.toString());
+                        }
+                        classpath.getExtraAttributes().put("bazel-target-name", target.getRule().getName());
+                        result.add(classpath);
+                    } else {
+                        needsFetch = true;
+                    }
+                }
+            }
+        }
+        return needsFetch;
     }
 
 }

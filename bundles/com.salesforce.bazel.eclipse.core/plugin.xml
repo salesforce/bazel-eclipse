@@ -100,6 +100,10 @@
             class="com.salesforce.bazel.eclipse.core.model.discovery.ProjectPerTargetProvisioningStrategy"
             name="project-per-target">
       </targetProvisioningStrategy>
+      <targetProvisioningStrategy
+            class="com.salesforce.bazel.eclipse.core.model.discovery.ProjectPerPackageProvisioningStrategy"
+            name="project-per-package">
+      </targetProvisioningStrategy>
    </extension>
    <extension
          point="com.salesforce.bazel.eclipse.core.executor">

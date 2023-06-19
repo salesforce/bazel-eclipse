@@ -106,8 +106,8 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                     }
 
                     if (!isRegularFile(entry.getPath().toPath())) {
-                        createBuildPathProblem(bazelProject,
-                            Status.error("There are missing libraries. Please consider running 'bazel fetch'"));
+                        createBuildPathProblem(bazelProject, Status.error(
+                            format("Library '%s' is missing. Please consider running 'bazel fetch'", entry.getPath())));
                         break;
                     }
                 }

@@ -92,6 +92,8 @@ For details please read the JavaDoc (and Java code) of [ProjectPerPackageProvisi
 
 * Split Java packages are not supported. Everything is merged into a single source folder.
 * Bazel packages mapping *one-to-one with* a Java packages are not recommended with this strategy.
+* The root package (`//`) cannot be imported as project.
+* Overlapping projects (nested packages) cause issues and will be ignored.
 * It requires running `bazel build` to detect classpath configuration.
 * Is not fully implemented and required help/work/contributions.
 

@@ -1,20 +1,31 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
+import static java.nio.file.Files.isRegularFile;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
@@ -22,6 +33,8 @@ import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.FileEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
+import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -41,11 +54,112 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
     public static final String STRATEGY_NAME = "project-per-package";
 
+    public static final QualifiedName PROJECT_PROPERTY_TARGETS = new QualifiedName(PLUGIN_ID, "bazel_targets");
+
+    private static Logger LOG = LoggerFactory.getLogger(ProjectPerPackageProvisioningStrategy.class);
+
     @Override
     public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
-            BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor monitor) throws CoreException {
-        // TODO Auto-generated method stub
-        return null;
+            BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
+        LOG.debug("Computing classpath for projects: {}", bazelProjects);
+        try {
+            var monitor = SubMonitor.convert(progress, "Computing classpaths...", 1 + bazelProjects.size());
+
+            List<BazelLabel> targetsToBuild = new ArrayList<>(bazelProjects.size());
+            Map<BazelProject, List<String>> activeTargetsPerProject = new HashMap<>();
+            for (BazelProject bazelProject : bazelProjects) {
+                monitor.checkCanceled();
+
+                if (!bazelProject.isPackageProject()) {
+                    throw new CoreException(Status.error(format(
+                        "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel package project created by the project per package strategy.",
+                        bazelProject)));
+                }
+
+                var targetsToBuildValue = bazelProject.getProject().getPersistentProperty(PROJECT_PROPERTY_TARGETS);
+                if (targetsToBuildValue == null) {
+                    // brute force build all targets
+                    LOG.warn(
+                        "Targets to build not properly set for project '{}'. Building all targets for computing the classpath, which may be too expensive!",
+                        bazelProject);
+                    bazelProject.getBazelPackage().getBazelTargets().stream().map(BazelTarget::getLabel)
+                            .forEach(targetsToBuild::add);
+                    activeTargetsPerProject.put(bazelProject, bazelProject.getBazelPackage().getBazelTargets().stream()
+                            .map(BazelTarget::getTargetName).collect(toList()));
+                    continue;
+                }
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Found targets for project '{}': {}", bazelProject,
+                        targetsToBuildValue.replace(':', ','));
+                }
+
+                var packagePath = bazelProject.getBazelPackage().getLabel().getPackagePath();
+                List<String> packageTargets = new ArrayList<>();
+                for (String targetName : targetsToBuildValue.split(":")) {
+                    packageTargets.add(targetName);
+                    targetsToBuild.add(new BazelLabel(format("//%s:%s", packagePath, targetName)));
+                }
+                activeTargetsPerProject.put(bazelProject, packageTargets);
+            }
+
+            var workspaceRoot = workspace.getLocation().toPath();
+
+            // run the aspect to compute all required information
+            var onlyDirectDeps = workspace.getBazelProjectView().deriveTargetsFromDirectories();
+            var outputGroups = Set.of(OutputGroup.INFO, OutputGroup.RESOLVE);
+            var languages = Set.of(LanguageClass.JAVA);
+            var aspects = workspace.getParent().getModelManager().getIntellijAspects();
+            var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targetsToBuild, outputGroups, aspects,
+                    languages, onlyDirectDeps);
+
+            monitor.subTask("Running Bazel...");
+            var result = workspace.getCommandExecutor().runDirectlyWithWorkspaceLock(command,
+                bazelProjects.stream().map(BazelProject::getProject).collect(toList()), monitor.split(1));
+
+            // populate map from result
+            Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
+            var aspectsInfo = new JavaClasspathAspectsInfo(result, workspace);
+            for (BazelProject bazelProject : bazelProjects) {
+                monitor.subTask("Analyzing: " + bazelProject);
+                monitor.checkCanceled();
+
+                // build index of classpath info
+                var classpathInfo = new JavaClasspathInfo(aspectsInfo, workspace);
+
+                // add the targets
+                List<String> targetNames = requireNonNull(activeTargetsPerProject.get(bazelProject),
+                    () -> format("programming error: not targets for project: %s", bazelProject));
+                for (String targetName : targetNames) {
+                    classpathInfo.addTarget(bazelProject.getBazelPackage().getBazelTarget(targetName));
+                }
+
+                // compute the classpath
+                var classpath = classpathInfo.compute();
+
+                // check for non existing jars
+                for (ClasspathEntry entry : classpath) {
+                    if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
+                        continue;
+                    }
+
+                    if (!isRegularFile(entry.getPath().toPath())) {
+                        createBuildPathProblem(bazelProject, Status.error(
+                            format("Library '%s' is missing. Please consider running 'bazel fetch'", entry.getPath())));
+                        break;
+                    }
+                }
+
+                classpathsByProject.put(bazelProject, classpath);
+                monitor.worked(1);
+            }
+
+            return classpathsByProject;
+        } finally {
+            if (progress != null) {
+                progress.done();
+            }
+        }
     }
 
     @Override
@@ -61,6 +175,11 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         for (Entry<BazelPackage, List<BazelTarget>> entry : targetsByPackage.entrySet()) {
             var bazelPackage = entry.getKey();
             var packageTargets = entry.getValue();
+
+            // skip the root package (not supported)
+            if (bazelPackage.isRoot()) {
+                continue;
+            }
 
             // create the project for the package
             var project = provisionPackageProject(bazelPackage, packageTargets, monitor.split(1));
@@ -116,13 +235,17 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             return bazelPackage.getBazelProject();
         }
 
-        var label = bazelPackage.getLabel();
-        var projectName = label.getPackagePath().replace('/', '.');
+        var packagePath = bazelPackage.getLabel().getPackagePath();
+        var projectName = packagePath.isBlank() ? "ROOT" : packagePath.replace('/', '.');
 
         // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
         var projectLocation = bazelPackage.getLocation();
 
-        createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
+        var project = createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
+
+        // remember the targets to build for the project
+        project.setPersistentProperty(PROJECT_PROPERTY_TARGETS,
+            targets.stream().map(BazelTarget::getTargetName).distinct().collect(joining(":")));
 
         // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
         return bazelPackage.getBazelProject();

@@ -57,6 +57,10 @@ public final class BazelPackageInfo extends BazelElementInfo {
             throws CoreException {
         // bazel query '"//foo:all" + "//bar:all"'
 
+        if (bazelPackages.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
         var workspaceRoot = bazelWorkspace.getLocation().toPath();
         var query = bazelPackages.stream()
                 .map(bazelPackage -> format("\"//%s:all\"", bazelPackage.getWorkspaceRelativePath()))
@@ -68,7 +72,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
 
         Map<BazelPackage, Map<String, Target>> result = new HashMap<>();
         try {
-            LOG.debug("{}: querying Bazel for list of targets form: {}", bazelWorkspace, query);
+            LOG.debug("{}: querying Bazel for list of targets from: {}", bazelWorkspace, query);
             var queryResult = executionService.executeOutsideWorkspaceLockAsync(
                 new BazelQueryForTargetProtoCommand(workspaceRoot, query, true /* keep going */), bazelWorkspace).get();
             for (Target target : queryResult) {
