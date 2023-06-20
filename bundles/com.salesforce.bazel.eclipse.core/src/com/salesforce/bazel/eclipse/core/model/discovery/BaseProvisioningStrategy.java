@@ -10,6 +10,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
+import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,6 +23,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Predicate;
 
+import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -262,7 +264,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     /**
      * Creates an Eclipse project representing the specified owner.
      * <p>
-     * The {@link BazelProject#PROJECT_PROPERTY_OWNER} property will be set to the given owner'S label.
+     * If a project already exists for the given location it will be used instead. The
+     * {@link BazelProject#PROJECT_PROPERTY_OWNER} property will be set to the given owner's label.
      * </p>
      *
      * @param projectName
@@ -276,22 +279,58 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      */
     protected IProject createProjectForElement(String projectName, IPath projectLocation, BazelElement<?, ?> owner,
             SubMonitor monitor) throws CoreException {
-        monitor.setWorkRemaining(2);
-        var projectDescription = getEclipseWorkspace().newProjectDescription(projectName);
+        monitor.setWorkRemaining(5);
 
-        // place the project into the Bazel workspace project area
-        projectDescription.setLocation(projectLocation);
-        projectDescription.setComment(format("Bazel project representing '%s'", owner.getLabel()));
+        var project = findProjectForLocation(projectLocation);
 
-        // create project
-        var project = getEclipseWorkspaceRoot().getProject(projectName);
-        project.create(projectDescription, monitor.split(1));
+        // open existing
+        if ((project != null) && !project.isOpen()) {
+            try {
+                project.open(monitor.split(1, SUPPRESS_NONE));
+            } catch (CoreException e) {
+                LOG.warn("Unable to open existing project '{}'. Deleting and re-creating the project.", project, e);
+                project.delete(true, monitor.split(1, SUPPRESS_NONE));
+                project = null;
+            }
+        }
 
-        // open project
-        project.open(monitor.split(1));
+        // check for name collection
+        if (project == null) {
+            project = getEclipseWorkspaceRoot().getProject(projectName);
+            if (project.exists()) {
+                LOG.warn(
+                    "Found existing project with name'{}' at different location. Deleting and re-creating the project.",
+                    project);
+                project.delete(true, monitor.split(1, SUPPRESS_NONE));
+            }
+
+            // create new project
+            var projectDescription = getEclipseWorkspace().newProjectDescription(projectName);
+            projectDescription.setLocation(projectLocation);
+            projectDescription.setComment(format("Bazel project representing '%s'", owner.getLabel()));
+            project.create(projectDescription, monitor.split(1, SUPPRESS_NONE));
+
+            // ensure project is open (creating a project which failed opening previously will create a closed project)
+            if (!project.isOpen()) {
+                project.open(monitor.split(1, SUPPRESS_NONE));
+            }
+        } else {
+            // open existing
+            if (!project.isOpen()) {
+                project.open(monitor.split(1, SUPPRESS_NONE));
+            }
+
+            // fix name
+            if (!projectName.equals(project.getName())) {
+                var projectDescription = project.getDescription();
+                projectDescription.setName(projectName);
+                projectDescription.setComment(format("Bazel project representing '%s'", owner.getLabel()));
+                project.move(projectDescription, true, monitor.split(1, SUPPRESS_NONE));
+            }
+        }
 
         // set natures separately in order to ensure they are configured properly
-        projectDescription = project.getDescription();
+        var projectDescription = project.getDescription();
         projectDescription.setNatureIds(new String[] { JavaCore.NATURE_ID, BAZEL_NATURE_ID });
         project.setDescription(projectDescription, monitor.newChild(1));
 
@@ -462,6 +501,20 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 allPackages.size()));
         }
         return allPackages.get(0); // BazelTarget::getBazelPackage guaranteed to not return null
+    }
+
+    private IProject findProjectForLocation(IPath location) {
+        var potentialProjects = getEclipseWorkspaceRoot().findContainersForLocationURI(URIUtil.toURI(location));
+
+        // first valid project wins
+        for (IContainer potentialProject : potentialProjects) {
+            if (potentialProject.getType() != IResource.PROJECT) {
+                continue;
+            }
+            return (IProject) potentialProject;
+        }
+
+        return null;
     }
 
     protected IWorkspace getEclipseWorkspace() {

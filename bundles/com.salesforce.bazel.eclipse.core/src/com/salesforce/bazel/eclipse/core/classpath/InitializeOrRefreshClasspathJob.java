@@ -42,7 +42,7 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
 
     static boolean isBazelProject(IProject p) {
         try {
-            return p.hasNature(BAZEL_NATURE_ID);
+            return p.isAccessible() && p.hasNature(BAZEL_NATURE_ID);
         } catch (CoreException e) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Error accessing project {}", p, e);

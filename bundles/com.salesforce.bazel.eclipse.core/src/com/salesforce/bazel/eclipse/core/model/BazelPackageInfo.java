@@ -128,7 +128,8 @@ public final class BazelPackageInfo extends BazelElementInfo {
         // we don't care about the actual project name - we look for the property
         var projects = getEclipseWorkspaceRoot().getProjects();
         for (IProject project : projects) {
-            if (project.hasNature(BAZEL_NATURE_ID) // is a Bazel project
+            if (project.isAccessible() // is open
+                    && project.hasNature(BAZEL_NATURE_ID) // is a Bazel project
                     && !workspaceProject.equals(project) // is not the workspace project
                     && hasWorkspaceRootPropertySetToLocation(project, workspaceRoot) // belongs to the workspace root
                     && hasOwnerPropertySetForLabel(project, getBazelPackage().getLabel()) // represents the target
