@@ -42,7 +42,14 @@ Export-Package: com.google.devtools.build.buildjar.proto,
  com.google.idea.blaze.java.sync.importer,
  com.google.idea.blaze.java.sync.model,
  com.intellij.openapi.util.io;x-internal:=true,
- com.intellij.openapi.util.text;x-internal:=true
+ com.intellij.openapi.util.text;x-internal:=true,
+ net.starlark.java.annot,
+ net.starlark.java.annot.processor,
+ net.starlark.java.cmd,
+ net.starlark.java.eval,
+ net.starlark.java.lib.json,
+ net.starlark.java.spelling,
+ net.starlark.java.syntax
 Bundle-Vendor: Bazel Eclipse Feature
 Automatic-Module-Name: com.salesforce.bazel.eclipse.vendoredsource
 Bundle-RequiredExecutionEnvironment: JavaSE-17

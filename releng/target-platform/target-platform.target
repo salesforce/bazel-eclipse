@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1686771403">
+<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1687335123">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.28.0.v20230525-0648"/>
@@ -116,6 +116,18 @@
     		<groupId>com.google.code.findbugs</groupId>
     		<artifactId>jsr305</artifactId>
     		<version>3.0.2</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.google.auto.value</groupId>
+    		<artifactId>auto-value</artifactId>
+    		<version>1.10.1</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.google.auto.value</groupId>
+    		<artifactId>auto-value-annotations</artifactId>
+    		<version>1.10.1</version>
     		<type>jar</type>
     	</dependency>
     </dependencies>

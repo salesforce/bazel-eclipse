@@ -114,4 +114,14 @@ maven MavenDependencies scope=compile,test dependencyDepth=infinite missingManif
 		artifactId="jsr305"
 		version="3.0.2"
 	}
+	dependency {
+		groupId="com.google.auto.value"
+		artifactId="auto-value"
+		version="1.10.1"
+	}
+	dependency {
+		groupId="com.google.auto.value"
+		artifactId="auto-value-annotations"
+		version="1.10.1"
+	}
 }

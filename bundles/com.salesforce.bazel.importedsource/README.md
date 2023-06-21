@@ -1,8 +1,10 @@
 # Imported Source
 
 This project contains source code imported from Bazel and Bazel Intellij Plug-in.
-Both project don't publish re-usable libraries.
+Both projects don't publish re-usable libraries.
 Therefore, we import the things we need manually.
+
+Where necessary, the code has been modified to prevent importing unneeded dependencies
 
 ## Important Settings
 
