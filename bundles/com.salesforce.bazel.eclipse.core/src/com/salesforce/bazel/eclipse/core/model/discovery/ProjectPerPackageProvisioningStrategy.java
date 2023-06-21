@@ -82,10 +82,17 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     LOG.warn(
                         "Targets to build not properly set for project '{}'. Building all targets for computing the classpath, which may be too expensive!",
                         bazelProject);
-                    bazelProject.getBazelPackage().getBazelTargets().stream().map(BazelTarget::getLabel)
+                    bazelProject.getBazelPackage()
+                            .getBazelTargets()
+                            .stream()
+                            .map(BazelTarget::getLabel)
                             .forEach(targetsToBuild::add);
-                    activeTargetsPerProject.put(bazelProject, bazelProject.getBazelPackage().getBazelTargets().stream()
-                            .map(BazelTarget::getTargetName).collect(toList()));
+                    activeTargetsPerProject.put(bazelProject,
+                        bazelProject.getBazelPackage()
+                                .getBazelTargets()
+                                .stream()
+                                .map(BazelTarget::getTargetName)
+                                .collect(toList()));
                     continue;
                 }
 
@@ -114,8 +121,9 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     languages, onlyDirectDeps);
 
             monitor.subTask("Running Bazel...");
-            var result = workspace.getCommandExecutor().runDirectlyWithWorkspaceLock(command,
-                bazelProjects.stream().map(BazelProject::getProject).collect(toList()), monitor.split(1));
+            var result = workspace.getCommandExecutor()
+                    .runDirectlyWithWorkspaceLock(command,
+                        bazelProjects.stream().map(BazelProject::getProject).collect(toList()), monitor.split(1));
 
             // populate map from result
             Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
@@ -178,6 +186,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
             // skip the root package (not supported)
             if (bazelPackage.isRoot()) {
+                createBuildPathProblem(bazelPackage.getBazelWorkspace().getBazelProject(), Status.warning(
+                    "The root package was skipped during sync because it's not supported by the project-per-package strategy."));
                 continue;
             }
 
@@ -199,8 +209,11 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 createBuildPathProblem(project,
                     Status.error(
                         format("No source directories detected when analyzihng package '%s' using targets '%s'",
-                            bazelPackage.getLabel().getPackagePath(), packageTargets.stream().map(BazelTarget::getLabel)
-                                    .map(BazelLabel::getLabelPath).collect(joining(", ")))));
+                            bazelPackage.getLabel().getPackagePath(),
+                            packageTargets.stream()
+                                    .map(BazelTarget::getLabel)
+                                    .map(BazelLabel::getLabelPath)
+                                    .collect(joining(", ")))));
             }
 
             // configure classpath
