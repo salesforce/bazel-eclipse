@@ -24,7 +24,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
  * </p>
  */
 public abstract sealed class BazelElementInfo
-        permits BazelWorkspaceInfo, BazelPackageInfo, BazelTargetInfo, BazelModelInfo {
+        permits BazelWorkspaceInfo, BazelPackageInfo, BazelTargetInfo, BazelModelInfo, BazelBuildFileInfo {
 
     IWorkspaceRoot getEclipseWorkspaceRoot() {
         return ResourcesPlugin.getWorkspace().getRoot();

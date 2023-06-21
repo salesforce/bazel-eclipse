@@ -211,6 +211,7 @@ public class JavaProjectInfo {
 
     private final BazelPackage bazelPackage;
     private final List<Entry> srcs = new ArrayList<>();
+    private final List<Entry> resources = new ArrayList<>();
     private final List<LabelEntry> deps = new ArrayList<>();
     private final List<LabelEntry> runtimeDeps = new ArrayList<>();
     private final List<LabelEntry> pluginDeps = new ArrayList<>();
@@ -246,6 +247,13 @@ public class JavaProjectInfo {
             }
         }
 
+        var resources = attributes.getStringList("resources");
+        if (resources != null) {
+            for (String resource : resources) {
+                addResource(resource);
+            }
+        }
+
         var deps = attributes.getStringList("deps");
         if (deps != null) {
             for (String dep : deps) {
@@ -270,6 +278,20 @@ public class JavaProjectInfo {
 
     private void addPluginDep(String label) {
         pluginDeps.add(new LabelEntry(new BazelLabel(label)));
+    }
+
+    /**
+     * Adds a resources entry.
+     * <p>
+     * Insertion order is maintained.
+     * </p>
+     *
+     * @param resourceFileOrLabel
+     *            file or label
+     * @throws CoreException
+     */
+    public void addResource(String resourceFileOrLabel) throws CoreException {
+        resources.add(fileOrLabel(resourceFileOrLabel));
     }
 
     public void addRuntimeDep(String label) {

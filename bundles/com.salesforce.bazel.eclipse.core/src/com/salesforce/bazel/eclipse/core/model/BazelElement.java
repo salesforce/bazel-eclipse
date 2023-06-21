@@ -40,9 +40,14 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * All elements in the Bazel model properly implement {@link #hashCode()} and {@link #equals(Object)} to ensure they are
  * equal when the handle matches the same Bazel element.
  * </p>
+ *
+ * @param <I>
+ *            type of element info
+ * @param <P>
+ *            type of element parent
  */
 public sealed abstract class BazelElement<I extends BazelElementInfo, P extends BazelElement<?, ?>>
-        permits BazelModel, BazelWorkspace, BazelPackage, BazelTarget {
+        permits BazelModel, BazelWorkspace, BazelPackage, BazelTarget, BazelBuildFile {
 
     private static final String NO_NAME = "";
 
@@ -140,9 +145,18 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
 
     /**
      * Returns the full qualified label for this element.
+     * <p>
+     * Note, not all elements in the model have a label. The label is only available when it allows to uniquely identify
+     * the element in Bazel. Therefore, the following elements to not have a label:
+     * <ul>
+     * <li>{@link BazelModel}</li>
+     * <li>{@link BazelWorkspace}</li>
+     * <li>{@link BazelBuildFile} and its children</li>
+     * </ul>
+     * </p>
      *
-     * @return the full qualified label for this element, or <code>null</code> in case of {@link BazelModel} or
-     *         {@link BazelWorkspace}
+     * @return the full qualified label for this element, or <code>null</code> in case of {@link BazelModel},
+     *         {@link BazelWorkspace} or {@link BazelBuildFile}
      */
     public abstract BazelLabel getLabel();
 
