@@ -181,6 +181,10 @@ public class MacroCall {
 
     /**
      * Returns the value as String of a named argument.
+     * <p>
+     * Returns <code>null</code> if the argument is not present. If the argument present but not a
+     * {@link StringLiteral}, <code>null</code> will be returned.
+     * </p>
      *
      * @param name
      *            name of the argument
@@ -193,11 +197,15 @@ public class MacroCall {
             return stringLiteral.getValue();
         }
 
-        return null;
+        return null; // treat as not present
     }
 
     /**
      * Returns the value of a named argument as list of string.
+     * <p>
+     * Returns <code>null</code> if the argument is not present. If the argument present but not a
+     * {@link ListExpression},, <code>null</code> will be returned.
+     * </p>
      *
      * @param name
      *            name of the argument
@@ -215,6 +223,21 @@ public class MacroCall {
                     .collect(toList());
         }
 
-        return null;
+        return null; // treat as not present
     }
+
+    @Override
+    public String toString() {
+        var name = getName();
+        if (name == null) {
+            name = "<unnamed>";
+        }
+
+        if (originalFunctionName != null) {
+            return format("%s(%s, kind %s) in %s", localFunctionName, name, originalFunctionName,
+                callExpression.getStartLocation());
+        }
+        return format("%s(%s) in %s", localFunctionName, name, callExpression.getStartLocation());
+    }
+
 }

@@ -17,12 +17,14 @@ import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 
+import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -40,18 +42,18 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * for further details.
  * </p>
  */
-public final class BazelBuildFile extends BazelElement<BazelElementInfo, BazelPackage> {
+public final class BazelBuildFile extends BazelElement<BazelBuildFileInfo, BazelPackage> {
 
     private final BazelPackage bazelPackage;
     private final IPath buildFileLocation;
 
-    public BazelBuildFile(BazelPackage bazelPackage, IPath buildFileLocation) {
+    BazelBuildFile(BazelPackage bazelPackage, IPath buildFileLocation) {
         this.bazelPackage = bazelPackage;
-        this.buildFileLocation = buildFileLocation;
+        this.buildFileLocation = buildFileLocation; /* this can be a BUILD or a BUILD.bazel file */
     }
 
     @Override
-    protected BazelElementInfo createInfo() throws CoreException {
+    protected BazelBuildFileInfo createInfo() throws CoreException {
         var reader = new BazelBuildFileReader(buildFileLocation.toPath());
         try {
             reader.read();
@@ -90,7 +92,7 @@ public final class BazelBuildFile extends BazelElement<BazelElementInfo, BazelPa
 
     @Override
     public BazelLabel getLabel() {
-        return null; // no label
+        return new BazelLabel(bazelPackage.getWorkspaceRelativePath().toString(), "BUILD.bazel"); // hardcode to BUILD.bazel to there is only one build file info in the model cache
     }
 
     @Override
@@ -101,6 +103,10 @@ public final class BazelBuildFile extends BazelElement<BazelElementInfo, BazelPa
     @Override
     public BazelPackage getParent() {
         return bazelPackage;
+    }
+
+    public List<MacroCall> getTopLevelMacroCalls() throws CoreException {
+        return getInfo().getMacroCalls();
     }
 
     @Override

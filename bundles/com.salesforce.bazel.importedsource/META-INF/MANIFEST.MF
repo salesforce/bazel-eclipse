@@ -6,6 +6,7 @@ Bundle-Version: 2.0.0.qualifier
 Import-Package: com.github.benmanes.caffeine;version="3.1.6",
  com.github.benmanes.caffeine.cache;version="3.1.6",
  com.github.benmanes.caffeine.guava;version="3.1.6",
+ com.google.auto.value;version="1.10.1",
  com.google.common.annotations;version="31.1.0",
  com.google.common.base;version="31.1.0",
  com.google.common.cache;version="31.1.0",

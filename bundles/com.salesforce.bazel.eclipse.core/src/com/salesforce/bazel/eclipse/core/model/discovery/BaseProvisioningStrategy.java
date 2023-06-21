@@ -41,6 +41,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.launching.IVMInstall;
@@ -58,7 +59,8 @@ import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.FileEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.GlobEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.JavaSourceEntry;
 import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand;
 
 /**
@@ -77,6 +79,53 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
     protected String javaToolchainSourceVersion;
     protected String javaToolchainTargetVersion;
+
+    /**
+     * Calls {@link JavaProjectInfo#analyzeProjectRecommendations(IProgressMonitor)} and creates problem markers for any
+     * identified issue.
+     *
+     * @param project
+     *            the project
+     * @param javaInfo
+     *            the populated project info
+     * @param monitor
+     *            monitor for cancellation check
+     * @throws CoreException
+     *             in case of problems creating the marker
+     */
+    protected void analyzeProjectInfo(BazelProject project, JavaProjectInfo javaInfo, IProgressMonitor monitor)
+            throws CoreException {
+        // analyze for recommended project setup
+        var recommendations = javaInfo.analyzeProjectRecommendations(monitor);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("{} source directories: {}", project,
+                javaInfo.hasSourceDirectories() ? javaInfo.getSourceDirectories() : "n/a");
+            LOG.debug("{} source files without root: {}", project,
+                javaInfo.hasSourceFilesWithoutCommonRoot() ? javaInfo.getSourceFilesWithoutCommonRoot() : "n/a");
+        }
+
+        // delete existing markers
+        project.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
+
+        // abort if canceled
+        if (monitor.isCanceled()) {
+            createBuildPathProblem(project, Status.warning(
+                "Bazel project provisioning for this workspace was canceled. The Eclipse workspace may not build properly."));
+            throw new OperationCanceledException();
+        }
+
+        // create project level markers
+        if (!recommendations.isOK()) {
+            if (recommendations.isMultiStatus()) {
+                for (IStatus status : recommendations.getChildren()) {
+                    createBuildPathProblem(project, status);
+                }
+            } else {
+                createBuildPathProblem(project, recommendations);
+            }
+        }
+    }
 
     /**
      * Collects base Java information for a given project and the targets it represents.
@@ -111,36 +160,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             javaInfo.addInfoFromTarget(bazelTarget);
         }
 
-        // analyze for recommended project setup
-        var recommendations = javaInfo.analyzeProjectRecommendations(monitor);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("{} source directories: {}", targets,
-                javaInfo.hasSourceDirectories() ? javaInfo.getSourceDirectories() : "n/a");
-            LOG.debug("{} source files without root: {}", targets,
-                javaInfo.hasSourceFilesWithoutCommonRoot() ? javaInfo.getSourceFilesWithoutCommonRoot() : "n/a");
-        }
-
-        // delete existing markers
-        project.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
-
-        // abort if canceled
-        if (monitor.isCanceled()) {
-            createBuildPathProblem(bazelPackage.getBazelWorkspace().getBazelProject(), Status.warning(
-                "Bazel project provisioning for this workspace was canceled. The Eclipse workspace may not build properly."));
-            throw new OperationCanceledException();
-        }
-
-        // create project level markers
-        if (!recommendations.isOK()) {
-            if (recommendations.isMultiStatus()) {
-                for (IStatus status : recommendations.getChildren()) {
-                    createBuildPathProblem(project, status);
-                }
-            } else {
-                createBuildPathProblem(project, recommendations);
-            }
-        }
+        analyzeProjectInfo(project, javaInfo, monitor);
 
         return javaInfo;
     }
@@ -174,6 +194,29 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         : project.getProject().getFolder(dir);
                 rawClasspath.add(JavaCore.newSourceEntry(sourceFolder.getFullPath()));
             }
+        }
+
+        if (javaInfo.hasTestSourceDirectories()) {
+            IClasspathAttribute[] testSrcAttributes =
+                    { JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, Boolean.TRUE.toString()) };
+            for (GlobEntry glob : javaInfo.getTestSourceDirectories()) {
+                if (glob.getRelativeDirectoryPath().isEmpty()) {
+                    throw new CoreException(
+                            Status.error(format("Unsupported test glob '%s' in project '%s'", glob, project)));
+                }
+
+                var inclusionPatterns =
+                        (glob.getIncludePattern() == null) || glob.getIncludePattern().equals("**/*.java")
+                                ? new IPath[0] : new IPath[] { new Path(glob.getIncludePattern()) };
+                var exclusionPatterns = glob.getExcludePatterns() == null ? List.of()
+                        : glob.getExcludePatterns().stream().map(IPath::forPosix).collect(toList());
+
+                var sourceFolder = project.getProject().getFolder(glob.getRelativeDirectoryPath());
+                rawClasspath.add(JavaCore.newSourceEntry(sourceFolder.getFullPath(), inclusionPatterns,
+                    exclusionPatterns.toArray(new IPath[exclusionPatterns.size()]),
+                    project.getProject().getFolder("bin-tests").getFullPath(), testSrcAttributes));
+            }
+
         }
 
         rawClasspath.add(JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)));
@@ -555,7 +598,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 // build emulated Java package structure and link files
                 var files = javaInfo.getSourceFilesWithoutCommonRoot();
                 Set<IFile> linkedFiles = new HashSet<>();
-                for (FileEntry fileEntry : files) {
+                for (JavaSourceEntry fileEntry : files) {
                     // peek at Java package to find proper "root"
                     var packagePath = fileEntry.getDetectedPackagePath();
                     var packageFolder = virtualSourceFolder.getFolder(packagePath);
@@ -638,6 +681,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         // done
                         break;
                     }
+
+                    // check for existing folder
                     sourceFolder = project.getProject().getFolder(dir);
                     if (sourceFolder.exists() && !sourceFolder.isLinked()) {
                         // check if there is any linked parent we can remove
@@ -691,8 +736,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             fileSystemMapper = new BazelProjectFileSystemMapper(workspace);
 
             // cleanup markers at workspace level
-            workspace.getBazelProject().getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true,
-                IResource.DEPTH_ZERO);
+            workspace.getBazelProject()
+                    .getProject()
+                    .deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
 
             // detect default Java level
             monitor.subTask("Detecting Java Toolchain");

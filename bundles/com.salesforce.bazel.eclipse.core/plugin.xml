@@ -3,7 +3,7 @@
 <plugin
 >
    <extension-point id="com.salesforce.bazel.eclipse.core.executor" name="Bazel Command Executor" schema="schema/com.salesforce.bazel.eclipse.core.executor.exsd"/>
-   <extension-point id="com.salesforce.bazel.eclipse.core.model.target.discovery" name="Bazel Target Discovery Strategy" schema="schema/com.salesforce.bazel.eclipse.core.model.target.discovery.exsd"/>
+   <extension-point id="com.salesforce.bazel.eclipse.core.model.target.discovery" name="Bazel Target Discovery and Provisioning Strategies Extensions" schema="schema/com.salesforce.bazel.eclipse.core.model.target.discovery.exsd"/>
 
    <extension
          point="org.eclipse.core.runtime.preferences">
@@ -104,6 +104,35 @@
             class="com.salesforce.bazel.eclipse.core.model.discovery.ProjectPerPackageProvisioningStrategy"
             name="project-per-package">
       </targetProvisioningStrategy>
+      <targetProvisioningStrategy
+            class="com.salesforce.bazel.eclipse.core.model.discovery.BuildFileAndVisibilityDrivenProvisioningStrategy"
+            name="build-file-and-visibility-driven">
+      </targetProvisioningStrategy>
+      <macroCallAnalyzer
+            class="com.salesforce.bazel.eclipse.core.model.discovery.analyzers.JavaBinaryAnalyzer"
+            functionName="java_binary"
+            priority="10">
+      </macroCallAnalyzer>
+      <macroCallAnalyzer
+            class="com.salesforce.bazel.eclipse.core.model.discovery.analyzers.JavaLibraryAnalyzer"
+            functionName="java_library"
+            priority="10">
+      </macroCallAnalyzer>
+      <macroCallAnalyzer
+            class="com.salesforce.bazel.eclipse.core.model.discovery.analyzers.JavaTestAnalyzer"
+            functionName="java_test"
+            priority="10">
+      </macroCallAnalyzer>
+      <macroCallAnalyzer
+            class="com.salesforce.bazel.eclipse.core.model.discovery.analyzers.JavaTestSuiteAnalyzer"
+            functionName="java_test_suite"
+            priority="10">
+      </macroCallAnalyzer>
+      <macroCallAnalyzer
+            class="com.salesforce.bazel.eclipse.core.model.discovery.analyzers.JavaJunit5TestAnalyzer"
+            functionName="java_junit5_test"
+            priority="10">
+      </macroCallAnalyzer>
    </extension>
    <extension
          point="com.salesforce.bazel.eclipse.core.executor">

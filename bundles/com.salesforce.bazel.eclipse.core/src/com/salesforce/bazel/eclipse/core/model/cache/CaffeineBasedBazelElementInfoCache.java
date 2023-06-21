@@ -13,12 +13,16 @@
  */
 package com.salesforce.bazel.eclipse.core.model.cache;
 
+import static java.util.Objects.requireNonNull;
+
 import java.time.Duration;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
 import com.salesforce.bazel.eclipse.core.model.BazelElementInfo;
+import com.salesforce.bazel.eclipse.core.model.BazelModel;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 
 /**
  * Implementation of {@link BazelElementInfoCache} which uses an LRU
@@ -72,17 +76,24 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
     }
 
     private String getStableCacheKey(BazelElement<?, ?> bazelElement) {
-        // use a combination of workspace name and label to ensure we support multiple workspaces
-        var workspace = bazelElement.getBazelWorkspace();
-        if (workspace == null) {
+
+        if (bazelElement instanceof BazelModel) {
             // this can only happen for the BazelModel
             return EMPTY_STRING;
         }
 
+        // use a combination of workspace name and label to ensure we support multiple workspaces
+        var workspace = requireNonNull(bazelElement.getBazelWorkspace(),
+            "every element is required to have a workspace at this point");
         var workspaceLocationHash = workspace.getLocation().toString().hashCode();
 
         var label = bazelElement.getLabel();
         if (label == null) {
+            // sanity check
+            if (!(bazelElement instanceof BazelWorkspace)) {
+                throw new IllegalStateException("Unable to compute cache key. Every BazelElement must have a label");
+            }
+
             return String.valueOf(workspaceLocationHash);
         }
 

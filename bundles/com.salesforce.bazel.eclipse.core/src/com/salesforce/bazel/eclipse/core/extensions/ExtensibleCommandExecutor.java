@@ -4,10 +4,8 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Comparator;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +23,6 @@ public final class ExtensibleCommandExecutor implements BazelCommandExecutor {
 
     private static final String EXTENSION_POINT_COMMAND_EXECUTOR = "com.salesforce.bazel.eclipse.core.executor";
     private static final String ATTR_CLASS = "class";
-    private static final String ATTR_PRIORITY = "priority";
 
     private volatile BazelCommandExecutor delegate;
 
@@ -53,23 +50,7 @@ public final class ExtensibleCommandExecutor implements BazelCommandExecutor {
             throw new IllegalStateException("No suitable extensions available providing a command executor!");
         }
 
-        Arrays.sort(elements, new Comparator<IConfigurationElement>() {
-            @Override
-            public int compare(IConfigurationElement o1, IConfigurationElement o2) {
-                var p1 = safeParse(o1.getAttribute(ATTR_PRIORITY));
-                var p2 = safeParse(o2.getAttribute(ATTR_PRIORITY));
-
-                return p2 - p1; // higher priority is more important
-            }
-
-            private int safeParse(String priority) {
-                try {
-                    return priority != null ? Integer.parseInt(priority) : 10;
-                } catch (NumberFormatException e) {
-                    return 0;
-                }
-            }
-        });
+        Arrays.sort(elements, new PriorityAttributeComparator());
 
         return requireNonNull((BazelCommandExecutor) elements[0].createExecutableExtension(ATTR_CLASS),
             "No object returned from extension factory");

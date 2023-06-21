@@ -5,7 +5,6 @@ import static java.nio.file.Files.find;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.Files.readString;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
@@ -13,6 +12,7 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -36,6 +36,7 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
 
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
+import com.salesforce.bazel.eclipse.core.model.buildfile.GlobInfo;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -53,10 +54,75 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  */
 public class JavaProjectInfo {
 
+    /**
+     * An entry in the project info
+     */
     public interface Entry {
     }
 
-    public static class FileEntry implements Entry {
+    /**
+     * A glob is used to denote directory with files and potentially excludes.
+     */
+    public static class GlobEntry implements Entry {
+
+        private final IPath relativeDirectoryPath;
+        private final String includePattern;
+        private final List<String> excludePatterns;
+
+        public GlobEntry(IPath relativeDirectoryPath, String includePattern, List<String> excludePatterns) {
+            this.relativeDirectoryPath = relativeDirectoryPath;
+            this.includePattern = includePattern;
+            this.excludePatterns = excludePatterns;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            var other = (GlobEntry) obj;
+            return Objects.equals(excludePatterns, other.excludePatterns)
+                    && Objects.equals(includePattern, other.includePattern)
+                    && Objects.equals(relativeDirectoryPath, other.relativeDirectoryPath);
+        }
+
+        public List<String> getExcludePatterns() {
+            return excludePatterns;
+        }
+
+        public String getIncludePattern() {
+            return includePattern;
+        }
+
+        public IPath getRelativeDirectoryPath() {
+            return relativeDirectoryPath;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(excludePatterns, includePattern, relativeDirectoryPath);
+        }
+
+        @Override
+        public String toString() {
+            if (excludePatterns == null) {
+                return relativeDirectoryPath + "/" + includePattern;
+            }
+            return relativeDirectoryPath + "/" + includePattern + " (excluding " + excludePatterns + ")";
+        }
+    }
+
+    /**
+     * A source entry points to exactly one <code>.java</code> source file. It contains additional logic for extracting
+     * the package path from the location.
+     */
+    public static class JavaSourceEntry implements Entry {
 
         private static boolean endsWith(IPath path, IPath lastSegments) {
             if (path.segmentCount() < lastSegments.segmentCount()) {
@@ -79,16 +145,14 @@ public class JavaProjectInfo {
         }
 
         private final IPath relativePath;
-
         private final IPath relativePathParent;
-
-        private final IPath containingFolderPath;
+        private final IPath bazelPackageLocation;
 
         private IPath detectedPackagePath;
 
-        public FileEntry(IPath relativePath, IPath containingFolderPath) {
+        public JavaSourceEntry(IPath relativePath, IPath bazelPackageLocation) {
             this.relativePath = relativePath;
-            this.containingFolderPath = containingFolderPath;
+            this.bazelPackageLocation = bazelPackageLocation;
             relativePathParent = relativePath.removeLastSegments(1).removeTrailingSeparator();
         }
 
@@ -103,8 +167,8 @@ public class JavaProjectInfo {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            var other = (FileEntry) obj;
-            return Objects.equals(containingFolderPath, other.containingFolderPath)
+            var other = (JavaSourceEntry) obj;
+            return Objects.equals(bazelPackageLocation, other.bazelPackageLocation)
                     && Objects.equals(relativePath, other.relativePath);
         }
 
@@ -112,7 +176,7 @@ public class JavaProjectInfo {
          * {@return absolute location of of the container of this path entry}
          */
         public IPath getContainingFolderPath() {
-            return containingFolderPath;
+            return bazelPackageLocation;
         }
 
         public IPath getDetectedPackagePath() {
@@ -123,7 +187,7 @@ public class JavaProjectInfo {
          * {@return the absolute path in the local file system, i.e. container path plus the relative path}
          */
         public IPath getLocation() {
-            return containingFolderPath.append(relativePath);
+            return bazelPackageLocation.append(relativePath);
         }
 
         /**
@@ -148,7 +212,7 @@ public class JavaProjectInfo {
             var detectedPackagePath = getDetectedPackagePath();
 
             // note, we check the full path because we *want* to identify files from targets defined within a Java package
-            if (endsWith(containingFolderPath.append(relativePathParent), detectedPackagePath)) {
+            if (endsWith(bazelPackageLocation.append(relativePathParent), detectedPackagePath)) {
                 // this is safe call even when relativePathParent has less segments then detectedPackagePath
                 return relativePathParent.removeLastSegments(detectedPackagePath.segmentCount());
             }
@@ -158,16 +222,19 @@ public class JavaProjectInfo {
 
         @Override
         public int hashCode() {
-            return Objects.hash(containingFolderPath, relativePath);
+            return Objects.hash(bazelPackageLocation, relativePath);
         }
 
         @Override
         public String toString() {
-            return relativePath + " (relativePathParent=" + relativePathParent + ", containingFolderPath="
-                    + containingFolderPath + ", detectedPackagePath=" + detectedPackagePath + ")";
+            return relativePath + " (relativePathParent=" + relativePathParent + ", bazelPackageLocation="
+                    + bazelPackageLocation + ", detectedPackagePath=" + detectedPackagePath + ")";
         }
     }
 
+    /**
+     * An entry pointing to another target, which may be generated output.
+     */
     public static class LabelEntry implements Entry {
 
         private final BazelLabel label;
@@ -203,6 +270,44 @@ public class JavaProjectInfo {
 
     }
 
+    /**
+     * A single file entry pointing to a single resource.
+     */
+    public static class ResourceEntry implements Entry {
+
+        private final IPath relativePath;
+
+        public ResourceEntry(IPath relativePath) {
+            this.relativePath = relativePath;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            var other = (ResourceEntry) obj;
+            return Objects.equals(relativePath, other.relativePath);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(relativePath);
+        }
+
+        @Override
+        public String toString() {
+            return "Resource[" + relativePath + "]";
+        }
+
+    }
+
     private static final IPath INVALID = new Path("_not_following_ide_standards_");
 
     static boolean isJavaFile(java.nio.file.Path file) {
@@ -216,10 +321,27 @@ public class JavaProjectInfo {
     private final List<LabelEntry> runtimeDeps = new ArrayList<>();
     private final List<LabelEntry> pluginDeps = new ArrayList<>();
 
-    private final Map<IPath, IPath> detectedPackagePathsByFileEntryPathParent = new HashMap<>();
-    private Map<IPath, List<FileEntry>> sourceDirectoriesWithFiles;
+    private final List<Entry> testSrcs = new ArrayList<>();
+    private final List<Entry> testResources = new ArrayList<>();
+    private final List<LabelEntry> testDeps = new ArrayList<>();
+    private final List<LabelEntry> testRuntimeDeps = new ArrayList<>();
+    private final List<LabelEntry> testPluginDeps = new ArrayList<>();
 
-    private List<FileEntry> sourceFilesWithoutCommonRoot;
+    private final Map<IPath, IPath> detectedPackagePathsByFileEntryPathParent = new HashMap<>();
+
+    /**
+     * a map of all discovered source directors and their content (which may either be a {@link List} of
+     * {@link JavaSourceEntry} or a single {@link GlobEntry}.
+     */
+    private Map<IPath, Object> sourceDirectoriesWithFilesOrGlobs;
+
+    /**
+     * a map of all discovered resource directors and their content (which may either be a {@link List} of
+     * {@link ResourceEntry} or a single {@link GlobEntry}.
+     */
+    private Map<IPath, Object> resourceDirectoriesWithFilesOrGlobs;
+
+    private List<JavaSourceEntry> sourceFilesWithoutCommonRoot;
 
     public JavaProjectInfo(BazelPackage bazelPackage) {
         this.bazelPackage = bazelPackage;
@@ -299,6 +421,21 @@ public class JavaProjectInfo {
     }
 
     /**
+     * Adds a srcs glob entry.
+     * <p>
+     * Insertion order is maintained.
+     * </p>
+     *
+     * @param relativeDirectoryPath
+     * @param includePattern
+     * @param excludePatterns
+     * @throws CoreException
+     */
+    public void addSrc(GlobInfo globInfo) throws CoreException {
+        addToSrc(this.srcs, globInfo);
+    }
+
+    /**
      * Adds a srcs entry.
      * <p>
      * Insertion order is maintained.
@@ -309,6 +446,38 @@ public class JavaProjectInfo {
      * @throws CoreException
      */
     public void addSrc(String srcFileOrLabel) throws CoreException {
+        addToSrc(this.srcs, srcFileOrLabel);
+    }
+
+    public void addTestSrc(GlobInfo globInfo) {
+        addToSrc(this.testSrcs, globInfo);
+    }
+
+    public void addTestSrc(String srcFileOrLabel) throws CoreException {
+        addToSrc(this.testSrcs, srcFileOrLabel);
+    }
+
+    private void addToSrc(List<Entry> srcs, GlobInfo globInfo) {
+        for (String include : globInfo.include()) {
+            var patternStart = include.indexOf('*');
+            if (patternStart < 0) {
+                throw new IllegalArgumentException(
+                        "Invalid glob - missing '*' to start an include pattern: " + include);
+            }
+
+            // since this is coming from a glob, the path is expected to use '/'
+            var directoryEnd = include.substring(0, patternStart).lastIndexOf('/');
+            if (directoryEnd < 0) {
+                srcs.add(new GlobEntry(IPath.EMPTY, include, globInfo.exclude()));
+            } else {
+                var directory =
+                        IPath.forPosix(include.substring(0, directoryEnd)).makeRelative().removeTrailingSeparator();
+                srcs.add(new GlobEntry(directory, include.substring(directoryEnd + 1), globInfo.exclude()));
+            }
+        }
+    }
+
+    private void addToSrc(List<Entry> srcs, String srcFileOrLabel) throws CoreException {
         srcs.add(fileOrLabel(srcFileOrLabel));
     }
 
@@ -326,14 +495,15 @@ public class JavaProjectInfo {
      * @todo Review if this belongs here or should be moved outside. It kind a meshs Bazel Java information with Eclipse
      *       project constraints.
      */
+    @SuppressWarnings("unchecked")
     public IStatus analyzeProjectRecommendations(IProgressMonitor monitor) throws CoreException {
         var result = new MultiStatus(JavaProjectInfo.class, 0, "Java Analysis Result");
 
         // build an index of all source files and their parent directories (does not need to maintain order)
-        Map<IPath, List<FileEntry>> sourceEntriesByParentFolder = new HashMap<>();
+        Map<IPath, List<JavaSourceEntry>> sourceEntriesByParentFolder = new HashMap<>();
 
         // group by potential source roots
-        Function<FileEntry, IPath> groupingByPotentialSourceRoots = fileEntry -> {
+        Function<JavaSourceEntry, IPath> groupingByPotentialSourceRoots = fileEntry -> {
             // detect package if necessary
             if (fileEntry.detectedPackagePath == null) {
                 fileEntry.detectedPackagePath = detectPackagePath(fileEntry);
@@ -357,14 +527,46 @@ public class JavaProjectInfo {
             return potentialSourceDirectoryRoot.makeRelative().removeTrailingSeparator();
 
         };
-        LinkedHashMap<IPath, List<FileEntry>> sourceEntriesBySourceRoot =
-                srcs.stream().filter(FileEntry.class::isInstance).map(FileEntry.class::cast)
-                        .collect(groupingBy(groupingByPotentialSourceRoots, LinkedHashMap::new, toList()));
+
+        // collect the potential list of source directories
+        var sourceEntriesBySourceRoot = new LinkedHashMap<IPath, Object>();
+        for (Entry srcEntry : srcs) {
+            if (srcEntry instanceof JavaSourceEntry javaSourceFile) {
+                var sourceDirectory = groupingByPotentialSourceRoots.apply(javaSourceFile);
+                if (!sourceEntriesBySourceRoot.containsKey(sourceDirectory)) {
+                    var list = new ArrayList<>();
+                    list.add(javaSourceFile);
+                    sourceEntriesBySourceRoot.put(sourceDirectory, list);
+                } else {
+                    var maybeList = sourceEntriesBySourceRoot.get(sourceDirectory);
+                    if (maybeList instanceof List list) {
+                        list.add(javaSourceFile);
+                    } else {
+                        result.add(Status.error(format(
+                            "It looks like source root '%s' is already mapped to a glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
+                            sourceDirectory)));
+                    }
+                }
+            } else if (srcEntry instanceof GlobEntry globEntry) {
+                if (sourceEntriesByParentFolder.containsKey(globEntry.getRelativeDirectoryPath())) {
+                    result.add(Status.error(format(
+                        "It looks like source root '%s' is already mapped to more than one glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
+                        globEntry.getRelativeDirectoryPath())));
+                } else {
+                    sourceEntriesBySourceRoot.put(globEntry.getRelativeDirectoryPath(), globEntry);
+                }
+            } else {
+                // check if the source has label dependencies
+                result.add(Status.warning(
+                    format("Found source label reference '%s'. The project may not be fully supported in the IDE.",
+                        srcEntry)));
+            }
+        }
 
         // discover folders that contain more .java files then declared in srcs
         // (this is a strong split-package indication)
         Set<IPath> potentialSplitPackageOrSubsetFolders = new HashSet<>();
-        for (Map.Entry<IPath, List<FileEntry>> entry : sourceEntriesByParentFolder.entrySet()) {
+        for (Map.Entry<IPath, List<JavaSourceEntry>> entry : sourceEntriesByParentFolder.entrySet()) {
             var entryParentPath = entry.getKey();
             var entryParentLocation = bazelPackage.getLocation().append(entryParentPath).toPath();
             var declaredJavaFilesInFolder = entry.getValue().size();
@@ -393,12 +595,16 @@ public class JavaProjectInfo {
             if (INVALID.equals(potentialSourceRoot)) {
                 continue;
             }
+            if (!(potentialSourceRootAndSourceEntries.getValue() instanceof List)) {
+                continue;
+            }
 
             var potentialSourceRootPath = bazelPackage.getLocation().append(potentialSourceRoot).toPath();
             try {
+                var registeredFiles = ((List<?>) potentialSourceRootAndSourceEntries.getValue()).size();
                 var foundJavaFilesInSourceRoot = find(potentialSourceRootPath, Integer.MAX_VALUE,
                     (p, a) -> isJavaFile(p), FileVisitOption.FOLLOW_LINKS).count();
-                if ((potentialSourceRootAndSourceEntries.getValue().size() != foundJavaFilesInSourceRoot)
+                if ((registeredFiles != foundJavaFilesInSourceRoot)
                         && potentialSplitPackageOrSubsetFolders.add(potentialSourceRoot)) {
                     result.add(Status.warning(format(
                         "Folder '%s' contains more Java files then configured in Bazel. This is a scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
@@ -414,31 +620,25 @@ public class JavaProjectInfo {
         if (potentialSplitPackageOrSubsetFolders.isEmpty()) {
             // collect remaining files without a root
             if (sourceEntriesBySourceRoot.containsKey(INVALID)) {
-                sourceFilesWithoutCommonRoot = sourceEntriesBySourceRoot.remove(INVALID);
+                sourceFilesWithoutCommonRoot = (List<JavaSourceEntry>) sourceEntriesBySourceRoot.remove(INVALID);
             }
 
             // create source directories
-            this.sourceDirectoriesWithFiles = sourceEntriesBySourceRoot;
+            this.sourceDirectoriesWithFilesOrGlobs = sourceEntriesBySourceRoot;
 
         } else {
             // treat all sources as if they don't have a directory
             // (if there are multiple source roots we could do an extra effort and try to filter the ones without split packages; but is this worth supporting?)
-            sourceFilesWithoutCommonRoot =
-                    srcs.stream().filter(FileEntry.class::isInstance).map(FileEntry.class::cast).collect(toList());
-        }
-
-        // check if the source has label dependencies
-        List<LabelEntry> labelSrcs =
-                srcs.stream().filter(LabelEntry.class::isInstance).map(LabelEntry.class::cast).collect(toList());
-        for (LabelEntry labelEntry : labelSrcs) {
-            result.add(Status.info(format(
-                "Found source label reference '%s'. The project may not be fully supported in the IDE.", labelEntry)));
+            sourceFilesWithoutCommonRoot = srcs.stream()
+                    .filter(JavaSourceEntry.class::isInstance)
+                    .map(JavaSourceEntry.class::cast)
+                    .collect(toList());
         }
 
         return result.isOK() ? Status.OK_STATUS : result;
     }
 
-    private IPath detectPackagePath(FileEntry fileEntry) {
+    private IPath detectPackagePath(JavaSourceEntry fileEntry) {
         // we inspect at most one file per directory (anything else is too weird to support)
         var previouslyDetectedPackagePath = detectedPackagePathsByFileEntryPathParent.get(fileEntry.getPathParent());
         if (previouslyDetectedPackagePath != null) {
@@ -482,7 +682,7 @@ public class JavaProjectInfo {
 
         // doesn't start with // but contains one, unlikely a label!
         if (srcFileOrLabel.indexOf('/') >= 1) {
-            return new FileEntry(new Path(srcFileOrLabel), bazelPackage.getLocation());
+            return new JavaSourceEntry(new Path(srcFileOrLabel), bazelPackage.getLocation());
         }
 
         // treat as label if package has one matching the name
@@ -491,7 +691,7 @@ public class JavaProjectInfo {
         }
 
         // treat as file
-        return new FileEntry(new Path(srcFileOrLabel), bazelPackage.getLocation());
+        return new JavaSourceEntry(new Path(srcFileOrLabel), bazelPackage.getLocation());
     }
 
     /**
@@ -507,21 +707,90 @@ public class JavaProjectInfo {
      * @return all detected Java packages for the specified source directory (collected from found files)
      */
     public Collection<IPath> getDetectedJavaPackagesForSourceDirectory(IPath sourceDirectory) {
-        return requireNonNull(
-            requireNonNull(sourceDirectoriesWithFiles, "no source directories discovered").get(sourceDirectory),
-            () -> format("source directory '%s' unknown", sourceDirectory)).stream()
-                    .map(FileEntry::getDetectedPackagePath).distinct().collect(toList());
+        var fileOrGlob = requireNonNull(
+            requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").get(sourceDirectory),
+            () -> format("source directory '%s' unknown", sourceDirectory));
+        if (fileOrGlob instanceof Collection<?> files) {
+            return files.stream()
+                    .map(JavaSourceEntry.class::cast)
+                    .map(JavaSourceEntry::getDetectedPackagePath)
+                    .distinct()
+                    .collect(toList());
+        }
+
+        // no info for globs
+        return Collections.emptyList();
+    }
+
+    /**
+     * @param resourceDirectory
+     *            the resource directory (must be contained in {@link #getSourceDirectories()})
+     * @return the configured excludes (if the resource directory is based on a <code>glob</code>, empty list otherwise)
+     */
+    public List<String> getExcludePatternsForResourceDirectory(IPath resourceDirectory) {
+        var fileOrGlob =
+                requireNonNull(requireNonNull(resourceDirectoriesWithFilesOrGlobs, "no resource directories discovered")
+                        .get(resourceDirectory),
+                    () -> format("resource directory '%s' unknown", resourceDirectory));
+        if (fileOrGlob instanceof GlobEntry globEntry) {
+            var excludePatterns = globEntry.getExcludePatterns();
+            return excludePatterns != null ? excludePatterns : Collections.emptyList();
+        }
+
+        // no info for none-globs
+        return Collections.emptyList();
+    }
+
+    /**
+     * @param sourceDirectory
+     *            the source directory (must be contained in {@link #getSourceDirectories()})
+     * @return the configured excludes (if the source directory is based on a <code>glob</code>, empty list otherwise)
+     */
+    public List<String> getExcludePatternsForSourceDirectory(IPath sourceDirectory) {
+        var fileOrGlob = requireNonNull(
+            requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").get(sourceDirectory),
+            () -> format("source directory '%s' unknown", sourceDirectory));
+        if (fileOrGlob instanceof GlobEntry globEntry) {
+            var excludePatterns = globEntry.getExcludePatterns();
+            return excludePatterns != null ? excludePatterns : Collections.emptyList();
+        }
+
+        // no info for none-globs
+        return Collections.emptyList();
+    }
+
+    /**
+     * @param resourceDirectory
+     *            the resource directory (must be contained in {@link #getSourceDirectories()})
+     * @return the configured include pattern (if the resource directory is based on a <code>glob</code>,
+     *         <code>null</code> otherwise)
+     */
+    public String getIncludePatternForResourceDirectory(IPath resourceDirectory) {
+        var fileOrGlob =
+                requireNonNull(requireNonNull(resourceDirectoriesWithFilesOrGlobs, "no resource directories discovered")
+                        .get(resourceDirectory),
+                    () -> format("resource directory '%s' unknown", resourceDirectory));
+        if (fileOrGlob instanceof GlobEntry globEntry) {
+            return globEntry.getIncludePattern();
+        }
+
+        // no info for none-globs
+        return null;
     }
 
     /**
      * {@return the list of detected source directories (relative to #getBazelPackage())}
      */
     public Collection<IPath> getSourceDirectories() {
-        return requireNonNull(sourceDirectoriesWithFiles, "no source directories discovered").keySet();
+        return requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").keySet();
     }
 
-    public List<FileEntry> getSourceFilesWithoutCommonRoot() {
+    public List<JavaSourceEntry> getSourceFilesWithoutCommonRoot() {
         return requireNonNull(sourceFilesWithoutCommonRoot, "no source files analyzed");
+    }
+
+    public Collection<GlobEntry> getTestSourceDirectories() {
+        return testSrcs.stream().filter(GlobEntry.class::isInstance).map(GlobEntry.class::cast).collect(toList());
     }
 
     public boolean hasAnnotationProcessorPlugins() {
@@ -529,15 +798,19 @@ public class JavaProjectInfo {
     }
 
     public boolean hasSourceDirectories() {
-        return (sourceDirectoriesWithFiles != null) && !sourceDirectoriesWithFiles.isEmpty();
+        return (sourceDirectoriesWithFilesOrGlobs != null) && !sourceDirectoriesWithFilesOrGlobs.isEmpty();
     }
 
     public boolean hasSourceFilesWithoutCommonRoot() {
         return (sourceFilesWithoutCommonRoot != null) && !sourceFilesWithoutCommonRoot.isEmpty();
     }
 
+    public boolean hasTestSourceDirectories() {
+        return testSrcs.stream().anyMatch(GlobEntry.class::isInstance);
+    }
+
     @SuppressWarnings("deprecation") // use of TokenNameIdentifier is ok here
-    private String readPackageName(FileEntry fileEntry) {
+    private String readPackageName(JavaSourceEntry fileEntry) {
         var packageName = new StringBuilder();
 
         var scanner = ToolFactory.createScanner( //
