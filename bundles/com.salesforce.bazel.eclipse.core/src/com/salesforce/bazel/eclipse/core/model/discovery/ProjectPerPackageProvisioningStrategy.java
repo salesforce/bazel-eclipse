@@ -187,7 +187,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             // skip the root package (not supported)
             if (bazelPackage.isRoot()) {
                 createBuildPathProblem(bazelPackage.getBazelWorkspace().getBazelProject(), Status.warning(
-                    "The root package was skipped during sync because it's not supported by the project-per-package strategy."));
+                    "The root package was skipped during sync because it's not supported by the project-per-package strategy. Consider excluding it in the .bazelproject file."));
                 continue;
             }
 
