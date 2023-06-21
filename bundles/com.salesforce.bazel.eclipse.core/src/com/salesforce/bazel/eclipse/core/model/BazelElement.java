@@ -147,16 +147,15 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
      * Returns the full qualified label for this element.
      * <p>
      * Note, not all elements in the model have a label. The label is only available when it allows to uniquely identify
-     * the element in Bazel. Therefore, the following elements to not have a label:
+     * the element in Bazel. Therefore, the following elements do not have a label:
      * <ul>
      * <li>{@link BazelModel}</li>
      * <li>{@link BazelWorkspace}</li>
-     * <li>{@link BazelBuildFile} and its children</li>
      * </ul>
      * </p>
      *
-     * @return the full qualified label for this element, or <code>null</code> in case of {@link BazelModel},
-     *         {@link BazelWorkspace} or {@link BazelBuildFile}
+     * @return the full qualified label for this element, or <code>null</code> in case of {@link BazelModel}, or
+     *         {@link BazelWorkspace}
      */
     public abstract BazelLabel getLabel();
 

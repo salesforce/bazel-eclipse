@@ -20,6 +20,7 @@
          <choice minOccurs="1" maxOccurs="unbounded">
             <element ref="targetDiscoveryStrategy"/>
             <element ref="targetProvisioningStrategy"/>
+            <element ref="macroCallAnalyzer"/>
          </choice>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -96,6 +97,40 @@
             <annotation>
                <documentation>
                   Name of the strategy (used within project views to refere to the strategy)
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="macroCallAnalyzer">
+      <annotation>
+         <documentation>
+            A MacroCall analyzer is used to translate top-level macro calls into IDE relevant information. MacroCalls are obtained from the AST of Bazel BUILD files.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="functionName" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Name of the function called by the macro
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Implementation of the analyzer
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":com.salesforce.bazel.eclipse.core.model.discovery.MacroCallAnalyzer"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="priority" type="string" use="default" value="10">
+            <annotation>
+               <documentation>
+                  (integer) priority of the analyzer in case multiple are registered for the same function name (the higher the more important)
                </documentation>
             </annotation>
          </attribute>

@@ -31,6 +31,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.JavaSourceEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
@@ -38,25 +39,33 @@ import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
- * Legacy implementation of {@link TargetProvisioningStrategy} which provisions a project for all targets in the same
- * package.
+ * Implementation of {@link TargetProvisioningStrategy} which provisions projects based on parsing <code>BUILD</code>
+ * files directly and computing their classpath based on visibility in the build graph.
  * <p>
- * This strategy implements the BEF behavior in versions 1.x.
+ * This strategy implements behavior which intentionally deviates from Bazel dominated strategies in favor of a better
+ * developer experience in IDEs.
  * <ul>
- * <li>All <code>java_*</code> targets in the same package are merged into a single Eclipse project.</li>
- * <li>The build path is merged so Eclipse does not have proper visibility in potentially unsupported imports.</li>
+ * <li><code>BUILD</code> files are parsed and macro/function calls translated into projects.</li>
+ * <li>The macro translation is extensible so translators for custom macros can be provided and included in the
+ * analysis.</li>
+ * <li>A heuristic is used to merge <code>java_*</code> targets in the same package into a single Eclipse project.</li>
+ * <li>The classpath is computed based on visibility, which eventually allows to compute the deps list by IDEs based on
+ * actual use.</li>
  * <li>Projects are created directly in the package location.</li>
  * <li>The root (empty) package <code>//</code> is not supported.</li>
  * </ul>
  * </p>
  */
-public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrategy {
+public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPerPackageProvisioningStrategy {
 
-    public static final String STRATEGY_NAME = "project-per-package";
+    public static final String STRATEGY_NAME = "build-file-and-visibility-driven";
 
     public static final QualifiedName PROJECT_PROPERTY_TARGETS = new QualifiedName(PLUGIN_ID, "bazel_targets");
 
-    private static Logger LOG = LoggerFactory.getLogger(ProjectPerPackageProvisioningStrategy.class);
+    private static Logger LOG = LoggerFactory.getLogger(BuildFileAndVisibilityDrivenProvisioningStrategy.class);
+
+    private final TargetDiscoveryAndProvisioningExtensionLookup extensionLookup =
+            new TargetDiscoveryAndProvisioningExtensionLookup();
 
     @Override
     public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
@@ -175,7 +184,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             throws CoreException {
         // group into packages
         Map<BazelPackage, List<BazelTarget>> targetsByPackage =
-                targets.stream().filter(this::isSupported).collect(groupingBy(BazelTarget::getBazelPackage));
+                targets.stream().collect(groupingBy(BazelTarget::getBazelPackage));
 
         monitor.beginTask("Provisioning projects", targetsByPackage.size() * 3);
 
@@ -186,16 +195,42 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
             // skip the root package (not supported)
             if (bazelPackage.isRoot()) {
-                createBuildPathProblem(bazelPackage.getBazelWorkspace().getBazelProject(), Status.warning(
-                    "The root package was skipped during sync because it's not supported by the project-per-package strategy. Consider excluding it in the .bazelproject file."));
+                createBuildPathProblem(bazelPackage.getBazelWorkspace().getBazelProject(), Status.warning(format(
+                    "The root package was skipped during sync because it's not supported by the '%s' strategy. Consider excluding it in the .bazelproject file.",
+                    STRATEGY_NAME)));
                 continue;
+            }
+
+            // get the top-level macro calls
+            var topLevelMacroCalls = bazelPackage.getBazelBuildFile().getTopLevelMacroCalls();
+
+            // build the project information as we traverse the macros
+            var javaInfo = new JavaProjectInfo(bazelPackage);
+            var relevantTargets = new ArrayList<BazelTarget>();
+            for (MacroCall macroCall : topLevelMacroCalls) {
+                var relevant = processMacroCall(macroCall, javaInfo);
+                if (!relevant) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Skipping not relevant macro call '{}'.", macroCall);
+                    }
+                    continue;
+                }
+                var name = macroCall.getName();
+                if (name != null) {
+                    packageTargets.stream().filter(t -> t.getTargetName().equals(name)).forEach(t -> {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Found relevant target '{}' for macro call '{}'", t, macroCall);
+                        }
+                        relevantTargets.add(t);
+                    });
+                }
             }
 
             // create the project for the package
             var project = provisionPackageProject(bazelPackage, packageTargets, monitor.split(1));
 
-            // build the Java information
-            var javaInfo = collectJavaInfo(project, packageTargets, monitor.split(1));
+            // create markers
+            analyzeProjectInfo(project, javaInfo, monitor);
 
             // sanity check
             if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
@@ -207,13 +242,12 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             }
             if (!javaInfo.hasSourceDirectories()) {
                 createBuildPathProblem(project,
-                    Status.error(
-                        format("No source directories detected when analyzihng package '%s' using targets '%s'",
-                            bazelPackage.getLabel().getPackagePath(),
-                            packageTargets.stream()
-                                    .map(BazelTarget::getLabel)
-                                    .map(BazelLabel::getLabelPath)
-                                    .collect(joining(", ")))));
+                    Status.error(format("No source directories detected when analyzing package '%s' using targets '%s'",
+                        bazelPackage.getLabel().getPackagePath(),
+                        packageTargets.stream()
+                                .map(BazelTarget::getLabel)
+                                .map(BazelLabel::getLabelPath)
+                                .collect(joining(", ")))));
             }
 
             // configure classpath
@@ -224,44 +258,29 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         return result;
     }
 
-    private boolean isSupported(BazelTarget bazeltarget) {
-        String ruleName;
-        try {
-            ruleName = bazeltarget.getRuleClass();
-        } catch (CoreException e) {
-            throw new IllegalStateException(e.getMessage(), e);
-        }
-        return switch (ruleName) {
-            case "java_library", "java_import", "java_binary": {
-                yield true;
-
+    private boolean processMacroCall(MacroCall macroCall, JavaProjectInfo javaInfo) throws CoreException {
+        var analyzers = extensionLookup.createMacroCallAnalyzers(macroCall.getResolvedFunctionName());
+        if (analyzers.isEmpty()) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("No analyzers available for function '{}'", macroCall.getResolvedFunctionName());
             }
-            default: {
-                yield false;
-            }
-        };
-    }
-
-    protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,
-            SubMonitor monitor) throws CoreException {
-        if (bazelPackage.hasBazelProject()) {
-            return bazelPackage.getBazelProject();
+            return false; // no analyzers
         }
 
-        var packagePath = bazelPackage.getLabel().getPackagePath();
-        var projectName = packagePath.isBlank() ? "ROOT" : packagePath.replace('/', '.');
+        for (MacroCallAnalyzer analyzer : analyzers) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Processing macro call '{}' with analyzer '{}'", macroCall, analyzer);
+            }
+            var wasAnalyzed = analyzer.analyze(macroCall, javaInfo);
+            if (wasAnalyzed) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Analyzer '{}' successfully processed macro call '{}'", analyzer.getClass(), macroCall);
+                }
+                return true; // stop processing
+            }
+        }
 
-        // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
-        var projectLocation = bazelPackage.getLocation();
-
-        var project = createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
-
-        // remember the targets to build for the project
-        project.setPersistentProperty(PROJECT_PROPERTY_TARGETS,
-            targets.stream().map(BazelTarget::getTargetName).distinct().collect(joining(":")));
-
-        // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
-        return bazelPackage.getBazelProject();
+        return false; // not analyzed
     }
 
 }

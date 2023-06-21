@@ -134,6 +134,14 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
     }
 
     /**
+     * @return the {@link BazelBuildFile build file for this package}
+     * @throws CoreException
+     */
+    public BazelBuildFile getBazelBuildFile() throws CoreException {
+        return new BazelBuildFile(this, getBuildFileLocation());
+    }
+
+    /**
      * The {@link BazelProject Bazel project} for this package
      * <p>
      * This method performs a search in the Eclipse workspace for a matching project representing this package. The
