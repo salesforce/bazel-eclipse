@@ -17,43 +17,74 @@ import org.eclipse.core.runtime.CoreException;
 
 import com.salesforce.bazel.eclipse.core.model.buildfile.GlobInfo;
 import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.MacroCallAnalyzer;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 
 /**
  * Default <code>java_library</code>
  */
 public class JavaLibraryAnalyzer implements MacroCallAnalyzer {
 
-    protected void addFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel) throws CoreException {
+    protected void addResourceFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel) throws CoreException {
+        javaInfo.addResource(fileOrLabel);
+    }
+
+    protected void addResourceGlob(JavaProjectInfo javaInfo, GlobInfo glob) throws CoreException {
+        javaInfo.addResource(glob);
+    }
+
+    protected void addSrcFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel) throws CoreException {
         javaInfo.addSrc(fileOrLabel);
     }
 
-    protected void addGlob(JavaProjectInfo javaInfo, GlobInfo glob) throws CoreException {
+    protected void addSrcGlob(JavaProjectInfo javaInfo, GlobInfo glob) throws CoreException {
         javaInfo.addSrc(glob);
     }
 
     @Override
     public boolean analyze(MacroCall macroCall, JavaProjectInfo javaInfo) throws CoreException {
+        // note: for absolute correctness all 'srcs' should be processed in their order; we deliberately say no to this effort
+
+        var addedSomething = false;
+
         // process globs first
         var globs = macroCall.getGlobInfoFromArgument("srcs");
-        if (globs == null) {
-            // ignore call without 'srcs'
-            return false;
-        }
-        for (GlobInfo glob : globs) {
-            addGlob(javaInfo, glob);
+        if (globs != null) {
+            addedSomething = true;
+            for (GlobInfo glob : globs) {
+                addSrcGlob(javaInfo, glob);
+            }
         }
 
         // process labels or files
         var labelsOrFiles = macroCall.getStringListArgument("srcs");
         if (labelsOrFiles != null) {
+            addedSomething = true;
             // this can be null if glob is the only srcs
             for (String labelOrFile : labelsOrFiles) {
-                addFileOrLabel(javaInfo, labelOrFile);
+                addSrcFileOrLabel(javaInfo, labelOrFile);
             }
         }
 
-        return true;
+        // process resources globs first
+        globs = macroCall.getGlobInfoFromArgument("resources");
+        if (globs != null) {
+            addedSomething = true;
+            for (GlobInfo glob : globs) {
+                addResourceGlob(javaInfo, glob);
+            }
+        }
+
+        // process resources labels or files
+        labelsOrFiles = macroCall.getStringListArgument("resources");
+        if (labelsOrFiles != null) {
+            addedSomething = true;
+            // this can be null if glob is the only srcs
+            for (String labelOrFile : labelsOrFiles) {
+                addResourceFileOrLabel(javaInfo, labelOrFile);
+            }
+        }
+
+        return addedSomething; // only relevant if something was added
     }
 }

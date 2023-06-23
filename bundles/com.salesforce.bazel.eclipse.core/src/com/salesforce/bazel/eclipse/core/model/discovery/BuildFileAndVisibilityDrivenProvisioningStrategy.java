@@ -32,8 +32,9 @@ import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.JavaSourceEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -233,14 +234,15 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             analyzeProjectInfo(project, javaInfo, monitor);
 
             // sanity check
-            if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
-                for (JavaSourceEntry file : javaInfo.getSourceFilesWithoutCommonRoot()) {
+            var sourceInfo = javaInfo.getSourceInfo();
+            if (sourceInfo.hasSourceFilesWithoutCommonRoot()) {
+                for (JavaSourceEntry file : sourceInfo.getSourceFilesWithoutCommonRoot()) {
                     createBuildPathProblem(project, Status.warning(format(
                         "File '%s' could not be mapped into a common source directory. The project may not build successful in Eclipse.",
                         file.getPath())));
                 }
             }
-            if (!javaInfo.hasSourceDirectories()) {
+            if (!sourceInfo.hasSourceDirectories()) {
                 createBuildPathProblem(project,
                     Status.error(format("No source directories detected when analyzing package '%s' using targets '%s'",
                         bazelPackage.getLabel().getPackagePath(),

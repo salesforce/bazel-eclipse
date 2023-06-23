@@ -1,0 +1,284 @@
+package com.salesforce.bazel.eclipse.core.model.discovery.projects;
+
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.salesforce.bazel.eclipse.core.model.BazelPackage;
+import com.salesforce.bazel.eclipse.core.model.buildfile.GlobInfo;
+import com.salesforce.bazel.sdk.model.BazelLabel;
+
+/**
+ * Holds information for computing Java project configuration of a target or a package.
+ * <p>
+ * The info is initialized with a {@link BazelPackage}. This package will be used to resolve paths when needed. However,
+ * nothing from the package is initially contributing to the {@link JavaProjectInfo}. Instead, callers must call the
+ * various add methods to populate the project info. Once done, {@link #analyzeProjectRecommendations(IProgressMonitor)}
+ * should be called to apply heuristics for computing a recommended project layout.
+ * </p>
+ * <p>
+ * The {@link JavaProjectInfo} maintains a stable order. Things added first remain first. Duplicate items will be
+ * eliminated.
+ * </p>
+ */
+public class JavaProjectInfo {
+
+    private static Logger LOG = LoggerFactory.getLogger(JavaProjectInfo.class);
+
+    private final BazelPackage bazelPackage;
+    private final List<Entry> srcs = new ArrayList<>();
+    private final List<Entry> resources = new ArrayList<>();
+    private final List<LabelEntry> pluginDeps = new ArrayList<>();
+
+    private final List<Entry> testSrcs = new ArrayList<>();
+    private final List<Entry> testResources = new ArrayList<>();
+    private final List<LabelEntry> testPluginDeps = new ArrayList<>();
+
+    private JavaSourceInfo sourceInfo;
+    private JavaSourceInfo testSourceInfo;
+    private JavaResourceInfo resourceInfo;
+    private JavaResourceInfo testResourceInfo;
+
+    public JavaProjectInfo(BazelPackage bazelPackage) {
+        this.bazelPackage = bazelPackage;
+    }
+
+    public void addPluginDep(String label) {
+        pluginDeps.add(new LabelEntry(new BazelLabel(label)));
+    }
+
+    public void addResource(GlobInfo globInfo) throws CoreException {
+        addToResources(resources, globInfo);
+    }
+
+    /**
+     * Adds a resources entry.
+     * <p>
+     * Insertion order is maintained.
+     * </p>
+     *
+     * @param resourceFileOrLabel
+     *            file or label
+     * @throws CoreException
+     */
+    public void addResource(String resourceFileOrLabel) throws CoreException {
+        addToResources(resources, resourceFileOrLabel);
+    }
+
+    /**
+     * Adds a srcs glob entry.
+     * <p>
+     * Insertion order is maintained.
+     * </p>
+     *
+     * @param relativeDirectoryPath
+     * @param includePattern
+     * @param excludePatterns
+     * @throws CoreException
+     */
+    public void addSrc(GlobInfo globInfo) throws CoreException {
+        addToSrc(this.srcs, globInfo);
+    }
+
+    /**
+     * Adds a srcs entry.
+     * <p>
+     * Insertion order is maintained.
+     * </p>
+     *
+     * @param srcFileOrLabel
+     *            file or label
+     * @throws CoreException
+     */
+    public void addSrc(String srcFileOrLabel) throws CoreException {
+        addToSrc(this.srcs, srcFileOrLabel);
+    }
+
+    public void addTestResource(GlobInfo globInfo) throws CoreException {
+        addToResources(testResources, globInfo);
+    }
+
+    /**
+     * Adds a resources entry for test classpath.
+     * <p>
+     * Insertion order is maintained.
+     * </p>
+     *
+     * @param resourceFileOrLabel
+     *            file or label
+     * @throws CoreException
+     */
+    public void addTestResource(String resourceFileOrLabel) throws CoreException {
+        addToResources(testResources, resourceFileOrLabel);
+    }
+
+    public void addTestSrc(GlobInfo globInfo) {
+        addToSrc(this.testSrcs, globInfo);
+    }
+
+    public void addTestSrc(String srcFileOrLabel) throws CoreException {
+        addToSrc(this.testSrcs, srcFileOrLabel);
+    }
+
+    private void addToResources(List<Entry> resources, GlobInfo globInfo) {
+        resources.add(toGlobEntry(globInfo));
+    }
+
+    private void addToResources(List<Entry> resources, String resourceFileOrLabel) throws CoreException {
+        resources.add(toFileOrLabelEntry(resourceFileOrLabel));
+    }
+
+    private void addToSrc(List<Entry> srcs, GlobInfo globInfo) {
+        srcs.add(toGlobEntry(globInfo));
+    }
+
+    private void addToSrc(List<Entry> srcs, String srcFileOrLabel) throws CoreException {
+        srcs.add(toFileOrLabelEntry(srcFileOrLabel));
+    }
+
+    /**
+     * Analyzes the gathered information for recommending a project setup suitable to local development.
+     * <p>
+     * This essentially implements some optimization hacks to detect things such as <code>glob</code> pointing to a
+     * folder. We don't get this information from Bazel with <code>bazel query</code>.
+     * </p>
+     *
+     * @param monitor
+     *            monitor for reporting progress and tracking cancellation (never <code>null</code>)
+     * @return a status (with at most one level of children) indicating potential problems (never <code>null</code>)
+     * @throws CoreException
+     * @todo Review if this belongs here or should be moved outside. It kind a meshs Bazel Java information with Eclipse
+     *       project constraints.
+     */
+    public IStatus analyzeProjectRecommendations(IProgressMonitor monitor) throws CoreException {
+        var result = new MultiStatus(JavaProjectInfo.class, 0, "Java Analysis Result");
+
+        sourceInfo = new JavaSourceInfo(this.srcs, bazelPackage.getLocation());
+        sourceInfo.analyzeSourceDirectories(result);
+
+        resourceInfo = new JavaResourceInfo(resources, bazelPackage, sourceInfo.getDetectedJavaPackages());
+        resourceInfo.analyzeResourceDirectories(result);
+
+        testSourceInfo = new JavaSourceInfo(this.testSrcs, bazelPackage.getLocation());
+        testSourceInfo.analyzeSourceDirectories(result);
+
+        testResourceInfo = new JavaResourceInfo(testResources, bazelPackage, sourceInfo.getDetectedJavaPackages());
+        testResourceInfo.analyzeResourceDirectories(result);
+
+        return result.isOK() ? Status.OK_STATUS : result;
+    }
+
+    /**
+     * {@return the Bazel package used for computing paths}
+     */
+    public BazelPackage getBazelPackage() {
+        return bazelPackage;
+    }
+
+    public List<LabelEntry> getPluginDeps() {
+        return pluginDeps;
+    }
+
+    public JavaResourceInfo getResourceInfo() {
+        return resourceInfo;
+    }
+
+    public JavaSourceInfo getSourceInfo() {
+        return requireNonNull(sourceInfo, "Source info not computed. Did you call analyzeProjectRecommendations?");
+    }
+
+    public List<LabelEntry> getTestPluginDeps() {
+        return testPluginDeps;
+    }
+
+    public JavaResourceInfo getTestResourceInfo() {
+        return testResourceInfo;
+    }
+
+    public JavaSourceInfo getTestSourceInfo() {
+        return requireNonNull(testSourceInfo,
+            "Test source info not computed. Did you call analyzeProjectRecommendations?");
+    }
+
+    private Entry toFileOrLabelEntry(String srcFileOrLabel) throws CoreException {
+        // test if this may be a file in this package
+        var myPackagePath = bazelPackage.getLabel().toString();
+        if (srcFileOrLabel.startsWith(myPackagePath + BazelLabel.BAZEL_COLON)) {
+            // drop the package name to identify a reference within package
+            srcFileOrLabel = srcFileOrLabel.substring(myPackagePath.length() + 1);
+        }
+
+        // starts with : then it must be treated as label
+        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_COLON)) {
+            return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel.substring(1)).getLabel());
+        }
+
+        // starts with // or @ then it must be treated as label
+        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)
+                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)) {
+            return new LabelEntry(new BazelLabel(srcFileOrLabel));
+        }
+
+        // doesn't start with // but contains one, unlikely a label!
+        if (srcFileOrLabel.indexOf('/') >= 1) {
+            return new JavaSourceEntry(new Path(srcFileOrLabel), bazelPackage.getLocation());
+        }
+
+        // treat as label if package has one matching the name
+        if (bazelPackage.hasBazelTarget(srcFileOrLabel)) {
+            return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel).getLabel());
+        }
+
+        // treat as file
+        return new JavaSourceEntry(new Path(srcFileOrLabel), bazelPackage.getLocation());
+    }
+
+    private GlobEntry toGlobEntry(GlobInfo globInfo) {
+        // the first include determines the path
+        var includes = globInfo.include();
+        if (includes.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Invalid glob. Need one include pattern for detecting the source directory path.");
+        }
+
+        var include = includes.iterator().next();
+        var patternStart = include.indexOf('*');
+        if (patternStart < 0) {
+            throw new IllegalArgumentException("Invalid glob - missing '*' to start an include pattern: " + include);
+        }
+
+        // since this is coming from a glob, the path is expected to use '/'
+        var directoryEnd = include.substring(0, patternStart).lastIndexOf('/');
+        if (directoryEnd < 0) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Using empty source directory for glob '{}' to package '{}'", globInfo, bazelPackage);
+            }
+            return new GlobEntry(IPath.EMPTY, globInfo.include(), globInfo.exclude());
+        }
+
+        // remove the directory from all includes if present
+        var directory = IPath.forPosix(include.substring(0, directoryEnd)).makeRelative().removeTrailingSeparator();
+        List<String> includePatterns = globInfo.include()
+                .stream()
+                .map(s -> s.startsWith(directory.toString()) ? s.substring(directory.toString().length()) : s)
+                .collect(toList());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Using directory '{}' with includes '{}' for glob '{}' to package '{}'", directory,
+                includePatterns, globInfo, bazelPackage);
+        }
+        return new GlobEntry(directory, includePatterns, globInfo.exclude());
+    }
+
+}
