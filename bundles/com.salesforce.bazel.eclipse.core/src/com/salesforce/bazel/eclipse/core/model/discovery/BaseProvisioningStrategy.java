@@ -59,14 +59,21 @@ import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.GlobEntry;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaProjectInfo.JavaSourceEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaResourceInfo;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceInfo;
 import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand;
 
 /**
  * Base class for provisioning strategies, providing common base logic re-usable by multiple strategies.
  */
 public abstract class BaseProvisioningStrategy implements TargetProvisioningStrategy {
+
+    private static final IClasspathAttribute CLASSPATH_ATTRIBUTE_FOR_TEST =
+            JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, Boolean.TRUE.toString());
+
+    private static final IPath[] EXCLUDE_JAVA_SOURCE = { IPath.forPosix("**/*.java") };
 
     private static Logger LOG = LoggerFactory.getLogger(BaseProvisioningStrategy.class);
 
@@ -79,6 +86,111 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
     protected String javaToolchainSourceVersion;
     protected String javaToolchainTargetVersion;
+
+    /**
+     * Adds all information from a {@link BazelTarget} to the {@link JavaProjectInfo}.
+     *
+     * @param target
+     * @throws CoreException
+     */
+    private void addInfoFromTarget(JavaProjectInfo javaInfo, BazelTarget bazelTarget) throws CoreException {
+        var attributes = bazelTarget.getRuleAttributes();
+        var srcs = attributes.getStringList("srcs");
+        if (srcs != null) {
+            for (String src : srcs) {
+                javaInfo.addSrc(src);
+            }
+        }
+
+        var resources = attributes.getStringList("resources");
+        if (resources != null) {
+            for (String resource : resources) {
+                javaInfo.addResource(resource);
+            }
+        }
+
+        var pluginDeps = attributes.getStringList("plugins");
+        if (pluginDeps != null) {
+            for (String dep : pluginDeps) {
+                javaInfo.addPluginDep(dep);
+            }
+        }
+    }
+
+    private void addResourceFolders(BazelProject project, List<IClasspathEntry> rawClasspath,
+            JavaResourceInfo resourceInfo, boolean useTestsClasspath) {
+        var virtualResourceFolder = useTestsClasspath ? getFileSystemMapper().getVirtualResourceFolderForTests(project)
+                : getFileSystemMapper().getVirtualResourceFolder(project);
+        var outputLocation = useTestsClasspath ? getFileSystemMapper().getOutputFolderForTests(project).getFullPath()
+                : getFileSystemMapper().getOutputFolder(project).getFullPath();
+        var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] { CLASSPATH_ATTRIBUTE_FOR_TEST }
+                : new IClasspathAttribute[] {};
+        if (resourceInfo.hasResourceFilesWithoutCommonRoot()) {
+            // add the virtual folder for resources
+            rawClasspath.add(
+                JavaCore.newSourceEntry(
+                    virtualResourceFolder.getFullPath(),
+                    null /* include all */,
+                    EXCLUDE_JAVA_SOURCE,
+                    outputLocation,
+                    classpathAttributes));
+        }
+        if (resourceInfo.hasResourceDirectories()) {
+            for (IPath dir : resourceInfo.getResourceDirectories()) {
+                // when the directory is empty, the virtual "srcs" container must be used
+                // this logic here requires proper linking support in linkSourcesIntoProject method
+                var resourceFolder = dir.isEmpty() ? virtualResourceFolder : project.getProject().getFolder(dir);
+                var inclusionPatterns = resourceInfo.getInclusionPatternsForSourceDirectory(dir);
+                var exclusionPatterns = resourceInfo.getExclutionPatternsForSourceDirectory(dir);
+                if ((exclusionPatterns == null) || (exclusionPatterns.length == 0)) {
+                    exclusionPatterns = EXCLUDE_JAVA_SOURCE; // exclude all .java files by default
+                }
+                rawClasspath.add(
+                    JavaCore.newSourceEntry(
+                        resourceFolder.getFullPath(),
+                        inclusionPatterns,
+                        exclusionPatterns,
+                        outputLocation,
+                        classpathAttributes));
+            }
+        }
+    }
+
+    private void addSourceFolders(BazelProject project, List<IClasspathEntry> rawClasspath,
+            JavaSourceInfo javaSourceInfo, boolean useTestsClasspath) {
+        var virtualSourceFolder = useTestsClasspath ? getFileSystemMapper().getVirtualResourceFolderForTests(project)
+                : getFileSystemMapper().getVirtualResourceFolder(project);
+        var outputLocation = useTestsClasspath ? getFileSystemMapper().getOutputFolderForTests(project).getFullPath()
+                : getFileSystemMapper().getOutputFolder(project).getFullPath();
+        var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] { CLASSPATH_ATTRIBUTE_FOR_TEST }
+                : new IClasspathAttribute[] {};
+        if (javaSourceInfo.hasSourceFilesWithoutCommonRoot()) {
+            // add the virtual folder for resources
+            rawClasspath.add(
+                JavaCore.newSourceEntry(
+                    virtualSourceFolder.getFullPath(),
+                    null /* include all */,
+                    null /* exclude nothing */,
+                    outputLocation,
+                    classpathAttributes));
+        }
+        if (javaSourceInfo.hasSourceDirectories()) {
+            for (IPath dir : javaSourceInfo.getSourceDirectories()) {
+                // when the directory is empty, the virtual "srcs" container must be used
+                // this logic here requires proper linking support in linkSourcesIntoProject method
+                var sourceFolder = dir.isEmpty() ? virtualSourceFolder : project.getProject().getFolder(dir);
+                var inclusionPatterns = javaSourceInfo.getInclusionPatternsForSourceDirectory(dir);
+                var exclusionPatterns = javaSourceInfo.getExclutionPatternsForSourceDirectory(dir);
+                rawClasspath.add(
+                    JavaCore.newSourceEntry(
+                        sourceFolder.getFullPath(),
+                        inclusionPatterns,
+                        exclusionPatterns,
+                        outputLocation,
+                        classpathAttributes));
+            }
+        }
+    }
 
     /**
      * Calls {@link JavaProjectInfo#analyzeProjectRecommendations(IProgressMonitor)} and creates problem markers for any
@@ -99,10 +211,26 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         var recommendations = javaInfo.analyzeProjectRecommendations(monitor);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("{} source directories: {}", project,
-                javaInfo.hasSourceDirectories() ? javaInfo.getSourceDirectories() : "n/a");
-            LOG.debug("{} source files without root: {}", project,
-                javaInfo.hasSourceFilesWithoutCommonRoot() ? javaInfo.getSourceFilesWithoutCommonRoot() : "n/a");
+            var sourceInfo = javaInfo.getSourceInfo();
+            LOG.debug(
+                "{} source directories: {}",
+                project,
+                sourceInfo.hasSourceDirectories() ? sourceInfo.getSourceDirectories() : "n/a");
+            LOG.debug(
+                "{} source files without root: {}",
+                project,
+                sourceInfo.hasSourceFilesWithoutCommonRoot() ? sourceInfo.getSourceFilesWithoutCommonRoot() : "n/a");
+
+            var testSourceInfo = javaInfo.getSourceInfo();
+            LOG.debug(
+                "{} test source directories: {}",
+                project,
+                testSourceInfo.hasSourceDirectories() ? testSourceInfo.getSourceDirectories() : "n/a");
+            LOG.debug(
+                "{} test source files without root: {}",
+                project,
+                testSourceInfo.hasSourceFilesWithoutCommonRoot() ? testSourceInfo.getSourceFilesWithoutCommonRoot()
+                        : "n/a");
         }
 
         // delete existing markers
@@ -110,8 +238,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         // abort if canceled
         if (monitor.isCanceled()) {
-            createBuildPathProblem(project, Status.warning(
-                "Bazel project provisioning for this workspace was canceled. The Eclipse workspace may not build properly."));
+            createBuildPathProblem(
+                project,
+                Status.warning(
+                    "Bazel project provisioning for this workspace was canceled. The Eclipse workspace may not build properly."));
             throw new OperationCanceledException();
         }
 
@@ -157,7 +287,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         // process targets in the given order
         for (BazelTarget bazelTarget : targets) {
-            javaInfo.addInfoFromTarget(bazelTarget);
+            addInfoFromTarget(javaInfo, bazelTarget);
         }
 
         analyzeProjectInfo(project, javaInfo, monitor);
@@ -181,43 +311,11 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             throws CoreException {
         List<IClasspathEntry> rawClasspath = new ArrayList<>();
 
-        if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
-            rawClasspath
-                    .add(JavaCore.newSourceEntry(getFileSystemMapper().getVirtualSourceFolder(project).getFullPath()));
-        }
+        addSourceFolders(project, rawClasspath, javaInfo.getSourceInfo(), false /* useTestsClasspath */);
+        addResourceFolders(project, rawClasspath, javaInfo.getResourceInfo(), false /* useTestsClasspath */);
 
-        if (javaInfo.hasSourceDirectories()) {
-            for (IPath dir : javaInfo.getSourceDirectories()) {
-                // when the directory is empty, the virtual "srcs" container must be used
-                // this logic here requires proper linking support in linkSourcesIntoProject method
-                var sourceFolder = dir.isEmpty() ? getFileSystemMapper().getVirtualSourceFolder(project)
-                        : project.getProject().getFolder(dir);
-                rawClasspath.add(JavaCore.newSourceEntry(sourceFolder.getFullPath()));
-            }
-        }
-
-        if (javaInfo.hasTestSourceDirectories()) {
-            IClasspathAttribute[] testSrcAttributes =
-                    { JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, Boolean.TRUE.toString()) };
-            for (GlobEntry glob : javaInfo.getTestSourceDirectories()) {
-                if (glob.getRelativeDirectoryPath().isEmpty()) {
-                    throw new CoreException(
-                            Status.error(format("Unsupported test glob '%s' in project '%s'", glob, project)));
-                }
-
-                var inclusionPatterns =
-                        (glob.getIncludePattern() == null) || glob.getIncludePattern().equals("**/*.java")
-                                ? new IPath[0] : new IPath[] { new Path(glob.getIncludePattern()) };
-                var exclusionPatterns = glob.getExcludePatterns() == null ? List.of()
-                        : glob.getExcludePatterns().stream().map(IPath::forPosix).collect(toList());
-
-                var sourceFolder = project.getProject().getFolder(glob.getRelativeDirectoryPath());
-                rawClasspath.add(JavaCore.newSourceEntry(sourceFolder.getFullPath(), inclusionPatterns,
-                    exclusionPatterns.toArray(new IPath[exclusionPatterns.size()]),
-                    project.getProject().getFolder("bin-tests").getFullPath(), testSrcAttributes));
-            }
-
-        }
+        addSourceFolders(project, rawClasspath, javaInfo.getTestSourceInfo(), true /* useTestsClasspath */);
+        addResourceFolders(project, rawClasspath, javaInfo.getTestResourceInfo(), true /* useTestsClasspath*/);
 
         rawClasspath.add(JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)));
 
@@ -378,7 +476,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         project.setDescription(projectDescription, monitor.newChild(1));
 
         // set properties
-        project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT,
+        project.setPersistentProperty(
+            BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT,
             getFileSystemMapper().getBazelWorkspace().getLocation().toString());
         project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_OWNER, owner.getLabel().getLabelPath());
 
@@ -418,8 +517,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             throws CoreException {
         var folderLocation =
                 requireNonNull(folderToKeep.getLocation(), () -> format("folder '%s' has no location", folderToKeep));
-        deleteAllFilesMatchingPredicate(root,
-            f -> (f.getLocation() != null) && !folderLocation.isPrefixOf(f.getLocation()), progress);
+        deleteAllFilesMatchingPredicate(
+            root,
+            f -> (f.getLocation() != null) && !folderLocation.isPrefixOf(f.getLocation()),
+            progress);
     }
 
     /**
@@ -435,7 +536,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @throws CoreException
      */
     protected void detectDefaultJavaToolchain(BazelWorkspace workspace) throws CoreException {
-        var command = new BazelCQueryWithStarlarkExpressionCommand(workspace.getLocation().toPath(),
+        var command = new BazelCQueryWithStarlarkExpressionCommand(
+                workspace.getLocation().toPath(),
                 "@bazel_tools//tools/jdk:current_java_toolchain",
                 "providers(target)['JavaToolchainInfo'].source_version + '::' + providers(target)['JavaToolchainInfo'].target_version + '::' + providers(target)['JavaToolchainInfo'].java_runtime.java_home",
                 false);
@@ -445,8 +547,11 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             javaToolchainSourceVersion = tokenizer.nextToken();
             javaToolchainTargetVersion = tokenizer.nextToken();
             var javaHome = tokenizer.nextToken();
-            LOG.debug("source_level: {}, target_level: {}, java_home: {}", javaToolchainSourceVersion,
-                javaToolchainTargetVersion, javaHome);
+            LOG.debug(
+                "source_level: {}, target_level: {}, java_home: {}",
+                javaToolchainSourceVersion,
+                javaToolchainTargetVersion,
+                javaHome);
 
             // sanitize versions
             try {
@@ -454,35 +559,47 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                     javaToolchainSourceVersion = "1." + javaToolchainSourceVersion;
                 }
             } catch (NumberFormatException e) {
-                throw new CoreException(Status
-                        .error(format("Unable to detect Java Toolchain information. Error parsing source level (%s)",
-                            javaToolchainSourceVersion), e));
+                throw new CoreException(
+                        Status.error(
+                            format(
+                                "Unable to detect Java Toolchain information. Error parsing source level (%s)",
+                                javaToolchainSourceVersion),
+                            e));
             }
             try {
                 if (Integer.parseInt(javaToolchainTargetVersion) < 9) {
                     javaToolchainTargetVersion = "1." + javaToolchainTargetVersion;
                 }
             } catch (NumberFormatException e) {
-                throw new CoreException(Status
-                        .error(format("Unable to detect Java Toolchain information. Error parsing target level (%s)",
-                            javaToolchainTargetVersion), e));
+                throw new CoreException(
+                        Status.error(
+                            format(
+                                "Unable to detect Java Toolchain information. Error parsing target level (%s)",
+                                javaToolchainTargetVersion),
+                            e));
             }
 
             // resolve java home
             var resolvedJavaHomePath = java.nio.file.Path.of(javaHome);
             if (!resolvedJavaHomePath.isAbsolute()) {
                 if (!javaHome.startsWith("external/")) {
-                    throw new CoreException(Status.error(format(
-                        "Unable to resolved java_home of '%s' into something meaningful. Please report as reproducible bug!",
-                        javaHome)));
+                    throw new CoreException(
+                            Status.error(
+                                format(
+                                    "Unable to resolved java_home of '%s' into something meaningful. Please report as reproducible bug!",
+                                    javaHome)));
                 }
                 resolvedJavaHomePath = new BazelWorkspaceBlazeInfo(workspace).getOutputBase().resolve(javaHome);
             }
 
             javaToolchainVm = new JvmConfigurator().configureVMInstall(resolvedJavaHomePath, workspace);
         } catch (NoSuchElementException e) {
-            throw new CoreException(Status.error(format(
-                "Unable to detect Java Toolchain information. Error parsing output of bazel cquery (%s)", result), e));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Unable to detect Java Toolchain information. Error parsing output of bazel cquery (%s)",
+                            result),
+                        e));
         }
     }
 
@@ -511,8 +628,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             throws CoreException {
         try {
             // use the job to properly trigger the classpath manager
-            new InitializeOrRefreshClasspathJob(projects.stream(),
-                    workspace.getParent().getModelManager().getClasspathManager(), true).runInWorkspace(monitor);
+            new InitializeOrRefreshClasspathJob(
+                    projects.stream(),
+                    workspace.getParent().getModelManager().getClasspathManager(),
+                    true).runInWorkspace(monitor);
         } finally {
             monitor.done();
         }
@@ -539,9 +658,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         List<BazelPackage> allPackages =
                 targets.stream().map(BazelTarget::getBazelPackage).distinct().collect(toList());
         if (allPackages.size() != 1) {
-            throw new IllegalArgumentException(format(
-                "Cannot process targets from different packages. Unable to detect common package. Expected 1 got %d.",
-                allPackages.size()));
+            throw new IllegalArgumentException(
+                    format(
+                        "Cannot process targets from different packages. Unable to detect common package. Expected 1 got %d.",
+                        allPackages.size()));
         }
         return allPackages.get(0); // BazelTarget::getBazelPackage guaranteed to not return null
     }
@@ -573,7 +693,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      *         {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)})
      */
     protected BazelProjectFileSystemMapper getFileSystemMapper() {
-        return requireNonNull(fileSystemMapper,
+        return requireNonNull(
+            fileSystemMapper,
             "file system mapper not initialized, check code flow/implementation (likely a bug)");
     }
 
@@ -589,14 +710,16 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             throws CoreException {
         var monitor = SubMonitor.convert(progress, 100);
         try {
-            if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
+            var sourceInfo = javaInfo.getSourceInfo();
+
+            if (sourceInfo.hasSourceFilesWithoutCommonRoot()) {
                 // create the "srcs" folder
                 var virtualSourceFolder = getFileSystemMapper().getVirtualSourceFolder(project);
                 if (!virtualSourceFolder.exists()) {
                     virtualSourceFolder.create(IResource.NONE, true, monitor.newChild(1));
                 }
                 // build emulated Java package structure and link files
-                var files = javaInfo.getSourceFilesWithoutCommonRoot();
+                var files = sourceInfo.getSourceFilesWithoutCommonRoot();
                 Set<IFile> linkedFiles = new HashSet<>();
                 for (JavaSourceEntry fileEntry : files) {
                     // peek at Java package to find proper "root"
@@ -618,8 +741,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 deleteAllFilesNotInAllowList(virtualSourceFolder, linkedFiles, monitor.newChild(1));
             }
 
-            if (javaInfo.hasSourceDirectories()) {
-                var directories = javaInfo.getSourceDirectories();
+            if (sourceInfo.hasSourceDirectories()) {
+                var directories = sourceInfo.getSourceDirectories();
                 NEXT_FOLDER: for (IPath dir : directories) {
                     IFolder sourceFolder;
                     if (dir.isEmpty()) {
@@ -635,7 +758,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                             continue NEXT_FOLDER;
                         }
                         // and there aren't any other source files to be linked
-                        if (javaInfo.hasSourceFilesWithoutCommonRoot()) {
+                        if (sourceInfo.hasSourceFilesWithoutCommonRoot()) {
                             // TODO create problem marker?
                             LOG.warn(
                                 "Impossible to support project '{}' - found mix of multiple source files and empty package fragment root!",
@@ -644,12 +767,13 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         }
                         // check this maps to a single Java package
                         var detectedJavaPackagesForSourceDirectory =
-                                javaInfo.getDetectedJavaPackagesForSourceDirectory(dir);
+                                sourceInfo.getDetectedJavaPackagesForSourceDirectory(dir);
                         if (detectedJavaPackagesForSourceDirectory.size() != 1) {
                             // TODO create problem marker?
                             LOG.warn(
                                 "Impossible to support project '{}' - an empty package fragment root must map to one Java package (got '{}')!",
-                                project, detectedJavaPackagesForSourceDirectory);
+                                project,
+                                detectedJavaPackagesForSourceDirectory);
                             continue NEXT_FOLDER;
                         }
 
@@ -672,7 +796,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         if (packageFolder.exists() && !packageFolder.isLinked()) {
                             packageFolder.delete(true, monitor.split(1));
                         }
-                        packageFolder.createLink(javaInfo.getBazelPackage().getLocation(), IResource.REPLACE,
+                        packageFolder.createLink(
+                            javaInfo.getBazelPackage().getLocation(),
+                            IResource.REPLACE,
                             monitor.split(1));
 
                         // remove all files not created as part of this loop
@@ -709,7 +835,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                     }
 
                     // create link to folder
-                    sourceFolder.createLink(javaInfo.getBazelPackage().getLocation().append(dir), IResource.REPLACE,
+                    sourceFolder.createLink(
+                        javaInfo.getBazelPackage().getLocation().append(dir),
+                        IResource.REPLACE,
                         monitor.newChild(1));
                 }
             }

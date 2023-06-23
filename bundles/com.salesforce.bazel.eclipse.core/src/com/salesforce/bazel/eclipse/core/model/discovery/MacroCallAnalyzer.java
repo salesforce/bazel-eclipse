@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 import org.eclipse.core.runtime.CoreException;
 
 import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 
 /**
  * Analyzer for {@link MacroCall} to extract information relevant for Eclipse to create a proper Java project.
