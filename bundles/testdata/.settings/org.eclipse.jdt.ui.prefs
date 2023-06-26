@@ -141,7 +141,6 @@ cleanup_profile=_Bazel Code Clean-up
 cleanup_settings_version=2
 eclipse.preferences.version=1
 editor_save_participant_org.eclipse.jdt.ui.postsavelistener.cleanup=true
-formatter_profile=_Bazel Eclipse Formatter
 formatter_settings_version=23
 org.eclipse.jdt.ui.text.custom_code_templates=
 sp_cleanup.add_all=true
