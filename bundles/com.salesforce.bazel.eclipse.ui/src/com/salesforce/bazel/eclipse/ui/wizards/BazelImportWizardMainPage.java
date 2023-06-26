@@ -14,6 +14,7 @@
 
 package com.salesforce.bazel.eclipse.ui.wizards;
 
+import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil.setHorizontalGrabbing;
 import static org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil.setWidthHint;
@@ -180,7 +181,12 @@ public class BazelImportWizardMainPage extends WizardPage {
     }
 
     protected void doStatusLineUpdate() {
-        setPageComplete(detectPageComplete());
+        try {
+            setPageComplete(detectPageComplete());
+        } catch (Exception | LinkageError e) {
+            setErrorMessage(format("A runtime error occured. Please check the Eclipse error log for details. (%s)", e));
+            setPageComplete(false);
+        }
     }
 
     private IPath findWorkspaceRoot(IPath projectView) {
@@ -208,7 +214,10 @@ public class BazelImportWizardMainPage extends WizardPage {
     private StringBuilder readWorkspaceInfo(Path projectViewPath, IPath workspaceRoot) throws IOException {
         var projectView = new BazelProjectFileReader(projectViewPath.toPath(), workspaceRoot.toPath()).read();
         var info = new StringBuilder();
-        info.append("Location:").append(System.lineSeparator()).append("  ").append(workspaceRoot)
+        info.append("Location:")
+                .append(System.lineSeparator())
+                .append("  ")
+                .append(workspaceRoot)
                 .append(System.lineSeparator());
         info.append("Targets:").append(System.lineSeparator());
         if (projectView.deriveTargetsFromDirectories()) {
