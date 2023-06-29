@@ -186,7 +186,9 @@ public class BazelClasspathManager {
         } catch (ObjectStreamException | ClassNotFoundException ex) {
             LOG.warn(
                 "Discarding classpath container state for project '{}' due to de-serialization incompatibilities. {}",
-                project.getName(), ex.getMessage(), ex);
+                project.getName(),
+                ex.getMessage(),
+                ex);
             return null;
         } catch (IOException ex) {
             throw new CoreException(Status.error("Can't read classpath container state for " + project.getName(), ex));
@@ -266,8 +268,11 @@ public class BazelClasspathManager {
             // now we need to re-compute the classpath so we can
             // eliminate all "standard" source/javadoc attachement we get from local repo
             var strategy = getTargetProvisioningStrategy(bazelProject.getBazelWorkspace());
-            var classpaths = strategy.computeClasspaths(List.of(bazelProject), bazelProject.getBazelWorkspace(),
-                DEFAULT_CLASSPATH, monitor.split(1));
+            var classpaths = strategy.computeClasspaths(
+                List.of(bazelProject),
+                bazelProject.getBazelWorkspace(),
+                DEFAULT_CLASSPATH,
+                monitor.split(1));
             entries =
                     configureClasspathWithSourceAttachments(classpaths.get(bazelProject), null /* no props */, monitor);
             for (IClasspathEntry entry : entries) {
@@ -330,12 +335,15 @@ public class BazelClasspathManager {
 
             // we need to refresh the workspace project differently
             var workspaceProject = bazelWorkspace.getBazelProject();
-            var workspaceProjectClasspath = projects.contains(workspaceProject) ? new WorkspaceClasspathStrategy()
-                    .computeClasspath(workspaceProject, bazelWorkspace, DEFAULT_CLASSPATH, monitor.split(1)) : null;
+            var workspaceProjectClasspath = projects.contains(workspaceProject)
+                    ? new WorkspaceClasspathStrategy()
+                            .computeClasspath(workspaceProject, bazelWorkspace, DEFAULT_CLASSPATH, monitor.split(1))
+                    : null;
 
             // extract all non workspace projects
             List<BazelProject> nonWorkspaceProjects = projects.stream()
-                    .filter(not(BazelClasspathHelpers::isWorkspaceProjectExcludeFailing)).collect(toList());
+                    .filter(not(BazelClasspathHelpers::isWorkspaceProjectExcludeFailing))
+                    .collect(toList());
 
             // ensure the packages are opened efficiently
             monitor.subTask("Reading packages...");
@@ -344,10 +352,10 @@ public class BazelClasspathManager {
             // compute classpaths for all non-workspace projects
             monitor.subTask("Computing classpaths...");
             var strategy = getTargetProvisioningStrategy(bazelWorkspace);
-            var classpaths = strategy.computeClasspaths(nonWorkspaceProjects, bazelWorkspace, DEFAULT_CLASSPATH,
-                monitor.split(1));
+            var classpaths = strategy
+                    .computeClasspaths(nonWorkspaceProjects, bazelWorkspace, DEFAULT_CLASSPATH, monitor.split(1));
 
-            // apply classpaths for each projecht
+            // apply classpaths for each project
             for (BazelProject bazelProject : projects) {
                 var javaProject = JavaCore.create(bazelProject.getProject());
                 monitor.subTask("Setting classpath: " + javaProject.getElementName());
@@ -362,12 +370,18 @@ public class BazelClasspathManager {
                 }
 
                 var sourceAttachmentProperties = getSourceAttachmentProperties(bazelProject);
-                IClasspathContainer container =
-                        new BazelClasspathContainer(path, configureClasspathWithSourceAttachments(projectClasspath,
-                            sourceAttachmentProperties, progress));
+                IClasspathContainer container = new BazelClasspathContainer(
+                        path,
+                        configureClasspathWithSourceAttachments(
+                            projectClasspath,
+                            sourceAttachmentProperties,
+                            progress));
 
-                JavaCore.setClasspathContainer(container.getPath(), new IJavaProject[] { javaProject },
-                    new IClasspathContainer[] { container }, monitor.newChild(1));
+                JavaCore.setClasspathContainer(
+                    container.getPath(),
+                    new IJavaProject[] { javaProject },
+                    new IClasspathContainer[] { container },
+                    monitor.newChild(1));
                 saveContainerState(bazelProject.getProject(), container);
 
             }

@@ -177,7 +177,7 @@ public class BazelModelManager implements BazelCoreSharedContstants {
         }
 
         // configure cache
-        BazelElementInfoCache.setInstance(new CaffeineBasedBazelElementInfoCache(5000));
+        BazelElementInfoCache.setInstance(new CaffeineBasedBazelElementInfoCache(10000000 /* is ten million enough?*/));
 
         // ensure aspects are usable
         aspects = new IntellijAspects(stateLocation.append("intellij-aspects").toPath());
@@ -186,7 +186,9 @@ public class BazelModelManager implements BazelCoreSharedContstants {
         // initialize the classpath
         classpathManager = new BazelClasspathManager(stateLocation.toFile(), this);
         var projects = getWorkspace().getRoot().getProjects();
-        var refreshClasspath = new InitializeOrRefreshClasspathJob(projects, classpathManager,
+        var refreshClasspath = new InitializeOrRefreshClasspathJob(
+                projects,
+                classpathManager,
                 false /* only when classpath is missing */);
         refreshClasspath.schedule();
 
@@ -205,7 +207,8 @@ public class BazelModelManager implements BazelCoreSharedContstants {
 
                     // we must process the POST_CHANGE events before the Java model
                     // for the container classpath update to proceed smoothly
-                    JavaCore.addPreProcessingResourceChangedListener(resourceChangeProcessor,
+                    JavaCore.addPreProcessingResourceChangedListener(
+                        resourceChangeProcessor,
                         IResourceChangeEvent.PRE_DELETE | IResourceChangeEvent.POST_CHANGE);
 
                     // add save participant and process delta atomically

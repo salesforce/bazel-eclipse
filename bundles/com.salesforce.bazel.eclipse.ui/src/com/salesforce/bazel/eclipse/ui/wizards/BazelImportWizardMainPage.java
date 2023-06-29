@@ -98,9 +98,13 @@ public class BazelImportWizardMainPage extends WizardPage {
     private IPath chooseProjectView() {
         var dialog = new FileDialog(getShell(), SWT.OPEN | SWT.SINGLE | SWT.SHEET);
         dialog.setText("Select Project View");
-        dialog.setFilterPath(System.getProperty("user.home"));
+        //        dialog.setFilterPath(System.getProperty("user.home"));
         dialog.setFilterExtensions(new String[] { "*.bazelproject", "*.*" });
         dialog.setFilterNames(new String[] { "Bazel Project View  (*.bazelproject)" });
+
+        if (!projectViewDialogField.getText().isBlank()) {
+            dialog.setFileName(projectViewDialogField.getText());
+        }
 
         var selectedFile = dialog.open();
         return selectedFile != null ? new Path(selectedFile) : null;
@@ -159,9 +163,9 @@ public class BazelImportWizardMainPage extends WizardPage {
         try {
             var info = readWorkspaceInfo(projectViewPath, workspaceRoot);
             workspaceInfoField.setText(info.toString());
-        } catch (IOException e) {
+        } catch (IllegalArgumentException | IOException e) {
             workspaceInfoField.setText(e.getMessage());
-            setMessage("Error reading Project View. Please select a different one!");
+            setErrorMessage("Error reading Project View. Please select a different one!");
             return false;
         }
 
@@ -169,6 +173,7 @@ public class BazelImportWizardMainPage extends WizardPage {
         bazelWorkspaceRoot = workspaceRoot;
 
         // all good
+        setErrorMessage(null);
         setMessage(IMPORT_BAZEL_PROJECT_VIEW);
         return true;
     }

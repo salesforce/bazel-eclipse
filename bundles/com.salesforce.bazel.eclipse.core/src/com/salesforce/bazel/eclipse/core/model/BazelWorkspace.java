@@ -27,15 +27,14 @@ import static java.util.Objects.requireNonNull;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -56,6 +55,8 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * </p>
  */
 public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, BazelModel> {
+
+    private static Logger LOG = LoggerFactory.getLogger(BazelWorkspace.class);
 
     /**
      * Utility function to find a <code>WORKSPACE.bazel</code>, <code>WORKSPACE</code> or <code>WORKSPACE.bzlmod</code>
@@ -381,13 +382,20 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
      *             in case of errors loading packages
      */
     public void open(Collection<BazelPackage> bazelPackages) throws CoreException {
-        var targets = queryForTargets(this, bazelPackages, getModelManager().getExecutionService());
-        for (Entry<BazelPackage, Map<String, Target>> queryResult : targets.entrySet()) {
-            var bazelPackage = queryResult.getKey();
-            bazelPackage.openIfNecessary(new BazelPackageInfo(
-                    requireNonNull(bazelPackage.findBuildFile(),
-                        () -> format("non-existing Bazel package: %s", bazelPackage.getLabel())),
-                    bazelPackage, queryResult.getValue()));
+        var targetsByPackage = queryForTargets(this, bazelPackages, getModelManager().getExecutionService());
+        for (BazelPackage bazelPackage : bazelPackages) {
+            var targets = targetsByPackage.get(bazelPackage);
+            if (targets == null) {
+                LOG.debug("No result for: '{}'", bazelPackage);
+                continue;
+            }
+            bazelPackage.openIfNecessary(
+                new BazelPackageInfo(
+                        requireNonNull(
+                            bazelPackage.findBuildFile(),
+                            () -> format("non-existing Bazel package: %s", bazelPackage.getLabel())),
+                        bazelPackage,
+                        targets));
         }
     }
 

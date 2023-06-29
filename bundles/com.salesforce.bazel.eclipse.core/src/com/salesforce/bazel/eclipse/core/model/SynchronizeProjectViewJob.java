@@ -121,6 +121,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         super(format("Synchronizing project view for workspace '%s'", workspace.getName()));
         this.workspace = workspace;
 
+        // ensure the workspace info is remove from the cache
+        this.workspace.getInfoCache().invalidate(this.workspace);
+
         // trigger loading of the project view
         this.projectView = workspace.getBazelProjectView();
         importRoots = createImportRoots(workspace);
@@ -142,7 +145,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             workspaceProject.createFilter(
                 IResourceFilterDescription.EXCLUDE_ALL | IResourceFilterDescription.FILES
                         | IResourceFilterDescription.FOLDERS,
-                new FileInfoMatcherDescription(RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID, null), NONE, monitor);
+                new FileInfoMatcherDescription(RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID, null),
+                NONE,
+                monitor);
         } else {
             // filter exists, just refresh the project
             workspaceProject.refreshLocal(DEPTH_INFINITE, monitor);
@@ -181,7 +186,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         // configure the classpath container
         var javaProject = JavaCore.create(project);
         javaProject.setRawClasspath(
-            new IClasspathEntry[] { JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)) }, true,
+            new IClasspathEntry[] { JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)) },
+            true,
             monitor.split(1));
 
         return project;
@@ -230,10 +236,14 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             var targetDiscoveryStrategy = getTargetDiscoveryStrategy();
 
             // we are comparing using project relative paths
-            Set<IPath> allowedDirectories = projectView.directoriesToImport().stream()
-                    .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator).collect(toSet());
-            Set<IPath> explicitelyExcludedDirectories = projectView.directoriesToExclude().stream()
-                    .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator).collect(toSet());
+            Set<IPath> allowedDirectories = projectView.directoriesToImport()
+                    .stream()
+                    .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator)
+                    .collect(toSet());
+            Set<IPath> explicitelyExcludedDirectories = projectView.directoriesToExclude()
+                    .stream()
+                    .map(this::convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator)
+                    .collect(toSet());
 
             // query workspace for all targets
             var bazelPackages = targetDiscoveryStrategy.discoverPackages(workspace, monitor.split(1));
@@ -337,7 +347,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     }
 
     private String getWorkspaceProjectComment(IPath workspaceRoot) {
-        return format("Bazel Workspace Project managed by Bazel Eclipse Feature for Bazel workspace at '%s'",
+        return format(
+            "Bazel Workspace Project managed by Bazel Eclipse Feature for Bazel workspace at '%s'",
             workspaceRoot);
     }
 
@@ -391,7 +402,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // we cannot make a decision, continue searching
             return true;
         };
-        workspaceProject.accept(visitor, DEPTH_INFINITE,
+        workspaceProject.accept(
+            visitor,
+            DEPTH_INFINITE,
             IContainer.INCLUDE_HIDDEN /* visit hidden ones so we can un-hide if necessary */);
     }
 
