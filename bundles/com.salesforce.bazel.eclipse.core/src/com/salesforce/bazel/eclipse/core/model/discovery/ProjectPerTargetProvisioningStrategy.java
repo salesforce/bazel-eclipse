@@ -85,13 +85,13 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
 
             // populate map from result
             Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
-            var aspectsInfo = new JavaClasspathAspectsInfo(result, workspace);
+            var aspectsInfo = new JavaAspectsInfo(result, workspace);
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.subTask("Analyzing: " + bazelProject);
                 monitor.checkCanceled();
 
                 // build index of classpath info
-                var classpathInfo = new JavaClasspathInfo(aspectsInfo, workspace);
+                var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
 
                 // add the target
                 classpathInfo.addTarget(bazelProject.getBazelTarget());

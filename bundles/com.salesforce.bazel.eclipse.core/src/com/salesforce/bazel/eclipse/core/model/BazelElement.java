@@ -132,7 +132,8 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
         }
 
         // loads can be potentially expensive; we tolerate this here and may create multiple infos
-        info = requireNonNull(createInfo(),
+        info = requireNonNull(
+            createInfo(),
             () -> format("invalid implementation of #createInfo in %s; must not return null!", this.getClass()));
 
         // however, we ensure there is at most one info in the cache and this is what we use
@@ -218,6 +219,10 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
     @Override
     public abstract int hashCode();
 
+    public final boolean hasInfo() {
+        return getInfoCache().getIfPresent(this) != null;
+    }
+
     public boolean hasParent() {
         return getParent() != null;
     }
@@ -261,7 +266,9 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
             return "BazelWorkspace (" + getLocation() + ")";
         }
 
-        return this.getClass().getSimpleName() + " (" + label.toString() + ")";
+        var info = hasInfo() ? " [OPEN]" : " [CLOSED]";
+
+        return this.getClass().getSimpleName() + " (" + label.toString() + ")" + info;
     }
 
 }

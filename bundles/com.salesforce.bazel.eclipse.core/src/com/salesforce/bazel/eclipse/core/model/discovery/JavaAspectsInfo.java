@@ -34,7 +34,6 @@ import com.google.idea.blaze.base.ideinfo.TargetKey;
 import com.google.idea.blaze.base.model.primitives.GenericBlazeRules;
 import com.google.idea.blaze.java.JavaBlazeRules;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
-import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
@@ -47,9 +46,9 @@ import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
  * with aspects result}. This result will be used for computing classpath.
  * </p>
  */
-public class JavaClasspathAspectsInfo extends JavaClasspathJarLocationResolver {
+public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
 
-    private static Logger LOG = LoggerFactory.getLogger(JavaClasspathAspectsInfo.class);
+    private static Logger LOG = LoggerFactory.getLogger(JavaAspectsInfo.class);
 
     static boolean isJavaProtoTarget(TargetIdeInfo target) {
         return (target.getJavaIdeInfo() != null)
@@ -68,7 +67,7 @@ public class JavaClasspathAspectsInfo extends JavaClasspathJarLocationResolver {
     /** index of jars based on their root relative path allows lookup of jdeps entries */
     final Map<String, BlazeJarLibrary> libraryByJdepsRootRelativePath;
 
-    public JavaClasspathAspectsInfo(ParsedBepOutput aspectsBuildResult, BazelWorkspace bazelWorkspace)
+    public JavaAspectsInfo(ParsedBepOutput aspectsBuildResult, BazelWorkspace bazelWorkspace)
             throws CoreException {
         super(bazelWorkspace);
         this.aspectsBuildResult = aspectsBuildResult;
@@ -79,8 +78,8 @@ public class JavaClasspathAspectsInfo extends JavaClasspathJarLocationResolver {
         libraryByJdepsRootRelativePath = new HashMap<>();
 
         // index all the info from each aspect
-        var outputArtifacts = aspectsBuildResult.getOutputGroupArtifacts(OutputGroup.INFO::isPrefixOf,
-            IntellijAspects.ASPECT_OUTPUT_FILE_PREDICATE);
+        var outputArtifacts = aspectsBuildResult
+                .getOutputGroupArtifacts(OutputGroup.INFO::isPrefixOf, IntellijAspects.ASPECT_OUTPUT_FILE_PREDICATE);
         NEXT_ASPECT: for (OutputArtifact outputArtifact : outputArtifacts) {
             try {
                 // parse the aspect
@@ -148,12 +147,6 @@ public class JavaClasspathAspectsInfo extends JavaClasspathJarLocationResolver {
         return ideInfoByTargetKey.get(targetKey);
     }
 
-    /**
-     * Computes the classpath based on the {@link #addTarget(BazelTarget) added targets}.
-     *
-     * @return the computed classpath
-     * @throws CoreException
-     */
     public IntellijAspects getAspects() {
         return bazelWorkspace.getParent().getModelManager().getIntellijAspects();
     }

@@ -3,20 +3,24 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
@@ -25,7 +29,7 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.idea.blaze.base.model.primitives.LanguageClass;
+import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
@@ -33,10 +37,10 @@ import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.classpath.external.ExternalLibrariesDiscovery;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
-import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
-import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
+import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -73,87 +77,147 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
-            var monitor = SubMonitor.convert(progress, "Computing classpaths...", 1 + bazelProjects.size());
+            var monitor = SubMonitor.convert(progress, "Computing classpaths...", 2 + bazelProjects.size());
 
-            List<BazelLabel> targetsToBuild = new ArrayList<>(bazelProjects.size());
-            Map<BazelProject, List<String>> activeTargetsPerProject = new HashMap<>();
+            Map<BazelProject, List<BazelLabel>> activeTargetsPerProject = new HashMap<>();
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.checkCanceled();
 
                 if (!bazelProject.isPackageProject()) {
-                    throw new CoreException(Status.error(format(
-                        "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel package project created by the project per package strategy.",
-                        bazelProject)));
+                    throw new CoreException(
+                            Status.error(
+                                format(
+                                    "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel package project created by the project per package strategy.",
+                                    bazelProject)));
                 }
 
                 var targetsToBuildValue = bazelProject.getProject().getPersistentProperty(PROJECT_PROPERTY_TARGETS);
                 if (targetsToBuildValue == null) {
-                    // brute force build all targets
-                    LOG.warn(
-                        "Targets to build not properly set for project '{}'. Building all targets for computing the classpath, which may be too expensive!",
-                        bazelProject);
-                    bazelProject.getBazelPackage()
-                            .getBazelTargets()
-                            .stream()
-                            .map(BazelTarget::getLabel)
-                            .forEach(targetsToBuild::add);
-                    activeTargetsPerProject.put(bazelProject,
-                        bazelProject.getBazelPackage()
-                                .getBazelTargets()
-                                .stream()
-                                .map(BazelTarget::getTargetName)
-                                .collect(toList()));
-                    continue;
+                    throw new CoreException(
+                            Status.error(
+                                format(
+                                    "Unable to compute classpath for project '%s'. Please check the setup. This Bazel package project is missing information about the relevant targets.",
+                                    bazelProject)));
                 }
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Found targets for project '{}': {}", bazelProject,
+                    LOG.debug(
+                        "Found targets for project '{}': {}",
+                        bazelProject,
                         targetsToBuildValue.replace(':', ','));
                 }
 
                 var packagePath = bazelProject.getBazelPackage().getLabel().getPackagePath();
-                List<String> packageTargets = new ArrayList<>();
+                List<BazelLabel> packageTargets = new ArrayList<>();
                 for (String targetName : targetsToBuildValue.split(":")) {
-                    packageTargets.add(targetName);
-                    targetsToBuild.add(new BazelLabel(format("//%s:%s", packagePath, targetName)));
+                    packageTargets.add(new BazelLabel(format("//%s:%s", packagePath, targetName)));
                 }
                 activeTargetsPerProject.put(bazelProject, packageTargets);
             }
 
+            var jarResolver = new JavaClasspathJarLocationResolver(workspace);
+            var externalLibrariesDiscovery = new ExternalLibrariesDiscovery(workspace);
+            var externalLibraries = externalLibrariesDiscovery.query(monitor.split(1));
+
             var workspaceRoot = workspace.getLocation().toPath();
 
-            // run the aspect to compute all required information
-            var onlyDirectDeps = workspace.getBazelProjectView().deriveTargetsFromDirectories();
-            var outputGroups = Set.of(OutputGroup.INFO, OutputGroup.RESOLVE);
-            var languages = Set.of(LanguageClass.JAVA);
-            var aspects = workspace.getParent().getModelManager().getIntellijAspects();
-            var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targetsToBuild, outputGroups, aspects,
-                    languages, onlyDirectDeps);
+            // get all public packages based on visibility
+            // FIXME: find a better way ... this requires having the visibility attribute explicitly declared
+            // attr(visibility, '//visibility:public', kind(java_library, //...))
+            monitor.subTask("Querying workspace for public targets...");
+            Set<BazelLabel> allPublicTargets = workspace.getCommandExecutor()
+                    .runQueryWithoutLock(
+                        new BazelQueryForLabelsCommand(
+                                workspaceRoot,
+                                "attr(visibility, '//visibility:public', kind(java_library, //...))",
+                                true))
+                    .stream()
+                    .map(BazelLabel::new)
+                    .collect(toCollection(LinkedHashSet::new));
 
-            monitor.subTask("Running Bazel...");
-            var result = workspace.getCommandExecutor()
-                    .runDirectlyWithWorkspaceLock(command,
-                        bazelProjects.stream().map(BazelProject::getProject).collect(toList()), monitor.split(1));
+            // ensure the workspace has all the packages open
+            List<BazelPackage> allPackagesWithPublicTargets =
+                    allPublicTargets.stream().map(workspace::getBazelPackage).distinct().collect(toList());
+            workspace.open(allPackagesWithPublicTargets);
 
-            // populate map from result
+            // log a warning if the cache is too small
+            List<BazelPackage> packagesNotOpen =
+                    allPackagesWithPublicTargets.stream().filter(p -> !p.hasInfo()).collect(toList());
+            if (packagesNotOpen.size() > 0) {
+                LOG.warn(
+                    "Classpath computation might be slow. The Bazel element cache is too small. Please increase the cache size by at least {}.",
+                    packagesNotOpen.size() * 2);
+            }
+
             Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
-            var aspectsInfo = new JavaClasspathAspectsInfo(result, workspace);
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.subTask("Analyzing: " + bazelProject);
                 monitor.checkCanceled();
 
-                // build index of classpath info
-                var classpathInfo = new JavaClasspathInfo(aspectsInfo, workspace);
+                // query for rdeps to find classpath exclusions
+                var projectTargets = activeTargetsPerProject.get(bazelProject);
+                var query = format(
+                    "rdeps(//..., %s)",
+                    projectTargets.stream().map(BazelLabel::toString).collect(joining(" + ")));
+                var rdeps = workspace.getCommandExecutor()
+                        .runQueryWithoutLock(new BazelQueryForLabelsCommand(workspaceRoot, query, true))
+                        .stream()
+                        .map(BazelLabel::new)
+                        .collect(toSet());
 
-                // add the targets
-                List<String> targetNames = requireNonNull(activeTargetsPerProject.get(bazelProject),
-                    () -> format("programming error: not targets for project: %s", bazelProject));
-                for (String targetName : targetNames) {
-                    classpathInfo.addTarget(bazelProject.getBazelPackage().getBazelTarget(targetName));
-                }
+                // get the remaining list of visible deps based on workspace dependency graph
+                var visibleDeps = new ArrayList<>(allPublicTargets);
+                visibleDeps.removeAll(rdeps); // exclude reverse deps
+                visibleDeps.removeAll(projectTargets); // exclude project targets (avoid dependencies on itself)
 
                 // compute the classpath
-                var classpath = classpathInfo.compute();
+                var processedPackages = new HashSet<BazelProject>();
+                var classpath = new LinkedHashSet<>(externalLibraries);
+                for (BazelLabel visibleDep : visibleDeps) {
+                    // connect to existing package project if possible
+                    var bazelPackage = workspace.getBazelPackage(visibleDep.getPackageLabel());
+                    if (bazelPackage.hasBazelProject()) {
+                        var packageProject = bazelPackage.getBazelProject();
+                        if (processedPackages.add(packageProject)) {
+                            classpath.add(ClasspathEntry.newProjectEntry(packageProject.getProject()));
+                        }
+                        continue; // next dependency
+                    }
+
+                    // lookup output jars from target
+                    var target = workspace.getBazelTarget(visibleDep);
+                    var ruleOutput = target.getRuleOutput();
+                    var builder = LibraryArtifact.builder();
+                    for (IPath jar : ruleOutput) {
+                        if (jar.lastSegment().endsWith("-src.jar")) {
+                            builder.addSourceJar(jarResolver.generatedJarLocation(bazelPackage, jar));
+                        } else if (jar.lastSegment().endsWith(".jar")) {
+                            builder.setClassJar(jarResolver.generatedJarLocation(bazelPackage, jar));
+                        }
+                    }
+
+                    var jarLibrary = builder.build();
+                    var jarEntry = jarResolver.resolveJar(jarLibrary);
+                    if (jarEntry != null) {
+                        if (isRegularFile(jarEntry.getPath().toPath())) {
+                            classpath.add(jarEntry);
+                        } else {
+                            createBuildPathProblem(
+                                bazelProject,
+                                Status.error(
+                                    format(
+                                        "Jar '%s' not found. Please run bazel fetch or bazel build and refresh the classpath.",
+                                        jarLibrary.getClassJar())));
+                        }
+                    } else {
+                        createBuildPathProblem(
+                            bazelProject,
+                            Status.error(
+                                format(
+                                    "Unable to resolve jar '%s'. Please open a bug with more details.",
+                                    jarLibrary)));
+                    }
+                }
 
                 // check for non existing jars
                 for (ClasspathEntry entry : classpath) {
@@ -162,8 +226,12 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                     }
 
                     if (!isRegularFile(entry.getPath().toPath())) {
-                        createBuildPathProblem(bazelProject, Status.error(
-                            format("Library '%s' is missing. Please consider running 'bazel fetch'", entry.getPath())));
+                        createBuildPathProblem(
+                            bazelProject,
+                            Status.error(
+                                format(
+                                    "Library '%s' is missing. Please consider running 'bazel fetch'",
+                                    entry.getPath())));
                         break;
                     }
                 }
@@ -196,9 +264,12 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
 
             // skip the root package (not supported)
             if (bazelPackage.isRoot()) {
-                createBuildPathProblem(bazelPackage.getBazelWorkspace().getBazelProject(), Status.warning(format(
-                    "The root package was skipped during sync because it's not supported by the '%s' strategy. Consider excluding it in the .bazelproject file.",
-                    STRATEGY_NAME)));
+                createBuildPathProblem(
+                    bazelPackage.getBazelWorkspace().getBazelProject(),
+                    Status.warning(
+                        format(
+                            "The root package was skipped during sync because it's not supported by the '%s' strategy. Consider excluding it in the .bazelproject file.",
+                            STRATEGY_NAME)));
                 continue;
             }
 
@@ -237,19 +308,25 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             var sourceInfo = javaInfo.getSourceInfo();
             if (sourceInfo.hasSourceFilesWithoutCommonRoot()) {
                 for (JavaSourceEntry file : sourceInfo.getSourceFilesWithoutCommonRoot()) {
-                    createBuildPathProblem(project, Status.warning(format(
-                        "File '%s' could not be mapped into a common source directory. The project may not build successful in Eclipse.",
-                        file.getPath())));
+                    createBuildPathProblem(
+                        project,
+                        Status.warning(
+                            format(
+                                "File '%s' could not be mapped into a common source directory. The project may not build successful in Eclipse.",
+                                file.getPath())));
                 }
             }
             if (!sourceInfo.hasSourceDirectories()) {
-                createBuildPathProblem(project,
-                    Status.error(format("No source directories detected when analyzing package '%s' using targets '%s'",
-                        bazelPackage.getLabel().getPackagePath(),
-                        packageTargets.stream()
-                                .map(BazelTarget::getLabel)
-                                .map(BazelLabel::getLabelPath)
-                                .collect(joining(", ")))));
+                createBuildPathProblem(
+                    project,
+                    Status.error(
+                        format(
+                            "No source directories detected when analyzing package '%s' using targets '%s'",
+                            bazelPackage.getLabel().getPackagePath(),
+                            packageTargets.stream()
+                                    .map(BazelTarget::getLabel)
+                                    .map(BazelLabel::getLabelPath)
+                                    .collect(joining(", ")))));
             }
 
             // configure classpath

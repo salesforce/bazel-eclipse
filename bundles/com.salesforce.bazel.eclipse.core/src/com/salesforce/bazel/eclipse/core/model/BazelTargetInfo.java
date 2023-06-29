@@ -18,12 +18,18 @@ import static com.salesforce.bazel.eclipse.core.model.BazelProject.hasOwnerPrope
 import static com.salesforce.bazel.eclipse.core.model.BazelProject.hasWorkspaceRootPropertySetToLocation;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
+
+import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 
+import com.google.devtools.build.lib.query2.proto.proto2api.Build.Rule;
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 
 public final class BazelTargetInfo extends BazelElementInfo {
 
@@ -32,6 +38,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
     private Target target;
     private volatile BazelProject bazelProject;
     private volatile BazelRuleAttributes ruleAttributes;
+    private List<IPath> ruleOutput;
 
     public BazelTargetInfo(String targetName, BazelTarget bazelTarget) {
         this.targetName = targetName;
@@ -64,9 +71,11 @@ public final class BazelTargetInfo extends BazelElementInfo {
 
         var project = findProject();
         if (project == null) {
-            throw new CoreException(Status.error(format(
-                "Unable to find project for Bazel target '%s' in the Eclipse workspace. Please check the workspace setup!",
-                getBazelTarget().getLabel())));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Unable to find project for Bazel target '%s' in the Eclipse workspace. Please check the workspace setup!",
+                            getBazelTarget().getLabel())));
         }
         return bazelProject = new BazelProject(project, getBazelTarget().getModel());
     }
@@ -75,18 +84,39 @@ public final class BazelTargetInfo extends BazelElementInfo {
         return bazelTarget;
     }
 
+    Rule getRule() throws CoreException {
+        var target = getTarget();
+        if (!target.hasRule()) {
+            throw new CoreException(Status.error(format("Bazel target '%s' is not backed by a rule!", bazelTarget)));
+        }
+        return target.getRule();
+    }
+
     public BazelRuleAttributes getRuleAttributes() throws CoreException {
         var cachedRuleAttributes = ruleAttributes;
         if (cachedRuleAttributes != null) {
             return cachedRuleAttributes;
         }
 
-        var target = getTarget();
-        if (!target.hasRule()) {
-            throw new CoreException(Status.error(format("Bazel target '%s' is not backed by a rule!", bazelTarget)));
+        return ruleAttributes = new BazelRuleAttributes(getRule());
+    }
+
+    public List<IPath> getRuleOutput() throws CoreException {
+        var cachedOutput = ruleOutput;
+        if (cachedOutput != null) {
+            return cachedOutput;
         }
 
-        return ruleAttributes = new BazelRuleAttributes(target.getRule());
+        var ruleOutputList = getRule().getRuleOutputList();
+        if (ruleOutputList != null) {
+            return ruleOutput = ruleOutputList.stream()
+                    .map(BazelLabel::new)
+                    .map(BazelLabel::getTargetName)
+                    .map(IPath::forPosix)
+                    .collect(toList());
+        }
+
+        return ruleOutput = List.of();
     }
 
     /**
@@ -105,8 +135,12 @@ public final class BazelTargetInfo extends BazelElementInfo {
         // re-use the info obtained from bazel query for the whole package
         var target = packageInfo.getTarget(getTargetName());
         if (target == null) {
-            throw new CoreException(Status.error(format("Target '%s' does not exist in package '%s'!", getTargetName(),
-                packageInfo.getBazelPackage().getLabel())));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Target '%s' does not exist in package '%s'!",
+                            getTargetName(),
+                            packageInfo.getBazelPackage().getLabel())));
         }
 
         this.target = target;

@@ -62,7 +62,7 @@ import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
  * with aspects result}. This result will be used for computing classpath.
  * </p>
  */
-public class JavaClasspathInfo extends JavaClasspathJarLocationResolver {
+public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
     static record JdepsDependency(
             ArtifactLocation artifactLocation,
@@ -71,7 +71,7 @@ public class JavaClasspathInfo extends JavaClasspathJarLocationResolver {
 
     private static final Path PATTERN_EVERYTHING = new Path("**");
 
-    private static Logger LOG = LoggerFactory.getLogger(JavaClasspathInfo.class);
+    private static Logger LOG = LoggerFactory.getLogger(JavaAspectsClasspathInfo.class);
 
     /**
      * Uses a filename heuristic to guess the location of a source jar corresponding to the given output jar.
@@ -104,7 +104,7 @@ public class JavaClasspathInfo extends JavaClasspathJarLocationResolver {
                         || target.getKind().equals(GenericBlazeRules.RuleTypes.PROTO_LIBRARY.getKind()));
     }
 
-    final JavaClasspathAspectsInfo aspectsInfo;
+    final JavaAspectsInfo aspectsInfo;
 
     /** set of generated source jars (maintaining insertion order) */
     final Set<BlazeJarLibrary> generatedSourceJars = new LinkedHashSet<>();
@@ -118,7 +118,7 @@ public class JavaClasspathInfo extends JavaClasspathJarLocationResolver {
     /** set of runtime dependencies (maintaining insertion order) */
     final Set<TargetKey> runtimeDeps = new LinkedHashSet<>();
 
-    public JavaClasspathInfo(JavaClasspathAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace) throws CoreException {
+    public JavaAspectsClasspathInfo(JavaAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace) throws CoreException {
         super(bazelWorkspace);
         this.aspectsInfo = aspectsInfo;
     }
