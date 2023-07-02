@@ -34,6 +34,7 @@
 package com.salesforce.bazel.sdk.model;
 
 import com.google.idea.blaze.base.model.primitives.Label;
+import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 
 /**
  * Answers to everything you've always wanted to ask a Bazel Label.
@@ -175,8 +176,9 @@ public class BazelLabel {
             }
             if (labelPathStr.contains("\\")) {
                 // the caller is passing us a label with \ as separators, probably a bug due to Windows paths
-                throw new IllegalArgumentException("Label [" + labelPathStr
-                        + "] has Windows style path delimeters. Bazel paths always have / delimiters");
+                throw new IllegalArgumentException(
+                        "Label [" + labelPathStr
+                                + "] has Windows style path delimeters. Bazel paths always have / delimiters");
             }
         } catch (IllegalArgumentException iae) {
             if (throwOnError) {
@@ -280,7 +282,8 @@ public class BazelLabel {
             throw new IllegalStateException("label " + localLabelPart + " is not package default");
         }
         // TODO all check for :all?
-        return getFullLabel(repositoryName,
+        return getFullLabel(
+            repositoryName,
             getPackagePath() + BazelLabel.BAZEL_COLON + BazelLabel.BAZEL_WILDCARD_ALLTARGETS_STAR);
     }
 
@@ -479,6 +482,10 @@ public class BazelLabel {
      */
     public boolean isExternalRepoLabel() {
         return fullLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT);
+    }
+
+    public WorkspacePath packagePathAsPrimitive() {
+        return WorkspacePath.createIfValid(getPackagePath());
     }
 
     public Label toPrimitive() {
