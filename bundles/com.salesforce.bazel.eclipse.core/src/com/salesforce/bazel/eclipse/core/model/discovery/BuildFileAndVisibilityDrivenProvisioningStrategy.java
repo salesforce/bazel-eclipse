@@ -1,5 +1,6 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
@@ -29,7 +30,12 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
+import com.google.idea.blaze.base.model.primitives.Label;
+import com.google.idea.blaze.base.model.primitives.TargetExpression;
+import com.google.idea.blaze.base.model.primitives.WildcardTargetPattern;
+import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
@@ -62,6 +68,122 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * </p>
  */
 public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPerPackageProvisioningStrategy {
+
+    public static class CircularDependenciesHelper {
+
+        /** A single {@link TargetExpression} and associated information. */
+        private static class TargetData {
+            private final TargetExpression originalExpression;
+            private final TargetExpression unexcludedExpression;
+            private final WildcardTargetPattern wildcardPattern;
+
+            TargetData(TargetExpression expression) {
+                this.originalExpression = expression;
+                this.unexcludedExpression = expression.isExcluded()
+                        ? TargetExpression.fromStringSafe(expression.toString().substring(1)) : expression;
+                this.wildcardPattern = WildcardTargetPattern.fromExpression(expression);
+            }
+
+            /** Returns true if the entire package is covered by this expression. */
+            boolean coversPackage(WorkspacePath path) {
+                return (wildcardPattern != null) && wildcardPattern.coversPackage(path);
+            }
+
+            boolean coversTarget(Label label) {
+                return label.equals(unexcludedExpression) || coversPackage(label.blazePackage());
+            }
+
+            boolean coversTargetData(TargetData data) {
+                if (data.wildcardPattern == null) {
+                    return (data.unexcludedExpression instanceof Label)
+                            && coversTarget(((Label) data.unexcludedExpression));
+                }
+                if (wildcardPattern == null) {
+                    return false;
+                }
+                return data.wildcardPattern.isRecursive()
+                        ? wildcardPattern.isRecursive()
+                                && wildcardPattern.coversPackage(data.wildcardPattern.getBasePackage())
+                        : wildcardPattern.coversPackage(data.wildcardPattern.getBasePackage());
+            }
+
+            boolean isExcluded() {
+                return originalExpression.isExcluded();
+            }
+        }
+
+        private final List<TargetData> reversedTargets;
+
+        public CircularDependenciesHelper(Collection<TargetExpression> targetOrderHints) {
+            ImmutableList<TargetData> targets =
+                    targetOrderHints.stream().map(TargetData::new).collect(toImmutableList());
+
+            // reverse list, removing trivially-excluded targets
+            List<TargetData> excluded = new ArrayList<>();
+            ImmutableList.Builder<TargetData> builder = ImmutableList.builder();
+            for (TargetData target : targets.reverse()) {
+                if (target.isExcluded()) {
+                    excluded.add(target);
+                    builder.add(target);
+                    continue;
+                }
+                var drop = excluded.stream().anyMatch(excl -> excl.coversTargetData(target));
+                if (!drop) {
+                    builder.add(target);
+                }
+            }
+            // the last target expression to cover a label overrides all previous expressions
+            // that's why we use a reversed list
+            this.reversedTargets = builder.build();
+        }
+
+        private int getPosition(BazelPackage toPackage) {
+            var packagePath = toPackage.getLabel().packagePathAsPrimitive();
+            var position = reversedTargets.size();
+            for (TargetData target : reversedTargets) {
+                position--;
+                if (target.coversPackage(packagePath)) {
+                    // if the toLabel is excluded, never allow the dependency
+                    if (target.isExcluded()) {
+                        return -1;
+                    }
+
+                    // accept the position
+                    return position;
+                }
+            }
+
+            // not found
+            return -1;
+        }
+
+        public boolean isAllowedDependencyPath(BazelPackage fromPackage, BazelPackage toPackage) {
+            // get position of target
+            var toPosition = getPosition(fromPackage);
+            if (toPosition < 0) {
+                return false;
+            }
+
+            // get position of from
+            var fromPosition = getPosition(toPackage);
+            if (fromPosition < 0) {
+                return false;
+            }
+
+            // special case if both are covered by same position
+            if (toPosition == fromPosition) {
+                // dependency from sub-package to parent package is ok
+                // in order to prevent parent -> sub we simply check the segment count
+                return toPackage.getWorkspaceRelativePath().isPrefixOf(fromPackage.getWorkspaceRelativePath())
+                        && (toPackage.getWorkspaceRelativePath().segmentCount() < fromPackage.getWorkspaceRelativePath()
+                                .segmentCount());
+            }
+
+            // the path is allowed if to-project is of higher order than from-project
+            return toPosition > fromPosition;
+        }
+
+    }
 
     public static final String STRATEGY_NAME = "build-file-and-visibility-driven";
 
@@ -149,6 +271,9 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                     packagesNotOpen.size() * 2);
             }
 
+            // use the hints to avoid circular dependencies between projects in Eclipse
+            var circularDependenciesHelper = new CircularDependenciesHelper(workspace.getBazelProjectView().targets());
+
             Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.subTask("Analyzing: " + bazelProject);
@@ -178,7 +303,9 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                     var bazelPackage = workspace.getBazelPackage(visibleDep.getPackageLabel());
                     if (bazelPackage.hasBazelProject()) {
                         var packageProject = bazelPackage.getBazelProject();
-                        if (processedPackages.add(packageProject)) {
+                        // check the hints if the project should actually go on the classpath
+                        if (processedPackages.add(packageProject) && circularDependenciesHelper
+                                .isAllowedDependencyPath(bazelProject.getBazelPackage(), bazelPackage)) {
                             classpath.add(ClasspathEntry.newProjectEntry(packageProject.getProject()));
                         }
                         continue; // next dependency
@@ -361,5 +488,4 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
 
         return false; // not analyzed
     }
-
 }
