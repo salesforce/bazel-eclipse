@@ -104,8 +104,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         var resources = attributes.getStringList("resources");
         if (resources != null) {
+            var resourceStripPrefix = attributes.getString("resource_strip_prefix");
             for (String resource : resources) {
-                javaInfo.addResource(resource);
+                javaInfo.addResource(resource, resourceStripPrefix);
             }
         }
 
@@ -140,6 +141,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 // when the directory is empty, the virtual "srcs" container must be used
                 // this logic here requires proper linking support in linkSourcesIntoProject method
                 var resourceFolder = dir.isEmpty() ? virtualResourceFolder : project.getProject().getFolder(dir);
+                if (!resourceFolder.exists()) {
+                    LOG.debug("Ignoring none existing resource folder: {}", resourceFolder);
+                    continue;
+                }
                 var inclusionPatterns = resourceInfo.getInclusionPatternsForSourceDirectory(dir);
                 var exclusionPatterns = resourceInfo.getExclutionPatternsForSourceDirectory(dir);
                 if ((exclusionPatterns == null) || (exclusionPatterns.length == 0)) {

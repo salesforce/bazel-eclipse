@@ -78,9 +78,12 @@ public class JavaSourceInfo {
             // calculate potential source root
             var potentialSourceDirectoryRoot = fileEntry.getPotentialSourceDirectoryRoot();
             if (potentialSourceDirectoryRoot == null) {
-                result.add(Status.warning(format(
-                    "Java file '%s' (with detected package '%s') does not meet IDE standards. Please move into a folder hierarchy which follows Java package structure!",
-                    fileEntry.getPath(), fileEntry.getDetectedPackagePath())));
+                result.add(
+                    Status.warning(
+                        format(
+                            "Java file '%s' (with detected package '%s') does not meet IDE standards. Please move into a folder hierarchy which follows Java package structure!",
+                            fileEntry.getPath(),
+                            fileEntry.getDetectedPackagePath())));
                 return INVALID;
             }
 
@@ -105,27 +108,33 @@ public class JavaSourceInfo {
                     sourceEntriesBySourceRoot.put(sourceDirectory, list);
                 } else {
                     var maybeList = sourceEntriesBySourceRoot.get(sourceDirectory);
-                    if (maybeList instanceof @SuppressWarnings("rawtypes") List list) {
+                    if (maybeList instanceof List list) {
                         list.add(javaSourceFile);
                     } else {
-                        result.add(Status.error(format(
-                            "It looks like source root '%s' is already mapped to a glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
-                            sourceDirectory)));
+                        result.add(
+                            Status.error(
+                                format(
+                                    "It looks like source root '%s' is already mapped to a glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
+                                    sourceDirectory)));
                     }
                 }
             } else if (srcEntry instanceof GlobEntry globEntry) {
                 if (sourceEntriesByParentFolder.containsKey(globEntry.getRelativeDirectoryPath())) {
-                    result.add(Status.error(format(
-                        "It looks like source root '%s' is already mapped to more than one glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
-                        globEntry.getRelativeDirectoryPath())));
+                    result.add(
+                        Status.error(
+                            format(
+                                "It looks like source root '%s' is already mapped to more than one glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
+                                globEntry.getRelativeDirectoryPath())));
                 } else {
                     sourceEntriesBySourceRoot.put(globEntry.getRelativeDirectoryPath(), globEntry);
                 }
             } else {
                 // check if the source has label dependencies
-                result.add(Status.warning(
-                    format("Found source label reference '%s'. The project may not be fully supported in the IDE.",
-                        srcEntry)));
+                result.add(
+                    Status.warning(
+                        format(
+                            "Found source label reference '%s'. The project may not be fully supported in the IDE.",
+                            srcEntry)));
             }
         }
 
@@ -142,9 +151,11 @@ public class JavaSourceInfo {
                     var javaFilesInParent = Files.list(entryParentLocation).filter(JavaSourceInfo::isJavaFile).count();
                     if (javaFilesInParent != declaredJavaFilesInFolder) {
                         if (potentialSplitPackageOrSubsetFolders.add(entryParentPath)) {
-                            result.add(Status.warning(format(
-                                "Folder '%s' contains more Java files then configured in Bazel. This is a split-package scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
-                                entryParentLocation)));
+                            result.add(
+                                Status.warning(
+                                    format(
+                                        "Folder '%s' contains more Java files then configured in Bazel. This is a split-package scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
+                                        entryParentLocation)));
                         }
                         continue; // continue with next so we capture all possible warnings (we could also abort, though)
                     }
@@ -168,13 +179,18 @@ public class JavaSourceInfo {
             var potentialSourceRootPath = bazelPackageLocation.append(potentialSourceRoot).toPath();
             try {
                 var registeredFiles = ((List<?>) potentialSourceRootAndSourceEntries.getValue()).size();
-                var foundJavaFilesInSourceRoot = find(potentialSourceRootPath, Integer.MAX_VALUE,
-                    (p, a) -> isJavaFile(p), FileVisitOption.FOLLOW_LINKS).count();
+                var foundJavaFilesInSourceRoot = find(
+                    potentialSourceRootPath,
+                    Integer.MAX_VALUE,
+                    (p, a) -> isJavaFile(p),
+                    FileVisitOption.FOLLOW_LINKS).count();
                 if ((registeredFiles != foundJavaFilesInSourceRoot)
                         && potentialSplitPackageOrSubsetFolders.add(potentialSourceRoot)) {
-                    result.add(Status.warning(format(
-                        "Folder '%s' contains more Java files then configured in Bazel. This is a scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
-                        potentialSourceRootPath)));
+                    result.add(
+                        Status.warning(
+                            format(
+                                "Folder '%s' contains more Java files then configured in Bazel. This is a scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
+                                potentialSourceRootPath)));
                 }
             } catch (IOException e) {
                 throw new CoreException(

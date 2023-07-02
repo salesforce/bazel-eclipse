@@ -34,6 +34,18 @@ public class BazelRuleAttributes {
         return rule;
     }
 
+    public String getString(String name) throws CoreException {
+        var attribute = attributesByAttributeName.get(name);
+        if (attribute == null) {
+            return null;
+        }
+
+        return switch (attribute.getType()) {
+            case LABEL, STRING -> attribute.getStringValue();
+            default -> throw new IllegalArgumentException("Unexpected value: " + attribute.getType());
+        };
+    }
+
     public List<String> getStringList(String name) throws CoreException {
         var attribute = attributesByAttributeName.get(name);
         if (attribute == null) {
@@ -45,5 +57,4 @@ public class BazelRuleAttributes {
             default -> throw new IllegalArgumentException("Unexpected value: " + attribute.getType());
         };
     }
-
 }
