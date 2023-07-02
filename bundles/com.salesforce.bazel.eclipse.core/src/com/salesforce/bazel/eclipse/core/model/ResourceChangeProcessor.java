@@ -70,9 +70,10 @@ class ResourceChangeProcessor implements IResourceChangeListener {
         // if we have some, we need to refresh classpaths
         // but we do this asynchronously and *only* when the workspace is in auto-build mode
         if ((affectedProjects.size() > 0) && isAutoBuilding()) {
-            var classpathJob =
-                    new InitializeOrRefreshClasspathJob(affectedProjects.toArray(new IProject[affectedProjects.size()]),
-                            modelManager.getClasspathManager(), true /* force refresh */);
+            var classpathJob = new InitializeOrRefreshClasspathJob(
+                    affectedProjects.toArray(new IProject[affectedProjects.size()]),
+                    modelManager.getClasspathManager(),
+                    true /* force refresh */);
             classpathJob.schedule();
         }
     }
@@ -144,14 +145,23 @@ class ResourceChangeProcessor implements IResourceChangeListener {
         if (processChildren) {
             var children = delta.getAffectedChildren();
             for (IResourceDelta child : children) {
-                collectProjectsAffectedByPossibleClasspathChange(child, affectedProjectsWithClasspathChange,
+                collectProjectsAffectedByPossibleClasspathChange(
+                    child,
+                    affectedProjectsWithClasspathChange,
                     affectedProjectsWithProjectViewChange);
             }
         }
     }
 
-    private void deleting(IProject resource) {
-        // invalidate the
+    private void deleting(IProject project) throws CoreException {
+        if (!project.hasNature(BAZEL_NATURE_ID)) {
+            return;
+        }
+
+        // FIXME: optimize to be less aggressive
+        // we "only" need to invalidate classpath of projects depending on the to be deleted one
+        // however, ideally a sync is required now
+        modelManager.getModel().getInfoCache().invalidateAll();
     }
 
     private void invalidateBazelWorkspaceCache(IProject project) {

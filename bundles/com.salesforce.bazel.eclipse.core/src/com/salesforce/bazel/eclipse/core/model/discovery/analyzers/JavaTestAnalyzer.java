@@ -24,8 +24,9 @@ import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInf
 public class JavaTestAnalyzer extends JavaLibraryAnalyzer {
 
     @Override
-    protected void addResourceFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel) throws CoreException {
-        javaInfo.addResource(fileOrLabel);
+    protected void addResourceFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel, String resourceStripPrefix)
+            throws CoreException {
+        javaInfo.addTestResource(fileOrLabel, resourceStripPrefix);
     }
 
     @Override

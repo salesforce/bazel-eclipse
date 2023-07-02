@@ -2,6 +2,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery.projects;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
+import static org.eclipse.core.runtime.IPath.forPosix;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,10 +72,12 @@ public class JavaProjectInfo {
      *
      * @param resourceFileOrLabel
      *            file or label
+     * @param resourceStripPrefix
+     *            the resource_strip_prefix attribute value (maybe <code>null</code> if not set)
      * @throws CoreException
      */
-    public void addResource(String resourceFileOrLabel) throws CoreException {
-        addToResources(resources, resourceFileOrLabel);
+    public void addResource(String resourceFileOrLabel, String resourceStripPrefix) throws CoreException {
+        addToResources(resources, resourceFileOrLabel, resourceStripPrefix);
     }
 
     /**
@@ -118,10 +121,12 @@ public class JavaProjectInfo {
      *
      * @param resourceFileOrLabel
      *            file or label
+     * @param resourceStripPrefix
+     *            the resource_strip_prefix attribute value (maybe <code>null</code> if not set)
      * @throws CoreException
      */
-    public void addTestResource(String resourceFileOrLabel) throws CoreException {
-        addToResources(testResources, resourceFileOrLabel);
+    public void addTestResource(String resourceFileOrLabel, String resourceStripPrefix) throws CoreException {
+        addToResources(testResources, resourceFileOrLabel, resourceStripPrefix);
     }
 
     public void addTestSrc(GlobInfo globInfo) {
@@ -136,8 +141,9 @@ public class JavaProjectInfo {
         resources.add(toGlobEntry(globInfo));
     }
 
-    private void addToResources(List<Entry> resources, String resourceFileOrLabel) throws CoreException {
-        resources.add(toFileOrLabelEntry(resourceFileOrLabel));
+    private void addToResources(List<Entry> resources, String resourceFileOrLabel, String resourceStripPrefix)
+            throws CoreException {
+        resources.add(toResourceFileOrLabelEntry(resourceFileOrLabel, resourceStripPrefix));
     }
 
     private void addToSrc(List<Entry> srcs, GlobInfo globInfo) {
@@ -145,7 +151,7 @@ public class JavaProjectInfo {
     }
 
     private void addToSrc(List<Entry> srcs, String srcFileOrLabel) throws CoreException {
-        srcs.add(toFileOrLabelEntry(srcFileOrLabel));
+        srcs.add(toJavaSourceFileOrLabelEntry(srcFileOrLabel));
     }
 
     /**
@@ -208,11 +214,52 @@ public class JavaProjectInfo {
     }
 
     public JavaSourceInfo getTestSourceInfo() {
-        return requireNonNull(testSourceInfo,
+        return requireNonNull(
+            testSourceInfo,
             "Test source info not computed. Did you call analyzeProjectRecommendations?");
     }
 
-    private Entry toFileOrLabelEntry(String srcFileOrLabel) throws CoreException {
+    private GlobEntry toGlobEntry(GlobInfo globInfo) {
+        // the first include determines the path
+        var includes = globInfo.include();
+        if (includes.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Invalid glob. Need one include pattern for detecting the source directory path.");
+        }
+
+        var include = includes.iterator().next();
+        var patternStart = include.indexOf('*');
+        if (patternStart < 0) {
+            throw new IllegalArgumentException("Invalid glob - missing '*' to start an include pattern: " + include);
+        }
+
+        // since this is coming from a glob, the path is expected to use '/'
+        var directoryEnd = include.substring(0, patternStart).lastIndexOf('/');
+        if (directoryEnd < 0) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Using empty source directory for glob '{}' to package '{}'", globInfo, bazelPackage);
+            }
+            return new GlobEntry(IPath.EMPTY, globInfo.include(), globInfo.exclude());
+        }
+
+        // remove the directory from all includes if present
+        var directory = forPosix(include.substring(0, directoryEnd)).makeRelative().removeTrailingSeparator();
+        List<String> includePatterns = globInfo.include()
+                .stream()
+                .map(s -> s.startsWith(directory.toString()) ? s.substring(directory.toString().length()) : s)
+                .collect(toList());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(
+                "Using directory '{}' with includes '{}' for glob '{}' to package '{}'",
+                directory,
+                includePatterns,
+                globInfo,
+                bazelPackage);
+        }
+        return new GlobEntry(directory, includePatterns, globInfo.exclude());
+    }
+
+    private Entry toJavaSourceFileOrLabelEntry(String srcFileOrLabel) throws CoreException {
         // test if this may be a file in this package
         var myPackagePath = bazelPackage.getLabel().toString();
         if (srcFileOrLabel.startsWith(myPackagePath + BazelLabel.BAZEL_COLON)) {
@@ -245,40 +292,41 @@ public class JavaProjectInfo {
         return new JavaSourceEntry(new Path(srcFileOrLabel), bazelPackage.getLocation());
     }
 
-    private GlobEntry toGlobEntry(GlobInfo globInfo) {
-        // the first include determines the path
-        var includes = globInfo.include();
-        if (includes.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Invalid glob. Need one include pattern for detecting the source directory path.");
+    private Entry toResourceFileOrLabelEntry(String srcFileOrLabel, String resourceStripPrefix) throws CoreException {
+        // test if this may be a file in this package
+        var myPackagePath = bazelPackage.getLabel().toString();
+        if (srcFileOrLabel.startsWith(myPackagePath + BazelLabel.BAZEL_COLON)) {
+            // drop the package name to identify a reference within package
+            srcFileOrLabel = srcFileOrLabel.substring(myPackagePath.length() + 1);
         }
 
-        var include = includes.iterator().next();
-        var patternStart = include.indexOf('*');
-        if (patternStart < 0) {
-            throw new IllegalArgumentException("Invalid glob - missing '*' to start an include pattern: " + include);
+        // starts with : then it must be treated as label
+        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_COLON)) {
+            return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel.substring(1)).getLabel());
         }
 
-        // since this is coming from a glob, the path is expected to use '/'
-        var directoryEnd = include.substring(0, patternStart).lastIndexOf('/');
-        if (directoryEnd < 0) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Using empty source directory for glob '{}' to package '{}'", globInfo, bazelPackage);
-            }
-            return new GlobEntry(IPath.EMPTY, globInfo.include(), globInfo.exclude());
+        // starts with // or @ then it must be treated as label
+        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)
+                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)) {
+            return new LabelEntry(new BazelLabel(srcFileOrLabel));
         }
 
-        // remove the directory from all includes if present
-        var directory = IPath.forPosix(include.substring(0, directoryEnd)).makeRelative().removeTrailingSeparator();
-        List<String> includePatterns = globInfo.include()
-                .stream()
-                .map(s -> s.startsWith(directory.toString()) ? s.substring(directory.toString().length()) : s)
-                .collect(toList());
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Using directory '{}' with includes '{}' for glob '{}' to package '{}'", directory,
-                includePatterns, globInfo, bazelPackage);
+        // doesn't start with // but contains one, unlikely a label!
+        if (srcFileOrLabel.indexOf('/') >= 1) {
+            return new ResourceEntry(
+                    forPosix(srcFileOrLabel),
+                    resourceStripPrefix != null ? forPosix(resourceStripPrefix) : IPath.EMPTY);
         }
-        return new GlobEntry(directory, includePatterns, globInfo.exclude());
+
+        // treat as label if package has one matching the name
+        if (bazelPackage.hasBazelTarget(srcFileOrLabel)) {
+            return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel).getLabel());
+        }
+
+        // treat as file
+        return new ResourceEntry(
+                forPosix(srcFileOrLabel),
+                resourceStripPrefix != null ? forPosix(resourceStripPrefix) : IPath.EMPTY);
     }
 
 }

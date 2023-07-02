@@ -65,7 +65,7 @@ public class JavaResourceInfo {
     @SuppressWarnings("unchecked")
     public void analyzeResourceDirectories(MultiStatus result) throws CoreException {
         // build an index of all source files and their parent directories (does not need to maintain order)
-        Map<IPath, List<JavaSourceEntry>> sourceEntriesByParentFolder = new HashMap<>();
+        Map<IPath, List<ResourceEntry>> resourceEntriesByParentFolder = new HashMap<>();
 
         // group by potential source roots
         Function<ResourceEntry, IPath> groupingByPotentialSourceRoots = fileEntry -> {
@@ -94,26 +94,33 @@ public class JavaResourceInfo {
                     resourceEntriesBySourceRoot.put(resourceDirectory, list);
                 } else {
                     var maybeList = resourceEntriesBySourceRoot.get(resourceDirectory);
-                    if (maybeList instanceof @SuppressWarnings("rawtypes") List list) {
+                    if (maybeList instanceof List list) {
                         list.add(resourceFile);
                     } else {
-                        result.add(Status.error(format(
-                            "It looks like resource root '%s' is already mapped to a glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
-                            resourceDirectory)));
+                        result.add(
+                            Status.error(
+                                format(
+                                    "It looks like resource root '%s' is already mapped to a glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
+                                    resourceDirectory)));
                     }
                 }
             } else if (entry instanceof GlobEntry globEntry) {
-                if (sourceEntriesByParentFolder.containsKey(globEntry.getRelativeDirectoryPath())) {
-                    result.add(Status.error(format(
-                        "It looks like resource root '%s' is already mapped to more than one glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
-                        globEntry.getRelativeDirectoryPath())));
+                if (resourceEntriesByParentFolder.containsKey(globEntry.getRelativeDirectoryPath())) {
+                    result.add(
+                        Status.error(
+                            format(
+                                "It looks like resource root '%s' is already mapped to more than one glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
+                                globEntry.getRelativeDirectoryPath())));
                 } else {
                     resourceEntriesBySourceRoot.put(globEntry.getRelativeDirectoryPath(), globEntry);
                 }
             } else {
                 // check if the resource has label dependencies
-                result.add(Status.warning(format(
-                    "Found resource label reference '%s'. The project may not be fully supported in the IDE.", entry)));
+                result.add(
+                    Status.warning(
+                        format(
+                            "Found resource label reference '%s'. The project may not be fully supported in the IDE.",
+                            entry)));
             }
         }
 
@@ -152,12 +159,14 @@ public class JavaResourceInfo {
 
         // if there is a resource_strip_prefix this is easy
         var resourceStripPrefix = fileEntry.getResourceStripPrefix();
-        if (resourceStripPrefix != null) {
+        if ((resourceStripPrefix != null) && !resourceStripPrefix.isEmpty()) {
             var relativePackagePath = getBazelPackage().getWorkspaceRelativePath();
             if (!relativePackagePath.isPrefixOf(resourceStripPrefix)) {
                 throw new IllegalStateException(
-                        format("Found a resource_strip_prefix which is outside the expected package location '{}': {}",
-                            relativePackagePath, resourceStripPrefix));
+                        format(
+                            "Found a resource_strip_prefix which is outside the expected package location '{}': {}",
+                            relativePackagePath,
+                            resourceStripPrefix));
             }
 
             rootPath = resourceStripPrefix.removeFirstSegments(relativePackagePath.segmentCount());
@@ -187,10 +196,10 @@ public class JavaResourceInfo {
      *         nothing should be excluded <code>glob</code>)
      */
     public IPath[] getExclutionPatternsForSourceDirectory(IPath resourceDirectory) {
-        var fileOrGlob =
-                requireNonNull(requireNonNull(resourceDirectoriesWithFilesOrGlobs, "no resource directories discovered")
-                        .get(resourceDirectory),
-                    () -> format("resource directory '%s' unknown", resourceDirectory));
+        var fileOrGlob = requireNonNull(
+            requireNonNull(resourceDirectoriesWithFilesOrGlobs, "no resource directories discovered")
+                    .get(resourceDirectory),
+            () -> format("resource directory '%s' unknown", resourceDirectory));
         if (fileOrGlob instanceof GlobEntry globEntry) {
             var excludePatterns = globEntry.getExcludePatterns();
             if (excludePatterns != null) {
@@ -213,10 +222,10 @@ public class JavaResourceInfo {
      *         everything should be included)
      */
     public IPath[] getInclusionPatternsForSourceDirectory(IPath resourceDirectory) {
-        var fileOrGlob =
-                requireNonNull(requireNonNull(resourceDirectoriesWithFilesOrGlobs, "no source directories discovered")
-                        .get(resourceDirectory),
-                    () -> format("source directory '%s' unknown", resourceDirectory));
+        var fileOrGlob = requireNonNull(
+            requireNonNull(resourceDirectoriesWithFilesOrGlobs, "no source directories discovered")
+                    .get(resourceDirectory),
+            () -> format("source directory '%s' unknown", resourceDirectory));
         if (fileOrGlob instanceof GlobEntry globEntry) {
             var includePatterns = globEntry.getIncludePatterns();
             if (includePatterns != null) {

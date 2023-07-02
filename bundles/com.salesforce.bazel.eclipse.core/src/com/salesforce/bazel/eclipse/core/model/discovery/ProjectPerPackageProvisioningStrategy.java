@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.QualifiedName;
@@ -71,9 +72,11 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 monitor.checkCanceled();
 
                 if (!bazelProject.isPackageProject()) {
-                    throw new CoreException(Status.error(format(
-                        "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel package project created by the project per package strategy.",
-                        bazelProject)));
+                    throw new CoreException(
+                            Status.error(
+                                format(
+                                    "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel package project created by the project per package strategy.",
+                                    bazelProject)));
                 }
 
                 var targetsToBuildValue = bazelProject.getProject().getPersistentProperty(PROJECT_PROPERTY_TARGETS);
@@ -87,7 +90,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                             .stream()
                             .map(BazelTarget::getLabel)
                             .forEach(targetsToBuild::add);
-                    activeTargetsPerProject.put(bazelProject,
+                    activeTargetsPerProject.put(
+                        bazelProject,
                         bazelProject.getBazelPackage()
                                 .getBazelTargets()
                                 .stream()
@@ -97,7 +101,9 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 }
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Found targets for project '{}': {}", bazelProject,
+                    LOG.debug(
+                        "Found targets for project '{}': {}",
+                        bazelProject,
                         targetsToBuildValue.replace(':', ','));
                 }
 
@@ -117,13 +123,20 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             var outputGroups = Set.of(OutputGroup.INFO, OutputGroup.RESOLVE);
             var languages = Set.of(LanguageClass.JAVA);
             var aspects = workspace.getParent().getModelManager().getIntellijAspects();
-            var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targetsToBuild, outputGroups, aspects,
-                    languages, onlyDirectDeps);
+            var command = new BazelBuildWithIntelliJAspectsCommand(
+                    workspaceRoot,
+                    targetsToBuild,
+                    outputGroups,
+                    aspects,
+                    languages,
+                    onlyDirectDeps);
 
             monitor.subTask("Running Bazel...");
             var result = workspace.getCommandExecutor()
-                    .runDirectlyWithWorkspaceLock(command,
-                        bazelProjects.stream().map(BazelProject::getProject).collect(toList()), monitor.split(1));
+                    .runDirectlyWithWorkspaceLock(
+                        command,
+                        bazelProjects.stream().map(BazelProject::getProject).collect(toList()),
+                        monitor.split(1));
 
             // populate map from result
             Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
@@ -136,7 +149,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
 
                 // add the targets
-                List<String> targetNames = requireNonNull(activeTargetsPerProject.get(bazelProject),
+                List<String> targetNames = requireNonNull(
+                    activeTargetsPerProject.get(bazelProject),
                     () -> format("programming error: not targets for project: %s", bazelProject));
                 for (String targetName : targetNames) {
                     classpathInfo.addTarget(bazelProject.getBazelPackage().getBazelTarget(targetName));
@@ -152,8 +166,12 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     }
 
                     if (!isRegularFile(entry.getPath().toPath())) {
-                        createBuildPathProblem(bazelProject, Status.error(
-                            format("Library '%s' is missing. Please consider running 'bazel fetch'", entry.getPath())));
+                        createBuildPathProblem(
+                            bazelProject,
+                            Status.error(
+                                format(
+                                    "Library '%s' is missing. Please consider running 'bazel fetch'",
+                                    entry.getPath())));
                         break;
                     }
                 }
@@ -186,8 +204,10 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
             // skip the root package (not supported)
             if (bazelPackage.isRoot()) {
-                createBuildPathProblem(bazelPackage.getBazelWorkspace().getBazelProject(), Status.warning(
-                    "The root package was skipped during sync because it's not supported by the project-per-package strategy. Consider excluding it in the .bazelproject file."));
+                createBuildPathProblem(
+                    bazelPackage.getBazelWorkspace().getBazelProject(),
+                    Status.warning(
+                        "The root package was skipped during sync because it's not supported by the project-per-package strategy. Consider excluding it in the .bazelproject file."));
                 continue;
             }
 
@@ -201,15 +221,20 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             var sourceInfo = javaInfo.getSourceInfo();
             if (sourceInfo.hasSourceFilesWithoutCommonRoot()) {
                 for (JavaSourceEntry file : sourceInfo.getSourceFilesWithoutCommonRoot()) {
-                    createBuildPathProblem(project, Status.warning(format(
-                        "File '%s' could not be mapped into a common source directory. The project may not build successful in Eclipse.",
-                        file.getPath())));
+                    createBuildPathProblem(
+                        project,
+                        Status.warning(
+                            format(
+                                "File '%s' could not be mapped into a common source directory. The project may not build successful in Eclipse.",
+                                file.getPath())));
                 }
             }
             if (!sourceInfo.hasSourceDirectories()) {
-                createBuildPathProblem(project,
+                createBuildPathProblem(
+                    project,
                     Status.error(
-                        format("No source directories detected when analyzihng package '%s' using targets '%s'",
+                        format(
+                            "No source directories detected when analyzihng package '%s' using targets '%s'",
                             bazelPackage.getLabel().getPackagePath(),
                             packageTargets.stream()
                                     .map(BazelTarget::getLabel)
@@ -245,20 +270,23 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
     protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,
             SubMonitor monitor) throws CoreException {
-        if (bazelPackage.hasBazelProject()) {
-            return bazelPackage.getBazelProject();
+        IProject project;
+        if (!bazelPackage.hasBazelProject()) {
+            // create project
+            var packagePath = bazelPackage.getLabel().getPackagePath();
+            var projectName = packagePath.isBlank() ? "ROOT" : packagePath.replace('/', '.');
+
+            // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
+            var projectLocation = bazelPackage.getLocation();
+            project = createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
+        } else {
+            // use existing project
+            project = bazelPackage.getBazelProject().getProject();
         }
 
-        var packagePath = bazelPackage.getLabel().getPackagePath();
-        var projectName = packagePath.isBlank() ? "ROOT" : packagePath.replace('/', '.');
-
-        // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
-        var projectLocation = bazelPackage.getLocation();
-
-        var project = createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
-
-        // remember the targets to build for the project
-        project.setPersistentProperty(PROJECT_PROPERTY_TARGETS,
+        // remember/update the targets to build for the project
+        project.setPersistentProperty(
+            PROJECT_PROPERTY_TARGETS,
             targets.stream().map(BazelTarget::getTargetName).distinct().collect(joining(":")));
 
         // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)

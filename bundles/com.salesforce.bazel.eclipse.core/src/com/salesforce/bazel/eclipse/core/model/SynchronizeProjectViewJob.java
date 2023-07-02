@@ -447,6 +447,11 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
         try {
+            // invalidate the entire cache because we want to ensure we sync fresh
+            // FIXME: this should not be required but currently is because our ResourceChangeProcessor is very light
+            // ideally we would monitor resource change events and invalidate individual targets/packages only when necessary
+            workspace.getModel().getInfoCache().invalidateAll();
+
             // ensure workspace project exists
             var workspaceName = workspace.getName();
             var workspaceRoot = workspace.getLocation();

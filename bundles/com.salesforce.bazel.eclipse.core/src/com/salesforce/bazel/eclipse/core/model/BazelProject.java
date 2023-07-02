@@ -96,9 +96,10 @@ public class BazelProject implements IProjectNature {
     public static boolean hasOwnerPropertySetForLabel(IProject project, BazelLabel label) throws CoreException {
         // prevent non-concrete and external repo labels
         if (!label.isConcrete() || label.isExternalRepoLabel()) {
-            throw new IllegalArgumentException(format(
-                "Invalid label '%s': Label must be concrete target or a package and without external repo identifier",
-                label));
+            throw new IllegalArgumentException(
+                    format(
+                        "Invalid label '%s': Label must be concrete target or a package and without external repo identifier",
+                        label));
         }
 
         var ownerValue = project.getPersistentProperty(PROJECT_PROPERTY_OWNER);
@@ -231,8 +232,12 @@ public class BazelProject implements IProjectNature {
     public BazelPackage getBazelPackage() throws CoreException {
         var label = getOwnerLabel();
         if ((label == null) || label.hasTarget()) {
-            throw new CoreException(Status.error(
-                format("Project '%s' does not map to a Bazel packagage (owner label is '%s').", project, label)));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Project '%s' does not map to a Bazel packagage (owner label is '%s').",
+                            project,
+                            label)));
         }
 
         // search model
@@ -240,8 +245,9 @@ public class BazelProject implements IProjectNature {
         var bazelPackage = bazelWorkspace.getBazelPackage(label.getPackageLabel());
 
         if (!bazelPackage.exists()) {
-            throw new CoreException(Status
-                    .error(format("Project '%s' maps to a Bazel package '%s', which does not exist!", project, label)));
+            throw new CoreException(
+                    Status.error(
+                        format("Project '%s' maps to a Bazel package '%s', which does not exist!", project, label)));
         }
 
         return bazelPackage;
@@ -263,8 +269,9 @@ public class BazelProject implements IProjectNature {
     public BazelTarget getBazelTarget() throws CoreException {
         var label = getOwnerLabel();
         if ((label == null) || !label.hasTarget()) {
-            throw new CoreException(Status.error(
-                format("Project '%s' does not map to a Bazel target (owner label is '%s').", project, label)));
+            throw new CoreException(
+                    Status.error(
+                        format("Project '%s' does not map to a Bazel target (owner label is '%s').", project, label)));
         }
 
         // search model
@@ -273,8 +280,9 @@ public class BazelProject implements IProjectNature {
         var bazelTarget = bazelPackage.getBazelTarget(label.getTargetName());
 
         if (!bazelTarget.exists()) {
-            throw new CoreException(Status
-                    .error(format("Project '%s' maps to a Bazel target '%s', which does not exist!", project, label)));
+            throw new CoreException(
+                    Status.error(
+                        format("Project '%s' maps to a Bazel target '%s', which does not exist!", project, label)));
         }
 
         return bazelTarget;
@@ -295,9 +303,11 @@ public class BazelProject implements IProjectNature {
 
         var workspaceRoot = project.getPersistentProperty(PROJECT_PROPERTY_WORKSPACE_ROOT);
         if (workspaceRoot == null) {
-            throw new CoreException(Status.error(
-                format("Project '%s' is not a conformant Bazel project. No workspace root is set for this project!",
-                    project)));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Project '%s' is not a conformant Bazel project. No workspace root is set for this project!",
+                            project)));
         }
 
         // search model
@@ -307,9 +317,11 @@ public class BazelProject implements IProjectNature {
             }
         }
 
-        throw new CoreException(Status.error(format(
-            "Unable to find Bazel workspace for workspace root '%s' in the Eclipse workspace. Please check the workspace setup!",
-            workspaceRoot)));
+        throw new CoreException(
+                Status.error(
+                    format(
+                        "Unable to find Bazel workspace for workspace root '%s' in the Eclipse workspace. Please check the workspace setup!",
+                        workspaceRoot)));
     }
 
     /**
@@ -433,7 +445,6 @@ public class BazelProject implements IProjectNature {
         var result = new StringBuilder();
         result.append("BazelProject [");
         result.append(project);
-        result.append(", ");
         try {
             result.append(", workspace=");
             result.append(project.getPersistentProperty(PROJECT_PROPERTY_WORKSPACE_ROOT));

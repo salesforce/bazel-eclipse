@@ -25,8 +25,9 @@ import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInf
  */
 public class JavaLibraryAnalyzer implements MacroCallAnalyzer {
 
-    protected void addResourceFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel) throws CoreException {
-        javaInfo.addResource(fileOrLabel);
+    protected void addResourceFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel, String resourceStripPrefix)
+            throws CoreException {
+        javaInfo.addResource(fileOrLabel, resourceStripPrefix);
     }
 
     protected void addResourceGlob(JavaProjectInfo javaInfo, GlobInfo glob) throws CoreException {
@@ -80,8 +81,9 @@ public class JavaLibraryAnalyzer implements MacroCallAnalyzer {
         if (labelsOrFiles != null) {
             addedSomething = true;
             // this can be null if glob is the only srcs
+            var resourceStripPrefix = macroCall.getStringArgument("resource_strip_prefix");
             for (String labelOrFile : labelsOrFiles) {
-                addResourceFileOrLabel(javaInfo, labelOrFile);
+                addResourceFileOrLabel(javaInfo, labelOrFile, resourceStripPrefix);
             }
         }
 
