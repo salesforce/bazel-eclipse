@@ -23,6 +23,7 @@ import static java.lang.String.format;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
+import static java.util.function.Predicate.not;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -382,8 +383,16 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
      *             in case of errors loading packages
      */
     public void open(Collection<BazelPackage> bazelPackages) throws CoreException {
-        var targetsByPackage = queryForTargets(this, bazelPackages, getModelManager().getExecutionService());
-        for (BazelPackage bazelPackage : bazelPackages) {
+        // avoid unnecessary open calls
+        var closedPackages =
+                bazelPackages.stream().filter(not(BazelPackage::hasInfo)).distinct().toList();
+        if (closedPackages.isEmpty()) {
+            return;
+        }
+
+        // open all closed projects
+        var targetsByPackage = queryForTargets(this, closedPackages, getModelManager().getExecutionService());
+        for (BazelPackage bazelPackage : closedPackages) {
             var targets = targetsByPackage.get(bazelPackage);
             if (targets == null) {
                 LOG.debug("No result for: '{}'", bazelPackage);

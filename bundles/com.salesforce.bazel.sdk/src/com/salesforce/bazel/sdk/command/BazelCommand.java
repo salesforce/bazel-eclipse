@@ -245,8 +245,11 @@ public abstract class BazelCommand<R> {
     @Override
     public String toString() {
         var commandLine = new ArrayList<String>();
+        if (workingDirectory != null) {
+            commandLine.add(workingDirectory.getFileName().toString() + ">");
+        }
         if (bazelBinary != null) {
-            commandLine.add(bazelBinary.executable().toString());
+            commandLine.add(bazelBinary.executable().getFileName().toString());
         } else {
             commandLine.add("bazel");
         }

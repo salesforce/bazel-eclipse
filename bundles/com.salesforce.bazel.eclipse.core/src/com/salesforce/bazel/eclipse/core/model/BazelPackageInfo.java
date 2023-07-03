@@ -63,7 +63,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
 
         var workspaceRoot = bazelWorkspace.getLocation().toPath();
         var query = bazelPackages.stream()
-                .map(bazelPackage -> format("\"//%s:all\"", bazelPackage.getWorkspaceRelativePath()))
+                .map(bazelPackage -> format("//%s:all", bazelPackage.getWorkspaceRelativePath()))
                 .collect(joining(" + "));
 
         Map<String, BazelPackage> bazelPackageByWorkspaceRelativePath = new HashMap<>();
@@ -73,8 +73,12 @@ public final class BazelPackageInfo extends BazelElementInfo {
         Map<BazelPackage, Map<String, Target>> result = new HashMap<>();
         try {
             LOG.debug("{}: querying Bazel for list of targets from: {}", bazelWorkspace, query);
-            var queryResult = executionService.executeOutsideWorkspaceLockAsync(
-                new BazelQueryForTargetProtoCommand(workspaceRoot, query, true /* keep going */), bazelWorkspace).get();
+            var queryResult =
+                    executionService
+                            .executeOutsideWorkspaceLockAsync(
+                                new BazelQueryForTargetProtoCommand(workspaceRoot, query, true /* keep going */),
+                                bazelWorkspace)
+                            .get();
             for (Target target : queryResult) {
                 if (!target.hasRule()) {
                     LOG.trace("{}: ignoring target: {}", bazelWorkspace, target);
@@ -102,11 +106,15 @@ public final class BazelPackageInfo extends BazelElementInfo {
         } catch (ExecutionException e) {
             var cause = e.getCause();
             if (cause == null) {
-                throw new CoreException(Status.error(
-                    format("bazel query failed in workspace '%s' for with unknown reason", workspaceRoot), e));
+                throw new CoreException(
+                        Status.error(
+                            format("bazel query failed in workspace '%s' for with unknown reason", workspaceRoot),
+                            e));
             }
-            throw new CoreException(Status.error(
-                format("bazel query failed in workspace '%s': %s", workspaceRoot, cause.getMessage()), cause));
+            throw new CoreException(
+                    Status.error(
+                        format("bazel query failed in workspace '%s': %s", workspaceRoot, cause.getMessage()),
+                        cause));
         }
     }
 
@@ -153,9 +161,11 @@ public final class BazelPackageInfo extends BazelElementInfo {
 
         var project = findProject();
         if (project == null) {
-            throw new CoreException(Status.error(format(
-                "Unable to find project for Bazel package '%s' in the Eclipse workspace. Please check the workspace setup!",
-                getBazelPackage().getLabel())));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Unable to find project for Bazel package '%s' in the Eclipse workspace. Please check the workspace setup!",
+                            getBazelPackage().getLabel())));
         }
         return bazelProject = new BazelProject(project, getBazelPackage().getModel());
     }

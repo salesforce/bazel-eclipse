@@ -176,6 +176,10 @@ public class ExternalLibrariesDiscovery {
                 .map(s -> s.substring(PREFIX_EXTERNAL.length()))
                 .map(s -> format("@%s//...", s))
                 .collect(joining(" "));
+        if (setOfExternalsToQuery.isBlank()) {
+            return;
+        }
+
         var javaImportQuery = new BazelQueryForTargetProtoCommand(
                 workspaceRoot.directory(),
                 format("kind('java_import rule', set( %s ))", setOfExternalsToQuery),
@@ -228,11 +232,7 @@ public class ExternalLibrariesDiscovery {
         }
     }
 
-    private boolean queryForRulesJvmExternalJars(Set<ClasspathEntry> result) throws CoreException {
-
-        // detect missing jars
-        var needsFetch = false;
-
+    private void queryForRulesJvmExternalJars(Set<ClasspathEntry> result) throws CoreException {
         // get list of all external repos
         var allExternalQuery = new BazelQueryForLabelsCommand(
                 workspaceRoot.directory(),
@@ -246,6 +246,9 @@ public class ExternalLibrariesDiscovery {
                 .map(s -> s.substring(PREFIX_EXTERNAL.length()))
                 .map(s -> format("@%s//...", s))
                 .collect(joining(" "));
+        if (setOfExternalsToQuery.isBlank()) {
+            return;
+        }
 
         // get jvm_import details from each external
         var javaImportQuery = new BazelQueryForTargetProtoCommand(
@@ -300,11 +303,10 @@ public class ExternalLibrariesDiscovery {
                         classpath.getExtraAttributes().put("bazel-target-name", target.getRule().getName());
                         result.add(classpath);
                     } else {
-                        needsFetch = true;
+                        foundMissingJars = true;
                     }
                 }
             }
         }
-        return needsFetch;
     }
 }

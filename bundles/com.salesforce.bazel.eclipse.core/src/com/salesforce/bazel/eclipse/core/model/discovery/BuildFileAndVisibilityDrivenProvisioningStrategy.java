@@ -1,14 +1,16 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDPATH_PROBLEM_MARKER;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -251,6 +253,9 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                 monitor.subTask("Analyzing: " + bazelProject);
                 monitor.checkCanceled();
 
+                // cleanup markers from previous runs
+                bazelProject.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, DEPTH_ZERO);
+
                 // query for rdeps to find classpath exclusions
                 var projectTargets = activeTargetsPerProject.get(bazelProject);
                 var rdeps = workspace.getCommandExecutor()
@@ -258,7 +263,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                             new BazelQueryForLabelsCommand(
                                     workspaceRoot,
                                     format(
-                                        "kind('java_library rule', rdeps(//..., %s))",
+                                        "kind(java_library, rdeps(//..., %s))",
                                         projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "))),
                                     true))
                         .stream()
@@ -271,7 +276,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                             new BazelQueryForLabelsCommand(
                                     workspaceRoot,
                                     format(
-                                        "kind('java_library rule', visible(%s, //...))",
+                                        "kind(java_library, visible(%s, //...))",
                                         projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "))),
                                     true))
                         .stream()
@@ -279,13 +284,13 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                         .collect(toCollection(LinkedHashSet::new));
 
                 // ensure the workspace has all the packages open
-                List<BazelPackage> allPackagesWithVisibleTargets =
-                        allVisibleTargets.stream().map(workspace::getBazelPackage).distinct().collect(toList());
+                var allPackagesWithVisibleTargets =
+                        allVisibleTargets.stream().map(workspace::getBazelPackage).distinct().toList();
                 workspace.open(allPackagesWithVisibleTargets);
 
                 // log a warning if the cache is too small
-                List<BazelPackage> packagesNotOpen =
-                        allPackagesWithVisibleTargets.stream().filter(p -> !p.hasInfo()).collect(toList());
+                var packagesNotOpen =
+                        allPackagesWithVisibleTargets.stream().filter(not(BazelPackage::hasInfo)).toList();
                 if (packagesNotOpen.size() > 0) {
                     LOG.warn(
                         "Classpath computation might be slow. The Bazel element cache is too small. Please increase the cache size by at least {}.",
@@ -324,6 +329,8 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                         } else if (jar.lastSegment().endsWith(".jar")) {
                             builder.setClassJar(jarResolver.generatedJarLocation(bazelPackage, jar));
                             foundClassJar = true;
+                        } else {
+                            LOG.warn("Unknown jar: '{}' (output of '{}')", jar, target);
                         }
                     }
 
