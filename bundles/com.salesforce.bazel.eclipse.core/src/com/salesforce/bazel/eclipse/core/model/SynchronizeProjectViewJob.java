@@ -14,6 +14,7 @@ import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 import static org.eclipse.core.resources.IResource.FORCE;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -113,20 +114,16 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     }
 
     private final BazelWorkspace workspace;
-    private final BazelProjectView projectView;
-
-    private final ImportRoots importRoots;
+    private BazelProjectView projectView;
+    private ImportRoots importRoots;
 
     public SynchronizeProjectViewJob(BazelWorkspace workspace) throws CoreException {
-        super(format("Synchronizing project view for workspace '%s'", workspace.getName()));
+        super("Synchronizing Bazel projects");
         this.workspace = workspace;
 
+        // don't perform any expensive work in the constructor
+        // it may be called in the UI thread
         // ensure the workspace info is remove from the cache
-        this.workspace.getInfoCache().invalidate(this.workspace);
-
-        // trigger loading of the project view
-        this.projectView = workspace.getBazelProjectView();
-        importRoots = createImportRoots(workspace);
 
         // lock the full workspace (to prevent concurrent build activity)
         setRule(getWorkspaceRoot());
@@ -182,6 +179,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
         // set properties
         project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT, workspaceRoot.toString());
+        project.setDefaultCharset(StandardCharsets.UTF_8.name(), monitor.split(1));
 
         // configure the classpath container
         var javaProject = JavaCore.create(project);
@@ -451,6 +449,10 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // FIXME: this should not be required but currently is because our ResourceChangeProcessor is very light
             // ideally we would monitor resource change events and invalidate individual targets/packages only when necessary
             workspace.getModel().getInfoCache().invalidateAll();
+
+            // trigger loading of the project view
+            projectView = workspace.getBazelProjectView();
+            importRoots = createImportRoots(workspace);
 
             // ensure workspace project exists
             var workspaceName = workspace.getName();

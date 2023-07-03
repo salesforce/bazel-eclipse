@@ -15,6 +15,7 @@ package com.salesforce.bazel.eclipse.core.model.execution;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Future;
@@ -54,7 +55,7 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
     @Override
     public <R> Future<R> executeOutsideWorkspaceLockAsync(BazelCommand<R> command,
             BazelElement<?, ?> executionContext) {
-        var future = new WorkspaceLockDetectingFuture<R>();
+        var future = new CompletableFuture<R>(); // this is ok to be a completable future
         new BazelReadOnlyJob<>(executor, command, getJobGroup(executionContext), future).schedule();
         return future;
     }
@@ -104,8 +105,8 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
         // quick cleanup of empty/no longer needed groups
         jobGroupsByWorkspace.entrySet().removeIf(e -> (!e.getKey().exists() || e.getValue().getActiveJobs().isEmpty()));
 
-        return jobGroupsByWorkspace.computeIfAbsent(bazelWorkspace,
-            w -> new JobGroup(w.getLocation().toString(), 2, 1));
+        return jobGroupsByWorkspace
+                .computeIfAbsent(bazelWorkspace, w -> new JobGroup(w.getLocation().toString(), 2, 1));
     }
 
     void refreshResources(List<IResource> resourcesToRefresh, SubMonitor subMonitor) {

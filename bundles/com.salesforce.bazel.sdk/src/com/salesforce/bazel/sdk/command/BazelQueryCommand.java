@@ -6,6 +6,7 @@ import static java.nio.file.Files.writeString;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.BazelVersion;
@@ -36,6 +37,12 @@ public abstract class BazelQueryCommand<R> extends BazelCommand<R> {
         super(queryCommand.name(), workspaceRoot);
         this.query = query;
         this.keepGoing = keepGoing;
+    }
+
+    @Override
+    protected void appendToStringDetails(ArrayList<String> toStringCommandLine) {
+        toStringCommandLine.add(getCommand());
+        toStringCommandLine.add(getQuery());
     }
 
     public String getQuery() {

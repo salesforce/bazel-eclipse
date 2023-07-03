@@ -6,12 +6,14 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDPATH_PROBLEM_MARKER;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PROBLEM_MARKER;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -239,7 +241,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         // delete existing markers
-        project.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
+        project.getProject().deleteMarkers(PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
 
         // abort if canceled
         if (monitor.isCanceled()) {
@@ -485,6 +487,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT,
             getFileSystemMapper().getBazelWorkspace().getLocation().toString());
         project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_OWNER, owner.getLabel().getLabelPath());
+
+        // set encoding to UTF-8
+        project.setDefaultCharset(StandardCharsets.UTF_8.name(), monitor.split(1));
 
         return project;
     }

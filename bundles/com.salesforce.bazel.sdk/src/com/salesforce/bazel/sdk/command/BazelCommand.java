@@ -58,8 +58,16 @@ public abstract class BazelCommand<R> {
      */
     public BazelCommand(String command, Path workingDirectory) {
         this.command = requireNonNull(command, "No command provided; see 'bazel help' for available commands");
-        this.workingDirectory = requireNonNull(workingDirectory,
+        this.workingDirectory = requireNonNull(
+            workingDirectory,
             "No working directory provided; Bazel needs to be executed from within a Bazel workspace");
+    }
+
+    protected void appendToStringDetails(ArrayList<String> toStringCommandLine) {
+        toStringCommandLine.addAll(getStartupArgs());
+        toStringCommandLine.add(getCommand());
+        toStringCommandLine.addAll(getCommandArgs());
+        toStringCommandLine.add("[" + getClass().getSimpleName() + "]");
     }
 
     /**
@@ -77,7 +85,8 @@ public abstract class BazelCommand<R> {
      * {@return the Bazel binary to use (never <code>null</code>)
      */
     BazelBinary ensureBazelBinary() {
-        return requireNonNull(getBazelBinary(),
+        return requireNonNull(
+            getBazelBinary(),
             "no Bazel binary configured; check code logic - it should be set to a default by the executor");
     }
 
@@ -101,7 +110,8 @@ public abstract class BazelCommand<R> {
                     format("Bazel %s failed with exit code %d. Please check command output", getCommand(), exitCode));
         }
 
-        return requireNonNull(doGenerateResult(),
+        return requireNonNull(
+            doGenerateResult(),
             () -> format("Invalid command implementation '%s'. null result not allowed", BazelCommand.this.getClass()));
     }
 
@@ -235,10 +245,12 @@ public abstract class BazelCommand<R> {
     @Override
     public String toString() {
         var commandLine = new ArrayList<String>();
-        commandLine.add(getClass().getSimpleName());
-        commandLine.addAll(getStartupArgs());
-        commandLine.add(getCommand());
-        commandLine.addAll(getCommandArgs());
+        if (bazelBinary != null) {
+            commandLine.add(bazelBinary.executable().toString());
+        } else {
+            commandLine.add("bazel");
+        }
+        appendToStringDetails(commandLine);
         return commandLine.stream().map(s -> s.contains(" ") ? "\"" + s + "\"" : s).collect(joining(" "));
     }
 }
