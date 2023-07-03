@@ -243,34 +243,6 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
 
             var workspaceRoot = workspace.getLocation().toPath();
 
-            // get all public packages based on visibility
-            // FIXME: find a better way ... this requires having the visibility attribute explicitly declared
-            // attr(visibility, '//visibility:public', kind(java_library, //...))
-            monitor.subTask("Querying workspace for public targets...");
-            Set<BazelLabel> allPublicTargets = workspace.getCommandExecutor()
-                    .runQueryWithoutLock(
-                        new BazelQueryForLabelsCommand(
-                                workspaceRoot,
-                                "attr(visibility, '//visibility:public', kind(java_library, //...))",
-                                true))
-                    .stream()
-                    .map(BazelLabel::new)
-                    .collect(toCollection(LinkedHashSet::new));
-
-            // ensure the workspace has all the packages open
-            List<BazelPackage> allPackagesWithPublicTargets =
-                    allPublicTargets.stream().map(workspace::getBazelPackage).distinct().collect(toList());
-            workspace.open(allPackagesWithPublicTargets);
-
-            // log a warning if the cache is too small
-            List<BazelPackage> packagesNotOpen =
-                    allPackagesWithPublicTargets.stream().filter(p -> !p.hasInfo()).collect(toList());
-            if (packagesNotOpen.size() > 0) {
-                LOG.warn(
-                    "Classpath computation might be slow. The Bazel element cache is too small. Please increase the cache size by at least {}.",
-                    packagesNotOpen.size() * 2);
-            }
-
             // use the hints to avoid circular dependencies between projects in Eclipse
             var circularDependenciesHelper = new CircularDependenciesHelper(workspace.getBazelProjectView().targets());
 
@@ -281,17 +253,47 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
 
                 // query for rdeps to find classpath exclusions
                 var projectTargets = activeTargetsPerProject.get(bazelProject);
-                var query = format(
-                    "rdeps(//..., %s)",
-                    projectTargets.stream().map(BazelLabel::toString).collect(joining(" + ")));
                 var rdeps = workspace.getCommandExecutor()
-                        .runQueryWithoutLock(new BazelQueryForLabelsCommand(workspaceRoot, query, true))
+                        .runQueryWithoutLock(
+                            new BazelQueryForLabelsCommand(
+                                    workspaceRoot,
+                                    format(
+                                        "kind('java_library rule', rdeps(//..., %s))",
+                                        projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "))),
+                                    true))
                         .stream()
                         .map(BazelLabel::new)
                         .collect(toSet());
 
+                // get all accessible targets based on visibility
+                Set<BazelLabel> allVisibleTargets = workspace.getCommandExecutor()
+                        .runQueryWithoutLock(
+                            new BazelQueryForLabelsCommand(
+                                    workspaceRoot,
+                                    format(
+                                        "kind('java_library rule', visible(%s, //...))",
+                                        projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "))),
+                                    true))
+                        .stream()
+                        .map(BazelLabel::new)
+                        .collect(toCollection(LinkedHashSet::new));
+
+                // ensure the workspace has all the packages open
+                List<BazelPackage> allPackagesWithVisibleTargets =
+                        allVisibleTargets.stream().map(workspace::getBazelPackage).distinct().collect(toList());
+                workspace.open(allPackagesWithVisibleTargets);
+
+                // log a warning if the cache is too small
+                List<BazelPackage> packagesNotOpen =
+                        allPackagesWithVisibleTargets.stream().filter(p -> !p.hasInfo()).collect(toList());
+                if (packagesNotOpen.size() > 0) {
+                    LOG.warn(
+                        "Classpath computation might be slow. The Bazel element cache is too small. Please increase the cache size by at least {}.",
+                        packagesNotOpen.size() * 2);
+                }
+
                 // get the remaining list of visible deps based on workspace dependency graph
-                var visibleDeps = new ArrayList<>(allPublicTargets);
+                var visibleDeps = new ArrayList<>(allVisibleTargets);
                 visibleDeps.removeAll(rdeps); // exclude reverse deps
                 visibleDeps.removeAll(projectTargets); // exclude project targets (avoid dependencies on itself)
 
@@ -315,34 +317,45 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                     var target = workspace.getBazelTarget(visibleDep);
                     var ruleOutput = target.getRuleOutput();
                     var builder = LibraryArtifact.builder();
+                    var foundClassJar = false;
                     for (IPath jar : ruleOutput) {
                         if (jar.lastSegment().endsWith("-src.jar")) {
                             builder.addSourceJar(jarResolver.generatedJarLocation(bazelPackage, jar));
                         } else if (jar.lastSegment().endsWith(".jar")) {
                             builder.setClassJar(jarResolver.generatedJarLocation(bazelPackage, jar));
+                            foundClassJar = true;
                         }
                     }
 
-                    var jarLibrary = builder.build();
-                    var jarEntry = jarResolver.resolveJar(jarLibrary);
-                    if (jarEntry != null) {
-                        if (isRegularFile(jarEntry.getPath().toPath())) {
-                            classpath.add(jarEntry);
+                    if (foundClassJar) {
+                        var jarLibrary = builder.build();
+                        var jarEntry = jarResolver.resolveJar(jarLibrary);
+                        if (jarEntry != null) {
+                            if (isRegularFile(jarEntry.getPath().toPath())) {
+                                classpath.add(jarEntry);
+                            } else {
+                                createBuildPathProblem(
+                                    bazelProject,
+                                    Status.error(
+                                        format(
+                                            "Jar '%s' not found. Please run bazel fetch or bazel build and refresh the classpath.",
+                                            jarLibrary.getClassJar())));
+                            }
                         } else {
                             createBuildPathProblem(
                                 bazelProject,
                                 Status.error(
                                     format(
-                                        "Jar '%s' not found. Please run bazel fetch or bazel build and refresh the classpath.",
-                                        jarLibrary.getClassJar())));
+                                        "Unable to resolve jar '%s'. Please open a bug with more details.",
+                                        jarLibrary)));
                         }
                     } else {
                         createBuildPathProblem(
                             bazelProject,
                             Status.error(
                                 format(
-                                    "Unable to resolve jar '%s'. Please open a bug with more details.",
-                                    jarLibrary)));
+                                    "Unable to resolve rule output '%s'. Please open a bug with more details.",
+                                    ruleOutput)));
                     }
                 }
 
