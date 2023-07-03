@@ -870,6 +870,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         try {
             var monitor = SubMonitor.convert(progress, "Provisioning projects", 2);
 
+            // load all packages to be provisioned
+            workspace.open(targets.stream().map(BazelTarget::getBazelPackage).distinct().toList());
+
             // ensure there is a mapper
             fileSystemMapper = new BazelProjectFileSystemMapper(workspace);
 

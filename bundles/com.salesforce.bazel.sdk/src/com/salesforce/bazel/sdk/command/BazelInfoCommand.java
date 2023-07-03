@@ -6,6 +6,7 @@ import static java.nio.file.Files.readAllLines;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,11 @@ public class BazelInfoCommand extends BazelCommand<Map<String, String>> {
 
     public BazelInfoCommand(Path workspaceRoot) {
         super("info", workspaceRoot);
+    }
+
+    @Override
+    protected void appendToStringDetails(ArrayList<String> toStringCommandLine) {
+        toStringCommandLine.add(getCommand());
     }
 
     @Override
