@@ -54,5 +54,12 @@
              name="Sync Projects">
        </command>
     </extension>
+    <extension
+          point="org.eclipse.ui.workingSets">
+       <workingSet
+             id="com.salesforce.bazel.eclipse.ui.workingSet1"
+             name="name">
+       </workingSet>
+    </extension>
 
 </plugin>

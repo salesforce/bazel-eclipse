@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.joining;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -23,9 +24,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
 
     private final IntellijAspects aspects;
-    private final Set<LanguageClass> languages;
-    private final Set<OutputGroup> outputGroups;
-    private final boolean onlyDirectDeps;
+    private final Collection<String> outputGroupNames;
 
     /**
      * @param workspaceRoot
@@ -48,10 +47,15 @@ public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
             Set<OutputGroup> outputGroups, IntellijAspects aspects, Set<LanguageClass> languages,
             boolean onlyDirectDeps) {
         super(targets, workspaceRoot, true /* keepGoing */);
-        this.outputGroups = outputGroups;
         this.aspects = aspects;
-        this.languages = languages;
-        this.onlyDirectDeps = onlyDirectDeps;
+        this.outputGroupNames = aspects.getOutputGroupNames(outputGroups, languages, onlyDirectDeps);
+    }
+
+    public BazelBuildWithIntelliJAspectsCommand(Path workspaceRoot, List<BazelLabel> targets,
+            Set<String> outputGroupNames, IntellijAspects aspects) {
+        super(targets, workspaceRoot, true /* keepGoing */);
+        this.aspects = aspects;
+        this.outputGroupNames = outputGroupNames;
     }
 
     @Override
@@ -60,8 +64,7 @@ public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
 
         // enable aspects and request output groups
         commandLine.addAll(aspects.getFlags(bazelVersion));
-        commandLine.add(format("--output_groups=%s",
-            aspects.getOutputGroupNames(outputGroups, languages, onlyDirectDeps).stream().collect(joining(","))));
+        commandLine.add(format("--output_groups=%s", outputGroupNames.stream().collect(joining(","))));
 
         return commandLine;
     }

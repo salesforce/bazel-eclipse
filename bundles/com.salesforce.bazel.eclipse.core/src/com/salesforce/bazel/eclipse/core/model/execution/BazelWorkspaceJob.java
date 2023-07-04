@@ -13,6 +13,8 @@
  */
 package com.salesforce.bazel.eclipse.core.model.execution;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -51,7 +53,7 @@ class BazelWorkspaceJob<R> extends WorkspaceJob {
         setPriority(LONG);
         setUser(true);
         setJobGroup(jobGroup);
-        setRule(rule);
+        setRule(requireNonNull(rule, "This job needs a scheduling rule. It shold probably be the workspace root!"));
     }
 
     private void refreshResources(SubMonitor subMonitor) {

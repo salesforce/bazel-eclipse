@@ -59,6 +59,8 @@ public class IntellijAspects {
         }
     }
 
+    public static final String OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH = "runtime_classpath";
+
     public static final String ASPECTS_VERSION = "3e0ba2";
 
     public static final String OVERRIDE_REPOSITORY_FLAG = "--override_repository=intellij_aspect";
@@ -89,13 +91,6 @@ public class IntellijAspects {
         return (language != LanguageClass.C) && (language != LanguageClass.GO);
     }
 
-    private String getAspectFlag(BazelVersion bazelVersion) {
-        if (bazelVersion.isAtLeast(6, 0, 0)) {
-            return "--aspects=@@intellij_aspect//:intellij_info_bundled.bzl%intellij_info_aspect";
-        }
-        return "--aspects=@intellij_aspect//:intellij_info_bundled.bzl%intellij_info_aspect";
-    }
-
     protected String getAspectsArchiveLocation() {
         return format("/aspects/aspects-%s.zip", ASPECTS_VERSION);
     }
@@ -115,7 +110,24 @@ public class IntellijAspects {
      * @return list of flags to add to the command line (never <code>null</code>)
      */
     public List<String> getFlags(BazelVersion bazelVersion) {
-        return List.of(getAspectFlag(bazelVersion), format("%s=%s", OVERRIDE_REPOSITORY_FLAG, directory));
+        return List.of(
+            getIntellijInfoAspectFlag(bazelVersion),
+            getJavaRuntimeClasspathAspectFlag(bazelVersion),
+            format("%s=%s", OVERRIDE_REPOSITORY_FLAG, directory));
+    }
+
+    private String getIntellijInfoAspectFlag(BazelVersion bazelVersion) {
+        if (bazelVersion.isAtLeast(6, 0, 0)) {
+            return "--aspects=@@intellij_aspect//:intellij_info_bundled.bzl%intellij_info_aspect";
+        }
+        return "--aspects=@intellij_aspect//:intellij_info_bundled.bzl%intellij_info_aspect";
+    }
+
+    private String getJavaRuntimeClasspathAspectFlag(BazelVersion bazelVersion) {
+        if (bazelVersion.isAtLeast(6, 0, 0)) {
+            return "--aspects=@@intellij_aspect//:java_classpath.bzl%java_classpath_aspect";
+        }
+        return "--aspects=@intellij_aspect//:java_classpath.bzl%java_classpath_aspect";
     }
 
     private String getOutputGroupForLanguage(OutputGroup group, LanguageClass language, boolean directDepsOnly) {
@@ -148,8 +160,10 @@ public class IntellijAspects {
             if (OutputGroup.INFO.equals(outputGroup)) {
                 outputGroupsBuilder.add(outputGroup.prefix + "generic");
             }
-            languages.stream().map(l -> getOutputGroupForLanguage(outputGroup, l, directDepsOnly))
-                    .filter(Objects::nonNull).forEach(outputGroupsBuilder::add);
+            languages.stream()
+                    .map(l -> getOutputGroupForLanguage(outputGroup, l, directDepsOnly))
+                    .filter(Objects::nonNull)
+                    .forEach(outputGroupsBuilder::add);
         }
         return outputGroupsBuilder.build();
     }

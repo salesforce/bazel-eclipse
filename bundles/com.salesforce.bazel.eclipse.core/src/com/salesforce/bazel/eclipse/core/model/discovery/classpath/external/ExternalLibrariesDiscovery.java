@@ -166,7 +166,7 @@ public class ExternalLibrariesDiscovery {
         // note, some rules may do crazy stuff, just expand the regex if you think we should be searching more for java_import
         var allExternalQuery = new BazelQueryForLabelsCommand(
                 workspaceRoot.directory(),
-                "kind(\"jvm_import_external|compat_repository\", //external:*)",
+                "kind('jvm_import_external|compat_repository', //external:*)",
                 false);
         Collection<String> externals = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
 
