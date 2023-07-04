@@ -276,8 +276,11 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             var entry = resolveLibrary(library);
             if (entry != null) {
                 if (jdepsDependency.dependencyKind == Kind.IMPLICIT) {
-                    entry.getAccessRules().add(
-                        new AccessRule(PATTERN_EVERYTHING, IAccessRule.K_DISCOURAGED | IAccessRule.IGNORE_IF_BETTER));
+                    entry.getAccessRules()
+                            .add(
+                                new AccessRule(
+                                        PATTERN_EVERYTHING,
+                                        IAccessRule.K_DISCOURAGED | IAccessRule.IGNORE_IF_BETTER));
 
                     // there might be an explicit entry, which we will never want to override!
                     result.putIfAbsent(entry.getPath(), entry);
@@ -342,10 +345,14 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             try (InputStream inputStream = jdepsFile.getInputStream()) {
                 var dependencies = Deps.Dependencies.parseFrom(inputStream);
                 if (dependencies != null) {
-                    return dependencies.getDependencyList().stream().filter(this::relevantDep).map(
-                        d -> new JdepsDependency(
-                                ExecutionPathHelper.parse(workspaceRoot, BazelBuildSystemProvider.BAZEL, d.getPath()),
-                                d.getKind()))
+                    return dependencies.getDependencyList()
+                            .stream()
+                            .filter(this::relevantDep)
+                            .map(
+                                d -> new JdepsDependency(
+                                        ExecutionPathHelper
+                                                .parse(workspaceRoot, BazelBuildSystemProvider.BAZEL, d.getPath()),
+                                        d.getKind()))
                             .collect(toList());
                 }
             } catch (IOException e) {

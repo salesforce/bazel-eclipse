@@ -17,8 +17,10 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -83,6 +85,15 @@ public class BazelProject implements IProjectNature {
     public static final QualifiedName PROJECT_PROPERTY_OWNER = new QualifiedName(PLUGIN_ID, "owner");
 
     /**
+     * A {@link IResource#getPersistentProperty(QualifiedName) persistent property} set on an {@link IProject}
+     * containing the full qualified label of the targets represented by a package project.
+     * <p>
+     * The property may be set on Bazel package projects only.
+     * </p>
+     */
+    public static final QualifiedName PROJECT_PROPERTY_TARGETS = new QualifiedName(PLUGIN_ID, "bazel_targets");
+
+    /**
      * A convenience method for checking if a project has the {@link #PROJECT_PROPERTY_OWNER} set to the given label.
      *
      * @param project
@@ -132,6 +143,7 @@ public class BazelProject implements IProjectNature {
     }
 
     private IProject project;
+
     private BazelModel bazelModel;
 
     /**
@@ -289,6 +301,32 @@ public class BazelProject implements IProjectNature {
     }
 
     /**
+     * Returns a list of target names represented by the package project.
+     * <p>
+     * If the project does not represent a package, the method with fail and throw a {@link CoreException}.
+     * </p>
+     *
+     * @return a list of target names
+     * @throws CoreException
+     */
+    public List<BazelTarget> getBazelTargets() throws CoreException {
+        // ensure this is a package project
+        var bazelPackage = getBazelPackage();
+
+        // get targets list
+        var targetsPropertyValue = getProject().getPersistentProperty(PROJECT_PROPERTY_TARGETS);
+        if ((targetsPropertyValue == null) || targetsPropertyValue.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        List<BazelTarget> packageTargets = new ArrayList<>();
+        for (String targetName : targetsPropertyValue.split(":")) {
+            packageTargets.add(bazelPackage.getBazelTarget(targetName));
+        }
+        return packageTargets;
+    }
+
+    /**
      * Returns the {@link BazelWorkspace} this project belongs to.
      * <p>
      * The model will be searched for the workspace.
@@ -429,6 +467,23 @@ public class BazelProject implements IProjectNature {
         }
 
         return true;
+    }
+
+    public void setBazelTargets(List<BazelTarget> targets) throws CoreException {
+        var bazelPackage = getBazelPackage();
+        List<String> targetNames = new ArrayList<>();
+        for (BazelTarget bazelTarget : targets) {
+            if (!bazelPackage.equals(bazelTarget.getBazelPackage())) {
+                throw new IllegalArgumentException(
+                        format(
+                            "This method should only be called with targets belonging to package '%s'. Got '%s'",
+                            bazelPackage,
+                            bazelTarget));
+            }
+            targetNames.add(bazelTarget.getName());
+        }
+
+        getProject().setPersistentProperty(PROJECT_PROPERTY_TARGETS, targetNames.stream().collect(joining(":")));
     }
 
     public void setModel(BazelModel bazelModel) {

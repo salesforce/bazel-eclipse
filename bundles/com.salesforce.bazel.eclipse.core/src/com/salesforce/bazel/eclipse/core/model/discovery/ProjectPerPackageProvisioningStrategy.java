@@ -1,6 +1,5 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
@@ -16,10 +15,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -55,8 +52,6 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
     public static final String STRATEGY_NAME = "project-per-package";
 
-    public static final QualifiedName PROJECT_PROPERTY_TARGETS = new QualifiedName(PLUGIN_ID, "bazel_targets");
-
     private static Logger LOG = LoggerFactory.getLogger(ProjectPerPackageProvisioningStrategy.class);
 
     @Override
@@ -79,8 +74,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                                     bazelProject)));
                 }
 
-                var targetsToBuildValue = bazelProject.getProject().getPersistentProperty(PROJECT_PROPERTY_TARGETS);
-                if (targetsToBuildValue == null) {
+                var projectTargetsToBuild = bazelProject.getBazelTargets();
+                if (projectTargetsToBuild.isEmpty()) {
                     // brute force build all targets
                     LOG.warn(
                         "Targets to build not properly set for project '{}'. Building all targets for computing the classpath, which may be too expensive!",
@@ -101,17 +96,13 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 }
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(
-                        "Found targets for project '{}': {}",
-                        bazelProject,
-                        targetsToBuildValue.replace(':', ','));
+                    LOG.debug("Found targets for project '{}': {}", bazelProject, targetsToBuild);
                 }
 
-                var packagePath = bazelProject.getBazelPackage().getLabel().getPackagePath();
                 List<String> packageTargets = new ArrayList<>();
-                for (String targetName : targetsToBuildValue.split(":")) {
-                    packageTargets.add(targetName);
-                    targetsToBuild.add(new BazelLabel(format("//%s:%s", packagePath, targetName)));
+                for (BazelTarget target : projectTargetsToBuild) {
+                    packageTargets.add(target.getName());
+                    targetsToBuild.add(target.getLabel());
                 }
                 activeTargetsPerProject.put(bazelProject, packageTargets);
             }
@@ -270,7 +261,6 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
     protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,
             SubMonitor monitor) throws CoreException {
-        IProject project;
         if (!bazelPackage.hasBazelProject()) {
             // create project
             var packagePath = bazelPackage.getLabel().getPackagePath();
@@ -278,19 +268,19 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
             // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
             var projectLocation = bazelPackage.getLocation();
-            project = createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
+            createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
         } else {
             // use existing project
-            project = bazelPackage.getBazelProject().getProject();
+            bazelPackage.getBazelProject().getProject();
         }
 
-        // remember/update the targets to build for the project
-        project.setPersistentProperty(
-            PROJECT_PROPERTY_TARGETS,
-            targets.stream().map(BazelTarget::getTargetName).distinct().collect(joining(":")));
-
         // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
-        return bazelPackage.getBazelProject();
+        var bazelProject = bazelPackage.getBazelProject();
+
+        // remember/update the targets to build for the project
+        bazelProject.setBazelTargets(targets);
+
+        return bazelProject;
     }
 
 }

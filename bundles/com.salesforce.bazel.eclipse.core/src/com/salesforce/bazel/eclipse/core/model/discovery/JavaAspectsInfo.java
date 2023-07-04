@@ -67,8 +67,7 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
     /** index of jars based on their root relative path allows lookup of jdeps entries */
     final Map<String, BlazeJarLibrary> libraryByJdepsRootRelativePath;
 
-    public JavaAspectsInfo(ParsedBepOutput aspectsBuildResult, BazelWorkspace bazelWorkspace)
-            throws CoreException {
+    public JavaAspectsInfo(ParsedBepOutput aspectsBuildResult, BazelWorkspace bazelWorkspace) throws CoreException {
         super(bazelWorkspace);
         this.aspectsBuildResult = aspectsBuildResult;
 

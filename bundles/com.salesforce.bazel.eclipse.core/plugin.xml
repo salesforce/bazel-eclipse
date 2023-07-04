@@ -141,4 +141,12 @@
             priority="10">
       </commandExecutor>
    </extension>
+   <extension
+         point="org.eclipse.jdt.launching.runtimeClasspathEntryResolvers">
+      <runtimeClasspathEntryResolver
+            class="com.salesforce.bazel.eclipse.core.classpath.BazelClasspathContainerRuntimeResolver"
+            container="com.salesforce.bazel.eclipse.BAZEL_CONTAINER"
+            id="com.salesforce.bazel.eclipse.core.classpath.launching.runtimeResolver">
+      </runtimeClasspathEntryResolver>
+   </extension>
 </plugin>

@@ -316,16 +316,15 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private IProject findProjectForLocation(IPath location) {
         var potentialProjects = getWorkspaceRoot().findContainersForLocationURI(URIUtil.toURI(location));
-        if (potentialProjects.length != 1) {
-            return null;
+        // use the first matching project
+        for (IContainer container : potentialProjects) {
+            if (container.getType() == IResource.PROJECT) {
+                return (IProject) container;
+            }
         }
 
-        var potentialProject = potentialProjects[0];
-        if (potentialProject.getType() != IResource.PROJECT) {
-            return null;
-        }
-
-        return (IProject) potentialProject;
+        // nothing available
+        return null;
     }
 
     BazelProject getBazelProject(IProject project) {

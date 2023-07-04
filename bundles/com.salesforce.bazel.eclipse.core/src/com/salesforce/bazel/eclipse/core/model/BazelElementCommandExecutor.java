@@ -141,4 +141,23 @@ public class BazelElementCommandExecutor {
             throw new OperationCanceledException("Interrupted while waiting for bazel cquery output to complete.");
         }
     }
+
+    public <R> R runWithWorkspaceLock(BazelCommand<R> command, ISchedulingRule rule, List<IResource> resourcesToRefresh)
+            throws CoreException {
+        configureWithWorkspaceBazelVersion(command, executionContext.getBazelWorkspace());
+        Future<R> future = getExecutionService()
+                .executeWithWorkspaceLockAsync(command, executionContext, rule, resourcesToRefresh);
+        try {
+            return future.get();
+        } catch (ExecutionException e) {
+            var cause = e.getCause();
+            if (cause != null) {
+                throw new CoreException(Status.error(cause.getMessage(), cause));
+            }
+
+            throw new CoreException(Status.error(e.getMessage(), e));
+        } catch (InterruptedException e) {
+            throw new OperationCanceledException("Interrupted while waiting for bazel output to complete.");
+        }
+    }
 }
