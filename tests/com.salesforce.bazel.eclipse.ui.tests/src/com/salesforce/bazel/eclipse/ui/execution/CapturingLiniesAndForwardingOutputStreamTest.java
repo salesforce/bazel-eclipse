@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.hamcrest.collection.IsIterableContainingInOrder;
@@ -22,6 +23,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 public class CapturingLiniesAndForwardingOutputStreamTest {
+
+    private static final Predicate<String> errorPrefixFilter = (var s) -> s.startsWith("ERROR:");
 
     private MessageConsoleStream messageConsoleStream;
 
@@ -38,8 +41,11 @@ public class CapturingLiniesAndForwardingOutputStreamTest {
     @ValueSource(ints = { 0, -1, -300 })
     void invalid_number_of_lines(int numberOfLines) throws Exception {
         assertThrows(IllegalArgumentException.class, () -> {
-            try (var stream =
-                    new CapturingLiniesAndForwardingOutputStream(messageConsoleStream, UTF_8, numberOfLines)) {
+            try (var stream = new CapturingLiniesAndForwardingOutputStream(
+                    messageConsoleStream,
+                    UTF_8,
+                    numberOfLines,
+                    errorPrefixFilter)) {
                 // empty
             }
         });
@@ -61,7 +67,11 @@ public class CapturingLiniesAndForwardingOutputStreamTest {
         var linesToCapture = 8;
         var lines = generateLines(numberOfLines);
 
-        try (var stream = new CapturingLiniesAndForwardingOutputStream(messageConsoleStream, UTF_8, linesToCapture)) {
+        try (var stream = new CapturingLiniesAndForwardingOutputStream(
+                messageConsoleStream,
+                UTF_8,
+                linesToCapture,
+                errorPrefixFilter)) {
             for (String line : lines) {
                 writeLineToStream(stream, line, UTF_8);
             }
@@ -81,7 +91,8 @@ public class CapturingLiniesAndForwardingOutputStreamTest {
 
     @Test
     void write_single_incomplete_line() throws Exception {
-        try (var stream = new CapturingLiniesAndForwardingOutputStream(messageConsoleStream, UTF_8, 4)) {
+        try (var stream =
+                new CapturingLiniesAndForwardingOutputStream(messageConsoleStream, UTF_8, 4, errorPrefixFilter)) {
 
             var s1 = "s1 " + System.nanoTime();
             var s2 = " s2 " + System.nanoTime();

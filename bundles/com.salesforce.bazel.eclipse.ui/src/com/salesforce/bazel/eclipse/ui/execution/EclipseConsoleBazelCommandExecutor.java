@@ -13,6 +13,7 @@ import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -32,7 +33,9 @@ import com.salesforce.bazel.sdk.command.BazelCommandExecutor;
  */
 public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelCommandExecutor {
 
-    private static Logger LOG = LoggerFactory.getLogger(EclipseConsoleBazelCommandExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EclipseConsoleBazelCommandExecutor.class);
+
+    private static final Predicate<String> errorPrefixFilter = (var s) -> s.startsWith("ERROR:");
 
     @Override
     protected <R> R doExecuteProcess(BazelCommand<R> command, CancelationCallback cancelationCallback,
@@ -42,8 +45,11 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
         showConsole(console);
 
         try (final var consoleStream = console.newMessageStream();
-                final var errorStream =
-                        new CapturingLiniesAndForwardingOutputStream(consoleStream, Charset.defaultCharset(), 4)) {
+                final var errorStream = new CapturingLiniesAndForwardingOutputStream(
+                        consoleStream,
+                        Charset.defaultCharset(),
+                        4,
+                        errorPrefixFilter)) {
             // remove old output
             //console.clearConsole();
             consoleStream.println();
@@ -79,8 +85,12 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
                         if (cancelationCallback.isCanceled()) {
                             process.destroyForcibly();
                             consoleStream.println();
-                            consoleStream.print(ansi().fgBrightMagenta().a(INTENSITY_FAINT).a("Operation cancelled!")
-                                    .reset().toString());
+                            consoleStream.print(
+                                ansi().fgBrightMagenta()
+                                        .a(INTENSITY_FAINT)
+                                        .a("Operation cancelled!")
+                                        .reset()
+                                        .toString());
                             throw new OperationCanceledException("user cancelled");
                         }
                     }
@@ -125,12 +135,23 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
                 return command.generateResult(result);
             } catch (IOException e) {
                 errorStream.close();
-                var stderrLines = errorStream.getCapturedLines().stream()
-                        .map(s -> s.replaceAll("\u001B\\[[;\\d]*m", "")).collect(joining(System.lineSeparator()));
+                var stderrLinesFiltered = errorStream.getCapturedLinesFiltered()
+                        .stream()
+                        .map(s -> s.replaceAll("\u001B\\[[;\\d]*m", ""))
+                        .collect(joining(System.lineSeparator()));
+                var stderrLines = errorStream.getCapturedLines()
+                        .stream()
+                        .map(s -> s.replaceAll("\u001B\\[[;\\d]*m", ""))
+                        .collect(joining(System.lineSeparator()));
                 if (stderrLines.length() > 0) {
-                    throw new IOException(format(
-                        "%s%n---- Begin of Captured Error Output (last %d lines)----%n%s---- End of Captured Error Output ----%n",
-                        e.getMessage(), errorStream.getLinesToCapture(), stderrLines), e);
+                    throw new IOException(
+                            format(
+                                "%s%n---- Begin of Captured Error Output (last %d lines)----%n%s---- (more context) ----%n%s---- End of Captured Error Output ----%n",
+                                e.getMessage(),
+                                errorStream.getLinesToCapture(),
+                                stderrLinesFiltered,
+                                stderrLines),
+                            e);
                 }
                 throw new IOException(format("%s%n(no error output was captured)", e.getMessage()), e);
             }
