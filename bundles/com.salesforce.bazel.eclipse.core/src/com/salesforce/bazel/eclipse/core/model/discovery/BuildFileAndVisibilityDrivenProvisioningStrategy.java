@@ -2,7 +2,6 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDPATH_PROBLEM_MARKER;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.function.Predicate.not;
@@ -25,7 +24,6 @@ import java.util.Set;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -189,8 +187,6 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
 
     public static final String STRATEGY_NAME = "build-file-and-visibility-driven";
 
-    public static final QualifiedName PROJECT_PROPERTY_TARGETS = new QualifiedName(PLUGIN_ID, "bazel_targets");
-
     private static Logger LOG = LoggerFactory.getLogger(BuildFileAndVisibilityDrivenProvisioningStrategy.class);
 
     private final TargetDiscoveryAndProvisioningExtensionLookup extensionLookup =
@@ -215,8 +211,8 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                                     bazelProject)));
                 }
 
-                var targetsToBuildValue = bazelProject.getProject().getPersistentProperty(PROJECT_PROPERTY_TARGETS);
-                if (targetsToBuildValue == null) {
+                var targetsToBuild = bazelProject.getBazelTargets();
+                if (targetsToBuild.isEmpty()) {
                     throw new CoreException(
                             Status.error(
                                 format(
@@ -225,17 +221,10 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                 }
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(
-                        "Found targets for project '{}': {}",
-                        bazelProject,
-                        targetsToBuildValue.replace(':', ','));
+                    LOG.debug("Found targets for project '{}': {}", bazelProject, targetsToBuild);
                 }
 
-                var packagePath = bazelProject.getBazelPackage().getLabel().getPackagePath();
-                List<BazelLabel> packageTargets = new ArrayList<>();
-                for (String targetName : targetsToBuildValue.split(":")) {
-                    packageTargets.add(new BazelLabel(format("//%s:%s", packagePath, targetName)));
-                }
+                var packageTargets = targetsToBuild.stream().map(BazelTarget::getLabel).toList();
                 activeTargetsPerProject.put(bazelProject, packageTargets);
             }
 
