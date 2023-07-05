@@ -480,7 +480,7 @@ public class BazelProject implements IProjectNature {
                             bazelPackage,
                             bazelTarget));
             }
-            targetNames.add(bazelTarget.getName());
+            targetNames.add(bazelTarget.getTargetName());
         }
 
         getProject().setPersistentProperty(PROJECT_PROPERTY_TARGETS, targetNames.stream().collect(joining(":")));
