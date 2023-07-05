@@ -107,7 +107,7 @@ public abstract class BazelCommand<R> {
     public R generateResult(int exitCode) throws IOException {
         if (exitCode != 0) {
             throw new IOException(
-                    format("Bazel %s failed with exit code %d. Please check command output", getCommand(), exitCode));
+                    format("Bazel %s failed with exit code %d. Please check command output.", getCommand(), exitCode));
         }
 
         return requireNonNull(
