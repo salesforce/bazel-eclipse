@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.function.Predicate;
 
 import org.eclipse.debug.internal.core.StreamDecoder;
 import org.eclipse.ui.console.MessageConsoleStream;
@@ -41,10 +42,13 @@ public class CapturingLiniesAndForwardingOutputStream extends OutputStream {
     private final StreamDecoder decoder;
 
     private final ArrayDeque<String> capturedLines;
+    private final ArrayDeque<String> capturedLinesFiltered;
+    private final Predicate<String> capturedLinesFilter;
     private final StringBuilder currentLine;
 
     public CapturingLiniesAndForwardingOutputStream(MessageConsoleStream consoleStream, Charset charset,
-            int linesToCapture) {
+            int linesToCapture, Predicate<String> capturedLinesFilter) {
+        this.capturedLinesFilter = capturedLinesFilter;
         if (linesToCapture <= 0) {
             throw new IllegalArgumentException("Cannot use zero or a negative number for number of lines to caputer");
         }
@@ -52,6 +56,7 @@ public class CapturingLiniesAndForwardingOutputStream extends OutputStream {
         this.decoder = new StreamDecoder(charset);
         this.linesToCapture = linesToCapture;
         capturedLines = new ArrayDeque<>(linesToCapture);
+        capturedLinesFiltered = new ArrayDeque<>(linesToCapture);
         currentLine = new StringBuilder(250);
     }
 
@@ -102,7 +107,16 @@ public class CapturingLiniesAndForwardingOutputStream extends OutputStream {
             capturedLines.removeFirst();
         }
         // add line
-        capturedLines.add(currentLine.toString());
+        var line = currentLine.toString();
+        capturedLines.add(line);
+
+        // add line to filtered list if matching
+        if ((capturedLinesFilter != null) && capturedLinesFilter.test(line)) {
+            while (capturedLinesFiltered.size() >= linesToCapture) {
+                capturedLinesFiltered.removeFirst();
+            }
+            capturedLinesFiltered.add(line);
+        }
         // reset current line
         currentLine.setLength(0);
     }
@@ -110,6 +124,18 @@ public class CapturingLiniesAndForwardingOutputStream extends OutputStream {
     public synchronized Collection<String> getCapturedLines() {
         var lines = new ArrayDeque<>(capturedLines);
         if (currentLine.length() > 0) {
+            lines.add(currentLine.toString());
+        }
+        while (lines.size() > linesToCapture) {
+            lines.removeFirst();
+        }
+        return lines;
+    }
+
+    public synchronized Collection<String> getCapturedLinesFiltered() {
+        var lines = new ArrayDeque<>(capturedLinesFiltered);
+        if ((currentLine.length() > 0) && (capturedLinesFilter != null)
+                && capturedLinesFilter.test(currentLine.toString())) {
             lines.add(currentLine.toString());
         }
         while (lines.size() > linesToCapture) {
