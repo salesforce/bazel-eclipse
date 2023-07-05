@@ -71,7 +71,8 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
     public InitializeOrRefreshClasspathJob(IProject[] projects, BazelClasspathManager classpathManager,
             boolean forceRefresh) {
         this(Stream.of(projects).filter(InitializeOrRefreshClasspathJob::isBazelProject).map(BazelCore::create),
-                classpathManager, forceRefresh);
+                classpathManager,
+                forceRefresh);
     }
 
     /**
@@ -146,13 +147,15 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
                         continue nextProjectSet;
                     }
 
-                    getClasspathManager().updateClasspath(projectSet.getKey(), projectSet.getValue(),
-                        subMonitor.newChild(1));
+                    getClasspathManager()
+                            .updateClasspath(projectSet.getKey(), projectSet.getValue(), subMonitor.newChild(1));
                 } catch (CoreException e) {
                     status.add(e.getStatus());
 
                     // create a marker so user is aware
-                    var marker = projectSet.getKey().getBazelProject().getProject()
+                    var marker = projectSet.getKey()
+                            .getBazelProject()
+                            .getProject()
                             .createMarker(IJavaModelMarker.BUILDPATH_PROBLEM_MARKER);
                     marker.setAttributes( // @formatter:off
                         new String[] {
@@ -162,7 +165,7 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
                             IMarker.SOURCE_ID,
                         },
                         new Object[] {
-                            status.getMessage(),
+                            e.getStatus().getMessage(),
                             IMarker.SEVERITY_ERROR,
                             "Bazel BUILD",
                             BazelModelManager.MARKER_SOURCE_ID,
