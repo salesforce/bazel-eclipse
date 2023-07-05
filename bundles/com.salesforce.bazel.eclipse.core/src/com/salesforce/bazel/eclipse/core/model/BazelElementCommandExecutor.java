@@ -1,5 +1,6 @@
 package com.salesforce.bazel.eclipse.core.model;
 
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
@@ -133,10 +135,10 @@ public class BazelElementCommandExecutor {
         } catch (ExecutionException e) {
             var cause = e.getCause();
             if (cause != null) {
-                throw new CoreException(Status.error(cause.getMessage(), cause));
+                throw new CoreException(toStatus(cause));
             }
 
-            throw new CoreException(Status.error(e.getMessage(), e));
+            throw new CoreException(toStatus(e));
         } catch (InterruptedException e) {
             throw new OperationCanceledException("Interrupted while waiting for bazel cquery output to complete.");
         }
@@ -152,12 +154,16 @@ public class BazelElementCommandExecutor {
         } catch (ExecutionException e) {
             var cause = e.getCause();
             if (cause != null) {
-                throw new CoreException(Status.error(cause.getMessage(), cause));
+                throw new CoreException(toStatus(cause));
             }
 
-            throw new CoreException(Status.error(e.getMessage(), e));
+            throw new CoreException(toStatus(e));
         } catch (InterruptedException e) {
             throw new OperationCanceledException("Interrupted while waiting for bazel output to complete.");
         }
+    }
+
+    private IStatus toStatus(Throwable e) {
+        return Status.error(format("%s: %s", executionContext.getName(), e.getMessage()), e);
     }
 }
