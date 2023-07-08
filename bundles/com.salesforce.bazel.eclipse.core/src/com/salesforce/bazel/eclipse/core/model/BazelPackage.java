@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -181,7 +180,7 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
      *             if there was a problem obtaining the list
      */
     public List<BazelTarget> getBazelTargets() throws CoreException {
-        return getInfo().getTargets().stream().map(this::getBazelTarget).collect(toList());
+        return getInfo().getTargets().stream().map(this::getBazelTarget).toList();
     }
 
     @Override

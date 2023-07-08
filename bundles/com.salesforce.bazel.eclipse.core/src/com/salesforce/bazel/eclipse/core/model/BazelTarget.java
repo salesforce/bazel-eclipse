@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
+import com.google.idea.blaze.base.model.primitives.TargetName;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -23,6 +24,11 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
     private final BazelLabel label;
 
     public BazelTarget(BazelPackage bazelPackage, String targetName) {
+        var targetNameError = TargetName.validate(targetName);
+        if (targetNameError != null) {
+            throw new IllegalArgumentException(targetNameError);
+        }
+
         this.bazelPackage = bazelPackage;
         this.targetName = targetName;
         this.label = new BazelLabel(bazelPackage.getLabel().getPackagePath(true), targetName);

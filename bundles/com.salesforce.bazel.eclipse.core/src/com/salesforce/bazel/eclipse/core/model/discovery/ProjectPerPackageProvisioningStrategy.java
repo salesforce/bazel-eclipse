@@ -62,7 +62,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             var monitor = SubMonitor.convert(progress, "Computing classpaths...", 1 + bazelProjects.size());
 
             List<BazelLabel> targetsToBuild = new ArrayList<>(bazelProjects.size());
-            Map<BazelProject, List<String>> activeTargetsPerProject = new HashMap<>();
+            Map<BazelProject, List<BazelTarget>> activeTargetsPerProject = new HashMap<>();
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.checkCanceled();
 
@@ -85,13 +85,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                             .stream()
                             .map(BazelTarget::getLabel)
                             .forEach(targetsToBuild::add);
-                    activeTargetsPerProject.put(
-                        bazelProject,
-                        bazelProject.getBazelPackage()
-                                .getBazelTargets()
-                                .stream()
-                                .map(BazelTarget::getTargetName)
-                                .collect(toList()));
+                    activeTargetsPerProject.put(bazelProject, bazelProject.getBazelPackage().getBazelTargets());
                     continue;
                 }
 
@@ -99,12 +93,10 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     LOG.debug("Found targets for project '{}': {}", bazelProject, targetsToBuild);
                 }
 
-                List<String> packageTargets = new ArrayList<>();
                 for (BazelTarget target : projectTargetsToBuild) {
-                    packageTargets.add(target.getName());
                     targetsToBuild.add(target.getLabel());
                 }
-                activeTargetsPerProject.put(bazelProject, packageTargets);
+                activeTargetsPerProject.put(bazelProject, projectTargetsToBuild);
             }
 
             var workspaceRoot = workspace.getLocation().toPath();
@@ -140,11 +132,11 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
 
                 // add the targets
-                List<String> targetNames = requireNonNull(
+                List<BazelTarget> projectTargets = requireNonNull(
                     activeTargetsPerProject.get(bazelProject),
                     () -> format("programming error: not targets for project: %s", bazelProject));
-                for (String targetName : targetNames) {
-                    classpathInfo.addTarget(bazelProject.getBazelPackage().getBazelTarget(targetName));
+                for (BazelTarget target : projectTargets) {
+                    classpathInfo.addTarget(target);
                 }
 
                 // compute the classpath
@@ -166,6 +158,12 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         break;
                     }
                 }
+
+                // remove references to the project represented by the package
+                // (this can happen because we have tests and none tests in the same package)
+                classpath.removeIf(
+                    entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
+                            && entry.getPath().equals(bazelProject.getProject().getFullPath()));
 
                 classpathsByProject.put(bazelProject, classpath);
                 monitor.worked(1);
@@ -249,7 +247,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             throw new IllegalStateException(e.getMessage(), e);
         }
         return switch (ruleName) {
-            case "java_library", "java_import", "java_binary": {
+            case "java_library", "java_import", "java_binary", "java_test": {
                 yield true;
 
             }

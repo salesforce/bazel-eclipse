@@ -96,11 +96,17 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @throws CoreException
      */
     private void addInfoFromTarget(JavaProjectInfo javaInfo, BazelTarget bazelTarget) throws CoreException {
+        var isTestTarget = isTestTarget(bazelTarget);
+
         var attributes = bazelTarget.getRuleAttributes();
         var srcs = attributes.getStringList("srcs");
         if (srcs != null) {
             for (String src : srcs) {
-                javaInfo.addSrc(src);
+                if (isTestTarget) {
+                    javaInfo.addTestSrc(src);
+                } else {
+                    javaInfo.addSrc(src);
+                }
             }
         }
 
@@ -108,7 +114,11 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         if (resources != null) {
             var resourceStripPrefix = attributes.getString("resource_strip_prefix");
             for (String resource : resources) {
-                javaInfo.addResource(resource, resourceStripPrefix);
+                if (isTestTarget) {
+                    javaInfo.addTestResource(resource, resourceStripPrefix);
+                } else {
+                    javaInfo.addResource(resource, resourceStripPrefix);
+                }
             }
         }
 
@@ -706,6 +716,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         return requireNonNull(
             fileSystemMapper,
             "file system mapper not initialized, check code flow/implementation (likely a bug)");
+    }
+
+    private boolean isTestTarget(BazelTarget bazelTarget) throws CoreException {
+        return bazelTarget.getRuleClass().contains("test");
     }
 
     /**
