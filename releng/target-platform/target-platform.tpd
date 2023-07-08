@@ -77,8 +77,12 @@ location "https://download.eclipse.org/technology/m2e/releases/2.3.0/" {
 location "https://download.eclipse.org/buildship/updates/e423/releases/3.x/3.1.6.v20220511-1359/" {
 	org.eclipse.buildship.feature.group
 }
-
 maven MavenDependencies scope=compile,test dependencyDepth=infinite missingManifest=generate includeSources {
+	feature {
+		id="com.salesforce.bazel.eclipse.dependencies.feature"
+		name="Third-Party Dependencies used by the Bazel Eclipse Feature"
+		version="1.0.0.qualifier"
+	}
 	dependency {
 		groupId="com.github.ben-manes.caffeine"
 		artifactId="caffeine"
@@ -125,3 +129,4 @@ maven MavenDependencies scope=compile,test dependencyDepth=infinite missingManif
 		version="1.10.1"
 	}
 }
+
