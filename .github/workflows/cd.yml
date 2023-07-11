@@ -29,15 +29,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       
-      - name: Download and Extract p2 Repository
+      - name: Download p2 Repository
         uses: dawidd6/action-download-artifact@v2
         with:
           run_id: ${{ github.event.workflow_run.id }}
           name: p2-repository
           path: bazel-eclipse-latest
+          skip_unpack: true
 
-      - name: Display structure of downloaded files
-        run: ls -R  . #bazel-eclipse-latest
+      - name: Extract p2 Repository
+        run: unzip bazel-eclipse-latest/p2-repository.zip -d bazel-eclipse-latest
+
+      - name: Display structure of the update site
+        run: ls -R  bazel-eclipse-latest
 
       - name: Deploy Update Site 🚀
         uses: JamesIves/github-pages-deploy-action@v4
