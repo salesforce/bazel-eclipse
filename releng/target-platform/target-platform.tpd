@@ -81,7 +81,7 @@ maven MavenDependencies scope=compile,test dependencyDepth=infinite missingManif
 	feature {
 		id="com.salesforce.bazel.eclipse.dependencies.feature"
 		name="Third-Party Dependencies used by the Bazel Eclipse Feature"
-		version="1.0.0.qualifier"
+		version="2.0.0.qualifier"
 	}
 	dependency {
 		groupId="com.github.ben-manes.caffeine"

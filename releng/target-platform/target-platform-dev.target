@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1688823456">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1689099019">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.28.0.v20230525-0648"/>
@@ -97,7 +97,7 @@
       <repository location="https://download.eclipse.org/mylyn/docs/releases/3.0.46/"/>
     </location>
     <location includeDependencyDepth="infinite" includeDependencyScopes="compile,test" includeSource="true" missingManifest="generate" type="Maven" label="MavenDependencies">
-    <feature id="com.salesforce.bazel.eclipse.dependencies.feature" label="Third-Party Dependencies used by the Bazel Eclipse Feature" provider-name="" version="1.0.0.qualifier">
+    <feature id="com.salesforce.bazel.eclipse.dependencies.feature" label="Third-Party Dependencies used by the Bazel Eclipse Feature" provider-name="" version="2.0.0.qualifier">
     	<description url="http://www.example.com/description">
     		[Enter Feature Description here.]
     	</description>

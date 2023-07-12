@@ -42,10 +42,12 @@
 
   <!-- common plug-in repos for all modules -->
   <pluginRepositories>
+	<!--
     <pluginRepository>
       <id>tycho-snapshots</id>
       <url>https://repo.eclipse.org/content/repositories/tycho-snapshots/</url>
     </pluginRepository>
+    -->
   </pluginRepositories>
 
 
