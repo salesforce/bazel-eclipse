@@ -77,7 +77,7 @@ jobs:
             await github.rest.actions.createWorkflowDispatch({
               owner: 'salesforce',
               repo: 'bazel-vscode-java',
-              workflow_id: 'workflows/publish.yml',
+              workflow_id: 'publish.yml',
               ref: 'main',
               inputs: {
                 releaseChannel: 'edge'
