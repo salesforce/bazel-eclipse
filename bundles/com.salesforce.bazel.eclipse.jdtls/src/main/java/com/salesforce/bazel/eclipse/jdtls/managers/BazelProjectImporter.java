@@ -40,7 +40,6 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.ls.core.internal.AbstractProjectImporter;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
-import org.eclipse.jdt.ls.core.internal.managers.BasicFileDetector;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
@@ -61,7 +60,8 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
     @Override
     public boolean applies(Collection<IPath> projectConfigurations, IProgressMonitor monitor)
             throws OperationCanceledException, CoreException {
-        var configurationDirs = findProjectPathByConfigurationName(projectConfigurations,
+        var configurationDirs = findProjectPathByConfigurationName(
+            projectConfigurations,
             List.of(FILE_NAME_WORKSPACE_BAZEL, FILE_NAME_WORKSPACE, FILE_NAME_WORKSPACE_BZLMOD),
             false /*includeNested*/);
         if ((configurationDirs == null) || configurationDirs.isEmpty()) {
@@ -86,11 +86,11 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
     @Override
     public boolean applies(IProgressMonitor monitor) throws OperationCanceledException, CoreException {
         if (directories == null) {
-            //@formatter:off
-            var bazelDetector = new BasicFileDetector(rootFolder.toPath(), FILE_NAME_WORKSPACE_BAZEL, FILE_NAME_WORKSPACE, FILE_NAME_WORKSPACE_BZLMOD)
-                    .includeNested(false)
-                    .addExclusions("**/bazel-*"); //default Bazel symlinks (this is only a guess)
-            //@formatter:on
+            var bazelDetector = new BazelFileDetector(
+                    rootFolder.toPath(),
+                    FILE_NAME_WORKSPACE_BAZEL,
+                    FILE_NAME_WORKSPACE,
+                    FILE_NAME_WORKSPACE_BZLMOD).includeNested(false);
 
             // exclude all existing non Bazel projects
             for (IProject project : ProjectUtils.getAllProjects()) {

@@ -1,7 +1,6 @@
 package com.salesforce.bazel.eclipse.jdtls.managers;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
-import static com.salesforce.bazel.eclipse.core.launching.BazelRuntimeClasspathProvider.BAZEL_CLASSPATH_PROVIDER;
 
 import java.util.List;
 
@@ -30,8 +29,13 @@ public class BazelBuildSupport implements IBuildSupport {
     private static final String UNSUPPORTED_OPERATION_MESSAGE =
             "Unsupported operation. Please use BUILD.bazel/BUILD file to manage the source directories of a Bazel target.";
 
-    private static final List<String> WATCH_FILE_PATTERNS = List.of("**/BUILD", "**/BUILD.bazel", "**/WORKSPACE",
-        "**/WORKSPACE.bazel", "**/WORKSPACE.bzlmod", "**/.bazelproject");
+    private static final List<String> WATCH_FILE_PATTERNS = List.of(
+        "**/BUILD",
+        "**/BUILD.bazel",
+        "**/WORKSPACE",
+        "**/WORKSPACE.bazel",
+        "**/WORKSPACE.bzlmod",
+        "**/.bazelproject");
 
     private final DigestStore digestStore;
 
@@ -65,7 +69,7 @@ public class BazelBuildSupport implements IBuildSupport {
 
     @Override
     public ILaunchConfiguration getLaunchConfiguration(IJavaProject javaProject, String scope) throws CoreException {
-        return new JavaApplicationLaunchConfiguration(javaProject.getProject(), scope, BAZEL_CLASSPATH_PROVIDER);
+        return new JavaApplicationLaunchConfiguration(javaProject.getProject(), scope, null);
     }
 
     @Override
@@ -117,8 +121,12 @@ public class BazelBuildSupport implements IBuildSupport {
             var projectViewJob = new SynchronizeProjectViewJob(bazelWorkspace);
 
             // we don't schedule the job but execute it directly with the required rule
-            project.getWorkspace().run(projectViewJob::runInWorkspace, projectViewJob.detectMissingRule(),
-                IWorkspace.AVOID_UPDATE, monitor);
+            project.getWorkspace()
+                    .run(
+                        projectViewJob::runInWorkspace,
+                        projectViewJob.detectMissingRule(),
+                        IWorkspace.AVOID_UPDATE,
+                        monitor);
         }
     }
 }
