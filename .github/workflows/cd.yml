@@ -1,5 +1,9 @@
 name: CD
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 on:
   workflow_run:
     workflows: ["CI"]
@@ -14,7 +18,10 @@ jobs:
   publish-latest-update-site:
     name: Publish Latest Update Site # (from main branch only)
     runs-on: ubuntu-latest
-    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+      
     # we are very restrictive when this runs, i.e. only on main, only on success and only with the bazel-eclipse repository (not on forks)
     if: >
       github.event.workflow_run.conclusion == 'success' && 
@@ -22,9 +29,12 @@ jobs:
       github.repository == 'salesforce/bazel-eclipse' && 
       github.ref == 'refs/heads/main'
 
+    # set permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
     permissions:
-      contents: write
-
+      contents: read
+      pages: write
+      id-token: write
+      
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -40,18 +50,22 @@ jobs:
       - name: Extract p2 Repository
         run: unzip bazel-eclipse-latest/p2-repository.zip -d bazel-eclipse-latest
 
-      - name: Display structure of the update site
-        run: ls -R  bazel-eclipse-latest
+      - name: Assemble pages folder
+        run: |
+          mkdir -p _site/latest
+          cp -rfv bazel-eclipse-latest/ _site/latest
+          cp -rfv .githup/pages/ _site
+          chmod -c -R +rX "_site/" | while read line; do
+            echo "::warning title=Invalid file permissions automatically fixed::$line"
+          done
 
+      - name: Display structure of the site
+        run: ls -R _site/
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v2
+          
       - name: Deploy Update Site 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: bazel-eclipse-latest
-          target-folder: latest # use a simpler name
-          clean: true
-          clean-exclude: |
-            index.html
-            update-site*
-          single-commit: true
+        id: deployment
+        uses: actions/deploy-pages@v2
           
