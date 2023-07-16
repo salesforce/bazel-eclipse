@@ -69,3 +69,17 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v2
           
+      - name: Trigger VS Code Extension publish workflow
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.BAZEL_VSCODE_JAVA_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'salesforce',
+              repo: 'bazel-vscode-java',
+              workflow_id: 'workflows/publish.yml',
+              ref: 'main',
+              inputs: {
+                releaseChannel: 'edge'
+              }
+            });
