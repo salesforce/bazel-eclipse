@@ -53,8 +53,8 @@ jobs:
       - name: Assemble pages folder
         run: |
           mkdir -p _site/latest
-          cp -rfv bazel-eclipse-latest/ _site/latest
-          cp -rfv .githup/pages/ _site
+          cp -rfv bazel-eclipse-latest/* _site/latest/
+          cp -rfv .githup/pages/* _site/
           chmod -c -R +rX "_site/" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
