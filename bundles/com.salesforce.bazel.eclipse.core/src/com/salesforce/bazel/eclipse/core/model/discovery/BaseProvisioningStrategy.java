@@ -157,6 +157,13 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                     LOG.debug("Ignoring none existing resource folder: {}", resourceFolder);
                     continue;
                 }
+                if (rawClasspath.stream()
+                        .anyMatch(
+                            e -> (e.getEntryKind() == IClasspathEntry.CPE_SOURCE)
+                                    && e.getPath().equals(resourceFolder.getFullPath()))) {
+                    LOG.debug("Ignoring duplicate resource folder: {}", resourceFolder);
+                    continue;
+                }
                 var inclusionPatterns = resourceInfo.getInclusionPatternsForSourceDirectory(dir);
                 var exclusionPatterns = resourceInfo.getExclutionPatternsForSourceDirectory(dir);
                 if ((exclusionPatterns == null) || (exclusionPatterns.length == 0)) {
