@@ -6,7 +6,7 @@ Bundle-Version: 2.0.0.qualifier
 Import-Package: com.github.benmanes.caffeine;version="3.1.6",
  com.github.benmanes.caffeine.cache;version="3.1.6",
  com.github.benmanes.caffeine.guava;version="3.1.6",
- com.google.auto.value;version="1.10.1",
+ com.google.auto.value;version="1.10.1";resolution:=optional,
  com.google.common.annotations;version="31.1.0",
  com.google.common.base;version="31.1.0",
  com.google.common.cache;version="31.1.0",
@@ -14,10 +14,10 @@ Import-Package: com.github.benmanes.caffeine;version="3.1.6",
  com.google.common.io;version="31.1.0",
  com.google.common.primitives;version="31.1.0",
  com.google.common.util.concurrent;version="31.1.0",
- com.google.errorprone.annotations;version="2.18.0",
+ com.google.errorprone.annotations;version="2.18.0";resolution:=optional,
  com.google.protobuf;version="3.22.0",
- javax.annotation;version="3.0.2",
- javax.annotation.concurrent;version="3.0.2"
+ javax.annotation;version="3.0.2";resolution:=optional,
+ javax.annotation.concurrent;version="3.0.2";resolution:=optional
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.27.0"
 Export-Package: com.google.devtools.build.buildjar.proto,
  com.google.devtools.build.lib.buildeventstream,
