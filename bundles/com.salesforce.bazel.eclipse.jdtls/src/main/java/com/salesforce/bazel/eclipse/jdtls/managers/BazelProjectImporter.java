@@ -112,6 +112,14 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
             return projectViewLocation;
         }
 
+        // check of a managed "tools/intellij/.managed.bazelproject" file
+        // (hard coded in Bazel IJ plug-in: https://github.com/bazelbuild/intellij/blob/bb96b4142c2d257425da2dbf7bab0e8cdb400662/base/src/com/google/idea/blaze/base/project/AutoImportProjectOpenProcessor.java#L54)
+        // note: we intentionally do not support the ENV variable; scripts/automation should create .eclipse/.bazelproject file instead
+        projectViewLocation = workspace.getLocation().append("tools/intellij/.managed.bazelproject");
+        if (isRegularFile(projectViewLocation.toPath())) {
+            return projectViewLocation;
+        }
+
         // check for a default ".bazelproject" file in the workspace root
         projectViewLocation = workspace.getLocation().append(BAZELPROJECT);
         if (isRegularFile(projectViewLocation.toPath())) {
