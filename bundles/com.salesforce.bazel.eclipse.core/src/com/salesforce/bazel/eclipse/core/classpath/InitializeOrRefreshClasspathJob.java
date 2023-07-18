@@ -1,6 +1,7 @@
 package com.salesforce.bazel.eclipse.core.classpath;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
 
 import java.util.List;
@@ -97,8 +98,7 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
             try {
                 return p.getBazelWorkspace();
             } catch (CoreException e) {
-                // invalid
-                return null;
+                throw new IllegalStateException(format("Invalid project '%s': %s", p, e.getMessage()), e);
             }
         }));
         setPriority(Job.BUILD); // process after others
