@@ -7,9 +7,11 @@ import static java.lang.String.format;
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
-import static java.nio.file.Files.writeString;
+import static java.nio.file.Files.write;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -31,6 +33,12 @@ import com.salesforce.bazel.eclipse.core.model.SynchronizeProjectViewJob;
  */
 public class ImportBazelWorkspaceJob extends WorkspaceJob {
 
+    /**
+     * default .bazelproject file for Bazel Eclipse users
+     */
+    private static final IPath ECLIPSE_DEFAULTS_PROJECTVIEW =
+            IPath.forPosix("tools/eclipse/.managed-defaults.bazelproject");
+
     private static Logger LOG = LoggerFactory.getLogger(ImportBazelWorkspaceJob.class);
 
     private final IPath projectViewToImport;
@@ -42,8 +50,11 @@ public class ImportBazelWorkspaceJob extends WorkspaceJob {
         this.projectViewToImport = projectViewToImport;
 
         if (!workspace.getLocation().isPrefixOf(projectViewToImport)) {
-            throw new IllegalArgumentException(format("Project view '%s' is located outside of workspace '%s'",
-                projectViewToImport, workspace.getLocation()));
+            throw new IllegalArgumentException(
+                    format(
+                        "Project view '%s' is located outside of workspace '%s'",
+                        projectViewToImport,
+                        workspace.getLocation()));
         }
 
         // lock the full workspace (to prevent concurrent build activity)
@@ -53,9 +64,12 @@ public class ImportBazelWorkspaceJob extends WorkspaceJob {
     private void createWorkspaceProjectViewIfNecessary() throws CoreException {
         var projectViewToImportPath = projectViewToImport.toPath();
         if (!isRegularFile(projectViewToImportPath)) {
-            throw new CoreException(Status.error(format(
-                "Unable to import workspace '%s'. No project view found at '%s'. Please specify a project view to import!",
-                workspace.getLocation(), projectViewToImportPath)));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Unable to import workspace '%s'. No project view found at '%s'. Please specify a project view to import!",
+                            workspace.getLocation(),
+                            projectViewToImportPath)));
         }
 
         var workspaceProjectView = workspace.getBazelProjectFileSystemMapper().getProjectViewLocation().toPath();
@@ -73,17 +87,32 @@ public class ImportBazelWorkspaceJob extends WorkspaceJob {
             // a specific .bazelproject file has been requested
             // override any existing workspace/.eclipse/.bazelproject file with importing the requested one
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Creating workspace view '{}' importing requested '{}' project view.", workspaceProjectView,
+                LOG.debug(
+                    "Creating workspace view '{}' importing requested '{}' project view.",
+                    workspaceProjectView,
                     projectViewToImportPath);
             }
+
             if (!isDirectory(workspaceProjectView.getParent())) {
                 createDirectories(workspaceProjectView.getParent());
             }
-            writeString(workspaceProjectView,
-                format("import %s%n", workspace.getLocation().toPath().relativize(projectViewToImportPath)));
+
+            List<String> lines = new ArrayList<>();
+            // import default if exists
+            var eclipseDefaults = workspace.getLocation().append(ECLIPSE_DEFAULTS_PROJECTVIEW).toPath();
+            if (isRegularFile(eclipseDefaults)) {
+                lines.add(format("import %s", ECLIPSE_DEFAULTS_PROJECTVIEW));
+            }
+            // import the requests project view
+            lines.add(format("import %s", workspace.getLocation().toPath().relativize(projectViewToImportPath)));
+
+            // write the file
+            write(workspaceProjectView, lines);
         } catch (IOException e) {
-            throw new CoreException(Status.error(
-                format("Error creating workspace project view '%s': %s", workspaceProjectView, e.getMessage()), e));
+            throw new CoreException(
+                    Status.error(
+                        format("Error creating workspace project view '%s': %s", workspaceProjectView, e.getMessage()),
+                        e));
         }
     }
 

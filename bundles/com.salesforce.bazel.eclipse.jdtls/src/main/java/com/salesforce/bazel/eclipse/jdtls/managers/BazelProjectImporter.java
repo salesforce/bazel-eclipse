@@ -106,7 +106,7 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
     }
 
     private IPath findExistingOrCreateEmptyProjectView(BazelWorkspace workspace) throws CoreException {
-        // use any existing .eclipse/.bazelproject file
+        // use any existing .eclipse/.bazelproject file (important: this dominates any of the logic below)
         var projectViewLocation = workspace.getBazelProjectFileSystemMapper().getProjectViewLocation();
         if (isRegularFile(projectViewLocation.toPath())) {
             return projectViewLocation;

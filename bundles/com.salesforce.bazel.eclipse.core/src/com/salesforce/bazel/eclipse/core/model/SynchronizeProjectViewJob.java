@@ -123,7 +123,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
         // don't perform any expensive work in the constructor
         // it may be called in the UI thread
-        // ensure the workspace info is remove from the cache
 
         // lock the full workspace (to prevent concurrent build activity)
         setRule(getWorkspaceRoot());
