@@ -21,4 +21,4 @@ You **cannot** *install* the BJLS into VS Code.
 You have to install an extension for your editor/IDE bundling it.
 
 We are working on integrating it directly into [Language support for Java for Visual Studio Code](https://github.com/eclipse/eclipse.jdt.ls).
-Until then please use [Bazel support for Java for Visual Studio Code](https://github.com/salesforce/bazel-vscode).
+Until then please use [Bazel support for Java for Visual Studio Code](https://github.com/salesforce/bazel-vscode-java).
