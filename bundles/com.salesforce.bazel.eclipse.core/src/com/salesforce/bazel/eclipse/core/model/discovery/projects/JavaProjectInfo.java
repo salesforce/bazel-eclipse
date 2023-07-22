@@ -4,7 +4,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.IPath.forPosix;
 
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
@@ -39,13 +40,14 @@ public class JavaProjectInfo {
     private static Logger LOG = LoggerFactory.getLogger(JavaProjectInfo.class);
 
     private final BazelPackage bazelPackage;
-    private final List<Entry> srcs = new ArrayList<>();
-    private final List<Entry> resources = new ArrayList<>();
-    private final List<LabelEntry> pluginDeps = new ArrayList<>();
 
-    private final List<Entry> testSrcs = new ArrayList<>();
-    private final List<Entry> testResources = new ArrayList<>();
-    private final List<LabelEntry> testPluginDeps = new ArrayList<>();
+    private final LinkedHashSet<Entry> srcs = new LinkedHashSet<>();
+    private final LinkedHashSet<Entry> resources = new LinkedHashSet<>();
+    private final LinkedHashSet<LabelEntry> pluginDeps = new LinkedHashSet<>();
+
+    private final LinkedHashSet<Entry> testSrcs = new LinkedHashSet<>();
+    private final LinkedHashSet<Entry> testResources = new LinkedHashSet<>();
+    private final LinkedHashSet<LabelEntry> testPluginDeps = new LinkedHashSet<>();
 
     private JavaSourceInfo sourceInfo;
     private JavaSourceInfo testSourceInfo;
@@ -137,20 +139,20 @@ public class JavaProjectInfo {
         addToSrc(this.testSrcs, srcFileOrLabel);
     }
 
-    private void addToResources(List<Entry> resources, GlobInfo globInfo) {
+    private void addToResources(Collection<Entry> resources, GlobInfo globInfo) {
         resources.add(toGlobEntry(globInfo));
     }
 
-    private void addToResources(List<Entry> resources, String resourceFileOrLabel, String resourceStripPrefix)
+    private void addToResources(Collection<Entry> resources, String resourceFileOrLabel, String resourceStripPrefix)
             throws CoreException {
         resources.add(toResourceFileOrLabelEntry(resourceFileOrLabel, resourceStripPrefix));
     }
 
-    private void addToSrc(List<Entry> srcs, GlobInfo globInfo) {
+    private void addToSrc(Collection<Entry> srcs, GlobInfo globInfo) {
         srcs.add(toGlobEntry(globInfo));
     }
 
-    private void addToSrc(List<Entry> srcs, String srcFileOrLabel) throws CoreException {
+    private void addToSrc(Collection<Entry> srcs, String srcFileOrLabel) throws CoreException {
         srcs.add(toJavaSourceFileOrLabelEntry(srcFileOrLabel));
     }
 
@@ -193,7 +195,7 @@ public class JavaProjectInfo {
         return bazelPackage;
     }
 
-    public List<LabelEntry> getPluginDeps() {
+    public Collection<LabelEntry> getPluginDeps() {
         return pluginDeps;
     }
 
@@ -205,7 +207,7 @@ public class JavaProjectInfo {
         return requireNonNull(sourceInfo, "Source info not computed. Did you call analyzeProjectRecommendations?");
     }
 
-    public List<LabelEntry> getTestPluginDeps() {
+    public Collection<LabelEntry> getTestPluginDeps() {
         return testPluginDeps;
     }
 

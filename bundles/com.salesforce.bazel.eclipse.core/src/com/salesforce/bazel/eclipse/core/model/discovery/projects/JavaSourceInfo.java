@@ -44,7 +44,7 @@ public class JavaSourceInfo {
     }
 
     private final Map<IPath, IPath> detectedPackagePathsByFileEntryPathParent = new HashMap<>();
-    private final List<Entry> srcs;
+    private final Collection<Entry> srcs;
     private final IPath bazelPackageLocation;
 
     /**
@@ -58,7 +58,7 @@ public class JavaSourceInfo {
      */
     private Map<IPath, Object> sourceDirectoriesWithFilesOrGlobs;
 
-    public JavaSourceInfo(List<Entry> srcs, IPath bazelPackageLocation) {
+    public JavaSourceInfo(Collection<Entry> srcs, IPath bazelPackageLocation) {
         this.srcs = srcs;
         this.bazelPackageLocation = bazelPackageLocation;
     }

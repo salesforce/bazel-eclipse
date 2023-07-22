@@ -30,7 +30,7 @@ public class JavaResourceInfo {
 
     private static final IPath INVALID = new Path("_not_following_ide_standards_");
 
-    private final List<Entry> resources;
+    private final Collection<Entry> resources;
     private final BazelPackage bazelPackage;
     private final Map<IPath, IPath> detectedRootPathsByFileEntryPathParent = new HashMap<>();
 
@@ -48,7 +48,7 @@ public class JavaResourceInfo {
      * @param bazelPackage
      *            the {@link BazelPackage} which defines the scope of any analysis
      */
-    public JavaResourceInfo(List<Entry> resources, BazelPackage bazelPackage) {
+    public JavaResourceInfo(Collection<Entry> resources, BazelPackage bazelPackage) {
         this.resources = resources;
         this.bazelPackage = bazelPackage;
     }

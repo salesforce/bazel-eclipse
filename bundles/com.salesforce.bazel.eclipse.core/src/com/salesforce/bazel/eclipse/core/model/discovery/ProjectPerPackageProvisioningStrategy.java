@@ -221,7 +221,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             if (!sourceInfo.hasSourceDirectories()) {
                 createBuildPathProblem(
                     project,
-                    Status.error(
+                    Status.info(
                         format(
                             "No source directories detected when analyzihng package '%s' using targets '%s'",
                             bazelPackage.getLabel().getPackagePath(),
