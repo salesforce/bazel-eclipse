@@ -3,6 +3,24 @@
 [Project Views (*.bazelproject files)](https://ij.bazel.build/docs/project-views.html "Open IJ PLug-in Documentation about Project View")  are used to describe what will be made available in your IDE.
 
 
+## How it works
+
+When importing a Bazel workspace the Bazel Eclipse Feature (and the Bazel JDT Language Server) will create a `.eclipse/.bazelproject` file within the Bazel workspace.
+The file will be used to drive the import/synchronization of Bazel directories and targets into Java projects with their own classpath.
+This resolution can be customized using `target_discovery_strategy` and `target_provisioning_strategy` (see below for details).
+
+The `.eclipse/.bazelproject` file usually does not contain directories and target lists directly but uses `import` to import `.bazelproject` files shared with the Bazel workspace in a source control system (eg., Git).
+The `.eclipse/.bazelproject` file should not be shared in source control and should be added to `.gitignore` instead (like most of the stuff within the `.eclipse` folder).
+The `.eclipse` folder may also be used to create virtual Java projects for Bazel targets.
+This is required to support individual classpath scopes per target.
+See `project-per-target` startegy for more details.
+
+Some of the additional settings below may cause issues in IntelliJ.
+Therefore the Bazel Eclipse Feature (and the Bazel JDT Language Server) support importing a file with default settings just for Eclipse, VS Code or other tools using the language server.
+Simply create a file `tools/eclipse/.managed-defaults.bazelproject` and put additional settings like `target_discovery_strategy` and `target_provisioning_strategy` only in this file, which can be added to source control and shared with every team member.
+The import process will check for the existence of this file and add an import line to `.eclipse/.bazelproject`.
+
+
 ## Supported Features
 
 ### `directories`
@@ -65,7 +83,7 @@ For details please read the JavaDoc (and Java code) of [ProjectPerTargetProvisio
 * This strategy is closest to how Bazel builds the code.
 * It allows fine grained visibility control of imports and exports.
 * It supports split Java packages, i.e. Java packages with individual `.java` files grouped into separate targets.
-* Bazel is the source of truth, any IDE configuration is ignored.
+* Bazel is the source of truth, any IDE configuration/convenience is ignored.
 
 ##### Con
 

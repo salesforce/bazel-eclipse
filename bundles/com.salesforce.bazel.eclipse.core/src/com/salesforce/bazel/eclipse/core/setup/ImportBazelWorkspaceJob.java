@@ -34,7 +34,7 @@ import com.salesforce.bazel.eclipse.core.model.SynchronizeProjectViewJob;
 public class ImportBazelWorkspaceJob extends WorkspaceJob {
 
     /**
-     * default .bazelproject file for Bazel Eclipse users
+     * default .bazelproject file for Bazel Eclipse users (gets imported always prior to the actual .bazelproject file)
      */
     private static final IPath ECLIPSE_DEFAULTS_PROJECTVIEW =
             IPath.forPosix("tools/eclipse/.managed-defaults.bazelproject");
