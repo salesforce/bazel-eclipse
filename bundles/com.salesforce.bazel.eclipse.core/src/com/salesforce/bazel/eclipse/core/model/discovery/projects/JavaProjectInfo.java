@@ -174,13 +174,13 @@ public class JavaProjectInfo {
         sourceInfo = new JavaSourceInfo(this.srcs, bazelPackage.getLocation());
         sourceInfo.analyzeSourceDirectories(result);
 
-        resourceInfo = new JavaResourceInfo(resources, bazelPackage, sourceInfo.getDetectedJavaPackages());
+        resourceInfo = new JavaResourceInfo(resources, bazelPackage);
         resourceInfo.analyzeResourceDirectories(result);
 
         testSourceInfo = new JavaSourceInfo(this.testSrcs, bazelPackage.getLocation());
         testSourceInfo.analyzeSourceDirectories(result);
 
-        testResourceInfo = new JavaResourceInfo(testResources, bazelPackage, sourceInfo.getDetectedJavaPackages());
+        testResourceInfo = new JavaResourceInfo(testResources, bazelPackage);
         testResourceInfo.analyzeResourceDirectories(result);
 
         return result.isOK() ? Status.OK_STATUS : result;

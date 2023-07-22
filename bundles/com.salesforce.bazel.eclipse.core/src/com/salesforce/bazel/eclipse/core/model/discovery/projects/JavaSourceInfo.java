@@ -246,7 +246,6 @@ public class JavaSourceInfo {
     }
 
     public Collection<IPath> getDetectedJavaPackages() {
-
         return requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").values()
                 .stream()
                 .filter(JavaSourceEntry.class::isInstance)

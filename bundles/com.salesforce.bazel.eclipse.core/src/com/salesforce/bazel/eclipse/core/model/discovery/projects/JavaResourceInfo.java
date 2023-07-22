@@ -31,6 +31,7 @@ public class JavaResourceInfo {
     private static final IPath INVALID = new Path("_not_following_ide_standards_");
 
     private final List<Entry> resources;
+    private final BazelPackage bazelPackage;
     private final Map<IPath, IPath> detectedRootPathsByFileEntryPathParent = new HashMap<>();
 
     /**
@@ -38,7 +39,6 @@ public class JavaResourceInfo {
      * {@link ResourceEntry} or a single {@link GlobEntry}.
      */
     private Map<IPath, Object> resourceDirectoriesWithFilesOrGlobs;
-    private final BazelPackage bazelPackage;
 
     private List<ResourceEntry> resourceFilesWithoutCommonRoot;
 
@@ -47,10 +47,8 @@ public class JavaResourceInfo {
      *            the list of resources to analyze
      * @param bazelPackage
      *            the {@link BazelPackage} which defines the scope of any analysis
-     * @param javaPackageHints
-     *            a list of Java package paths detected/found in Java sources accompanying the resources
      */
-    public JavaResourceInfo(List<Entry> resources, BazelPackage bazelPackage, Collection<IPath> javaPackageHints) {
+    public JavaResourceInfo(List<Entry> resources, BazelPackage bazelPackage) {
         this.resources = resources;
         this.bazelPackage = bazelPackage;
     }
