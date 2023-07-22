@@ -182,8 +182,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
     private void addSourceFolders(BazelProject project, List<IClasspathEntry> rawClasspath,
             JavaSourceInfo javaSourceInfo, boolean useTestsClasspath) {
-        var virtualSourceFolder = useTestsClasspath ? getFileSystemMapper().getVirtualResourceFolderForTests(project)
-                : getFileSystemMapper().getVirtualResourceFolder(project);
+        var virtualSourceFolder = useTestsClasspath ? getFileSystemMapper().getVirtualSourceFolderForTests(project)
+                : getFileSystemMapper().getVirtualSourceFolder(project);
         var outputLocation = useTestsClasspath ? getFileSystemMapper().getOutputFolderForTests(project).getFullPath()
                 : getFileSystemMapper().getOutputFolder(project).getFullPath();
         var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] { CLASSPATH_ATTRIBUTE_FOR_TEST }
