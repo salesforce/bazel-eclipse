@@ -89,6 +89,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     protected String javaToolchainSourceVersion;
     protected String javaToolchainTargetVersion;
 
+    private JvmConfigurator jvmConfigurator;
+
     /**
      * Adds all information from a {@link BazelTarget} to the {@link JavaProjectInfo}.
      *
@@ -343,17 +345,27 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         rawClasspath.add(JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)));
 
-        if (javaToolchainVm != null) {
+        var javaProject = JavaCore.create(project.getProject());
+
+        getJvmConfigurator()
+                .applyJavaProjectOptions(javaProject, javaToolchainSourceVersion, javaToolchainTargetVersion, null);
+
+        var executionEnvironmentId = getJvmConfigurator().getExecutionEnvironmentId(javaProject);
+        if (executionEnvironmentId != null) {
+            // prefer setting EE based JDK for compilation
+            rawClasspath
+                    .add(getJvmConfigurator().getJreClasspathContainerForExecutionEnvironment(executionEnvironmentId));
+        } else if (javaToolchainVm != null) {
+            // use toolchain specific entry
             rawClasspath.add(JavaCore.newContainerEntry(JavaRuntime.newJREContainerPath(javaToolchainVm)));
         } else {
             rawClasspath.add(JavaRuntime.getDefaultJREContainerEntry());
         }
 
-        var javaProject = JavaCore.create(project.getProject());
         javaProject.setRawClasspath(rawClasspath.toArray(new IClasspathEntry[rawClasspath.size()]), true, progress);
 
         if (javaToolchainVm != null) {
-            new JvmConfigurator().configureJVMSettings(javaProject, javaToolchainVm);
+            getJvmConfigurator().configureJVMSettings(javaProject, javaToolchainVm);
         }
         if (javaToolchainSourceVersion != null) {
             javaProject.setOption(JavaCore.COMPILER_SOURCE, javaToolchainSourceVersion);
@@ -619,7 +631,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 resolvedJavaHomePath = new BazelWorkspaceBlazeInfo(workspace).getOutputBase().resolve(javaHome);
             }
 
-            javaToolchainVm = new JvmConfigurator().configureVMInstall(resolvedJavaHomePath, workspace);
+            javaToolchainVm = getJvmConfigurator().configureVMInstall(resolvedJavaHomePath, workspace);
         } catch (NoSuchElementException e) {
             throw new CoreException(
                     Status.error(
@@ -723,6 +735,13 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         return requireNonNull(
             fileSystemMapper,
             "file system mapper not initialized, check code flow/implementation (likely a bug)");
+    }
+
+    private JvmConfigurator getJvmConfigurator() {
+        if (jvmConfigurator == null) {
+            jvmConfigurator = new JvmConfigurator();
+        }
+        return jvmConfigurator;
     }
 
     private boolean isTestTarget(BazelTarget bazelTarget) throws CoreException {

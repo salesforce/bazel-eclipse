@@ -15,9 +15,15 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -26,6 +32,7 @@ import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMInstallType;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.VMStandin;
+import org.eclipse.jdt.launching.environments.IExecutionEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +48,74 @@ public class JvmConfigurator {
 
     static final String STANDARD_VM_TYPE = "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType"; //$NON-NLS-1$
     static final String MAC_OSX_VM_TYPE = "org.eclipse.jdt.internal.launching.macosx.MacOSXType"; //$NON-NLS-1$
+    private final List<String> supportedSources;
+
+    private final List<String> supportedTargets;
+    private final List<String> supportedReleases;
+
+    private final LinkedHashMap<String, String> environmentIdByComplianceVersion = new LinkedHashMap<>();
+
+    public JvmConfigurator() {
+        Set<String> supportedExecutionEnvironmentTypes = Set.of("JRE", "J2SE", "JavaSE");
+
+        List<String> sources = new ArrayList<>();
+
+        List<String> targets = new ArrayList<>();
+        //Special case
+        targets.add("jsr14"); //$NON-NLS-1$
+        environmentIdByComplianceVersion.put("jsr14", "J2SE-1.5"); //$NON-NLS-1$ //$NON-NLS-2$
+
+        List<String> releases = new ArrayList<>(List.of("6", "7", "8"));
+
+        for (var ee : JavaRuntime.getExecutionEnvironmentsManager().getExecutionEnvironments()) {
+            var eeId = ee.getId();
+            if (supportedExecutionEnvironmentTypes.stream().filter(type -> eeId.startsWith(type)).findAny().isEmpty()) {
+                continue;
+            }
+            var compliance = ee.getComplianceOptions().get(JavaCore.COMPILER_COMPLIANCE);
+            if (compliance != null) {
+                sources.add(compliance);
+                targets.add(compliance);
+                if (JavaCore.ENABLED.equals(ee.getComplianceOptions().get(JavaCore.COMPILER_RELEASE))) {
+                    releases.add(compliance);
+                }
+                environmentIdByComplianceVersion.put(compliance, eeId);
+            }
+        }
+
+        supportedSources = Collections.unmodifiableList(sources);
+        supportedTargets = Collections.unmodifiableList(targets);
+        supportedReleases = Collections.unmodifiableList(releases);
+    }
+
+    public void applyJavaProjectOptions(IJavaProject javaProject, String source, String target, String release) {
+        var javaProjectOptions = javaProject.getOptions(false);
+
+        // initialize null values if possible
+        source = source == null ? target : source;
+        target = target == null ? source : target;
+        release = release == null ? target : release;
+
+        if (source != null) {
+            javaProject.setOption(JavaCore.COMPILER_SOURCE, source);
+            javaProject.setOption(JavaCore.COMPILER_COMPLIANCE, source);
+        }
+        if (target != null) {
+            javaProject.setOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, target);
+        }
+        javaProject.setOption(JavaCore.COMPILER_RELEASE, (release == null) ? JavaCore.DISABLED : JavaCore.ENABLED);
+
+        // initialize more options if not set yet (but allow users to customize)
+        if (javaProjectOptions.get(JavaCore.COMPILER_CODEGEN_METHOD_PARAMETERS_ATTR) == null) {
+            javaProject.setOption(JavaCore.COMPILER_CODEGEN_METHOD_PARAMETERS_ATTR, JavaCore.GENERATE);
+        }
+        if (javaProjectOptions.get(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES) == null) {
+            javaProject.setOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.ENABLED);
+            if (javaProjectOptions.get(JavaCore.COMPILER_PB_REPORT_PREVIEW_FEATURES) == null) {
+                javaProject.setOption(JavaCore.COMPILER_PB_REPORT_PREVIEW_FEATURES, JavaCore.IGNORE);
+            }
+        }
+    }
 
     public void configureJVMSettings(IJavaProject javaProject, IVMInstall vmInstall) {
         if (javaProject == null) {
@@ -53,6 +128,7 @@ public class JvmConfigurator {
             var compliance = CompilerOptions.versionFromJdkLevel(jdkLevel);
             var options = javaProject.getOptions(false);
             JavaCore.setComplianceOptions(compliance, options);
+            javaProject.setOptions(options);
         }
         if (JavaCore.isSupportedJavaVersion(version)
                 && (JavaCore.compareJavaVersions(version, JavaCore.latestSupportedJavaVersion()) >= 0)) {
@@ -66,13 +142,18 @@ public class JvmConfigurator {
 
     public IVMInstall configureVMInstall(java.nio.file.Path resolvedJavaHomePath, BazelWorkspace bazelWorkspace)
             throws CoreException {
-        var name = format("Bazel Java Toolchain (%s, %s)", resolvedJavaHomePath.getFileName().toString(),
+        var name = format(
+            "Bazel Java Toolchain (%s, %s)",
+            resolvedJavaHomePath.getFileName().toString(),
             bazelWorkspace.getName());
         var vm = findVmForNameOrPath(resolvedJavaHomePath, name);
 
         // delete if location does not match
         if ((vm != null) && !vm.getInstallLocation().toPath().equals(resolvedJavaHomePath)) {
-            LOG.debug("Disposing existing VMInstall at '{}' ({}, {})", vm.getInstallLocation(), vm.getName(),
+            LOG.debug(
+                "Disposing existing VMInstall at '{}' ({}, {})",
+                vm.getInstallLocation(),
+                vm.getName(),
                 vm.getId());
             vm.getVMInstallType().disposeVMInstall(vm.getId());
             vm = null;
@@ -123,6 +204,36 @@ public class JvmConfigurator {
             unique = "bazel-workspace-jvm_" + UUID.randomUUID().toString();
         }
         return unique;
+    }
+
+    private IExecutionEnvironment getExecutionEnvironment(String environmentId) {
+        if (environmentId == null) {
+            return null;
+        }
+
+        var manager = JavaRuntime.getExecutionEnvironmentsManager();
+        var environment = manager.getEnvironment(environmentId);
+        if ((environment != null) && (environment.getCompatibleVMs().length > 0)) {
+            return environment;
+        }
+        LOG.error(
+            "Failed to find a compatible VM for environment id '{}', falling back to workspace default",
+            environmentId);
+        return null;
+    }
+
+    public String getExecutionEnvironmentId(IJavaProject javaProject) {
+        var options = javaProject.getOptions(false);
+        return environmentIdByComplianceVersion.get(options.get(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM));
+    }
+
+    public IClasspathEntry getJreClasspathContainerForExecutionEnvironment(String environmentId) {
+        var executionEnvironment = getExecutionEnvironment(environmentId);
+        if (executionEnvironment == null) {
+            return JavaRuntime.getDefaultJREContainerEntry();
+        }
+        var containerPath = JavaRuntime.newJREContainerPath(executionEnvironment);
+        return JavaCore.newContainerEntry(containerPath);
     }
 
 }
