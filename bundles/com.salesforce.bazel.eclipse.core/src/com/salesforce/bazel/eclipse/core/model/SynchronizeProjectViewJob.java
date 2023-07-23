@@ -281,7 +281,11 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         // add any explicitly configured target
         var manualTargetsQuery = queryForTargets(projectView.targets());
         if (!manualTargetsQuery.isBlank()) {
-            var queryCommand = new BazelQueryForLabelsCommand(workspace.workspacePath(), manualTargetsQuery, true);
+            var queryCommand = new BazelQueryForLabelsCommand(
+                    workspace.workspacePath(),
+                    manualTargetsQuery,
+                    true,
+                    "Identifying manual specified targets to synchronize");
             Collection<String> labels = workspace.getCommandExecutor().runQueryWithoutLock(queryCommand);
             for (String label : labels) {
                 var bazelLabel = new BazelLabel(label.toString());

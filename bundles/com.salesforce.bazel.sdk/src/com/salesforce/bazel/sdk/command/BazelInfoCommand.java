@@ -18,8 +18,8 @@ import com.salesforce.bazel.sdk.BazelVersion;
  */
 public class BazelInfoCommand extends BazelCommand<Map<String, String>> {
 
-    public BazelInfoCommand(Path workspaceRoot) {
-        super("info", workspaceRoot);
+    public BazelInfoCommand(Path workspaceRoot, String purpose) {
+        super("info", workspaceRoot, purpose);
     }
 
     @Override

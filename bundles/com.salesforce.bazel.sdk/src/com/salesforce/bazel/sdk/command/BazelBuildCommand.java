@@ -28,8 +28,8 @@ public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
     private final boolean keepGoing;
     private final List<BazelLabel> targets;
 
-    public BazelBuildCommand(List<BazelLabel> targets, Path workspaceRoot, boolean keepGoing) {
-        super("build", workspaceRoot);
+    public BazelBuildCommand(List<BazelLabel> targets, Path workspaceRoot, boolean keepGoing, String purpose) {
+        super("build", workspaceRoot, purpose);
         this.targets = targets;
         this.keepGoing = keepGoing;
     }
@@ -41,8 +41,11 @@ public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
 
     @Override
     public ParsedBepOutput generateResult(int exitCode) throws IOException {
-        return ParsedBepOutput.parseBepArtifacts(newInputStream(
-            requireNonNull(bepFile, "unusual code flow; prepareCommandLine not called or overridden incorrectly?")));
+        return ParsedBepOutput.parseBepArtifacts(
+            newInputStream(
+                requireNonNull(
+                    bepFile,
+                    "unusual code flow; prepareCommandLine not called or overridden incorrectly?")));
     }
 
     @Override

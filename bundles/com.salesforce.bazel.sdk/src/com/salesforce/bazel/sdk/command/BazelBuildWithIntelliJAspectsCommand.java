@@ -42,18 +42,19 @@ public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
      *            should be set to <code>true</code> when the project view specifies
      *            <code>derive_targets_from_directories</code> (see
      *            https://github.com/bazelbuild/intellij/blob/37813e607ad26716c4d1ccf4bc3e7163b2188658/base/src/com/google/idea/blaze/base/sync/aspects/BlazeIdeInterfaceAspectsImpl.java#L724)
+     * @param purpose
      */
     public BazelBuildWithIntelliJAspectsCommand(Path workspaceRoot, List<BazelLabel> targets,
             Set<OutputGroup> outputGroups, IntellijAspects aspects, Set<LanguageClass> languages,
-            boolean onlyDirectDeps) {
-        super(targets, workspaceRoot, true /* keepGoing */);
+            boolean onlyDirectDeps, String purpose) {
+        super(targets, workspaceRoot, true /* keepGoing */, purpose);
         this.aspects = aspects;
         this.outputGroupNames = aspects.getOutputGroupNames(outputGroups, languages, onlyDirectDeps);
     }
 
     public BazelBuildWithIntelliJAspectsCommand(Path workspaceRoot, List<BazelLabel> targets,
-            Set<String> outputGroupNames, IntellijAspects aspects) {
-        super(targets, workspaceRoot, true /* keepGoing */);
+            Set<String> outputGroupNames, IntellijAspects aspects, String purpose) {
+        super(targets, workspaceRoot, true /* keepGoing */, purpose);
         this.aspects = aspects;
         this.outputGroupNames = outputGroupNames;
     }

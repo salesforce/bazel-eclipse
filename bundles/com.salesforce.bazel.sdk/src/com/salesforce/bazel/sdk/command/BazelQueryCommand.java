@@ -29,12 +29,13 @@ public abstract class BazelQueryCommand<R> extends BazelCommand<R> {
     private final String query;
     private final boolean keepGoing;
 
-    public BazelQueryCommand(Path workspaceRoot, String query, boolean keepGoing) {
-        this(QueryCommand.query, workspaceRoot, query, keepGoing);
+    public BazelQueryCommand(Path workspaceRoot, String query, boolean keepGoing, String purpose) {
+        this(QueryCommand.query, workspaceRoot, query, keepGoing, purpose);
     }
 
-    protected BazelQueryCommand(QueryCommand queryCommand, Path workspaceRoot, String query, boolean keepGoing) {
-        super(queryCommand.name(), workspaceRoot);
+    protected BazelQueryCommand(QueryCommand queryCommand, Path workspaceRoot, String query, boolean keepGoing,
+            String purpose) {
+        super(queryCommand.name(), workspaceRoot, purpose);
         this.query = query;
         this.keepGoing = keepGoing;
     }

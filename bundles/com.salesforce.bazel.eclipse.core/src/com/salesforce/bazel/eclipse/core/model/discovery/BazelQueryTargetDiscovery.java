@@ -39,8 +39,13 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
         var monitor = SubMonitor.convert(progress, 100);
 
         // bazel query 'buildfiles(//...)' --output package
-        Collection<String> labels = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(
-            new BazelQueryForPackagesCommand(bazelWorkspace.getLocation().toPath(), "buildfiles(//...)", true));
+        Collection<String> labels = bazelWorkspace.getCommandExecutor()
+                .runQueryWithoutLock(
+                    new BazelQueryForPackagesCommand(
+                            bazelWorkspace.getLocation().toPath(),
+                            "buildfiles(//...)",
+                            true,
+                            "Queringy for all available packages in workspace"));
 
         monitor.worked(1);
         monitor.setWorkRemaining(labels.size());
@@ -60,7 +65,9 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
             var packagePath = new Path(label);
             var packageWorkspaceLocation = findWorkspaceLocation(bazelWorkspace, packagePath);
             if (!bazelWorkspace.getLocation().equals(packageWorkspaceLocation)) {
-                LOG.debug("Ignored package within nested workspace during discover: {} ({})", label,
+                LOG.debug(
+                    "Ignored package within nested workspace during discover: {} ({})",
+                    label,
                     packageWorkspaceLocation);
                 continue;
             }
@@ -90,7 +97,9 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
             for (BazelPackage bazelPackage : bazelPackages) {
                 monitor.checkCanceled();
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Discovered targets in package '{}': {}", bazelPackage.getLabel(),
+                    LOG.debug(
+                        "Discovered targets in package '{}': {}",
+                        bazelPackage.getLabel(),
                         bazelPackage.getBazelTargets());
                 }
                 targets.addAll(bazelPackage.getBazelTargets());

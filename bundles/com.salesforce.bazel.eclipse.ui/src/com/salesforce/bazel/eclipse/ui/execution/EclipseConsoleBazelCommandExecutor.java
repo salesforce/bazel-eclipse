@@ -10,6 +10,8 @@ import static org.fusesource.jansi.Ansi.Attribute.ITALIC;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +39,10 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
 
     private static final Predicate<String> errorPrefixFilter = (var s) -> s.startsWith("ERROR:");
 
+    static String humanReadableFormat(Duration duration) {
+        return duration.toString().substring(2).replaceAll("(\\d[HMS])(?!$)", "$1 ").toLowerCase();
+    }
+
     @Override
     protected <R> R doExecuteProcess(BazelCommand<R> command, CancelationCallback cancelationCallback,
             ProcessBuilder processBuilder, PreparedCommandLine commandLine) throws IOException {
@@ -55,7 +61,9 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
             consoleStream.println();
 
             // print info about command
-            consoleStream.println(ansi().a(ITALIC).a(new Date().toString()).reset().toString());
+            var purpose = command.getPurpose() != null ? format(": %s", command.getPurpose()) : "";
+            var startTime = new Date();
+            consoleStream.println(ansi().a(ITALIC).a(startTime.toString()).a(purpose).reset().toString());
             consoleStream.println(ansi().a(INTENSITY_BOLD).a("Running Command:").reset().toString());
             consoleStream.println(
                 " > bazel " + commandLine.commandLineWithoutBinaryAsPreparedByCommand().stream().collect(joining(" ")));
@@ -110,9 +118,19 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
 
                 result = process.exitValue();
 
+                var endTime = new Date();
+                var executionTime = Duration
+                        .between(Instant.ofEpochMilli(startTime.getTime()), Instant.ofEpochMilli(endTime.getTime()));
                 consoleStream.println();
-                consoleStream
-                        .println(ansi().a(ITALIC).a("Process finished ").a(new Date().toString()).reset().toString());
+                consoleStream.println(
+                    ansi().a(ITALIC)
+                            .a("Process finished in ")
+                            .a(humanReadableFormat(executionTime))
+                            .a(" (at ")
+                            .a(endTime.toString())
+                            .a(")")
+                            .reset()
+                            .toString());
 
                 if (result != 0) {
                     consoleStream

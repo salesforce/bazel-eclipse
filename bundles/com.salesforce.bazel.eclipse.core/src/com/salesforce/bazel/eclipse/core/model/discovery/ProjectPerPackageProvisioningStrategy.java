@@ -112,7 +112,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     outputGroups,
                     aspects,
                     languages,
-                    onlyDirectDeps);
+                    onlyDirectDeps,
+                    "Running build with IntelliJ aspects to collect classpath information");
 
             monitor.subTask("Running Bazel...");
             var result = workspace.getCommandExecutor()

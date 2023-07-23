@@ -18,8 +18,8 @@ import com.salesforce.bazel.sdk.BazelVersion;
  */
 public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collection<Build.Target>> {
 
-    public BazelQueryForTargetProtoCommand(Path workspaceRoot, String query, boolean keepGoing) {
-        super(workspaceRoot, query, keepGoing);
+    public BazelQueryForTargetProtoCommand(Path workspaceRoot, String query, boolean keepGoing, String purpose) {
+        super(workspaceRoot, query, keepGoing, purpose);
         setCommandArgs("--output", "streamed_proto", "--order_output=no");
     }
 

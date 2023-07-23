@@ -380,6 +380,13 @@ public class BazelProject implements IProjectNature {
     }
 
     /**
+     * {@return convenience for <code>getProject().getName()</code>}
+     */
+    public String getName() {
+        return getProject().getName();
+    }
+
+    /**
      * Returns the label of the owning Bazel element of this project.
      * <p>
      * The owner is either a {@link BazelPackage} or a {@link BazelLabel}. Callers can use

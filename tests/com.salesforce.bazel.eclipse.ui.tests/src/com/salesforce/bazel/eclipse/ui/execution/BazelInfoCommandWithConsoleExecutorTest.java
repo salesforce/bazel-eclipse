@@ -39,7 +39,7 @@ public class BazelInfoCommandWithConsoleExecutorTest {
 
     @Test
     void default_bazel_version_detection() throws IOException {
-        var command = new BazelInfoCommand(bazelWorkspace.getWorkspaceRoot());
+        var command = new BazelInfoCommand(bazelWorkspace.getWorkspaceRoot(), null);
 
         var result = executor.execute(command, () -> false);
         assertFalse(result.isEmpty());

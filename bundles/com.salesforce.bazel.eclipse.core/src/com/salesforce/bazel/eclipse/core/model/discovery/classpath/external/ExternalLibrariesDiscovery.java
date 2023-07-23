@@ -53,8 +53,6 @@ public class ExternalLibrariesDiscovery {
 
     private static Logger LOG = LoggerFactory.getLogger(ExternalLibrariesDiscovery.class);
 
-    private static final String PREFIX_EXTERNAL = "//external:";
-
     private final BazelWorkspace bazelWorkspace;
     private final WorkspaceRoot workspaceRoot;
     private final JavaClasspathJarLocationResolver locationResolver;
@@ -177,7 +175,8 @@ public class ExternalLibrariesDiscovery {
         var javaImportQuery = new BazelQueryForTargetProtoCommand(
                 workspaceRoot.directory(),
                 format("kind('java_import rule', set( %s ))", setOfExternalsToQuery),
-                false);
+                false,
+                "Querying for external java_import library information");
         Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
 
         // parse info from each found target
@@ -244,7 +243,8 @@ public class ExternalLibrariesDiscovery {
         var javaImportQuery = new BazelQueryForTargetProtoCommand(
                 workspaceRoot.directory(),
                 format("kind('jvm_import rule', set( %s ))", setOfExternalsToQuery),
-                false);
+                false,
+                "Querying for rules_jvm_external library information");
         Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
 
         /*

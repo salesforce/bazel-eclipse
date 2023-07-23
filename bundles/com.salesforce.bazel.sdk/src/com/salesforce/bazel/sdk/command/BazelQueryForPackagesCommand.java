@@ -15,8 +15,8 @@ import com.salesforce.bazel.sdk.BazelVersion;
  */
 public class BazelQueryForPackagesCommand extends BazelQueryCommand<Collection<String>> {
 
-    public BazelQueryForPackagesCommand(Path workspaceRoot, String query, boolean keepGoing) {
-        super(workspaceRoot, query, keepGoing);
+    public BazelQueryForPackagesCommand(Path workspaceRoot, String query, boolean keepGoing, String purpose) {
+        super(workspaceRoot, query, keepGoing, purpose);
         setCommandArgs("--output", "package");
     }
 

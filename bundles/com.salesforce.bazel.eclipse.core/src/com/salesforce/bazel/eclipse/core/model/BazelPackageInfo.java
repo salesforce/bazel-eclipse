@@ -76,7 +76,14 @@ public final class BazelPackageInfo extends BazelElementInfo {
             var queryResult =
                     executionService
                             .executeOutsideWorkspaceLockAsync(
-                                new BazelQueryForTargetProtoCommand(workspaceRoot, query, true /* keep going */),
+                                new BazelQueryForTargetProtoCommand(
+                                        workspaceRoot,
+                                        query,
+                                        true /* keep going */,
+                                        format(
+                                            "Loading targets for %d %s",
+                                            bazelPackages.size(),
+                                            bazelPackages.size() == 1 ? "package" : "packages")),
                                 bazelWorkspace)
                             .get();
             for (Target target : queryResult) {

@@ -18,8 +18,8 @@ import com.salesforce.bazel.sdk.BazelVersion;
 public class BazelCQueryWithStarlarkExpressionCommand extends BazelCQueryCommand<String> {
 
     public BazelCQueryWithStarlarkExpressionCommand(Path workspaceRoot, String query, String starlarkExpression,
-            boolean keepGoing) {
-        super(workspaceRoot, query, keepGoing);
+            boolean keepGoing, String purpose) {
+        super(workspaceRoot, query, keepGoing, purpose);
         setCommandArgs("--output", "starlark", "--starlark:expr", starlarkExpression);
     }
 

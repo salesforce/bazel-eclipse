@@ -44,6 +44,7 @@ public abstract class BazelCommand<R> {
     private List<String> commandArgs;
     private Path stdOutFile;
     private BazelBinary bazelBinary;
+    private final String purpose;
 
     /**
      * Creates a command using the specified command.
@@ -55,12 +56,15 @@ public abstract class BazelCommand<R> {
      *            the command (must not be <code>null</code>)
      * @param workingDirectory
      *            the command working directory (typically the workspace root, must not be <code>null</code>)
+     * @param purpose
+     *            an optional, human readable text why the command should be executed (may be <code>null</code>)
      */
-    public BazelCommand(String command, Path workingDirectory) {
+    public BazelCommand(String command, Path workingDirectory, String purpose) {
         this.command = requireNonNull(command, "No command provided; see 'bazel help' for available commands");
         this.workingDirectory = requireNonNull(
             workingDirectory,
             "No working directory provided; Bazel needs to be executed from within a Bazel workspace");
+        this.purpose = purpose;
     }
 
     protected void appendToStringDetails(ArrayList<String> toStringCommandLine) {
@@ -135,6 +139,13 @@ public abstract class BazelCommand<R> {
     protected final List<String> getCommandArgs() {
         var args = commandArgs;
         return args != null ? args : emptyList();
+    }
+
+    /**
+     * {@return an optional, human readable text why the command should be executed (may be <code>null</code>)}
+     */
+    public String getPurpose() {
+        return purpose;
     }
 
     /**

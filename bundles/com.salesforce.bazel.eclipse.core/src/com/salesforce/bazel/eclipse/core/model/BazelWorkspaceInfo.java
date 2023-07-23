@@ -243,9 +243,12 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         var workspaceRoot = getWorkspaceFile().getParent();
         try {
             // we use the BazelModelCommandExecutionService directly because info is not a query
-            var infoResult = executionService
-                    .executeOutsideWorkspaceLockAsync(new BazelInfoCommand(workspaceRoot), bazelWorkspace)
-                    .get();
+            var infoResult =
+                    executionService
+                            .executeOutsideWorkspaceLockAsync(
+                                new BazelInfoCommand(workspaceRoot, "Reading workspace info"),
+                                bazelWorkspace)
+                            .get();
 
             // sanity check
             if (infoResult.isEmpty()) {
@@ -297,7 +300,11 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         }
 
         var workspaceRoot = getWorkspaceFile().getParent();
-        var allExternalQuery = new BazelQueryForTargetProtoCommand(workspaceRoot, "//external:*", false);
+        var allExternalQuery = new BazelQueryForTargetProtoCommand(
+                workspaceRoot,
+                "//external:*",
+                false,
+                "Querying for external repositories");
         var externalRepositories = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
 
         return externalRepositoryRuleByName = externalRepositories.stream()

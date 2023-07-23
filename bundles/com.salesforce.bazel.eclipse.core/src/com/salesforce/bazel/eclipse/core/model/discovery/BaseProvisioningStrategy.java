@@ -579,7 +579,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 workspace.getLocation().toPath(),
                 "@bazel_tools//tools/jdk:current_java_toolchain",
                 "providers(target)['JavaToolchainInfo'].source_version + '::' + providers(target)['JavaToolchainInfo'].target_version + '::' + providers(target)['JavaToolchainInfo'].java_runtime.java_home",
-                false);
+                false,
+                "Querying for Java toolchain information");
         var result = workspace.getCommandExecutor().runQueryWithoutLock(command).trim();
         try {
             var tokenizer = new StringTokenizer(result, "::");

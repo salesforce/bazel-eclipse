@@ -13,8 +13,8 @@ import java.nio.file.Path;
  */
 public abstract class BazelCQueryCommand<R> extends BazelQueryCommand<R> {
 
-    public BazelCQueryCommand(Path workspaceRoot, String query, boolean keepGoing) {
-        super(QueryCommand.cquery, workspaceRoot, query, keepGoing);
+    public BazelCQueryCommand(Path workspaceRoot, String query, boolean keepGoing, String purpose) {
+        super(QueryCommand.cquery, workspaceRoot, query, keepGoing, purpose);
     }
 
 }

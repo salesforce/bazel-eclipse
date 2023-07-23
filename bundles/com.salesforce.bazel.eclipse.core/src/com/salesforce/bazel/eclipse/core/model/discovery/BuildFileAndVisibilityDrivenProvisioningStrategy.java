@@ -254,7 +254,10 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                                     format(
                                         "kind(java_library, rdeps(//..., %s))",
                                         projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "))),
-                                    true))
+                                    true,
+                                    format(
+                                        "Querying for reverse dependencies of '%s' for classpath computation",
+                                        bazelProject.getName())))
                         .stream()
                         .map(BazelLabel::new)
                         .collect(toSet());
@@ -267,7 +270,10 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                                     format(
                                         "kind(java_library, visible(%s, //...))",
                                         projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "))),
-                                    true))
+                                    true,
+                                    format(
+                                        "Querying for Java targets visibile to '%s' for classpath computation",
+                                        bazelProject.getName())))
                         .stream()
                         .map(BazelLabel::new)
                         .collect(toCollection(LinkedHashSet::new));

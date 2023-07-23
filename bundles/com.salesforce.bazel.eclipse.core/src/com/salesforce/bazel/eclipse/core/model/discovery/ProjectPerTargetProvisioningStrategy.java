@@ -61,9 +61,11 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                 monitor.checkCanceled();
 
                 if (!bazelProject.isTargetProject()) {
-                    throw new CoreException(Status.error(format(
-                        "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel target project created by the project per target strategy.",
-                        bazelProjects)));
+                    throw new CoreException(
+                            Status.error(
+                                format(
+                                    "Unable to compute classpath for project '%s'. Please check the setup. This is not a Bazel target project created by the project per target strategy.",
+                                    bazelProjects)));
                 }
 
                 targetsToBuild.add(bazelProject.getBazelTarget().getLabel());
@@ -76,12 +78,21 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             var outputGroups = Set.of(OutputGroup.INFO, OutputGroup.RESOLVE);
             var languages = Set.of(LanguageClass.JAVA);
             var aspects = workspace.getParent().getModelManager().getIntellijAspects();
-            var command = new BazelBuildWithIntelliJAspectsCommand(workspaceRoot, targetsToBuild, outputGroups, aspects,
-                    languages, onlyDirectDeps);
+            var command = new BazelBuildWithIntelliJAspectsCommand(
+                    workspaceRoot,
+                    targetsToBuild,
+                    outputGroups,
+                    aspects,
+                    languages,
+                    onlyDirectDeps,
+                    "Running build with IntelliJ aspects to collect classpath information");
 
             monitor.subTask("Running Bazel...");
-            var result = workspace.getCommandExecutor().runDirectlyWithWorkspaceLock(command,
-                bazelProjects.stream().map(BazelProject::getProject).collect(toList()), monitor.split(1));
+            var result = workspace.getCommandExecutor()
+                    .runDirectlyWithWorkspaceLock(
+                        command,
+                        bazelProjects.stream().map(BazelProject::getProject).collect(toList()),
+                        monitor.split(1));
 
             // populate map from result
             Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
@@ -106,8 +117,12 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                     }
 
                     if (!isRegularFile(entry.getPath().toPath())) {
-                        createBuildPathProblem(bazelProject, Status.error(
-                            format("Library '%s' is missing. Please consider running 'bazel fetch'", entry.getPath())));
+                        createBuildPathProblem(
+                            bazelProject,
+                            Status.error(
+                                format(
+                                    "Library '%s' is missing. Please consider running 'bazel fetch'",
+                                    entry.getPath())));
                         break;
                     }
                 }

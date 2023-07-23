@@ -16,7 +16,7 @@ class TestCommand extends BazelCommand<Integer> {
     }
 
     public TestCommand(Path workingDirectory, String... commandArgs) {
-        super("dummy", workingDirectory);
+        super("dummy", workingDirectory, "test command");
         setCommandArgs(commandArgs);
     }
 

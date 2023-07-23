@@ -92,7 +92,8 @@ public class BazelClasspathContainerRuntimeResolver
                 workspaceRoot,
                 targets.stream().map(BazelTarget::getLabel).toList(),
                 outputGroups,
-                aspects);
+                aspects,
+                "Running build with IntelliJ aspects to collect classpath information");
 
         var bepOutput = bazelWorkspace.getCommandExecutor()
                 .runWithWorkspaceLock(command, getBuildRule(), Collections.emptyList());

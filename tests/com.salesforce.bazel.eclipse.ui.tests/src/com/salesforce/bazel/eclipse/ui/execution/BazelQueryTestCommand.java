@@ -18,7 +18,7 @@ import com.salesforce.bazel.sdk.command.BazelQueryCommand;
 public class BazelQueryTestCommand extends BazelQueryCommand<Collection<String>> {
 
     public BazelQueryTestCommand(Path workspaceRoot, String query, boolean keepGoing) {
-        super(workspaceRoot, query, keepGoing);
+        super(workspaceRoot, query, keepGoing, "query test command");
     }
 
     @Override
