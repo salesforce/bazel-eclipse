@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.eclipse.core.runtime.CoreException;
-
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Attribute;
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Rule;
 
@@ -22,7 +20,7 @@ public class BazelRuleAttributes {
     private final Rule rule;
     private final Map<String, Attribute> attributesByAttributeName;
 
-    public BazelRuleAttributes(Rule rule) {
+    BazelRuleAttributes(Rule rule) {
         this.rule = rule;
         // this might fail if there are multiple attributes of the same name
         // TODO: confirm with Bazel what the behavior/expectation should be
@@ -30,11 +28,27 @@ public class BazelRuleAttributes {
                 rule.getAttributeList().stream().collect(toMap(Attribute::getName, Function.identity()));
     }
 
+    /**
+     * @return value of the attribute name if present, otherwise {@link Rule#getName()};
+     */
+    public String getName() {
+        var name = getString("name");
+        if (name != null) {
+            return name;
+        }
+
+        return rule.getName();
+    }
+
     Rule getRule() {
         return rule;
     }
 
-    public String getString(String name) throws CoreException {
+    public String getRuleClass() {
+        return rule.getRuleClass();
+    }
+
+    public String getString(String name) {
         var attribute = attributesByAttributeName.get(name);
         if (attribute == null) {
             return null;
@@ -46,7 +60,7 @@ public class BazelRuleAttributes {
         };
     }
 
-    public List<String> getStringList(String name) throws CoreException {
+    public List<String> getStringList(String name) {
         var attribute = attributesByAttributeName.get(name);
         if (attribute == null) {
             return null;
@@ -56,5 +70,10 @@ public class BazelRuleAttributes {
             case LABEL_LIST, STRING_LIST -> attribute.getStringListValueList();
             default -> throw new IllegalArgumentException("Unexpected value: " + attribute.getType());
         };
+    }
+
+    @Override
+    public String toString() {
+        return "BazelRuleAttributes [rule=" + rule + "]";
     }
 }

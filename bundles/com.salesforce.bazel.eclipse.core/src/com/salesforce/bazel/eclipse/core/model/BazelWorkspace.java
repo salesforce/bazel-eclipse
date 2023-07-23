@@ -29,6 +29,8 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -36,7 +38,6 @@ import org.eclipse.core.runtime.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -286,17 +287,29 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
         return this;
     }
 
-    public Target getExternalRepository(String externalRepositoryName) throws CoreException {
-        var ruleName = format("//external:%s", externalRepositoryName);
-        var externalRepositoryTarget = getInfo().getExternalRepositories()
-                .stream()
-                .filter(t -> t.hasRule() && t.getRule().getName().equals(ruleName))
-                .findAny();
-        if (externalRepositoryTarget.isEmpty()) {
-            return null;
-        }
+    /**
+     * Looks up and returns a collection of external repositories matching a rule class predicate
+     *
+     * @param ruleClassPredicate
+     *            the predicate to use for filtering
+     * @return Stream of matching elements (never <code>null</code>)
+     * @throws CoreException
+     */
+    public Stream<BazelRuleAttributes> getExternalRepositoriesByRuleClass(Predicate<String> ruleClassPredicate)
+            throws CoreException {
+        return getInfo().getExternalRepositoriesByRuleClass(ruleClassPredicate);
+    }
 
-        return externalRepositoryTarget.get();
+    /**
+     * Looks up and returns an external repository by its simple name
+     *
+     * @param name
+     *            name used in the name attribute of the external repository definition
+     * @return the external repository rule (maybe <code>null</code>)
+     * @throws CoreException
+     */
+    public BazelRuleAttributes getExternalRepository(String name) throws CoreException {
+        return getInfo().getExternalRepository(name);
     }
 
     @Override

@@ -16,12 +16,15 @@ package com.salesforce.bazel.eclipse.core.model;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -63,7 +66,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
     private IPath outputPath;
     private BazelVersion bazelVersion;
 
-    private Collection<Target> externalRepositories;
+    private volatile Map<String, BazelRuleAttributes> externalRepositoryRuleByName;
 
     public BazelWorkspaceInfo(IPath root, Path workspaceFile, BazelWorkspace bazelWorkspace) {
         this.root = root;
@@ -165,14 +168,22 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         return new org.eclipse.core.runtime.Path(getExpectedOutput(infoResult, key));
     }
 
-    public Collection<Target> getExternalRepositories() throws CoreException {
-        if (externalRepositories != null) {
-            return externalRepositories;
+    public Stream<BazelRuleAttributes> getExternalRepositoriesByRuleClass(Predicate<String> ruleClassPredicate)
+            throws CoreException {
+        var externalRepositoryRuleByName = this.externalRepositoryRuleByName;
+        if (externalRepositoryRuleByName == null) {
+            externalRepositoryRuleByName = loadExternalRepositoryRules();
         }
 
-        var workspaceRoot = getWorkspaceFile().getParent();
-        var allExternalQuery = new BazelQueryForTargetProtoCommand(workspaceRoot, "//external:*", false);
-        return externalRepositories = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
+        return externalRepositoryRuleByName.values().stream().filter(a -> ruleClassPredicate.test(a.getRuleClass()));
+    }
+
+    public BazelRuleAttributes getExternalRepository(String externalRepositoryName) throws CoreException {
+        if (externalRepositoryRuleByName != null) {
+            return externalRepositoryRuleByName.get(externalRepositoryName);
+        }
+
+        return loadExternalRepositoryRules().get(externalRepositoryName);
     }
 
     public String getName() {
@@ -278,5 +289,21 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
                             cause.getMessage()),
                         cause));
         }
+    }
+
+    private synchronized Map<String, BazelRuleAttributes> loadExternalRepositoryRules() throws CoreException {
+        if (externalRepositoryRuleByName != null) {
+            return externalRepositoryRuleByName;
+        }
+
+        var workspaceRoot = getWorkspaceFile().getParent();
+        var allExternalQuery = new BazelQueryForTargetProtoCommand(workspaceRoot, "//external:*", false);
+        var externalRepositories = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
+
+        return externalRepositoryRuleByName = externalRepositories.stream()
+                .filter(Target::hasRule)
+                .map(Target::getRule)
+                .map(BazelRuleAttributes::new)
+                .collect(toMap(BazelRuleAttributes::getName, Function.identity())); // index by the "name" attribute
     }
 }

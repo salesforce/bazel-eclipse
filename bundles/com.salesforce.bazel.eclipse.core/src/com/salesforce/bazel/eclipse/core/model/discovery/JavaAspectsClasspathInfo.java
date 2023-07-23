@@ -340,15 +340,11 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     private BazelWorkspace findExternalWorkspace(Label label) throws CoreException {
         var externalRepository = bazelWorkspace.getExternalRepository(label.externalWorkspaceName());
         if (externalRepository != null) {
-            switch (externalRepository.getRule().getRuleClass()) {
+            switch (externalRepository.getRuleClass()) {
                 case "local_repository": {
-                    var pathAttribute = externalRepository.getRule()
-                            .getAttributeList()
-                            .stream()
-                            .filter(a -> a.getName().equals("path"))
-                            .findAny();
-                    if (pathAttribute.isPresent()) {
-                        var path = forPosix(pathAttribute.get().getStringValue());
+                    var pathAttribute = externalRepository.getString("path");
+                    if (pathAttribute != null) {
+                        var path = forPosix(pathAttribute);
                         if (!path.isAbsolute()) {
                             path = bazelWorkspace.getLocation().append(path);
                         }

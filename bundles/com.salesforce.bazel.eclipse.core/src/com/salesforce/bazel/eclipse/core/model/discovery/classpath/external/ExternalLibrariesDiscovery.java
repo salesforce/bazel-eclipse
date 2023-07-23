@@ -40,6 +40,7 @@ import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
 import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
+import com.salesforce.bazel.eclipse.core.model.BazelRuleAttributes;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaClasspathJarLocationResolver;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
@@ -163,19 +164,14 @@ public class ExternalLibrariesDiscovery {
 
     private void queryForJavaImports(Set<ClasspathEntry> result) throws CoreException {
         // get list of all interesting external repo rules
-        // note, some rules may do crazy stuff, just expand the regex if you think we should be searching more for java_import
-        var allExternalQuery = new BazelQueryForLabelsCommand(
-                workspaceRoot.directory(),
-                "kind('jvm_import_external|compat_repository', //external:*)",
-                false);
-        Collection<String> externals = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
+        // note, some rules may do crazy stuff, just expand the set if you think we should be searching more for java_import
+        Set<String> wantedRuleKinds = Set.of("jvm_import_external", "compat_repository");
+        var externals =
+                bazelWorkspace.getExternalRepositoriesByRuleClass(k -> wantedRuleKinds.contains(k));
 
         // get java_import details from each external
-        var setOfExternalsToQuery = externals.stream()
-                .filter(s -> s.startsWith(PREFIX_EXTERNAL))
-                .map(s -> s.substring(PREFIX_EXTERNAL.length()))
-                .map(s -> format("@%s//...", s))
-                .collect(joining(" "));
+        var setOfExternalsToQuery =
+                externals.map(BazelRuleAttributes::getName).map(s -> format("@%s//...", s)).collect(joining(" "));
         if (setOfExternalsToQuery.isBlank()) {
             return;
         }
