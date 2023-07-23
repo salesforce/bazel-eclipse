@@ -36,6 +36,13 @@ public final class ArtifactLocationDecoderImpl implements ArtifactLocationDecode
             return pathResolver.resolveToFile(artifactLocation.getRelativePath());
         }
 
+        if(artifactLocation.isExternal() && !artifactLocation.isGenerated()) {
+        	// the symlinks for externals are sometimes not there
+        	// it's unclear what Bazel behavior is responsible for this
+        	// thus, instead of execution root, we use the <output-base>/externals directly
+        	return blazeInfo.getOutputBase().resolve(artifactLocation.getExecutionRootRelativePath());
+        }
+
         // resolve from execution root
         // doesn't require file-system operations -- no attempt to resolve symlinks.
         return blazeInfo.getExecutionRoot().resolve(artifactLocation.getExecutionRootRelativePath());

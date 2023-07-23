@@ -44,7 +44,6 @@ import com.salesforce.bazel.eclipse.core.model.BazelRuleAttributes;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaClasspathJarLocationResolver;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
-import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
 
 /**
@@ -166,8 +165,7 @@ public class ExternalLibrariesDiscovery {
         // get list of all interesting external repo rules
         // note, some rules may do crazy stuff, just expand the set if you think we should be searching more for java_import
         Set<String> wantedRuleKinds = Set.of("jvm_import_external", "compat_repository");
-        var externals =
-                bazelWorkspace.getExternalRepositoriesByRuleClass(k -> wantedRuleKinds.contains(k));
+        var externals = bazelWorkspace.getExternalRepositoriesByRuleClass(k -> wantedRuleKinds.contains(k));
 
         // get java_import details from each external
         var setOfExternalsToQuery =
@@ -229,17 +227,13 @@ public class ExternalLibrariesDiscovery {
     }
 
     private void queryForRulesJvmExternalJars(Set<ClasspathEntry> result) throws CoreException {
-        // get list of all external repos
-        var allExternalQuery = new BazelQueryForLabelsCommand(
-                workspaceRoot.directory(),
-                "kind('.*coursier_fetch', //external:*)",
-                false);
-        Collection<String> externals = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
+        // get list of all external repos (
+        Set<String> wantedRuleKinds = Set.of("coursier_fetch", "pinned_coursier_fetch"); // pinned is not always available
+        var externals = bazelWorkspace.getExternalRepositoriesByRuleClass(k -> wantedRuleKinds.contains(k));
 
-        // ignore "unpinned" repositories
-        var setOfExternalsToQuery = externals.stream()
-                .filter(s -> s.startsWith(PREFIX_EXTERNAL) && !s.contains(":unpinned_"))
-                .map(s -> s.substring(PREFIX_EXTERNAL.length()))
+        // filter out "unpinned" repositories
+        var setOfExternalsToQuery = externals.map(BazelRuleAttributes::getName)
+                .filter(s -> s.startsWith("unpinned_"))
                 .map(s -> format("@%s//...", s))
                 .collect(joining(" "));
         if (setOfExternalsToQuery.isBlank()) {
