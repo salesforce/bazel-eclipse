@@ -13,11 +13,11 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.OperationCanceledException;
 
 import com.salesforce.bazel.eclipse.core.model.cache.BazelElementInfoCache;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -131,13 +131,14 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
             getParent().getInfo();
         }
 
-        // loads can be potentially expensive; we tolerate this here and may create multiple infos
-        info = requireNonNull(
-            createInfo(),
-            () -> format("invalid implementation of #createInfo in %s; must not return null!", this.getClass()));
-
-        // however, we ensure there is at most one info in the cache and this is what we use
-        return infoCache.putOrGetCached(this, info);
+        // loads can be potentially expensive; we synchronize on the location
+        var location = getLocation();
+        var openJob = new BazelElementOpenJob<>(location != null ? location : IPath.ROOT, this, infoCache);
+        try {
+            return openJob.open();
+        } catch (InterruptedException e) {
+            throw new OperationCanceledException("Interrupted while opening element.");
+        }
     }
 
     BazelElementInfoCache getInfoCache() {
