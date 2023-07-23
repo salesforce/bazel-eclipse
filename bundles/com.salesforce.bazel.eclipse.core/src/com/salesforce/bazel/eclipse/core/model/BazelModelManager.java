@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathManager;
-import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 import com.salesforce.bazel.eclipse.core.extensions.ExtensibleCommandExecutor;
 import com.salesforce.bazel.eclipse.core.model.cache.BazelElementInfoCache;
 import com.salesforce.bazel.eclipse.core.model.cache.CaffeineBasedBazelElementInfoCache;
@@ -183,14 +182,8 @@ public class BazelModelManager implements BazelCoreSharedContstants {
         aspects = new IntellijAspects(stateLocation.append("intellij-aspects").toPath());
         aspects.makeAvailable();
 
-        // initialize the classpath
+        // initialize the classpath manager
         classpathManager = new BazelClasspathManager(stateLocation.toFile(), this);
-        var projects = getWorkspace().getRoot().getProjects();
-        var refreshClasspath = new InitializeOrRefreshClasspathJob(
-                projects,
-                classpathManager,
-                false /* only when classpath is missing */);
-        refreshClasspath.schedule();
 
         // insert our global resource listener into the workspace
         // and process deltas since last activated in same thread so that we don't miss anything
