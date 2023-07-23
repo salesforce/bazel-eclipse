@@ -436,11 +436,11 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             }
             var bazelPackage = workspace.getBazelPackage(forPosix(targetKey.getLabel().blazePackage().relativePath()));
             var bazelTarget = bazelPackage.getBazelTarget(targetKey.getLabel().targetName().toString());
-            if (bazelTarget.hasBazelProject()) {
+            if (bazelTarget.hasBazelProject() && bazelTarget.getBazelProject().getProject().isAccessible()) {
                 // a direct target match is preferred
                 return newProjectReference(targetKey, bazelTarget.getBazelProject());
             }
-            if (bazelPackage.hasBazelProject()) {
+            if (bazelPackage.hasBazelProject() && bazelPackage.getBazelProject().getProject().isAccessible()) {
                 // at this point we *assume* the package is a valid project reference and includes the given target
                 // if this assumption doesn't hold true we need to customize/override this behavior per override
                 return newProjectReference(targetKey, bazelPackage.getBazelProject());
