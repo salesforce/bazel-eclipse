@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.eclipse.core.runtime.IPath.forPosix;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +46,7 @@ import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
 import com.google.idea.blaze.base.ideinfo.TargetKey;
 import com.google.idea.blaze.base.model.primitives.GenericBlazeRules;
+import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.java.JavaBlazeRules;
 import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
@@ -335,6 +337,33 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         return result.values();
     }
 
+    private BazelWorkspace findExternalWorkspace(Label label) throws CoreException {
+        var externalRepository = bazelWorkspace.getExternalRepository(label.externalWorkspaceName());
+        if (externalRepository != null) {
+            switch (externalRepository.getRule().getRuleClass()) {
+                case "local_repository": {
+                    var pathAttribute = externalRepository.getRule()
+                            .getAttributeList()
+                            .stream()
+                            .filter(a -> a.getName().equals("path"))
+                            .findAny();
+                    if (pathAttribute.isPresent()) {
+                        var path = forPosix(pathAttribute.get().getStringValue());
+                        if (!path.isAbsolute()) {
+                            path = bazelWorkspace.getLocation().append(path);
+                        }
+
+                        var externalWorkspace = bazelWorkspace.getParent().getBazelWorkspace(path);
+                        if (externalWorkspace.exists()) {
+                            return externalWorkspace;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     private List<JdepsDependency> loadJdeps(TargetIdeInfo targetIdeInfo) throws CoreException {
         // load jdeps file
         var jdepsFile = resolveJdepsOutput(targetIdeInfo);
@@ -401,9 +430,15 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     }
 
     protected ClasspathEntry resolveProject(TargetKey targetKey) throws CoreException {
-        if (targetKey.isPlainTarget() && !targetKey.getLabel().isExternal()) {
-            var bazelPackage =
-                    bazelWorkspace.getBazelPackage(new Path(targetKey.getLabel().blazePackage().relativePath()));
+        if (targetKey.isPlainTarget()) {
+            var workspace = bazelWorkspace;
+            if (targetKey.getLabel().isExternal()) {
+                workspace = findExternalWorkspace(targetKey.getLabel());
+                if (workspace == null) {
+                    return null;
+                }
+            }
+            var bazelPackage = workspace.getBazelPackage(forPosix(targetKey.getLabel().blazePackage().relativePath()));
             var bazelTarget = bazelPackage.getBazelTarget(targetKey.getLabel().targetName().toString());
             if (bazelTarget.hasBazelProject()) {
                 // a direct target match is preferred

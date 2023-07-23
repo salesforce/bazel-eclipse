@@ -22,7 +22,7 @@ public class BazelRuleAttributes {
     private final Rule rule;
     private final Map<String, Attribute> attributesByAttributeName;
 
-    BazelRuleAttributes(Rule rule) {
+    public BazelRuleAttributes(Rule rule) {
         this.rule = rule;
         // this might fail if there are multiple attributes of the same name
         // TODO: confirm with Bazel what the behavior/expectation should be

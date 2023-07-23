@@ -19,6 +19,7 @@ import static java.util.stream.Collectors.joining;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -30,11 +31,13 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 
+import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectFileReader;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.command.BazelInfoCommand;
+import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
 
 public final class BazelWorkspaceInfo extends BazelElementInfo {
 
@@ -59,6 +62,8 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
     private IPath outputBase;
     private IPath outputPath;
     private BazelVersion bazelVersion;
+
+    private Collection<Target> externalRepositories;
 
     public BazelWorkspaceInfo(IPath root, Path workspaceFile, BazelWorkspace bazelWorkspace) {
         this.root = root;
@@ -101,12 +106,15 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         var projectViewLocation = getBazelProjectFileSystemMapper().getProjectViewLocation();
         try {
             return bazelProjectView =
-                    new BazelProjectFileReader(projectViewLocation.toPath(), getRoot().toPath())
-                            .read();
+                    new BazelProjectFileReader(projectViewLocation.toPath(), getRoot().toPath()).read();
         } catch (IOException e) {
-            throw new CoreException(Status.error(format(
-                "Error reading project view '%s'. Please check the setup. Each workspace is required to have a project view to work properly in an IDE. %s",
-                projectViewLocation, e.getMessage()), e));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Error reading project view '%s'. Please check the setup. Each workspace is required to have a project view to work properly in an IDE. %s",
+                            projectViewLocation,
+                            e.getMessage()),
+                        e));
         }
     }
 
@@ -138,10 +146,16 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
     private String getExpectedOutput(Map<String, String> infoResult, String key) throws CoreException {
         var value = infoResult.get(key);
         if ((value == null) || value.isBlank()) {
-            throw new CoreException(Status
-                    .error(format("incomplete bazel info output in workspace '%s': %s missing%n%navailable info:%n%s",
-                        root, key, infoResult.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue())
-                                .collect(joining(System.lineSeparator())))));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "incomplete bazel info output in workspace '%s': %s missing%n%navailable info:%n%s",
+                            root,
+                            key,
+                            infoResult.entrySet()
+                                    .stream()
+                                    .map(e -> e.getKey() + ": " + e.getValue())
+                                    .collect(joining(System.lineSeparator())))));
         }
 
         return value;
@@ -149,6 +163,16 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
 
     private IPath getExpectedOutputAsPath(Map<String, String> infoResult, String key) throws CoreException {
         return new org.eclipse.core.runtime.Path(getExpectedOutput(infoResult, key));
+    }
+
+    public Collection<Target> getExternalRepositories() throws CoreException {
+        if (externalRepositories != null) {
+            return externalRepositories;
+        }
+
+        var workspaceRoot = getWorkspaceFile().getParent();
+        var allExternalQuery = new BazelQueryForTargetProtoCommand(workspaceRoot, "//external:*", false);
+        return externalRepositories = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
     }
 
     public String getName() {
@@ -177,9 +201,11 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             }
         }
 
-        throw new CoreException(Status.error(format(
-            "Unable to find project for Bazel workspace root '%s' in the Eclipse workspace. Please check the workspace setup!",
-            root)));
+        throw new CoreException(
+                Status.error(
+                    format(
+                        "Unable to find project for Bazel workspace root '%s' in the Eclipse workspace. Please check the workspace setup!",
+                        root)));
     }
 
     public String getRelease() {
@@ -207,13 +233,16 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         try {
             // we use the BazelModelCommandExecutionService directly because info is not a query
             var infoResult = executionService
-                    .executeOutsideWorkspaceLockAsync(new BazelInfoCommand(workspaceRoot), bazelWorkspace).get();
+                    .executeOutsideWorkspaceLockAsync(new BazelInfoCommand(workspaceRoot), bazelWorkspace)
+                    .get();
 
             // sanity check
             if (infoResult.isEmpty()) {
-                throw new CoreException(Status.error(format(
-                    "bazel info did not return any output in workspace '%s'. Please check the bazel output and binary setup/configuration!",
-                    root)));
+                throw new CoreException(
+                        Status.error(
+                            format(
+                                "bazel info did not return any output in workspace '%s'. Please check the bazel output and binary setup/configuration!",
+                                root)));
 
             }
 
@@ -236,12 +265,18 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         } catch (ExecutionException e) {
             var cause = e.getCause();
             if (cause == null) {
-                throw new CoreException(Status.error(
-                    format("bazel info failed in workspace '%s' for with unknown reason", workspaceRoot), e));
+                throw new CoreException(
+                        Status.error(
+                            format("bazel info failed in workspace '%s' for with unknown reason", workspaceRoot),
+                            e));
             }
-            throw new CoreException(Status.error(format(
-                "bazel info failed in workspace '%s': %s%n Please check the bazel output and binary setup/configuration!",
-                workspaceRoot, cause.getMessage()), cause));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "bazel info failed in workspace '%s': %s%n Please check the bazel output and binary setup/configuration!",
+                            workspaceRoot,
+                            cause.getMessage()),
+                        cause));
         }
     }
 }

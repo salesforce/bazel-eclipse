@@ -36,6 +36,7 @@ import org.eclipse.core.runtime.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -285,6 +286,19 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
         return this;
     }
 
+    public Target getExternalRepository(String externalRepositoryName) throws CoreException {
+        var ruleName = format("//external:%s", externalRepositoryName);
+        var externalRepositoryTarget = getInfo().getExternalRepositories()
+                .stream()
+                .filter(t -> t.hasRule() && t.getRule().getName().equals(ruleName))
+                .findAny();
+        if (externalRepositoryTarget.isEmpty()) {
+            return null;
+        }
+
+        return externalRepositoryTarget.get();
+    }
+
     @Override
     public BazelLabel getLabel() {
         // FIXME: the workspace should have a label but which one? @, @//, @name?
@@ -384,8 +398,7 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
      */
     public void open(Collection<BazelPackage> bazelPackages) throws CoreException {
         // avoid unnecessary open calls
-        var closedPackages =
-                bazelPackages.stream().filter(not(BazelPackage::hasInfo)).distinct().toList();
+        var closedPackages = bazelPackages.stream().filter(not(BazelPackage::hasInfo)).distinct().toList();
         if (closedPackages.isEmpty()) {
             return;
         }
