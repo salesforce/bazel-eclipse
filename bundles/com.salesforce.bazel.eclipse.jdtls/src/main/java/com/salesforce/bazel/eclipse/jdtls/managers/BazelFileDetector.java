@@ -70,9 +70,9 @@ public class BazelFileDetector {
      * @param fileNames
      *            the names of the file to search
      */
-    public BazelFileDetector(Path rootDir, String... fileNames) {
+    public BazelFileDetector(Path rootDir, List<String> fileNames) {
         this.rootDir = rootDir;
-        this.fileNames = fileNames == null ? new ArrayList<>() : Arrays.asList(fileNames);
+        this.fileNames = fileNames;
         directories = new ArrayList<>();
         addExclusions(METADATA_FOLDER);
         var javaImportExclusions =

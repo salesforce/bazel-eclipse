@@ -13,11 +13,10 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD_BAZEL;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_MODULE_BAZEL;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_REPO_BAZEL;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BAZEL;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BZLMOD;
 import static com.salesforce.bazel.eclipse.core.model.BazelPackageInfo.queryForTargets;
 import static java.lang.String.format;
 import static java.nio.file.Files.isDirectory;
@@ -62,8 +61,24 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     private static Logger LOG = LoggerFactory.getLogger(BazelWorkspace.class);
 
     /**
-     * Utility function to find a <code>WORKSPACE.bazel</code>, <code>WORKSPACE</code> or <code>WORKSPACE.bzlmod</code>
-     * file in a directory.
+     * List of files defining the boundary of a workspace as defined in <a href=
+     * "https://github.com/bazelbuild/bazel/blob/6eb7dbb2f2634a0acaee5dc8c73f0aab710e1256/src/main/cpp/workspace_layout.cc#L36">Bazel's
+     * workspace_layout.cc</a>
+     * <p>
+     * Workspace boundary files are:
+     * <ul>
+     * <li><code>MODULE.bazel</code></li>
+     * <li><code>REPO.bazel</code></li>
+     * <li><code>WORKSPACE.bazel</code></li>
+     * <li><code>WORKSPACE</code></li>
+     * </ul>
+     * </p>
+     */
+    public static final List<String> WORKSPACE_BOUNDARY_FILES =
+            List.of(FILE_NAME_MODULE_BAZEL, FILE_NAME_REPO_BAZEL, FILE_NAME_WORKSPACE_BAZEL, FILE_NAME_WORKSPACE);
+
+    /**
+     * Utility function to find a {@link #WORKSPACE_BOUNDARY_FILES workspace boundary file} in a directory.
      * <p>
      * This method is used by {@link BazelWorkspace#exists()} to determine whether a workspace exists.
      * </p>
@@ -71,14 +86,11 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
      * @param path
      *            the path to check
      * @return the found workspace file (maybe <code>null</code> if none exist)
-     * @see #isWorkspaceFileName(String)
+     * @see #isWorkspaceBoundaryFileName(String)
      */
     public static Path findWorkspaceFile(Path path) {
-        for (String workspaceFile : List.of( //
-            FILE_NAME_WORKSPACE_BAZEL, // prefer WORKSPACE.bazel
-            FILE_NAME_WORKSPACE, // then WORKSPACE
-            FILE_NAME_WORKSPACE_BZLMOD /* bzlmod is last */)) {
-            var workspaceFilePath = path.resolve(workspaceFile);
+        for (String workspaceBoundaryFile : WORKSPACE_BOUNDARY_FILES) {
+            var workspaceFilePath = path.resolve(workspaceBoundaryFile);
             if (isRegularFile(workspaceFilePath)) {
                 return workspaceFilePath;
             }
@@ -87,8 +99,16 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     }
 
     /**
-     * Utility function to check whether a given file name is <code>WORKSPACE.bazel</code>, <code>WORKSPACE</code> or
-     * <code>WORKSPACE.bzlmod</code>.
+     * Utility function to check whether a given file name is workspace boundary file name.
+     * <p>
+     * Workspace boundary files are:
+     * <ul>
+     * <li><code>MODULE.bazel</code></li>
+     * <li><code>REPO.bazel</code></li>
+     * <li><code>WORKSPACE.bazel</code></li>
+     * <li><code>WORKSPACE</code></li>
+     * </ul>
+     * </p>
      *
      * @param fileName
      *            the file name to check
@@ -96,9 +116,9 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
      *         <code>WORKSPACE.bzlmod</code>, <code>false</code> otherwise
      * @see #findWorkspaceFile(Path)
      */
-    public static boolean isWorkspaceFileName(String fileName) {
-        for (String packageFile : List.of(FILE_NAME_BUILD_BAZEL, FILE_NAME_BUILD)) {
-            if (packageFile.equals(fileName)) {
+    public static boolean isWorkspaceBoundaryFileName(String fileName) {
+        for (String workspaceBoundaryFile : WORKSPACE_BOUNDARY_FILES) {
+            if (workspaceBoundaryFile.equals(fileName)) {
                 return true;
             }
         }

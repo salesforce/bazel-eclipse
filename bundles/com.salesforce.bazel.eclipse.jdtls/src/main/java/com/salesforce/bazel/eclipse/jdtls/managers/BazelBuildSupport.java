@@ -81,12 +81,12 @@ public class BazelBuildSupport implements IBuildSupport {
     public boolean isBuildFile(IResource resource) {
         return (resource != null) && (resource.getProject() != null) && (resource.getType() == IResource.FILE)
                 && (BazelPackage.isBuildFileName(resource.getName())
-                        || BazelWorkspace.isWorkspaceFileName(resource.getName()));
+                        || BazelWorkspace.isWorkspaceBoundaryFileName(resource.getName()));
     }
 
     @Override
     public boolean isBuildLikeFileName(String fileName) {
-        return BazelPackage.isBuildFileName(fileName) || BazelWorkspace.isWorkspaceFileName(fileName);
+        return BazelPackage.isBuildFileName(fileName) || BazelWorkspace.isWorkspaceBoundaryFileName(fileName);
     }
 
     @Override

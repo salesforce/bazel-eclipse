@@ -24,11 +24,8 @@
 package com.salesforce.bazel.eclipse.core.model;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD_BAZEL;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BAZEL;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BZLMOD;
+import static com.salesforce.bazel.eclipse.core.model.BazelPackage.isBuildFileName;
+import static com.salesforce.bazel.eclipse.core.model.BazelWorkspace.isWorkspaceBoundaryFileName;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -43,8 +40,6 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-
-import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 
 /**
  * Global change listener for Eclipse Workspaces used by the Bazel model.
@@ -69,13 +64,14 @@ class ResourceChangeProcessor implements IResourceChangeListener {
 
         // if we have some, we need to refresh classpaths
         // but we do this asynchronously and *only* when the workspace is in auto-build mode
-        if ((affectedProjects.size() > 0) && isAutoBuilding()) {
-            var classpathJob = new InitializeOrRefreshClasspathJob(
-                    affectedProjects.toArray(new IProject[affectedProjects.size()]),
-                    modelManager.getClasspathManager(),
-                    true /* force refresh */);
-            classpathJob.schedule();
-        }
+        // TODO: disabled because this behavior is annoying/too disruptive (we need a better thing, potentially delay, configurable, notification only)
+        //        if ((affectedProjects.size() > 0) && isAutoBuilding()) {
+        //            var classpathJob = new InitializeOrRefreshClasspathJob(
+        //                    affectedProjects.toArray(new IProject[affectedProjects.size()]),
+        //                    modelManager.getClasspathManager(),
+        //                    true /* force refresh */);
+        //            classpathJob.schedule();
+        //        }
     }
 
     private void collectProjectsAffectedByPossibleClasspathChange(IResourceDelta delta,
@@ -127,9 +123,7 @@ class ResourceChangeProcessor implements IResourceChangeListener {
                 /* check BUILD files change */
                 var file = (IFile) resource;
                 var fileName = file.getName();
-                if (fileName.equals(FILE_NAME_BUILD_BAZEL) || fileName.equals(FILE_NAME_BUILD)
-                        || fileName.equals(FILE_NAME_WORKSPACE_BAZEL) || fileName.equals(FILE_NAME_WORKSPACE)
-                        || fileName.equals(FILE_NAME_WORKSPACE_BZLMOD)) {
+                if (isBuildFileName(fileName) || isWorkspaceBoundaryFileName(fileName)) {
                     affectedProjectsWithClasspathChange.add(file.getProject());
                 }
                 var fileExtension = file.getFileExtension();

@@ -15,9 +15,7 @@
 package com.salesforce.bazel.eclipse.jdtls.managers;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BAZEL;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_WORKSPACE_BZLMOD;
+import static com.salesforce.bazel.eclipse.core.model.BazelWorkspace.WORKSPACE_BOUNDARY_FILES;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.Files.writeString;
@@ -26,7 +24,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,7 +59,7 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
             throws OperationCanceledException, CoreException {
         var configurationDirs = findProjectPathByConfigurationName(
             projectConfigurations,
-            List.of(FILE_NAME_WORKSPACE_BAZEL, FILE_NAME_WORKSPACE, FILE_NAME_WORKSPACE_BZLMOD),
+            WORKSPACE_BOUNDARY_FILES,
             false /*includeNested*/);
         if ((configurationDirs == null) || configurationDirs.isEmpty()) {
             return false;
@@ -86,11 +83,8 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
     @Override
     public boolean applies(IProgressMonitor monitor) throws OperationCanceledException, CoreException {
         if (directories == null) {
-            var bazelDetector = new BazelFileDetector(
-                    rootFolder.toPath(),
-                    FILE_NAME_WORKSPACE_BAZEL,
-                    FILE_NAME_WORKSPACE,
-                    FILE_NAME_WORKSPACE_BZLMOD).includeNested(false);
+            var bazelDetector =
+                    new BazelFileDetector(rootFolder.toPath(), WORKSPACE_BOUNDARY_FILES).includeNested(false);
 
             // exclude all existing non Bazel projects
             for (IProject project : ProjectUtils.getAllProjects()) {
