@@ -94,6 +94,43 @@ public class BazelProject implements IProjectNature {
     public static final QualifiedName PROJECT_PROPERTY_TARGETS = new QualifiedName(PLUGIN_ID, "bazel_targets");
 
     /**
+     * Attempts to recover the workspace root property value.
+     * <p>
+     * This method must only be called on Bazel projects. After an import in Eclipse (eg., importing existing projects)
+     * the persistent property metadata might not be there. This method attempts to recover the property be scanning the
+     * file system for a Bazel workspace.
+     * </p>
+     *
+     * @param project
+     * @return
+     * @throws CoreException
+     */
+    private static String getOrFixWorkspaceRootPropertyValue(IProject project) throws CoreException {
+        var workspaceRootPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_WORKSPACE_ROOT);
+        if (workspaceRootPropertyValue != null) {
+            return workspaceRootPropertyValue;
+        }
+
+        var location =
+                requireNonNull(project.getLocation(), "Bazel projects must have a location in the local file system");
+        while (true) {
+            var workspaceFile = BazelWorkspace.findWorkspaceFile(location.toPath());
+            if (workspaceFile != null) {
+                project.setPersistentProperty(PROJECT_PROPERTY_WORKSPACE_ROOT, location.toString());
+                return location.toString();
+            }
+
+            if (location.isRoot()) {
+                // we search everything including the root, give up
+                return null;
+            }
+
+            // continue with parent
+            location = location.removeLastSegments(1);
+        }
+    }
+
+    /**
      * A convenience method for checking if a project has the {@link #PROJECT_PROPERTY_OWNER} set to the given label.
      *
      * @param project
@@ -136,7 +173,7 @@ public class BazelProject implements IProjectNature {
      */
     public static boolean hasWorkspaceRootPropertySetToLocation(IProject project, IPath workspaceRoot)
             throws CoreException {
-        var workspaceRootPropertyValue = project.getPersistentProperty(PROJECT_PROPERTY_WORKSPACE_ROOT);
+        var workspaceRootPropertyValue = getOrFixWorkspaceRootPropertyValue(project);
         // workspace root must be set and must match the project location
         return (workspaceRootPropertyValue != null) && (workspaceRoot != null)
                 && workspaceRoot.toString().equals(workspaceRootPropertyValue);
@@ -339,7 +376,7 @@ public class BazelProject implements IProjectNature {
     public BazelWorkspace getBazelWorkspace() throws CoreException {
         var project = getProject();
 
-        var workspaceRoot = project.getPersistentProperty(PROJECT_PROPERTY_WORKSPACE_ROOT);
+        var workspaceRoot = getOrFixWorkspaceRootPropertyValue(project);
         if (workspaceRoot == null) {
             throw new CoreException(
                     Status.error(
