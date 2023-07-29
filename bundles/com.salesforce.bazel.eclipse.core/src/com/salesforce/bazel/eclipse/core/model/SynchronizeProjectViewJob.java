@@ -110,7 +110,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             return targetList;
         }
 
-        return String.format("attr('tags', '^((?!manual).)*$', %s)", targetList);
+        // do not exclude the manual tags here but make sure to filter out "no-ide" targets
+        return String.format("attr('tags', '^((?!no-ide).)*$', %s)", targetList);
     }
 
     private final BazelWorkspace workspace;

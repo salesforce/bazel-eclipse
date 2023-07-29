@@ -179,7 +179,7 @@ public class JavaProjectInfo {
         resourceInfo = new JavaResourceInfo(resources, bazelPackage);
         resourceInfo.analyzeResourceDirectories(result);
 
-        testSourceInfo = new JavaSourceInfo(this.testSrcs, bazelPackage.getLocation());
+        testSourceInfo = new JavaSourceInfo(this.testSrcs, bazelPackage.getLocation(), sourceInfo);
         testSourceInfo.analyzeSourceDirectories(result);
 
         testResourceInfo = new JavaResourceInfo(testResources, bazelPackage);

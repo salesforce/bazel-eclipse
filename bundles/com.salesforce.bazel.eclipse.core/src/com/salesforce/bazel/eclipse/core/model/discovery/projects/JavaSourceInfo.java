@@ -37,7 +37,8 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
  */
 public class JavaSourceInfo {
 
-    private static final IPath INVALID = new Path("_not_following_ide_standards_");
+    private static final IPath NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE =
+            new Path("_not_following_java_package_structure_");
 
     private static boolean isJavaFile(java.nio.file.Path file) {
         return isRegularFile(file) && file.getFileName().toString().endsWith(".java");
@@ -46,6 +47,7 @@ public class JavaSourceInfo {
     private final Map<IPath, IPath> detectedPackagePathsByFileEntryPathParent = new HashMap<>();
     private final Collection<Entry> srcs;
     private final IPath bazelPackageLocation;
+    private final JavaSourceInfo sharedSourceInfo;
 
     /**
      * A list of all source files impossible to identify a common root directory
@@ -61,6 +63,26 @@ public class JavaSourceInfo {
     public JavaSourceInfo(Collection<Entry> srcs, IPath bazelPackageLocation) {
         this.srcs = srcs;
         this.bazelPackageLocation = bazelPackageLocation;
+        this.sharedSourceInfo = null;
+    }
+
+    /**
+     * Use this constructor for test sources, i.e. sources which may have targets sharing sources.
+     * <p>
+     * Bazel allows to re-use sources in multiple targets. It will then compile those multiple times. An example setup
+     * is where all code is exposed as <code>java_library</code> as well as many targets for <code>java_test</code> with
+     * only one test class. If this is the case, we want to not issue "split package" warnings when the test class is
+     * already handled at the <code>java_library</code> level.
+     * </p>
+     *
+     * @param srcs
+     * @param bazelPackageLocation
+     * @param sharedSourceInfo
+     */
+    public JavaSourceInfo(Collection<Entry> srcs, IPath bazelPackageLocation, JavaSourceInfo sharedSourceInfo) {
+        this.srcs = srcs;
+        this.bazelPackageLocation = bazelPackageLocation;
+        this.sharedSourceInfo = sharedSourceInfo;
     }
 
     @SuppressWarnings("unchecked")
@@ -84,7 +106,7 @@ public class JavaSourceInfo {
                             "Java file '%s' (with detected package '%s') does not meet IDE standards. Please move into a folder hierarchy which follows Java package structure!",
                             fileEntry.getPath(),
                             fileEntry.getDetectedPackagePath())));
-                return INVALID;
+                return NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE;
             }
 
             // build second index of parent for all entries with a potential source root
@@ -169,7 +191,7 @@ public class JavaSourceInfo {
         // (eg., glob(["src/test/java/some/package/only/*.java"])
         for (var potentialSourceRootAndSourceEntries : sourceEntriesBySourceRoot.entrySet()) {
             var potentialSourceRoot = potentialSourceRootAndSourceEntries.getKey();
-            if (INVALID.equals(potentialSourceRoot)) {
+            if (NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE.equals(potentialSourceRoot)) {
                 continue;
             }
             if (!(potentialSourceRootAndSourceEntries.getValue() instanceof List)) {
@@ -198,11 +220,25 @@ public class JavaSourceInfo {
             }
         }
 
+        /*
+         * Bazel allows to re-use sources in multiple targets. It will then compile those multiple times. An example setup
+         * is where all code is exposed as <code>java_library</code> as well as many targets for <code>java_test</code> with
+         * only one test class. If this is the case, we want to not issue "split package" warnings when the test class is
+         * already handled at the <code>java_library</code> level.
+         */
+        if ((sharedSourceInfo != null) && sharedSourceInfo.hasSourceDirectories()) {
+            var sharedSourceDirectories = sharedSourceInfo.getSourceDirectories();
+            potentialSplitPackageOrSubsetFolders.removeIf(
+                potentialSourceRoot -> sharedSourceDirectories.contains(potentialSourceRoot)
+                        || sharedSourceDirectories.stream().anyMatch(p -> p.isPrefixOf(potentialSourceRoot)));
+        }
+
         // when there are no split packages we found a good setup
         if (potentialSplitPackageOrSubsetFolders.isEmpty()) {
             // collect remaining files without a root
-            if (sourceEntriesBySourceRoot.containsKey(INVALID)) {
-                sourceFilesWithoutCommonRoot = (List<JavaSourceEntry>) sourceEntriesBySourceRoot.remove(INVALID);
+            if (sourceEntriesBySourceRoot.containsKey(NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE)) {
+                sourceFilesWithoutCommonRoot =
+                        (List<JavaSourceEntry>) sourceEntriesBySourceRoot.remove(NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE);
             }
 
             // create source directories

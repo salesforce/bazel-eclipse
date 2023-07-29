@@ -131,7 +131,7 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
      *             in case of errors loading the rules info
      */
     public String getRuleClass() throws CoreException {
-        return getInfo().getTarget().getRule().getRuleClass();
+        return getInfo().getRule().getRuleClass();
     }
 
     /**
@@ -163,5 +163,19 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
     @Override
     public int hashCode() {
         return Objects.hash(bazelPackage, targetName);
+    }
+
+    /**
+     * Returns <code>true</code> if the target is a rule and has a attribute named <code>tags</code> containing the
+     * specified tag.
+     *
+     * @param tag
+     *            the tag to check
+     * @return <code>true</code> if the rule has the specified tag, <code>false</code> otherwise
+     * @throws CoreException
+     */
+    public boolean hasTag(String tag) throws CoreException {
+        var tags = getInfo().getRuleAttributes().getStringList("tags");
+        return (tags != null) && tags.contains(tag);
     }
 }
