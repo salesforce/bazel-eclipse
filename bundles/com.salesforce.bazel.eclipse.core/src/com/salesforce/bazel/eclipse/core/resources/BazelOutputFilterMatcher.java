@@ -39,28 +39,39 @@ public class BazelOutputFilterMatcher extends AbstractFileInfoMatcher {
     private static Logger LOG = LoggerFactory.getLogger(BazelOutputFilterMatcher.class);
 
     private BazelProject bazelProject;
-    private boolean enabled;
 
     @Override
     public void initialize(IProject project, Object arguments) throws CoreException {
         if (!project.hasNature(BAZEL_NATURE_ID)) {
-            throw new CoreException(Status.error(format(
-                "Project '%s' is not a Bazel project. Please remove the Bazel output filter from the project configuration!",
-                project)));
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Project '%s' is not a Bazel project. Please remove the Bazel output filter from the project configuration!",
+                            project)));
         }
 
         bazelProject = BazelCore.create(project);
-        enabled = bazelProject.isWorkspaceProject();
     }
 
     @Override
     public boolean matches(IContainer parent, IFileInfo fileInfo) throws CoreException {
-        if (!enabled || (parent.getType() != IResource.PROJECT)) {
+        if (parent.getType() != IResource.PROJECT) {
             return false;
         }
 
         // only check symlinks
         if (!fileInfo.getAttribute(EFS.ATTRIBUTE_SYMLINK)) {
+            return false;
+        }
+
+        // shortcut: if symlink name starts with "bazel-" we ignore it
+        if (fileInfo.getName().startsWith("bazel-")) {
+            return true;
+        }
+
+        // implementation node: the code below requires a proper Bazel setup, thus, lets check here if this is a workspace project
+        // the code above can run without this check
+        if (!bazelProject.isWorkspaceProject()) {
             return false;
         }
 
@@ -77,8 +88,12 @@ public class BazelOutputFilterMatcher extends AbstractFileInfoMatcher {
         } catch (IOException e) {
             // ignore
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Error checking symlink '{}' -> '{}' in project '{}'", fileInfo.getName(), symlinkTarget,
-                    parent, e);
+                LOG.debug(
+                    "Error checking symlink '{}' -> '{}' in project '{}'",
+                    fileInfo.getName(),
+                    symlinkTarget,
+                    parent,
+                    e);
             }
         }
 
