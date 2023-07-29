@@ -129,8 +129,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     }
 
     private void configureFiltersAndRefresh(IProject workspaceProject, SubMonitor monitor) throws CoreException {
-        monitor.beginTask("Configuring workspace project", 1);
-
         var filterExists = Stream.of(workspaceProject.getFilters()).anyMatch(f -> {
             var matcher = f.getFileInfoMatcherDescription();
             return RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID.equals(matcher.getId());
@@ -169,7 +167,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         var project = getWorkspaceRoot().getProject(workspaceName);
         project.create(projectDescription, monitor.split(1));
 
-        project.open(monitor.split(1));
+        // open project but refresh in the background (there is another one coming later)
+        project.open(IResource.BACKGROUND_REFRESH, monitor.split(1, SUPPRESS_NONE));
 
         // set natures separately in order to ensure they are configured properly
         projectDescription = project.getDescription();
@@ -460,7 +459,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             var workspaceName = workspace.getName();
             var workspaceRoot = workspace.getLocation();
 
-            var progress = SubMonitor.convert(monitor, format("Synchronizing workspace %s", workspaceName), 10);
+            var progress = SubMonitor.convert(monitor, format("Synchronizing workspace %s", workspaceName), 20);
 
             // we don't care about the actual project name - we look for the path
             var workspaceProject = findProjectForLocation(workspaceRoot);
@@ -486,13 +485,13 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             configureFiltersAndRefresh(workspaceProject, progress.split(1, SUPPRESS_NONE));
 
             // apply excludes
-            hideFoldersNotVisibleAccordingToProjectView(workspaceProject, progress.split(1, SUPPRESS_NONE));
+            hideFoldersNotVisibleAccordingToProjectView(workspaceProject, progress.split(10, SUPPRESS_NONE));
 
             // detect targets
             var targets = detectTargetsToMaterializeInEclipse(workspaceProject, progress.split(1, SUPPRESS_NONE));
 
             // ensure project exists
-            var targetProjects = provisionProjectsForTarget(targets, progress.split(1, SUPPRESS_NONE));
+            var targetProjects = provisionProjectsForTarget(targets, progress.split(10, SUPPRESS_NONE));
 
             // remove no longer needed projects
             removeObsoleteProjects(targetProjects, progress.split(1, SUPPRESS_NONE));
