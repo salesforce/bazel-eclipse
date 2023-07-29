@@ -46,14 +46,12 @@ public final class BazelTargetInfo extends BazelElementInfo {
     }
 
     IProject findProject() throws CoreException {
-        var workspaceProject = getBazelTarget().getBazelWorkspace().getBazelProject().getProject();
         var workspaceRoot = getBazelTarget().getBazelWorkspace().getLocation();
         // we don't care about the actual project name - we look for the property
         var projects = getEclipseWorkspaceRoot().getProjects();
         for (IProject project : projects) {
             if (project.isAccessible() // is open
                     && project.hasNature(BAZEL_NATURE_ID) // is a Bazel project
-                    && !workspaceProject.equals(project) // is not the workspace project
                     && hasWorkspaceRootPropertySetToLocation(project, workspaceRoot) // belongs to the workspace root
                     && hasOwnerPropertySetForLabel(project, getBazelTarget().getLabel()) // represents the target
             ) {
