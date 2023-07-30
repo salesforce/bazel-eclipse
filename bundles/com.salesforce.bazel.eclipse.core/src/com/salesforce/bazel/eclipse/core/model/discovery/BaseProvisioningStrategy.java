@@ -215,7 +215,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                             project,
                             Status.warning(
                                 format(
-                                    "Folder '%s' found twice on the classpath. This is likely because it's used as test as well as non-test resource. Please consider modifying the project setup!",
+                                    "Folder '%s' found twice on the classpath. This is likely because it's used as test as well as non-test source. Please consider modifying the project setup!",
                                     sourceFolder)));
                     } else {
                         createBuildPathProblem(
