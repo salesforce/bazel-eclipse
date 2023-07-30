@@ -45,6 +45,8 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.StatusFactory;
 
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+
 /**
  * Fork of org.eclipse.jdt.ls.core.internal.managers.BasicFileDetector to skip Bazel symlinks.
  */
@@ -64,6 +66,9 @@ public class BazelFileDetector {
      * Constructs a new BazelFileDetector for the given root directory, searching for fileNames. By default, the search
      * depth is limited to 5. Sub-directories of a found directory will be walked through. The ".metadata" folder is
      * excluded.
+     * <p>
+     * Parents are also checked in case the root folder is inside a workspace.
+     * </p>
      *
      * @param rootDir
      *            the root directory to search for files
@@ -188,6 +193,7 @@ public class BazelFileDetector {
     private void scanDir(Path dir, final IProgressMonitor monitor) throws IOException {
         var hasInclusionPattern = exclusions.stream().anyMatch(e -> e.startsWith("!"));
 
+        // scan dir and subdir
         FileVisitor<Path> visitor = new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
@@ -216,6 +222,24 @@ public class BazelFileDetector {
 
         };
         Files.walkFileTree(dir, FOLLOW_LINKS_OPTION, maxDepth, visitor);
+
+        // check parents if we still don't have anything
+        while ((dir != null) && directories.isEmpty()) {
+            var workspaceFile = BazelWorkspace.findWorkspaceFile(dir);
+            if (workspaceFile != null) {
+                directories.add(dir);
+                return;
+            }
+
+            if (dir.getNameCount() == 0) {
+                // we search everything including the root, give up
+                return;
+            }
+
+            // continue with parent
+            dir = dir.getParent(); // (needs null check in while condition)
+        }
+
     }
 
 }
