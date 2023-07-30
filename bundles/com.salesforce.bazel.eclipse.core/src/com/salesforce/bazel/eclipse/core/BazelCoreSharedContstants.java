@@ -44,6 +44,9 @@ public interface BazelCoreSharedContstants {
     /** {@code BUILD} */
     String FILE_NAME_BUILD = "BUILD";
 
+    /** {@code .bazelproject} */
+    String FILE_NAME_DOT_BAZELPROJECT = ".bazelproject";
+
     /** id of the resource filter responsible for filtering bazel symlinks from the workspace project */
     String RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID =
             "com.salesforce.bazel.eclipse.core.resources.filter.bazelOutputMatcher";

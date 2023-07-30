@@ -1,8 +1,14 @@
 package com.salesforce.bazel.eclipse.jdtls.managers;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD_BAZEL;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_DOT_BAZELPROJECT;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -29,13 +35,14 @@ public class BazelBuildSupport implements IBuildSupport {
     private static final String UNSUPPORTED_OPERATION_MESSAGE =
             "Unsupported operation. Please use BUILD.bazel/BUILD file to manage the source directories of a Bazel target.";
 
-    private static final List<String> WATCH_FILE_PATTERNS = List.of(
-        "**/BUILD",
-        "**/BUILD.bazel",
-        "**/WORKSPACE",
-        "**/WORKSPACE.bazel",
-        "**/WORKSPACE.bzlmod",
-        "**/.bazelproject");
+    private static final List<String> WATCH_FILE_PATTERNS;
+    static {
+        Set<String> fileNames = new TreeSet<>(BazelWorkspace.WORKSPACE_BOUNDARY_FILES);
+        fileNames.add(FILE_NAME_BUILD_BAZEL);
+        fileNames.add(FILE_NAME_BUILD);
+        fileNames.add(FILE_NAME_DOT_BAZELPROJECT);
+        WATCH_FILE_PATTERNS = fileNames.stream().map(s -> "**/" + s).collect(toUnmodifiableList());
+    }
 
     private final DigestStore digestStore;
 

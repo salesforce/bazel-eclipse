@@ -17,4 +17,17 @@
          	order="200"
          	class="com.salesforce.bazel.eclipse.jdtls.managers.BazelBuildSupport" />
    </extension>
+   <extension
+         point="org.eclipse.jdt.ls.core.delegateCommandHandler">
+      <delegateCommandHandler
+            class="com.salesforce.bazel.eclipse.jdtls.commands.BazelJdtLsDelegateCommandHandler"
+            name="Bazel JDT LS Commands">
+         <command
+               id="java.bazel.syncProjects">
+         </command>
+         <command
+               id="java.bazel.updateClasspaths">
+         </command>
+      </delegateCommandHandler>
+   </extension>
 </plugin>

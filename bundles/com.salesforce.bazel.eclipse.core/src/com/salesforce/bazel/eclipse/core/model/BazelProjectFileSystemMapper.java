@@ -13,6 +13,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_DOT_BAZELPROJECT;
 import static java.util.Objects.requireNonNull;
 
 import org.eclipse.core.resources.IFolder;
@@ -86,7 +87,7 @@ public class BazelProjectFileSystemMapper {
      * {@return the absolute path in the file system to the <code>.bazelproject</code> file used by the workspace}
      */
     public IPath getProjectViewLocation() {
-        return getBazelWorkspace().getLocation().append(DOT_ECLIPSE_FOLDER).append(".bazelproject");
+        return getBazelWorkspace().getLocation().append(DOT_ECLIPSE_FOLDER).append(FILE_NAME_DOT_BAZELPROJECT);
     }
 
     /**

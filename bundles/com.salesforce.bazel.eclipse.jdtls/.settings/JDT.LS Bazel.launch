@@ -236,7 +236,7 @@
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
     <stringAttribute key="templateConfig" value="${target_home}/configuration/config.ini"/>
-    <stringAttribute key="timestamp" value="1690688568107"/>
+    <stringAttribute key="timestamp" value="1690750962594"/>
     <booleanAttribute key="tracing" value="true"/>
     <mapAttribute key="tracingOptions">
         <mapEntry key="com.salesforce.bazel.eclipse.core/debugLog" value="true"/>

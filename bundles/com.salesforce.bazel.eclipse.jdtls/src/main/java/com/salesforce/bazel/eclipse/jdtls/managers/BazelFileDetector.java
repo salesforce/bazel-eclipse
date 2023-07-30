@@ -225,6 +225,11 @@ public class BazelFileDetector {
 
         // check parents if we still don't have anything
         while ((dir != null) && directories.isEmpty()) {
+            if (isExcluded(dir)) {
+                // abort if we hit an exclusion (ignore all its parents as well)
+                return;
+            }
+
             var workspaceFile = BazelWorkspace.findWorkspaceFile(dir);
             if (workspaceFile != null) {
                 directories.add(dir);
