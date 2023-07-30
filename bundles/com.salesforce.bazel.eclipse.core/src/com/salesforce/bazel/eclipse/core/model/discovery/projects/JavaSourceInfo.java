@@ -164,15 +164,20 @@ public class JavaSourceInfo {
         // (this is a strong split-package indication)
         Set<IPath> potentialSplitPackageOrSubsetFolders = new HashSet<>();
         for (Map.Entry<IPath, List<JavaSourceEntry>> entry : sourceEntriesByParentFolder.entrySet()) {
-            var entryParentPath = entry.getKey();
-            var entryParentLocation = bazelPackageLocation.append(entryParentPath).toPath();
+            var potentialSourceRoot = entry.getKey();
+            if (isContainedInSharedSourceDirectories(potentialSourceRoot)) {
+                // don't check for split packages for stuff covered in shared sources already
+                continue;
+            }
+
+            var entryParentLocation = bazelPackageLocation.append(potentialSourceRoot).toPath();
             var declaredJavaFilesInFolder = entry.getValue().size();
             try {
                 // when there are declared Java files, expect them to match
                 if (declaredJavaFilesInFolder > 0) {
                     var javaFilesInParent = Files.list(entryParentLocation).filter(JavaSourceInfo::isJavaFile).count();
                     if (javaFilesInParent != declaredJavaFilesInFolder) {
-                        if (potentialSplitPackageOrSubsetFolders.add(entryParentPath)) {
+                        if (potentialSplitPackageOrSubsetFolders.add(potentialSourceRoot)) {
                             result.add(
                                 Status.warning(
                                     format(
@@ -195,6 +200,10 @@ public class JavaSourceInfo {
                 continue;
             }
             if (!(potentialSourceRootAndSourceEntries.getValue() instanceof List)) {
+                continue;
+            }
+            if (isContainedInSharedSourceDirectories(potentialSourceRoot)) {
+                // don't check for split packages for stuff covered in shared sources already
                 continue;
             }
 
@@ -220,17 +229,9 @@ public class JavaSourceInfo {
             }
         }
 
-        /*
-         * Bazel allows to re-use sources in multiple targets. It will then compile those multiple times. An example setup
-         * is where all code is exposed as <code>java_library</code> as well as many targets for <code>java_test</code> with
-         * only one test class. If this is the case, we want to not issue "split package" warnings when the test class is
-         * already handled at the <code>java_library</code> level.
-         */
+        // don't issue split packages warning nfor stuff covered in shared sources already
         if ((sharedSourceInfo != null) && sharedSourceInfo.hasSourceDirectories()) {
-            var sharedSourceDirectories = sharedSourceInfo.getSourceDirectories();
-            potentialSplitPackageOrSubsetFolders.removeIf(
-                potentialSourceRoot -> sharedSourceDirectories.contains(potentialSourceRoot)
-                        || sharedSourceDirectories.stream().anyMatch(p -> p.isPrefixOf(potentialSourceRoot)));
+            potentialSplitPackageOrSubsetFolders.removeIf(this::isContainedInSharedSourceDirectories);
         }
 
         // when there are no split packages we found a good setup
@@ -379,6 +380,23 @@ public class JavaSourceInfo {
 
     public boolean hasSourceFilesWithoutCommonRoot() {
         return (sourceFilesWithoutCommonRoot != null) && !sourceFilesWithoutCommonRoot.isEmpty();
+    }
+
+    private boolean isContainedInSharedSourceDirectories(IPath potentialSourceRoot) {
+        if ((sharedSourceInfo == null) || !sharedSourceInfo.hasSourceDirectories()) {
+            return false;
+        }
+
+        /*
+         * Bazel allows to re-use sources in multiple targets. It will then compile those multiple times. An example setup
+         * is where all code is exposed as <code>java_library</code> as well as many targets for <code>java_test</code> with
+         * only one test class. If this is the case, we want to not issue "split package" warnings when the test class is
+         * already handled at the <code>java_library</code> level.
+         */
+
+        var sharedSourceDirectories = sharedSourceInfo.getSourceDirectories();
+        return sharedSourceDirectories.contains(potentialSourceRoot)
+                || sharedSourceDirectories.stream().anyMatch(p -> p.isPrefixOf(potentialSourceRoot));
     }
 
     @SuppressWarnings("deprecation") // use of TokenNameIdentifier is ok here
