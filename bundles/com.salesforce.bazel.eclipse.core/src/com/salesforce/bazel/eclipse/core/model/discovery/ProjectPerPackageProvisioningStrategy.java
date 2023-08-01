@@ -269,26 +269,33 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
     protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,
             SubMonitor monitor) throws CoreException {
-        if (!bazelPackage.hasBazelProject()) {
-            // create project
-            var packagePath = bazelPackage.getLabel().getPackagePath();
-            var projectName = packagePath.isBlank() ? "ROOT" : packagePath.replace('/', '.');
+        try {
+            if (!bazelPackage.hasBazelProject()) {
+                // create project
+                var packagePath = bazelPackage.getLabel().getPackagePath();
+                var projectName = packagePath.isBlank() ? "ROOT" : packagePath.replace('/', '.');
 
-            // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
-            var projectLocation = bazelPackage.getLocation();
-            createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
-        } else {
-            // use existing project
-            bazelPackage.getBazelProject().getProject();
+                // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
+                var projectLocation = bazelPackage.getLocation();
+                createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
+            } else {
+                // use existing project
+                bazelPackage.getBazelProject().getProject();
+            }
+
+            // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
+            var bazelProject = bazelPackage.getBazelProject();
+
+            // remember/update the targets to build for the project
+            bazelProject.setBazelTargets(targets);
+
+            return bazelProject;
+        } catch (CoreException e) {
+            throw new CoreException(
+                    Status.error(
+                        format("Error provisioning project for package '%s' (targets [%s])", bazelPackage, targets),
+                        e));
         }
-
-        // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
-        var bazelProject = bazelPackage.getBazelProject();
-
-        // remember/update the targets to build for the project
-        bazelProject.setBazelTargets(targets);
-
-        return bazelProject;
     }
 
 }
