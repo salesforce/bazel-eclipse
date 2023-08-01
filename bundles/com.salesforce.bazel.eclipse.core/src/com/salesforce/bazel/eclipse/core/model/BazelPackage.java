@@ -2,6 +2,7 @@ package com.salesforce.bazel.eclipse.core.model;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.FILE_NAME_BUILD_BAZEL;
+import static com.salesforce.bazel.eclipse.core.model.BazelPackageInfo.findProject;
 import static java.lang.String.format;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
@@ -279,7 +280,7 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
     }
 
     public boolean hasBazelProject() throws CoreException {
-        return getInfo().findProject() != null;
+        return findProject(this) != null;
     }
 
     public boolean hasBazelTarget(String name) throws CoreException {

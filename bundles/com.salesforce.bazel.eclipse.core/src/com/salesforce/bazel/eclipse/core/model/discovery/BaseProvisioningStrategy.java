@@ -10,6 +10,7 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PROBLE
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -128,6 +130,13 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         if (pluginDeps != null) {
             for (String dep : pluginDeps) {
                 javaInfo.addPluginDep(dep);
+            }
+        }
+
+        var javacOpts = attributes.getStringList("javacopts");
+        if (javacOpts != null) {
+            for (String javacOpt : javacOpts) {
+                javaInfo.addJavacOpt(javacOpt);
             }
         }
     }
@@ -371,16 +380,46 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         getJvmConfigurator()
                 .applyJavaProjectOptions(javaProject, javaToolchainSourceVersion, javaToolchainTargetVersion, null);
 
+        var extraAttributes = getExtraJvmAttributes(javaInfo);
+
         var executionEnvironmentId = getJvmConfigurator().getExecutionEnvironmentId(javaProject);
         if (executionEnvironmentId != null) {
             // prefer setting EE based JDK for compilation
-            rawClasspath
-                    .add(getJvmConfigurator().getJreClasspathContainerForExecutionEnvironment(executionEnvironmentId));
+            rawClasspath.add(
+                getJvmConfigurator()
+                        .getJreClasspathContainerForExecutionEnvironment(executionEnvironmentId, extraAttributes));
         } else if (javaToolchainVm != null) {
             // use toolchain specific entry
-            rawClasspath.add(JavaCore.newContainerEntry(JavaRuntime.newJREContainerPath(javaToolchainVm)));
+            rawClasspath.add(
+                JavaCore.newContainerEntry(
+                    JavaRuntime.newJREContainerPath(javaToolchainVm),
+                    null /* no access rules */,
+                    extraAttributes,
+                    false /* not exported */));
+
         } else {
-            rawClasspath.add(JavaRuntime.getDefaultJREContainerEntry());
+            rawClasspath.add(
+                JavaCore.newContainerEntry(
+                    JavaRuntime.getDefaultJREContainerEntry().getPath(),
+                    null /* no access rules */,
+                    extraAttributes,
+                    false /* not exported */));
+        }
+
+        // if the classpath has no source folder Eclipse will default to the whole project
+        // this is not good for us because this could cause duplication of an entire hierarchy
+        // we therefore ensure there is a default folder
+        if (!rawClasspath.stream().anyMatch(e -> e.getEntryKind() == IClasspathEntry.CPE_SOURCE)) {
+            // add the virtual folder for resources
+            var virtualSourceFolder = getFileSystemMapper().getVirtualSourceFolder(project);
+            createFolderAndParents(virtualSourceFolder, progress);
+            rawClasspath.add(
+                JavaCore.newSourceEntry(
+                    virtualSourceFolder.getFullPath(),
+                    null /* include all */,
+                    null /* exclude nothing */,
+                    getFileSystemMapper().getOutputFolder(project).getFullPath(),
+                    null /* nothing */));
         }
 
         javaProject.setRawClasspath(rawClasspath.toArray(new IClasspathEntry[rawClasspath.size()]), true, progress);
@@ -410,7 +449,15 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         return createMarker(project.getProject(), BUILDPATH_PROBLEM_MARKER, status);
     }
 
-    protected void createFolderAndParents(final IContainer folder, IProgressMonitor progress) throws CoreException {
+    /**
+     * Creates a folder hierarchy and marks them as derived (because they are generated and should not go into SCM)
+     *
+     * @param folder
+     * @param progress
+     * @throws CoreException
+     */
+    protected final void createFolderAndParents(final IContainer folder, IProgressMonitor progress)
+            throws CoreException {
         var monitor = SubMonitor.convert(progress, 2);
         try {
             if ((folder == null) || folder.exists()) {
@@ -422,7 +469,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             }
             switch (folder.getType()) {
                 case IResource.FOLDER:
-                    ((IFolder) folder).create(IResource.NONE, true, monitor.newChild(1));
+                    ((IFolder) folder).create(IResource.FORCE | IResource.DERIVED, true, monitor.newChild(1));
                     break;
                 default:
                     throw new CoreException(Status.error(format("Cannot create resource '%s'", folder)));
@@ -749,6 +796,32 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         return ResourcesPlugin.getWorkspace().getRoot();
     }
 
+    private IClasspathAttribute[] getExtraJvmAttributes(JavaProjectInfo javaInfo) {
+        Set<String> addExports = new LinkedHashSet<>();
+        Set<String> addOpens = new LinkedHashSet<>();
+        for (String opt : javaInfo.getJavacOpts()) {
+            opt = opt.trim();
+            if (opt.startsWith("--add-opens ")) {
+                addOpens.add(opt.substring("--add-opens ".length()));
+            } else if (opt.startsWith("--add-exports ")) {
+                addExports.add(opt.substring("--add-exports ".length()));
+            }
+        }
+
+        List<IClasspathAttribute> result = new ArrayList<>();
+        if (addExports.size() > 0) {
+            result.add(
+                JavaCore.newClasspathAttribute(
+                    IClasspathAttribute.ADD_EXPORTS,
+                    addExports.stream().collect(joining(","))));
+        }
+        if (addOpens.size() > 0) {
+            result.add(
+                JavaCore.newClasspathAttribute(IClasspathAttribute.ADD_OPENS, addOpens.stream().collect(joining(","))));
+        }
+        return result.toArray(new IClasspathAttribute[result.size()]);
+    }
+
     /**
      * @return the {@link BazelProjectFileSystemMapper} (only set during
      *         {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)})
@@ -787,9 +860,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             if (sourceInfo.hasSourceFilesWithoutCommonRoot()) {
                 // create the "srcs" folder
                 var virtualSourceFolder = getFileSystemMapper().getVirtualSourceFolder(project);
-                if (!virtualSourceFolder.exists()) {
-                    virtualSourceFolder.create(IResource.NONE, true, monitor.newChild(1));
-                }
+                createFolderAndParents(virtualSourceFolder, monitor.split(1));
                 // build emulated Java package structure and link files
                 var files = sourceInfo.getSourceFilesWithoutCommonRoot();
                 Set<IFile> linkedFiles = new HashSet<>();
@@ -798,19 +869,19 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                     var packagePath = fileEntry.getDetectedPackagePath();
                     var packageFolder = virtualSourceFolder.getFolder(packagePath);
                     if (!packageFolder.exists()) {
-                        createFolderAndParents(packageFolder, monitor.newChild(1));
+                        createFolderAndParents(packageFolder, monitor.split(1));
                     }
 
                     // create link to file
                     var file = packageFolder.getFile(fileEntry.getPath().lastSegment());
-                    file.createLink(fileEntry.getLocation(), IResource.REPLACE, monitor.newChild(1));
+                    file.createLink(fileEntry.getLocation(), IResource.REPLACE, monitor.split(1));
 
                     // remember for cleanup
                     linkedFiles.add(file);
                 }
 
                 // remove all files not created as part of this loop
-                deleteAllFilesNotInAllowList(virtualSourceFolder, linkedFiles, monitor.newChild(1));
+                deleteAllFilesNotInAllowList(virtualSourceFolder, linkedFiles, monitor.split(1));
             }
 
             if (sourceInfo.hasSourceDirectories()) {
@@ -855,9 +926,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                             // delete it to ensure we start fresh
                             virtualSourceFolder.delete(true, monitor.split(1));
                         }
-                        if (!virtualSourceFolder.exists()) {
-                            virtualSourceFolder.create(IResource.NONE, true, monitor.split(1));
-                        }
+                        createFolderAndParents(virtualSourceFolder, monitor.split(1));
 
                         // build emulated Java package structure and link the directory
                         var packagePath = detectedJavaPackagesForSourceDirectory.iterator().next();
@@ -874,7 +943,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                             monitor.split(1));
 
                         // remove all files not created as part of this loop
-                        deleteAllFilesNotInFolderList(virtualSourceFolder, packageFolder, monitor.newChild(1));
+                        deleteAllFilesNotInFolderList(virtualSourceFolder, packageFolder, monitor.split(1));
 
                         // done
                         break;
@@ -887,7 +956,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         var parent = sourceFolder.getParent();
                         while ((parent != null) && (parent.getType() != IResource.PROJECT)) {
                             if (parent.isLinked()) {
-                                parent.delete(true, monitor.newChild(1));
+                                parent.delete(true, monitor.split(1));
                                 break;
                             }
                             parent = parent.getParent();
@@ -903,14 +972,14 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
                     // ensure the parent exists
                     if (!sourceFolder.getParent().exists()) {
-                        createFolderAndParents(sourceFolder.getParent(), monitor.newChild(1));
+                        createFolderAndParents(sourceFolder.getParent(), monitor.split(1));
                     }
 
                     // create link to folder
                     sourceFolder.createLink(
                         javaInfo.getBazelPackage().getLocation().append(dir),
                         IResource.REPLACE,
-                        monitor.newChild(1));
+                        monitor.split(1));
                 }
             }
 

@@ -270,6 +270,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,
             SubMonitor monitor) throws CoreException {
         try {
+            monitor.beginTask(format("Provisioning project for '//%s'", bazelPackage.getLabel().getPackagePath()), 2);
             if (!bazelPackage.hasBazelProject()) {
                 // create project
                 var packagePath = bazelPackage.getLabel().getPackagePath();
@@ -277,7 +278,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
                 // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
                 var projectLocation = bazelPackage.getLocation();
-                createProjectForElement(projectName, projectLocation, bazelPackage, monitor);
+                createProjectForElement(projectName, projectLocation, bazelPackage, monitor.split(1));
             } else {
                 // use existing project
                 bazelPackage.getBazelProject().getProject();
@@ -287,7 +288,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             var bazelProject = bazelPackage.getBazelProject();
 
             // remember/update the targets to build for the project
-            bazelProject.setBazelTargets(targets);
+            bazelProject.setBazelTargets(targets, monitor.split(1));
 
             return bazelProject;
         } catch (CoreException e) {

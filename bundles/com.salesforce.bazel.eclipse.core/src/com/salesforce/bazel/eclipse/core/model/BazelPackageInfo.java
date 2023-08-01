@@ -44,6 +44,34 @@ public final class BazelPackageInfo extends BazelElementInfo {
 
     private static Logger LOG = LoggerFactory.getLogger(BazelPackageInfo.class);
 
+    /**
+     * Finds a {@link IProject} for a given package.
+     * <p>
+     * This method works without opening/loading the model.
+     * </p>
+     *
+     * @param bazelPackage
+     *            the package to find the project for
+     * @return the found project (maybe <code>null</code>)
+     * @throws CoreException
+     */
+    static IProject findProject(BazelPackage bazelPackage) throws CoreException {
+        var workspaceRoot = bazelPackage.getBazelWorkspace().getLocation();
+        // we don't care about the actual project name - we look for the property
+        var projects = getEclipseWorkspaceRoot().getProjects();
+        for (IProject project : projects) {
+            if (project.isAccessible() // is open
+                    && project.hasNature(BAZEL_NATURE_ID) // is a Bazel project
+                    && hasWorkspaceRootPropertySetToLocation(project, workspaceRoot) // belongs to the workspace root
+                    && hasOwnerPropertySetForLabel(project, bazelPackage.getLabel()) // represents the target
+            ) {
+                return project;
+            }
+        }
+
+        return null;
+    }
+
     static Map<String, Target> queryForTargets(BazelPackage bazelPackage,
             BazelModelCommandExecutionService executionService) throws CoreException {
 
@@ -127,6 +155,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
 
     private final Path buildFile;
     private final BazelPackage bazelPackage;
+
     private final Map<String, Target> indexOfTargetInfoByTargetName;
 
     private volatile BazelProject bazelProject;
@@ -135,23 +164,6 @@ public final class BazelPackageInfo extends BazelElementInfo {
         this.buildFile = buildFile;
         this.bazelPackage = bazelPackage;
         this.indexOfTargetInfoByTargetName = indexOfTargetInfoByTargetName;
-    }
-
-    IProject findProject() throws CoreException {
-        var workspaceRoot = getBazelPackage().getBazelWorkspace().getLocation();
-        // we don't care about the actual project name - we look for the property
-        var projects = getEclipseWorkspaceRoot().getProjects();
-        for (IProject project : projects) {
-            if (project.isAccessible() // is open
-                    && project.hasNature(BAZEL_NATURE_ID) // is a Bazel project
-                    && hasWorkspaceRootPropertySetToLocation(project, workspaceRoot) // belongs to the workspace root
-                    && hasOwnerPropertySetForLabel(project, getBazelPackage().getLabel()) // represents the target
-            ) {
-                return project;
-            }
-        }
-
-        return null;
     }
 
     public BazelPackage getBazelPackage() {
@@ -164,7 +176,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
             return cachedProject;
         }
 
-        var project = findProject();
+        var project = findProject(getBazelPackage());
         if (project == null) {
             throw new CoreException(
                     Status.error(

@@ -27,8 +27,6 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -135,11 +133,6 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
 
     public IPath getCommandLog() {
         return commandLog;
-    }
-
-    @Override
-    IWorkspaceRoot getEclipseWorkspaceRoot() {
-        return ResourcesPlugin.getWorkspace().getRoot();
     }
 
     public IPath getExcutionRoot() {

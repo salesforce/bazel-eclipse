@@ -33,27 +33,26 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 
 public final class BazelTargetInfo extends BazelElementInfo {
 
-    private final BazelTarget bazelTarget;
-    private final String targetName;
-    private Target target;
-    private volatile BazelProject bazelProject;
-    private volatile BazelRuleAttributes ruleAttributes;
-    private List<IPath> ruleOutput;
-
-    public BazelTargetInfo(String targetName, BazelTarget bazelTarget) {
-        this.targetName = targetName;
-        this.bazelTarget = bazelTarget;
-    }
-
-    IProject findProject() throws CoreException {
-        var workspaceRoot = getBazelTarget().getBazelWorkspace().getLocation();
+    /**
+     * Finds a {@link IProject} for a given target.
+     * <p>
+     * This method works without opening/loading the model.
+     * </p>
+     *
+     * @param bazelTarget
+     *            the target to find the project for
+     * @return the found project (maybe <code>null</code>)
+     * @throws CoreException
+     */
+    static IProject findProject(BazelTarget bazelTarget) throws CoreException {
+        var workspaceRoot = bazelTarget.getBazelWorkspace().getLocation();
         // we don't care about the actual project name - we look for the property
         var projects = getEclipseWorkspaceRoot().getProjects();
         for (IProject project : projects) {
             if (project.isAccessible() // is open
                     && project.hasNature(BAZEL_NATURE_ID) // is a Bazel project
                     && hasWorkspaceRootPropertySetToLocation(project, workspaceRoot) // belongs to the workspace root
-                    && hasOwnerPropertySetForLabel(project, getBazelTarget().getLabel()) // represents the target
+                    && hasOwnerPropertySetForLabel(project, bazelTarget.getLabel()) // represents the target
             ) {
                 return project;
             }
@@ -62,13 +61,26 @@ public final class BazelTargetInfo extends BazelElementInfo {
         return null;
     }
 
+    private final BazelTarget bazelTarget;
+    private final String targetName;
+    private Target target;
+    private volatile BazelProject bazelProject;
+    private volatile BazelRuleAttributes ruleAttributes;
+
+    private List<IPath> ruleOutput;
+
+    public BazelTargetInfo(String targetName, BazelTarget bazelTarget) {
+        this.targetName = targetName;
+        this.bazelTarget = bazelTarget;
+    }
+
     public BazelProject getBazelProject() throws CoreException {
         var cachedProject = bazelProject;
         if (cachedProject != null) {
             return cachedProject;
         }
 
-        var project = findProject();
+        var project = findProject(getBazelTarget());
         if (project == null) {
             throw new CoreException(
                     Status.error(

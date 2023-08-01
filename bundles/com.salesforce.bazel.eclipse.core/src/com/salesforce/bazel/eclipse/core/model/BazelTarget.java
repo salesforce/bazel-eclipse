@@ -1,5 +1,7 @@
 package com.salesforce.bazel.eclipse.core.model;
 
+import static com.salesforce.bazel.eclipse.core.model.BazelTargetInfo.findProject;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -157,7 +159,7 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
     }
 
     public boolean hasBazelProject() throws CoreException {
-        return getInfo().findProject() != null;
+        return findProject(this) != null;
     }
 
     @Override

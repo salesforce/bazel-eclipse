@@ -16,9 +16,15 @@ package com.salesforce.bazel.eclipse.core.model;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_BUILDER_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
+import static java.lang.System.lineSeparator;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -85,13 +91,12 @@ public class BazelProject implements IProjectNature {
     public static final QualifiedName PROJECT_PROPERTY_OWNER = new QualifiedName(PLUGIN_ID, "owner");
 
     /**
-     * A {@link IResource#getPersistentProperty(QualifiedName) persistent property} set on an {@link IProject}
-     * containing the full qualified label of the targets represented by a package project.
+     * A file in the project root containing the full qualified label of the targets selected by a package project.
      * <p>
      * The property may be set on Bazel package projects only.
      * </p>
      */
-    public static final QualifiedName PROJECT_PROPERTY_TARGETS = new QualifiedName(PLUGIN_ID, "bazel_targets");
+    static final String FILE_NAME_DOT_BAZELTARGETS = ".bazeltargets";
 
     /**
      * Attempts to recover the workspace root property value.
@@ -350,16 +355,26 @@ public class BazelProject implements IProjectNature {
         // ensure this is a package project
         var bazelPackage = getBazelPackage();
 
-        // get targets list
-        var targetsPropertyValue = getProject().getPersistentProperty(PROJECT_PROPERTY_TARGETS);
-        if ((targetsPropertyValue == null) || targetsPropertyValue.isBlank()) {
+        var bazelTargetsFile = getProject().getFile(FILE_NAME_DOT_BAZELTARGETS);
+        if (!bazelTargetsFile.exists()) {
             return Collections.emptyList();
         }
 
+        // get targets list
         List<BazelTarget> packageTargets = new ArrayList<>();
-        for (String targetName : targetsPropertyValue.split(":")) {
-            packageTargets.add(bazelPackage.getBazelTarget(targetName));
+        try (var reader = new BufferedReader(new InputStreamReader(bazelTargetsFile.getContents(true), UTF_8))) {
+            for (var line = reader.readLine(); line != null; line = reader.readLine()) {
+                var targetName = line.trim();
+                if (targetName.startsWith("#")) {
+                    continue;
+                }
+                packageTargets.add(bazelPackage.getBazelTarget(targetName));
+            }
+        } catch (IOException e) {
+            throw new CoreException(
+                    Status.error(format("Unable to read targets list of project '%s'", getProject()), e));
         }
+
         return packageTargets;
     }
 
@@ -513,21 +528,24 @@ public class BazelProject implements IProjectNature {
         return true;
     }
 
-    public void setBazelTargets(List<BazelTarget> targets) throws CoreException {
-        var bazelPackage = getBazelPackage();
-        List<String> targetNames = new ArrayList<>();
-        for (BazelTarget bazelTarget : targets) {
-            if (!bazelPackage.equals(bazelTarget.getBazelPackage())) {
-                throw new IllegalArgumentException(
-                        format(
-                            "This method should only be called with targets belonging to package '%s'. Got '%s'",
-                            bazelPackage,
-                            bazelTarget));
-            }
-            targetNames.add(bazelTarget.getTargetName());
-        }
+    public void setBazelTargets(List<BazelTarget> targets, IProgressMonitor monitor) throws CoreException {
+        // the list can become extremely huge
+        // thus, instead of storing it as a persistent property on the project
+        // we put it into the .bazeltargets file
 
-        getProject().setPersistentProperty(PROJECT_PROPERTY_TARGETS, targetNames.stream().collect(joining(":")));
+        List<String> lines = new ArrayList<>();
+        lines.add("# targets used to setup the project");
+        lines.add("# (do not modify manually; synchronize projects to update)");
+        targets.stream().map(BazelTarget::getTargetName).distinct().sorted().forEach(lines::add);
+
+        var content = lines.stream().collect(joining(lineSeparator())).getBytes(UTF_8);
+        var bazelTargetsFile = getProject().getFile(FILE_NAME_DOT_BAZELTARGETS);
+        if (!bazelTargetsFile.exists()) {
+            bazelTargetsFile.create(new ByteArrayInputStream(content), IResource.FORCE | IResource.DERIVED, monitor);
+        } else {
+            bazelTargetsFile
+                    .setContents(new ByteArrayInputStream(content), IResource.FORCE | IResource.KEEP_HISTORY, monitor);
+        }
     }
 
     public void setModel(BazelModel bazelModel) {

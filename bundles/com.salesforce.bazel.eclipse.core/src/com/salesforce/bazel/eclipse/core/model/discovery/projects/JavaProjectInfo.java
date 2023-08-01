@@ -49,6 +49,8 @@ public class JavaProjectInfo {
     private final LinkedHashSet<Entry> testResources = new LinkedHashSet<>();
     private final LinkedHashSet<LabelEntry> testPluginDeps = new LinkedHashSet<>();
 
+    private final LinkedHashSet<String> javacOpts = new LinkedHashSet<>();
+
     private JavaSourceInfo sourceInfo;
     private JavaSourceInfo testSourceInfo;
     private JavaResourceInfo resourceInfo;
@@ -56,6 +58,10 @@ public class JavaProjectInfo {
 
     public JavaProjectInfo(BazelPackage bazelPackage) {
         this.bazelPackage = bazelPackage;
+    }
+
+    public void addJavacOpt(String javacOpt) {
+        javacOpts.add(javacOpt);
     }
 
     public void addPluginDep(String label) {
@@ -193,6 +199,10 @@ public class JavaProjectInfo {
      */
     public BazelPackage getBazelPackage() {
         return bazelPackage;
+    }
+
+    public Collection<String> getJavacOpts() {
+        return javacOpts;
     }
 
     public Collection<LabelEntry> getPluginDeps() {

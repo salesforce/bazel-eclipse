@@ -37,6 +37,17 @@ import org.eclipse.jdt.core.JavaCore;
  */
 public final class ClasspathEntry {
 
+    public static ClasspathEntry fromExisting(IClasspathEntry entry) {
+        var classpathEntry = new ClasspathEntry(entry.getPath(), entry.getEntryKind());
+        for (IAccessRule rule : entry.getAccessRules()) {
+            classpathEntry.getAccessRules().add(new AccessRule(rule.getPattern(), rule.getKind()));
+        }
+        for (IClasspathAttribute attribute : entry.getExtraAttributes()) {
+            classpathEntry.getExtraAttributes().put(attribute.getName(), attribute.getValue());
+        }
+        return classpathEntry;
+    }
+
     static IAccessRule newAccessRule(AccessRule rule) {
         return JavaCore.newAccessRule(rule.pattern(), rule.kind());
     }
@@ -79,14 +90,21 @@ public final class ClasspathEntry {
      */
     public IClasspathEntry build() {
         var accessRules = this.accessRules.stream().map(ClasspathEntry::newAccessRule).toArray(IAccessRule[]::new);
-        var extraAttributes = this.extraAttributes.entrySet().stream().map(ClasspathEntry::newAttribute)
+        var extraAttributes = this.extraAttributes.entrySet()
+                .stream()
+                .map(ClasspathEntry::newAttribute)
                 .toArray(IClasspathAttribute[]::new);
 
         return switch (entryKind) {
-            case IClasspathEntry.CPE_LIBRARY -> JavaCore.newLibraryEntry(path, sourceAttachmentPath,
-                sourceAttachmentRootPath, accessRules, extraAttributes, exported);
-            case IClasspathEntry.CPE_PROJECT -> JavaCore.newProjectEntry(path, accessRules, true, extraAttributes,
+            case IClasspathEntry.CPE_LIBRARY -> JavaCore.newLibraryEntry(
+                path,
+                sourceAttachmentPath,
+                sourceAttachmentRootPath,
+                accessRules,
+                extraAttributes,
                 exported);
+            case IClasspathEntry.CPE_PROJECT -> JavaCore
+                    .newProjectEntry(path, accessRules, true, extraAttributes, exported);
 
             default -> throw new IllegalArgumentException(
                     "Unsupported entry kind! Only CPE_LIBRARY or CPE_PROJECT is supported currently!");
@@ -137,7 +155,13 @@ public final class ClasspathEntry {
 
     @Override
     public int hashCode() {
-        return Objects.hash(accessRules, entryKind, exported, extraAttributes, path, sourceAttachmentPath,
+        return Objects.hash(
+            accessRules,
+            entryKind,
+            exported,
+            extraAttributes,
+            path,
+            sourceAttachmentPath,
             sourceAttachmentRootPath);
     }
 

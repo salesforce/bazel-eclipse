@@ -23,6 +23,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -48,10 +50,9 @@ public class JvmConfigurator {
 
     static final String STANDARD_VM_TYPE = "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType"; //$NON-NLS-1$
     static final String MAC_OSX_VM_TYPE = "org.eclipse.jdt.internal.launching.macosx.MacOSXType"; //$NON-NLS-1$
-    private final List<String> supportedSources;
-
-    private final List<String> supportedTargets;
-    private final List<String> supportedReleases;
+    final List<String> supportedSources;
+    final List<String> supportedTargets;
+    final List<String> supportedReleases;
 
     private final LinkedHashMap<String, String> environmentIdByComplianceVersion = new LinkedHashMap<>();
 
@@ -227,13 +228,20 @@ public class JvmConfigurator {
         return environmentIdByComplianceVersion.get(options.get(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM));
     }
 
-    public IClasspathEntry getJreClasspathContainerForExecutionEnvironment(String environmentId) {
+    public IClasspathEntry getJreClasspathContainerForExecutionEnvironment(String environmentId,
+            IClasspathAttribute[] extraAttributes) {
         var executionEnvironment = getExecutionEnvironment(environmentId);
+        IPath containerPath;
         if (executionEnvironment == null) {
-            return JavaRuntime.getDefaultJREContainerEntry();
+            containerPath = JavaRuntime.getDefaultJREContainerEntry().getPath();
+        } else {
+            containerPath = JavaRuntime.newJREContainerPath(executionEnvironment);
         }
-        var containerPath = JavaRuntime.newJREContainerPath(executionEnvironment);
-        return JavaCore.newContainerEntry(containerPath);
+        return JavaCore.newContainerEntry(
+            containerPath,
+            null /* no access rules */,
+            extraAttributes,
+            false /* not exported */);
     }
 
 }
