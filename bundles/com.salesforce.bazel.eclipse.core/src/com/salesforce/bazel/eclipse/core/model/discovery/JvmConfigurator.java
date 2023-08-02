@@ -95,7 +95,11 @@ public class JvmConfigurator {
         // initialize null values if possible
         source = source == null ? target : source;
         target = target == null ? source : target;
-        release = release == null ? target : release;
+
+        // note, we do *not* initialize release
+        // enabling release is something changing compiler behavior
+        // (https://stackoverflow.com/questions/45370178/exporting-a-package-from-system-module-is-not-allowed-with-release)
+        // therefore we expect the user to know what they are doing
 
         if (source != null) {
             javaProject.setOption(JavaCore.COMPILER_SOURCE, source);
@@ -104,6 +108,7 @@ public class JvmConfigurator {
         if (target != null) {
             javaProject.setOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, target);
         }
+
         javaProject.setOption(JavaCore.COMPILER_RELEASE, (release == null) ? JavaCore.DISABLED : JavaCore.ENABLED);
 
         // initialize more options if not set yet (but allow users to customize)
@@ -129,6 +134,7 @@ public class JvmConfigurator {
             var compliance = CompilerOptions.versionFromJdkLevel(jdkLevel);
             var options = javaProject.getOptions(false);
             JavaCore.setComplianceOptions(compliance, options);
+
             javaProject.setOptions(options);
         }
         if (JavaCore.isSupportedJavaVersion(version)

@@ -13,6 +13,12 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
+import static org.eclipse.jdt.core.IClasspathAttribute.ADD_EXPORTS;
+import static org.eclipse.jdt.core.IClasspathAttribute.ADD_OPENS;
+import static org.eclipse.jdt.core.JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM;
+import static org.eclipse.jdt.core.JavaCore.COMPILER_RELEASE;
+import static org.eclipse.jdt.core.JavaCore.COMPILER_SOURCE;
+import static org.eclipse.jdt.core.JavaCore.DISABLED;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -26,6 +32,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IContainer;
@@ -380,21 +387,21 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         getJvmConfigurator()
                 .applyJavaProjectOptions(javaProject, javaToolchainSourceVersion, javaToolchainTargetVersion, null);
 
-        var extraAttributes = getExtraJvmAttributes(javaInfo);
-
+        var extraAttributesForJdk = getExtraJvmAttributes(javaInfo);
         var executionEnvironmentId = getJvmConfigurator().getExecutionEnvironmentId(javaProject);
         if (executionEnvironmentId != null) {
             // prefer setting EE based JDK for compilation
             rawClasspath.add(
-                getJvmConfigurator()
-                        .getJreClasspathContainerForExecutionEnvironment(executionEnvironmentId, extraAttributes));
+                getJvmConfigurator().getJreClasspathContainerForExecutionEnvironment(
+                    executionEnvironmentId,
+                    extraAttributesForJdk));
         } else if (javaToolchainVm != null) {
             // use toolchain specific entry
             rawClasspath.add(
                 JavaCore.newContainerEntry(
                     JavaRuntime.newJREContainerPath(javaToolchainVm),
                     null /* no access rules */,
-                    extraAttributes,
+                    extraAttributesForJdk,
                     false /* not exported */));
 
         } else {
@@ -402,7 +409,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 JavaCore.newContainerEntry(
                     JavaRuntime.getDefaultJREContainerEntry().getPath(),
                     null /* no access rules */,
-                    extraAttributes,
+                    extraAttributesForJdk,
                     false /* not exported */));
         }
 
@@ -428,11 +435,19 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             getJvmConfigurator().configureJVMSettings(javaProject, javaToolchainVm);
         }
         if (javaToolchainSourceVersion != null) {
-            javaProject.setOption(JavaCore.COMPILER_SOURCE, javaToolchainSourceVersion);
+            javaProject.setOption(COMPILER_SOURCE, javaToolchainSourceVersion);
         }
         if (javaToolchainTargetVersion != null) {
-            javaProject.setOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, javaToolchainTargetVersion);
+            javaProject.setOption(COMPILER_CODEGEN_TARGET_PLATFORM, javaToolchainTargetVersion);
         }
+
+        // if we have add-opens or add-export we need to turn release flag off
+        // (https://stackoverflow.com/questions/45370178/exporting-a-package-from-system-module-is-not-allowed-with-release)
+        if (Stream.of(extraAttributesForJdk)
+                .anyMatch(a -> a.getName().equals(ADD_OPENS) || a.getName().equals(ADD_EXPORTS))) {
+            javaProject.setOption(COMPILER_RELEASE, DISABLED);
+        }
+
     }
 
     /**
@@ -810,14 +825,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         List<IClasspathAttribute> result = new ArrayList<>();
         if (addExports.size() > 0) {
-            result.add(
-                JavaCore.newClasspathAttribute(
-                    IClasspathAttribute.ADD_EXPORTS,
-                    addExports.stream().collect(joining(","))));
+            result.add(JavaCore.newClasspathAttribute(ADD_EXPORTS, addExports.stream().collect(joining(","))));
         }
         if (addOpens.size() > 0) {
-            result.add(
-                JavaCore.newClasspathAttribute(IClasspathAttribute.ADD_OPENS, addOpens.stream().collect(joining(","))));
+            result.add(JavaCore.newClasspathAttribute(ADD_OPENS, addOpens.stream().collect(joining(","))));
         }
         return result.toArray(new IClasspathAttribute[result.size()]);
     }
