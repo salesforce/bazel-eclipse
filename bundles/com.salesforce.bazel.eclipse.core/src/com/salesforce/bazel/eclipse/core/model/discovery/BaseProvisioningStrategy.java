@@ -825,10 +825,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         List<IClasspathAttribute> result = new ArrayList<>();
         if (addExports.size() > 0) {
-            result.add(JavaCore.newClasspathAttribute(ADD_EXPORTS, addExports.stream().collect(joining(","))));
+            result.add(JavaCore.newClasspathAttribute(ADD_EXPORTS, addExports.stream().collect(joining(":"))));
         }
         if (addOpens.size() > 0) {
-            result.add(JavaCore.newClasspathAttribute(ADD_OPENS, addOpens.stream().collect(joining(","))));
+            result.add(JavaCore.newClasspathAttribute(ADD_OPENS, addOpens.stream().collect(joining(":"))));
         }
         return result.toArray(new IClasspathAttribute[result.size()]);
     }
