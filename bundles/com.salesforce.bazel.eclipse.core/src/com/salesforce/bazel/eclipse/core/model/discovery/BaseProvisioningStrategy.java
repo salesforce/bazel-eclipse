@@ -81,6 +81,10 @@ import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand
  */
 public abstract class BaseProvisioningStrategy implements TargetProvisioningStrategy {
 
+    private static final String JAVAC_OPT_ADD_OPENS = "--add-opens";
+
+    private static final String JAVAC_OPT_ADD_EXPORTS = "--add-exports";
+
     private static final IClasspathAttribute CLASSPATH_ATTRIBUTE_FOR_TEST =
             JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, Boolean.TRUE.toString());
 
@@ -816,10 +820,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         Set<String> addOpens = new LinkedHashSet<>();
         for (String opt : javaInfo.getJavacOpts()) {
             opt = opt.trim();
-            if (opt.startsWith("--add-opens ")) {
-                addOpens.add(opt.substring("--add-opens ".length()));
-            } else if (opt.startsWith("--add-exports ")) {
-                addExports.add(opt.substring("--add-exports ".length()));
+            if (opt.startsWith(JAVAC_OPT_ADD_OPENS)) {
+                addOpens.add(getOptionValue(opt, JAVAC_OPT_ADD_OPENS));
+            } else if (opt.startsWith(JAVAC_OPT_ADD_EXPORTS)) {
+                addExports.add(getOptionValue(opt, JAVAC_OPT_ADD_EXPORTS));
             }
         }
 
@@ -848,6 +852,14 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             jvmConfigurator = new JvmConfigurator();
         }
         return jvmConfigurator;
+    }
+
+    private String getOptionValue(String opt, String key) {
+        var value = opt.substring(key.length()).trim();
+        if (value.startsWith("=")) {
+            value = value.substring(1).trim();
+        }
+        return value;
     }
 
     private boolean isTestTarget(BazelTarget bazelTarget) throws CoreException {
