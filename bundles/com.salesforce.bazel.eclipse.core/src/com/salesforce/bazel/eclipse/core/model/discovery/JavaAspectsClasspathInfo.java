@@ -449,7 +449,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 if (bazelPackage.getBazelProject()
                         .getBazelTargets()
                         .stream()
-                        .anyMatch(t -> t.getName().equals(targetName))) {
+                        .anyMatch(t -> t.getTargetName().equals(targetName))) {
                     return newProjectReference(targetKey, bazelPackage.getBazelProject());
                 }
             }
