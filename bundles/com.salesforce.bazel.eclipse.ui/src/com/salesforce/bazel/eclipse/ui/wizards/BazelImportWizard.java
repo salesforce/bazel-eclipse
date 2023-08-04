@@ -41,11 +41,21 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
     protected List<IWorkingSet> workingSets = new ArrayList<>();
 
     private BazelImportWizardMainPage mainPage;
+    private BazelImportWizardProjectViewPage projectViewPage;
 
     @Override
     public void addPages() {
         mainPage = new BazelImportWizardMainPage();
+        projectViewPage = new BazelImportWizardProjectViewPage(mainPage::getBazelProjectView);
+
         addPage(mainPage);
+        addPage(projectViewPage);
+    }
+
+    @Override
+    public void init(IWorkbench workbench, IStructuredSelection selection) {
+        setNeedsProgressMonitor(true);
+        setWindowTitle("Import Bazel Workspace");
     }
 
     @Override
@@ -55,8 +65,8 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
 
     @Override
     public boolean performFinish() {
-        var workspaceRoot = mainPage.getBazelWorkspaceRoot();
-        var projectView = mainPage.getBazelProjectView();
+        var workspaceRoot = projectViewPage.getBazelWorkspaceRoot();
+        var projectView = projectViewPage.getBazelProjectView();
 
         var bazelWorkspace = BazelCore.getModel().getBazelWorkspace(workspaceRoot);
 
@@ -81,7 +91,9 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
                 }
             });
         } catch (InterruptedException e) {
-            MessageDialog.openInformation(getShell(), "Bazel Import Canceled",
+            MessageDialog.openInformation(
+                getShell(),
+                "Bazel Import Canceled",
                 "The Bazel workspace import was canceled. Your workspace might be in an incomplete state. Please perform any necessary cleanups yourself.");
             return true; // close wizard
         } catch (InvocationTargetException e) {
@@ -96,12 +108,6 @@ public class BazelImportWizard extends Wizard implements IImportWizard {
         }
 
         return true;
-    }
-
-    @Override
-    public void init(IWorkbench workbench, IStructuredSelection selection) {
-        setNeedsProgressMonitor(true);
-        setWindowTitle("Import Bazel Workspace");
     }
 
 }

@@ -236,13 +236,11 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     }
 
     /**
-     * {@return the {@link BazelProjectFileSystemMapper} for this workspace}
-     *
-     * @throws CoreException
-     *             if the project cannot be found in the Eclipse workspace
+     * {@return a {@link BazelProjectFileSystemMapper} for this workspace}
      */
-    public BazelProjectFileSystemMapper getBazelProjectFileSystemMapper() throws CoreException {
-        return getInfo().getBazelProjectFileSystemMapper();
+    public BazelProjectFileSystemMapper getBazelProjectFileSystemMapper() {
+        // don't trigger loading (don't use getInfo())
+        return new BazelProjectFileSystemMapper(getBazelWorkspace());
     }
 
     /**
@@ -263,12 +261,9 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
 
     /**
      * {@return the absolute path to the <code>.bazelproject</code> file used by this workspace}
-     *
-     * @throws CoreException
-     *             if the workspace does not exist
      */
-    public Path getBazelProjectViewFile() throws CoreException {
-        return getInfo().getBazelProjectFileSystemMapper().getProjectViewLocation().toPath();
+    public Path getBazelProjectViewFile() {
+        return getBazelProjectFileSystemMapper().getProjectViewLocation().toPath();
     }
 
     /**

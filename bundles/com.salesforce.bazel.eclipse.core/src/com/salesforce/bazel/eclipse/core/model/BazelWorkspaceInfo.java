@@ -89,7 +89,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         return bazelProject = new BazelProject(getProject(), bazelWorkspace.getModel());
     }
 
-    public BazelProjectFileSystemMapper getBazelProjectFileSystemMapper() {
+    private BazelProjectFileSystemMapper getBazelProjectFileSystemMapper() {
         var cachedBazelProjectFileSystemMapper = bazelProjectFileSystemMapper;
         if (cachedBazelProjectFileSystemMapper != null) {
             return cachedBazelProjectFileSystemMapper;
