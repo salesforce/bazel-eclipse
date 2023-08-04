@@ -192,12 +192,22 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
         // process generated sources
         javaIdeInfo.getGeneratedJars().stream().map(jar -> new BlazeJarLibrary(jar, targetKey)).forEach(jar -> {
+            // it seems to contain generated classes but where do they come from?
+            // according to Bazel doc it should be from annotation processing
+            // (JavaInfo.generated_class_jar https://bazel.build/versions/6.0.0/rules/lib/JavaInfo)
+            // if that is true, it would mean duplication with filtered-gen jar below - but that doesn't seem to be the case
+            // however, I found stuff in there, which is also exist as '.java' file in 'srcs' of target; some bug in Bazel?
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Found generated jar: {}", jar);
             }
             generatedSourceJars.add(jar);
         });
         if (javaIdeInfo.getFilteredGenJar() != null) {
+            // the filtered-gen jar is produced by the IJ aspects
+            // it contains classes produced by annotation processors
+            // it also contains additional classes produced from '.srcjar' files in the 'srcs' list
+            // ideally we would setup plugins on the project so we don't need this
+            // we also need a solution for 'srcjar' jars to allow compiling them directly in Eclipse (if we want to get rid of aspects)
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Found filtered gen jar: {}", javaIdeInfo.getFilteredGenJar());
             }
