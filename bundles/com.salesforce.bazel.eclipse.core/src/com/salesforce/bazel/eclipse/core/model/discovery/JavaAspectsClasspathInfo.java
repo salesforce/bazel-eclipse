@@ -205,6 +205,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         }
 
         // special handling for protobuf targets
+        // see also: https://github.com/bazelbuild/intellij/blob/53cf0680dab7ea2dac3c1589ac69b268d596aee3/java/src/com/google/idea/blaze/java/sync/importer/BlazeJavaWorkspaceImporter.java#L314
         if (isJavaProtoTarget(targetIdeInfo)) {
             // add generated jars from all proto library targets in the project
             javaIdeInfo.getJars().stream().map(jar -> new BlazeJarLibrary(jar, targetKey)).forEach(jar -> {
@@ -331,6 +332,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 }
                 continue;
             }
+            jarEntry.setExported(true); // source jars should be exported
             result.put(jarEntry.getPath(), jarEntry);
         }
 
@@ -441,9 +443,15 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 return newProjectReference(targetKey, bazelTarget.getBazelProject());
             }
             if (bazelPackage.hasBazelProject() && bazelPackage.getBazelProject().getProject().isAccessible()) {
-                // at this point we *assume* the package is a valid project reference and includes the given target
-                // if this assumption doesn't hold true we need to customize/override this behavior per override
-                return newProjectReference(targetKey, bazelPackage.getBazelProject());
+                // we have to check the target name is part of the enabled project list
+                // otherwise it might be a special jar by some generator target we don't support for import
+                var targetName = targetKey.getLabel().targetName().toString();
+                if (bazelPackage.getBazelProject()
+                        .getBazelTargets()
+                        .stream()
+                        .anyMatch(t -> t.getName().equals(targetName))) {
+                    return newProjectReference(targetKey, bazelPackage.getBazelProject());
+                }
             }
         }
         return null;
