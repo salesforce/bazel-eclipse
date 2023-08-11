@@ -175,16 +175,18 @@ public class JavaSourceInfo {
             try {
                 // when there are declared Java files, expect them to match
                 if (declaredJavaFilesInFolder > 0) {
-                    var javaFilesInParent = Files.list(entryParentLocation).filter(JavaSourceInfo::isJavaFile).count();
-                    if (javaFilesInParent != declaredJavaFilesInFolder) {
-                        if (potentialSplitPackageOrSubsetFolders.add(potentialSourceRoot)) {
-                            result.add(
-                                Status.warning(
-                                    format(
-                                        "Folder '%s' contains more Java files then configured in Bazel. This is a split-package scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
-                                        entryParentLocation)));
+                    try (var files = Files.list(entryParentLocation)) {
+                        var javaFilesInParent = files.filter(JavaSourceInfo::isJavaFile).count();
+                        if (javaFilesInParent != declaredJavaFilesInFolder) {
+                            if (potentialSplitPackageOrSubsetFolders.add(potentialSourceRoot)) {
+                                result.add(
+                                    Status.warning(
+                                        format(
+                                            "Folder '%s' contains more Java files then configured in Bazel. This is a split-package scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
+                                            entryParentLocation)));
+                            }
+                            continue; // continue with next so we capture all possible warnings (we could also abort, though)
                         }
-                        continue; // continue with next so we capture all possible warnings (we could also abort, though)
                     }
                 }
             } catch (IOException e) {
