@@ -7,6 +7,7 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDPATH_PROBLEM_MARKER;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PROBLEM_MARKER;
+import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
@@ -15,6 +16,7 @@ import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 import static org.eclipse.jdt.core.IClasspathAttribute.ADD_EXPORTS;
 import static org.eclipse.jdt.core.IClasspathAttribute.ADD_OPENS;
+import static org.eclipse.jdt.core.IClasspathAttribute.MODULE;
 import static org.eclipse.jdt.core.JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM;
 import static org.eclipse.jdt.core.JavaCore.COMPILER_RELEASE;
 import static org.eclipse.jdt.core.JavaCore.COMPILER_SOURCE;
@@ -828,11 +830,14 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         List<IClasspathAttribute> result = new ArrayList<>();
-        if (addExports.size() > 0) {
-            result.add(JavaCore.newClasspathAttribute(ADD_EXPORTS, addExports.stream().collect(joining(":"))));
-        }
-        if (addOpens.size() > 0) {
-            result.add(JavaCore.newClasspathAttribute(ADD_OPENS, addOpens.stream().collect(joining(":"))));
+        if ((addExports.size() + addOpens.size()) > 0) {
+            result.add(JavaCore.newClasspathAttribute(MODULE, TRUE.toString()));
+            if (addExports.size() > 0) {
+                result.add(JavaCore.newClasspathAttribute(ADD_EXPORTS, addExports.stream().collect(joining(":"))));
+            }
+            if (addOpens.size() > 0) {
+                result.add(JavaCore.newClasspathAttribute(ADD_OPENS, addOpens.stream().collect(joining(":"))));
+            }
         }
         return result.toArray(new IClasspathAttribute[result.size()]);
     }
