@@ -377,6 +377,23 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         return null;
     }
 
+    private String findProjectMapping(final Label targetLabel) throws CoreException {
+        // direct patch preferred
+        var projectMapping = bazelWorkspace.getBazelProjectView().projectMappings().get(targetLabel.toString());
+        if (projectMapping != null) {
+            return projectMapping;
+        }
+
+        // just check for the repo name if label is verbose "@some_target//:some_target"
+        if ((targetLabel.blazePackage().isWorkspaceRoot())
+                && targetLabel.targetName().toString().equals(targetLabel.externalWorkspaceName())) {
+            projectMapping = bazelWorkspace.getBazelProjectView()
+                    .projectMappings()
+                    .get("@" + targetLabel.externalWorkspaceName());
+        }
+        return projectMapping;
+    }
+
     IWorkspaceRoot getEclipseWorkspaceRoot() {
         return ResourcesPlugin.getWorkspace().getRoot();
     }
@@ -451,16 +468,17 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             return null;
         }
 
+        final var targetLabel = targetKey.getLabel();
         var workspace = bazelWorkspace;
 
         // check for project mapping (it trumps everything)
-        var projectMapping = workspace.getBazelProjectView().projectMappings().get(targetKey.getLabel().toString());
-        if (null != projectMapping) {
+        var projectMapping = findProjectMapping(targetLabel);
+        if (projectMapping != null) {
             try {
                 var path = new URI(projectMapping).getPath();
                 LOG.debug(
                     "Discovered project mapping for target '{}': {} (path '{}')",
-                    targetKey.getLabel(),
+                    targetLabel,
                     projectMapping,
                     path);
                 if (path != null) {
@@ -475,21 +493,21 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             } catch (URISyntaxException e) {
                 LOG.error(
                     "Unparsable project mapping for target '{}': {} (check project view of '{}')",
-                    targetKey.getLabel(),
+                    targetLabel,
                     projectMapping,
                     workspace,
                     e);
             }
         }
 
-        if (targetKey.getLabel().isExternal()) {
-            workspace = findExternalWorkspace(targetKey.getLabel());
+        if (targetLabel.isExternal()) {
+            workspace = findExternalWorkspace(targetLabel);
             if (workspace == null) {
                 return null;
             }
         }
-        var bazelPackage = workspace.getBazelPackage(forPosix(targetKey.getLabel().blazePackage().relativePath()));
-        var bazelTarget = bazelPackage.getBazelTarget(targetKey.getLabel().targetName().toString());
+        var bazelPackage = workspace.getBazelPackage(forPosix(targetLabel.blazePackage().relativePath()));
+        var bazelTarget = bazelPackage.getBazelTarget(targetLabel.targetName().toString());
         if (bazelTarget.hasBazelProject() && bazelTarget.getBazelProject().getProject().isAccessible()) {
             // a direct target match is preferred
             return newProjectReference(targetKey, bazelTarget.getBazelProject());
@@ -497,7 +515,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         if (bazelPackage.hasBazelProject() && bazelPackage.getBazelProject().getProject().isAccessible()) {
             // we have to check the target name is part of the enabled project list
             // otherwise it might be a special jar by some generator target we don't support for import
-            var targetName = targetKey.getLabel().targetName().toString();
+            var targetName = targetLabel.targetName().toString();
             if (bazelPackage.getBazelProject()
                     .getBazelTargets()
                     .stream()
