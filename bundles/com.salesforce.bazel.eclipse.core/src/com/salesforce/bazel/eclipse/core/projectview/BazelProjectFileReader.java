@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -63,6 +64,7 @@ public class BazelProjectFileReader {
         String targetDiscoveryStrategy, targetProvisioningStrategy;
         final LinkedHashSet<Path> importingFiles = new LinkedHashSet<>();
         IPath bazelBinary;
+        final LinkedHashMap<String, String> projectMappings = new LinkedHashMap<>();
 
         public BazelProjectView build() throws IllegalStateException {
             // check mandatory parameters
@@ -109,9 +111,10 @@ public class BazelProjectFileReader {
                     additionalLanguages,
                     javaLanguageLevel,
                     tsConfigRules,
+                    bazelBinary,
                     targetDiscoveryStrategy,
                     targetProvisioningStrategy,
-                    bazelBinary);
+                    projectMappings);
         }
 
         public ImportHandle startImporting(Path bazelProjectViewFile) throws IOException {
@@ -234,16 +237,6 @@ public class BazelProjectFileReader {
                         }
                         break;
                     }
-                    case "bazel_binary": {
-                        try {
-                            builder.bazelBinary = IPath.forPosix(rawSection.getBodyAsSingleValue());
-                        } catch (NullPointerException e) {
-                            throw new IOException(
-                                    format("Invalid syntax in '%s': bazel_binary needs a value!", bazelProjectFile),
-                                    e);
-                        }
-                        break;
-                    }
                     case "additional_languages": {
                         parseSectionBodyIntoList(rawSection).forEach(builder.additionalLanguages::add);
                         break;
@@ -262,6 +255,27 @@ public class BazelProjectFileReader {
                     }
                     case "ts_config_rules": {
                         parseSectionBodyIntoList(rawSection).forEach(builder.tsConfigRules::add);
+                        break;
+                    }
+                    case "bazel_binary": {
+                        try {
+                            builder.bazelBinary = IPath.forPosix(rawSection.getBodyAsSingleValue());
+                        } catch (NullPointerException e) {
+                            throw new IOException(
+                                    format("Invalid syntax in '%s': bazel_binary needs a value!", bazelProjectFile),
+                                    e);
+                        }
+                        break;
+                    }
+                    case "project_mappings": {
+                        parseSectionBodyIntoList(rawSection).forEach(s -> {
+                            var separator = s.indexOf('=');
+                            if (separator != -1) {
+                                var key = s.substring(0, separator).trim();
+                                var value = s.substring(separator + 1).trim();
+                                builder.projectMappings.put(key, value);
+                            }
+                        });
                         break;
                     }
                     case "target_discovery_strategy": {

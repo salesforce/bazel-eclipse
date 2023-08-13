@@ -124,6 +124,12 @@ For details please read the JavaDoc (and Java code) of [ProjectPerPackageProvisi
 * It requires running `bazel build` to detect classpath configuration.
 * Is not fully implemented and required help/work/contributions.
 
+### `project_mappings`
+
+A list of mappings from targets to projects in the IDE.
+This should be used in combination with `--override_repository`.
+The syntax of each entry is `target = projecturi`, where `target` is typically an external repository (eg., `@myjar`) and `projecturi` the project type and name (eg., `maven:my-jar`).
+
 
 ## Unsupported Features / Limitations
 
@@ -134,7 +140,6 @@ In addition to those, the following items are not supported as well:
 * `exclude_library`
 * `build_flags`,  `sync_flags` and `test_flags` (use local `.bazelrc`)
 * `import_run_configurations`
-* `bazel_binary`
 * `exclude_target`
 * `import_target_output`
 * `ts_config_rules`
