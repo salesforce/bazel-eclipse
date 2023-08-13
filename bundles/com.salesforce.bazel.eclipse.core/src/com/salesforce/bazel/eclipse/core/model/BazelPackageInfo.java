@@ -26,17 +26,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
-import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
@@ -73,15 +70,16 @@ public final class BazelPackageInfo extends BazelElementInfo {
     }
 
     static Map<String, Target> queryForTargets(BazelPackage bazelPackage,
-            BazelModelCommandExecutionService executionService) throws CoreException {
+            BazelElementCommandExecutor bazelElementCommandExecutor) throws CoreException {
 
-        var result = queryForTargets(bazelPackage.getBazelWorkspace(), List.of(bazelPackage), executionService)
-                .get(bazelPackage);
+        var result =
+                queryForTargets(bazelPackage.getBazelWorkspace(), List.of(bazelPackage), bazelElementCommandExecutor)
+                        .get(bazelPackage);
         return result != null ? result : Collections.emptyMap();
     }
 
     static Map<BazelPackage, Map<String, Target>> queryForTargets(BazelWorkspace bazelWorkspace,
-            Collection<BazelPackage> bazelPackages, BazelModelCommandExecutionService executionService)
+            Collection<BazelPackage> bazelPackages, BazelElementCommandExecutor bazelElementCommandExecutor)
             throws CoreException {
         // bazel query '"//foo:all" + "//bar:all"'
 
@@ -99,58 +97,38 @@ public final class BazelPackageInfo extends BazelElementInfo {
                 .forEach(p -> bazelPackageByWorkspaceRelativePath.put(p.getWorkspaceRelativePath().toString(), p));
 
         Map<BazelPackage, Map<String, Target>> result = new HashMap<>();
-        try {
-            LOG.debug("{}: querying Bazel for list of targets from: {}", bazelWorkspace, query);
-            var queryResult =
-                    executionService
-                            .executeOutsideWorkspaceLockAsync(
-                                new BazelQueryForTargetProtoCommand(
-                                        workspaceRoot,
-                                        query,
-                                        true /* keep going */,
-                                        format(
-                                            "Loading targets for %d %s",
-                                            bazelPackages.size(),
-                                            bazelPackages.size() == 1 ? "package" : "packages")),
-                                bazelWorkspace)
-                            .get();
-            for (Target target : queryResult) {
-                if (!target.hasRule()) {
-                    LOG.trace("{}: ignoring target: {}", bazelWorkspace, target);
-                    continue;
-                }
-
-                LOG.trace("{}: found target: {}", bazelWorkspace, target);
-                var targetLabel = new BazelLabel(target.getRule().getName());
-
-                var bazelPackage = bazelPackageByWorkspaceRelativePath.get(targetLabel.getPackagePath());
-                if (bazelPackage == null) {
-                    LOG.debug("{}: ignoring target for unknown package: {}", bazelWorkspace, targetLabel);
-                    continue;
-                }
-                if (!result.containsKey(bazelPackage)) {
-                    result.put(bazelPackage, new HashMap<>());
-                }
-
-                var targetName = targetLabel.getTargetName();
-                result.get(bazelPackage).put(targetName, target);
+        LOG.debug("{}: querying Bazel for list of targets from: {}", bazelWorkspace, query);
+        var queryResult = bazelElementCommandExecutor.runQueryWithoutLock(
+            new BazelQueryForTargetProtoCommand(
+                    workspaceRoot,
+                    query,
+                    true /* keep going */,
+                    format(
+                        "Loading targets for %d %s",
+                        bazelPackages.size(),
+                        bazelPackages.size() == 1 ? "package" : "packages")));
+        for (Target target : queryResult) {
+            if (!target.hasRule()) {
+                LOG.trace("{}: ignoring target: {}", bazelWorkspace, target);
+                continue;
             }
-            return result;
-        } catch (InterruptedException e) {
-            throw new OperationCanceledException("cancelled");
-        } catch (ExecutionException e) {
-            var cause = e.getCause();
-            if (cause == null) {
-                throw new CoreException(
-                        Status.error(
-                            format("bazel query failed in workspace '%s' for with unknown reason", workspaceRoot),
-                            e));
+
+            LOG.trace("{}: found target: {}", bazelWorkspace, target);
+            var targetLabel = new BazelLabel(target.getRule().getName());
+
+            var bazelPackage = bazelPackageByWorkspaceRelativePath.get(targetLabel.getPackagePath());
+            if (bazelPackage == null) {
+                LOG.debug("{}: ignoring target for unknown package: {}", bazelWorkspace, targetLabel);
+                continue;
             }
-            throw new CoreException(
-                    Status.error(
-                        format("bazel query failed in workspace '%s': %s", workspaceRoot, cause.getMessage()),
-                        cause));
+            if (!result.containsKey(bazelPackage)) {
+                result.put(bazelPackage, new HashMap<>());
+            }
+
+            var targetName = targetLabel.getTargetName();
+            result.get(bazelPackage).put(targetName, target);
         }
+        return result;
     }
 
     private final Path buildFile;

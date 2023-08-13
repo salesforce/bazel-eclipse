@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 import com.salesforce.bazel.sdk.BazelVersion;
+import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -188,6 +189,14 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     public boolean exists() {
         var path = workspacePath();
         return isDirectory(path) && (findWorkspaceFile(path) != null);
+    }
+
+    /**
+     * @return the {@link BazelBinary} specified by the project view (or <code>null</code> if a default should be used)
+     * @throws CoreException
+     */
+    BazelBinary getBazelBinary() throws CoreException {
+        return getInfo().getBazelBinary();
     }
 
     /**
@@ -432,7 +441,7 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
         }
 
         // open all closed projects
-        var targetsByPackage = queryForTargets(this, closedPackages, getModelManager().getExecutionService());
+        var targetsByPackage = queryForTargets(this, closedPackages, getCommandExecutor());
         for (BazelPackage bazelPackage : closedPackages) {
             var targets = targetsByPackage.get(bazelPackage);
             if (targets == null) {

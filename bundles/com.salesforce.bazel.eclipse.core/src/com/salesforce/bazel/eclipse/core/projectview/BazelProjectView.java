@@ -3,6 +3,8 @@ package com.salesforce.bazel.eclipse.core.projectview;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.eclipse.core.runtime.IPath;
+
 import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 
@@ -31,7 +33,8 @@ public record BazelProjectView(
         String javaLanguageLevel,
         Collection<String> tsConfigRules,
         String targetDiscoveryStrategy,
-        String targetProvisioningStrategy) {
+        String targetProvisioningStrategy,
+        IPath bazelBinary) {
 
     public BazelProjectView {
         directoriesToImport = Collections.unmodifiableCollection(directoriesToImport);

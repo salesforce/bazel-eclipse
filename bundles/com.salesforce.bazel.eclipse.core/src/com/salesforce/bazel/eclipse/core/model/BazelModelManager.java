@@ -136,7 +136,7 @@ public class BazelModelManager implements BazelCoreSharedContstants {
     /**
      * @return the execution service used by the model
      */
-    public BazelModelCommandExecutionService getExecutionService() {
+    BazelModelCommandExecutionService getExecutionService() {
         return executionService;
     }
 

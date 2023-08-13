@@ -9,12 +9,14 @@ import java.util.concurrent.Future;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +49,8 @@ public class BazelElementCommandExecutor {
      * Applies any Bazel workspace specific configuration to the command binary.
      * <p>
      * By default we have an Eclipse wide preference setting providing the Eclipse wide Bazel binary to use. However, a
-     * Bazel workspace may use a different Bazel version (eg., via <code>.bazelversion</code> file).
+     * Bazel workspace may use a different Bazel version (eg., via <code>.bazelversion</code> file or
+     * <code>.bazelproject</code> project view).
      * </p>
      * <p>
      * We rely on a single, system wide Bazel binary (eg., Bazelisk or Bazel shell wrapper script) to resolve the
@@ -60,14 +63,22 @@ public class BazelElementCommandExecutor {
      *            the workspace to use
      * @throws CoreException
      */
-    private void configureWithWorkspaceBazelVersion(BazelCommand<?> command, BazelWorkspace bazelWorkspace)
-            throws CoreException {
-        var bazelBinary = getExecutionService().getBazelBinary();
+    private void configureCommand(BazelCommand<?> command, BazelWorkspace bazelWorkspace) throws CoreException {
+        var bazelBinary = bazelWorkspace.getBazelBinary();
+        if (bazelBinary == null) {
+            bazelBinary = getExecutionService().getBazelBinary();
+        } else {
+            LOG.trace("Using binary from workspace: {}", bazelBinary);
+        }
         var workspaceBazelVersion = bazelWorkspace.getBazelVersion();
         if (!bazelBinary.bazelVersion().equals(workspaceBazelVersion)) {
-            LOG.trace("Using workspace Bazel version '{}' for command: {}", workspaceBazelVersion, command);
-            command.setBazelBinary(
-                new BazelBinary(getExecutionService().getBazelBinary().executable(), workspaceBazelVersion));
+            LOG.trace(
+                "Forcing (overriding) workspace Bazel version '{}' for command: {}",
+                workspaceBazelVersion,
+                command);
+            command.setBazelBinary(new BazelBinary(bazelBinary.executable(), workspaceBazelVersion));
+        } else {
+            command.setBazelBinary(bazelBinary);
         }
     }
 
@@ -107,28 +118,32 @@ public class BazelElementCommandExecutor {
      */
     public <R> R runDirectlyWithWorkspaceLock(BazelCommand<R> command, List<IResource> resourcesToRefresh,
             IProgressMonitor monitor) throws CoreException {
-        configureWithWorkspaceBazelVersion(command, executionContext.getBazelWorkspace());
+        configureCommand(command, executionContext.getBazelWorkspace());
         return getExecutionService().executeWithWorkspaceLock(command, executionContext, resourcesToRefresh, monitor);
     }
 
     /**
-     * Execute a Bazel query using
+     * Execute a Bazel query command using
      * {@link BazelModelCommandExecutionService#executeOutsideWorkspaceLockAsync(BazelCommand, BazelElement)}.
      * <p>
-     * The method will block and wait for the result.
+     * The method will block the current thread and wait for the result. However, the command execution will happen in a
+     * different {@link Job thread} in the background for proper progress handling/reporting.
+     * </p>
+     * <p>
+     * Note, the command must not modify any resources in the workspace (eg., performing a build or something).
      * </p>
      *
      * @param <R>
      *            the command result type
      * @param command
-     *            the query command to execute
+     *            the command to execute
      * @return the command result (never <code>null</code>)
      * @see BazelModelCommandExecutionService#executeOutsideWorkspaceLockAsync(BazelCommand, BazelElement)
      *      <code>executeOutsideWorkspaceLockAsync</code> for execution and locking semantics
      * @throws CoreException
      */
     public <R> R runQueryWithoutLock(BazelQueryCommand<R> command) throws CoreException {
-        configureWithWorkspaceBazelVersion(command, executionContext.getBazelWorkspace());
+        configureCommand(command, executionContext.getBazelWorkspace());
         Future<R> future = getExecutionService().executeOutsideWorkspaceLockAsync(command, executionContext);
         try {
             return future.get();
@@ -144,9 +159,30 @@ public class BazelElementCommandExecutor {
         }
     }
 
+    /**
+     * Execute a Bazel command using
+     * {@link BazelModelCommandExecutionService#executeOutsideWorkspaceLockAsync(BazelCommand, BazelElement)}.
+     * <p>
+     * The method will block the current thread and wait for the result. However, the command execution will happen in a
+     * different {@link Job thread} in the background for proper progress handling/reporting.
+     * </p>
+     *
+     * @param <R>
+     *            the command result type
+     * @param command
+     *            the command to execute
+     * @param rule
+     *            the scheduling rule to apply to {@link WorkspaceJob#setRule(ISchedulingRule)}
+     * @param resourcesToRefresh
+     *            list of resources to refresh recursively when the command execution is complete
+     * @return the command result (never <code>null</code>)
+     * @see BazelModelCommandExecutionService#executeWithWorkspaceLockAsync(BazelCommand, BazelElement, ISchedulingRule,
+     *      List) <code>executeWithWorkspaceLockAsync</code> for execution and locking semantics
+     * @throws CoreException
+     */
     public <R> R runWithWorkspaceLock(BazelCommand<R> command, ISchedulingRule rule, List<IResource> resourcesToRefresh)
             throws CoreException {
-        configureWithWorkspaceBazelVersion(command, executionContext.getBazelWorkspace());
+        configureCommand(command, executionContext.getBazelWorkspace());
         Future<R> future = getExecutionService()
                 .executeWithWorkspaceLockAsync(command, executionContext, rule, resourcesToRefresh);
         try {

@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.eclipse.core.runtime.IPath;
+
 import com.google.idea.blaze.base.model.primitives.InvalidTargetException;
 import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
@@ -58,6 +60,7 @@ public class BazelProjectFileReader {
         LinkedHashSet<String> tsConfigRules = new LinkedHashSet<>();
         String targetDiscoveryStrategy, targetProvisioningStrategy;
         final LinkedHashSet<Path> importingFiles = new LinkedHashSet<>();
+        IPath bazelBinary;
 
         public BazelProjectView build() throws IllegalStateException {
             // check mandatory parameters
@@ -95,16 +98,29 @@ public class BazelProjectFileReader {
                         "at least one target to include is required unless derive_targets_from_directories is set");
             }
 
-            return new BazelProjectView(directoriesToImport, directoriesToExclude, targetsList,
-                    deriveTargetsFromDirectories, workspaceType, additionalLanguages, javaLanguageLevel, tsConfigRules,
-                    targetDiscoveryStrategy, targetProvisioningStrategy);
+            return new BazelProjectView(
+                    directoriesToImport,
+                    directoriesToExclude,
+                    targetsList,
+                    deriveTargetsFromDirectories,
+                    workspaceType,
+                    additionalLanguages,
+                    javaLanguageLevel,
+                    tsConfigRules,
+                    targetDiscoveryStrategy,
+                    targetProvisioningStrategy,
+                    bazelBinary);
         }
 
         public ImportHandle startImporting(Path bazelProjectViewFile) throws IOException {
             if (!importingFiles.add(bazelProjectViewFile)) {
-                throw new IOException(format("Recursive import detected for file '%s'%n%s", bazelProjectViewFile,
-                    importingFiles.stream().map(Path::toString)
-                            .collect(joining(System.lineSeparator() + "-> ", "-> ", ""))));
+                throw new IOException(
+                        format(
+                            "Recursive import detected for file '%s'%n%s",
+                            bazelProjectViewFile,
+                            importingFiles.stream()
+                                    .map(Path::toString)
+                                    .collect(joining(System.lineSeparator() + "-> ", "-> ", ""))));
             }
             return new ImportHandle(bazelProjectViewFile);
         }
@@ -179,21 +195,28 @@ public class BazelProjectFileReader {
                             fileToImport = rawSection.getBodyAsPath();
                         } catch (NullPointerException e) {
                             throw new IOException(
-                                    format("Invalid syntax in '%s': import needs a value!", bazelProjectFile), e);
+                                    format("Invalid syntax in '%s': import needs a value!", bazelProjectFile),
+                                    e);
                         }
                         if (fileToImport.isAbsolute()) {
-                            throw new IOException(format(
-                                "Invalid import (%s) defined in '%s': imports must be relative to the file they are defined in",
-                                fileToImport, bazelProjectFile));
+                            throw new IOException(
+                                    format(
+                                        "Invalid import (%s) defined in '%s': imports must be relative to the file they are defined in",
+                                        fileToImport,
+                                        bazelProjectFile));
                         }
                         var resolvedPathOfFileToImport = bazelWorkspaceRoot.resolve(fileToImport);
                         try {
                             // parse the import into the existing builder (this allows to implement the wanted behavior)
                             parseProjectFile(resolvedPathOfFileToImport, builder);
                         } catch (NoSuchFileException e) {
-                            throw new NoSuchFileException(resolvedPathOfFileToImport.toString(),
-                                    bazelProjectFile.toString(), format("import '%s' not found (defined in '%s')",
-                                        resolvedPathOfFileToImport, bazelProjectFile));
+                            throw new NoSuchFileException(
+                                    resolvedPathOfFileToImport.toString(),
+                                    bazelProjectFile.toString(),
+                                    format(
+                                        "import '%s' not found (defined in '%s')",
+                                        resolvedPathOfFileToImport,
+                                        bazelProjectFile));
                         }
                         break;
                     }
@@ -207,6 +230,16 @@ public class BazelProjectFileReader {
                         }
                         break;
                     }
+                    case "bazel_binary": {
+                        try {
+                            builder.bazelBinary = IPath.forPosix(rawSection.getBodyAsSingleValue());
+                        } catch (NullPointerException e) {
+                            throw new IOException(
+                                    format("Invalid syntax in '%s': bazel_binary needs a value!", bazelProjectFile),
+                                    e);
+                        }
+                        break;
+                    }
                     case "additional_languages": {
                         parseSectionBodyIntoList(rawSection).forEach(builder.additionalLanguages::add);
                         break;
@@ -215,8 +248,11 @@ public class BazelProjectFileReader {
                         try {
                             builder.javaLanguageLevel = rawSection.getBodyAsSingleValue();
                         } catch (NullPointerException e) {
-                            throw new IOException(format("Invalid syntax in '%s': java_language_level needs a value!",
-                                bazelProjectFile), e);
+                            throw new IOException(
+                                    format(
+                                        "Invalid syntax in '%s': java_language_level needs a value!",
+                                        bazelProjectFile),
+                                    e);
                         }
                         break;
                     }
@@ -230,7 +266,8 @@ public class BazelProjectFileReader {
                             builder.targetDiscoveryStrategy = rawSection.getBodyAsSingleValue();
                         } catch (NullPointerException e) {
                             throw new IOException(
-                                    format("Invalid syntax in '%s': target_discovery_strategy needs a value!",
+                                    format(
+                                        "Invalid syntax in '%s': target_discovery_strategy needs a value!",
                                         bazelProjectFile),
                                     e);
                         }
@@ -242,7 +279,8 @@ public class BazelProjectFileReader {
                             builder.targetProvisioningStrategy = rawSection.getBodyAsSingleValue();
                         } catch (NullPointerException e) {
                             throw new IOException(
-                                    format("Invalid syntax in '%s': target_provisioning_strategy needs a value!",
+                                    format(
+                                        "Invalid syntax in '%s': target_provisioning_strategy needs a value!",
                                         bazelProjectFile),
                                     e);
                         }
@@ -262,13 +300,18 @@ public class BazelProjectFileReader {
 
     private List<RawSection> parseRawSections(String bazelProjectFileContent) throws IOException {
         List<RawSection> results = new ArrayList<>();
-        var headers = SECTION_HEADER_REGEX.matcher(bazelProjectFileContent).results().map(t -> t.group(2))
+        var headers = SECTION_HEADER_REGEX.matcher(bazelProjectFileContent)
+                .results()
+                .map(t -> t.group(2))
                 .toArray(String[]::new);
         var bodies = SECTION_HEADER_REGEX.split(bazelProjectFileContent);
         if (headers.length != (bodies.length - 1)) {
-            throw new IOException(format(
-                "Syntax error in .bazelproject: The number of section headers doesn't match the number of section bodies (%d != %d; header: %s).",
-                headers.length, bodies.length, Stream.of(headers).collect(joining(", "))));
+            throw new IOException(
+                    format(
+                        "Syntax error in .bazelproject: The number of section headers doesn't match the number of section bodies (%d != %d; header: %s).",
+                        headers.length,
+                        bodies.length,
+                        Stream.of(headers).collect(joining(", "))));
         }
 
         for (var i = 0; i < headers.length; i++) {

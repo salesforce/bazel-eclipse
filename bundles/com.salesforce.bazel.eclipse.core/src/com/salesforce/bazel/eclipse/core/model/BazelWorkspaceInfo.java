@@ -31,16 +31,22 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
+import com.salesforce.bazel.eclipse.core.extensions.DetectBazelVersionAndSetBinaryJob;
 import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectFileReader;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 import com.salesforce.bazel.sdk.BazelVersion;
+import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.command.BazelInfoCommand;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
 
 public final class BazelWorkspaceInfo extends BazelElementInfo {
+
+    private static Logger LOG = LoggerFactory.getLogger(BazelWorkspaceInfo.class);
 
     private static final String RELEASE_VERSION_PREFIX = "release ";
 
@@ -66,6 +72,8 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
 
     private volatile Map<String, BazelRuleAttributes> externalRepositoryRuleByName;
 
+    private BazelBinary bazelBinary;
+
     public BazelWorkspaceInfo(IPath root, Path workspaceFile, BazelWorkspace bazelWorkspace) {
         this.root = root;
         this.workspaceFile = workspaceFile;
@@ -74,6 +82,10 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
 
     public IPath getBazelBin() {
         return bazelBin;
+    }
+
+    BazelBinary getBazelBinary() {
+        return bazelBinary;
     }
 
     public IPath getBazelGenfiles() {
@@ -232,10 +244,47 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         return requireNonNull(name, "not loaded");
     }
 
+    private void initializeBazelBinary(Path binary) {
+        // we should not be using any service but just execute it directly
+        // because BazelElementCommandExecutor calls BazelWorksapce#getBazelBinary
+
+        // use job to signal progress
+        var job = new DetectBazelVersionAndSetBinaryJob(binary, false, bazelBinary -> {
+            this.bazelBinary = bazelBinary;
+        }, () -> {
+            var defaultVersion = new BazelVersion(999, 999, 999);
+            LOG.error(
+                "Unable to detect version for Bazel binary '{}' (configured via .bazelproject file) - defaulting to '{}'",
+                binary,
+                defaultVersion);
+            return new BazelBinary(binary, defaultVersion);
+        });
+        job.schedule();
+        try {
+            // wait for completion
+            job.join();
+        } catch (InterruptedException e) {
+            throw new OperationCanceledException("Interrupted waiting for Bazel binary version detection to happen");
+        }
+    }
+
     public void load(BazelModelCommandExecutionService executionService) throws CoreException {
         var workspaceRoot = getWorkspaceFile().getParent();
+
+        // check for a workspace specific binary
+        // note: this will trigger loading the project view
+        var workspaceBinary = getBazelProjectView().bazelBinary();
+        if (workspaceBinary != null) {
+            // resolve against the workspace root
+            var binary = workspaceBinary.isAbsolute() ? workspaceBinary.toPath()
+                    : workspaceRoot.resolve(workspaceBinary.toPath());
+            initializeBazelBinary(binary);
+        }
+
         try {
-            // we use the BazelModelCommandExecutionService directly because info is not a query
+            // we use the BazelModelCommandExecutionService directly because there is a cycle dependency between
+            // BazelModelCommandExecutor and BazelWorkspace#getBazelBinary
+
             var infoResult =
                     executionService
                             .executeOutsideWorkspaceLockAsync(
@@ -265,6 +314,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             outputPath = getExpectedOutputAsPath(infoResult, "output_path");
 
             if (release.startsWith(RELEASE_VERSION_PREFIX)) {
+                // parse the version from bazel info instead of using BazelBinary (if available)
                 bazelVersion = BazelVersion.parseVersion(release.substring(RELEASE_VERSION_PREFIX.length()));
             }
         } catch (InterruptedException e) {

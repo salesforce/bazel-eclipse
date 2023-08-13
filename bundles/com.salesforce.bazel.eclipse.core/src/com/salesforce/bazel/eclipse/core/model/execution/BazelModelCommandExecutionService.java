@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
+import com.salesforce.bazel.eclipse.core.model.BazelElementCommandExecutor;
 import com.salesforce.bazel.eclipse.core.model.BazelModel;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.command.BazelBinary;
@@ -40,11 +41,17 @@ import com.salesforce.bazel.sdk.command.BazelCommand;
  * jobs will ensure they never compete with each other and especially never conflict with ongoing build activity inside
  * Eclipse.
  * </p>
+ * <p>
+ * Note, callers should use this service very seldom. Instead the {@link BazelElementCommandExecutor} should be used via
+ * {@link BazelElement#getCommandExecutor()}.
+ * </p>
+ *
+ * @see BazelElementCommandExecutor
  */
 public interface BazelModelCommandExecutionService {
 
     /**
-     * Execute a read-only Bazel command.
+     * Execute a read-only Bazel command asynchronously.
      * <p>
      * The command is expected to be read-only from an Eclipse resource perspective, no resources will be modified when
      * executing this command. This distinction is important from an Eclipse perspective to still allow scheduling
@@ -102,7 +109,7 @@ public interface BazelModelCommandExecutionService {
             List<IResource> resourcesToRefresh, IProgressMonitor monitor) throws CoreException;
 
     /**
-     * Execute a potentially resource modifying Bazel command.
+     * Execute a potentially resource modifying Bazel command asynchronously.
      * <p>
      * The command is allowed to modify Eclipse resources. As such a resource level lock will be obtained by the
      * execution service before executing the command. The lock ensures that the workspace is locked for modification
@@ -144,5 +151,5 @@ public interface BazelModelCommandExecutionService {
      * @throws NullPointerException
      *             if the command executor has no Bazel binary
      */
-    BazelBinary getBazelBinary() throws NullPointerException;
+    BazelBinary getBazelBinary();
 }

@@ -11,6 +11,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.command.shell.ShellUtil;
 
@@ -18,6 +21,8 @@ import com.salesforce.bazel.sdk.command.shell.ShellUtil;
  * Invokes any Bazel binary command to detect it's version.
  */
 public class BazelBinaryVersionDetector {
+
+    private static Logger LOG = LoggerFactory.getLogger(BazelBinaryVersionDetector.class);
 
     private static final String BAZEL_VERSION_PREFIX = "bazel ";
 
@@ -41,6 +46,9 @@ public class BazelBinaryVersionDetector {
         if (useShellEnvironment) {
             commandLine = shellUtil.wrapExecutionIntoShell(commandLine);
         }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Checking Bazel binary '{}' for its version: {}", binary, commandLine);
+        }
         var pb = new ProcessBuilder(commandLine);
         var stdoutFile = File.createTempFile("bazel_version_", ".txt");
         pb.redirectOutput(stdoutFile);
@@ -49,8 +57,12 @@ public class BazelBinaryVersionDetector {
         var result = pb.start().waitFor();
         if (result != 0) {
             var out = readString(stderrFile.toPath(), Charset.defaultCharset());
-            throw new IOException(format("Error executing '%s'. Process exited with code %d: %s",
-                commandLine.stream().collect(joining(" ")), result, out));
+            throw new IOException(
+                    format(
+                        "Error executing '%s'. Process exited with code %d: %s",
+                        commandLine.stream().collect(joining(" ")),
+                        result,
+                        out));
         }
         var lines = readAllLines(stdoutFile.toPath(), Charset.defaultCharset());
         for (String potentialVersion : lines) {
@@ -60,7 +72,11 @@ public class BazelBinaryVersionDetector {
         }
 
         var out = readString(stdoutFile.toPath(), Charset.defaultCharset());
-        throw new IOException(format("No version information found in output of command '%s': %s",
-            commandLine.stream().collect(joining(" ")), result, out));
+        throw new IOException(
+                format(
+                    "No version information found in output of command '%s': %s",
+                    commandLine.stream().collect(joining(" ")),
+                    result,
+                    out));
     }
 }

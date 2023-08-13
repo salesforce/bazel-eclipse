@@ -43,6 +43,6 @@ public interface BazelCommandExecutor {
      * @throws NullPointerException
      *             if the command executor has no Bazel binary
      */
-    BazelBinary getBazelBinary() throws NullPointerException;
+    BazelBinary getBazelBinary();
 
 }

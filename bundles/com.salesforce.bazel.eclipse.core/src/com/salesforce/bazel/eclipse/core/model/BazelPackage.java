@@ -89,7 +89,7 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
                     Status.error(format("Package '%s' does not exist in workspace '%s'!", label, parent.getName())));
         }
 
-        var targets = BazelPackageInfo.queryForTargets(this, getModelManager().getExecutionService());
+        var targets = BazelPackageInfo.queryForTargets(this, getCommandExecutor());
         return new BazelPackageInfo(buildFile, this, targets);
     }
 

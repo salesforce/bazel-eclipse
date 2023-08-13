@@ -5,15 +5,11 @@ import static com.salesforce.bazel.eclipse.preferences.BazelCorePreferenceKeys.P
 import static com.salesforce.bazel.eclipse.preferences.BazelCorePreferenceKeys.PREF_KEY_USE_SHELL_ENVIRONMENT;
 import static java.lang.String.format;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
@@ -26,46 +22,12 @@ import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.preferences.BazelCorePreferenceKeys;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.command.BazelBinary;
-import com.salesforce.bazel.sdk.command.BazelBinaryVersionDetector;
 import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor;
 
 /**
  * Headless version initializing the Bazel binary from Eclipse preferences.
  */
 public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExecutor {
-
-    /**
-     * Calls <code>bazel --version</code> on a provided binary to identify the version use.
-     * <p>
-     * Calls {@link EclipseHeadlessBazelCommandExecutor#setBazelBinary(BazelBinary)} when done.
-     * </p>
-     */
-    protected final class DetectBazelVersionAndSetBinaryJob extends Job {
-        private final Path binary;
-
-        private DetectBazelVersionAndSetBinaryJob(Path binary) {
-            super(format("Detecting Bazel version...", binary));
-            this.binary = binary;
-            setSystem(true);
-            setPriority(SHORT);
-        }
-
-        @Override
-        protected IStatus run(IProgressMonitor monitor) {
-            try {
-                var bazelVersion = new BazelBinaryVersionDetector(binary, isWrapExecutionIntoShell()).detectVersion();
-                setBazelBinary(new BazelBinary(binary, bazelVersion));
-                return Status.OK_STATUS;
-            } catch (IOException e) {
-                setBazelBinary(UNKNOWN_BAZEL_BINARY);
-                return Status.error(format("Unable to detect Bazel version of binary '%s'!", binary), e);
-            } catch (InterruptedException e) {
-                LOG.warn("Interrupted waiting for bazel --version to respond for binary '{}'", binary, e);
-                setBazelBinary(UNKNOWN_BAZEL_BINARY);
-                return Status.CANCEL_STATUS;
-            }
-        }
-    }
 
     static BazelBinary UNKNOWN_BAZEL_BINARY = new BazelBinary(Path.of("bazel"), new BazelVersion(999, 999, 999));
     static Logger LOG = LoggerFactory.getLogger(EclipseHeadlessBazelCommandExecutor.class);
@@ -168,14 +130,20 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
      */
     protected Job scheduleInitBazelBinaryFromPreferencesJob() {
         var binary = Path.of(Platform.getPreferencesService().get(PREF_KEY_BAZEL_BINARY, "bazel", preferencesLookup));
-        var job = new DetectBazelVersionAndSetBinaryJob(binary);
+        var job = new DetectBazelVersionAndSetBinaryJob(
+                binary,
+                isWrapExecutionIntoShell(),
+                this::setBazelBinary,
+                () -> UNKNOWN_BAZEL_BINARY);
         job.schedule();
         return job;
     }
 
     @Override
     public void setBazelBinary(BazelBinary bazelBinary) {
-        LOG.info("Using default Bazel binary '{}' (version '{}')", bazelBinary.executable(),
+        LOG.info(
+            "Using default Bazel binary '{}' (version '{}')",
+            bazelBinary.executable(),
             bazelBinary.bazelVersion());
         super.setBazelBinary(bazelBinary);
     }
