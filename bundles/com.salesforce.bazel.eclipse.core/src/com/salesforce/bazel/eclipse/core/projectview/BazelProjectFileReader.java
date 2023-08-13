@@ -15,6 +15,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.IPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.InvalidTargetException;
 import com.google.idea.blaze.base.model.primitives.TargetExpression;
@@ -125,6 +127,8 @@ public class BazelProjectFileReader {
             return new ImportHandle(bazelProjectViewFile);
         }
     }
+
+    private static Logger LOG = LoggerFactory.getLogger(BazelProjectFileReader.BazelProjectViewBuilder.class);
 
     private static final Pattern SECTION_HEADER_REGEX = Pattern.compile("((^[^:\\-/*\\s]+)([: ]))", Pattern.MULTILINE);
     private static final Pattern WHITESPACE_CHAR_REGEX = Pattern.compile("\\s+");
@@ -292,7 +296,7 @@ public class BazelProjectFileReader {
                         break;
                     }
                     default:
-                        throw new IllegalArgumentException("Unexpected value: " + rawSection.getName());
+                        LOG.warn("Unexpected section '{}' while reading '{}'", rawSection.getName(), bazelProjectFile);
                 }
             }
         }
