@@ -14,6 +14,7 @@
 package com.salesforce.bazel.eclipse.core.model;
 
 import static java.lang.String.format;
+import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
@@ -273,12 +274,16 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
 
         // check for a workspace specific binary
         // note: this will trigger loading the project view
-        var workspaceBinary = getBazelProjectView().bazelBinary();
-        if (workspaceBinary != null) {
-            // resolve against the workspace root
-            var binary = workspaceBinary.isAbsolute() ? workspaceBinary.toPath()
-                    : workspaceRoot.resolve(workspaceBinary.toPath());
-            initializeBazelBinary(binary);
+        // but here hte project view is optional (we may be called without being projects)
+        var projectViewLocation = getBazelProjectFileSystemMapper().getProjectViewLocation();
+        if (isRegularFile(projectViewLocation.toPath())) {
+            var workspaceBinary = getBazelProjectView().bazelBinary();
+            if (workspaceBinary != null) {
+                // resolve against the workspace root
+                var binary = workspaceBinary.isAbsolute() ? workspaceBinary.toPath()
+                        : workspaceRoot.resolve(workspaceBinary.toPath());
+                initializeBazelBinary(binary);
+            }
         }
 
         try {

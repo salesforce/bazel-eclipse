@@ -137,7 +137,7 @@
         <setEntry value="org.eclipse.e4.ui.services@default:default"/>
         <setEntry value="org.eclipse.e4.ui.widgets@default:default"/>
         <setEntry value="org.eclipse.e4.ui.workbench.addons.swt@default:default"/>
-        <setEntry value="org.eclipse.e4.ui.workbench.renderers.swt.cocoa@default:default"/>
+        <setEntry value="org.eclipse.e4.ui.workbench.renderers.swt.cocoa@default:false"/>
         <setEntry value="org.eclipse.e4.ui.workbench.renderers.swt@default:default"/>
         <setEntry value="org.eclipse.e4.ui.workbench.swt@default:default"/>
         <setEntry value="org.eclipse.e4.ui.workbench3@default:default"/>
@@ -186,7 +186,7 @@
         <setEntry value="org.eclipse.m2e.archetype.common@default:default"/>
         <setEntry value="org.eclipse.m2e.core.ui@default:default"/>
         <setEntry value="org.eclipse.m2e.core@default:default"/>
-        <setEntry value="org.eclipse.m2e.logback@default:default"/>
+        <setEntry value="org.eclipse.m2e.logback@default:false"/>
         <setEntry value="org.eclipse.m2e.maven.runtime@default:default"/>
         <setEntry value="org.eclipse.m2e.model.edit@default:default"/>
         <setEntry value="org.eclipse.m2e.workspace.cli@default:default"/>
@@ -195,11 +195,10 @@
         <setEntry value="org.eclipse.osgi.util@default:default"/>
         <setEntry value="org.eclipse.osgi@1:true"/>
         <setEntry value="org.eclipse.pde.junit.runtime@default:default"/>
-        <setEntry value="org.eclipse.swt.cocoa.macosx.x86_64@default:default"/>
         <setEntry value="org.eclipse.swt@default:default"/>
         <setEntry value="org.eclipse.team.core@default:default"/>
         <setEntry value="org.eclipse.text@default:default"/>
-        <setEntry value="org.eclipse.ui.cocoa@default:default"/>
+        <setEntry value="org.eclipse.ui.cocoa@default:false"/>
         <setEntry value="org.eclipse.ui.console@default:default"/>
         <setEntry value="org.eclipse.ui.forms@default:default"/>
         <setEntry value="org.eclipse.ui.ide@default:default"/>
@@ -257,6 +256,7 @@
         <setEntry value="com.salesforce.bazel.logback@default:false"/>
         <setEntry value="com.salesforce.bazel.sdk.tests@default:false"/>
         <setEntry value="com.salesforce.bazel.sdk@default:default"/>
+        <setEntry value="com.salesforce.productivity.eclipse.sfdc.bazelextension@default:default"/>
         <setEntry value="testdata@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
