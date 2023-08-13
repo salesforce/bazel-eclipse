@@ -128,7 +128,7 @@ For details please read the JavaDoc (and Java code) of [ProjectPerPackageProvisi
 
 A list of mappings from targets to projects in the IDE.
 This should be used in combination with `--override_repository`.
-The syntax of each entry is `target = projecturi`, where `target` is typically an external repository (eg., `@myjar`) and `projecturi` the project type and name (eg., `maven:my-jar`).
+The syntax of each entry is `target = projecturi`, where `target` is typically an external repository (eg., `@myjar`) and `projecturi` the project type and path (eg., `maven:/my-jar`).
 
 
 ## Unsupported Features / Limitations
