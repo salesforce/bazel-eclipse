@@ -20,6 +20,8 @@ import static org.eclipse.core.runtime.IPath.forPosix;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -27,6 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -372,6 +377,10 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         return null;
     }
 
+    IWorkspaceRoot getEclipseWorkspaceRoot() {
+        return ResourcesPlugin.getWorkspace().getRoot();
+    }
+
     private List<JdepsDependency> loadJdeps(TargetIdeInfo targetIdeInfo) throws CoreException {
         // load jdeps file
         var jdepsFile = resolveJdepsOutput(targetIdeInfo);
@@ -438,34 +447,67 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     }
 
     protected ClasspathEntry resolveProject(TargetKey targetKey) throws CoreException {
-        if (targetKey.isPlainTarget()) {
-            var workspace = bazelWorkspace;
-            if (targetKey.getLabel().isExternal()) {
-                workspace = findExternalWorkspace(targetKey.getLabel());
-                if (workspace == null) {
-                    return null;
+        if (!targetKey.isPlainTarget()) {
+            return null;
+        }
+
+        var workspace = bazelWorkspace;
+
+        // check for project mapping (it trumps everything)
+        var projectMapping = workspace.getBazelProjectView().projectMappings().get(targetKey.getLabel().toString());
+        if (null != projectMapping) {
+            try {
+                var path = new URI(projectMapping).getPath();
+                LOG.debug(
+                    "Discovered project mapping for target '{}': {} (path '{}')",
+                    targetKey.getLabel(),
+                    projectMapping,
+                    path);
+                if (path != null) {
+                    var member = getEclipseWorkspaceRoot().findMember(IPath.forPosix(path));
+                    if ((member != null) && (member.getType() == IResource.PROJECT)) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Found project reference for '{}': {}", targetKey, member.getProject());
+                        }
+                        return ClasspathEntry.newProjectEntry(member.getProject());
+                    }
                 }
-            }
-            var bazelPackage = workspace.getBazelPackage(forPosix(targetKey.getLabel().blazePackage().relativePath()));
-            var bazelTarget = bazelPackage.getBazelTarget(targetKey.getLabel().targetName().toString());
-            if (bazelTarget.hasBazelProject() && bazelTarget.getBazelProject().getProject().isAccessible()) {
-                // a direct target match is preferred
-                return newProjectReference(targetKey, bazelTarget.getBazelProject());
-            }
-            if (bazelPackage.hasBazelProject() && bazelPackage.getBazelProject().getProject().isAccessible()) {
-                // we have to check the target name is part of the enabled project list
-                // otherwise it might be a special jar by some generator target we don't support for import
-                var targetName = targetKey.getLabel().targetName().toString();
-                if (bazelPackage.getBazelProject()
-                        .getBazelTargets()
-                        .stream()
-                        .anyMatch(t -> t.getTargetName().equals(targetName))) {
-                    return newProjectReference(targetKey, bazelPackage.getBazelProject());
-                }
+            } catch (URISyntaxException e) {
+                LOG.error(
+                    "Unparsable project mapping for target '{}': {} (check project view of '{}')",
+                    targetKey.getLabel(),
+                    projectMapping,
+                    workspace,
+                    e);
             }
         }
-        return null;
 
+        if (targetKey.getLabel().isExternal()) {
+            workspace = findExternalWorkspace(targetKey.getLabel());
+            if (workspace == null) {
+                return null;
+            }
+        }
+        var bazelPackage = workspace.getBazelPackage(forPosix(targetKey.getLabel().blazePackage().relativePath()));
+        var bazelTarget = bazelPackage.getBazelTarget(targetKey.getLabel().targetName().toString());
+        if (bazelTarget.hasBazelProject() && bazelTarget.getBazelProject().getProject().isAccessible()) {
+            // a direct target match is preferred
+            return newProjectReference(targetKey, bazelTarget.getBazelProject());
+        }
+        if (bazelPackage.hasBazelProject() && bazelPackage.getBazelProject().getProject().isAccessible()) {
+            // we have to check the target name is part of the enabled project list
+            // otherwise it might be a special jar by some generator target we don't support for import
+            var targetName = targetKey.getLabel().targetName().toString();
+            if (bazelPackage.getBazelProject()
+                    .getBazelTargets()
+                    .stream()
+                    .anyMatch(t -> t.getTargetName().equals(targetName))) {
+                return newProjectReference(targetKey, bazelPackage.getBazelProject());
+            }
+        }
+
+        // nothing found
+        return null;
     }
 
 }
