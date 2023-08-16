@@ -9,7 +9,6 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.RESOUR
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.eclipse.core.resources.IResource.ALWAYS_DELETE_PROJECT_CONTENT;
 import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 import static org.eclipse.core.resources.IResource.FORCE;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
@@ -439,7 +438,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         if (obsoleteProjects.size() > 0) {
             monitor.beginTask("Cleaning up", obsoleteProjects.size());
             for (IProject project : obsoleteProjects) {
-                project.delete(ALWAYS_DELETE_PROJECT_CONTENT | FORCE, monitor.split(1));
+                project.delete(FORCE, monitor.split(1));
             }
         }
     }

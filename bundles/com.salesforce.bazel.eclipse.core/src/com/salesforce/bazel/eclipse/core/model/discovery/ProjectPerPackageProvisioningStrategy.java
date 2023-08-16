@@ -274,7 +274,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             if (!bazelPackage.hasBazelProject()) {
                 // create project
                 var packagePath = bazelPackage.getLabel().getPackagePath();
-                var projectName = packagePath.isBlank() ? "ROOT" : packagePath.replace('/', '.');
+                var projectName = packagePath.isBlank() ? "__ROOT__" : packagePath.replace('/', '.');
 
                 // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
                 var projectLocation = bazelPackage.getLocation();

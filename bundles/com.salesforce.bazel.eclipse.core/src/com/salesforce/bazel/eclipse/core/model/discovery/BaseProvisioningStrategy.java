@@ -547,6 +547,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             SubMonitor monitor) throws CoreException {
         monitor.setWorkRemaining(5);
 
+        // locate existing project by its location (never use the name)
         var project = findProjectForLocation(projectLocation);
 
         // open existing
