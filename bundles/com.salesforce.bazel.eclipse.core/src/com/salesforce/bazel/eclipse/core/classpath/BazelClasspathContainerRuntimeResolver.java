@@ -57,12 +57,14 @@ public class BazelClasspathContainerRuntimeResolver
         var directory = localJar.getPath().getParent();
         var jarName = localJar.getPath().getFileName().toString();
 
+        // try removing known prefixes
         List<String> knownPrefixes =
                 List.of("processed_" /* rules_jvm_external */, "" /* always try with empty prefix */);
         for (String prefix : knownPrefixes) {
             if ((prefix.length() > 0) && jarName.startsWith(prefix)) {
                 jarName = jarName.substring(prefix.length());
             }
+            // try removing known suffixes
             List<String> knownSuffixes = List.of("-sources.jar", "-src.jar");
             for (String suffix : knownSuffixes) {
                 var srcJar = directory.resolve(jarName.replace(".jar", suffix));
@@ -71,8 +73,6 @@ public class BazelClasspathContainerRuntimeResolver
                 }
             }
         }
-
-        // retry
 
         LOG.warn(
             "Unable to guess source jar for '{}'. Please check configuration if source download is disabled. ",
