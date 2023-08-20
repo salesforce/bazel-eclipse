@@ -429,9 +429,9 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         return List.of();
     }
 
-    protected ClasspathEntry newProjectReference(TargetKey targetKey, BazelProject bazelProject) {
+    protected ClasspathEntry newProjectReference(Label targetLabel, BazelProject bazelProject) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Found workspace reference for '{}': {}", targetKey, bazelProject.getProject());
+            LOG.debug("Found workspace reference for '{}': {}", targetLabel, bazelProject.getProject());
         }
         return ClasspathEntry.newProjectEntry(bazelProject.getProject());
     }
@@ -463,12 +463,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         return resolveJar(library.libraryArtifact);
     }
 
-    protected ClasspathEntry resolveProject(TargetKey targetKey) throws CoreException {
-        if (!targetKey.isPlainTarget()) {
-            return null;
-        }
-
-        final var targetLabel = targetKey.getLabel();
+    public ClasspathEntry resolveProject(final Label targetLabel) throws CoreException {
         var workspace = bazelWorkspace;
 
         // check for project mapping (it trumps everything)
@@ -485,7 +480,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                     var member = getEclipseWorkspaceRoot().findMember(IPath.forPosix(path));
                     if ((member != null) && (member.getType() == IResource.PROJECT)) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("Found project reference for '{}': {}", targetKey, member.getProject());
+                            LOG.debug("Found project reference for '{}': {}", targetLabel, member.getProject());
                         }
                         return ClasspathEntry.newProjectEntry(member.getProject());
                     }
@@ -510,7 +505,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         var bazelTarget = bazelPackage.getBazelTarget(targetLabel.targetName().toString());
         if (bazelTarget.hasBazelProject() && bazelTarget.getBazelProject().getProject().isAccessible()) {
             // a direct target match is preferred
-            return newProjectReference(targetKey, bazelTarget.getBazelProject());
+            return newProjectReference(targetLabel, bazelTarget.getBazelProject());
         }
         if (bazelPackage.hasBazelProject() && bazelPackage.getBazelProject().getProject().isAccessible()) {
             // we have to check the target name is part of the enabled project list
@@ -520,12 +515,20 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                     .getBazelTargets()
                     .stream()
                     .anyMatch(t -> t.getTargetName().equals(targetName))) {
-                return newProjectReference(targetKey, bazelPackage.getBazelProject());
+                return newProjectReference(targetLabel, bazelPackage.getBazelProject());
             }
         }
 
         // nothing found
         return null;
+    }
+
+    protected ClasspathEntry resolveProject(TargetKey targetKey) throws CoreException {
+        if (!targetKey.isPlainTarget()) {
+            return null;
+        }
+
+        return resolveProject(targetKey.getLabel());
     }
 
 }

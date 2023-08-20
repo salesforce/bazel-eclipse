@@ -3,10 +3,14 @@
  */
 package com.salesforce.bazel.eclipse.core.classpath;
 
+import static java.nio.file.Files.isRegularFile;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.JarFile;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -21,18 +25,25 @@ import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntryResolver;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntryResolver2;
 import org.eclipse.jdt.launching.IVMInstall;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.command.buildresult.LocalFileOutputArtifact;
 import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
+import com.google.idea.blaze.base.model.primitives.Label;
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
+import com.salesforce.bazel.eclipse.core.model.discovery.JavaAspectsClasspathInfo;
+import com.salesforce.bazel.eclipse.core.model.discovery.JavaAspectsInfo;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 
 @SuppressWarnings("restriction")
 public class BazelClasspathContainerRuntimeResolver
         implements IRuntimeClasspathEntryResolver, IRuntimeClasspathEntryResolver2 {
+
+    private static Logger LOG = LoggerFactory.getLogger(BazelClasspathContainerRuntimeResolver.class);
 
     ISchedulingRule getBuildRule() {
         return ResourcesPlugin.getWorkspace().getRuleFactory().buildRule();
@@ -42,9 +53,46 @@ public class BazelClasspathContainerRuntimeResolver
         return BazelCorePlugin.getInstance().getBazelModelManager().getClasspathManager();
     }
 
+    private IPath guessSrcJarLocation(LocalFileOutputArtifact localJar) {
+        var directory = localJar.getPath().getParent();
+        var jarName = localJar.getPath().getFileName().toString();
+
+        var srcJar = directory.resolve(jarName.replace(".jar", "-sources.jar"));
+        if (isRegularFile(srcJar)) {
+            return IPath.fromPath(srcJar);
+        }
+
+        srcJar = directory.resolve(jarName.replace(".jar", "-src.jar"));
+        if (isRegularFile(srcJar)) {
+            return IPath.fromPath(srcJar);
+        }
+
+        LOG.warn(
+            "Unable to guess source jar for '{}'. Please check configuration if source download is disabled. ",
+            localJar);
+
+        return null;
+    }
+
     @Override
     public boolean isVMInstallReference(IClasspathEntry entry) {
         return false;
+    }
+
+    private Label readTargetLabel(LocalFileOutputArtifact localJar) {
+        try (var jarFile = new JarFile(localJar.getPath().toFile())) {
+            var manifest = jarFile.getManifest();
+            var mainAttributes = manifest.getMainAttributes();
+            if (mainAttributes != null) {
+                var targetLabel = mainAttributes.getValue("Target-Label");
+                if (targetLabel != null) {
+                    return Label.createIfValid(targetLabel);
+                }
+            }
+        } catch (IOException e) {
+            LOG.warn("Error inspecting manifest of jar '{}': {}", localJar, e.getMessage());
+        }
+        return null;
     }
 
     @Override
@@ -97,13 +145,24 @@ public class BazelClasspathContainerRuntimeResolver
 
         var bepOutput = bazelWorkspace.getCommandExecutor()
                 .runWithWorkspaceLock(command, getBuildRule(), Collections.emptyList());
+        var aspectsInfo = new JavaAspectsInfo(bepOutput, bazelWorkspace);
+        var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, bazelWorkspace);
         List<IRuntimeClasspathEntry> result = new ArrayList<>();
         for (OutputArtifact jar : bepOutput
                 .getOutputGroupArtifacts(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH)) {
             if (jar instanceof LocalFileOutputArtifact localJar) {
+                var targetLabel = readTargetLabel(localJar);
+                if (targetLabel != null) {
+                    var projectEntry = classpathInfo.resolveProject(targetLabel);
+                    if (projectEntry != null) {
+                        result.add(new RuntimeClasspathEntry(JavaCore.newProjectEntry(projectEntry.getPath())));
+                        continue;
+                    }
+                }
+                var srcJarLocation = guessSrcJarLocation(localJar);
                 result.add(
                     new RuntimeClasspathEntry(
-                            JavaCore.newLibraryEntry(IPath.fromPath(localJar.getPath()), null, null)));
+                            JavaCore.newLibraryEntry(IPath.fromPath(localJar.getPath()), srcJarLocation, null)));
             }
         }
 
