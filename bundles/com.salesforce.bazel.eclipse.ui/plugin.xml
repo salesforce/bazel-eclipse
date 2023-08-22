@@ -54,12 +54,64 @@
              name="Sync Projects">
        </command>
     </extension>
+
     <extension
-          point="org.eclipse.ui.workingSets">
-       <workingSet
-             id="com.salesforce.bazel.eclipse.ui.workingSet1"
-             name="name">
-       </workingSet>
+          point="org.eclipse.tm4e.registry.grammars">
+       <grammar
+             path="syntaxes/starlark.tmLanguage.json"
+             scopeName="source.starlark">
+       </grammar>
+       <grammar
+             path="syntaxes/bazel.tmLanguage.json"
+             scopeName="source.bazel">
+       </grammar>
+       <grammar
+             path="syntaxes/bazelrc.tmLanguage.json"
+             scopeName="source.bazelrc">
+       </grammar>
+       <scopeNameContentTypeBinding
+             contentTypeId="com.salesforce.bazel.eclipse.content.starlark"
+             scopeName="source.starlark">
+       </scopeNameContentTypeBinding>
+       <scopeNameContentTypeBinding
+             contentTypeId="com.salesforce.bazel.eclipse.content.bazelrc"
+             scopeName="source.bazelrc">
+       </scopeNameContentTypeBinding>
+       <scopeNameContentTypeBinding
+             contentTypeId="com.salesforce.bazel.eclipse.content.bazel"
+             scopeName="source.bazel">
+       </scopeNameContentTypeBinding>
     </extension>
 
+    <extension
+          point="org.eclipse.tm4e.languageconfiguration.languageConfigurations">
+       <languageConfiguration
+             contentTypeId="com.salesforce.bazel.eclipse.content.starlark"
+             path="syntaxes/starlark.configuration.json">
+       </languageConfiguration>
+       <languageConfiguration
+             contentTypeId="com.salesforce.bazel.eclipse.content.bazel"
+             path="syntaxes/bazel.configuration.json">
+       </languageConfiguration>
+       <languageConfiguration
+             contentTypeId="com.salesforce.bazel.eclipse.content.bazelrc"
+             path="syntaxes/bazelrc.configuration.json">
+       </languageConfiguration>
+    </extension>
+
+    <extension
+          point="org.eclipse.ui.editors">
+       <editorContentTypeBinding
+             contentTypeId="com.salesforce.bazel.eclipse.content.starlark"
+             editorId="org.eclipse.ui.genericeditor.GenericEditor">
+       </editorContentTypeBinding>
+       <editorContentTypeBinding
+             contentTypeId="com.salesforce.bazel.eclipse.content.bazel"
+             editorId="org.eclipse.ui.genericeditor.GenericEditor">
+       </editorContentTypeBinding>
+       <editorContentTypeBinding
+             contentTypeId="com.salesforce.bazel.eclipse.content.bazelrc"
+             editorId="org.eclipse.ui.genericeditor.GenericEditor">
+       </editorContentTypeBinding>
+    </extension>
 </plugin>

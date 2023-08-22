@@ -1,0 +1,219 @@
+{
+	"name": "bazelrc",
+	"scopeName": "source.bazelrc",
+	"patterns": [
+		{
+			"include": "#comment"
+		},
+        {
+            "include": "#command"
+        },
+        {
+            "include": "#short-flag"
+        },
+        {
+            "include": "#long-flag"
+        },
+        {
+            "include": "#string"
+        },
+        {
+            "include": "#relative-replacement"
+        },
+        {
+            "include": "#discouraged-line-continuation"
+        }
+	],
+	"repository": {
+        "command": {
+            "name": "constant.language.bazelrc",
+            "match": "\\b(startup|common|build|test|query|coverage|run|sync|aquery|cquery|mobile-install|print_action|dump|analyze-profile|canonicalize-flags|clean|fetch|help|info|license|shutdown|version|import|try-import|codesearch)(?:(:)(\\w+))?\\b",
+            "captures": {
+                "1": {
+                    "name": "constant.language.bazelrc"
+                },
+                "2": {
+                    "name": "keyword.operator.bazelrc"
+                },
+                "3": {
+                    "name": "support.function.bazelrc"
+                }
+            }
+        },
+        "config": {
+            "name": "support.function.bazelrc",
+            "match": "^build\\s+(:)(\\w+)\\b",
+            "captures": {
+                "1": {
+                    "name": "keyword.operator.bazelrc"
+                },
+                "2": {
+                    "name": "support.function.bazelrc"
+                }
+            }
+        },
+        "short-flag": {
+            "name": "variable.bazelrc",
+            "match": "\\s(-)([a-zA-Z])(=)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.operator.bazelrc"
+                },
+                "2": {
+                    "name": "support.constant.bazelrc"
+                },
+                "3": {
+                    "name": "keyword.operator.bazelrc"
+                }
+            }
+        },
+        "long-flag": {
+            "name": "variable.bazelrc",
+            "match": "\\s(--)([-_a-zA-Z]+)(=)?\\b",
+            "captures": {
+                "1": {
+                    "name": "keyword.operator.bazelrc"
+                },
+                "2": {
+                    "name": "support.constant.bazelrc"
+                },
+                "3": {
+                    "name": "keyword.operator.bazelrc"
+                }
+            }
+        },
+        "relative-replacement": {
+            "name": "string.interpolated",
+            "match": "\\s%workspace%/"
+        },
+
+        "comment": {
+            "name": "comment.line.number-sign.bazelrc",
+            "begin": "(\\#)",
+            "beginCaptures": {
+                "1": {
+                    "name": "punctuation.definition.comment.bazelrc"
+                }
+            },
+            "end": "($)"
+        },
+        "discouraged-line-continuation": {
+            "name": "invalid.deprecated.language.bazelrc",
+            "match": "\\\\$"
+        },
+        "string": {
+            "patterns": [
+                {
+                    "include": "#string-raw-quoted-single-line"
+                },
+                {
+                    "include": "#string-quoted-single-line"
+                }
+            ]
+        },
+        "string-raw-quoted-single-line": {
+            "name": "string.quoted.raw.single.bazelrc",
+            "begin": "\\b(r)(['\"])",
+            "end": "(\\2)|((?<!\\\\)\\n)",
+            "beginCaptures": {
+                "1": {
+                    "name": "storage.type.string.bazelrc"
+                },
+                "2": {
+                    "name": "punctuation.definition.string.begin.bazelrc"
+                }
+            },
+            "endCaptures": {
+                "1": {
+                    "name": "punctuation.definition.string.end.bazelrc"
+                },
+                "2": {
+                    "name": "invalid.illegal.newline.bazelrc"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "#string-raw-content"
+                }
+            ]
+        },
+        "string-quoted-single-line": {
+            "name": "string.quoted.single.bazelrc",
+            "begin": "(['\"])",
+            "end": "(\\1)|((?<!\\\\)\\n)",
+            "beginCaptures": {
+                "1": {
+                    "name": "punctuation.definition.string.begin.bazelrc"
+                }
+            },
+            "endCaptures": {
+                "1": {
+                    "name": "punctuation.definition.string.end.bazelrc"
+                },
+                "2": {
+                    "name": "invalid.illegal.newline.bazelrc"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "#string-content"
+                }
+            ]
+        },
+        "string-content": {
+            "patterns": [
+                {
+                    "include": "#string-escape-sequence"
+                },
+                {
+                    "include": "#string-illegal-escape-sequence"
+                },
+                {
+                    "include": "#discouraged-line-continuation"
+                },
+                {
+                    "include": "#string-format-placeholder-percent"
+                },
+                {
+                    "include": "#string-format-placeholder-braces"
+                }
+            ]
+        },
+        "string-raw-content": {
+            "patterns": [
+                {
+                    "include": "#string-consume-escape"
+                },
+                {
+                    "include": "#string-format-placeholder-percent"
+                },
+                {
+                    "include": "#string-format-placeholder-braces"
+                }
+            ]
+        },
+        "string-consume-escape": {
+            "match": "\\\\['\"\\n\\\\]"
+        },
+        "string-escape-sequence": {
+            "name": "constant.character.escape.bazelrc",
+            "match": "\\\\[\\\\\"'nrt]"
+        },
+        "string-illegal-escape-sequence": {
+            "name": "invalid.illegal.character.escape.bazelrc",
+            "match": "\\\\[^\\\\\"'nrt]"
+        },
+        "string-format-placeholder-percent": {
+            "name": "constant.character.format.placeholder.other.bazelrc",
+            "match": "%[drs%]"
+        },
+        "string-format-placeholder-braces": {
+            "patterns": [
+                {
+                    "name": "constant.character.format.placeholder.other.bazelrc",
+                    "match": "\\{(?:[0-9]+|[[:alpha:]_][[:alnum:]_]*)?\\}"
+                }
+            ]
+        }
+	}
+}

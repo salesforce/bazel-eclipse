@@ -28,7 +28,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.expressions,
  com.salesforce.bazel.sdk,
  com.salesforce.bazel.eclipse.core,
- org.eclipse.ltk.core.refactoring
+ org.eclipse.ltk.core.refactoring,
+ org.eclipse.tm4e.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: com.salesforce.bazel.eclipse.ui
 Bundle-ActivationPolicy: lazy
