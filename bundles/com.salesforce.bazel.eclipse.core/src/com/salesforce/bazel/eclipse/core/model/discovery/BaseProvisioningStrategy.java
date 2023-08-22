@@ -13,6 +13,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.eclipse.core.runtime.Platform.PI_RUNTIME;
+import static org.eclipse.core.runtime.Platform.PREF_LINE_SEPARATOR;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 import static org.eclipse.jdt.core.IClasspathAttribute.ADD_EXPORTS;
 import static org.eclipse.jdt.core.IClasspathAttribute.ADD_OPENS;
@@ -45,6 +47,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -52,13 +55,18 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
+import org.osgi.service.prefs.BackingStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -390,6 +398,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         var javaProject = JavaCore.create(project.getProject());
 
+        // apply settings from workspace
+        copyProjectSettingsFromWorkspaceProject(javaProject, project.getBazelWorkspace());
+
+        // tweak to current JVMconfiguration
         getJvmConfigurator()
                 .applyJavaProjectOptions(javaProject, javaToolchainSourceVersion, javaToolchainTargetVersion, null);
 
@@ -454,6 +466,46 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             javaProject.setOption(COMPILER_RELEASE, DISABLED);
         }
 
+    }
+
+    private void copyPreferences(IEclipsePreferences srcPreferences, IEclipsePreferences targetPreferences,
+            String nodeName) throws CoreException {
+        try {
+            if (srcPreferences.nodeExists(nodeName)) {
+                var srcNode = srcPreferences.node(nodeName);
+                var targetNode = targetPreferences.node(nodeName);
+                for (String key : srcPreferences.node(nodeName).keys()) {
+                    targetNode.put(key, srcNode.get(key, null));
+                }
+                targetNode.flush();
+            }
+        } catch (BackingStoreException e) {
+            throw new CoreException(Status.error("Error coping preferences from workspace project.", e));
+        }
+    }
+
+    /**
+     * Copies project settings from the workspace project into the target project.
+     * <p>
+     * This ensures consistent settings across all projects of the same Bazel workspace.
+     * </p>
+     *
+     * @param target
+     *            the target Java project
+     * @param bazelWorkspace
+     *            the workspace suppliying the settings
+     * @throws CoreException
+     */
+    protected void copyProjectSettingsFromWorkspaceProject(IJavaProject target, BazelWorkspace bazelWorkspace)
+            throws CoreException {
+        var src = JavaCore.create(bazelWorkspace.getBazelProject().getProject());
+        target.setOptions(src.getOptions(false));
+
+        var srcPreferences = getPreferences(src.getProject());
+        var targetPreferences = getPreferences(target.getProject());
+
+        copyPreferences(srcPreferences, targetPreferences, PI_RUNTIME);
+        copyPreferences(srcPreferences, targetPreferences, "org.eclipse.jdt.ui");
     }
 
     /**
@@ -609,6 +661,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         // set encoding to UTF-8
         project.setDefaultCharset(StandardCharsets.UTF_8.name(), monitor.split(1));
+
+        // set line separator to posix
+        setLineSeparator(getPreferences(project), "\n");
 
         return project;
     }
@@ -868,6 +923,17 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         return value;
     }
 
+    private IEclipsePreferences getPreferences(IProject project) {
+        if (project != null) {
+            return (IEclipsePreferences) Platform.getPreferencesService()
+                    .getRootNode()
+                    .node(ProjectScope.SCOPE)
+                    .node(project.getName());
+        }
+
+        return (IEclipsePreferences) Platform.getPreferencesService().getRootNode().node(InstanceScope.SCOPE);
+    }
+
     private boolean isTestTarget(BazelTarget bazelTarget) throws CoreException {
         return bazelTarget.getRuleClass().contains("test");
     }
@@ -1055,6 +1121,15 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             return result;
         } finally {
             progress.done();
+        }
+    }
+
+    private void setLineSeparator(IEclipsePreferences projectPreferences, String value) throws CoreException {
+        try {
+            projectPreferences.node(PI_RUNTIME).put(PREF_LINE_SEPARATOR, value);
+            projectPreferences.flush();
+        } catch (BackingStoreException e) {
+            throw new CoreException(Status.error("Error saving project setting.", e));
         }
     }
 
