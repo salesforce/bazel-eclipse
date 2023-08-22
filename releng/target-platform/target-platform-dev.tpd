@@ -36,9 +36,6 @@ location "https://download.eclipse.org/releases/2023-06/" {
     org.eclipse.linuxtools.docker.feature.feature.group
     org.eclipse.linuxtools.docker.editor.ls.feature.feature.group
 
-    // Terminal
-    org.eclipse.tm4e.feature.feature.group
-
 	// Xtext
 //    org.eclipse.xtend.sdk.feature.group
 //    org.eclipse.xtext.sdk.feature.group

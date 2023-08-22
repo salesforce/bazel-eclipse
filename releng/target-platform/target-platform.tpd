@@ -44,6 +44,13 @@ location "https://download.eclipse.org/tools/orbit/downloads/drops/R202305310105
 	org.hamcrest
 }
 
+location "https://download.eclipse.org/releases/2023-06/" {
+    // TextMate
+    org.eclipse.tm4e.feature.feature.group
+}
+
+
+
 location "https://download.eclipse.org/jdtls/milestones/1.23.0/repository/" {
 	org.eclipse.jdt.ls.core
 }
