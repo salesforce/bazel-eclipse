@@ -32,7 +32,6 @@ import java.util.Objects;
 
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -204,13 +203,8 @@ public class BazelProject implements IProjectNature {
         setModel(model);
     }
 
-    boolean addBazelBuilder(IProject project, IProjectDescription description, IProgressMonitor monitor)
-            throws CoreException {
-        var setProjectDescription = false;
-        if (description == null) {
-            description = project.getDescription();
-            setProjectDescription = true;
-        }
+    boolean addBazelBuilder(IProject project, IProgressMonitor monitor) throws CoreException {
+        var description = project.getDescription();
 
         // ensure Maven builder is always the last one
         ICommand bazelBuilder = null;
@@ -220,7 +214,7 @@ public class BazelProject implements IProjectNature {
             if (BAZEL_BUILDER_ID.equals(command.getBuilderName())) {
                 bazelBuilder = command;
                 if (i == (description.getBuildSpec().length - 1)) {
-                    // This is the maven builder command and it is the last one in the list - there is nothing to change
+                    // This is the builder command and it is the last one in the list - there is nothing to change
                     return false;
                 }
             } else {
@@ -235,20 +229,18 @@ public class BazelProject implements IProjectNature {
         newSpec.add(bazelBuilder);
         description.setBuildSpec(newSpec.toArray(ICommand[]::new));
 
-        if (setProjectDescription) {
-            project.setDescription(description, monitor);
-        }
+        project.setDescription(description, monitor);
         return true;
     }
 
     @Override
     public void configure() throws CoreException {
-        addBazelBuilder(project, project.getDescription(), null);
+        addBazelBuilder(project, null);
     }
 
     @Override
     public void deconfigure() throws CoreException {
-        removeBazelBuilder(project, project.getDescription(), null);
+        removeBazelBuilder(project, null);
     }
 
     @Override
@@ -499,13 +491,8 @@ public class BazelProject implements IProjectNature {
         return hasWorkspaceRootPropertySetToLocation(project, workspaceRoot);
     }
 
-    boolean removeBazelBuilder(IProject project, IProjectDescription description, IProgressMonitor monitor)
-            throws CoreException {
-        var setProjectDescription = false;
-        if (description == null) {
-            description = project.getDescription();
-            setProjectDescription = true;
-        }
+    boolean removeBazelBuilder(IProject project, IProgressMonitor monitor) throws CoreException {
+        var description = project.getDescription();
 
         var foundBazelBuilder = false;
         List<ICommand> newSpec = new ArrayList<>();
@@ -521,10 +508,7 @@ public class BazelProject implements IProjectNature {
         }
         description.setBuildSpec(newSpec.toArray(ICommand[]::new));
 
-        if (setProjectDescription) {
-            project.setDescription(description, monitor);
-        }
-
+        project.setDescription(description, monitor);
         return true;
     }
 

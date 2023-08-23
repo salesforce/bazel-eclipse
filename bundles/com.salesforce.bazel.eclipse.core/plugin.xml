@@ -13,7 +13,7 @@
    </extension>
 
    <extension
-         id="com.salesforce.bazel.eclipse.bazelNature"
+         id="com.salesforce.bazel.eclipse.core.bazelnature"
          name="Bazel Project Nature"
          point="org.eclipse.core.resources.natures">
       <runtime>
@@ -25,12 +25,12 @@
             id="org.eclipse.jdt.core.javanature">
       </requires-nature>
       <builder
-            id="com.salesforce.bazel.eclipse.builder">
+            id="com.salesforce.bazel.eclipse.core.bazelprojectbuilder">
       </builder>
    </extension>
 
    <extension
-         id="com.salesforce.bazel.eclipse.builder"
+         id="bazelprojectbuilder"
          name="Bazel Project Builder"
          point="org.eclipse.core.resources.builders">
       <builder

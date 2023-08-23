@@ -6,10 +6,10 @@ public interface BazelCoreSharedContstants {
     String PLUGIN_ID = "com.salesforce.bazel.eclipse.core";
 
     /** The Bazel project nature */
-    String BAZEL_NATURE_ID = "com.salesforce.bazel.eclipse.bazelNature";
+    String BAZEL_NATURE_ID = "com.salesforce.bazel.eclipse.core.bazelnature";
 
     /** The Bazel project builder */
-    String BAZEL_BUILDER_ID = "com.salesforce.bazel.eclipse.builder";
+    String BAZEL_BUILDER_ID = "com.salesforce.bazel.eclipse.core.bazelprojectbuilder";
 
     /** Bazel Problem marker */
     String PROBLEM_MARKER = PLUGIN_ID + ".problem";
