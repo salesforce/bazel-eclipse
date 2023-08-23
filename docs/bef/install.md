@@ -7,9 +7,11 @@ These instructions are for **users that just want to use** the Bazel Eclipse fea
 ### Supported Platforms
 
 We will support you on:
-- Mac - reasonably recent OS versions
-- Linux - reasonably recent OS version of a major distro (Ubuntu, Mint, etc)
-- Windows - best-effort, we are looking for expertise/help
+- Mac - reasonably recent OS versions, latest Eclipse
+- Linux - reasonably recent OS version, latest Eclipse
+
+We are looking for help to support:
+- Windows - not tests
 
 
 ### Supported Eclipse
@@ -22,29 +24,26 @@ Given the language server is our priority, we may need to adopt new APIs quickly
 The Bazel Eclipse Feature does not come with an embedded install of Bazel.
 You must have Bazel binary (`bazel`) installed on your machine and in your shell path.
 
-We recommend Bazelisk.
+We recommend Bazelisk or another wrapper which supports `.bazelversion`.
 
 
 ### Installing the Bazel Eclipse feature into Eclipse
 
 **Manually Install the Bazel Eclipse feature into Eclipse:**
 
-First, understand what releases of BEF are available, which is [covered on the Releases page](releases.md).
 If you want to install the latest version of BEF, follow these steps to install it in your Eclipse IDE using the update site:
 
 - Start Eclipse.
 - In Eclipse, go to *Help* -> *Install New Software*
 - Click the *Add* button
 <!-- markdown-link-check-disable-next-line -->
-- For the location, enter: **https://opensource.salesforce.com/bazel-eclipse/update-site**
-- Give the location a name, like *Bazel-Eclipse updatesite*
+- For the location, enter: **https://opensource.salesforce.com/bazel-eclipse/latest/**
+- Give the location a name, like *Bazel Eclipse*
 - In the tree control area, open the *Bazel Eclipse* node
 - Check the box next to the *Bazel Eclipse Feature* item, then hit *Next*
-  - Note: BEF users do not need the *BJLS Feature*. You should leave that unchecked.
+  - Note: Don't install the *BJLS Feature*. You must leave that unchecked.
 - Click *Next/Agree/Finish* until it completes.
 - Restart Eclipse
-
-Otherwise, you can install older versions of BEF using the archive zip files that are listed [on the Releases page](releases.md).
 
 **To verify that it is installed:**
 - Start Eclipse
@@ -53,13 +52,11 @@ Otherwise, you can install older versions of BEF using the archive zip files tha
 
 ### Known Issues
 
-If you have a problem, searching the full [Issues list](https://github.com/salesforce/bazel-eclipse/issues)
-  is a good thing to do.
+If you have a problem, searching the full [Issues list](https://github.com/salesforce/bazel-eclipse/issues) is a good thing to do.
 
 ### Updating your Bazel Eclipse feature
 
-If you would like a newer build of the Bazel Eclipse feature, you will need to re-install it.
-Repeat the above steps using with a newer version.
+If you would like a newer build of the Bazel Eclipse feature, you should Eclipse built-in *Help > Check for Updates* functionality.
 
 ### Using the Bazel Eclipse Feature
 
