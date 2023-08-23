@@ -77,6 +77,20 @@ public final class BazelModel extends BazelElement<BazelModelInfo, BazelElement<
         return new BazelWorkspace(workspaceRoot, this);
     }
 
+    /**
+     * Returns the list of workspaces the model knows about.
+     * <p>
+     * A Bazel workspace is identified in the Eclipse workspace by traversing all projects and identifying those mapping
+     * to the Bazel workspace. Each Bazel workspace is required to be represented by an {@link IProject} in Eclipse.
+     * </p>
+     *
+     * @return the list of workspaces the model knows about
+     * @throws CoreException
+     */
+    public List<BazelWorkspace> getBazelWorkspaces() throws CoreException {
+        return getInfo().findWorkspaces();
+    }
+
     @Override
     public BazelLabel getLabel() {
         return null; // no label
@@ -97,20 +111,6 @@ public final class BazelModel extends BazelElement<BazelModelInfo, BazelElement<
     @Override
     public BazelElement<?, ?> getParent() {
         return null;
-    }
-
-    /**
-     * Returns the list of workspaces the model knows about.
-     * <p>
-     * A Bazel workspace is identified in the Eclipse workspace by traversing all projects and identifying those mapping
-     * to the Bazel workspace. Each Bazel workspace is required to be represented by an {@link IProject} in Eclipse.
-     * </p>
-     *
-     * @return the list of workspaces the model knows about
-     * @throws CoreException
-     */
-    public List<BazelWorkspace> getWorkspaces() throws CoreException {
-        return getInfo().findWorkspaces();
     }
 
     @Override

@@ -40,12 +40,12 @@ public class BazelJdtLsDelegateCommandHandler implements IDelegateCommandHandler
                         projects.add(container.getProject());
                     }
                     new InitializeOrRefreshClasspathJob(
-                            projects.toArray(new IProject[projects.size()]),
+                            projects,
                             BazelCorePlugin.getInstance().getBazelModelManager().getClasspathManager(),
                             true /* force */).schedule();
                     return new Object();
                 case "java.bazel.syncProjects":
-                    var workspaces = BazelCore.getModel().getWorkspaces();
+                    var workspaces = BazelCore.getModel().getBazelWorkspaces();
                     for (BazelWorkspace workspace : workspaces) {
                         new SynchronizeProjectViewJob(workspace).schedule();
                     }

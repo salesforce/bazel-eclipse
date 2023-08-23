@@ -4,6 +4,7 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_
 import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -69,9 +70,9 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
      *            <code>true</code> if a refresh should be forced, <code>false</code> if the classpath should only be
      *            computed when it's missing (no previously persisted state)
      */
-    public InitializeOrRefreshClasspathJob(IProject[] projects, BazelClasspathManager classpathManager,
+    public InitializeOrRefreshClasspathJob(Collection<IProject> projects, BazelClasspathManager classpathManager,
             boolean forceRefresh) {
-        this(Stream.of(projects).filter(InitializeOrRefreshClasspathJob::isBazelProject).map(BazelCore::create),
+        this(projects.stream().filter(InitializeOrRefreshClasspathJob::isBazelProject).map(BazelCore::create),
                 classpathManager,
                 forceRefresh);
     }

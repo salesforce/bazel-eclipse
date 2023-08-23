@@ -393,7 +393,7 @@ public class BazelProject implements IProjectNature {
         }
 
         // search model
-        for (BazelWorkspace workspace : getBazelModel().getWorkspaces()) {
+        for (BazelWorkspace workspace : getBazelModel().getBazelWorkspaces()) {
             if (workspace.getLocation().toString().equals(workspaceRoot)) {
                 return workspace;
             }

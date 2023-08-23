@@ -42,16 +42,23 @@
        <command
              categoryId="com.salesforce.bazel.eclipse.ui.commands.category"
              defaultHandler="com.salesforce.bazel.eclipse.ui.commands.UpdateClasspathsHandler"
-             description="Refresh Eclipse build path information from Bazel BUILD files."
+             description="Refresh project build path information from Bazel BUILD files."
              id="com.salesforce.bazel.eclipse.ui.commands.updateClasspaths"
-             name="Update Classpaths">
+             name="Update Bazel Classpaths">
        </command>
        <command
              categoryId="com.salesforce.bazel.eclipse.ui.commands.category"
              defaultHandler="com.salesforce.bazel.eclipse.ui.commands.SynchronizeProjectsHandler"
-             description="Refresh Eclipse workspace project configuration from Bazel BUILD files according to the configured project view."
-             id="com.salesforce.bazel.eclipse.ui.commands.syncProjects"
-             name="Sync Projects">
+             description="Synchronize Eclipse project configurations from a Bazel workspace project view."
+             id="com.salesforce.bazel.eclipse.ui.commands.syncWorkspace"
+             name="Sync Bazel Project View">
+       </command>
+       <command
+             categoryId="com.salesforce.bazel.eclipse.ui.commands.category"
+             defaultHandler="com.salesforce.bazel.eclipse.ui.commands.SynchronizeAllWorkspacesHandler"
+             description="Synchronize all Eclipse project configurations from a all Bazel workspace project views imported into Eclipse"
+             id="com.salesforce.bazel.eclipse.ui.commands.syncAllWorkspaces"
+             name="Sync Bazel Project Views">
        </command>
     </extension>
 
@@ -113,5 +120,105 @@
              contentTypeId="com.salesforce.bazel.eclipse.content.bazelrc"
              editorId="org.eclipse.ui.genericeditor.GenericEditor">
        </editorContentTypeBinding>
+    </extension>
+    <extension
+          point="org.eclipse.ui.menus">
+       <menuContribution
+             allPopups="false"
+             locationURI="popup:org.eclipse.ui.popup.any">
+          <menu
+                icon="resources/bazelicon.gif"
+                id="com.salesforce.bazel.eclipse.ui.tools"
+                label="Bazel">
+             <visibleWhen
+                   checkEnabled="false">
+                <reference
+                      definitionId="com.salesforce.bazel.eclipse.ui.isBuildOrWorkspaceFile">
+                </reference>
+             </visibleWhen>
+          </menu>
+       </menuContribution>
+       <menuContribution
+             allPopups="false"
+             locationURI="popup:com.salesforce.bazel.eclipse.ui.tools">
+          <command
+                commandId="com.salesforce.bazel.eclipse.ui.commands.syncWorkspace"
+                style="push">
+             <visibleWhen
+                   checkEnabled="false">
+                <reference
+                      definitionId="com.salesforce.bazel.eclipse.ui.isBuildOrWorkspaceFile">
+                </reference>
+             </visibleWhen>
+          </command>
+          <command
+                commandId="com.salesforce.bazel.eclipse.ui.commands.updateClasspaths"
+                style="push">
+             <visibleWhen
+                   checkEnabled="false">
+                <reference
+                      definitionId="com.salesforce.bazel.eclipse.ui.isBuildOrWorkspaceFile">
+                </reference>
+             </visibleWhen>
+          </command>
+       </menuContribution>
+       <menuContribution
+             allPopups="false"
+             locationURI="toolbar:org.eclipse.ui.main.toolbar">
+          <toolbar
+                id="com.salesforce.bazel.eclipse.ui.toolbar"
+                label="Bazel">
+             <command
+                   commandId="com.salesforce.bazel.eclipse.ui.commands.syncAllWorkspaces"
+                   icon="resources/failed.png"
+                   style="push">
+             </command>
+          </toolbar>
+       </menuContribution>
+    </extension>
+    <extension
+          point="org.eclipse.core.expressions.definitions">
+       <definition
+             id="com.salesforce.bazel.eclipse.ui.isBuildOrWorkspaceFile">
+          <iterate
+                ifEmpty="false"
+                operator="and">
+             <adapt
+                   type="org.eclipse.core.resources.IResource">
+                <test
+                      property="org.eclipse.core.resources.projectNature"
+                      value="com.salesforce.bazel.eclipse.core.bazelnature">
+                </test>
+             </adapt>
+             <or>
+                <adapt
+                      type="org.eclipse.core.resources.IProject">
+                   <instanceof
+                         value="org.eclipse.core.resources.IProject">
+                   </instanceof>
+                </adapt>
+                <test
+                      property="org.eclipse.core.resources.name"
+                      value="BUILD">
+                </test>
+                <test
+                      property="org.eclipse.core.resources.name"
+                      value="BUILD.bazel">
+                </test>
+                <test
+                      property="org.eclipse.core.resources.name"
+                      value="WORKSPACE">
+                </test>
+                <test
+                      property="org.eclipse.core.resources.name"
+                      value="WORKSPACE.bazel">
+                </test>
+                <test
+                      property="org.eclipse.core.resources.name"
+                      value="MODULE.bazel">
+                </test>
+             </or>
+          </iterate>
+       </definition>
     </extension>
 </plugin>
