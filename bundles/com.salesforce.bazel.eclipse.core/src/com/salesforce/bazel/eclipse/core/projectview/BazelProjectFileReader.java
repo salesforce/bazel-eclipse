@@ -65,6 +65,7 @@ public class BazelProjectFileReader {
         final LinkedHashSet<Path> importingFiles = new LinkedHashSet<>();
         IPath bazelBinary;
         final LinkedHashMap<String, String> projectMappings = new LinkedHashMap<>();
+        final LinkedHashSet<String> importPreferences = new LinkedHashSet<>();
 
         public BazelProjectView build() throws IllegalStateException {
             // check mandatory parameters
@@ -102,6 +103,11 @@ public class BazelProjectFileReader {
                         "at least one target to include is required unless derive_targets_from_directories is set");
             }
 
+            List<WorkspacePath> preferencesToImport = new ArrayList<>();
+            for (String epfFile : importPreferences) {
+                preferencesToImport.add(new WorkspacePath(epfFile));
+            }
+
             return new BazelProjectView(
                     directoriesToImport,
                     directoriesToExclude,
@@ -114,7 +120,8 @@ public class BazelProjectFileReader {
                     bazelBinary,
                     targetDiscoveryStrategy,
                     targetProvisioningStrategy,
-                    projectMappings);
+                    projectMappings,
+                    preferencesToImport);
         }
 
         public ImportHandle startImporting(Path bazelProjectViewFile) throws IOException {
@@ -302,6 +309,10 @@ public class BazelProjectFileReader {
                                         bazelProjectFile),
                                     e);
                         }
+                        break;
+                    }
+                    case "import_preferences": {
+                        parseSectionBodyIntoList(rawSection).forEach(builder.importPreferences::add);
                         break;
                     }
                     case "import_target_output":

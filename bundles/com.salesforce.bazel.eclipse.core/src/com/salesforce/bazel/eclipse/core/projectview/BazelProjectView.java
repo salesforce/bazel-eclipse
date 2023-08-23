@@ -38,7 +38,8 @@ public record BazelProjectView(
         IPath bazelBinary,
         String targetDiscoveryStrategy,
         String targetProvisioningStrategy,
-        Map<String, String> projectMappings) {
+        Map<String, String> projectMappings,
+        Collection<WorkspacePath> importPreferences) {
 
     public BazelProjectView {
         directoriesToImport = Collections.unmodifiableCollection(directoriesToImport);

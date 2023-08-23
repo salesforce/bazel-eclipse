@@ -7,17 +7,21 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID;
 import static java.lang.String.format;
+import static java.nio.file.Files.isReadable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
 import static org.eclipse.core.resources.IResource.FORCE;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -37,9 +41,14 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
+import org.eclipse.core.runtime.preferences.IPreferenceFilter;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.core.runtime.preferences.PreferenceFilterEntry;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 import org.slf4j.Logger;
@@ -407,6 +416,58 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             IContainer.INCLUDE_HIDDEN /* visit hidden ones so we can un-hide if necessary */);
     }
 
+    private void importPreferences(Collection<WorkspacePath> importPreferences, SubMonitor monitor)
+            throws CoreException {
+        if (importPreferences.isEmpty()) {
+            return;
+        }
+
+        var workspaceRoot = workspace.getLocation().toPath();
+
+        monitor.beginTask("Importing preferences...", importPreferences.size());
+        for (WorkspacePath epfFile : importPreferences) {
+            monitor.subTask(epfFile.toString());
+
+            var epfFilePath = workspaceRoot.resolve(epfFile.asPath());
+            if (!isReadable(epfFilePath)) {
+                throw new CoreException(
+                        Status.error(
+                            format(
+                                "Eclipse preference file '%s' is not readable. Please check .bazelproject file!",
+                                epfFile)));
+            }
+
+            try (var fis = new FileInputStream(epfFilePath.toFile())) {
+                final var service = Platform.getPreferencesService();
+                final var prefs = service.readPreferences(fis);
+
+                // create a filter that matches *all*
+                final var filters = new IPreferenceFilter[1];
+                filters[0] = new IPreferenceFilter() {
+
+                    @Override
+                    public Map<String, PreferenceFilterEntry[]> getMapping(final String scope) {
+                        // note, here we could limit the values that should be imported
+                        // we don't do this because we expect the .epf file to be correctly stripped
+                        return null;
+                    }
+
+                    @Override
+                    public String[] getScopes() {
+                        return new String[] { InstanceScope.SCOPE, ConfigurationScope.SCOPE };
+                    }
+                };
+
+                service.applyPreferences(prefs, filters);
+
+                monitor.worked(1);
+            } catch (IOException | CoreException e) {
+                throw new CoreException(
+                        Status.error(format("Error importing preference file '%s': %s", epfFile, e.getMessage()), e));
+            }
+        }
+    }
+
     private List<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, SubMonitor monitor)
             throws CoreException {
         return getTargetProvisioningStrategy().provisionProjectsForSelectedTargets(targets, workspace, monitor);
@@ -460,6 +521,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             var workspaceRoot = workspace.getLocation();
 
             var progress = SubMonitor.convert(monitor, format("Synchronizing workspace %s", workspaceName), 20);
+
+            // import preferences
+            importPreferences(projectView.importPreferences(), progress.split(1, SUPPRESS_NONE));
 
             // we don't care about the actual project name - we look for the path
             var workspaceProject = findProjectForLocation(workspaceRoot);

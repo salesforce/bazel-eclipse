@@ -138,6 +138,10 @@ In case the name does not match an explicit `project_mappings` should be setup i
 The lookup within the IDE implements a simple logic to make defining the mappings less verbose.
 A mapping for target `@some_external_target//:some_external_target` can be defined using just `@some_external_target`.
 
+### `import_preferences`
+
+A list of preferences files (`*.epf`) to import into Eclipse during sync.
+
 
 ## Unsupported Features / Limitations
 
