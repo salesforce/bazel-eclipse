@@ -224,9 +224,11 @@
    limitations under the License.
    </license>
 
-   <url>
-      <discovery label="Salesforce internal Git repository" url="https://github.com/salesforce/bazel-eclipse"/>
-   </url>
+   <requires>
+      <import feature="org.eclipse.tm4e.feature" version="0.5.5" match="greaterOrEqual"/>
+      <import feature="org.eclipse.jdt" version="3.19.100" match="greaterOrEqual"/>
+      <import feature="org.eclipse.platform" version="4.28.0" match="greaterOrEqual"/>
+   </requires>
 
    <plugin
          id="com.salesforce.bazel.sdk"
