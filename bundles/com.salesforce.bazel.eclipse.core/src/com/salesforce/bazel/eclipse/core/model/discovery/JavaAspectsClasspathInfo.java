@@ -470,20 +470,31 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         var projectMapping = findProjectMapping(targetLabel);
         if (projectMapping != null) {
             try {
-                var path = new URI(projectMapping).getPath();
-                LOG.debug(
-                    "Discovered project mapping for target '{}': {} (path '{}')",
-                    targetLabel,
-                    projectMapping,
-                    path);
-                if (path != null) {
-                    var member = getEclipseWorkspaceRoot().findMember(IPath.forPosix(path));
-                    if ((member != null) && (member.getType() == IResource.PROJECT)) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Found project reference for '{}': {}", targetLabel, member.getProject());
+                var projectMappingUri = new URI(projectMapping);
+                var scheme = projectMappingUri.getScheme();
+                if ("project".equals(scheme)) {
+                    var path = projectMappingUri.getPath();
+                    LOG.debug(
+                        "Discovered project mapping for target '{}': {} (path '{}')",
+                        targetLabel,
+                        projectMapping,
+                        path);
+                    if (path != null) {
+                        var member = getEclipseWorkspaceRoot().findMember(IPath.forPosix(path));
+                        if ((member != null) && (member.getType() == IResource.PROJECT)) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Found project reference for '{}': {}", targetLabel, member.getProject());
+                            }
+                            return ClasspathEntry.newProjectEntry(member.getProject());
                         }
-                        return ClasspathEntry.newProjectEntry(member.getProject());
                     }
+                } else {
+                    LOG.warn(
+                        "Found a project mapping '{}' for target '{}' but the scheme '{}' is not supported. Only 'project' is supported at this time.",
+                        projectMapping,
+                        targetLabel,
+                        scheme);
+                    // fall through
                 }
             } catch (URISyntaxException e) {
                 LOG.error(

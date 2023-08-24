@@ -128,7 +128,8 @@ For details please read the JavaDoc (and Java code) of [ProjectPerPackageProvisi
 
 A list of mappings from targets (typically from external repositories) to projects in the IDE.
 This should be used in combination with `--override_repository`.
-The syntax of each entry is `target = projecturi`, where `target` is typically an external repository (eg., `@myjar`) and `projecturi` the project type and path (eg., `maven:/my-jar`).
+The syntax of each entry is `target = projecturi`, where `target` is typically an external repository (eg., `@myjar`) and `projecturi` the project type and path (eg., `project:/my-jar`).
+Currently only the scheme `project:` is supported, which will map to an existing Eclipse/Language Server project with the given name.
 
 Out of the box the language server as well as the Eclipse feature resolves references to other Bazel workspaces using the workspace name.
 Thus, if the external workspace is already imported and its name matches its projects will be used when resolving dependencies.
