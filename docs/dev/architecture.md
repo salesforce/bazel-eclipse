@@ -92,6 +92,14 @@ This may not always be possible.
 Therefore the feature needs to implement some kind for recovery.
 
 
+### Opinionated Integration
+
+While Bazel considers itself the source of truth of everything, The Bazel Eclipse Feature ignores that occasionally.
+The goal of BEF is a good DX.
+Sometimes invoking a Bazel command for obtaining some information is just not right from a DX/UX perspective.
+In this case BEF might implement some things directly rather then asking Bazel for it.
+
+
 ### Bazel Classpath Container
 
 The bridge between JDT and the Bazel Eclipse Feature is largely accomplished by the Bazel Classpath container.

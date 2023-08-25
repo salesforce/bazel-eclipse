@@ -50,6 +50,12 @@ If you want to install the latest version of BEF, follow these steps to install 
 - *Eclipse* > *About* > *Installation Details* > *Click on the Plugins Tab* > *search for Bazel*: the feature's plugins should be in the list
 - In the *Project Explorer* view, you should be able to right-click, choose *Import*, and see a *Bazel* menu item.
 
+
+### Start using it
+
+Now that your tool chain is ready, it is time to start using it.
+We cover how to use the Bazel Eclipse feature [in our User's Guide](using_the_feature.md).
+
 ### Known Issues
 
 If you have a problem, searching the full [Issues list](https://github.com/salesforce/bazel-eclipse/issues) is a good thing to do.
@@ -58,7 +64,3 @@ If you have a problem, searching the full [Issues list](https://github.com/sales
 
 If you would like a newer build of the Bazel Eclipse feature, you should Eclipse built-in *Help > Check for Updates* functionality.
 
-### Using the Bazel Eclipse Feature
-
-Now that your tool chain is ready, it is time to start using it.
-We cover how to use the Bazel Eclipse feature [in our User's Guide](using_the_feature.md).

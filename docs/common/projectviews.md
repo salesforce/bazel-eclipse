@@ -9,19 +9,37 @@ When importing a Bazel workspace the Bazel Eclipse Feature (and the Bazel JDT La
 The file will be used to drive the import/synchronization of Bazel directories and targets into Java projects with their own classpath.
 This resolution can be customized using `target_discovery_strategy` and `target_provisioning_strategy` (see below for details).
 
-The `.eclipse/.bazelproject` file usually does not contain directories and target lists directly but uses `import` to import `.bazelproject` files shared with the Bazel workspace in a source control system (eg., Git).
-The `.eclipse/.bazelproject` file should not be shared in source control and should be added to `.gitignore` instead (like most of the stuff within the `.eclipse` folder).
+Note, an existing `.eclipse/.bazelproject` file will never be overridden.
+It will be used as is.
+
+**Import and Share**
+
+Instead of using only the `.eclipse/.bazelproject` file we recommend using `import`.
+Teams should share recommended  `.bazelproject` files in source control (eg. Git).
+Simply add an `import` statement for any  `.bazelproject` file you want to use.
+
+The `.eclipse/.bazelproject` file should not be shared in source control.
+It should be added to `.gitignore` instead (like most of the stuff within the `.eclipse` folder).
 The `.eclipse` folder may also be used to create virtual Java projects for Bazel targets.
 This is required to support individual classpath scopes per target.
-See `project-per-target` startegy for more details.
+See `project-per-target` strategy for more details.
+
+**tools/eclipse/.managed-defaults.bazelproject**
 
 Some of the additional settings below may cause issues in IntelliJ.
 Therefore the Bazel Eclipse Feature (and the Bazel JDT Language Server) support importing a file with default settings just for Eclipse, VS Code or other tools using the language server.
 Simply create a file `tools/eclipse/.managed-defaults.bazelproject` and put additional settings like `target_discovery_strategy` and `target_provisioning_strategy` only in this file, which can be added to source control and shared with every team member.
 The import process will check for the existence of this file and add an import line to `.eclipse/.bazelproject`.
 
+**project-per-package**
+
+If you are looking for inspiration try this `target_provisioning_strategy`.
+It creates a more *traditional* IDE experience.
+
 
 ## Supported Features
+
+### `import`
 
 ### `directories`
 
@@ -29,7 +47,6 @@ The import process will check for the existence of this file and add an import l
 See JavaDoc of [BazelProject](../../bundles/com.salesforce.bazel.eclipse.core/src/com/salesforce/bazel/eclipse/core/model/BazelProject.java) for details about project types.
 
 ### `targets`
-
 
 ### `derive_targets_from_directories`
 
