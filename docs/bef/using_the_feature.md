@@ -6,10 +6,8 @@ All of them assume you have already [installed your toolchain](install.md).
 **Using the Bazel Eclipse Feature:**
 
 - [Import your Bazel workspace into the IDE](import_workspace.md)
-- [Configure the project Settings](using_the_feature_settings.md)
-- [Building your project](using_the_feature_builds.md)
-- [Understanding the Java Classpath with the Bazel Eclipse Feature](using_the_feature_classpath.md)
-- [Running apps and tests](using_the_feature_launching.md)
+- [Sync and Building your project](sync_and_build.md)
+- [Understanding the Java Classpath with the Bazel Eclipse Feature](../common/classpath.md)
 
 **Modifying the Bazel Eclipse Feature**
 
