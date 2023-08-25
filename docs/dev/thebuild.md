@@ -1,10 +1,11 @@
 ## How the Build Works
 
 This project is currently maintained using one build.
-Technically, there are still two build systems - Eclipse PDE and Maven Tycho.
-However, they use one single source of truth - Eclipse PDE.
-Thus, you don't have to worry about maintaining Maven POM.xml files.
-
+This build is **not** Bazel based.
+For building Eclipse plug-ins and extensions Bazel does not offer any support at all.
+Therefore we are using Maven Tycho and Eclipse PDE as the build system.
+However, you don't have to worry about writing Maven POM.xml files.
+Tycho's Pomless extension takes care of that.
 
 
 ### Eclipse PDE (SDK and Self-Hosting)
