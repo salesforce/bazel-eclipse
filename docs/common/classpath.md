@@ -17,7 +17,7 @@ Depending on the `target_provisioning_strategy` the project will either match th
 Additionally, Eclipse supports two classpaths per project - one for main and one for tests.
 Bazel tests targets and their dependencies will be mapped to the test classpath on a best effort base.
 
-** Project dependencies **
+**Project Dependencies**
 
 Every dependencies will be checked for a project first.
 The dependencie's target label will be used to discover existing projects.
@@ -28,7 +28,7 @@ In order for it to work the external workspace must also be imported into the ID
 
 For more intentional mappings setup `project_mappings` in the [project view](projectviews.md).
 
-** Jar Dependencies **
+**Jar Dependencies**
 
 Bazel uses header jars (or ijars) during compilation.
 The classpath in the IDE will be setup for compilation using those jars if available.

@@ -11,7 +11,7 @@ This process is called **sync** (short for synchronization).
 If a Bazel command fails during the process the **sync** will be incomplete and fail as well.
 You have to fix the Bazel issue and **sync** again.
 
-** What happens during sync? **
+**What happens during sync?**
 
 A **sync** will execute the `target_discovery_strategy` to discover targets to provision (setup) in Eclipse.
 It then calls the `target_provisioning_strategy` to group targets into Eclipse projects.
@@ -26,7 +26,7 @@ The following information will be configured during a **sync**:
 After the first processing round is finished a classpath update round will be triggered.
 
 
-** When to sync? **
+**When to sync?**
 
 Rule of thumb: whenever you modify the project view (`.eclipse/.bazelproject` and any of the `import` files) you have to **sync**.
 
