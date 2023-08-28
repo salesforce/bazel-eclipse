@@ -851,6 +851,26 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         return allPackages.get(0); // BazelTarget::getBazelPackage guaranteed to not return null
     }
 
+    private IPath findCommonParentPackagePrefix(Collection<IPath> detectedJavaPackagesForSourceDirectory) {
+        if (detectedJavaPackagesForSourceDirectory.isEmpty()) {
+            return null;
+        }
+
+        if (detectedJavaPackagesForSourceDirectory.size() == 1) {
+            return detectedJavaPackagesForSourceDirectory.stream().findFirst().get();
+        }
+
+        Set<IPath> possiblePrefixes = new LinkedHashSet<>(detectedJavaPackagesForSourceDirectory);
+        for (IPath prefix : possiblePrefixes) {
+            if (detectedJavaPackagesForSourceDirectory.stream().allMatch(p -> prefix.isPrefixOf(p))) {
+                // abort early, we have a common prefix and there can really only be one
+                return prefix;
+            }
+        }
+
+        return null;
+    }
+
     private IProject findProjectForLocation(IPath location) {
         var potentialProjects = getEclipseWorkspaceRoot().findContainersForLocationURI(URIUtil.toURI(location));
 
@@ -989,29 +1009,34 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         // in this case we need to link (emulate) its package structure
                         // however, we can only support this properly if this is the only folder
                         if (directories.size() > 1) {
-                            // TODO create problem marker?
-                            LOG.warn(
-                                "Impossible to support project '{}' - found multiple source directories which seems to be nested!",
-                                project);
+                            createBuildPathProblem(
+                                project,
+                                Status.error(
+                                    "Impossible to support project: found multiple source directories which seems to be nested! Please consider restructuring the targets."));
                             continue NEXT_FOLDER;
                         }
                         // and there aren't any other source files to be linked
                         if (sourceInfo.hasSourceFilesWithoutCommonRoot()) {
-                            // TODO create problem marker?
-                            LOG.warn(
-                                "Impossible to support project '{}' - found mix of multiple source files and empty package fragment root!",
-                                project);
+                            createBuildPathProblem(
+                                project,
+                                Status.error(
+                                    "Impossible to support project: found mix of source files without common root and empty package fragment root! Please consider restructuring the targets."));
                             continue NEXT_FOLDER;
                         }
                         // check this maps to a single Java package
                         var detectedJavaPackagesForSourceDirectory =
                                 sourceInfo.getDetectedJavaPackagesForSourceDirectory(dir);
-                        if (detectedJavaPackagesForSourceDirectory.size() != 1) {
-                            // TODO create problem marker?
-                            LOG.warn(
-                                "Impossible to support project '{}' - an empty package fragment root must map to one Java package (got '{}')!",
+                        var packagePath = findCommonParentPackagePrefix(detectedJavaPackagesForSourceDirectory);
+                        if (packagePath == null) {
+                            createBuildPathProblem(
                                 project,
-                                detectedJavaPackagesForSourceDirectory);
+                                Status.error(
+                                    format(
+                                        "Impossible to support project: an empty package fragment root must map to one Java package (got '%s')! Please consider restructuring the targets.",
+                                        detectedJavaPackagesForSourceDirectory.isEmpty() ? "none"
+                                                : detectedJavaPackagesForSourceDirectory.stream()
+                                                        .map(IPath::toString)
+                                                        .collect(joining(", ")))));
                             continue NEXT_FOLDER;
                         }
 
@@ -1024,7 +1049,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         createFolderAndParents(virtualSourceFolder, monitor.split(1));
 
                         // build emulated Java package structure and link the directory
-                        var packagePath = detectedJavaPackagesForSourceDirectory.iterator().next();
                         var packageFolder = virtualSourceFolder.getFolder(packagePath);
                         if (!packageFolder.getParent().exists()) {
                             createFolderAndParents(packageFolder.getParent(), monitor.split(1));
