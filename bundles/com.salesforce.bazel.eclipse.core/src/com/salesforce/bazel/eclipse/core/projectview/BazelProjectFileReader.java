@@ -1,6 +1,7 @@
 package com.salesforce.bazel.eclipse.core.projectview;
 
 import static java.lang.String.format;
+import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.Files.readString;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
@@ -66,6 +67,7 @@ public class BazelProjectFileReader {
         IPath bazelBinary;
         final LinkedHashMap<String, String> projectMappings = new LinkedHashMap<>();
         final LinkedHashSet<String> importPreferences = new LinkedHashSet<>();
+        final LinkedHashSet<String> projectSettings = new LinkedHashSet<>();
 
         public BazelProjectView build() throws IllegalStateException {
             // check mandatory parameters
@@ -108,6 +110,11 @@ public class BazelProjectFileReader {
                 preferencesToImport.add(new WorkspacePath(epfFile));
             }
 
+            List<WorkspacePath> projectSettingsToSync = new ArrayList<>();
+            for (String prefsFile : projectSettings) {
+                projectSettingsToSync.add(new WorkspacePath(prefsFile));
+            }
+
             return new BazelProjectView(
                     directoriesToImport,
                     directoriesToExclude,
@@ -121,7 +128,8 @@ public class BazelProjectFileReader {
                     targetDiscoveryStrategy,
                     targetProvisioningStrategy,
                     projectMappings,
-                    preferencesToImport);
+                    preferencesToImport,
+                    projectSettingsToSync);
         }
 
         public ImportHandle startImporting(Path bazelProjectViewFile) throws IOException {
@@ -220,6 +228,13 @@ public class BazelProjectFileReader {
                                         bazelProjectFile));
                         }
                         var resolvedPathOfFileToImport = bazelWorkspaceRoot.resolve(fileToImport);
+                        if (!isRegularFile(resolvedPathOfFileToImport)) {
+                            LOG.warn(
+                                "Import '{}' in project view '{}' cannot be found. Skipping. Some projects might be missing.",
+                                fileToImport,
+                                bazelProjectFile);
+                            break;
+                        }
                         try {
                             // parse the import into the existing builder (this allows to implement the wanted behavior)
                             parseProjectFile(resolvedPathOfFileToImport, builder);
@@ -315,6 +330,10 @@ public class BazelProjectFileReader {
                         parseSectionBodyIntoList(rawSection).forEach(builder.importPreferences::add);
                         break;
                     }
+                    case "project_settings": {
+                        parseSectionBodyIntoList(rawSection).forEach(builder.projectSettings::add);
+                        break;
+                    }
                     case "import_target_output":
                     case "exclude_target": {
                         // ignore deprecated
@@ -322,6 +341,7 @@ public class BazelProjectFileReader {
                     }
                     default:
                         LOG.warn("Unexpected section '{}' while reading '{}'", rawSection.getName(), bazelProjectFile);
+                        break;
                 }
             }
         }
