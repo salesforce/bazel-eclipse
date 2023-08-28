@@ -42,16 +42,37 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
     private static Logger LOG = LoggerFactory.getLogger(DefaultBazelCommandExecutor.class);
 
-    private static final ThreadGroup pipesThreadGroup = new ThreadGroup("Bazel Command Executor Pipes");
+    private static ThreadGroup pipesThreadGroup;
+
+    /**
+     * This method is a workaround for https://github.com/salesforce/bazel-eclipse/issues/464.
+     * <p>
+     * For some reason the ThreadGroup gets automatically destroyed.
+     * </p>
+     *
+     * @return the thread group
+     */
+    @SuppressWarnings("removal")
+    private static synchronized ThreadGroup getPipesThreadGroup() {
+        if ((pipesThreadGroup == null) || pipesThreadGroup.isDestroyed()) {
+            // https://github.com/salesforce/bazel-eclipse/issues/464
+            return pipesThreadGroup = new ThreadGroup("Bazel Command Executor Pipes");
+        }
+
+        return pipesThreadGroup;
+    }
 
     protected static Thread pipe(final InputStream src, final OutputStream dest, String threadDetails) {
-        final var thread = new Thread(pipesThreadGroup, (Runnable) () -> {
+        final var thread = new Thread(getPipesThreadGroup(), (Runnable) () -> {
             // we don't close any streams as we expect this do be done outside
             try {
                 var transfered = src.transferTo(dest);
                 LOG.debug("Transfered {} bytes in pipe '{}'", transfered, threadDetails);
             } catch (final IOException e) {
-                LOG.error("IO error while processing command output in pipe '{}': {}", threadDetails, e.getMessage(),
+                LOG.error(
+                    "IO error while processing command output in pipe '{}': {}",
+                    threadDetails,
+                    e.getMessage(),
                     e);
             }
         }, format("Bazel Command Executor Pipe (%s)", threadDetails));

@@ -335,9 +335,9 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             throw new CoreException(
                     Status.error(
                         format(
-                            "bazel info failed in workspace '%s': %s%n Please check the bazel output and binary setup/configuration!",
+                            "bazel info failed in workspace '%s': %s%nPlease check the bazel output and binary setup/configuration!",
                             workspaceRoot,
-                            cause.getMessage()),
+                            cause.getMessage() != null ? cause.getMessage() : cause.toString()),
                         cause));
         }
     }
