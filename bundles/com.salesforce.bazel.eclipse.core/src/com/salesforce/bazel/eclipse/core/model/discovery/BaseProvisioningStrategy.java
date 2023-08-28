@@ -7,6 +7,7 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDPATH_PROBLEM_MARKER;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PROBLEM_MARKER;
+import static com.salesforce.bazel.eclipse.core.model.discovery.EclipsePreferencesHelper.convertToPreferences;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -24,7 +25,9 @@ import static org.eclipse.jdt.core.JavaCore.COMPILER_RELEASE;
 import static org.eclipse.jdt.core.JavaCore.COMPILER_SOURCE;
 import static org.eclipse.jdt.core.JavaCore.DISABLED;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,6 +36,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Predicate;
@@ -62,7 +66,6 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
@@ -70,6 +73,7 @@ import org.osgi.service.prefs.BackingStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
@@ -90,6 +94,8 @@ import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand
  * Base class for provisioning strategies, providing common base logic re-usable by multiple strategies.
  */
 public abstract class BaseProvisioningStrategy implements TargetProvisioningStrategy {
+
+    private static final String FILE_EXTENSION_DOT_PREFS = ".prefs";
 
     private static final String JAVAC_OPT_ADD_OPENS = "--add-opens";
 
@@ -398,8 +404,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         var javaProject = JavaCore.create(project.getProject());
 
-        // apply settings from workspace
-        copyProjectSettingsFromWorkspaceProject(javaProject, project.getBazelWorkspace());
+        // apply settings configured in project view
+        copyProjectSettings(project.getProject(), project.getBazelWorkspace());
 
         // tweak to current JVMconfiguration
         getJvmConfigurator()
@@ -468,22 +474,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
     }
 
-    private void copyPreferences(IEclipsePreferences srcPreferences, IEclipsePreferences targetPreferences,
-            String nodeName) throws CoreException {
-        try {
-            if (srcPreferences.nodeExists(nodeName)) {
-                var srcNode = srcPreferences.node(nodeName);
-                var targetNode = targetPreferences.node(nodeName);
-                for (String key : srcPreferences.node(nodeName).keys()) {
-                    targetNode.put(key, srcNode.get(key, null));
-                }
-                targetNode.flush();
-            }
-        } catch (BackingStoreException e) {
-            throw new CoreException(Status.error("Error coping preferences from workspace project.", e));
-        }
-    }
-
     /**
      * Copies project settings from the workspace project into the target project.
      * <p>
@@ -491,21 +481,52 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * </p>
      *
      * @param target
-     *            the target Java project
+     *            the target project
      * @param bazelWorkspace
      *            the workspace suppliying the settings
      * @throws CoreException
      */
-    protected void copyProjectSettingsFromWorkspaceProject(IJavaProject target, BazelWorkspace bazelWorkspace)
-            throws CoreException {
-        var src = JavaCore.create(bazelWorkspace.getBazelProject().getProject());
-        target.setOptions(src.getOptions(false));
+    protected void copyProjectSettings(IProject target, BazelWorkspace bazelWorkspace) throws CoreException {
+        var projectSettings = bazelWorkspace.getBazelProjectView().projectSettings();
+        if ((projectSettings == null) || projectSettings.isEmpty()) {
+            return;
+        }
 
-        var srcPreferences = getPreferences(src.getProject());
         var targetPreferences = getPreferences(target.getProject());
 
-        copyPreferences(srcPreferences, targetPreferences, PI_RUNTIME);
-        copyPreferences(srcPreferences, targetPreferences, "org.eclipse.jdt.ui");
+        for (WorkspacePath projectSettingsFile : projectSettings) {
+            var srcPreferencesFile = bazelWorkspace.getLocation().toPath().resolve(projectSettingsFile.asPath());
+            copyProjectSettingsToProjectPreferences(srcPreferencesFile, targetPreferences);
+        }
+    }
+
+    private void copyProjectSettingsToProjectPreferences(java.nio.file.Path srcPreferencesFile,
+            IEclipsePreferences targetPreferences) throws CoreException {
+        var fileName = srcPreferencesFile.getFileName().toString();
+        if (!fileName.endsWith(FILE_EXTENSION_DOT_PREFS)) {
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Invalid project settings file '%s' specified in project view. File name must follow Eclipse project settings nameing (eg., 'org.eclipse.jdt.core.prefs').",
+                            fileName)));
+        }
+
+        // this re-implements lots of functionality from Eclipse ProjectPreferences
+        try (var in = Files.newBufferedReader(srcPreferencesFile);) {
+            var nodeName = fileName.substring(0, fileName.length() - FILE_EXTENSION_DOT_PREFS.length());
+            var srcPreferences = new Properties();
+            srcPreferences.load(in);
+            var targetNode = targetPreferences.node(nodeName);
+            convertToPreferences(srcPreferences, targetNode);
+            targetNode.flush();
+        } catch (BackingStoreException e) {
+            throw new CoreException(Status.error("Error coping preferences from setting file project.", e));
+        } catch (IOException e) {
+            throw new CoreException(
+                    Status.error(
+                        format("Error reading project settings file '%s' specified in project view.", fileName),
+                        e));
+        }
     }
 
     /**

@@ -160,6 +160,15 @@ A mapping for target `@some_external_target//:some_external_target` can be defin
 
 A list of preferences files (`*.epf`) to import into Eclipse during sync.
 
+### `project_settings`
+
+A list of project settings files (`*.prefs`) to copy into each provisioned Eclipse project during sync.
+
+The settings files must follow the naming conventions of Eclipse project settings (eg., `org.eclipse.jdt.core.prefs`).
+Only the file name part without the `*.prefs` extension will be used for determin the target project settings file.
+The folder will be ignored.
+
+
 
 ## Unsupported Features / Limitations
 
