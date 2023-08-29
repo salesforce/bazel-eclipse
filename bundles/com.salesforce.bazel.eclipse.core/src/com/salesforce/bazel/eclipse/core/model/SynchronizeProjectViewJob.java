@@ -10,7 +10,8 @@ import static java.lang.String.format;
 import static java.nio.file.Files.isReadable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.eclipse.core.resources.IResource.DEPTH_INFINITE;
+import static org.eclipse.core.resources.IContainer.INCLUDE_HIDDEN;
+import static org.eclipse.core.resources.IResource.DEPTH_ONE;
 import static org.eclipse.core.resources.IResource.FORCE;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
@@ -31,7 +32,6 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceFilterDescription;
-import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -137,7 +137,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         setRule(getWorkspaceRoot());
     }
 
-    private void configureFiltersAndRefresh(IProject workspaceProject, SubMonitor monitor) throws CoreException {
+    private void configureFilters(IProject workspaceProject, SubMonitor monitor) throws CoreException {
         var filterExists = Stream.of(workspaceProject.getFilters()).anyMatch(f -> {
             var matcher = f.getFileInfoMatcherDescription();
             return RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID.equals(matcher.getId());
@@ -151,9 +151,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                 new FileInfoMatcherDescription(RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID, null),
                 NONE,
                 monitor);
-        } else {
-            // filter exists, just refresh the project
-            workspaceProject.refreshLocal(DEPTH_INFINITE, monitor);
         }
     }
 
@@ -364,8 +361,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         return getWorkspace().getRoot();
     }
 
-    private void hideFoldersNotVisibleAccordingToProjectView(IProject workspaceProject, SubMonitor monitor)
-            throws CoreException {
+    private void hideFoldersNotVisibleAccordingToProjectViewAndSmartRefresh(IProject workspaceProject,
+            SubMonitor monitor) throws CoreException {
         monitor.beginTask("Configuring visible folders", 10);
 
         // we are comparing using project relative paths
@@ -384,36 +381,13 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             }
         }
 
-        IResourceVisitor visitor = resource -> {
-            // we only hide folders, i.e. all files contained in the project remain visible
-            if (resource.getType() == IResource.FOLDER) {
-                var path = resource.getProjectRelativePath();
-                if (findPathOrAnyParentInSet(path, alwaysAllowedFolders)) {
-                    // never hide those in the always allowed folders
-                    resource.setHidden(false);
-                    return false;
-                }
-
-                // we need to check three things
-                // 1. if workspace root '.' is listed, everything should be visible by default
-                // 2. if a parent is in visiblePaths it should be visible
-                // 3. if a sub-sub-sub directory is in importRoots then it should be visible as well
-                var visible = foundWorkspaceRoot || visiblePaths.contains(resource.getProjectRelativePath())
-                        || importRoots.containsWorkspacePath(new WorkspacePath(path.toString()));
-                // but an explicit exclude dominates
-                var excluded = importRoots.isExcluded(new WorkspacePath(path.toString()));
-
-                resource.setHidden(excluded || !visible);
-                return visible && !excluded; // no need to continue looking if it's not visible
-            }
-
-            // we cannot make a decision, continue searching
-            return true;
-        };
-        workspaceProject.accept(
-            visitor,
-            DEPTH_INFINITE,
-            IContainer.INCLUDE_HIDDEN /* visit hidden ones so we can un-hide if necessary */);
+        refreshFolderAndHideMembersIfNecessary(
+            monitor,
+            alwaysAllowedFolders,
+            foundWorkspaceRoot,
+            visiblePaths,
+            3 /* max deepness */,
+            workspaceProject);
     }
 
     private void importPreferences(Collection<WorkspacePath> importPreferences, SubMonitor monitor)
@@ -473,6 +447,65 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         return getTargetProvisioningStrategy().provisionProjectsForSelectedTargets(targets, workspace, monitor);
     }
 
+    private void refreshFolderAndHideMembersIfNecessary(SubMonitor monitor, Set<IPath> alwaysAllowedFolders,
+            boolean foundWorkspaceRoot, Set<IPath> visiblePaths, int maxDepth, IContainer container)
+            throws CoreException {
+        monitor.subTask(container.getFullPath().toString());
+
+        // ensure the folder is up to date
+        container.refreshLocal(DEPTH_ONE, monitor.slice(1));
+
+        // check all its children
+        var members = container.members(INCLUDE_HIDDEN);
+        for (IResource resource : members) {
+            // we only hide folders, i.e. all files contained in the project remain visible
+            if (resource.getType() != IResource.FOLDER) {
+                continue;
+            }
+
+            var path = resource.getProjectRelativePath();
+            if (findPathOrAnyParentInSet(path, alwaysAllowedFolders)) {
+                // never hide those in the always allowed folders
+                resource.setHidden(false);
+
+                // continue with next member, there is no need to go any deeper here
+                continue;
+            }
+
+            // we need to check three things
+            // 1. if workspace root '.' is listed, everything should be visible by default
+            // 2. if a parent is in visiblePaths it should be visible
+            // 3. if a sub-sub-sub directory is in importRoots then it should be visible as well
+            var visible = foundWorkspaceRoot || visiblePaths.contains(resource.getProjectRelativePath())
+                    || importRoots.containsWorkspacePath(new WorkspacePath(path.toString()));
+            // but an explicit exclude dominates
+            var excluded = importRoots.isExcluded(new WorkspacePath(path.toString()));
+
+            // summarize hidden state
+            var isHidden = excluded || !visible;
+
+            // toggle the resource hidden state
+            resource.setHidden(isHidden);
+
+            // there was no update to the resource
+            // in for efficiency of process don't go deeper if a folder is hidden
+            if (isHidden) {
+                continue;
+            }
+
+            // folder is visible then check its children
+            if ((maxDepth - 1) > 0) {
+                refreshFolderAndHideMembersIfNecessary(
+                    monitor.newChild(1),
+                    alwaysAllowedFolders,
+                    foundWorkspaceRoot,
+                    visiblePaths,
+                    maxDepth - 1,
+                    (IContainer) resource);
+            }
+        }
+    }
+
     private void removeObsoleteProjects(List<BazelProject> provisionedProjects, SubMonitor monitor)
             throws CoreException {
         var obsoleteProjects = new ArrayList<IProject>();
@@ -520,7 +553,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             var workspaceName = workspace.getName();
             var workspaceRoot = workspace.getLocation();
 
-            var progress = SubMonitor.convert(monitor, format("Synchronizing workspace %s", workspaceName), 20);
+            var progress = SubMonitor.convert(monitor, format("Synchronizing workspace %s", workspaceName), 50);
 
             // import preferences
             importPreferences(projectView.importPreferences(), progress.split(1, SUPPRESS_NONE));
@@ -546,16 +579,18 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             }
 
             // ensure Bazel symlinks are filtered
-            configureFiltersAndRefresh(workspaceProject, progress.split(1, SUPPRESS_NONE));
+            configureFilters(workspaceProject, progress.split(5, SUPPRESS_NONE));
 
             // apply excludes
-            hideFoldersNotVisibleAccordingToProjectView(workspaceProject, progress.split(10, SUPPRESS_NONE));
+            hideFoldersNotVisibleAccordingToProjectViewAndSmartRefresh(
+                workspaceProject,
+                progress.split(10, SUPPRESS_NONE));
 
             // detect targets
-            var targets = detectTargetsToMaterializeInEclipse(workspaceProject, progress.split(1, SUPPRESS_NONE));
+            var targets = detectTargetsToMaterializeInEclipse(workspaceProject, progress.split(5, SUPPRESS_NONE));
 
             // ensure project exists
-            var targetProjects = provisionProjectsForTarget(targets, progress.split(10, SUPPRESS_NONE));
+            var targetProjects = provisionProjectsForTarget(targets, progress.split(20, SUPPRESS_NONE));
 
             // remove no longer needed projects
             removeObsoleteProjects(targetProjects, progress.split(1, SUPPRESS_NONE));

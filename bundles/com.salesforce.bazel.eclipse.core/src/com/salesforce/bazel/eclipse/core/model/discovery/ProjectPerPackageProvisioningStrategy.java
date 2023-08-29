@@ -6,6 +6,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_ALL_LABELS;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,7 +61,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
-            var monitor = SubMonitor.convert(progress, "Computing classpaths...", 1 + bazelProjects.size());
+            var monitor = SubMonitor.convert(progress, "Computing Bazel project classpaths", 1 + bazelProjects.size());
 
             List<BazelLabel> targetsToBuild = new ArrayList<>(bazelProjects.size());
             Map<BazelProject, List<BazelTarget>> activeTargetsPerProject = new HashMap<>();
@@ -116,18 +117,18 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     onlyDirectDeps,
                     "Running build with IntelliJ aspects to collect classpath information");
 
-            monitor.subTask("Running Bazel...");
+            monitor.subTask("Running Bazel build with aspects");
             var result = workspace.getCommandExecutor()
                     .runDirectlyWithWorkspaceLock(
                         command,
                         bazelProjects.stream().map(BazelProject::getProject).collect(toList()),
-                        monitor.split(1));
+                        monitor.split(1, SUPPRESS_ALL_LABELS));
 
             // populate map from result
             Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
             var aspectsInfo = new JavaAspectsInfo(result, workspace);
             for (BazelProject bazelProject : bazelProjects) {
-                monitor.subTask("Analyzing: " + bazelProject);
+                monitor.subTask(bazelProject.getName());
                 monitor.checkCanceled();
 
                 // build index of classpath info
@@ -204,6 +205,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         for (Entry<BazelPackage, List<BazelTarget>> entry : targetsByPackage.entrySet()) {
             var bazelPackage = entry.getKey();
             var packageTargets = entry.getValue();
+
+            monitor.subTask(bazelPackage.getName());
 
             // skip the root package (not supported)
             if (bazelPackage.isRoot()) {

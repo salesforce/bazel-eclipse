@@ -13,6 +13,8 @@
  */
 package com.salesforce.bazel.eclipse.core.model.execution;
 
+import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -62,23 +64,23 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
 
     @Override
     public <R> R executeWithWorkspaceLock(BazelCommand<R> command, BazelElement<?, ?> executionContext,
-            List<IResource> resourcesToRefresh, IProgressMonitor monitor) throws CoreException {
+            List<IResource> resourcesToRefresh, IProgressMonitor progress) throws CoreException {
         var result = new AtomicReference<R>();
         ResourcesPlugin.getWorkspace().run(pm -> {
-            var subMonitor = SubMonitor.convert(pm);
+            var monitor = SubMonitor.convert(pm);
             try {
-                subMonitor.beginTask(command.toString(), IProgressMonitor.UNKNOWN);
+                monitor.beginTask(command.toString(), IProgressMonitor.UNKNOWN);
                 result.set(executor.execute(command, pm::isCanceled));
             } catch (IOException e) {
                 throw new CoreException(Status.error("Error executing command: " + e.getMessage(), e));
             } finally {
                 try {
-                    refreshResources(resourcesToRefresh, subMonitor.newChild(1));
+                    refreshResources(resourcesToRefresh, monitor);
                 } finally {
                     pm.done();
                 }
             }
-        }, monitor);
+        }, progress);
         return result.get();
     }
 
@@ -109,11 +111,11 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
                 .computeIfAbsent(bazelWorkspace, w -> new JobGroup(w.getLocation().toString(), 2, 1));
     }
 
-    void refreshResources(List<IResource> resourcesToRefresh, SubMonitor subMonitor) {
-        subMonitor.beginTask("Refreshing resources", resourcesToRefresh.size());
+    void refreshResources(List<IResource> resourcesToRefresh, SubMonitor monitor) {
+        monitor.beginTask("Refreshing resources", resourcesToRefresh.size());
         for (IResource resource : resourcesToRefresh) {
             try {
-                resource.refreshLocal(IResource.DEPTH_INFINITE, subMonitor.newChild(1));
+                resource.refreshLocal(IResource.DEPTH_INFINITE, monitor.split(1, SUPPRESS_NONE));
             } catch (CoreException e) {
                 // ignore (might have been deleted?)
                 LOG.debug("Ignoring error during refresh of {}", resource, e);

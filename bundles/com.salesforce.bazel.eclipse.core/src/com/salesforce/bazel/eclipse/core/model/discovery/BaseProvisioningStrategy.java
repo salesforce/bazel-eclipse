@@ -1139,7 +1139,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     public List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets,
             BazelWorkspace workspace, IProgressMonitor progress) throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, "Provisioning projects", 2);
+            var monitor = SubMonitor.convert(progress, "Provisioning projects", 3);
 
             // load all packages to be provisioned
             workspace.open(targets.stream().map(BazelTarget::getBazelPackage).distinct().toList());
@@ -1157,10 +1157,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             detectDefaultJavaToolchain(workspace);
 
             // create projects
-            var result = doProvisionProjects(targets, monitor.split(1));
+            var result = doProvisionProjects(targets, monitor.split(1, SUPPRESS_NONE));
 
             // after provisioning we go over the projects a second time to initialize the classpaths
-            doInitializeClasspaths(result, workspace, monitor.split(1));
+            doInitializeClasspaths(result, workspace, monitor.split(2, SUPPRESS_NONE));
 
             // done
             return result;

@@ -17,6 +17,8 @@ import static com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope.DE
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
+import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_ALL_LABELS;
+import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -236,7 +238,7 @@ public class BazelClasspathManager {
     public void persistAttachedSourcesAndJavadoc(IJavaProject project, IClasspathContainer containerSuggestion,
             IProgressMonitor progress) throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, 2);
+            var monitor = SubMonitor.convert(progress, "Saving classpath container for " + project.getElementName(), 2);
             var bazelProject = getBazelProject(project);
             if (bazelProject == null) {
                 return;
@@ -272,7 +274,7 @@ public class BazelClasspathManager {
                 List.of(bazelProject),
                 bazelProject.getBazelWorkspace(),
                 DEFAULT_CLASSPATH,
-                monitor.split(1));
+                monitor.split(1, SUPPRESS_ALL_LABELS));
             entries =
                     configureClasspathWithSourceAttachments(classpaths.get(bazelProject), null /* no props */, monitor);
             for (IClasspathEntry entry : entries) {
@@ -300,7 +302,10 @@ public class BazelClasspathManager {
             }
 
             // update classpath container (this will re-set classpath on JavaProject)
-            updateClasspath(bazelProject.getBazelWorkspace(), List.of(bazelProject), monitor.split(1));
+            updateClasspath(
+                bazelProject.getBazelWorkspace(),
+                List.of(bazelProject),
+                monitor.split(1, SUPPRESS_ALL_LABELS));
         } finally {
             if (progress != null) {
                 progress.done();
@@ -331,7 +336,7 @@ public class BazelClasspathManager {
     void updateClasspath(BazelWorkspace bazelWorkspace, List<BazelProject> projects, IProgressMonitor progress)
             throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, 2 + projects.size());
+            var monitor = SubMonitor.convert(progress, "Computing classpath of Bazel projects", 2 + projects.size());
 
             // we need to refresh the workspace project differently
             var workspaceProject = bazelWorkspace.getBazelProject();
@@ -346,14 +351,15 @@ public class BazelClasspathManager {
                     .collect(toList());
 
             // ensure the packages are opened efficiently
-            monitor.subTask("Reading packages...");
             bazelWorkspace.open(getBazelPackages(bazelWorkspace, nonWorkspaceProjects));
 
             // compute classpaths for all non-workspace projects
-            monitor.subTask("Computing classpaths...");
             var strategy = getTargetProvisioningStrategy(bazelWorkspace);
-            var classpaths = strategy
-                    .computeClasspaths(nonWorkspaceProjects, bazelWorkspace, DEFAULT_CLASSPATH, monitor.split(1));
+            var classpaths = strategy.computeClasspaths(
+                nonWorkspaceProjects,
+                bazelWorkspace,
+                DEFAULT_CLASSPATH,
+                monitor.split(1, SUPPRESS_NONE));
 
             // apply classpaths for each project
             for (BazelProject bazelProject : projects) {
@@ -381,7 +387,7 @@ public class BazelClasspathManager {
                     container.getPath(),
                     new IJavaProject[] { javaProject },
                     new IClasspathContainer[] { container },
-                    monitor.newChild(1));
+                    monitor.split(1));
                 saveContainerState(bazelProject.getProject(), container);
 
             }

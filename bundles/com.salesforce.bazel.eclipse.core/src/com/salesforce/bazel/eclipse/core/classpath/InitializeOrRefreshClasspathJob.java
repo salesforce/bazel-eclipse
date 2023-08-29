@@ -3,6 +3,8 @@ package com.salesforce.bazel.eclipse.core.classpath;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
+import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
+import static org.eclipse.core.runtime.SubMonitor.convert;
 
 import java.util.Collection;
 import java.util.List;
@@ -20,7 +22,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.JavaCore;
@@ -135,9 +136,9 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
     }
 
     @Override
-    public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
+    public IStatus runInWorkspace(IProgressMonitor progress) throws CoreException {
         try {
-            var subMonitor = SubMonitor.convert(monitor, bazelProjects.size());
+            var monitor = convert(progress, "Computing Bazel Classpaths", bazelProjects.size());
             var status =
                     new MultiStatus(BazelModelManager.PLUGIN_ID, 0, "Some Bazel build paths could not be initialized.");
 
@@ -148,8 +149,10 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
                         continue nextProjectSet;
                     }
 
-                    getClasspathManager()
-                            .updateClasspath(projectSet.getKey(), projectSet.getValue(), subMonitor.newChild(1));
+                    getClasspathManager().updateClasspath(
+                        projectSet.getKey(),
+                        projectSet.getValue(),
+                        monitor.split(1, SUPPRESS_NONE));
                 } catch (CoreException e) {
                     status.add(e.getStatus());
 
@@ -173,7 +176,7 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
                         }
                     ); // @formatter:on
                 }
-                subMonitor.worked(1);
+                monitor.worked(1);
             }
 
             // return error if we have one!
@@ -181,8 +184,8 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
                 return status;
             }
         } finally {
-            if (monitor != null) {
-                monitor.done();
+            if (progress != null) {
+                progress.done();
             }
         }
         return Status.OK_STATUS;
