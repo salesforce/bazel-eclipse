@@ -210,6 +210,7 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
         // tweak for Eclipse Console
         commandLine.add("--color=yes");
         commandLine.add("--curses=no");
+        commandLine.add("--progress_in_terminal_title=no");
     }
 
     private void showConsole(MessageConsole console) {
