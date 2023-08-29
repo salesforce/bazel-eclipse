@@ -50,7 +50,10 @@ public class EclipseConsoleBazelCommandExecutorTest {
 
         var output = readString(stdOutFile, Charset.defaultCharset());
         assertNotNull(output);
-        assertEquals("dummy --tool_tag=eclipse:test --color=yes --curses=no" + System.lineSeparator(), output);
+        assertEquals(
+            "dummy --tool_tag=eclipse:test --color=yes --curses=no --progress_in_terminal_title=no"
+                    + System.lineSeparator(),
+            output);
     }
 
     @BeforeEach
