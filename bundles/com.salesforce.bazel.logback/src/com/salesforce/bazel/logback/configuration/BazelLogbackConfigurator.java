@@ -139,7 +139,7 @@ public class BazelLogbackConfigurator extends BasicConfigurator implements Confi
     }
 
     @Override
-    public void configure(LoggerContext lc) {
+    public ExecutionStatus configure(LoggerContext lc) {
         // Bug 337167: Configuring Logback requires the state-location. If not yet initialized it will be initialized to the default value,
         // but this prevents the workspace-chooser dialog to show up in a stand-alone Eclipse-product. Therefore we have to wait until the resources plug-in has started.
         // This happens if a Plug-in that uses SLF4J is started before the workspace has been selected.
@@ -148,11 +148,15 @@ public class BazelLogbackConfigurator extends BasicConfigurator implements Confi
             LOG.info(
                 "Activated before the state location was initialized. Retry after the state location is initialized."); //$NON-NLS-1$
 
-            runConditionally(() -> configureLogback(lc), BazelLogbackConfigurator::isStateLocationInitialized,
+            runConditionally(
+                () -> configureLogback(lc),
+                BazelLogbackConfigurator::isStateLocationInitialized,
                 "logback configurator timer");
         } else {
             configureLogback(lc);
         }
+
+        return ExecutionStatus.DO_NOT_INVOKE_NEXT_IF_ANY;
     }
 
     private synchronized void configureLogback(LoggerContext lc) {

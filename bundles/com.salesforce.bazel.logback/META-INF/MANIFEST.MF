@@ -4,7 +4,7 @@ Bundle-Name: Logback Configuration for Bazel Eclipse Feature
 Bundle-SymbolicName: com.salesforce.bazel.logback
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: Bazel Eclipse Feature
-Fragment-Host: ch.qos.logback.classic;bundle-version="1.2.11"
+Fragment-Host: ch.qos.logback.classic;bundle-version="1.4.11"
 Automatic-Module-Name: com.salesforce.bazel.logback
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.eclipse.core.runtime
