@@ -144,5 +144,20 @@ maven MavenDependencies scope=compile dependencyDepth=none missingManifest=gener
 		artifactId="auto-value-annotations"
 		version="1.10.1"
 	}
+	dependency {
+		groupId="org.slf4j"
+		artifactId="slf4j-api"
+		version="2.0.7"
+	}
+	dependency {
+		groupId="ch.qos.logback"
+		artifactId="logback-core"
+		version="1.4.11"
+	}
+	dependency {
+		groupId="ch.qos.logback"
+		artifactId="logback-classic"
+		version="1.4.11"
+	}
 }
 

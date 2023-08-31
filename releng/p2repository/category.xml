@@ -5,7 +5,6 @@
    </feature>
    <feature id="com.salesforce.bazel.eclipse.jdtls.feature"/>
    <feature id="com.salesforce.bazel.eclipse.dependencies.feature"/>
-   <feature id="org.eclipse.tm4e.feature"/>
    <category-def name="com.salesforce.bazel.eclipse" label="Bazel Eclipse Feature">
       <description>
          Bazel Eclipse Feature provides support for the Bazel build system in Eclipse. https://github.com/salesforce/bazel-eclipse

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1693485146">
+<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1693510864">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.28.0.v20230525-0648"/>
@@ -149,6 +149,24 @@
     		<groupId>com.google.auto.value</groupId>
     		<artifactId>auto-value-annotations</artifactId>
     		<version>1.10.1</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>org.slf4j</groupId>
+    		<artifactId>slf4j-api</artifactId>
+    		<version>2.0.7</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>ch.qos.logback</groupId>
+    		<artifactId>logback-core</artifactId>
+    		<version>1.4.11</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>ch.qos.logback</groupId>
+    		<artifactId>logback-classic</artifactId>
+    		<version>1.4.11</version>
     		<type>jar</type>
     	</dependency>
     </dependencies>
