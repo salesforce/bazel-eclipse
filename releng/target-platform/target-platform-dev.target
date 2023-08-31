@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1692715958">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1693485142">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.28.0.v20230525-0648"/>
@@ -33,7 +33,6 @@
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="com.google.gson" version="2.10.1.v20230109-0753"/>
-      <unit id="com.google.guava" version="30.1.0.v20221112-0806"/>
       <unit id="com.google.javascript" version="0.0.20160315.v20161124-1903"/>
       <unit id="com.google.protobuf" version="2.4.1.v20220404-1934"/>
       <unit id="javax.annotation" version="1.3.5.v20230504-0748"/>
@@ -46,29 +45,33 @@
       <repository location="https://download.eclipse.org/tools/orbit/downloads/drops/R20230531010532/repository/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.jdt.ls.core" version="1.23.0.202304271346"/>
-      <repository location="https://download.eclipse.org/jdtls/milestones/1.23.0/repository/"/>
+      <unit id="org.eclipse.jdt.ls.core" version="1.26.0.202307271613"/>
+      <repository location="https://download.eclipse.org/jdtls/milestones/1.26.0/repository/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.mockito.mockito-all" version="1.9.5"/>
       <repository location="https://download.eclipse.org/scout/releases/4.0/testing"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.lsp4j.sdk.feature.group" version="0.20.1.v20230228-1533"/>
-      <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.20.1/"/>
+      <unit id="org.eclipse.lsp4j.sdk.feature.group" version="0.21.1.v20230829-0014"/>
+      <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.21.1/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.19.1/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.m2e.feature.feature.group" version="2.3.0.20230523-2033"/>
-      <unit id="org.eclipse.m2e.logback.feature.feature.group" version="2.1.2.20230523-2106"/>
-      <unit id="org.eclipse.m2e.sdk.feature.feature.group" version="2.3.0.20230523-2106"/>
-      <repository location="https://download.eclipse.org/technology/m2e/releases/2.3.0/"/>
+      <unit id="org.eclipse.m2e.feature.feature.group" version="2.4.100.20230827-1557"/>
+      <unit id="org.eclipse.m2e.logback.feature.feature.group" version="2.2.0.20230819-1220"/>
+      <unit id="org.eclipse.m2e.sdk.feature.feature.group" version="2.4.0.20230827-1557"/>
+      <repository location="https://download.eclipse.org/technology/m2e/releases/2.4.0/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.buildship.feature.group" version="3.1.6.v20220511-1359"/>
-      <repository location="https://download.eclipse.org/buildship/updates/e423/releases/3.x/3.1.6.v20220511-1359/"/>
+      <unit id="org.eclipse.wildwebdeveloper.xml.feature.feature.group" version="1.3.0.202308101707"/>
+      <repository location="https://download.eclipse.org/wildwebdeveloper/releases/1.3.0/"/>
+    </location>
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
+      <unit id="org.eclipse.buildship.feature.group" version="3.1.7.v20230428-1420"/>
+      <repository location="https://download.eclipse.org/buildship/updates/e423/releases/3.x/3.1.7.v20230428-1420/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.egit.feature.group" version="6.6.0.202305301015-r"/>
@@ -96,7 +99,7 @@
       <unit id="org.eclipse.mylyn.wikitext.markdown.ui" version="3.0.46.202301111837"/>
       <repository location="https://download.eclipse.org/mylyn/docs/releases/3.0.46/"/>
     </location>
-    <location includeDependencyDepth="infinite" includeDependencyScopes="compile,test" includeSource="true" missingManifest="generate" type="Maven" label="MavenDependencies">
+    <location includeDependencyDepth="none" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="MavenDependencies">
     <feature id="com.salesforce.bazel.eclipse.dependencies.feature" label="Third-Party Dependencies used by the Bazel Eclipse Feature" provider-name="" version="2.0.0.qualifier">
     	<description url="http://www.example.com/description">
     		[Enter Feature Description here.]
@@ -112,13 +115,19 @@
     	<dependency>
     		<groupId>com.github.ben-manes.caffeine</groupId>
     		<artifactId>caffeine</artifactId>
-    		<version>3.1.6</version>
+    		<version>3.1.8</version>
     		<type>jar</type>
     	</dependency>
     	<dependency>
     		<groupId>com.github.ben-manes.caffeine</groupId>
     		<artifactId>guava</artifactId>
-    		<version>3.1.6</version>
+    		<version>3.1.8</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.google.guava</groupId>
+    		<artifactId>guava</artifactId>
+    		<version>32.1.2-jre</version>
     		<type>jar</type>
     	</dependency>
     	<dependency>

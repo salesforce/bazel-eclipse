@@ -9,17 +9,26 @@ Automatic-Module-Name: com.salesforce.bazel.eclipse.model
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: com.salesforce.bazel.sdk.BazelJavaSdkPlugin
 Eclipse-BundleShape: dir
-Export-Package: com.salesforce.bazel.sdk,
- com.salesforce.bazel.sdk.aspects.intellij,
- com.salesforce.bazel.sdk.command,
- com.salesforce.bazel.sdk.command.shell,
+Export-Package: com.salesforce.bazel.sdk;uses:="org.osgi.framework,org.eclipse.core.runtime",
+ com.salesforce.bazel.sdk.aspects.intellij;
+  uses:="com.google.idea.blaze.base.command.buildresult,
+   com.google.devtools.intellij.ideinfo,
+   com.salesforce.bazel.sdk,
+   com.google.idea.blaze.base.model.primitives",
+ com.salesforce.bazel.sdk.command;
+  uses:="com.google.idea.blaze.base.command.buildresult,
+   com.salesforce.bazel.sdk,
+   com.salesforce.bazel.sdk.command.shell,
+   com.salesforce.bazel.sdk.aspects.intellij,
+   com.salesforce.bazel.sdk.util",
+ com.salesforce.bazel.sdk.command.shell;uses:="com.salesforce.bazel.sdk.util",
  com.salesforce.bazel.sdk.init,
- com.salesforce.bazel.sdk.model,
- com.salesforce.bazel.sdk.projectview,
+ com.salesforce.bazel.sdk.model;uses:="com.google.idea.blaze.base.model.primitives",
+ com.salesforce.bazel.sdk.projectview;uses:="com.google.common.collect,com.google.idea.blaze.base.model.primitives",
  com.salesforce.bazel.sdk.util
-Import-Package: com.google.common.annotations;version="31.1.0",
- com.google.common.collect;version="31.1.0",
+Import-Package: com.google.common.annotations;version="32.1.2",
+ com.google.common.collect;version="32.1.2",
  com.google.protobuf;version="3.22.0",
  org.slf4j;version="1.7.30"
-Require-Bundle: com.salesforce.bazel.importedsource;bundle-version="2.0.0";visibility:=reexport,
+Require-Bundle: com.salesforce.bazel.importedsource;bundle-version="2.0.0",
  org.eclipse.core.runtime;bundle-version="3.27.0"
