@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1693510864">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1693563161">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.28.0.v20230525-0648"/>
@@ -128,6 +128,12 @@
     		<groupId>com.google.guava</groupId>
     		<artifactId>guava</artifactId>
     		<version>32.1.2-jre</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.google.guava</groupId>
+    		<artifactId>failureaccess</artifactId>
+    		<version>1.0.1</version>
     		<type>jar</type>
     	</dependency>
     	<dependency>
