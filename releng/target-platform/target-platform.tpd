@@ -110,6 +110,11 @@ maven MavenDependencies scope=compile dependencyDepth=none missingManifest=gener
 		version="32.1.2-jre"
 	}
 	dependency {
+		groupId="com.google.guava"
+		artifactId="failureaccess"
+		version="1.0.1"
+	}
+	dependency {
 		groupId="com.google.protobuf"
 		artifactId="protobuf-java"
 		version="3.22.0"
