@@ -3,8 +3,20 @@
    <feature id="com.salesforce.bazel.eclipse.feature">
       <category name="com.salesforce.bazel.eclipse"/>
    </feature>
+
    <feature id="com.salesforce.bazel.eclipse.jdtls.feature"/>
    <feature id="com.salesforce.bazel.eclipse.dependencies.feature"/>
+
+   <bundle id="slf4j.api"/>
+   <bundle id="slf4j.api.source"/>
+   <bundle id="ch.qos.logback.core"/>
+   <bundle id="ch.qos.logback.core.source"/>
+   <bundle id="ch.qos.logback.classic"/>
+   <bundle id="ch.qos.logback.classic.source"/>
+   <bundle id="jakarta.servlet-api"/>
+   <bundle id="org.apache.aries.spifly.dynamic.bundle"/>
+   <bundle id="org.apache.aries.spifly.dynamic.bundle.source"/>
+
    <category-def name="com.salesforce.bazel.eclipse" label="Bazel Eclipse Feature">
       <description>
          Bazel Eclipse Feature provides support for the Bazel build system in Eclipse. https://github.com/salesforce/bazel-eclipse

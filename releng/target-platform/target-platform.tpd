@@ -1,33 +1,33 @@
-target "bazel-eclipse-feature-target-platform" with source configurePhase requirements
-
-environment JavaSE-17
+target "bazel-eclipse-feature-target-platform" with source configurePhase requirements environment JavaSE-17
 
 location "https://download.eclipse.org/eclipse/updates/4.28/" {
-    org.eclipse.e4.rcp.feature.group
-    org.eclipse.ecf.core.feature.feature.group
-    org.eclipse.ecf.core.ssl.feature.feature.group
-    org.eclipse.ecf.filetransfer.feature.feature.group
-    org.eclipse.ecf.filetransfer.httpclient5.feature.feature.group
-    org.eclipse.ecf.filetransfer.ssl.feature.feature.group
-    org.eclipse.emf.common.feature.group
-    org.eclipse.emf.ecore.feature.group
-    org.eclipse.equinox.core.feature.feature.group
-    org.eclipse.equinox.core.sdk.feature.group
-    org.eclipse.equinox.p2.core.feature.source.feature.group
-    org.eclipse.equinox.sdk.feature.group
-    org.eclipse.equinox.p2.discovery.feature.feature.group
-    org.eclipse.rcp.feature.group
-    org.eclipse.rcp.sdk.id
-    org.eclipse.sdk.ide
-    org.eclipse.test.feature.group
-    org.eclipse.equinox.executable
-    org.eclipse.equinox.executable.feature.group
-    org.eclipse.jdt.feature.group
-    org.eclipse.platform.feature.group
-    org.eclipse.test
-    org.eclipse.jface.text.tests
-    org.eclipse.text.tests
-    org.eclipse.sdk.feature.group
+	org.eclipse.e4.rcp.feature.group
+	org.eclipse.ecf.core.feature.feature.group
+	org.eclipse.ecf.core.ssl.feature.feature.group
+	org.eclipse.ecf.filetransfer.feature.feature.group
+	org.eclipse.ecf.filetransfer.httpclient5.feature.feature.group
+	org.eclipse.ecf.filetransfer.ssl.feature.feature.group
+	org.eclipse.emf.common.feature.group
+	org.eclipse.emf.ecore.feature.group
+	org.eclipse.equinox.core.feature.feature.group
+	org.eclipse.equinox.core.sdk.feature.group
+	org.eclipse.equinox.p2.core.feature.source.feature.group
+	org.eclipse.equinox.sdk.feature.group
+	org.eclipse.equinox.p2.discovery.feature.feature.group
+	org.eclipse.rcp.feature.group
+	org.eclipse.rcp.sdk.id
+	org.eclipse.sdk.ide
+	org.eclipse.test.feature.group
+	org.eclipse.equinox.executable
+	org.eclipse.equinox.executable.feature.group
+	org.eclipse.jdt.feature.group
+	org.eclipse.platform.feature.group
+	org.eclipse.test
+	org.eclipse.jface.text.tests
+	org.eclipse.text.tests
+	org.eclipse.sdk.feature.group
+	// for SLF4J 2.0 Aries Spy Fly is needed
+	org.apache.aries.spifly.dynamic.bundle
 }
 
 location "https://download.eclipse.org/tools/orbit/downloads/drops/R20230531010532/repository/" {
@@ -44,18 +44,15 @@ location "https://download.eclipse.org/tools/orbit/downloads/drops/R202305310105
 }
 
 location "https://download.eclipse.org/releases/2023-06/" {
-    // TextMate
-    org.eclipse.tm4e.feature.feature.group
+	// TextMate
+	org.eclipse.tm4e.feature.feature.group
 }
-
-
 
 location "https://download.eclipse.org/jdtls/milestones/1.26.0/repository/" {
 	org.eclipse.jdt.ls.core
 }
 
 // locations below taken from eclipse.jdt.ls project (to allow building the JDT LS in same workspace)
-
 location "https://download.eclipse.org/releases/2023-06/" {
 	org.eclipse.xtext.xbase.lib
 }
@@ -70,9 +67,8 @@ location "https://download.eclipse.org/lsp4j/updates/releases/0.21.1/" {
 
 // https://github.com/eclipse-lsp4j/lsp4j/issues/702
 location "https://download.eclipse.org/lsp4j/updates/releases/0.19.1/" {
-//	org.eclipse.lsp4j.sdk.feature.group [0.19.1,0.20.0)
+	// org.eclipse.lsp4j.sdk.feature.group [0.19.1,0.20.0)
 }
-
 
 location "https://download.eclipse.org/technology/m2e/releases/2.4.0/" {
 	org.eclipse.m2e.feature.feature.group
@@ -88,7 +84,7 @@ location "https://download.eclipse.org/buildship/updates/e423/releases/3.x/3.1.7
 	org.eclipse.buildship.feature.group
 }
 
-maven MavenDependencies scope=compile dependencyDepth=none missingManifest=generate includeSources {
+maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=generate includeSources {
 	feature {
 		id="com.salesforce.bazel.eclipse.dependencies.feature"
 		name="Third-Party Dependencies used by the Bazel Eclipse Feature"
@@ -164,5 +160,9 @@ maven MavenDependencies scope=compile dependencyDepth=none missingManifest=gener
 		artifactId="logback-classic"
 		version="1.4.11"
 	}
+	dependency { // Logback provides a Servlet Container service which is also loaded and that needs servlet (by default optional)
+		groupId="jakarta.servlet"
+		artifactId="jakarta.servlet-api"
+		version="5.0.0"
+	}
 }
-

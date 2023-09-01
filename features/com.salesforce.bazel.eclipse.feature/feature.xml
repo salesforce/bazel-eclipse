@@ -228,6 +228,11 @@
       <import feature="org.eclipse.tm4e.feature" version="0.5.5" match="greaterOrEqual"/>
       <import feature="org.eclipse.jdt" version="3.19.100" match="greaterOrEqual"/>
       <import feature="org.eclipse.platform" version="4.28.0" match="greaterOrEqual"/>
+
+      <!-- This is only necessary until Aries can handle the absence of the servlet-api for logback:
+        https://github.com/apache/aries/pull/233 -->
+      <!-- see also https://github.com/eclipse-m2e/m2e-core/pull/1512 -->
+      <import plugin="jakarta.servlet-api" version="5.0.0" match="compatible"/>
    </requires>
 
    <plugin
