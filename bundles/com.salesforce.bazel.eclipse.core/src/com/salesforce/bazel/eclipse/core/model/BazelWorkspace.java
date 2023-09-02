@@ -253,6 +253,15 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     }
 
     /**
+     * @return a list of all {@link BazelProject projects} belonging to this workspace
+     * @throws CoreException
+     *             if the project cannot be found in the Eclipse workspace
+     */
+    public List<BazelProject> getBazelProjects() throws CoreException {
+        return getInfo().findBazelProjects();
+    }
+
+    /**
      * Returns the project view for this workspace.
      * <p>
      * There is a single project view file used by the workspace at

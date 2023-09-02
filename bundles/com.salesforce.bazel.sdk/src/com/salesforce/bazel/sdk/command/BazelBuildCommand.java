@@ -41,11 +41,10 @@ public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
 
     @Override
     public ParsedBepOutput generateResult(int exitCode) throws IOException {
-        return ParsedBepOutput.parseBepArtifacts(
-            newInputStream(
-                requireNonNull(
-                    bepFile,
-                    "unusual code flow; prepareCommandLine not called or overridden incorrectly?")));
+        try (var in = newInputStream(
+            requireNonNull(bepFile, "unusual code flow; prepareCommandLine not called or overridden incorrectly?"))) {
+            return ParsedBepOutput.parseBepArtifacts(in);
+        }
     }
 
     @Override

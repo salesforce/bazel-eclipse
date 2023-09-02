@@ -254,6 +254,7 @@ sp_cleanup.strictly_equal_or_different=false
 sp_cleanup.stringbuffer_to_stringbuilder=false
 sp_cleanup.stringbuilder=false
 sp_cleanup.stringbuilder_for_local_vars=true
+sp_cleanup.stringconcat_stringbuffer_stringbuilder=false
 sp_cleanup.stringconcat_to_textblock=true
 sp_cleanup.substring=true
 sp_cleanup.switch=true

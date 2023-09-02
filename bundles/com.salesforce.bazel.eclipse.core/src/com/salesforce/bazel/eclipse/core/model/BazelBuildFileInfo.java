@@ -37,7 +37,7 @@ public final class BazelBuildFileInfo extends BazelElementInfo {
     BazelBuildFileInfo(BazelBuildFile bazelBuildFile, List<LoadStatement> loadStatements,
             List<CallExpression> macroCalls) {
         this.bazelBuildFile = bazelBuildFile;
-        // note: the load statements become relevant at some point to map from private to public bame
+        // note: the load statements become relevant at some point to map from private to public name
         this.loadStatements = loadStatements;
         macroCallBindingsByLocalName = loadStatements.stream()
                 .flatMap(l -> l.getBindings().stream())

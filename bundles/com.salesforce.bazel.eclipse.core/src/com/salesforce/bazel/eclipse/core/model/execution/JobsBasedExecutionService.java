@@ -63,7 +63,7 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
     }
 
     @Override
-    public <R> R executeWithWorkspaceLock(BazelCommand<R> command, BazelElement<?, ?> executionContext,
+    public <R> R executeWithinExistingWorkspaceLock(BazelCommand<R> command, BazelElement<?, ?> executionContext,
             List<IResource> resourcesToRefresh, IProgressMonitor progress) throws CoreException {
         var result = new AtomicReference<R>();
         ResourcesPlugin.getWorkspace().run(pm -> {

@@ -3,14 +3,11 @@
  */
 package com.salesforce.bazel.eclipse.core.classpath;
 
-import static java.nio.file.Files.isRegularFile;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.jar.JarFile;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -36,6 +33,8 @@ import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaAspectsClasspathInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaAspectsInfo;
+import com.salesforce.bazel.eclipse.core.util.jar.BazelJarFile;
+import com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 
@@ -54,24 +53,9 @@ public class BazelClasspathContainerRuntimeResolver
     }
 
     private IPath guessSrcJarLocation(LocalFileOutputArtifact localJar) {
-        var directory = localJar.getPath().getParent();
-        var jarName = localJar.getPath().getFileName().toString();
-
-        // try removing known prefixes
-        List<String> knownPrefixes =
-                List.of("processed_" /* rules_jvm_external */, "" /* always try with empty prefix */);
-        for (String prefix : knownPrefixes) {
-            if ((prefix.length() > 0) && jarName.startsWith(prefix)) {
-                jarName = jarName.substring(prefix.length());
-            }
-            // try removing known suffixes
-            List<String> knownSuffixes = List.of("-sources.jar", "-src.jar");
-            for (String suffix : knownSuffixes) {
-                var srcJar = directory.resolve(jarName.replace(".jar", suffix));
-                if (isRegularFile(srcJar)) {
-                    return IPath.fromPath(srcJar);
-                }
-            }
+        var sourceJar = SourceJarFinder.findSourceJar(localJar.getPath());
+        if (sourceJar != null) {
+            return sourceJar;
         }
 
         LOG.warn(
@@ -87,15 +71,8 @@ public class BazelClasspathContainerRuntimeResolver
     }
 
     private Label readTargetLabel(LocalFileOutputArtifact localJar) {
-        try (var jarFile = new JarFile(localJar.getPath().toFile())) {
-            var manifest = jarFile.getManifest();
-            var mainAttributes = manifest.getMainAttributes();
-            if (mainAttributes != null) {
-                var targetLabel = mainAttributes.getValue("Target-Label");
-                if (targetLabel != null) {
-                    return Label.createIfValid(targetLabel);
-                }
-            }
+        try (var jarFile = new BazelJarFile(localJar.getPath())) {
+            return jarFile.getTargetLabel();
         } catch (IOException e) {
             LOG.warn("Error inspecting manifest of jar '{}': {}", localJar, e.getMessage());
         }

@@ -49,6 +49,7 @@ import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,10 +202,10 @@ public class BazelClasspathManager {
         return BazelClasspathHelpers.getAttribute(entry, IClasspathAttribute.SOURCE_ATTACHMENT_ENCODING);
     }
 
-    Properties getSourceAttachmentProperties(BazelProject bazelProject) throws CoreException {
+    Properties getSourceAttachmentProperties(IProject project) throws CoreException {
         try {
             var props = new Properties();
-            var file = getSourceAttachmentPropertiesFile(bazelProject.getProject());
+            var file = getSourceAttachmentPropertiesFile(project);
             if (file.canRead()) {
                 try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
                     props.load(is);
@@ -223,6 +224,30 @@ public class BazelClasspathManager {
     TargetProvisioningStrategy getTargetProvisioningStrategy(BazelWorkspace bazelWorkspace) throws CoreException {
         return new TargetDiscoveryAndProvisioningExtensionLookup()
                 .createTargetProvisioningStrategy(bazelWorkspace.getBazelProjectView());
+    }
+
+    /**
+     * Updates the project's classpath container with the specified classpath.
+     * <p>
+     * This method can be used to update a project's classpath without requesting long-running computation of the Bazel
+     * classpath container. Note, as a result the project classpath diverges from the Bazel classpath. It's recommended
+     * to inform the user about this and recommend a sync at earliest convenience.
+     * </p>
+     *
+     * @param project
+     * @param classpath
+     * @param monitor
+     * @throws CoreException
+     */
+    public void patchClasspathContainer(BazelProject bazelProject, List<ClasspathEntry> classpath,
+            IProgressMonitor progress) throws CoreException {
+        var monitor = SubMonitor.convert(progress);
+        try {
+            monitor.beginTask("Patchig classpath: " + bazelProject.getName(), 2);
+            saveAndSetContainer(JavaCore.create(bazelProject.getProject()), classpath, monitor);
+        } finally {
+            progress.done();
+        }
     }
 
     /**
@@ -313,7 +338,29 @@ public class BazelClasspathManager {
         }
     }
 
-    void saveContainerState(IProject project, IClasspathContainer container) throws CoreException {
+    void saveAndSetContainer(IJavaProject javaProject, Collection<ClasspathEntry> classpath, SubMonitor monitor)
+            throws CoreException, JavaModelException {
+        var containerEntry = getBazelContainerEntry(javaProject);
+        var path = containerEntry != null ? containerEntry.getPath()
+                : new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
+
+        var sourceAttachmentProperties = getSourceAttachmentProperties(javaProject.getProject());
+        var container = new BazelClasspathContainer(
+                path,
+                configureClasspathWithSourceAttachments(
+                    classpath,
+                    sourceAttachmentProperties,
+                    monitor.split(1, SUPPRESS_NONE)));
+
+        JavaCore.setClasspathContainer(
+            container.getPath(),
+            new IJavaProject[] { javaProject },
+            new IClasspathContainer[] { container },
+            monitor.split(1, SUPPRESS_NONE));
+        saveContainerState(javaProject.getProject(), container);
+    }
+
+    private void saveContainerState(IProject project, IClasspathContainer container) throws CoreException {
         var containerStateFile = getContainerStateFile(project);
         try (var is = new FileOutputStream(containerStateFile)) {
             new BazelClasspathContainerSaveHelper().writeContainer(container, is);
@@ -336,7 +383,7 @@ public class BazelClasspathManager {
     void updateClasspath(BazelWorkspace bazelWorkspace, List<BazelProject> projects, IProgressMonitor progress)
             throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, "Computing classpath of Bazel projects", 2 + projects.size());
+            var monitor = SubMonitor.convert(progress, "Computing classpath of Bazel projects", 4 + projects.size());
 
             // we need to refresh the workspace project differently
             var workspaceProject = bazelWorkspace.getBazelProject();
@@ -365,31 +412,10 @@ public class BazelClasspathManager {
             for (BazelProject bazelProject : projects) {
                 var javaProject = JavaCore.create(bazelProject.getProject());
                 monitor.subTask("Setting classpath: " + javaProject.getElementName());
-                var containerEntry = getBazelContainerEntry(javaProject);
-                var path = containerEntry != null ? containerEntry.getPath()
-                        : new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
                 var projectClasspath =
                         bazelProject.isWorkspaceProject() ? workspaceProjectClasspath : classpaths.get(bazelProject);
-                if (projectClasspath == null) {
-                    LOG.error("No classpath return for project '{}'", bazelProject);
-                    continue;
-                }
 
-                var sourceAttachmentProperties = getSourceAttachmentProperties(bazelProject);
-                IClasspathContainer container = new BazelClasspathContainer(
-                        path,
-                        configureClasspathWithSourceAttachments(
-                            projectClasspath,
-                            sourceAttachmentProperties,
-                            progress));
-
-                JavaCore.setClasspathContainer(
-                    container.getPath(),
-                    new IJavaProject[] { javaProject },
-                    new IClasspathContainer[] { container },
-                    monitor.split(1));
-                saveContainerState(bazelProject.getProject(), container);
-
+                saveAndSetContainer(javaProject, projectClasspath, monitor);
             }
         } finally {
             if (progress != null) {

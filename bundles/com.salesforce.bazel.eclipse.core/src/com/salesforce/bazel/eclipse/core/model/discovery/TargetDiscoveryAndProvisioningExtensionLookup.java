@@ -56,7 +56,6 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup {
         }
 
         return analyzers;
-
     }
 
     /**
@@ -127,8 +126,9 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup {
     Object findAndCreateStrategy(String strategyName, String elementName) throws CoreException {
         var elements = findExtensionsWithAttributeValue(elementName, ATTR_NAME, strategyName);
         if (elements.isEmpty()) {
-            throw new CoreException(Status.error(
-                format("No extensions available providing a '%s' with name '%s'!", elementName, strategyName)));
+            throw new CoreException(
+                    Status.error(
+                        format("No extensions available providing a '%s' with name '%s'!", elementName, strategyName)));
         }
 
         // use the first one in the list
