@@ -9,7 +9,7 @@ Generators have been provided for Eclipse plugged into the *Run > External Tools
 * `intellij/intellij_ide_info.proto` [13287a2](https://github.com/bazelbuild/intellij/commits/37813e607ad26716c4d1ccf4bc3e7163b2188658/proto/intellij_ide_info.proto)
 * `intellij/common.proto` [46582ba](https://github.com/bazelbuild/intellij/commits/37813e607ad26716c4d1ccf4bc3e7163b2188658/proto/common.proto)
 * `bazel/build_event_stream.proto` and dependencies [be7458a](https://github.com/bazelbuild/bazel/blob/be7458ad7c96b590e9fdec4c3022b60bf8aa9d05/src/main/java/com/google/devtools/build/lib/buildeventstream/proto/build_event_stream.proto)
-
+* `buildozer/api.proto` [386244e](https://github.com/bazelbuild/buildtools/blob/386244e73fc446db36abd5bc9f291be7c79e2abd/api_proto/api.proto)
 
 ## Full Vendoring
 
