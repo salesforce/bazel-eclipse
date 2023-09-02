@@ -14,6 +14,7 @@
 package com.salesforce.bazel.eclipse.core.model;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_BUILDER_ID;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PLUGIN_ID;
 import static java.lang.String.format;
 import static java.lang.System.lineSeparator;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.core.resources.ICommand;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.resources.IResource;
@@ -39,6 +41,8 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
@@ -70,6 +74,8 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * </p>
  */
 public class BazelProject implements IProjectNature {
+
+    private static Logger LOG = LoggerFactory.getLogger(BazelProject.class);
 
     /**
      * A {@link IResource#getPersistentProperty(QualifiedName) persistent property} set on an {@link IProject}
@@ -183,6 +189,23 @@ public class BazelProject implements IProjectNature {
                 && workspaceRoot.toString().equals(workspaceRootPropertyValue);
     }
 
+    /**
+     * Convenience method to check whether a project is a Bazel project.
+     *
+     * @param project
+     *            project to check
+     * @return <code>true</code> if the project is open and has the Bazel project nature, <code>false</code> if the
+     *         conditions aren't met or there was an error checking the project
+     */
+    public static boolean isBazelProject(final IProject project) {
+        try {
+            return project.isOpen() && project.hasNature(BAZEL_NATURE_ID);
+        } catch (CoreException e) {
+            LOG.warn("Unable to check project '{}' for Bazel project nature.", project, e);
+            return false;
+        }
+    }
+
     private IProject project;
 
     private BazelModel bazelModel;
@@ -256,6 +279,25 @@ public class BazelProject implements IProjectNature {
         }
         var other = (BazelProject) obj;
         return Objects.equals(bazelModel, other.bazelModel) && Objects.equals(project, other.project);
+    }
+
+    /**
+     * Returns the {@link BazelBuildFile} of this project.
+     *
+     * @return the build file of this project
+     * @throws CoreException
+     *             if this is neither a package nor a target project
+     */
+    public BazelBuildFile getBazelBuildFile() throws CoreException {
+        if (isTargetProject()) {
+            return getBazelTarget().getBazelPackage().getBazelBuildFile();
+        }
+        if (isPackageProject()) {
+            return getBazelPackage().getBazelBuildFile();
+        }
+        throw new CoreException(
+                Status.error(
+                    format("'%s' is neither a target nor a package project. Unable to obtain build file", getName())));
     }
 
     BazelModel getBazelModel() {
@@ -342,6 +384,7 @@ public class BazelProject implements IProjectNature {
      *
      * @return a list of target names
      * @throws CoreException
+     *             if this is not a package projects
      */
     public List<BazelTarget> getBazelTargets() throws CoreException {
         // ensure this is a package project
@@ -404,6 +447,21 @@ public class BazelProject implements IProjectNature {
                     format(
                         "Unable to find Bazel workspace for workspace root '%s' in the Eclipse workspace. Please check the workspace setup!",
                         workspaceRoot)));
+    }
+
+    /**
+     * Returns the {@link IFile file handle} to the project's BUILD file.
+     *
+     * @return the build file of this project
+     * @throws CoreException
+     *             if this is neither a package nor a target project
+     */
+    public IFile getBuildFile() throws CoreException {
+        var buildFile = getBazelBuildFile();
+
+        // By definition: the BUILD file is always available in the project root.
+        // It's either linked or available directly
+        return getProject().getFile(buildFile.getLocation().lastSegment());
     }
 
     /**

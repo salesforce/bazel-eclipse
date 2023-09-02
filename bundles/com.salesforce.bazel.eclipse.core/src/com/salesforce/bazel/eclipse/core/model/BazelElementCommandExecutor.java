@@ -64,6 +64,11 @@ public class BazelElementCommandExecutor {
      * @throws CoreException
      */
     private void configureCommand(BazelCommand<?> command, BazelWorkspace bazelWorkspace) throws CoreException {
+        if (command.getBazelBinary() != null) {
+            LOG.trace("Command '{}' already has a binary: {}", command, command.getBazelBinary());
+            return;
+        }
+
         var bazelBinary = bazelWorkspace.getBazelBinary();
         if (bazelBinary == null) {
             bazelBinary = getExecutionService().getBazelBinary();
@@ -88,7 +93,7 @@ public class BazelElementCommandExecutor {
 
     /**
      * Execute a Bazel build/test using
-     * {@link BazelModelCommandExecutionService#executeWithWorkspaceLock(BazelCommand, BazelElement, java.util.List, org.eclipse.core.runtime.IProgressMonitor)}.
+     * {@link BazelModelCommandExecutionService#executeWithinExistingWorkspaceLock(BazelCommand, BazelElement, java.util.List, org.eclipse.core.runtime.IProgressMonitor)}.
      * <p>
      * The method will execute the command directly in the same thread. Progress reporting will happen to the provided
      * progress monitor. The workspace will be locked.
@@ -110,16 +115,16 @@ public class BazelElementCommandExecutor {
      * @param monitor
      *            the monitor to check for cancellation and to report progress (must not be <code>null</code>)
      * @return the command result (never <code>null</code>)
-     * @see BazelModelCommandExecutionService#executeWithWorkspaceLock(BazelCommand, BazelElement, java.util.List,
+     * @see BazelModelCommandExecutionService#executeWithinExistingWorkspaceLock(BazelCommand, BazelElement, java.util.List,
      *      org.eclipse.core.runtime.IProgressMonitor) <code>executeWithWorkspaceLock</code> for execution and locking
      *      semantics
      * @see IWorkspace#run(org.eclipse.core.runtime.ICoreRunnable, ISchedulingRule, int, IProgressMonitor)
      * @throws CoreException
      */
-    public <R> R runDirectlyWithWorkspaceLock(BazelCommand<R> command, List<IResource> resourcesToRefresh,
+    public <R> R runDirectlyWithinExistingWorkspaceLock(BazelCommand<R> command, List<IResource> resourcesToRefresh,
             IProgressMonitor monitor) throws CoreException {
         configureCommand(command, executionContext.getBazelWorkspace());
-        return getExecutionService().executeWithWorkspaceLock(command, executionContext, resourcesToRefresh, monitor);
+        return getExecutionService().executeWithinExistingWorkspaceLock(command, executionContext, resourcesToRefresh, monitor);
     }
 
     /**

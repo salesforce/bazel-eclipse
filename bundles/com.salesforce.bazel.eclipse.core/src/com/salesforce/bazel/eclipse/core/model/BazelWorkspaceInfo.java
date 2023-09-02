@@ -13,6 +13,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
@@ -21,6 +22,8 @@ import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -28,6 +31,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -79,6 +83,18 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         this.root = root;
         this.workspaceFile = workspaceFile;
         this.bazelWorkspace = bazelWorkspace;
+    }
+
+    public List<BazelProject> findBazelProjects() throws CoreException {
+        var result = new ArrayList<BazelProject>();
+        var projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+        for (IProject project : projects) {
+            if ((project.isOpen() && project.hasNature(BAZEL_NATURE_ID))
+                    && BazelProject.hasWorkspaceRootPropertySetToLocation(project, getRoot())) {
+                result.add(bazelWorkspace.getModelManager().getBazelProject(project));
+            }
+        }
+        return result;
     }
 
     public IPath getBazelBin() {

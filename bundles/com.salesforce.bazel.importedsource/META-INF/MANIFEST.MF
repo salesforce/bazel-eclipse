@@ -28,6 +28,7 @@ Export-Package: com.google.devtools.build.buildjar.proto;uses:="com.google.proto
  com.google.devtools.build.lib.runtime.proto,
  com.google.devtools.build.lib.server,
  com.google.devtools.build.lib.view.proto,
+ com.google.devtools.buildozer,
  com.google.devtools.common.options.proto,
  com.google.devtools.intellij.aspect;uses:="com.google.protobuf",
  com.google.devtools.intellij.ideinfo,

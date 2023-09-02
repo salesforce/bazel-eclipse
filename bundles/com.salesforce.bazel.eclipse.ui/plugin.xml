@@ -60,6 +60,13 @@
              id="com.salesforce.bazel.eclipse.ui.commands.syncAllWorkspaces"
              name="Sync Bazel Project Views">
        </command>
+       <command
+             categoryId="com.salesforce.bazel.eclipse.ui.commands.category"
+             defaultHandler="com.salesforce.bazel.eclipse.ui.commands.classpath.AddCompileDependencyHandler"
+             description="Searches for a Bazel target providing a Java type and adds it and its transitive dependencies to a BUILD.bazel file"
+             id="com.salesforce.bazel.eclipse.ui.commands.classpath.addCompileDependency"
+             name="Add Compile Dependency">
+       </command>
     </extension>
 
     <extension
@@ -161,6 +168,16 @@
                 </reference>
              </visibleWhen>
           </command>
+          <command
+                commandId="com.salesforce.bazel.eclipse.ui.commands.classpath.addCompileDependency"
+                style="push">
+             <visibleWhen
+                   checkEnabled="false">
+                <reference
+                      definitionId="com.salesforce.bazel.eclipse.ui.isBuildOrWorkspaceFile">
+                </reference>
+             </visibleWhen>
+          </command>
        </menuContribution>
        <menuContribution
              allPopups="false"
@@ -220,5 +237,13 @@
              </or>
           </iterate>
        </definition>
+    </extension>
+    <extension
+          point="org.eclipse.jdt.ui.quickFixProcessors">
+       <quickFixProcessor
+             class="com.salesforce.bazel.eclipse.ui.jdt.BazelQuickFixProcessor"
+             id="com.salesforce.bazel.eclipse.ui.jdt.quickFixProcessor"
+             name="Bazel Quick Fixes">
+       </quickFixProcessor>
     </extension>
 </plugin>

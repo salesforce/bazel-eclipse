@@ -1,21 +1,20 @@
 package com.salesforce.bazel.eclipse.ui.utils;
 
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.internal.ide.actions.BuildUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
+
 @SuppressWarnings("restriction")
 public class BazelProjectUtilitis {
 
-    private static Logger LOG = LoggerFactory.getLogger(BazelProjectUtilitis.class);
+    public static Logger LOG = LoggerFactory.getLogger(BazelProjectUtilitis.class);
 
     /**
      * @param window
@@ -26,20 +25,11 @@ public class BazelProjectUtilitis {
         final List<IProject> result = new ArrayList<>();
         final var projects = BuildUtilities.findSelectedProjects(window);
         for (final IProject project : projects) {
-            if (isBazelProject(project)) {
+            if (BazelProject.isBazelProject(project)) {
                 result.add(project);
             }
         }
         return result;
-    }
-
-    public static boolean isBazelProject(final IProject project) {
-        try {
-            return project.isOpen() && project.hasNature(BAZEL_NATURE_ID);
-        } catch (CoreException e) {
-            LOG.warn("Unable to check project '{}' for Bazel project nature.", project, e);
-            return false;
-        }
     }
 
 }

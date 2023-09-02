@@ -105,7 +105,7 @@ public interface BazelModelCommandExecutionService {
      * @return the command result
      * @see IWorkspace#run(org.eclipse.core.runtime.ICoreRunnable, ISchedulingRule, int, IProgressMonitor)
      */
-    <R> R executeWithWorkspaceLock(BazelCommand<R> command, BazelElement<?, ?> executionContext,
+    <R> R executeWithinExistingWorkspaceLock(BazelCommand<R> command, BazelElement<?, ?> executionContext,
             List<IResource> resourcesToRefresh, IProgressMonitor monitor) throws CoreException;
 
     /**

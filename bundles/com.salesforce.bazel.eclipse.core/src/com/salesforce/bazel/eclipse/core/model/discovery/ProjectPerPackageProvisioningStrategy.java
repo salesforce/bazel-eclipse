@@ -119,7 +119,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
             monitor.subTask("Running Bazel build with aspects");
             var result = workspace.getCommandExecutor()
-                    .runDirectlyWithWorkspaceLock(
+                    .runDirectlyWithinExistingWorkspaceLock(
                         command,
                         bazelProjects.stream().map(BazelProject::getProject).collect(toList()),
                         monitor.split(1, SUPPRESS_ALL_LABELS));
