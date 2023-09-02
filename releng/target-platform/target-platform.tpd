@@ -26,8 +26,14 @@ location "https://download.eclipse.org/eclipse/updates/4.28/" {
 	org.eclipse.jface.text.tests
 	org.eclipse.text.tests
 	org.eclipse.sdk.feature.group
-	// for SLF4J 2.0 Aries Spy Fly is needed
+
+	// for SLF4J 2.0 Aries Spy Fly is needed (and all the ASM stuff)
 	org.apache.aries.spifly.dynamic.bundle
+	org.objectweb.asm
+	org.objectweb.asm.commons
+	org.objectweb.asm.tree
+	org.objectweb.asm.tree.analysis
+	org.objectweb.asm.util
 }
 
 location "https://download.eclipse.org/tools/orbit/downloads/drops/R20230531010532/repository/" {

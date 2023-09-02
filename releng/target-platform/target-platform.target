@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1693573371">
+<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1693643841">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.28.0.v20230525-0648"/>
@@ -30,6 +30,11 @@
       <unit id="org.eclipse.text.tests" version="3.14.0.v20230316-1200"/>
       <unit id="org.eclipse.sdk.feature.group" version="4.28.0.v20230605-0440"/>
       <unit id="org.apache.aries.spifly.dynamic.bundle" version="1.3.6"/>
+      <unit id="org.objectweb.asm" version="9.5.0"/>
+      <unit id="org.objectweb.asm.commons" version="9.5.0"/>
+      <unit id="org.objectweb.asm.tree" version="9.5.0"/>
+      <unit id="org.objectweb.asm.tree.analysis" version="9.5.0"/>
+      <unit id="org.objectweb.asm.util" version="9.5.0"/>
       <repository location="https://download.eclipse.org/eclipse/updates/4.28/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
