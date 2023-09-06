@@ -39,8 +39,8 @@ public final class AddDependenciesJob extends WorkspaceJob {
         this.labelsToAdd = requireNonNull(labelsToAdd);
         this.newClasspathEntries = requireNonNull(newClasspathEntries);
         setPriority(LONG);
-        // lock the build file only (is this sufficient?)
-        setRule(getRuleFactory().modifyRule(bazelProject.getBuildFile()));
+        // lock the workspace
+        setRule(getRuleFactory().buildRule());
     }
 
     IResourceRuleFactory getRuleFactory() {
