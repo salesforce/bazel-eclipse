@@ -294,7 +294,9 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         var fullCommandLine = new ArrayList<>(commandLine);
 
         // inject more options required by executor implementation
-        injectAdditionalOptions(fullCommandLine);
+        if (command.supportsInjectionOfAdditionalBazelOptions()) {
+            injectAdditionalOptions(fullCommandLine);
+        }
 
         // the binary must be the first argument
         fullCommandLine.add(0, bazelBinary.executable().toString());

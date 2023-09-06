@@ -253,6 +253,10 @@ public abstract class BazelCommand<R> {
         startupArgs = args != null ? List.of(args) : emptyList();
     }
 
+    boolean supportsInjectionOfAdditionalBazelOptions() {
+        return true; // default is yes
+    }
+
     @Override
     public String toString() {
         var commandLine = new ArrayList<String>();
