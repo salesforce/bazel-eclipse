@@ -14,6 +14,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
 import static org.eclipse.core.runtime.Platform.PI_RUNTIME;
 import static org.eclipse.core.runtime.Platform.PREF_LINE_SEPARATOR;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
@@ -835,7 +836,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         try {
             // use the job to properly trigger the classpath manager
             new InitializeOrRefreshClasspathJob(
-                    projects.stream(),
+                    projects.contains(workspace.getBazelProject()) ? projects.stream()
+                            : concat(Stream.of(workspace.getBazelProject()), projects.stream()),
                     workspace.getParent().getModelManager().getClasspathManager(),
                     true).runInWorkspace(monitor);
         } finally {
