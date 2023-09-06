@@ -37,7 +37,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
     protected static record PreparedCommandLine(
             List<String> fullCommandLineWithOptionalShellWrappingAndBinary,
-            List<String> commandLineWithoutBinaryAsPreparedByCommand) {
+            List<String> commandLineForDisplayPurposes) {
     }
 
     private static Logger LOG = LoggerFactory.getLogger(DefaultBazelCommandExecutor.class);
@@ -290,6 +290,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         var bazelBinary = command.ensureBazelBinary();
         var commandLine = command.prepareCommandLine(bazelBinary.bazelVersion());
 
+        // create a copy (for manipulation)
         var fullCommandLine = new ArrayList<>(commandLine);
 
         // inject more options required by executor implementation
@@ -297,6 +298,9 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
         // the binary must be the first argument
         fullCommandLine.add(0, bazelBinary.executable().toString());
+
+        // add the short binary name to the visible command line
+        commandLine.add(0, bazelBinary.executable().getFileName().toString());
 
         if (isWrapExecutionIntoShell()) {
             return new PreparedCommandLine(getShellUtil().wrapExecutionIntoShell(fullCommandLine), commandLine);
