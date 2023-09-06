@@ -119,4 +119,9 @@ public class BuildozerCommand extends BazelCommand<List<Output>> {
         super.setBazelBinary(new BazelBinary(buildozerExecutable, bazelBinary.bazelVersion()));
     }
 
+    @Override
+    boolean supportsInjectionOfAdditionalBazelOptions() {
+        return false; // buildozer doesn't support --tool_tag & co
+    }
+
 }
