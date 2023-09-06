@@ -3,7 +3,9 @@ package com.salesforce.bazel.eclipse.ui.commands.classpath;
 import static com.salesforce.bazel.eclipse.core.model.discovery.classpath.util.TypeLocator.findBazelInfo;
 import static com.salesforce.bazel.eclipse.ui.utils.JavaSearchUtil.createScopeIncludingAllWorkspaceProjectsButSelected;
 import static java.lang.String.format;
+import static org.eclipse.core.runtime.SubMonitor.convert;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -67,6 +69,7 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
     void collectLabelAndClasspathEntryForTypeDependencies(IType type, Set<Label> labels,
             Set<ClasspathEntry> classpathEntries, BazelWorkspace bazelWorkspace, SubMonitor monitor)
             throws CoreException {
+        monitor.beginTask("Collecting dependencies", 2);
         Set<String> processedTypes = new HashSet<>();
 
         var parser = ASTParser.newParser(AST.getJLSLatest());
@@ -81,15 +84,16 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
 
         parser.setIgnoreMethodBodies(true);
         parser.setResolveBindings(true);
-        var bindings = parser.createBindings(new IJavaElement[] { type }, monitor);
+        var bindings = parser.createBindings(new IJavaElement[] { type }, monitor.split(1));
 
+        monitor.setWorkRemaining(bindings.length);
         for (IBinding binding : bindings) {
             collectLabelAndClasspathEntryFromTypeBinding(
                 (ITypeBinding) binding,
                 labels,
                 classpathEntries,
                 processedTypes,
-                monitor);
+                monitor.split(1));
         }
     }
 
@@ -213,12 +217,18 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
 
                 collectLabelAndClasspathEntryForType(type, dependencyLabels, newClasspathEntries);
 
-                collectLabelAndClasspathEntryForTypeDependencies(
-                    type,
-                    dependencyLabels,
-                    newClasspathEntries,
-                    bazelProject.getBazelWorkspace(),
-                    null);
+                context.run(false, false, monitor -> {
+                    try {
+                        collectLabelAndClasspathEntryForTypeDependencies(
+                            type,
+                            dependencyLabels,
+                            newClasspathEntries,
+                            bazelProject.getBazelWorkspace(),
+                            convert(monitor));
+                    } catch (CoreException e) {
+                        throw new InvocationTargetException(e);
+                    }
+                });
 
                 if (!dependencyLabels.isEmpty()) {
                     return new AddDependenciesJob(bazelProject, dependencyLabels, newClasspathEntries);
@@ -231,9 +241,11 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
 
                 return null;
             }
-        } catch (CoreException e) {
+        } catch (InvocationTargetException | CoreException e) {
             LOG.error("Add Dependency Failed: Error collecting dependency information. {}", e.getMessage(), e);
             MessageDialog.openError(activeShell, "Add Dependency Failed", "Please check the logs for more details!");
+        } catch (InterruptedException e) {
+            throw new OperationCanceledException();
         }
 
         return null;
