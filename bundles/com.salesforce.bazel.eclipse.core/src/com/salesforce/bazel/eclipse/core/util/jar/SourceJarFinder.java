@@ -36,6 +36,22 @@ public class SourceJarFinder {
         return null;
     }
 
+    public static String getPotentialNonSourceJarNames(String maybeSourceJarName) {
+        // try removing known prefixes
+        for (String prefix : KNOWN_PREFIXES) {
+            if ((prefix.length() > 0) && maybeSourceJarName.startsWith(prefix)) {
+                maybeSourceJarName = maybeSourceJarName.substring(prefix.length());
+            }
+        }
+
+        // try removing known suffixes
+        for (String suffix : KNOWN_SUFFIXES) {
+            maybeSourceJarName = maybeSourceJarName.replace(suffix, ".jar");
+        }
+
+        return maybeSourceJarName;
+    }
+
     public static Collection<String> getPotentialSourceJarNames(String jarName) {
         var potentialJarNames = new LinkedHashSet<String>(); // use deterministic order
 

@@ -7,20 +7,28 @@ import static com.salesforce.bazel.eclipse.core.model.BazelProject.isBazelProjec
 import static com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry.newLibraryEntry;
 import static com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry.newProjectEntry;
 import static com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder.findSourceJar;
+import static com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder.getPotentialNonSourceJarNames;
+import static com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder.isPotentialSourceJar;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaCore;
 
 import com.google.idea.blaze.base.model.primitives.Label;
+import com.google.idea.blaze.base.model.primitives.TargetName;
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
@@ -127,7 +135,60 @@ public class TypeLocator extends LibrariesDiscoveryUtil {
         try (var jarFile = new BazelJarFile(jarPath.toPath())) {
             var targetLabel = jarFile.getTargetLabel();
             if (targetLabel == null) {
+                // try to lookup the jar from the workspace classpath container
+                var javaProject = JavaCore.create(bazelWorkspace.getBazelProject().getProject());
+                var resolvedClasspath = javaProject.getResolvedClasspath(true);
+                List<IClasspathEntry> jarMatches =
+                        Stream.of(resolvedClasspath).filter(e -> e.getPath().equals(jarPath)).collect(toList());
+                for (IClasspathEntry match : jarMatches) {
+                    var origin = ClasspathEntry.fromExisting(match).getBazelTargetOrigin();
+                    if (origin != null) {
+                        targetLabel = origin;
+                        break;
+                    }
+                }
+            }
+            if (targetLabel == null) {
+                // as a very last fallback, we guess the label
                 targetLabel = guessJarLabelFromLocation(jarPath.toPath());
+                // note, we now have a jar *file* label
+                // however, we want this to be a java target
+                if (targetLabel != null) {
+                    if (targetLabel.isExternal()) {
+                        if (targetLabel.blazePackage().isWorkspaceRoot()) {
+                            // replace with default target
+                            targetLabel = Label.create(
+                                targetLabel.externalWorkspaceName(),
+                                targetLabel.blazePackage(),
+                                TargetName.create(targetLabel.externalWorkspaceName()));
+                        } else {
+                            // replace with "jar" as target name
+                            targetLabel = Label.create(
+                                targetLabel.externalWorkspaceName(),
+                                targetLabel.blazePackage(),
+                                TargetName.create("jar"));
+                        }
+                    } else {
+                        // not external, try parsing for lib<targetname>.jar
+                        var jarName = targetLabel.targetName().toString();
+                        if (isPotentialSourceJar(jarName)) {
+                            jarName = getPotentialNonSourceJarNames(jarName);
+                        }
+                        if (jarName.endsWith(".jar") && jarName.startsWith("lib")) {
+                            // use whatever is between lib and .jar
+                            targetLabel = Label.create(
+                                targetLabel.externalWorkspaceName(),
+                                targetLabel.blazePackage(),
+                                TargetName.create(jarName.substring(3).replace(".jar", "")));
+                        } else {
+                            // use the default target
+                            targetLabel = Label.create(
+                                targetLabel.externalWorkspaceName(),
+                                targetLabel.blazePackage(),
+                                TargetName.create(targetLabel.blazePackage().asPath().getFileName().toString()));
+                        }
+                    }
+                }
             }
             if (targetLabel != null) {
                 return new ClasspathInfo(
