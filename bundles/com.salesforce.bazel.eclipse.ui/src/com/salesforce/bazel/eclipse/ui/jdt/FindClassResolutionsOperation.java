@@ -13,8 +13,6 @@
 */
 package com.salesforce.bazel.eclipse.ui.jdt;
 
-import static com.salesforce.bazel.eclipse.core.model.discovery.classpath.util.TypeLocator.findBazelInfo;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,6 +38,7 @@ import com.google.idea.blaze.base.model.primitives.Label;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.classpath.util.TypeLocator;
 import com.salesforce.bazel.eclipse.ui.jdt.JavaResolutionFactory.ProposalType;
 import com.salesforce.bazel.eclipse.ui.utils.JavaSearchUtil;
 
@@ -95,9 +94,10 @@ public class FindClassResolutionsOperation implements IRunnableWithProgress {
         }
     }
 
-    String className = null;
-    BazelProject bazelProject = null;
-    ClassResolutionCollector collector = null;
+    final String className;
+    final BazelProject bazelProject;
+    final ClassResolutionCollector collector;
+    final TypeLocator typeLocator;
 
     /**
      * This class is used to try to find resolutions to unresolved java classes.
@@ -113,12 +113,14 @@ public class FindClassResolutionsOperation implements IRunnableWithProgress {
      *            the name of the class which is unresolved
      * @param collector
      *            a subclass of AbstractClassResolutionCollector to collect/handle possible resolutions
+     * @throws CoreException
      */
     public FindClassResolutionsOperation(final BazelProject bazelProject, final String className,
-            final ClassResolutionCollector collector) {
+            final ClassResolutionCollector collector) throws CoreException {
         this.bazelProject = bazelProject;
         this.className = className;
         this.collector = collector;
+        typeLocator = new TypeLocator(bazelProject.getBazelWorkspace());
     }
 
     /**
@@ -151,7 +153,7 @@ public class FindClassResolutionsOperation implements IRunnableWithProgress {
                             && (Flags.isPublic(type.getFlags()) && !currentJavaProject.equals(type.getJavaProject()))) {
                         var packageFragment = type.getPackageFragment();
                         if (packageFragment.exists()) {
-                            var bazelInfo = findBazelInfo(type);
+                            var bazelInfo = typeLocator.findBazelInfo(type);
                             if (bazelInfo != null) {
                                 bazelInfos.put(bazelInfo.originLabel(), bazelInfo.classpathEntry());
                             }
@@ -159,7 +161,7 @@ public class FindClassResolutionsOperation implements IRunnableWithProgress {
                     } else if (((element instanceof IPackageFragment packageFragment)
                             && !currentJavaProject.equals(packageFragment.getJavaProject()))
                             && packageFragment.exists()) {
-                        var bazelInfo = findBazelInfo(packageFragment);
+                        var bazelInfo = typeLocator.findBazelInfo(packageFragment);
                         if (bazelInfo != null) {
                             bazelInfos.put(bazelInfo.originLabel(), bazelInfo.classpathEntry());
                         }

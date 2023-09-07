@@ -22,7 +22,9 @@ import org.eclipse.jdt.core.IType;
 
 import com.google.idea.blaze.base.model.primitives.Label;
 import com.salesforce.bazel.eclipse.core.BazelCore;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.LibrariesDiscoveryUtil;
 import com.salesforce.bazel.eclipse.core.util.jar.BazelJarFile;
 
 /**
@@ -34,12 +36,16 @@ import com.salesforce.bazel.eclipse.core.util.jar.BazelJarFile;
  * case. Thus, when jars are missing this locator is out of luck.
  * </p>
  */
-public class TypeLocator {
+public class TypeLocator extends LibrariesDiscoveryUtil {
 
     /**
      * Return value of {@link TypeLocator#findBazelInfo(IType)}.
      */
     public static record ClasspathInfo(Label originLabel, ClasspathEntry classpathEntry) {
+    }
+
+    public TypeLocator(BazelWorkspace bazelWorkspace) throws CoreException {
+        super(bazelWorkspace);
     }
 
     /**
@@ -50,7 +56,7 @@ public class TypeLocator {
      * @return the {@link ClasspathInfo} (maybe <code>null</code>)
      * @throws CoreException
      */
-    public static ClasspathInfo findBazelInfo(IPackageFragment packageFragment) throws CoreException {
+    public ClasspathInfo findBazelInfo(IPackageFragment packageFragment) throws CoreException {
         if (!packageFragment.exists()) {
             return null;
         }
@@ -72,7 +78,7 @@ public class TypeLocator {
      * @return the {@link ClasspathInfo} (maybe <code>null</code>)
      * @throws CoreException
      */
-    public static ClasspathInfo findBazelInfo(IPackageFragmentRoot packageFragmentRoot) throws CoreException {
+    public ClasspathInfo findBazelInfo(IPackageFragmentRoot packageFragmentRoot) throws CoreException {
         if (!packageFragmentRoot.exists()) {
             return null;
         }
@@ -99,7 +105,7 @@ public class TypeLocator {
      * @return the {@link ClasspathInfo} (maybe <code>null</code>)
      * @throws CoreException
      */
-    public static ClasspathInfo findBazelInfo(IType type) throws CoreException {
+    public ClasspathInfo findBazelInfo(IType type) throws CoreException {
         if (type.isBinary()) {
             // extract the target label from the jar
             var root = (IPackageFragmentRoot) type.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
@@ -117,9 +123,12 @@ public class TypeLocator {
         return null;
     }
 
-    static ClasspathInfo getBazelInfoFromJarFile(IPath jarPath) throws CoreException {
+    ClasspathInfo getBazelInfoFromJarFile(IPath jarPath) throws CoreException {
         try (var jarFile = new BazelJarFile(jarPath.toPath())) {
             var targetLabel = jarFile.getTargetLabel();
+            if (targetLabel == null) {
+                targetLabel = guessJarLabelFromLocation(jarPath.toPath());
+            }
             if (targetLabel != null) {
                 return new ClasspathInfo(
                         targetLabel,
@@ -131,7 +140,7 @@ public class TypeLocator {
         return null;
     }
 
-    static ClasspathInfo getBazelInfoFromSourceProject(IJavaProject javaProject) throws CoreException {
+    ClasspathInfo getBazelInfoFromSourceProject(IJavaProject javaProject) throws CoreException {
         if (!javaProject.exists() || !isBazelProject(javaProject.getProject())) {
             return null;
         }
@@ -147,9 +156,5 @@ public class TypeLocator {
         }
 
         return null;
-    }
-
-    private TypeLocator() {
-        // no need to instantiate (may want to in the future if the lookup should be more extensible or testable?)
     }
 }
