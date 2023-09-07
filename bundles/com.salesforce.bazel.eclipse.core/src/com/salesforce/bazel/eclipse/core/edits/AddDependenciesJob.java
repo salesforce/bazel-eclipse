@@ -63,7 +63,9 @@ public final class AddDependenciesJob extends WorkspaceJob {
             } else {
                 throw new CoreException(
                         Status.error(
-                            format("Project '%s' cannot be updated! No targets found to update.", bazelProject)));
+                            format(
+                                "Project '%s' cannot be updated! No targets found to update.",
+                                bazelProject.getName())));
             }
 
             // java_library & co

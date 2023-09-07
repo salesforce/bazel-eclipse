@@ -65,7 +65,11 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
             var startTime = new Date();
             consoleStream.println(ansi().a(ITALIC).a(startTime.toString()).a(purpose).reset().toString());
             consoleStream.println(ansi().a(INTENSITY_BOLD).a("Running Command:").reset().toString());
-            consoleStream.println(" > " + commandLine.commandLineForDisplayPurposes().stream().collect(joining(" ")));
+            consoleStream.println(
+                " > " + commandLine.commandLineForDisplayPurposes()
+                        .stream()
+                        .map(this::simpleQuoteForDisplayOnly)
+                        .collect(joining(" ")));
             consoleStream.println();
 
             var fullCommandLine = processBuilder.command().stream().collect(joining(" "));
@@ -214,5 +218,12 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
 
     private void showConsole(MessageConsole console) {
         ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
+    }
+
+    private String simpleQuoteForDisplayOnly(String arg) {
+        if (arg.indexOf(' ') > -1) {
+            return (arg.indexOf('\'') > -1) ? '"' + arg + '"' : "'" + arg + "'";
+        }
+        return arg;
     }
 }

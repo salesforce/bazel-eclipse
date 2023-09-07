@@ -4,6 +4,7 @@
 package com.salesforce.bazel.sdk.command;
 
 import static java.io.File.createTempFile;
+import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.Files.newInputStream;
 import static java.nio.file.Files.write;
@@ -64,6 +65,20 @@ public class BuildozerCommand extends BazelCommand<List<Output>> {
             } while (output != null);
         }
         return result;
+    }
+
+    @Override
+    public List<Output> generateResult(int exitCode) throws IOException {
+        // per buildozer: 0 and 3 is ok, 3 just means nothing changed
+        if ((exitCode != 0) && (exitCode != 3)) {
+            throw new IOException(
+                    format(
+                        "Buildozer %s failed with exit code %d. Please check command output.",
+                        getCommand(),
+                        exitCode));
+        }
+
+        return doGenerateResult();
     }
 
     @Override
