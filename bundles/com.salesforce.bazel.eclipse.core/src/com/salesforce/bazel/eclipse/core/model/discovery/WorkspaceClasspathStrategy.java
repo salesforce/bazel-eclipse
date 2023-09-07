@@ -3,6 +3,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,8 @@ import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
-import com.salesforce.bazel.eclipse.core.model.discovery.classpath.external.ExternalLibrariesDiscovery;
+import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.ExternalLibrariesDiscovery;
+import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.GeneratedLibrariesDiscovery;
 
 /**
  * This strategy implements computation of the {@link BazelWorkspace workspace project's} classpath.
@@ -47,19 +49,35 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
      * @throws CoreException
      */
     public Collection<ClasspathEntry> computeClasspath(BazelProject workspaceProject, BazelWorkspace bazelWorkspace,
-            BazelClasspathScope scope, IProgressMonitor monitor) throws CoreException {
+            BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
+        try {
+            var monitor = SubMonitor.convert(progress);
+            monitor.beginTask("Scanning for workspace jars", 2);
 
-        var externalLibrariesDiscovery = new ExternalLibrariesDiscovery(bazelWorkspace);
-        var result = externalLibrariesDiscovery.query(monitor);
+            List<ClasspathEntry> result = new ArrayList<>();
 
-        if (externalLibrariesDiscovery.isFoundMissingJars()) {
-            createBuildPathProblem(
-                workspaceProject,
-                Status.info(
-                    "Some external jars were ommitted from the classpath because they don't exist locally. Consider runing 'bazel fetch //...' to download any missing library."));
+            var externalLibrariesDiscovery = new ExternalLibrariesDiscovery(bazelWorkspace);
+            result.addAll(externalLibrariesDiscovery.query(monitor.split(1, SubMonitor.SUPPRESS_NONE)));
+            if (externalLibrariesDiscovery.isFoundMissingJars()) {
+                createBuildPathProblem(
+                    workspaceProject,
+                    Status.info(
+                        "Some external jars were ommitted from the classpath because they don't exist locally. Consider runing 'bazel fetch //...' to download any missing library."));
+            }
+
+            var generatedLibrariesDiscovery = new GeneratedLibrariesDiscovery(bazelWorkspace);
+            result.addAll(generatedLibrariesDiscovery.query(monitor.split(1, SubMonitor.SUPPRESS_NONE)));
+            if (generatedLibrariesDiscovery.isFoundMissingJars()) {
+                createBuildPathProblem(
+                    workspaceProject,
+                    Status.info(
+                        "Some generated jars were ommitted from the classpath because they don't exist locally. Consider runing 'bazel build //...' to build any missing library."));
+            }
+
+            return result;
+        } finally {
+            progress.done();
         }
-
-        return result;
     }
 
     @Override

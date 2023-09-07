@@ -3,6 +3,8 @@ package com.salesforce.bazel.eclipse.core.util.jar;
 import static java.nio.file.Files.isRegularFile;
 
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
@@ -15,28 +17,52 @@ import org.eclipse.core.runtime.IPath;
  */
 public class SourceJarFinder {
 
+    private final static List<String> KNOWN_SUFFIXES = List.of("-sources.jar", "-src.jar");
+
+    private final static List<String> KNOWN_PREFIXES =
+            List.of("processed_" /* rules_jvm_external */, "" /* always try with empty prefix */);
+
     public static IPath findSourceJar(Path jarPath) {
         var directory = jarPath.getParent();
-        var jarName = jarPath.getFileName().toString();
+        var srcJarNames = getPotentialSourceJarNames(jarPath.getFileName().toString());
 
-        // try removing known prefixes
-        List<String> knownPrefixes =
-                List.of("processed_" /* rules_jvm_external */, "" /* always try with empty prefix */);
-        for (String prefix : knownPrefixes) {
-            if ((prefix.length() > 0) && jarName.startsWith(prefix)) {
-                jarName = jarName.substring(prefix.length());
-            }
-            // try removing known suffixes
-            List<String> knownSuffixes = List.of("-sources.jar", "-src.jar");
-            for (String suffix : knownSuffixes) {
-                var srcJar = directory.resolve(jarName.replace(".jar", suffix));
-                if (isRegularFile(srcJar)) {
-                    return IPath.fromPath(srcJar);
-                }
+        for (String srcJarName : srcJarNames) {
+            var srcJar = directory.resolve(srcJarName);
+            if (isRegularFile(srcJar)) {
+                return IPath.fromPath(srcJar);
             }
         }
 
         return null;
+    }
+
+    public static Collection<String> getPotentialSourceJarNames(String jarName) {
+        var potentialJarNames = new LinkedHashSet<String>(); // use deterministic order
+
+        // try removing known prefixes
+        for (String prefix : KNOWN_PREFIXES) {
+            if ((prefix.length() > 0) && jarName.startsWith(prefix)) {
+                jarName = jarName.substring(prefix.length());
+            }
+            // try removing known suffixes
+            for (String suffix : KNOWN_SUFFIXES) {
+                var srcJar = jarName.replace(".jar", suffix);
+                potentialJarNames.add(srcJar);
+            }
+        }
+
+        return potentialJarNames;
+    }
+
+    public static boolean isPotentialSourceJar(String jarNameOrPath) {
+        // try removing known suffixes
+        for (String suffix : KNOWN_SUFFIXES) {
+            if (jarNameOrPath.endsWith(suffix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private SourceJarFinder() {
