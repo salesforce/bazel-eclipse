@@ -64,6 +64,15 @@
          <persistent value="true"/>
    </extension>
    <extension
+         id="com.salesforce.bazel.eclipse.core.buildpath_problem.workspace_container"
+         name="Bazel Workspace Container Build Path Problem"
+         point="org.eclipse.core.resources.markers">
+         <super type="com.salesforce.bazel.eclipse.core.buildpath_problem"/>
+         <super type="org.eclipse.core.resources.problemmarker"/>
+         <super type="org.eclipse.core.resources.textmarker"/>
+         <persistent value="true"/>
+   </extension>
+   <extension
          id="transient_problem"
          name="Transient Bazel Problem"
          point="org.eclipse.core.resources.markers">

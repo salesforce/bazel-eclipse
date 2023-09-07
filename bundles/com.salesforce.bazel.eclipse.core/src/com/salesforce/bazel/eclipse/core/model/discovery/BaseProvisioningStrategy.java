@@ -574,7 +574,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
     }
 
-    private IMarker createMarker(IResource resource, String type, IStatus status) throws CoreException {
+    protected IMarker createMarker(IResource resource, String type, IStatus status) throws CoreException {
         var message = status.getMessage();
         if (status.isMultiStatus()) {
             var children = status.getChildren();
@@ -727,6 +727,18 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             root,
             f -> (f.getLocation() != null) && !folderLocation.isPrefixOf(f.getLocation()),
             progress);
+    }
+
+    /**
+     * Convenience method to delete all markers of type {@link BazelCoreSharedContstants#BUILDPATH_PROBLEM_MARKER} from
+     * the Bazel project
+     *
+     * @param project
+     *            the project to create the marker at (must not be <code>null</code>)
+     * @throws CoreException
+     */
+    protected void deleteBuildPathProblems(BazelProject project) throws CoreException {
+        project.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, false, 0);
     }
 
     /**
