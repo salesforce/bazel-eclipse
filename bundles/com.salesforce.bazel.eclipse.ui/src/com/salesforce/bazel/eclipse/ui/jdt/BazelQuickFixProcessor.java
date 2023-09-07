@@ -77,7 +77,7 @@ public class BazelQuickFixProcessor implements IQuickFixProcessor {
     }
 
     private void handleImportNotFound(IInvocationContext context, IProblemLocation problemLocation,
-            ClassResolutionCollector collector) {
+            ClassResolutionCollector collector) throws CoreException {
         var cu = context.getASTRoot();
         var selectedNode = problemLocation.getCoveringNode(cu);
         if (selectedNode != null) {
@@ -134,7 +134,7 @@ public class BazelQuickFixProcessor implements IQuickFixProcessor {
     }
 
     private void handleMissingTransitive(IInvocationContext context, IProblemLocation problemLocation,
-            ClassResolutionCollector collector) {
+            ClassResolutionCollector collector) throws CoreException {
         var cu = context.getASTRoot();
         var problemArguments = problemLocation.getProblemArguments();
         if (problemArguments.length == 1) {

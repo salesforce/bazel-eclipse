@@ -29,7 +29,7 @@ import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
  */
 public final class ExecutionPathHelper {
 
-    private static boolean isExternal(String firstPathComponent) {
+	public static boolean isExternal(String firstPathComponent) {
         return firstPathComponent.equals("external");
     }
 

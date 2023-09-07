@@ -4,12 +4,14 @@ import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.stream.Collectors.toList;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,8 @@ import com.google.idea.blaze.base.bazel.BazelBuildSystemProvider;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.google.idea.blaze.base.model.primitives.Label;
+import com.google.idea.blaze.base.model.primitives.TargetName;
+import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
 import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
@@ -137,7 +141,80 @@ public class LibrariesDiscoveryUtil {
             execRootRelativPath.append(blazePackage.relativePath()).append('/');
         }
         execRootRelativPath.append(fileLabel.targetName());
-        return blazePackage.toString();
+        return execRootRelativPath.toString();
+    }
+
+    /**
+     * This is the inverse of {@link #getHypotheticalRelativePathOfConsumableArtifact(Label)}. It highly depends on
+     * Bazel implementation details and will break if the change it.
+     *
+     * @param jarPath
+     *            the jar location (typically absolute)
+     * @return the Label (maybe <code>null</code>)
+     */
+    protected Label guessJarLabelFromLocation(Path jarPath) {
+        if (jarPath.isAbsolute()) {
+            // make relative
+            var blazeInfo = locationResolver.getBlazeInfo();
+            var executionRoot = blazeInfo.getExecutionRoot();
+            var bazelOutPrefix = blazeInfo.getBlazeBin().getPathRootedAt(executionRoot);
+
+            if (jarPath.startsWith(bazelOutPrefix)) {
+                jarPath = bazelOutPrefix.relativize(jarPath);
+            } else if (jarPath.startsWith(executionRoot)) {
+                jarPath = blazeInfo.getExecutionRoot().relativize(jarPath);
+            } else {
+                // not in this workspace
+                LOG.warn(
+                    "Path '{}' outside of workspace '{}' execution root. Please check setup and/or report bug!",
+                    jarPath,
+                    executionRoot);
+                return null;
+            }
+        }
+
+        var segments = jarPath.getNameCount();
+        if (segments == 0) {
+            LOG.warn("Path '{}' is empty. Please check setup and/or report bug!", jarPath);
+            return null;
+        }
+        if (segments == 1) {
+            return Label.create(new WorkspacePath(""), TargetName.create(jarPath.getName(0).toString()));
+        }
+
+        // at least two
+        var firstSegment = jarPath.getName(0).toString();
+        var secondSegment = jarPath.getName(1).toString();
+
+        String externalWorkspaceName = null;
+        if ("external".equals(firstSegment)) {
+            externalWorkspaceName = secondSegment;
+            // adjust remaining path
+            jarPath = jarPath.subpath(2, jarPath.getNameCount());
+            segments = jarPath.getNameCount();
+        }
+
+        if (segments == 0) {
+            LOG.warn("Path '{}' is empty. Please check setup and/or report bug!", jarPath);
+            return null;
+        }
+        if (segments == 1) {
+            return Label.create(
+                externalWorkspaceName,
+                new WorkspacePath(""),
+                TargetName.create(jarPath.getName(0).toString()));
+        }
+
+        // everything else is a lottery - we need to lookup from the workspace classpath to guess correctly
+        // hence we make the following assumption - last segment is the target name, everything else is package path
+
+        var packagePath = jarPath.subpath(0, segments - 1);
+        var jarName = jarPath.getName(segments - 1);
+
+        return Label.create(
+            externalWorkspaceName,
+            new WorkspacePath(IPath.fromPath(packagePath).toString() /* Bazel expects '/' as separator */),
+            TargetName.create(jarName.toString()));
     }
 
     /**

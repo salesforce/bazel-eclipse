@@ -1,6 +1,5 @@
 package com.salesforce.bazel.eclipse.ui.commands.classpath;
 
-import static com.salesforce.bazel.eclipse.core.model.discovery.classpath.util.TypeLocator.findBazelInfo;
 import static com.salesforce.bazel.eclipse.ui.utils.JavaSearchUtil.createScopeIncludingAllWorkspaceProjectsButSelected;
 import static java.lang.String.format;
 import static org.eclipse.core.runtime.SubMonitor.convert;
@@ -43,6 +42,7 @@ import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.edits.AddDependenciesJob;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.classpath.util.TypeLocator;
 import com.salesforce.bazel.eclipse.ui.commands.BaseBazelProjectHandler;
 import com.salesforce.bazel.eclipse.ui.utils.BazelProjectUtilitis;
 
@@ -55,8 +55,8 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
             "com.salesforce.bazel.eclipse.ui.commands.classpath.addCompileDependency";
 
     boolean collectLabelAndClasspathEntryForType(IType type, Set<Label> dependencyLabels,
-            Set<ClasspathEntry> newClasspathEntries) throws CoreException {
-        var bazelInfo = findBazelInfo(type);
+            Set<ClasspathEntry> newClasspathEntries, TypeLocator typeLocator) throws CoreException {
+        var bazelInfo = typeLocator.findBazelInfo(type);
         if (bazelInfo == null) {
             return false;
         }
@@ -67,8 +67,8 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
     }
 
     void collectLabelAndClasspathEntryForTypeDependencies(IType type, Set<Label> labels,
-            Set<ClasspathEntry> classpathEntries, BazelWorkspace bazelWorkspace, SubMonitor monitor)
-            throws CoreException {
+            Set<ClasspathEntry> classpathEntries, BazelWorkspace bazelWorkspace, TypeLocator typeLocator,
+            SubMonitor monitor) throws CoreException {
         monitor.beginTask("Collecting dependencies", 2);
         Set<String> processedTypes = new HashSet<>();
 
@@ -92,13 +92,15 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
                 (ITypeBinding) binding,
                 labels,
                 classpathEntries,
+                typeLocator,
                 processedTypes,
                 monitor.split(1));
         }
     }
 
     private void collectLabelAndClasspathEntryFromMethodBinding(IMethodBinding binding, Set<Label> labels,
-            Set<ClasspathEntry> classpathEntries, Set<String> processedTypes, SubMonitor monitor) throws CoreException {
+            Set<ClasspathEntry> classpathEntries, TypeLocator typeLocator, Set<String> processedTypes,
+            SubMonitor monitor) throws CoreException {
         if (monitor.isCanceled()) {
             throw new OperationCanceledException();
         }
@@ -112,6 +114,7 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
                 parameterType,
                 labels,
                 classpathEntries,
+                typeLocator,
                 processedTypes,
                 monitor);
         }
@@ -120,12 +123,14 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
             binding.getReturnType(),
             labels,
             classpathEntries,
+            typeLocator,
             processedTypes,
             monitor);
     }
 
     private void collectLabelAndClasspathEntryFromTypeBinding(ITypeBinding binding, Set<Label> labels,
-            Set<ClasspathEntry> classpathEntries, Set<String> processedTypes, SubMonitor monitor) throws CoreException {
+            Set<ClasspathEntry> classpathEntries, TypeLocator typeLocator, Set<String> processedTypes,
+            SubMonitor monitor) throws CoreException {
         if (monitor.isCanceled()) {
             throw new OperationCanceledException();
         }
@@ -141,6 +146,7 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
                 binding.getElementType(),
                 labels,
                 classpathEntries,
+                typeLocator,
                 processedTypes,
                 monitor);
             return;
@@ -157,8 +163,11 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
         processedTypes.add(binding.getQualifiedName());
         monitor.subTask(binding.getQualifiedName());
 
-        var collected =
-                collectLabelAndClasspathEntryForType((IType) binding.getJavaElement(), labels, classpathEntries);
+        var collected = collectLabelAndClasspathEntryForType(
+            (IType) binding.getJavaElement(),
+            labels,
+            classpathEntries,
+            typeLocator);
         if (!collected) {
             return; // abort early
         }
@@ -168,13 +177,20 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
                 interfaceBinding,
                 labels,
                 classpathEntries,
+                typeLocator,
                 processedTypes,
                 monitor);
         }
 
         var superclass = binding.getSuperclass();
         if (superclass != null) {
-            collectLabelAndClasspathEntryFromTypeBinding(superclass, labels, classpathEntries, processedTypes, monitor);
+            collectLabelAndClasspathEntryFromTypeBinding(
+                superclass,
+                labels,
+                classpathEntries,
+                typeLocator,
+                processedTypes,
+                monitor);
         }
 
         for (ITypeBinding typeParameter : binding.getTypeParameters()) {
@@ -182,6 +198,7 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
                 typeParameter,
                 labels,
                 classpathEntries,
+                typeLocator,
                 processedTypes,
                 monitor);
         }
@@ -191,6 +208,7 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
                 methodBinding,
                 labels,
                 classpathEntries,
+                typeLocator,
                 processedTypes,
                 monitor);
         }
@@ -201,6 +219,7 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
         var activeShell = HandlerUtil.getActiveShell(event);
 
         var bazelProject = BazelCore.create(project);
+        var typeLocator = new TypeLocator(bazelProject.getBazelWorkspace());
 
         Set<Label> dependencyLabels = new LinkedHashSet<>();
         Set<ClasspathEntry> newClasspathEntries = new LinkedHashSet<>();
@@ -215,7 +234,7 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
             if (dialog.open() == Window.OK) {
                 var type = (IType) dialog.getResult()[0];
 
-                collectLabelAndClasspathEntryForType(type, dependencyLabels, newClasspathEntries);
+                collectLabelAndClasspathEntryForType(type, dependencyLabels, newClasspathEntries, typeLocator);
 
                 context.run(false, false, monitor -> {
                     try {
@@ -224,6 +243,7 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
                             dependencyLabels,
                             newClasspathEntries,
                             bazelProject.getBazelWorkspace(),
+                            typeLocator,
                             convert(monitor));
                     } catch (CoreException e) {
                         throw new InvocationTargetException(e);
