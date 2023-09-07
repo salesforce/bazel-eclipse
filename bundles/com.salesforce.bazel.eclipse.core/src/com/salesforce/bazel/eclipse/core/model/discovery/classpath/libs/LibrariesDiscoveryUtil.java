@@ -37,6 +37,7 @@ public class LibrariesDiscoveryUtil {
     protected final BazelWorkspace bazelWorkspace;
     protected final WorkspaceRoot workspaceRoot;
     protected final JavaClasspathJarLocationResolver locationResolver;
+    protected Path outputBase;
 
     private boolean foundMissingJars;
 
@@ -44,6 +45,7 @@ public class LibrariesDiscoveryUtil {
         this.bazelWorkspace = bazelWorkspace;
         this.workspaceRoot = new WorkspaceRoot(bazelWorkspace.getLocation().toPath());
         this.locationResolver = new JavaClasspathJarLocationResolver(bazelWorkspace);
+        this.outputBase = bazelWorkspace.getOutputBaseLocation().toPath();
     }
 
     /**
@@ -163,6 +165,9 @@ public class LibrariesDiscoveryUtil {
                 jarPath = bazelOutPrefix.relativize(jarPath);
             } else if (jarPath.startsWith(executionRoot)) {
                 jarPath = blazeInfo.getExecutionRoot().relativize(jarPath);
+            } else if (jarPath.startsWith(outputBase)) {
+                // the 'external' folder is actually a sibling of execroot, let's try this
+                jarPath = outputBase.relativize(jarPath);
             } else {
                 // not in this workspace
                 LOG.warn(
