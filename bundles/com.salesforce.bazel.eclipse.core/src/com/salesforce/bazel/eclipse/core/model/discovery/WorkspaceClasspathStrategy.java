@@ -3,6 +3,8 @@
  */
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDPATH_PROBLEM_MARKER;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,6 +32,9 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.Generate
  */
 public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
 
+    /** Build Path related Bazel problem */
+    String WORKSPACE_BUILDPATH_PROBLEM_MARKER = BUILDPATH_PROBLEM_MARKER + ".workspace_container";
+
     /**
      * Computes the classpath for the workspace project.
      * <p>
@@ -56,21 +61,26 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
 
             List<ClasspathEntry> result = new ArrayList<>();
 
+            // clean-up any markers created previously on the workspace project
+            workspaceProject.getProject().deleteMarkers(WORKSPACE_BUILDPATH_PROBLEM_MARKER, false, 0);
+
             var externalLibrariesDiscovery = new ExternalLibrariesDiscovery(bazelWorkspace);
             result.addAll(externalLibrariesDiscovery.query(monitor.split(1, SubMonitor.SUPPRESS_NONE)));
             if (externalLibrariesDiscovery.isFoundMissingJars()) {
-                createBuildPathProblem(
-                    workspaceProject,
-                    Status.info(
+                createMarker(
+                    workspaceProject.getProject(),
+                    WORKSPACE_BUILDPATH_PROBLEM_MARKER,
+                    Status.warning(
                         "Some external jars were ommitted from the classpath because they don't exist locally. Consider runing 'bazel fetch //...' to download any missing library."));
             }
 
             var generatedLibrariesDiscovery = new GeneratedLibrariesDiscovery(bazelWorkspace);
             result.addAll(generatedLibrariesDiscovery.query(monitor.split(1, SubMonitor.SUPPRESS_NONE)));
             if (generatedLibrariesDiscovery.isFoundMissingJars()) {
-                createBuildPathProblem(
-                    workspaceProject,
-                    Status.info(
+                createMarker(
+                    workspaceProject.getProject(),
+                    WORKSPACE_BUILDPATH_PROBLEM_MARKER,
+                    Status.warning(
                         "Some generated jars were ommitted from the classpath because they don't exist locally. Consider runing 'bazel build //...' to build any missing library."));
             }
 
