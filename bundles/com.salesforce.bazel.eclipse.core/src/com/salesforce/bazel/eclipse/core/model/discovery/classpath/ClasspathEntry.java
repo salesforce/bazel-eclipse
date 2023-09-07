@@ -29,6 +29,8 @@ import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 
+import com.google.idea.blaze.base.model.primitives.Label;
+
 /**
  * Mutable version of {@link IClasspathEntry}.
  * <p>
@@ -36,6 +38,8 @@ import org.eclipse.jdt.core.JavaCore;
  * </p>
  */
 public final class ClasspathEntry {
+
+    private static final String ATTRIBUTE_BAZEL_TARGET_NAME = "bazel-target-name";
 
     public static ClasspathEntry fromExisting(IClasspathEntry entry) {
         var classpathEntry = new ClasspathEntry(entry.getPath(), entry.getEntryKind());
@@ -133,6 +137,11 @@ public final class ClasspathEntry {
         return accessRules;
     }
 
+    public Label getBazelTargetOrigin() {
+        var origin = getExtraAttributes().get(ATTRIBUTE_BAZEL_TARGET_NAME);
+        return origin != null ? Label.createIfValid(origin) : null;
+    }
+
     public int getEntryKind() {
         return entryKind;
     }
@@ -167,6 +176,10 @@ public final class ClasspathEntry {
 
     public boolean isExported() {
         return exported;
+    }
+
+    public void setBazelTargetOrigin(Label origin) {
+        getExtraAttributes().put(ATTRIBUTE_BAZEL_TARGET_NAME, origin.toString());
     }
 
     public void setExported(boolean exported) {

@@ -4,7 +4,6 @@
 package com.salesforce.bazel.sdk.command;
 
 import static java.io.File.createTempFile;
-import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.Files.newInputStream;
 import static java.nio.file.Files.write;
@@ -77,7 +76,7 @@ public class BuildozerCommand extends BazelCommand<List<Output>> {
 
         if ((buildozerCommands.size() == 1) && (buildozerCommands.get(0).indexOf('\'') == -1)) {
             // no single quote and just one line so let's add the command directly
-            commandLine.add(format("'%s'", buildozerCommands.get(0)));
+            commandLine.add(buildozerCommands.get(0));
         } else {
             // too complicated, use a file
             var commandsFile = createTempFile("buildozer_commands_", ".txt").toPath();

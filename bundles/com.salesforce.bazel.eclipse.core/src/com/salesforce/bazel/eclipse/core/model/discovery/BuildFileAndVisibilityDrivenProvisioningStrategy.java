@@ -43,7 +43,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
-import com.salesforce.bazel.eclipse.core.model.discovery.classpath.external.ExternalLibrariesDiscovery;
+import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.ExternalLibrariesDiscovery;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
 import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;

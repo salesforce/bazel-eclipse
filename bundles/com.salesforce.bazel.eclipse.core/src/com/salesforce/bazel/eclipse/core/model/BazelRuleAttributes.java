@@ -28,6 +28,18 @@ public class BazelRuleAttributes {
                 rule.getAttributeList().stream().collect(toMap(Attribute::getName, Function.identity()));
     }
 
+    public Boolean getBoolean(String name) {
+        var attribute = attributesByAttributeName.get(name);
+        if (attribute == null) {
+            return null;
+        }
+
+        return switch (attribute.getType()) {
+            case BOOLEAN -> attribute.getBooleanValue();
+            default -> throw new IllegalArgumentException("Unexpected value: " + attribute.getType());
+        };
+    }
+
     /**
      * @return value of the attribute name if present, otherwise {@link Rule#getName()};
      */

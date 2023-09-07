@@ -12,6 +12,7 @@ import static java.lang.String.format;
 import java.io.IOException;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -25,7 +26,13 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntr
 import com.salesforce.bazel.eclipse.core.util.jar.BazelJarFile;
 
 /**
- * A utility for locating the origin of a type
+ * A utility for locating the origin of a Java type or package within a Bazel workspace.
+ * <p>
+ * This utility operates on the resolved classpath of a Bazel workspace and tries to locate an {@link ClasspathInfo
+ * origin}. It's useful when locating missing dependencies. However, there are limitations with this approach. Relying
+ * on the resolved class path is not consistent. It depends on the workspace being fully built, which is not always the
+ * case. Thus, when jars are missing this locator is out of luck.
+ * </p>
  */
 public class TypeLocator {
 
@@ -73,15 +80,8 @@ public class TypeLocator {
         if (packageFragmentRoot.isArchive()) {
             // extract the target label from the jar
             var jarPath = packageFragmentRoot.getPath();
-            try (var jarFile = new BazelJarFile(jarPath.toPath())) {
-                return new ClasspathInfo(
-                        jarFile.getTargetLabel(),
-                        newLibraryEntry(jarPath, findSourceJar(jarPath.toPath()), null, false /* test only */));
-            } catch (IOException e) {
-                throw new CoreException(Status.error(format("Error reading jar '%s'. %s", jarPath, e.getMessage()), e));
-            }
+            return getBazelInfoFromJarFile(jarPath);
         }
-
         // extract from project
         var javaProject = packageFragmentRoot.getJavaProject();
         if (javaProject != null) {
@@ -106,11 +106,27 @@ public class TypeLocator {
             if (root != null) {
                 return findBazelInfo(root);
             }
+        } else {
+            // extract from project
+            var javaProject = type.getJavaProject();
+            if (javaProject != null) {
+                return getBazelInfoFromSourceProject(javaProject);
+            }
         }
 
-        var javaProject = type.getJavaProject();
-        if (javaProject != null) {
-            return getBazelInfoFromSourceProject(javaProject);
+        return null;
+    }
+
+    static ClasspathInfo getBazelInfoFromJarFile(IPath jarPath) throws CoreException {
+        try (var jarFile = new BazelJarFile(jarPath.toPath())) {
+            var targetLabel = jarFile.getTargetLabel();
+            if (targetLabel != null) {
+                return new ClasspathInfo(
+                        targetLabel,
+                        newLibraryEntry(jarPath, findSourceJar(jarPath.toPath()), null, false /* test only */));
+            }
+        } catch (IOException e) {
+            throw new CoreException(Status.error(format("Error reading jar '%s'. %s", jarPath, e.getMessage()), e));
         }
         return null;
     }
