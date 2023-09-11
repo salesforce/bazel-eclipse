@@ -29,6 +29,7 @@ Export-Package: com.salesforce.bazel.sdk;uses:="org.osgi.framework,org.eclipse.c
 Import-Package: com.google.common.annotations;version="32.1.2",
  com.google.common.collect;version="32.1.2",
  com.google.protobuf;version="3.22.0",
+ org.fusesource.jansi;version="2.4.0",
  org.slf4j;version="1.7.30"
 Require-Bundle: com.salesforce.bazel.importedsource;bundle-version="2.0.0",
  org.eclipse.core.runtime;bundle-version="3.27.0"

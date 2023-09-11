@@ -19,6 +19,7 @@ import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.SynchronizeProjectViewJob;
+import com.salesforce.bazel.eclipse.jdtls.execution.StreamingSocketBazelCommandExecutor;
 
 /**
  * Bazel JDT LS Commands
@@ -50,6 +51,20 @@ public class BazelJdtLsDelegateCommandHandler implements IDelegateCommandHandler
                         new SynchronizeProjectViewJob(workspace).schedule();
                     }
                     return new Object();
+                case "java.bazel.connectProcessStreamSocket":
+                    var port = 0;
+                    var portArg = arguments.get(0);
+                    if (portArg instanceof Number) {
+                        port = ((Number) portArg).intValue();
+                    } else if (portArg instanceof String) {
+                        port = Integer.parseInt((String) portArg);
+                    }
+                    if ((port > 0) && (port < 65535)) {
+                        Integer staticPort = port;
+                        StreamingSocketBazelCommandExecutor.setLocalPortHostSupplier(() -> staticPort);
+                    } else {
+                        StreamingSocketBazelCommandExecutor.setLocalPortHostSupplier(null);
+                    }
                 default:
                     break;
             }

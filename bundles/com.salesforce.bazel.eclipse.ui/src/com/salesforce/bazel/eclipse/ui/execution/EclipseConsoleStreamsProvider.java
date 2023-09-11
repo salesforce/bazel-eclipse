@@ -2,17 +2,10 @@ package com.salesforce.bazel.eclipse.ui.execution;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static org.fusesource.jansi.Ansi.ansi;
-import static org.fusesource.jansi.Ansi.Attribute.INTENSITY_BOLD;
-import static org.fusesource.jansi.Ansi.Attribute.INTENSITY_FAINT;
-import static org.fusesource.jansi.Ansi.Attribute.ITALIC;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
 import java.util.function.Predicate;
 
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -24,28 +17,21 @@ import org.eclipse.ui.console.MessageConsoleStream;
 import com.salesforce.bazel.eclipse.ui.BazelUIPlugin;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor.PreparedCommandLine;
-import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor.ProcessStreamsProvider;
+import com.salesforce.bazel.sdk.command.ProcessStreamsProvider;
+import com.salesforce.bazel.sdk.command.VerboseProcessStreamsProvider;
 
 /**
  * A specialized {@link ProcessStreamsProvider} interacting with the Eclipse Console
  */
-public class EclipseConsoleStreamsProvider extends ProcessStreamsProvider {
+public class EclipseConsoleStreamsProvider extends VerboseProcessStreamsProvider {
 
     private static final Predicate<String> errorPrefixFilter = (var s) -> s.startsWith("ERROR:");
 
-    static String humanReadableFormat(Duration duration) {
-        return duration.toString().substring(2).replaceAll("(\\d[HMS])(?!$)", "$1 ").toLowerCase();
-    }
-
     private final MessageConsoleStream consoleStream;
     private final CapturingLiniesAndForwardingOutputStream errorStream;
-    private final BazelCommand<?> command;
-    private final PreparedCommandLine commandLine;
-    private final Date startTime;
 
     public EclipseConsoleStreamsProvider(BazelCommand<?> command, PreparedCommandLine commandLine) throws IOException {
-        this.command = command;
-        this.commandLine = commandLine;
+        super(command, commandLine);
 
         var console = findConsole(format("Bazel Workspace (%s)", command.getWorkingDirectory()));
         showConsole(console);
@@ -56,32 +42,12 @@ public class EclipseConsoleStreamsProvider extends ProcessStreamsProvider {
                 Charset.defaultCharset(),
                 4,
                 errorPrefixFilter);
-
-        startTime = new Date();
     }
 
     @Override
-    public void beginExecution() {
-        // remove old output
-        //console.clearConsole();
-        consoleStream.println();
-
-        // print info about command
-        var purpose = command.getPurpose() != null ? format(": %s", command.getPurpose()) : "";
-        consoleStream.println(ansi().a(ITALIC).a(startTime.toString()).a(purpose).reset().toString());
-        consoleStream.println(ansi().a(INTENSITY_BOLD).a("Running Command:").reset().toString());
-        consoleStream.println(
-            " > " + commandLine.commandLineForDisplayPurposes()
-                    .stream()
-                    .map(this::simpleQuoteForDisplayOnly)
-                    .collect(joining(" ")));
-        consoleStream.println();
-    }
-
-    @Override
-    public void executionCanceled() {
-        consoleStream.println();
-        consoleStream.print(ansi().fgBrightMagenta().a(INTENSITY_FAINT).a("Operation cancelled!").reset().toString());
+    public void close() throws IOException {
+        consoleStream.close();
+        errorStream.close();
     }
 
     @Override
@@ -113,27 +79,6 @@ public class EclipseConsoleStreamsProvider extends ProcessStreamsProvider {
         throw new IOException(format("%s%n(no error output was captured)", cause.getMessage()), cause);
     }
 
-    @Override
-    public void executionFinished(int exitCode) {
-        var endTime = new Date();
-        var executionTime =
-                Duration.between(Instant.ofEpochMilli(startTime.getTime()), Instant.ofEpochMilli(endTime.getTime()));
-        consoleStream.println();
-        consoleStream.println(
-            ansi().a(ITALIC)
-                    .a("Process finished in ")
-                    .a(humanReadableFormat(executionTime))
-                    .a(" (at ")
-                    .a(endTime.toString())
-                    .a(")")
-                    .reset()
-                    .toString());
-
-        if (exitCode != 0) {
-            consoleStream.println(ansi().fgBrightBlack().a("Process exited with ").a(exitCode).reset().toString());
-        }
-    }
-
     MessageConsole findConsole(final String consoleName) {
         final var consoleManager = ConsolePlugin.getDefault().getConsoleManager();
         for (final IConsole existing : consoleManager.getConsoles()) {
@@ -162,15 +107,18 @@ public class EclipseConsoleStreamsProvider extends ProcessStreamsProvider {
         return consoleStream;
     }
 
-    private void showConsole(MessageConsole console) {
-        ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
+    @Override
+    protected void println() {
+        consoleStream.println();
     }
 
-    private String simpleQuoteForDisplayOnly(String arg) {
-        if (arg.indexOf(' ') > -1) {
-            return (arg.indexOf('\'') > -1) ? '"' + arg + '"' : "'" + arg + "'";
-        }
-        return arg;
+    @Override
+    protected void println(String line) {
+        consoleStream.println(line);
+    }
+
+    private void showConsole(MessageConsole console) {
+        ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
     }
 
 }

@@ -26,6 +26,7 @@ import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor;
+import com.salesforce.bazel.sdk.command.ProcessStreamsProvider;
 
 /**
  * Headless version initializing the Bazel binary from Eclipse preferences.
