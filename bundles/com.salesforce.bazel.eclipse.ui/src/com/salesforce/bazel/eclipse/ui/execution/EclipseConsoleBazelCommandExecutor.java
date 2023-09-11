@@ -9,6 +9,7 @@ import com.salesforce.bazel.eclipse.core.extensions.EclipseHeadlessBazelCommandE
 import com.salesforce.bazel.eclipse.ui.BazelUIPlugin;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.BazelCommandExecutor;
+import com.salesforce.bazel.sdk.command.ProcessStreamsProvider;
 
 /**
  * Implementation of a {@link BazelCommandExecutor} which integrates with the Eclipse Console.

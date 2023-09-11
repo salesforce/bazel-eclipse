@@ -290,7 +290,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
 
         // check for a workspace specific binary
         // note: this will trigger loading the project view
-        // but here hte project view is optional (we may be called without being projects)
+        // but here the project view is optional (we may be called without being projects)
         var projectViewLocation = getBazelProjectFileSystemMapper().getProjectViewLocation();
         if (isRegularFile(projectViewLocation.toPath())) {
             var workspaceBinary = getBazelProjectView().bazelBinary();

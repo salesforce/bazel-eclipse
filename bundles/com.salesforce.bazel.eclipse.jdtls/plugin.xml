@@ -28,6 +28,16 @@
          <command
                id="java.bazel.updateClasspaths">
          </command>
+         <command
+               id="java.bazel.connectProcessStreamSocket">
+         </command>
       </delegateCommandHandler>
+   </extension>
+   <extension
+         point="com.salesforce.bazel.eclipse.core.executor">
+      <commandExecutor
+            class="com.salesforce.bazel.eclipse.jdtls.execution.StreamingSocketBazelCommandExecutor"
+            priority="800">
+      </commandExecutor>
    </extension>
 </plugin>
