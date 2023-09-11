@@ -76,8 +76,7 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
         if (toolTagArgument != null) {
             return toolTagArgument;
         }
-        return this.cachedToolTagArgument =
-                format("--tool_tag=eclipse:headless:%s", BazelCorePlugin.getBundleVersion());
+        return this.cachedToolTagArgument = format("--tool_tag=eclipse:%s", BazelCorePlugin.getBundleVersion());
     }
 
     /**
