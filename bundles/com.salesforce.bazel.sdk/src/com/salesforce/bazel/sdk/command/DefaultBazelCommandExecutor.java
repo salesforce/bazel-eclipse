@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,14 +36,123 @@ import com.salesforce.bazel.sdk.util.SystemUtil;
  */
 public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
-    protected static record PreparedCommandLine(
+    /**
+     * A provider for process out and error streams.
+     * <p>
+     * Used by
+     * {@link DefaultBazelCommandExecutor#doExecuteProcess(BazelCommand, com.salesforce.bazel.sdk.command.BazelCommandExecutor.CancelationCallback, ProcessBuilder, PreparedCommandLine)}
+     * implementation to requests streams when necessary and print additional execution details.
+     * </p>
+     */
+    public static class ProcessStreamsProvider implements AutoCloseable {
+
+        /**
+         * Hook called when the process is about to be started.
+         * <p>
+         * Implementors can use this to collect/print additional details.
+         * </p>
+         */
+        public void beginExecution() {
+            // empty
+        }
+
+        /**
+         * Called by <code>try-with-resource</code> block to close/release any underlying streams.
+         * <p>
+         * Note, as the defaults in {@link #getErrorStream()} and {@link #getOutStream()} use streams which shouldn't be
+         * closed, the default implementation does nothing. Subclasses creating their own streams must override this
+         * method and close any resources.
+         * </p>
+         */
+        @Override
+        public void close() throws IOException {
+            // nothing to close, i.e. System.err and System.out remain open
+        }
+
+        /**
+         * Hook called when the process execution was canceled/aborted on user request.
+         * <p>
+         * Implementors can use this to collect/print additional details.
+         * </p>
+         */
+        public void executionCanceled() {
+            // empty
+        }
+
+        /**
+         * Hook called when the process execution failse.
+         * <p>
+         * Implementors can use this to collect/print additional details. They may also wrap/enrich the
+         * {@link IOException} and throw a more detailed one.
+         * </p>
+         *
+         * @param cause
+         *            the {@link IOException} to be thrown after this method returns
+         * @throws IOException
+         *             with additional information
+         */
+        public void executionFailed(IOException cause) throws IOException {
+            // empty
+        }
+
+        /**
+         * Hook called when the process execution finished.
+         * <p>
+         * Implementors can use this to collect/print additional details.
+         * </p>
+         *
+         * @param exitCode
+         *            the process exit code
+         */
+        public void executionFinished(int exitCode) {
+            // empty
+        }
+
+        /**
+         * Returns the output stream to be used for process <code>STDERR</code>.
+         * <p>
+         * Must return the same output stream instance every time.
+         * </p>
+         * <p>
+         * Note, the returned stream will never be closed by the caller. Implementors are responsible for closing when
+         * {@link #close()} is called.
+         * </p>
+         *
+         *
+         * @return the output stream to be used for process <code>STDERR</code>, defaults to {@link System#err}
+         */
+        public OutputStream getErrorStream() {
+            return System.err;
+        }
+
+        /**
+         * Returns the output stream to be used for process <code>STDOUT</code>.
+         * <p>
+         * Note, this method is only called when the command is <b>not</b> redirecting its output into a file.
+         * </p>
+         * <p>
+         * Must return the same output stream instance every time.
+         * </p>
+         * <p>
+         * Note, the returned stream will never be closed by the caller. Implementors are responsible for closing when
+         * {@link #close()} is called.
+         * </p>
+         *
+         * @return the output stream to be used for process <code>STDOUT</code>, defaults to {@link System#out}
+         */
+        public OutputStream getOutStream() {
+            return System.out;
+        }
+    }
+
+    public static record PreparedCommandLine(
             List<String> fullCommandLineWithOptionalShellWrappingAndBinary,
             List<String> commandLineForDisplayPurposes) {
     }
 
     private static Logger LOG = LoggerFactory.getLogger(DefaultBazelCommandExecutor.class);
-
     private static ThreadGroup pipesThreadGroup;
+    private static ProcessStreamsProvider SYSOUT_ERR_PROVIDER = new ProcessStreamsProvider();
 
     /**
      * This method is a workaround for https://github.com/salesforce/bazel-eclipse/issues/464.
@@ -124,56 +234,70 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
     protected <R> R doExecuteProcess(BazelCommand<R> command, CancelationCallback cancelationCallback,
             ProcessBuilder processBuilder, PreparedCommandLine commandLine) throws IOException {
-        // execute
-        final int result;
-        try {
-            var fullCommandLine = processBuilder.command().stream().collect(joining(" "));
-            LOG.debug(fullCommandLine);
-
-            // redirect standard out (otherwise we will pipe to System.out after starting the process)
-            if (command.getStdOutFile() != null) {
-                processBuilder.redirectOutput(command.getStdOutFile().toFile());
-            }
-
-            // start process
-            final var process = processBuilder.start();
-
-            // forward to console if not redirected to file
-            final var p1 = command.getStdOutFile() == null ? pipe(process.getInputStream(), System.out, fullCommandLine)
-                    : null;
-            final var p2 = pipe(process.getErrorStream(), getProcessErrorStream(), fullCommandLine);
-
+        try (var streamProvider = newProcessStreamProvider(command, commandLine)) {
+            // wrap execution into another try-catch to allow enriching the IOException when necessary
             try {
-                while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
-                    Thread.onSpinWait();
-                    if (cancelationCallback.isCanceled()) {
-                        process.destroyForcibly();
-                        throw new IOException("user cancelled");
-                    }
+                // call provider hook
+                streamProvider.beginExecution();
+
+                // log the command line
+                var fullCommandLine = processBuilder.command().stream().collect(joining(" "));
+                LOG.debug(fullCommandLine);
+
+                // redirect standard out (otherwise we will pipe to System.out after starting the process)
+                if (command.getStdOutFile() != null) {
+                    processBuilder.redirectOutput(command.getStdOutFile().toFile());
                 }
 
-                // wait for pipes to finish
-                if (p1 != null) {
-                    waitForPipeToFinish(p1, cancelationCallback);
+                // start process
+                final var process = processBuilder.start();
+
+                // forward to console if not redirected to file
+                final var p1 = command.getStdOutFile() == null
+                        ? pipe(process.getInputStream(), streamProvider.getOutStream(), fullCommandLine) : null;
+                final var p2 = pipe(process.getErrorStream(), streamProvider.getErrorStream(), fullCommandLine);
+
+                try {
+                    while (!process.waitFor(500L, TimeUnit.MILLISECONDS)) {
+                        Thread.onSpinWait();
+                        if (cancelationCallback.isCanceled()) {
+                            process.destroyForcibly();
+                            streamProvider.executionCanceled();
+                            throw new IOException("user cancelled");
+                        }
+                    }
+
+                    // wait for pipes to finish
+                    if (p1 != null) {
+                        waitForPipeToFinish(p1, cancelationCallback);
+                    }
+                    waitForPipeToFinish(p2, cancelationCallback);
+                } finally {
+                    // interrupt pipe threads so they'll die
+                    if (p1 != null) {
+                        p1.interrupt();
+                    }
+                    p2.interrupt();
                 }
-                waitForPipeToFinish(p2, cancelationCallback);
-            } finally {
-                // interrupt pipe threads so they'll die
-                if (p1 != null) {
-                    p1.interrupt();
-                }
-                p2.interrupt();
+
+                var result = process.exitValue();
+
+                // call provider hook
+                streamProvider.executionFinished(result);
+
+                // send result to command
+                return command.generateResult(result);
+            } catch (IOException e) {
+                streamProvider.executionFailed(e);
+                throw e;
             }
 
-            result = process.exitValue();
         } catch (final InterruptedException e) {
             // ignore, just reset interrupt flag
             Thread.currentThread().interrupt();
-            throw new IOException("Aborted waiting for result");
+            throw new OperationCanceledException("Aborted waiting for result");
         }
 
-        // send result to command
-        return command.generateResult(result);
     }
 
     @Override
@@ -207,18 +331,6 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
     public Map<String, String> getExtraEnv() {
         return extraEnv;
-    }
-
-    /**
-     * Hook for sub classes to use a different stream to which the process' STDERR output should go to.
-     * <p>
-     * Note, the stream will never be closed.
-     * </p>
-     *
-     * @return the stream for stderr, defaults to {@link System#err}
-     */
-    protected OutputStream getProcessErrorStream() {
-        return System.err;
     }
 
     protected ShellUtil getShellUtil() {
@@ -267,6 +379,29 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
     protected ProcessBuilder newProcessBuilder(List<String> commandLine) throws IOException {
         return new ProcessBuilder(commandLine);
+    }
+
+    /**
+     * Called by
+     * {@link #doExecuteProcess(BazelCommand, com.salesforce.bazel.sdk.command.BazelCommandExecutor.CancelationCallback, ProcessBuilder, PreparedCommandLine)}
+     * to create a new process stream provider.
+     * <p>
+     * The default implementation returns a static instance providing access to {@link System#out}/{@link System#err}.
+     * Subclasses may override to provide a more sophisticated implementation (eg., redirected output to an IDE built-in
+     * console).
+     * </p>
+     *
+     * @param command
+     *            the command to be executed
+     * @param commandLine
+     *            the command line
+     * @return the {@link ProcessStreamsProvider} instance (must not be <code>null</code>)
+     * @throws IOException
+     *             in case of errors creating/opening the underlying streams
+     */
+    protected ProcessStreamsProvider newProcessStreamProvider(BazelCommand<?> command, PreparedCommandLine commandLine)
+            throws IOException {
+        return SYSOUT_ERR_PROVIDER;
     }
 
     /**

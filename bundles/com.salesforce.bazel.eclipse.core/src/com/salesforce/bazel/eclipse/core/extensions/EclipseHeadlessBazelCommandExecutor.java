@@ -5,8 +5,10 @@ import static com.salesforce.bazel.eclipse.preferences.BazelCorePreferenceKeys.P
 import static com.salesforce.bazel.eclipse.preferences.BazelCorePreferenceKeys.PREF_KEY_USE_SHELL_ENVIRONMENT;
 import static java.lang.String.format;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
@@ -22,6 +24,7 @@ import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.preferences.BazelCorePreferenceKeys;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.command.BazelBinary;
+import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor;
 
 /**
@@ -31,6 +34,14 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
 
     static BazelBinary UNKNOWN_BAZEL_BINARY = new BazelBinary(Path.of("bazel"), new BazelVersion(999, 999, 999));
     static Logger LOG = LoggerFactory.getLogger(EclipseHeadlessBazelCommandExecutor.class);
+
+    private static ProcessStreamsProvider SYSOUT_PROVIDER = new ProcessStreamsProvider() {
+        @Override
+        public OutputStream getErrorStream() {
+            // assuming this is displayed in the Eclipse Console, using System.out avoids the red coloring
+            return System.out;
+        };
+    };
 
     private final IPreferenceChangeListener preferencesListener = event -> {
         if (PREF_KEY_BAZEL_BINARY.equalsIgnoreCase(event.getKey())) {
@@ -57,12 +68,6 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
 
     IEclipsePreferences getInstanceScopeNode() {
         return InstanceScope.INSTANCE.getNode(PLUGIN_ID);
-    }
-
-    @Override
-    protected OutputStream getProcessErrorStream() {
-        // assuming this is displayed in the Eclipse Console, using System.out avoids the red coloring
-        return System.out;
     }
 
     @Override
@@ -116,6 +121,18 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
         var defaultValue = !getSystemUtil().isWindows(); // mimic super-class default, which is *false* on Windows
         var value = Platform.getPreferencesService().get(PREF_KEY_USE_SHELL_ENVIRONMENT, null, preferencesLookup);
         setWrapExecutionIntoShell(value == null ? defaultValue : Boolean.valueOf(value).booleanValue());
+    }
+
+    @Override
+    protected ProcessBuilder newProcessBuilder(List<String> commandLine) throws IOException {
+        // TODO Auto-generated method stub
+        return super.newProcessBuilder(commandLine);
+    }
+
+    @Override
+    protected ProcessStreamsProvider newProcessStreamProvider(BazelCommand<?> command, PreparedCommandLine commandLine)
+            throws IOException {
+        return SYSOUT_PROVIDER;
     }
 
     /**
