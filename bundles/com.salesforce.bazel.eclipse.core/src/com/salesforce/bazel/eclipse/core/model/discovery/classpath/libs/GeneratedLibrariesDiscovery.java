@@ -109,7 +109,7 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
 
         for (String generatingRule : jarsByGeneratingRuleLabel.keySet()) {
             var bazelTarget = bazelWorkspace.getBazelTarget(new BazelLabel(generatingRule));
-            if (!bazelTarget.exists()) {
+            if (!bazelTarget.exists() || !bazelTarget.isVisibleToIde()) {
                 continue;
             }
 

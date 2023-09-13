@@ -1,5 +1,6 @@
 package com.salesforce.bazel.eclipse.core.model;
 
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.TAG_NO_IDE;
 import static com.salesforce.bazel.eclipse.core.model.BazelTargetInfo.findProject;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
 import com.google.idea.blaze.base.model.primitives.TargetName;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -179,5 +181,17 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
     public boolean hasTag(String tag) throws CoreException {
         var tags = getInfo().getRuleAttributes().getStringList("tags");
         return (tags != null) && tags.contains(tag);
+    }
+
+    /**
+     * @return <code>true</code> if the target does not have the {@value BazelCoreSharedContstants#TAG_NO_IDE} tag set,
+     *         <code>false</code> otherwise
+     */
+    public boolean isVisibleToIde() {
+        try {
+            return !hasTag(TAG_NO_IDE);
+        } catch (CoreException e) {
+            return true; // not visible
+        }
     }
 }

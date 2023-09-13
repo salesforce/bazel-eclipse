@@ -29,8 +29,6 @@ import com.salesforce.bazel.sdk.command.BazelQueryForPackagesCommand;
  */
 public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
 
-    private static final String TAG_NO_IDE = "no-ide";
-
     public static final String STRATEGY_NAME = "bazel-query";
 
     private static Logger LOG = LoggerFactory.getLogger(BazelQueryTargetDiscovery.class);
@@ -104,7 +102,7 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
                         bazelPackage.getLabel(),
                         bazelPackage.getBazelTargets());
                 }
-                bazelPackage.getBazelTargets().stream().filter(this::isVisibleToIde).forEach(targets::add);
+                bazelPackage.getBazelTargets().stream().filter(BazelTarget::isVisibleToIde).forEach(targets::add);
                 monitor.worked(1);
             }
 
@@ -148,14 +146,5 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
             return locationToCheck;
         }
         return findWorkspaceLocation(bazelWorkspace, packagePath.removeLastSegments(1));
-    }
-
-    private boolean isVisibleToIde(BazelTarget bazelTarget) {
-        try {
-            return !bazelTarget.hasTag(TAG_NO_IDE);
-        } catch (CoreException e) {
-            LOG.error("Error reading tags for target '{}': {}", bazelTarget, e.getMessage(), e);
-            return true;
-        }
     }
 }

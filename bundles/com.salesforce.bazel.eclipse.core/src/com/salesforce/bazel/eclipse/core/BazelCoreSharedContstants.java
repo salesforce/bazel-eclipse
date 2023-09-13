@@ -51,4 +51,7 @@ public interface BazelCoreSharedContstants {
     String RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID =
             "com.salesforce.bazel.eclipse.core.resources.filter.bazelOutputMatcher";
 
+    /** tag on targets when they are not supposed to show up in IDEs */
+    String TAG_NO_IDE = "no-ide";
+
 }
