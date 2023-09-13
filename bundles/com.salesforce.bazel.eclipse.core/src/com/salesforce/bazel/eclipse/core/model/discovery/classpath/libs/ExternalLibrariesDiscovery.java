@@ -112,7 +112,7 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
 
         // filter out "unpinned" repositories
         var setOfExternalsToQuery = externals.map(BazelRuleAttributes::getName)
-                .filter(s -> s.startsWith("unpinned_"))
+                .filter(s -> !s.startsWith("unpinned_"))
                 .map(s -> format("@%s//...", s))
                 .collect(joining(" "));
         if (setOfExternalsToQuery.isBlank()) {
