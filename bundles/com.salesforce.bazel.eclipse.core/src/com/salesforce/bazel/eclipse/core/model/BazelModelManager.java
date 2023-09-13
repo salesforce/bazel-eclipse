@@ -176,7 +176,8 @@ public class BazelModelManager implements BazelCoreSharedContstants {
         }
 
         // configure cache
-        BazelElementInfoCache.setInstance(new CaffeineBasedBazelElementInfoCache(10000000 /* is ten million enough?*/));
+        BazelElementInfoCache
+                .setInstance(new CaffeineBasedBazelElementInfoCache(100000000 /* is hundred million enough?*/));
 
         // ensure aspects are usable
         aspects = new IntellijAspects(stateLocation.append("intellij-aspects").toPath());
