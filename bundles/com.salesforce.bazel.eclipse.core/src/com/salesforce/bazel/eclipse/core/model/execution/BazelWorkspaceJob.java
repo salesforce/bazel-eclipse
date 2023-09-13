@@ -36,6 +36,8 @@ import com.salesforce.bazel.sdk.command.BazelCommandExecutor;
 
 class BazelWorkspaceJob<R> extends WorkspaceJob {
 
+    private static final int TASK_LENGTH_LIMIT = 72;
+
     private static Logger LOG = LoggerFactory.getLogger(BazelWorkspaceJob.class);
 
     private final BazelCommandExecutor executor;
@@ -71,7 +73,8 @@ class BazelWorkspaceJob<R> extends WorkspaceJob {
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
         // see https://github.com/eclipse-platform/eclipse.platform.ui/issues/1112 why we should limit the length on task name
-        var subMonitor = SubMonitor.convert(monitor, trim(command.toString(), 120), IProgressMonitor.UNKNOWN);
+        var subMonitor =
+                SubMonitor.convert(monitor, trim(command.toString(), TASK_LENGTH_LIMIT), IProgressMonitor.UNKNOWN);
         try {
             if (command.getPurpose() != null) {
                 subMonitor.subTask(command.getPurpose());
