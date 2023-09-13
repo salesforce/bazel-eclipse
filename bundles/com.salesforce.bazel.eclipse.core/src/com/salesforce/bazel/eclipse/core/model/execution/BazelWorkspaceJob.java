@@ -70,10 +70,9 @@ class BazelWorkspaceJob<R> extends WorkspaceJob {
 
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
-        var subMonitor = SubMonitor.convert(monitor);
+        // see https://github.com/eclipse-platform/eclipse.platform.ui/issues/1112 why we should limit the length on task name
+        var subMonitor = SubMonitor.convert(monitor, trim(command.toString(), 120), IProgressMonitor.UNKNOWN);
         try {
-            // see https://github.com/eclipse-platform/eclipse.platform.ui/issues/1112 why we should limit the length on task name
-            subMonitor.beginTask(trim(command.toString(), 120), IProgressMonitor.UNKNOWN);
             if (command.getPurpose() != null) {
                 subMonitor.subTask(command.getPurpose());
             }
