@@ -105,7 +105,7 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
                     .collect(toList()));
 
         // filter out java_binary targets and others developers cannot use typically as dependencies
-        Set<String> rulesToIgnore = Set.of("java_binary");
+        Set<String> rulesToIgnore = Set.of("java_binary", "java_test");
 
         for (String generatingRule : jarsByGeneratingRuleLabel.keySet()) {
             var bazelTarget = bazelWorkspace.getBazelTarget(new BazelLabel(generatingRule));
