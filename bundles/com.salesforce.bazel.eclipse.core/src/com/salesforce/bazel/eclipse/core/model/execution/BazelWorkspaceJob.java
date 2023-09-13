@@ -72,7 +72,11 @@ class BazelWorkspaceJob<R> extends WorkspaceJob {
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
         var subMonitor = SubMonitor.convert(monitor);
         try {
-            subMonitor.beginTask(command.toString(), IProgressMonitor.UNKNOWN);
+            // see https://github.com/eclipse-platform/eclipse.platform.ui/issues/1112 why we should limit the length on task name
+            subMonitor.beginTask(trim(command.toString(), 120), IProgressMonitor.UNKNOWN);
+            if (command.getPurpose() != null) {
+                subMonitor.subTask(command.getPurpose());
+            }
             var result = executor.execute(command, monitor::isCanceled);
             refreshResources(subMonitor.newChild(1));
             resultFuture.complete(result);
@@ -87,5 +91,13 @@ class BazelWorkspaceJob<R> extends WorkspaceJob {
             monitor.done();
         }
         return Status.OK_STATUS;
+    }
+
+    private String trim(String text, int length) {
+        if (text.length() <= length) {
+            return text;
+        }
+
+        return text.substring(0, length - 3) + "...";
     }
 }
