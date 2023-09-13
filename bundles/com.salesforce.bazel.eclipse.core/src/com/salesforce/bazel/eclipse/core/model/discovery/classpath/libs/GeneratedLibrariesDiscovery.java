@@ -15,7 +15,6 @@ package com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
@@ -41,7 +40,6 @@ import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.base.model.primitives.TargetName;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
-import com.salesforce.bazel.eclipse.core.model.BazelRuleAttributes;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder;
@@ -67,16 +65,12 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
 
     public Collection<ClasspathEntry> query(IProgressMonitor progress) throws CoreException {
 
-        var monitor = SubMonitor.convert(progress, "Quering Bazel..", 2);
+        var monitor = SubMonitor.convert(progress, "Quering Bazel..", 1);
         try {
             Set<ClasspathEntry> result = new LinkedHashSet<>();
 
             monitor.subTask("generated jars");
             queryForGeneratedJars(result);
-            monitor.checkCanceled();
-
-            monitor.subTask("rules_jvm_external");
-            queryForRulesJvmExternalJars(result);
             monitor.checkCanceled();
 
             return result;
@@ -99,6 +93,16 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
         Map<String, List<String>> jarsByGeneratingRuleLabel = generatedJarTargets.stream()
                 .map(Target::getGeneratedFile)
                 .collect(groupingBy(GeneratedFile::getGeneratingRule, mapping(GeneratedFile::getName, toList())));
+
+        // ensure all packages are open
+        bazelWorkspace.open(
+            jarsByGeneratingRuleLabel.keySet()
+                    .stream()
+                    .map(BazelLabel::new)
+                    .map(BazelLabel::getPackageLabel)
+                    .distinct()
+                    .map(bazelWorkspace::getBazelPackage)
+                    .collect(toList()));
 
         // filter out java_binary targets and others developers cannot use typically as dependencies
         Set<String> rulesToIgnore = Set.of("java_binary");
@@ -143,46 +147,6 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
             var origin = bazelTarget.getLabel().toPrimitive();
 
             collectJarsAsClasspathEntries(classpathJars, srcJar, testOnly, origin, result);
-        }
-    }
-
-    private void queryForRulesJvmExternalJars(Set<ClasspathEntry> result) throws CoreException {
-        // get list of all external repos (
-        Set<String> wantedRuleKinds = Set.of("coursier_fetch", "pinned_coursier_fetch"); // pinned is not always available
-        var externals = bazelWorkspace.getExternalRepositoriesByRuleClass(k -> wantedRuleKinds.contains(k));
-
-        // filter out "unpinned" repositories
-        var setOfExternalsToQuery = externals.map(BazelRuleAttributes::getName)
-                .filter(s -> s.startsWith("unpinned_"))
-                .map(s -> format("@%s//...", s))
-                .collect(joining(" "));
-        if (setOfExternalsToQuery.isBlank()) {
-            return;
-        }
-
-        // get jvm_import details from each external
-        var javaImportQuery = new BazelQueryForTargetProtoCommand(
-                workspaceRoot.directory(),
-                format("kind('jvm_import rule', set( %s ))", setOfExternalsToQuery),
-                false,
-                "Querying for rules_jvm_external library information");
-        Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
-
-        /*
-         * RJE (maven_install) consumes the jar from bazel-out/mnemonic/bin directory because it's generated
-         *
-         * We therefore prefix all locations from the rule to point to the bazel-bin/externals/... directory.
-         * This depends on internal implementation design of maven_install, which is ok at this time.
-         */
-
-        // parse info from each found target
-        for (Target target : javaImportTargets) {
-            var srcJar = findSingleJar(target.getRule(), "srcjar", true /* generated */);
-            var jars = findJars(target.getRule(), "jars", true /* generated */);
-            var testOnly = findBooleanAttribute(target.getRule(), "testonly");
-            var origin = Label.create(target.getRule().getName());
-
-            collectJarsAsClasspathEntries(jars, srcJar, testOnly, origin, result);
         }
     }
 }
