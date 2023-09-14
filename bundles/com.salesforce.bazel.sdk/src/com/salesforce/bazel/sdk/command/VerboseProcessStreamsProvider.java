@@ -92,6 +92,8 @@ public abstract class VerboseProcessStreamsProvider extends ProcessStreamsProvid
         if (exitCode != 0) {
             println(ansi().fgBrightBlack().a("Process exited with ").a(exitCode).reset().toString());
         }
+
+        println();
     }
 
     /**
