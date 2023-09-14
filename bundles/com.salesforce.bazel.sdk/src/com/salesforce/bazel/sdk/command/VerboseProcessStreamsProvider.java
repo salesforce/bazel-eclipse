@@ -9,7 +9,10 @@ import static org.fusesource.jansi.Ansi.Attribute.ITALIC;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor.PreparedCommandLine;
 
@@ -19,19 +22,25 @@ import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor.PreparedComm
 public abstract class VerboseProcessStreamsProvider extends ProcessStreamsProvider {
 
     protected static String humanReadableFormat(Duration duration) {
-        return duration.toString().substring(2).replaceAll("(\\d[HMS])(?!$)", "$1 ").toLowerCase();
+        return duration.truncatedTo(ChronoUnit.MILLIS)
+                .toString()
+                .substring(2)
+                .replaceAll("(\\d[HMS])(?!$)", "$1 ")
+                .toLowerCase();
     }
+
+    private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("EEE HH:mm:ss");
 
     protected final BazelCommand<?> command;
     protected final PreparedCommandLine commandLine;
+    private final Instant startInstant;
 
-    private final Date startTime;
+    private Instant endInstant;
 
     public VerboseProcessStreamsProvider(BazelCommand<?> command, PreparedCommandLine commandLine) {
         this.command = command;
         this.commandLine = commandLine;
-        startTime = new Date();
-
+        startInstant = Instant.now();
     }
 
     @Override
@@ -42,13 +51,22 @@ public abstract class VerboseProcessStreamsProvider extends ProcessStreamsProvid
 
         // print info about command
         var purpose = command.getPurpose() != null ? format(": %s", command.getPurpose()) : "";
-        println(ansi().a(ITALIC).a(startTime.toString()).a(purpose).reset().toString());
-        println(ansi().a(INTENSITY_BOLD).a("Running Command:").reset().toString());
         println(
-            " > " + commandLine.commandLineForDisplayPurposes()
-                    .stream()
-                    .map(this::simpleQuoteForDisplayOnly)
-                    .collect(joining(" ")));
+            ansi().a(ITALIC)
+                    .a(dateFormat.format(LocalDateTime.ofInstant(startInstant, ZoneId.systemDefault())))
+                    .a(INTENSITY_BOLD)
+                    .a(purpose)
+                    .reset()
+                    .toString());
+        println(
+            ansi().fgBlue()
+                    .a(
+                        "> " + commandLine.commandLineForDisplayPurposes()
+                                .stream()
+                                .map(this::simpleQuoteForDisplayOnly)
+                                .collect(joining(" ")))
+                    .reset()
+                    .toString());
         println();
     }
 
@@ -60,17 +78,14 @@ public abstract class VerboseProcessStreamsProvider extends ProcessStreamsProvid
 
     @Override
     public void executionFinished(int exitCode) {
-        var endTime = new Date();
-        var executionTime =
-                Duration.between(Instant.ofEpochMilli(startTime.getTime()), Instant.ofEpochMilli(endTime.getTime()));
+        endInstant = Instant.now();
+        var executionTime = Duration.between(startInstant, endInstant);
         println();
         println(
             ansi().a(ITALIC)
                     .a("Process finished in ")
+                    .a(INTENSITY_BOLD)
                     .a(humanReadableFormat(executionTime))
-                    .a(" (at ")
-                    .a(endTime.toString())
-                    .a(")")
                     .reset()
                     .toString());
 
