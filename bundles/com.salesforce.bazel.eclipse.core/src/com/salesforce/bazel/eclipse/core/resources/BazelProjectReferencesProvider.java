@@ -28,11 +28,13 @@ public class BazelProjectReferencesProvider implements IDynamicReferenceProvider
                 // each non-workspace project automatically depends on its workspace project
                 // (this is to ensure it's always available)
 
-                // note, due to https://github.com/eclipse-platform/eclipse.platform.ui/issues/1062 we create the project ourselves when not loaded
                 var bazelWorkspace = bazelProject.getBazelWorkspace();
                 if (bazelWorkspace.hasInfo()) {
+                    // workspace is loaded use the model to lookup project
                     return List.of(bazelWorkspace.getBazelProject().getProject());
                 }
+
+                // note, due to https://github.com/eclipse-platform/eclipse.platform.ui/issues/1062 we create the project ourselves when not loaded
                 var containers = project.getWorkspace()
                         .getRoot()
                         .findContainersForLocationURI(bazelWorkspace.getLocation().toPath().toUri());
