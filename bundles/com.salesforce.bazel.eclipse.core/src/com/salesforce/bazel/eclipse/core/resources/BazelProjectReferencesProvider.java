@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.core.resources.IBuildConfiguration;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IDynamicReferenceProvider;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -26,7 +27,20 @@ public class BazelProjectReferencesProvider implements IDynamicReferenceProvider
             if (!bazelProject.isWorkspaceProject()) {
                 // each non-workspace project automatically depends on its workspace project
                 // (this is to ensure it's always available)
-                return List.of(bazelProject.getBazelWorkspace().getBazelProject().getProject());
+
+                // note, due to https://github.com/eclipse-platform/eclipse.platform.ui/issues/1062 we create the project ourselves when not loaded
+                var bazelWorkspace = bazelProject.getBazelWorkspace();
+                if (bazelWorkspace.hasInfo()) {
+                    return List.of(bazelWorkspace.getBazelProject().getProject());
+                }
+                var containers = project.getWorkspace()
+                        .getRoot()
+                        .findContainersForLocationURI(bazelWorkspace.getLocation().toPath().toUri());
+                for (IContainer container : containers) {
+                    if (container instanceof IProject workspaceProject) {
+                        return List.of(workspaceProject);
+                    }
+                }
             }
         }
         return Collections.emptyList();
