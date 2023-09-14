@@ -40,6 +40,7 @@ public class LibrariesDiscoveryUtil {
     protected Path outputBase;
 
     private boolean foundMissingJars;
+    private boolean foundMissingSrcJars;
 
     public LibrariesDiscoveryUtil(BazelWorkspace bazelWorkspace) throws CoreException {
         this.bazelWorkspace = bazelWorkspace;
@@ -79,6 +80,10 @@ public class LibrariesDiscoveryUtil {
                         classpath.getExtraAttributes().put(IClasspathAttribute.TEST, Boolean.TRUE.toString());
                     }
                     classpath.setBazelTargetOrigin(origin);
+                    if ((classpath.getSourceAttachmentPath() != null)
+                            && !isRegularFile(classpath.getSourceAttachmentPath().toPath())) {
+                        foundMissingSrcJars = true;
+                    }
                     result.add(classpath);
                 } else {
                     foundMissingJars = true;
@@ -223,11 +228,19 @@ public class LibrariesDiscoveryUtil {
     }
 
     /**
-     * @return <code>true</code> if there jars were omitted from the result because they cannot be found locally
+     * @return <code>true</code> if jars were omitted from the result because they cannot be found locally
      *         (<code>false</code> otherwise)
      */
     public boolean isFoundMissingJars() {
         return foundMissingJars;
+    }
+
+    /**
+     * @return <code>true</code> if source jars were discovered which cannot be found locally (<code>false</code>
+     *         otherwise)
+     */
+    public boolean isFoundMissingSrcJars() {
+        return foundMissingSrcJars;
     }
 
     protected ArtifactLocation jarLabelToArtifactLocation(String jar, boolean isGenerated) {

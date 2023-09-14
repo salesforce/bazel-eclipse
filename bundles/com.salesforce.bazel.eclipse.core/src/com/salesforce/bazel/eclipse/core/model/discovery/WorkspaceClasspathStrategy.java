@@ -82,6 +82,12 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
                     WORKSPACE_BUILDPATH_PROBLEM_MARKER,
                     Status.warning(
                         "Some generated jars were ommitted from the classpath because they don't exist locally. Consider runing 'bazel build //...' to build any missing library."));
+            } else if (generatedLibrariesDiscovery.isFoundMissingSrcJars()) {
+                createMarker(
+                    workspaceProject.getProject(),
+                    WORKSPACE_BUILDPATH_PROBLEM_MARKER,
+                    Status.warning(
+                        "Some source jars are missing. Bazel does not build them by default. Consider runing 'bazel build  --output_groups=+_source_jars //...' to build any missing source jar."));
             }
 
             return result;
