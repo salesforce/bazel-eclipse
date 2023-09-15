@@ -71,6 +71,17 @@ public class BazelClasspathContainerRuntimeResolver
         return false;
     }
 
+    private void populateWithSavedContainer(IJavaProject project, List<IRuntimeClasspathEntry> result)
+            throws CoreException {
+        var bazelContainer = getClasspathManager().getSavedContainer(project.getProject());
+        if (bazelContainer != null) {
+            var entries = bazelContainer.getClasspathEntries();
+            for (IClasspathEntry e : entries) {
+                result.add(new RuntimeClasspathEntry(e));
+            }
+        }
+    }
+
     private Label readTargetLabel(LocalFileOutputArtifact localJar) {
         try (var jarFile = new BazelJarFile(localJar.getPath())) {
             return jarFile.getTargetLabel();
@@ -92,18 +103,14 @@ public class BazelClasspathContainerRuntimeResolver
             return new IRuntimeClasspathEntry[0];
         }
 
+        List<IRuntimeClasspathEntry> result = new ArrayList<>();
+
+        // try the saved container
+        // this is usually ok because we no longer use the ijars on project classpaths
+        populateWithSavedContainer(project, result);
+
         var bazelProject = BazelCore.create(project.getProject());
         if (bazelProject.isWorkspaceProject()) {
-            List<IRuntimeClasspathEntry> result = new ArrayList<>();
-
-            // try the saved container
-            var bazelContainer = getClasspathManager().getSavedContainer(project.getProject());
-            if (bazelContainer != null) {
-                var entries = bazelContainer.getClasspathEntries();
-                for (IClasspathEntry e : entries) {
-                    result.add(new RuntimeClasspathEntry(e));
-                }
-            }
 
             // include all projects ( ... this is odd because the projects should cause cyclic dependencies)
             var bazelProjects = bazelProject.getBazelWorkspace().getBazelProjects();
@@ -114,9 +121,32 @@ public class BazelClasspathContainerRuntimeResolver
                 }
             }
 
-            return result.toArray(new IRuntimeClasspathEntry[result.size()]);
+        } else if (result.isEmpty()) {
+
+            // query Bazel for runtime jars
+            runBazelBuildWithIntelliJAspectsForCollectingRuntimeJars(bazelProject, result);
         }
 
+        return result.toArray(new IRuntimeClasspathEntry[result.size()]);
+    }
+
+    @Override
+    public IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry entry,
+            ILaunchConfiguration configuration) throws CoreException {
+        if ((entry == null) || (entry.getJavaProject() == null)) {
+            return new IRuntimeClasspathEntry[0];
+        }
+
+        return resolveRuntimeClasspathEntry(entry, entry.getJavaProject());
+    }
+
+    @Override
+    public IVMInstall resolveVMInstall(IClasspathEntry entry) throws CoreException {
+        return null;
+    }
+
+    private void runBazelBuildWithIntelliJAspectsForCollectingRuntimeJars(BazelProject bazelProject,
+            List<IRuntimeClasspathEntry> result) throws CoreException {
         var bazelWorkspace = bazelProject.getBazelWorkspace();
 
         // get list of targets from project
@@ -142,7 +172,6 @@ public class BazelClasspathContainerRuntimeResolver
                 .runWithWorkspaceLock(command, getBuildRule(), Collections.emptyList());
         var aspectsInfo = new JavaAspectsInfo(bepOutput, bazelWorkspace);
         var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, bazelWorkspace);
-        List<IRuntimeClasspathEntry> result = new ArrayList<>();
         for (OutputArtifact jar : bepOutput
                 .getOutputGroupArtifacts(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH)) {
             if (jar instanceof LocalFileOutputArtifact localJar) {
@@ -160,23 +189,6 @@ public class BazelClasspathContainerRuntimeResolver
                             JavaCore.newLibraryEntry(IPath.fromPath(localJar.getPath()), srcJarLocation, null)));
             }
         }
-
-        return result.toArray(new IRuntimeClasspathEntry[result.size()]);
-    }
-
-    @Override
-    public IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry entry,
-            ILaunchConfiguration configuration) throws CoreException {
-        if ((entry == null) || (entry.getJavaProject() == null)) {
-            return new IRuntimeClasspathEntry[0];
-        }
-
-        return resolveRuntimeClasspathEntry(entry, entry.getJavaProject());
-    }
-
-    @Override
-    public IVMInstall resolveVMInstall(IClasspathEntry entry) throws CoreException {
-        return null;
     }
 
 }
