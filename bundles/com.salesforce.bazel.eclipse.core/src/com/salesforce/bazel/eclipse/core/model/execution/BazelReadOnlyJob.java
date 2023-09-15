@@ -35,7 +35,7 @@ class BazelReadOnlyJob<R> extends Job {
 
     public BazelReadOnlyJob(BazelCommandExecutor executor, BazelCommand<R> command, JobGroup jobGroup,
             CompletableFuture<R> resultFuture) {
-        super(command.toString());
+        super(getTaskName(command));
         this.executor = executor;
         this.command = command;
         this.resultFuture = resultFuture;
@@ -48,6 +48,9 @@ class BazelReadOnlyJob<R> extends Job {
     protected IStatus run(IProgressMonitor monitor) {
         try {
             monitor.beginTask(getTaskName(command), IProgressMonitor.UNKNOWN);
+            if (command.getPurpose() != null) {
+                monitor.subTask(command.getPurpose());
+            }
             var result = executor.execute(command, monitor::isCanceled);
             resultFuture.complete(result);
         } catch (RuntimeException | IOException e) {

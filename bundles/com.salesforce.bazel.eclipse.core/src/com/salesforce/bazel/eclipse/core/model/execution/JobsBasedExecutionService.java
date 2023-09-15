@@ -70,6 +70,9 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
         ResourcesPlugin.getWorkspace().run(pm -> {
             var monitor = SubMonitor.convert(pm, getTaskName(command), IProgressMonitor.UNKNOWN);
             try {
+                if (command.getPurpose() != null) {
+                    monitor.subTask(command.getPurpose());
+                }
                 result.set(executor.execute(command, pm::isCanceled));
             } catch (IOException e) {
                 throw new CoreException(Status.error("Error executing command: " + e.getMessage(), e));

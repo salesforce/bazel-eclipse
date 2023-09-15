@@ -47,7 +47,7 @@ class BazelWorkspaceJob<R> extends WorkspaceJob {
 
     public BazelWorkspaceJob(BazelCommandExecutor executor, BazelCommand<R> command, JobGroup jobGroup,
             ISchedulingRule rule, List<IResource> resourcesToRefresh, CompletableFuture<R> resultFuture) {
-        super(command.toString());
+        super(getTaskName(command));
         this.executor = executor;
         this.command = command;
         this.resourcesToRefresh = resourcesToRefresh;
