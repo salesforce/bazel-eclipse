@@ -91,17 +91,19 @@ public class BazelClasspathContainerRuntimeResolver
             return new IRuntimeClasspathEntry[0];
         }
 
-        //        var bazelContainer = getClasspathManager().getSavedContainer(project.getProject());
-        //        if (bazelContainer != null) {
-        //            JavaCore.setClasspathContainer(
-        //                containerPath,
-        //                new IJavaProject[] { project },
-        //                new IClasspathContainer[] { bazelContainer },
-        //                new NullProgressMonitor());
-        //        }
-
         var bazelProject = BazelCore.create(project.getProject());
         if (bazelProject.isWorkspaceProject()) {
+            // try the saved container
+            var bazelContainer = getClasspathManager().getSavedContainer(project.getProject());
+            if (bazelContainer != null) {
+                var entries = bazelContainer.getClasspathEntries();
+                List<IRuntimeClasspathEntry> result = new ArrayList<>(entries.length);
+                for (IClasspathEntry e : entries) {
+                    result.add(new RuntimeClasspathEntry(e));
+                }
+                return result.toArray(new IRuntimeClasspathEntry[result.size()]);
+            }
+
             // no runtime classpath here
             return new IRuntimeClasspathEntry[0];
         }
