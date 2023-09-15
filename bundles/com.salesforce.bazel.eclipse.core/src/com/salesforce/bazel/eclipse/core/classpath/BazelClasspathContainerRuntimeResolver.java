@@ -30,6 +30,7 @@ import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
 import com.google.idea.blaze.base.model.primitives.Label;
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaAspectsClasspathInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaAspectsInfo;
@@ -93,19 +94,27 @@ public class BazelClasspathContainerRuntimeResolver
 
         var bazelProject = BazelCore.create(project.getProject());
         if (bazelProject.isWorkspaceProject()) {
+            List<IRuntimeClasspathEntry> result = new ArrayList<>();
+
             // try the saved container
             var bazelContainer = getClasspathManager().getSavedContainer(project.getProject());
             if (bazelContainer != null) {
                 var entries = bazelContainer.getClasspathEntries();
-                List<IRuntimeClasspathEntry> result = new ArrayList<>(entries.length);
                 for (IClasspathEntry e : entries) {
                     result.add(new RuntimeClasspathEntry(e));
                 }
-                return result.toArray(new IRuntimeClasspathEntry[result.size()]);
             }
 
-            // no runtime classpath here
-            return new IRuntimeClasspathEntry[0];
+            // include all projects ( ... this is odd because the projects should cause cyclic dependencies)
+            var bazelProjects = bazelProject.getBazelWorkspace().getBazelProjects();
+            for (BazelProject sourceProject : bazelProjects) {
+                if (!sourceProject.isWorkspaceProject()) {
+                    result.add(
+                        new RuntimeClasspathEntry(JavaCore.newProjectEntry(sourceProject.getProject().getFullPath())));
+                }
+            }
+
+            return result.toArray(new IRuntimeClasspathEntry[result.size()]);
         }
 
         var bazelWorkspace = bazelProject.getBazelWorkspace();
