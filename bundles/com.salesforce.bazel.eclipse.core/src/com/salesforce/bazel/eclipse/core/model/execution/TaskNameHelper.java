@@ -8,7 +8,7 @@ import com.salesforce.bazel.sdk.command.BazelCommand;
  */
 class TaskNameHelper {
 
-    static final int TASK_LENGTH_LIMIT = 72;
+    static final int TASK_LENGTH_LIMIT = 120;
 
     static String getTaskName(BazelCommand<?> command) {
         var taskName = command.toString();
