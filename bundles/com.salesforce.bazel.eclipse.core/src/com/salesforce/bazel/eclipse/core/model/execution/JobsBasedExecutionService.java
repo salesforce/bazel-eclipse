@@ -13,6 +13,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model.execution;
 
+import static com.salesforce.bazel.eclipse.core.model.execution.TaskNameHelper.getTaskName;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
 import java.io.IOException;
@@ -67,9 +68,8 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
             List<IResource> resourcesToRefresh, IProgressMonitor progress) throws CoreException {
         var result = new AtomicReference<R>();
         ResourcesPlugin.getWorkspace().run(pm -> {
-            var monitor = SubMonitor.convert(pm);
+            var monitor = SubMonitor.convert(pm, getTaskName(command), IProgressMonitor.UNKNOWN);
             try {
-                monitor.beginTask(command.toString(), IProgressMonitor.UNKNOWN);
                 result.set(executor.execute(command, pm::isCanceled));
             } catch (IOException e) {
                 throw new CoreException(Status.error("Error executing command: " + e.getMessage(), e));
@@ -112,7 +112,6 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
     }
 
     void refreshResources(List<IResource> resourcesToRefresh, SubMonitor monitor) {
-        monitor.beginTask("Refreshing resources", resourcesToRefresh.size());
         for (IResource resource : resourcesToRefresh) {
             try {
                 resource.refreshLocal(IResource.DEPTH_INFINITE, monitor.split(1, SUPPRESS_NONE));

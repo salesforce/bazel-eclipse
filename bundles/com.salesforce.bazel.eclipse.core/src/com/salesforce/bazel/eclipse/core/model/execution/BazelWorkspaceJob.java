@@ -13,6 +13,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model.execution;
 
+import static com.salesforce.bazel.eclipse.core.model.execution.TaskNameHelper.getTaskName;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
@@ -36,13 +37,12 @@ import com.salesforce.bazel.sdk.command.BazelCommandExecutor;
 
 class BazelWorkspaceJob<R> extends WorkspaceJob {
 
-    private static final int TASK_LENGTH_LIMIT = 72;
-
     private static Logger LOG = LoggerFactory.getLogger(BazelWorkspaceJob.class);
 
     private final BazelCommandExecutor executor;
     private final BazelCommand<R> command;
     private final CompletableFuture<R> resultFuture;
+
     private final List<IResource> resourcesToRefresh;
 
     public BazelWorkspaceJob(BazelCommandExecutor executor, BazelCommand<R> command, JobGroup jobGroup,
@@ -72,9 +72,7 @@ class BazelWorkspaceJob<R> extends WorkspaceJob {
 
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
-        // see https://github.com/eclipse-platform/eclipse.platform.ui/issues/1112 why we should limit the length on task name
-        var subMonitor =
-                SubMonitor.convert(monitor, trim(command.toString(), TASK_LENGTH_LIMIT), IProgressMonitor.UNKNOWN);
+        var subMonitor = SubMonitor.convert(monitor, getTaskName(command), IProgressMonitor.UNKNOWN);
         try {
             if (command.getPurpose() != null) {
                 subMonitor.subTask(command.getPurpose());
@@ -93,13 +91,5 @@ class BazelWorkspaceJob<R> extends WorkspaceJob {
             monitor.done();
         }
         return Status.OK_STATUS;
-    }
-
-    private String trim(String text, int length) {
-        if (text.length() <= length) {
-            return text;
-        }
-
-        return text.substring(0, length - 3) + "...";
     }
 }

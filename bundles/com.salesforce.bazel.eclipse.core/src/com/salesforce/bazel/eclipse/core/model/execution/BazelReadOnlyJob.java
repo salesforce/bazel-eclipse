@@ -13,6 +13,8 @@
  */
 package com.salesforce.bazel.eclipse.core.model.execution;
 
+import static com.salesforce.bazel.eclipse.core.model.execution.TaskNameHelper.getTaskName;
+
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
@@ -45,7 +47,7 @@ class BazelReadOnlyJob<R> extends Job {
     @Override
     protected IStatus run(IProgressMonitor monitor) {
         try {
-            monitor.beginTask(command.toString(), IProgressMonitor.UNKNOWN);
+            monitor.beginTask(getTaskName(command), IProgressMonitor.UNKNOWN);
             var result = executor.execute(command, monitor::isCanceled);
             resultFuture.complete(result);
         } catch (RuntimeException | IOException e) {
