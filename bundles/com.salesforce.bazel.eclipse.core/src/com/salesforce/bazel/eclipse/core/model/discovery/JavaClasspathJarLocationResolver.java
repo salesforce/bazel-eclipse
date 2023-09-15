@@ -87,7 +87,8 @@ public class JavaClasspathJarLocationResolver {
      * @return the classpath entry (maybe <code>null</code> in case resolution is not possible)
      */
     public ClasspathEntry resolveJar(LibraryArtifact jar) {
-        var jarArtifactForIde = jar.jarForIntellijLibrary();
+        // prefer the class jar because this is much better in Eclipse when debugging/stepping through code/code navigation/etc.
+        var jarArtifactForIde = jar.getClassJar() != null ? jar.getClassJar() : jar.jarForIntellijLibrary();
         if (jarArtifactForIde.isMainWorkspaceSourceArtifact()) {
             IPath jarPath = new Path(locationDecoder.resolveSource(jarArtifactForIde).toString());
             var sourceJar = jar.getSourceJars().stream().findFirst();
