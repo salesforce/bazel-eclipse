@@ -5,11 +5,16 @@ import java.net.Socket;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.salesforce.bazel.eclipse.core.extensions.EclipseHeadlessBazelCommandExecutor;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.ProcessStreamsProvider;
 
 public class StreamingSocketBazelCommandExecutor extends EclipseHeadlessBazelCommandExecutor {
+
+    private static Logger LOG = LoggerFactory.getLogger(StreamingSocketBazelCommandExecutor.class);
 
     private static volatile Supplier<Integer> localPortHostSupplier;
 
@@ -34,6 +39,7 @@ public class StreamingSocketBazelCommandExecutor extends EclipseHeadlessBazelCom
         if (supplier != null) {
             var port = supplier.get();
             if (port != null) {
+                LOG.info("> {} (>>> locahost:{})", command.toString(), port);
                 var socket = new Socket("localhost", port);
                 return new SocketStreamProvider(socket, command, commandLine);
             }

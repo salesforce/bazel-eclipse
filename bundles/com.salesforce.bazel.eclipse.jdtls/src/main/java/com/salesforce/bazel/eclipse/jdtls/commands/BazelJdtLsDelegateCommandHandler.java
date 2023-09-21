@@ -3,6 +3,8 @@
  */
 package com.salesforce.bazel.eclipse.jdtls.commands;
 
+import static org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin.logInfo;
+
 import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
@@ -62,8 +64,10 @@ public class BazelJdtLsDelegateCommandHandler implements IDelegateCommandHandler
                     if ((port > 0) && (port < 65535)) {
                         Integer staticPort = port;
                         StreamingSocketBazelCommandExecutor.setLocalPortHostSupplier(() -> staticPort);
+                        logInfo("Enabled Bazel command output streaming to port: " + port);
                     } else {
                         StreamingSocketBazelCommandExecutor.setLocalPortHostSupplier(null);
+                        logInfo("Disabled Bazel command output streaming");
                     }
                 default:
                     break;
