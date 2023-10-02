@@ -15,10 +15,8 @@
 package com.salesforce.bazel.eclipse.ui.wizards;
 
 import static java.lang.String.format;
-import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
-import static java.nio.file.Files.writeString;
 import static org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil.setHorizontalGrabbing;
 import static org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil.setWidthHint;
 import static org.eclipse.jface.dialogs.Dialog.applyDialogFont;
@@ -41,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
+import com.salesforce.bazel.eclipse.core.setup.DefaultProjectViewFileInitializer;
 
 /**
  * Class that sets up the UI for the Bazel Import Workspace wizard.
@@ -160,20 +159,8 @@ public class BazelImportWizardMainPage extends WizardPage {
             var projectViewLocation = bazelWorkspace.getBazelProjectFileSystemMapper().getProjectViewLocation();
             if (!isRegularFile(projectViewLocation.toPath())) {
                 try {
-                    createDirectories(projectViewLocation.toPath().getParent());
-                    writeString(projectViewLocation.toPath(), """
-                            # The project view file (.bazelproject) is used to import targets into the IDE.
-                            #
-                            # See: https://ij.bazel.build/docs/project-views.html
-                            #
-                            # This files provides a default experience for developers working with the project.
-                            # You should customize it to suite your needs.
-
-                            directories:
-                              .
-
-                            derive_targets_from_directories: true
-                            """);
+                    new DefaultProjectViewFileInitializer(bazelWorkspace.getLocation().toPath())
+                            .create(projectViewLocation.toPath());
                 } catch (IOException e) {
                     LOG.error(
                         "Error creating default project view at '{}': {}",

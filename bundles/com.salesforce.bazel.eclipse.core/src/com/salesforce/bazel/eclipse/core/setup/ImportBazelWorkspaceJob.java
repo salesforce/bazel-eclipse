@@ -1,5 +1,15 @@
 /*-
+ * Copyright (c) 2023 Salesforce and others.
  *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *      Salesforce - initial implementation
  */
 package com.salesforce.bazel.eclipse.core.setup;
 
@@ -36,8 +46,7 @@ public class ImportBazelWorkspaceJob extends WorkspaceJob {
     /**
      * default .bazelproject file for Bazel Eclipse users (gets imported always prior to the actual .bazelproject file)
      */
-    private static final IPath ECLIPSE_DEFAULTS_PROJECTVIEW =
-            IPath.forPosix("tools/eclipse/.managed-defaults.bazelproject");
+    static final IPath ECLIPSE_DEFAULTS_PROJECTVIEW = IPath.forPosix("tools/eclipse/.managed-defaults.bazelproject");
 
     private static Logger LOG = LoggerFactory.getLogger(ImportBazelWorkspaceJob.class);
 
@@ -98,6 +107,7 @@ public class ImportBazelWorkspaceJob extends WorkspaceJob {
             }
 
             List<String> lines = new ArrayList<>();
+
             // import default if exists
             var eclipseDefaults = workspace.getLocation().append(ECLIPSE_DEFAULTS_PROJECTVIEW).toPath();
             if (isRegularFile(eclipseDefaults)) {

@@ -18,7 +18,6 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_
 import static com.salesforce.bazel.eclipse.core.model.BazelWorkspace.WORKSPACE_BOUNDARY_FILES;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
-import static java.nio.file.Files.writeString;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -40,6 +39,7 @@ import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.core.setup.DefaultProjectViewFileInitializer;
 import com.salesforce.bazel.eclipse.core.setup.ImportBazelWorkspaceJob;
 
 /**
@@ -51,8 +51,6 @@ import com.salesforce.bazel.eclipse.core.setup.ImportBazelWorkspaceJob;
  */
 @SuppressWarnings("restriction")
 public final class BazelProjectImporter extends AbstractProjectImporter {
-
-    private static final String BAZELPROJECT = ".bazelproject";
 
     @Override
     public boolean applies(Collection<IPath> projectConfigurations, IProgressMonitor monitor)
@@ -106,36 +104,11 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
             return projectViewLocation;
         }
 
-        // check of a managed "tools/intellij/.managed.bazelproject" file
-        // (hard coded in Bazel IJ plug-in: https://github.com/bazelbuild/intellij/blob/bb96b4142c2d257425da2dbf7bab0e8cdb400662/base/src/com/google/idea/blaze/base/project/AutoImportProjectOpenProcessor.java#L54)
-        // note: we intentionally do not support the ENV variable; scripts/automation should create .eclipse/.bazelproject file instead
-        projectViewLocation = workspace.getLocation().append("tools/intellij/.managed.bazelproject");
-        if (isRegularFile(projectViewLocation.toPath())) {
-            return projectViewLocation;
-        }
-
-        // check for a default ".bazelproject" file in the workspace root
-        projectViewLocation = workspace.getLocation().append(BAZELPROJECT);
-        if (isRegularFile(projectViewLocation.toPath())) {
-            return projectViewLocation;
-        }
-
-        // create an empty one in the workspace root
+        // create a default one
         JavaLanguageServerPlugin.logInfo("No .bazelproject file found. Generating a default one.");
         try {
-            writeString(projectViewLocation.toPath(), """
-                    # The project view file (.bazelproject) is used to import targets into the IDE.
-                    #
-                    # See: https://ij.bazel.build/docs/project-views.html
-                    #
-                    # This files provides a default experience for developers working with the project.
-                    # You should customize it to suite your needs.
-
-                    directories:
-                      .
-
-                    derive_targets_from_directories: true
-                    """);
+            new DefaultProjectViewFileInitializer(workspace.getLocation().toPath())
+                    .create(projectViewLocation.toPath());
         } catch (IOException e) {
             throw new CoreException(
                     Status.error(format("Unable to create default project view at '%s'", projectViewLocation), e));
