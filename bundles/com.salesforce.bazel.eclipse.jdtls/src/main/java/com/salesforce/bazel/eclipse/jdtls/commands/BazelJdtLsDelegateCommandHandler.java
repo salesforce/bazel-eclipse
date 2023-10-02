@@ -65,9 +65,11 @@ public class BazelJdtLsDelegateCommandHandler implements IDelegateCommandHandler
                         Integer staticPort = port;
                         StreamingSocketBazelCommandExecutor.setLocalPortHostSupplier(() -> staticPort);
                         logInfo("Enabled Bazel command output streaming to port: " + port);
+                        return Boolean.TRUE;
                     } else {
                         StreamingSocketBazelCommandExecutor.setLocalPortHostSupplier(null);
                         logInfo("Disabled Bazel command output streaming");
+                        return Boolean.FALSE;
                     }
                 default:
                     break;
