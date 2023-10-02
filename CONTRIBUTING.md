@@ -70,6 +70,23 @@ Note, the shell script requires a working Git and Bazel binary in the `PATH`.
 On MacOS, GNU Tar (`gtar`) is needed as well.
 
 
+## Debugging
+
+A common development task is debugging the Bazel Eclipse Feature code.
+In Eclipse this is done using Debug configurations.
+For creating a new Debug configuration use the following steps.
+
+- Go to *Run > Debug Configurations...* (top level menu or toolbar icon)
+- Right click on *Eclipse Application* and select *New Configuration*
+- Give it a name: *Bazel Eclipse*
+- Leave everything as default and click *Debug*
+
+This should open a second window of Eclipse.
+Use the second instance to import a Bazel workspace and test the Bazel Eclipse Feature.
+Continue using the first instance with the Bazel Eclipse Feature code for setting breakpoints, etc.
+This is called self-hosting.
+
+
 ## CI
 
 We use [GitHub Actions](https://github.com/salesforce/bazel-eclipse/actions) for our CI system.
