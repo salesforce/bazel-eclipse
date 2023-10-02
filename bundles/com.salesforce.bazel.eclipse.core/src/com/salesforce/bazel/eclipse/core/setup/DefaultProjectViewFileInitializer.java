@@ -75,7 +75,7 @@ public class DefaultProjectViewFileInitializer {
             lines.add("");
             lines.addAll(readAllLines(templateFile));
         } else {
-            lines.add("""
+            lines.addAll(List.of("""
                     # The project view file (.bazelproject) is used to import targets into the IDE.
                     #
                     # See: https://ij.bazel.build/docs/project-views.html
@@ -87,7 +87,7 @@ public class DefaultProjectViewFileInitializer {
                       .  # import everything (remove the dot if this is too much)
 
                     derive_targets_from_directories: true
-                    """);
+                    """.split("\n")));
         }
 
         writeString(
