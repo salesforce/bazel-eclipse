@@ -247,7 +247,7 @@ public class BazelImportWizardProjectViewPage extends WizardPage {
             }
         }
         for (WorkspacePath target : projectView.directoriesToExclude()) {
-            info.append("  ").append(target).append(System.lineSeparator());
+            info.append("  -").append(target).append(System.lineSeparator());
         }
         return info;
     }
