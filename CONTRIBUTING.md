@@ -60,6 +60,15 @@ Once done everything should build.
 
 :fire: If you see errors at this point, please [search/see discussions for help](https://github.com/salesforce/bazel-eclipse/discussions/categories/q-a).
 
+**Import IntelliJ Aspects**
+
+- In Eclipse main meny select to *Run > External Tools > Import InteliJ Aspects*
+
+This will download the IntelliJ Aspects and puts them into a ZIP file for use.
+We don't distribute them in our source control.
+Note, the shell script requires a working Git and Bazel binary in the `PATH`.
+On MacOS, GNU Tar (`gtar`) is needed as well.
+
 
 ## CI
 
