@@ -187,7 +187,7 @@
                 label="Bazel">
              <command
                    commandId="com.salesforce.bazel.eclipse.ui.commands.syncAllWorkspaces"
-                   icon="resources/failed.png"
+                   icon="resources/logo.png"
                    style="push">
              </command>
           </toolbar>
