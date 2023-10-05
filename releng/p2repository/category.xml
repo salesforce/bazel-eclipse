@@ -7,6 +7,9 @@
    <feature id="com.salesforce.bazel.eclipse.jdtls.feature"/>
    <feature id="com.salesforce.bazel.eclipse.dependencies.feature"/>
 
+   <feature id="com.salesforce.bazel.eclipse.feature.source"/>
+   <feature id="com.salesforce.bazel.eclipse.jdtls.feature.source"/>
+
    <bundle id="slf4j.api"/>
    <bundle id="slf4j.api.source"/>
    <bundle id="ch.qos.logback.core"/>
