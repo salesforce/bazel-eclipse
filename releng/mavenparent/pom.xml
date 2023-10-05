@@ -29,8 +29,7 @@
 		<surefire-reports-directory>${project.build.directory}/surefire-reports</surefire-reports-directory>
 		<test.vmparams>-Xmx1024m</test.vmparams>
 		<coretest.vmparams></coretest.vmparams>
-		<uitest.vmparams>-Dorg.eclipse.swtbot.search.timeout=30000
-			-Dorg.eclipse.swtbot.screenshots.dir=target/screenshots</uitest.vmparams>
+		<uitest.vmparams>-Dorg.eclipse.swtbot.search.timeout=30000 -Dorg.eclipse.swtbot.screenshots.dir=target/screenshots</uitest.vmparams>
 
 		<tycho.version>4.0.3</tycho.version>
 
@@ -122,8 +121,7 @@
 				</os>
 			</activation>
 			<properties>
-				<ui.test.vmargs>${test.vmparams} ${uitest.vmparams}
-					-XstartOnFirstThread</ui.test.vmargs>
+				<ui.test.vmargs>-XstartOnFirstThread ${test.vmparams} ${uitest.vmparams}</ui.test.vmargs>
 			</properties>
 		</profile>
 		<profile>
@@ -422,20 +420,6 @@
 						<useUIHarness>true</useUIHarness>
 						<useUIThread>true</useUIThread>
 						<argLine>${ui.test.vmargs}</argLine>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.eclipse.tycho.extras</groupId>
-					<artifactId>tycho-eclipserun-plugin</artifactId>
-					<version>${tycho.version}</version>
-					<configuration>
-						<repositories>
-							<repository>
-								<id>eclipserun-repo</id>
-								<layout>p2</layout>
-								<url>${eclipserun-repo.url}</url>
-							</repository>
-						</repositories>
 					</configuration>
 				</plugin>
 				<plugin>
