@@ -53,20 +53,25 @@
         <setEntry value="ch.qos.logback.core@default:default"/>
         <setEntry value="com.github.ben-manes.caffeine.guava@default:default"/>
         <setEntry value="com.github.ben-manes.caffeine@default:default"/>
+        <setEntry value="com.google.errorprone.annotations@default:default"/>
         <setEntry value="com.google.gson@default:default"/>
-        <setEntry value="com.google.guava*31.1.0.jre@default:default"/>
+        <setEntry value="com.google.guava*32.1.2.jre@default:default"/>
         <setEntry value="com.google.guava.failureaccess@default:default"/>
         <setEntry value="com.googlecode.json-simple@default:default"/>
         <setEntry value="com.ibm.icu@default:default"/>
         <setEntry value="com.jcraft.jsch@default:default"/>
         <setEntry value="com.sun.jna.platform@default:default"/>
         <setEntry value="com.sun.jna@default:default"/>
+        <setEntry value="jakarta.activation-api@default:default"/>
         <setEntry value="jakarta.activation@default:default"/>
-        <setEntry value="jakarta.servlet-api@default:default"/>
+        <setEntry value="jakarta.mail-api@default:default"/>
+        <setEntry value="jakarta.servlet-api*4.0.0@default:default"/>
+        <setEntry value="jakarta.servlet-api*5.0.0@default:default"/>
         <setEntry value="javax.activation@default:default"/>
         <setEntry value="javax.annotation@default:default"/>
         <setEntry value="javax.inject@default:default"/>
         <setEntry value="javax.xml@default:default"/>
+        <setEntry value="jaxen@default:default"/>
         <setEntry value="junit-jupiter-api@default:default"/>
         <setEntry value="junit-jupiter-engine@default:default"/>
         <setEntry value="junit-jupiter-migrationsupport@default:default"/>
@@ -82,12 +87,14 @@
         <setEntry value="net.bytebuddy.byte-buddy-agent@default:default"/>
         <setEntry value="net.bytebuddy.byte-buddy@default:default"/>
         <setEntry value="org.apache.ant@default:default"/>
+        <setEntry value="org.apache.aries.spifly.dynamic.bundle@default:default"/>
         <setEntry value="org.apache.batik.constants@default:default"/>
         <setEntry value="org.apache.batik.css@default:default"/>
         <setEntry value="org.apache.batik.i18n@default:default"/>
         <setEntry value="org.apache.batik.util@default:default"/>
         <setEntry value="org.apache.commons.cli@default:default"/>
         <setEntry value="org.apache.commons.codec@default:default"/>
+        <setEntry value="org.apache.commons.commons-codec@default:default"/>
         <setEntry value="org.apache.commons.io@default:default"/>
         <setEntry value="org.apache.commons.jxpath@default:default"/>
         <setEntry value="org.apache.commons.logging@default:default"/>
@@ -100,6 +107,8 @@
         <setEntry value="org.apache.xml.resolver@default:default"/>
         <setEntry value="org.apache.xmlgraphics@default:default"/>
         <setEntry value="org.apiguardian.api@default:default"/>
+        <setEntry value="org.codehaus.janino.commons-compiler@default:default"/>
+        <setEntry value="org.codehaus.janino.janino@default:default"/>
         <setEntry value="org.eclipse.ant.core@default:default"/>
         <setEntry value="org.eclipse.ant.optional.junit@default:false"/>
         <setEntry value="org.eclipse.compare.core@default:default"/>
@@ -183,18 +192,12 @@
         <setEntry value="org.eclipse.jface.text@default:default"/>
         <setEntry value="org.eclipse.jface@default:default"/>
         <setEntry value="org.eclipse.ltk.core.refactoring@default:default"/>
-        <setEntry value="org.eclipse.m2e.archetype.common@default:default"/>
-        <setEntry value="org.eclipse.m2e.core.ui@default:default"/>
-        <setEntry value="org.eclipse.m2e.core@default:default"/>
-        <setEntry value="org.eclipse.m2e.logback@default:false"/>
-        <setEntry value="org.eclipse.m2e.maven.runtime@default:default"/>
-        <setEntry value="org.eclipse.m2e.model.edit@default:default"/>
-        <setEntry value="org.eclipse.m2e.workspace.cli@default:default"/>
         <setEntry value="org.eclipse.osgi.compatibility.state@default:false"/>
         <setEntry value="org.eclipse.osgi.services@default:default"/>
         <setEntry value="org.eclipse.osgi.util@default:default"/>
         <setEntry value="org.eclipse.osgi@1:true"/>
         <setEntry value="org.eclipse.pde.junit.runtime@default:default"/>
+        <setEntry value="org.eclipse.swt.cocoa.macosx.x86_64@default:false"/>
         <setEntry value="org.eclipse.swt@default:default"/>
         <setEntry value="org.eclipse.team.core@default:default"/>
         <setEntry value="org.eclipse.text@default:default"/>
@@ -215,11 +218,18 @@
         <setEntry value="org.eclipse.wst.common.uriresolver@default:default"/>
         <setEntry value="org.eclipse.wst.sse.core@default:default"/>
         <setEntry value="org.eclipse.wst.xml.core@default:default"/>
+        <setEntry value="org.fusesource.jansi@default:default"/>
         <setEntry value="org.hamcrest.core@default:default"/>
         <setEntry value="org.hamcrest@default:default"/>
+        <setEntry value="org.jdom2@default:default"/>
         <setEntry value="org.jsr-305@default:default"/>
         <setEntry value="org.junit@default:default"/>
         <setEntry value="org.mockito.mockito-core@default:default"/>
+        <setEntry value="org.objectweb.asm.commons@default:default"/>
+        <setEntry value="org.objectweb.asm.tree.analysis@default:default"/>
+        <setEntry value="org.objectweb.asm.tree@default:default"/>
+        <setEntry value="org.objectweb.asm.util@default:default"/>
+        <setEntry value="org.objectweb.asm@default:default"/>
         <setEntry value="org.objenesis@default:default"/>
         <setEntry value="org.opentest4j@default:default"/>
         <setEntry value="org.osgi.service.cm@default:default"/>
@@ -244,6 +254,7 @@
         <setEntry value="org.w3c.dom.smil@default:default"/>
         <setEntry value="org.w3c.dom.svg@default:default"/>
         <setEntry value="slf4j.api@default:default"/>
+        <setEntry value="wrapped.com.google.auto.value.auto-value-annotations@default:default"/>
         <setEntry value="wrapped.com.google.errorprone.error_prone_annotations@default:default"/>
         <setEntry value="wrapped.com.google.protobuf.protobuf-java@default:default"/>
         <setEntry value="wrapped.junit.junit@default:default"/>
@@ -260,7 +271,7 @@
         <setEntry value="testdata@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
-    <stringAttribute key="timestamp" value="1686149982606"/>
+    <stringAttribute key="timestamp" value="1696498066115"/>
     <booleanAttribute key="tracing" value="false"/>
     <booleanAttribute key="useCustomFeatures" value="false"/>
     <booleanAttribute key="useDefaultConfig" value="true"/>
