@@ -8,6 +8,8 @@ import static java.util.stream.Collectors.joining;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import com.salesforce.bazel.sdk.BazelVersion;
@@ -65,6 +67,19 @@ public abstract class BazelCommand<R> {
             workingDirectory,
             "No working directory provided; Bazel needs to be executed from within a Bazel workspace");
         this.purpose = purpose;
+    }
+
+    /**
+     * @param buildFlags
+     *            additional command arguments to inject (eg., from <code>.bazelproject</code> file)
+     */
+    public void addCommandArgs(Collection<String> buildFlags) {
+        if ((buildFlags == null) || buildFlags.isEmpty()) {
+            return;
+        }
+        var newCommandArgs = new ArrayList<>(getCommandArgs());
+        newCommandArgs.addAll(buildFlags);
+        this.commandArgs = Collections.unmodifiableList(newCommandArgs);
     }
 
     protected void appendToStringDetails(ArrayList<String> toStringCommandLine) {

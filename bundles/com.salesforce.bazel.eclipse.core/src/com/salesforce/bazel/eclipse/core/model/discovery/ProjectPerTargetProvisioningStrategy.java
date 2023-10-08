@@ -88,6 +88,9 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                     onlyDirectDeps,
                     "Running build with IntelliJ aspects to collect classpath information");
 
+            // sync_flags
+            command.addCommandArgs(workspace.getBazelProjectView().syncFlags());
+
             monitor.subTask("Running Bazel build with aspects");
             var result = workspace.getCommandExecutor()
                     .runDirectlyWithinExistingWorkspaceLock(

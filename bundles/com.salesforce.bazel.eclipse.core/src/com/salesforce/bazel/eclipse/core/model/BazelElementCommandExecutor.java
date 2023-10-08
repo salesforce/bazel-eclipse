@@ -85,6 +85,11 @@ public class BazelElementCommandExecutor {
         } else {
             command.setBazelBinary(bazelBinary);
         }
+
+        var buildFlags = bazelWorkspace.getBazelProjectView().buildFlags();
+        if (!buildFlags.isEmpty()) {
+            command.addCommandArgs(buildFlags);
+        }
     }
 
     final BazelModelCommandExecutionService getExecutionService() {
@@ -115,16 +120,17 @@ public class BazelElementCommandExecutor {
      * @param monitor
      *            the monitor to check for cancellation and to report progress (must not be <code>null</code>)
      * @return the command result (never <code>null</code>)
-     * @see BazelModelCommandExecutionService#executeWithinExistingWorkspaceLock(BazelCommand, BazelElement, java.util.List,
-     *      org.eclipse.core.runtime.IProgressMonitor) <code>executeWithWorkspaceLock</code> for execution and locking
-     *      semantics
+     * @see BazelModelCommandExecutionService#executeWithinExistingWorkspaceLock(BazelCommand, BazelElement,
+     *      java.util.List, org.eclipse.core.runtime.IProgressMonitor) <code>executeWithWorkspaceLock</code> for
+     *      execution and locking semantics
      * @see IWorkspace#run(org.eclipse.core.runtime.ICoreRunnable, ISchedulingRule, int, IProgressMonitor)
      * @throws CoreException
      */
     public <R> R runDirectlyWithinExistingWorkspaceLock(BazelCommand<R> command, List<IResource> resourcesToRefresh,
             IProgressMonitor monitor) throws CoreException {
         configureCommand(command, executionContext.getBazelWorkspace());
-        return getExecutionService().executeWithinExistingWorkspaceLock(command, executionContext, resourcesToRefresh, monitor);
+        return getExecutionService()
+                .executeWithinExistingWorkspaceLock(command, executionContext, resourcesToRefresh, monitor);
     }
 
     /**
