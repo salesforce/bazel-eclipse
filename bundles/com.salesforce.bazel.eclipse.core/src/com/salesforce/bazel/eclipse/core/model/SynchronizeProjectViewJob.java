@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.eclipse.core.resources.IContainer.INCLUDE_HIDDEN;
 import static org.eclipse.core.resources.IResource.DEPTH_ONE;
 import static org.eclipse.core.resources.IResource.FORCE;
+import static org.eclipse.core.resources.IResource.NEVER_DELETE_PROJECT_CONTENT;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
 import java.io.FileInputStream;
@@ -541,7 +542,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         if (obsoleteProjects.size() > 0) {
             monitor.beginTask("Cleaning up", obsoleteProjects.size());
             for (IProject project : obsoleteProjects) {
-                project.delete(FORCE, monitor.split(1));
+                project.delete(FORCE | NEVER_DELETE_PROJECT_CONTENT, monitor.split(1));
             }
         }
     }
