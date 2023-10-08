@@ -40,7 +40,10 @@ public record BazelProjectView(
         String targetProvisioningStrategy,
         Map<String, String> projectMappings,
         Collection<WorkspacePath> importPreferences,
-        Collection<WorkspacePath> projectSettings) {
+        Collection<WorkspacePath> projectSettings,
+        Collection<String> buildFlags,
+        Collection<String> syncFlags,
+        Collection<String> testFlags) {
 
     public BazelProjectView {
         directoriesToImport = Collections.unmodifiableCollection(directoriesToImport);
@@ -48,6 +51,12 @@ public record BazelProjectView(
         targets = Collections.unmodifiableCollection(targets);
         additionalLanguages = Collections.unmodifiableCollection(additionalLanguages);
         tsConfigRules = Collections.unmodifiableCollection(tsConfigRules);
+        projectMappings = Collections.unmodifiableMap(projectMappings);
+        importPreferences = Collections.unmodifiableCollection(importPreferences);
+        projectSettings = Collections.unmodifiableCollection(projectSettings);
+        buildFlags = Collections.unmodifiableCollection(buildFlags);
+        syncFlags = Collections.unmodifiableCollection(syncFlags);
+        testFlags = Collections.unmodifiableCollection(testFlags);
     }
 
 }

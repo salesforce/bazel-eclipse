@@ -68,6 +68,9 @@ public class BazelProjectFileReader {
         final LinkedHashMap<String, String> projectMappings = new LinkedHashMap<>();
         final LinkedHashSet<String> importPreferences = new LinkedHashSet<>();
         final LinkedHashSet<String> projectSettings = new LinkedHashSet<>();
+        final LinkedHashSet<String> buildFlags = new LinkedHashSet<>();
+        final LinkedHashSet<String> syncFlags = new LinkedHashSet<>();
+        final LinkedHashSet<String> testFlags = new LinkedHashSet<>();
 
         public BazelProjectView build() throws IllegalStateException {
             // check mandatory parameters
@@ -129,7 +132,10 @@ public class BazelProjectFileReader {
                     targetProvisioningStrategy,
                     projectMappings,
                     preferencesToImport,
-                    projectSettingsToSync);
+                    projectSettingsToSync,
+                    buildFlags,
+                    syncFlags,
+                    testFlags);
         }
 
         public ImportHandle startImporting(Path bazelProjectViewFile) throws IOException {
@@ -332,6 +338,18 @@ public class BazelProjectFileReader {
                     }
                     case "project_settings": {
                         parseSectionBodyIntoList(rawSection).forEach(builder.projectSettings::add);
+                        break;
+                    }
+                    case "build_flags": {
+                        parseSectionBodyIntoList(rawSection).forEach(builder.buildFlags::add);
+                        break;
+                    }
+                    case "sync_flags": {
+                        parseSectionBodyIntoList(rawSection).forEach(builder.syncFlags::add);
+                        break;
+                    }
+                    case "test_flags": {
+                        parseSectionBodyIntoList(rawSection).forEach(builder.testFlags::add);
                         break;
                     }
                     case "import_target_output":
