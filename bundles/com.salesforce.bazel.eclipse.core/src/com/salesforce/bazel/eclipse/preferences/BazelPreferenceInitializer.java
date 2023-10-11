@@ -49,6 +49,6 @@ public class BazelPreferenceInitializer extends AbstractPreferenceInitializer {
     @Override
     public void initializeDefaultPreferences() {
         var node = DefaultScope.INSTANCE.getNode(PLUGIN_ID);
-        node.putBoolean(BazelCorePreferenceKeys.PREF_KEY_USE_SHELL_ENVIRONMENT, !SystemUtil.getInstance().isWindows());
+        node.putBoolean(BazelCorePreferenceKeys.PREF_KEY_USE_SHELL_ENVIRONMENT, SystemUtil.getInstance().isMac());
     }
 }

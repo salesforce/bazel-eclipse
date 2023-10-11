@@ -118,7 +118,7 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
      * preferences and applies it to {@link #setWrapExecutionIntoShell(boolean)}
      */
     protected void initializeWrapExecutionIntoShellSettingFromPreferences() {
-        var defaultValue = !getSystemUtil().isWindows(); // mimic super-class default, which is *false* on Windows
+        var defaultValue = getSystemUtil().isMac(); // mimic super-class default, which is *true* only on Mac
         var value = Platform.getPreferencesService().get(PREF_KEY_USE_SHELL_ENVIRONMENT, null, preferencesLookup);
         setWrapExecutionIntoShell(value == null ? defaultValue : Boolean.valueOf(value).booleanValue());
     }

@@ -97,7 +97,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
         }
     }
 
-    private boolean wrapExecutionIntoShell = !getSystemUtil().isWindows(); // default is yes except on Windows
+    private boolean wrapExecutionIntoShell = getSystemUtil().isMac(); // default is yes only on Mac to ensure proper path
     private final ShellUtil shellUtil = new ShellUtil(); // login shell change requires Eclipse restart
     private volatile Map<String, String> extraEnv;
     private volatile BazelBinary bazelBinary;
