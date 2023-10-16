@@ -43,7 +43,8 @@ public record BazelProjectView(
         Collection<WorkspacePath> projectSettings,
         Collection<String> buildFlags,
         Collection<String> syncFlags,
-        Collection<String> testFlags) {
+        Collection<String> testFlags,
+        boolean discoverAllExternalAndWorkspaceJars) {
 
     public BazelProjectView {
         directoriesToImport = Collections.unmodifiableCollection(directoriesToImport);

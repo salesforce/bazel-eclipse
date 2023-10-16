@@ -171,7 +171,19 @@ The settings files must follow the naming conventions of Eclipse project setting
 Only the file name part without the `*.prefs` extension will be used for determin the target project settings file.
 The folder will be ignored.
 
+### `discover_all_external_and_workspace_jars`
 
+A boolean flag to discover external and workspace jars for making them available on the workspace project classpath (default is `false`).
+
+When this flag is set to true, an attempt will be made to discover all jars in the workspace and from external repositories to make them available to the IDE.
+This will increase the sync time but allows to use discover types for everything in the workspace.
+
+Note, it's recommended to add the `--output_groups=+_source_jars` when building to force Bazel to always build sources.
+This can be done with the following in your `.bazelrc` file:
+```
+# For having sources available in the IDE always create source jars
+build --output_groups=+_source_jars
+```
 
 ## Unsupported Features / Limitations
 

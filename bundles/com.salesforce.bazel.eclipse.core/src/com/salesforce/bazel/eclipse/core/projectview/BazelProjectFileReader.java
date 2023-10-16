@@ -71,6 +71,7 @@ public class BazelProjectFileReader {
         final LinkedHashSet<String> buildFlags = new LinkedHashSet<>();
         final LinkedHashSet<String> syncFlags = new LinkedHashSet<>();
         final LinkedHashSet<String> testFlags = new LinkedHashSet<>();
+        boolean discoverAllExternalAndWorkspaceJars = false;
 
         public BazelProjectView build() throws IllegalStateException {
             // check mandatory parameters
@@ -135,7 +136,8 @@ public class BazelProjectFileReader {
                     projectSettingsToSync,
                     buildFlags,
                     syncFlags,
-                    testFlags);
+                    testFlags,
+                    discoverAllExternalAndWorkspaceJars);
         }
 
         public ImportHandle startImporting(Path bazelProjectViewFile) throws IOException {
@@ -350,6 +352,13 @@ public class BazelProjectFileReader {
                     }
                     case "test_flags": {
                         parseSectionBodyIntoList(rawSection).forEach(builder.testFlags::add);
+                        break;
+                    }
+                    case "discover_all_external_and_workspace_jars": {
+                        var rawBody = rawSection.getRawBody();
+                        if ((rawBody != null) && !rawBody.isBlank()) {
+                            builder.discoverAllExternalAndWorkspaceJars = Boolean.parseBoolean(rawBody.trim());
+                        }
                         break;
                     }
                     case "import_target_output":

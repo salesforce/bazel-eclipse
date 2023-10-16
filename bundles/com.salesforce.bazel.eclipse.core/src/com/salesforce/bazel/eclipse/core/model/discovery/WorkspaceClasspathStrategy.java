@@ -7,6 +7,7 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDP
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -59,10 +60,15 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
             var monitor = SubMonitor.convert(progress);
             monitor.beginTask("Scanning for workspace jars", 2);
 
-            List<ClasspathEntry> result = new ArrayList<>();
-
             // clean-up any markers created previously on the workspace project
             workspaceProject.getProject().deleteMarkers(WORKSPACE_BUILDPATH_PROBLEM_MARKER, false, 0);
+
+            if (!bazelWorkspace.getBazelProjectView().discoverAllExternalAndWorkspaceJars()) {
+                // discovery is disabled
+                return Collections.emptyList();
+            }
+
+            List<ClasspathEntry> result = new ArrayList<>();
 
             var externalLibrariesDiscovery = new ExternalLibrariesDiscovery(bazelWorkspace);
             result.addAll(externalLibrariesDiscovery.query(monitor.split(1, SubMonitor.SUPPRESS_NONE)));
