@@ -58,6 +58,9 @@ Only `java` is supported.
 
 Ignored and inferred from current/workspace `JavaToolchainInfo`.
 
+###  `build_flags`,  `sync_flags` and `test_flags`
+
+
 ## Additional Features
 
 The following additional entries are supported to further customize the import experience.
@@ -177,7 +180,6 @@ All deprecated items are not supported.
 In addition to those, the following items are not supported as well:
 * `shard_sync` and `target_shard_size`
 * `exclude_library`
-* `build_flags`,  `sync_flags` and `test_flags` (use local `.bazelrc`)
 * `import_run_configurations`
 * `exclude_target`
 * `import_target_output`
