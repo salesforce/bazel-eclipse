@@ -26,6 +26,13 @@ public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
     private final IntellijAspects aspects;
     private final Collection<String> outputGroupNames;
 
+    public BazelBuildWithIntelliJAspectsCommand(Path workspaceRoot, List<BazelLabel> targets,
+            Collection<String> outputGroupNames, IntellijAspects aspects, String purpose) {
+        super(targets, workspaceRoot, true /* keepGoing */, purpose);
+        this.aspects = aspects;
+        this.outputGroupNames = outputGroupNames;
+    }
+
     /**
      * @param workspaceRoot
      *            the Bazel workspace root
@@ -50,13 +57,6 @@ public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
         super(targets, workspaceRoot, true /* keepGoing */, purpose);
         this.aspects = aspects;
         this.outputGroupNames = aspects.getOutputGroupNames(outputGroups, languages, onlyDirectDeps);
-    }
-
-    public BazelBuildWithIntelliJAspectsCommand(Path workspaceRoot, List<BazelLabel> targets,
-            Set<String> outputGroupNames, IntellijAspects aspects, String purpose) {
-        super(targets, workspaceRoot, true /* keepGoing */, purpose);
-        this.aspects = aspects;
-        this.outputGroupNames = outputGroupNames;
     }
 
     @Override

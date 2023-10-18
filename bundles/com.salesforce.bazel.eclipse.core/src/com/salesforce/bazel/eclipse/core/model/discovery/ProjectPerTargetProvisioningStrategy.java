@@ -8,6 +8,7 @@ import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_ALL_LABELS;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +27,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -75,17 +77,20 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             var workspaceRoot = workspace.getLocation().toPath();
 
             // run the aspect to compute all required information
+            var aspects = workspace.getParent().getModelManager().getIntellijAspects();
+            var languages = Set.of(LanguageClass.JAVA);
             var onlyDirectDeps = workspace.getBazelProjectView().deriveTargetsFromDirectories();
             var outputGroups = Set.of(OutputGroup.INFO, OutputGroup.RESOLVE);
-            var languages = Set.of(LanguageClass.JAVA);
-            var aspects = workspace.getParent().getModelManager().getIntellijAspects();
+            var outputGroupNames = aspects.getOutputGroupNames(outputGroups, languages, onlyDirectDeps);
+            if (scope == BazelClasspathScope.RUNTIME_CLASSPATH) {
+                outputGroupNames = new HashSet<>(outputGroupNames);
+                outputGroupNames.add(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH);
+            }
             var command = new BazelBuildWithIntelliJAspectsCommand(
                     workspaceRoot,
                     targetsToBuild,
-                    outputGroups,
+                    outputGroupNames,
                     aspects,
-                    languages,
-                    onlyDirectDeps,
                     "Running build with IntelliJ aspects to collect classpath information");
 
             // sync_flags

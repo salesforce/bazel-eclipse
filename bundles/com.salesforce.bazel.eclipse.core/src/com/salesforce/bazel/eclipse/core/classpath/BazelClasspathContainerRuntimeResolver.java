@@ -3,15 +3,11 @@
  */
 package com.salesforce.bazel.eclipse.core.classpath;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -22,28 +18,14 @@ import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntryResolver;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntryResolver2;
 import org.eclipse.jdt.launching.IVMInstall;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.idea.blaze.base.command.buildresult.LocalFileOutputArtifact;
-import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
-import com.google.idea.blaze.base.model.primitives.Label;
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
-import com.salesforce.bazel.eclipse.core.model.BazelTarget;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaAspectsClasspathInfo;
-import com.salesforce.bazel.eclipse.core.model.discovery.JavaAspectsInfo;
-import com.salesforce.bazel.eclipse.core.util.jar.BazelJarFile;
-import com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder;
-import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
-import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 
 @SuppressWarnings("restriction")
 public class BazelClasspathContainerRuntimeResolver
         implements IRuntimeClasspathEntryResolver, IRuntimeClasspathEntryResolver2 {
-
-    private static Logger LOG = LoggerFactory.getLogger(BazelClasspathContainerRuntimeResolver.class);
 
     ISchedulingRule getBuildRule() {
         return ResourcesPlugin.getWorkspace().getRuleFactory().buildRule();
@@ -51,19 +33,6 @@ public class BazelClasspathContainerRuntimeResolver
 
     BazelClasspathManager getClasspathManager() {
         return BazelCorePlugin.getInstance().getBazelModelManager().getClasspathManager();
-    }
-
-    private IPath guessSrcJarLocation(LocalFileOutputArtifact localJar) {
-        var sourceJar = SourceJarFinder.findSourceJar(localJar.getPath());
-        if (sourceJar != null) {
-            return sourceJar;
-        }
-
-        LOG.warn(
-            "Unable to guess source jar for '{}'. Please check configuration if source download is disabled. ",
-            localJar);
-
-        return null;
     }
 
     @Override
@@ -82,15 +51,6 @@ public class BazelClasspathContainerRuntimeResolver
         }
     }
 
-    private Label readTargetLabel(LocalFileOutputArtifact localJar) {
-        try (var jarFile = new BazelJarFile(localJar.getPath())) {
-            return jarFile.getTargetLabel();
-        } catch (IOException e) {
-            LOG.warn("Error inspecting manifest of jar '{}': {}", localJar, e.getMessage());
-        }
-        return null;
-    }
-
     @Override
     public IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry entry, IJavaProject project)
             throws CoreException {
@@ -107,12 +67,14 @@ public class BazelClasspathContainerRuntimeResolver
 
         // try the saved container
         // this is usually ok because we no longer use the ijars on project classpaths
+        // the saved container also contains all runtime dependencies by default
         populateWithSavedContainer(project, result);
 
         var bazelProject = BazelCore.create(project.getProject());
         if (bazelProject.isWorkspaceProject()) {
-
-            // include all projects ( ... this is odd because the projects should cause cyclic dependencies)
+            // when debugging the workspace project we include all target/package projects automatically
+            // this is odd because the projects should cause cyclic dependencies
+            // however it is convenient with source code lookups for missing dependencies
             var bazelProjects = bazelProject.getBazelWorkspace().getBazelProjects();
             for (BazelProject sourceProject : bazelProjects) {
                 if (!sourceProject.isWorkspaceProject()) {
@@ -120,11 +82,6 @@ public class BazelClasspathContainerRuntimeResolver
                         new RuntimeClasspathEntry(JavaCore.newProjectEntry(sourceProject.getProject().getFullPath())));
                 }
             }
-
-        } else if (result.isEmpty()) {
-
-            // query Bazel for runtime jars
-            runBazelBuildWithIntelliJAspectsForCollectingRuntimeJars(bazelProject, result);
         }
 
         return result.toArray(new IRuntimeClasspathEntry[result.size()]);
@@ -143,52 +100,6 @@ public class BazelClasspathContainerRuntimeResolver
     @Override
     public IVMInstall resolveVMInstall(IClasspathEntry entry) throws CoreException {
         return null;
-    }
-
-    private void runBazelBuildWithIntelliJAspectsForCollectingRuntimeJars(BazelProject bazelProject,
-            List<IRuntimeClasspathEntry> result) throws CoreException {
-        var bazelWorkspace = bazelProject.getBazelWorkspace();
-
-        // get list of targets from project
-        List<BazelTarget> targets;
-        if (bazelProject.isPackageProject()) {
-            targets = bazelProject.getBazelTargets();
-        } else {
-            targets = List.of(bazelProject.getBazelTarget());
-        }
-
-        // run the aspect to compute all required information
-        var workspaceRoot = bazelWorkspace.getLocation().toPath();
-        var outputGroups = Set.of(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH);
-        var aspects = bazelWorkspace.getParent().getModelManager().getIntellijAspects();
-        var command = new BazelBuildWithIntelliJAspectsCommand(
-                workspaceRoot,
-                targets.stream().map(BazelTarget::getLabel).toList(),
-                outputGroups,
-                aspects,
-                "Running build with IntelliJ aspects to collect classpath information");
-
-        var bepOutput = bazelWorkspace.getCommandExecutor()
-                .runWithWorkspaceLock(command, getBuildRule(), Collections.emptyList());
-        var aspectsInfo = new JavaAspectsInfo(bepOutput, bazelWorkspace);
-        var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, bazelWorkspace);
-        for (OutputArtifact jar : bepOutput
-                .getOutputGroupArtifacts(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH)) {
-            if (jar instanceof LocalFileOutputArtifact localJar) {
-                var targetLabel = readTargetLabel(localJar);
-                if (targetLabel != null) {
-                    var projectEntry = classpathInfo.resolveProject(targetLabel);
-                    if (projectEntry != null) {
-                        result.add(new RuntimeClasspathEntry(JavaCore.newProjectEntry(projectEntry.getPath())));
-                        continue;
-                    }
-                }
-                var srcJarLocation = guessSrcJarLocation(localJar);
-                result.add(
-                    new RuntimeClasspathEntry(
-                            JavaCore.newLibraryEntry(IPath.fromPath(localJar.getPath()), srcJarLocation, null)));
-            }
-        }
     }
 
 }

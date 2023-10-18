@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,6 +38,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IAccessRule;
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -260,6 +262,16 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 dependencyIdeInfo.getDependencies().forEach(this::addDirectDependency);
             }
         }
+
+        // (transitive) runtime dependencies
+        var runtimeClasspath = aspectsInfo.getRuntimeClasspath(targetKey);
+        if (runtimeClasspath != null) {
+            for (BlazeJarLibrary jarLibrary : runtimeClasspath) {
+                if (runtimeDeps.add(jarLibrary.targetKey) && LOG.isDebugEnabled()) {
+                    LOG.debug("Found transitive runtime dependency: {}", jarLibrary.targetKey);
+                }
+            }
+        }
     }
 
     /**
@@ -311,33 +323,6 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             }
         }
 
-        // Collect jars referenced by direct deps
-        for (TargetKey targetKey : directDeps) {
-            var projectEntry = resolveProject(targetKey);
-            if (projectEntry != null) {
-                result.put(projectEntry.getPath(), projectEntry);
-                continue;
-            }
-
-            var jars = aspectsInfo.getLibraries(targetKey);
-            if (jars == null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.warn("Unable to locate compile jars in index for dependency: {}", targetKey);
-                }
-                continue;
-            }
-            for (BlazeJarLibrary library : jars) {
-                var jarEntry = resolveJar(library.libraryArtifact);
-                if (jarEntry == null) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.warn("Unable to resolve compile jar: {}", library.libraryArtifact);
-                    }
-                    continue;
-                }
-                result.put(jarEntry.getPath(), jarEntry);
-            }
-        }
-
         // Collect generated jars from source rules
         for (BlazeJarLibrary library : generatedSourceJars) {
             var jarEntry = resolveJar(library.libraryArtifact);
@@ -348,7 +333,31 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 continue;
             }
             jarEntry.setExported(true); // source jars should be exported
-            result.put(jarEntry.getPath(), jarEntry);
+            result.putIfAbsent(jarEntry.getPath(), jarEntry);
+        }
+
+        // Collect jars referenced by direct deps
+        for (TargetKey targetKey : directDeps) {
+            var entries = resolveDependency(targetKey);
+            for (ClasspathEntry entry : entries) {
+                result.putIfAbsent(entry.getPath(), entry);
+            }
+        }
+
+        // Collect jars referenced by runtime deps
+        for (TargetKey targetKey : runtimeDeps) {
+            var entries = resolveDependency(targetKey);
+            for (ClasspathEntry entry : entries) {
+                // runtime dependencies are only visible to tests
+                entry.getExtraAttributes().put(IClasspathAttribute.TEST, Boolean.toString(true));
+                // runtime dependencies are never accessible
+                entry.getAccessRules()
+                        .add(
+                            new AccessRule(
+                                    PATTERN_EVERYTHING,
+                                    IAccessRule.K_DISCOURAGED | IAccessRule.IGNORE_IF_BETTER));
+                result.putIfAbsent(entry.getPath(), entry);
+            }
         }
 
         return result.values();
@@ -440,6 +449,33 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         // we only want explicit or implicit deps that were actually resolved by the compiler, not ones
         // that are available for use in the same package
         return (dep.getKind() == Deps.Dependency.Kind.EXPLICIT) || (dep.getKind() == Deps.Dependency.Kind.IMPLICIT);
+    }
+
+    protected Collection<ClasspathEntry> resolveDependency(TargetKey targetKey) throws CoreException {
+        var projectEntry = resolveProject(targetKey);
+        if (projectEntry != null) {
+            return Set.of(projectEntry);
+        }
+
+        var jars = aspectsInfo.getLibraries(targetKey);
+        if (jars == null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.warn("Unable to locate compile jars in index for dependency: {}", targetKey);
+            }
+            return Collections.emptyList();
+        }
+        var result = new LinkedHashSet<ClasspathEntry>();
+        for (BlazeJarLibrary library : jars) {
+            var jarEntry = resolveJar(library.libraryArtifact);
+            if (jarEntry == null) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.warn("Unable to resolve compile jar: {}", library.libraryArtifact);
+                }
+                continue;
+            }
+            result.add(jarEntry);
+        }
+        return result;
     }
 
     protected BlazeArtifact resolveJdepsOutput(TargetIdeInfo target) {

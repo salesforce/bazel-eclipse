@@ -9,6 +9,9 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
 
+import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
+import com.google.idea.blaze.base.ideinfo.ArtifactLocation.Builder;
+
 /**
  * A utility for finding source jars.
  * <p>
@@ -21,6 +24,24 @@ public class SourceJarFinder {
 
     private final static List<String> KNOWN_PREFIXES =
             List.of("processed_" /* rules_jvm_external */, "" /* always try with empty prefix */);
+
+    public static ArtifactLocation findSourceJar(ArtifactLocation jar) {
+        var jarPath = Path.of(jar.getExecutionRootRelativePath());
+        var directory = jarPath.getParent();
+        var srcJarNames = getPotentialSourceJarNames(jarPath.getFileName().toString());
+
+        for (String srcJarName : srcJarNames) {
+            var srcJarPath = directory.resolve(srcJarName);
+            if (isRegularFile(srcJarPath)) {
+                ArtifactLocation.builder();
+                return Builder.copy(jar)
+                        .setRelativePath(Path.of(jar.getRelativePath()).resolveSibling(srcJarName).toString())
+                        .build();
+            }
+        }
+
+        return null;
+    }
 
     public static IPath findSourceJar(Path jarPath) {
         var directory = jarPath.getParent();

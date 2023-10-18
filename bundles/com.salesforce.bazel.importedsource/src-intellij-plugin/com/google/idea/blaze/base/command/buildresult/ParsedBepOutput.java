@@ -297,8 +297,8 @@ public final class ParsedBepOutput {
     }
 
     /** Returns the set of artifacts directly produced by the given target. */
-    public ImmutableSet<OutputArtifact> getDirectArtifactsForTarget(Label label, Predicate<String> pathFilter) {
-        return targetFileSets.get(label.toString()).stream().map(s -> fileSets.get(s).parsedOutputs)
+    public ImmutableSet<OutputArtifact> getDirectArtifactsForTarget(Label label, Predicate<String> outputGroupFilter, Predicate<String> pathFilter) {
+        return targetFileSets.get(label.toString()).stream().map(s -> fileSets.get(s)).filter(f -> f.outputGroups.stream().anyMatch(outputGroupFilter)).map(f -> f.parsedOutputs)
                 .flatMap(List::stream).filter(o -> pathFilter.test(o.getRelativePath())).collect(toImmutableSet());
     }
 
