@@ -630,7 +630,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 project.open(monitor.split(1, SUPPRESS_NONE));
             } catch (CoreException e) {
                 LOG.warn("Unable to open existing project '{}'. Deleting and re-creating the project.", project, e);
-                project.delete(true, monitor.split(1, SUPPRESS_NONE));
+                project.delete(IResource.NEVER_DELETE_PROJECT_CONTENT, monitor.split(1, SUPPRESS_NONE));
                 project = null;
             }
         }
@@ -642,7 +642,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 LOG.warn(
                     "Found existing project with name'{}' at different location. Deleting and re-creating the project.",
                     project);
-                project.delete(true, monitor.split(1, SUPPRESS_NONE));
+                project.delete(IResource.NEVER_DELETE_PROJECT_CONTENT, monitor.split(1, SUPPRESS_NONE));
             }
 
             // create new project
