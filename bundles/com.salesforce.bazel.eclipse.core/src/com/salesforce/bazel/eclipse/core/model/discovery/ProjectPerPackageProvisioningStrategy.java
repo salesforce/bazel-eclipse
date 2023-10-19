@@ -54,6 +54,8 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  */
 public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrategy {
 
+    private static final String PROJECT_NAME_SEPARATOR_CHAR = "project_name_separator_char";
+
     public static final String STRATEGY_NAME = "project-per-package";
 
     private static Logger LOG = LoggerFactory.getLogger(ProjectPerPackageProvisioningStrategy.class);
@@ -262,6 +264,23 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         return result;
     }
 
+    private char getProjectNameSeparatorChar(BazelPackage bazelPackage) throws CoreException {
+        var separatorChar = bazelPackage.getBazelWorkspace()
+                .getBazelProjectView()
+                .targetProvisioningSettings()
+                .get(PROJECT_NAME_SEPARATOR_CHAR);
+        if (separatorChar == null) {
+            return '.';
+        }
+
+        separatorChar = separatorChar.trim();
+        if (separatorChar.length() != 1) {
+            throw new CoreException(Status.error("Invalid 'project_name_separator_char' setting in project view!"));
+        }
+
+        return separatorChar.charAt(0);
+    }
+
     private boolean isSupported(BazelTarget bazeltarget) {
         String ruleName;
         try {
@@ -287,7 +306,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             if (!bazelPackage.hasBazelProject()) {
                 // create project
                 var packagePath = bazelPackage.getLabel().getPackagePath();
-                var projectName = packagePath.isBlank() ? "__ROOT__" : packagePath.replace('/', '.');
+                var projectName = packagePath.isBlank() ? "__ROOT__"
+                        : packagePath.replace('/', getProjectNameSeparatorChar(bazelPackage));
 
                 // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
                 var projectLocation = bazelPackage.getLocation();

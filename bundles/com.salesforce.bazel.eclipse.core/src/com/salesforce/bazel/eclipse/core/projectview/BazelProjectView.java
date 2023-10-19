@@ -38,6 +38,7 @@ public record BazelProjectView(
         IPath bazelBinary,
         String targetDiscoveryStrategy,
         String targetProvisioningStrategy,
+        Map<String, String> targetProvisioningSettings,
         Map<String, String> projectMappings,
         Collection<WorkspacePath> importPreferences,
         Collection<WorkspacePath> projectSettings,
@@ -52,6 +53,7 @@ public record BazelProjectView(
         targets = Collections.unmodifiableCollection(targets);
         additionalLanguages = Collections.unmodifiableCollection(additionalLanguages);
         tsConfigRules = Collections.unmodifiableCollection(tsConfigRules);
+        targetProvisioningSettings = Collections.unmodifiableMap(targetProvisioningSettings);
         projectMappings = Collections.unmodifiableMap(projectMappings);
         importPreferences = Collections.unmodifiableCollection(importPreferences);
         projectSettings = Collections.unmodifiableCollection(projectSettings);

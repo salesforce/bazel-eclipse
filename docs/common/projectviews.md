@@ -144,6 +144,12 @@ For details please read the JavaDoc (and Java code) of [ProjectPerPackageProvisi
 * It requires running `bazel build` to detect classpath configuration.
 * Is not fully implemented and required help/work/contributions.
 
+### `target_provisioning_settings`
+
+A list of settings to further tweak the `target_provisioning_strategy`.
+The syntax of each entry is `key = value`, where `key` and `value` are expected string values (without any whitespace characters).
+
+
 ### `project_mappings`
 
 A list of mappings from targets (typically from external repositories) to projects in the IDE.
