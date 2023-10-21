@@ -3,11 +3,17 @@
  */
 package com.salesforce.bazel.eclipse.core.classpath;
 
-import java.util.ArrayList;
-import java.util.List;
+import static java.lang.String.format;
+import static java.util.Arrays.stream;
+import static org.eclipse.jdt.launching.JavaRuntime.newProjectRuntimeClasspathEntry;
 
+import java.util.Collection;
+import java.util.LinkedHashSet;
+
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -18,6 +24,7 @@ import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntryResolver;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntryResolver2;
 import org.eclipse.jdt.launching.IVMInstall;
+import org.eclipse.jdt.launching.JavaRuntime;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
@@ -40,13 +47,58 @@ public class BazelClasspathContainerRuntimeResolver
         return false;
     }
 
-    private void populateWithSavedContainer(IJavaProject project, List<IRuntimeClasspathEntry> result)
+    /**
+     * Resolves a project classpath reference into all possible output folders and adds it to the resolved classpath.
+     *
+     * @param resolvedClasspath
+     *            the resolved classpath
+     * @param sourceProject
+     *            the project reference
+     * @throws CoreException
+     *             in case of problems
+     */
+    private void populateWithResolvedProject(Collection<IRuntimeClasspathEntry> resolvedClasspath,
+            IProject sourceProject) throws CoreException {
+        var javaProject = JavaCore.create(sourceProject);
+        var classpath = newProjectRuntimeClasspathEntry(javaProject);
+
+        // add the project itself for source code lookup
+        resolvedClasspath.add(classpath);
+
+        // add all possible output folders
+        stream(
+            JavaRuntime.resolveRuntimeClasspathEntry(
+                classpath,
+                javaProject,
+                false /* test code is used for runtime dependencies */)).forEach(resolvedClasspath::add);
+    }
+
+    private void populateWithSavedContainer(IJavaProject project, Collection<IRuntimeClasspathEntry> resolvedClasspath)
             throws CoreException {
         var bazelContainer = getClasspathManager().getSavedContainer(project.getProject());
         if (bazelContainer != null) {
+            var workspaceRoot = project.getResource().getWorkspace().getRoot();
             var entries = bazelContainer.getClasspathEntries();
             for (IClasspathEntry e : entries) {
-                result.add(new RuntimeClasspathEntry(e));
+                switch (e.getEntryKind()) {
+                    case IClasspathEntry.CPE_PROJECT: {
+                        // projects need to be resolved properly so we have all the output folders on the classpath
+                        var sourceProject = workspaceRoot.getProject(e.getPath().segment(0));
+                        populateWithResolvedProject(resolvedClasspath, sourceProject);
+                        break;
+                    }
+                    case IClasspathEntry.CPE_LIBRARY: {
+                        // we can rely on the assumption that this is an absolute path pointing into Bazel's execroot
+                        resolvedClasspath.add(new RuntimeClasspathEntry(e));
+                        break;
+                    }
+                    default:
+                        throw new CoreException(
+                                Status.error(
+                                    format(
+                                        "Unexpected classpath entry in the persisted Bazel container. Try refreshing the classpath or report as bug. %s",
+                                        e)));
+                }
             }
         }
     }
@@ -63,7 +115,7 @@ public class BazelClasspathContainerRuntimeResolver
             return new IRuntimeClasspathEntry[0];
         }
 
-        List<IRuntimeClasspathEntry> result = new ArrayList<>();
+        Collection<IRuntimeClasspathEntry> result = new LinkedHashSet<>(); // insertion order is important but avoid duplicates
 
         // try the saved container
         // this is usually ok because we no longer use the ijars on project classpaths
@@ -78,8 +130,7 @@ public class BazelClasspathContainerRuntimeResolver
             var bazelProjects = bazelProject.getBazelWorkspace().getBazelProjects();
             for (BazelProject sourceProject : bazelProjects) {
                 if (!sourceProject.isWorkspaceProject()) {
-                    result.add(
-                        new RuntimeClasspathEntry(JavaCore.newProjectEntry(sourceProject.getProject().getFullPath())));
+                    populateWithResolvedProject(result, sourceProject.getProject());
                 }
             }
         }
