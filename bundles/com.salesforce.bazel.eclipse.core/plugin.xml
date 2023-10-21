@@ -158,6 +158,12 @@
             id="com.salesforce.bazel.eclipse.core.classpath.launching.runtimeResolver">
       </runtimeClasspathEntryResolver>
    </extension>
+    <extension
+          point="org.eclipse.jdt.launching.sourceContainerResolvers">
+       <resolver
+             class="com.salesforce.bazel.eclipse.core.classpath.BazelSourceContainerResolver">
+       </resolver>
+    </extension>
 
     <extension
           point="org.eclipse.core.contenttype.contentTypes">
