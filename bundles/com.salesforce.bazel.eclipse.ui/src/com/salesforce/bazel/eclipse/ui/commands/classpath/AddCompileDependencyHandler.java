@@ -2,11 +2,13 @@ package com.salesforce.bazel.eclipse.ui.commands.classpath;
 
 import static com.salesforce.bazel.eclipse.ui.utils.JavaSearchUtil.createScopeIncludingAllWorkspaceProjectsButSelected;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static org.eclipse.core.runtime.SubMonitor.convert;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.commands.ExecutionEvent;
@@ -14,6 +16,7 @@ import org.eclipse.core.expressions.IEvaluationContext;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
@@ -25,6 +28,7 @@ import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.ui.util.BusyIndicatorRunnableContext;
 import org.eclipse.jdt.ui.IJavaElementSearchConstants;
 import org.eclipse.jdt.ui.JavaUI;
@@ -34,6 +38,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.ui.ISources;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.statushandlers.StatusManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -261,9 +266,18 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
 
                 return null;
             }
-        } catch (InvocationTargetException | CoreException e) {
-            LOG.error("Add Dependency Failed: Error collecting dependency information. {}", e.getMessage(), e);
-            MessageDialog.openError(activeShell, "Add Dependency Failed", "Please check the logs for more details!");
+        } catch (InvocationTargetException | CoreException | AbortCompilation e) {
+            StatusManager.getManager()
+                    .handle(
+                        Status.error(
+                            List.of(
+                                "Unable to add the dependency.",
+                                "",
+                                "Please check the error log for details. In the event of resolution problems please add missing libraries to the project view!")
+                                    .stream()
+                                    .collect(joining(System.lineSeparator())),
+                            e),
+                        StatusManager.SHOW | StatusManager.LOG);
         } catch (InterruptedException e) {
             throw new OperationCanceledException();
         }
