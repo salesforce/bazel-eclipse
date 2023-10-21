@@ -69,6 +69,7 @@ public class BazelQuickFixProcessor implements IQuickFixProcessor {
                     handleImportNotFound(context, location, collector);
                     break;
                 case IProblem.IsClassPathCorrect:
+                case IProblem.IsClassPathCorrectWithReferencingType:
                     handleMissingTransitive(context, location, collector);
                     break;
             }
@@ -137,8 +138,7 @@ public class BazelQuickFixProcessor implements IQuickFixProcessor {
             ClassResolutionCollector collector) throws CoreException {
         var cu = context.getASTRoot();
         var problemArguments = problemLocation.getProblemArguments();
-        if (problemArguments.length == 1) {
-            var className = problemArguments[0];
+        for (String className : problemArguments) {
             if (className != null) {
                 var project = cu.getJavaElement().getJavaProject().getProject();
 
@@ -166,6 +166,7 @@ public class BazelQuickFixProcessor implements IQuickFixProcessor {
             case IProblem.MissingTypeInConstructor:
             case IProblem.MissingTypeInLambda:
             case IProblem.IsClassPathCorrect:
+            case IProblem.IsClassPathCorrectWithReferencingType:
                 var parent = unit.getParent();
                 if (parent != null) {
                     var project = parent.getJavaProject();

@@ -61,6 +61,7 @@ public class JavaResolutionFactory {
         public Change perform(IProgressMonitor pm) throws CoreException {
             var job = new AddDependenciesJob(bazelProject, List.of(labelToAdd), List.of(newClasspathEntry));
             job.runInWorkspace(pm); // run directly because this should be executed in workspace lock already
+            // FIXME: if this blocks the UI we should send it to the background (needs testing)
             return null;
         }
     }

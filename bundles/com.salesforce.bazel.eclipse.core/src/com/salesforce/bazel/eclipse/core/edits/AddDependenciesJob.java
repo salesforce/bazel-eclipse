@@ -2,6 +2,7 @@ package com.salesforce.bazel.eclipse.core.edits;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import com.salesforce.bazel.sdk.command.BuildozerCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 public final class AddDependenciesJob extends WorkspaceJob {
+
     private final BazelProject bazelProject;
     private final Collection<Label> labelsToAdd;
     private final Collection<ClasspathEntry> newClasspathEntries;
@@ -69,10 +71,19 @@ public final class AddDependenciesJob extends WorkspaceJob {
             }
 
             // java_library & co
-            updateTargetsUsingAttribute(targetsToUpdate, "deps", monitor.split(1));
+            var updated = updateTargetsUsingAttribute(targetsToUpdate, "deps", monitor.split(1));
 
             // some other macros may use this
-            updateTargetsUsingAttribute(targetsToUpdate, "dependencies", monitor.split(1));
+            updated += updateTargetsUsingAttribute(targetsToUpdate, "dependencies", monitor.split(1));
+
+            // log a message if nothing was updated
+            if (updated == 0) {
+                return Status.info(
+                    format(
+                        "No suitable targets found in '%s' to add dependency %s to.",
+                        bazelProject.getBazelBuildFile(),
+                        labelsToAdd.stream().map(Label::toString).collect(joining(", "))));
+            }
 
         } catch (CoreException e) {
             return Status.error(format("Error updating '%s'. %s", bazelProject, e.getMessage()), e);
@@ -106,15 +117,23 @@ public final class AddDependenciesJob extends WorkspaceJob {
                 var modified = false;
                 Stream.of(container.getClasspathEntries()).map(ClasspathEntry::fromExisting).forEach(classpath::add);
                 for (ClasspathEntry newClasspathEntry : newClasspathEntries) {
-                    if (classpath.stream()
-                            .anyMatch(
+                    var existing = classpath.stream()
+                            .filter(
                                 c -> (c.getEntryKind() == newClasspathEntry.getEntryKind())
-                                        && c.getPath().equals(newClasspathEntry.getPath()))) {
-                        // skip if there is already an existing entry
-                        continue;
+                                        && c.getPath().equals(newClasspathEntry.getPath()))
+                            .findFirst();
+                    if (existing.isPresent()) {
+                        // remove the test attribute in case a runtime dependency is changed to become a compile dependency
+                        if (!existing.get().isTest()) {
+                            // skip if there is already an existing entry
+                            continue;
+                        }
+                        existing.get().setTest(true);
+                        modified = true;
+                    } else {
+                        classpath.add(newClasspathEntry);
+                        modified = true;
                     }
-                    classpath.add(newClasspathEntry);
-                    modified = true;
                 }
 
                 if (modified) {
@@ -130,25 +149,37 @@ public final class AddDependenciesJob extends WorkspaceJob {
         workspaceJob.schedule();
     }
 
-    private void updateTargetsUsingAttribute(List<String> targetsToUpdate, String depsAttributeName, SubMonitor monitor)
+    private int updateTargetsUsingAttribute(List<String> targetsToUpdate, String depsAttributeName, SubMonitor monitor)
             throws CoreException {
 
         // filter that targets to update based on top level macro calls actually using the attribute name
         var buildFile = bazelProject.getBazelBuildFile();
-        List<String> targetsUsingDependencies = buildFile.getTopLevelMacroCalls()
+        var affactedMacroCalls = buildFile.getTopLevelMacroCalls()
                 .stream()
                 .filter(m -> (m.getStringListArgument(depsAttributeName) != null))
                 .map(m -> buildFile.getParent().getLabel().toString() + ":" + m.getName())
-                .filter(targetsToUpdate::contains)
-                .collect(toList());
+                .toList();
 
-        if (!targetsUsingDependencies.isEmpty()) {
+        // if there is only one top level macro call we use it directly
+        // otherwise we try to match based on targetsToUpdate
+        List<String> targetsForBuildozerToUpdate;
+        if (affactedMacroCalls.size() > 1) {
+            targetsForBuildozerToUpdate =
+                    affactedMacroCalls.stream().filter(targetsToUpdate::contains).collect(toList());
+        } else {
+            targetsForBuildozerToUpdate = affactedMacroCalls;
+        }
+
+        if (!targetsForBuildozerToUpdate.isEmpty()) {
             var workspaceRoot = bazelProject.getBazelWorkspace().getLocation().toPath();
             var buildozerCommand = new BuildozerCommand(
                     workspaceRoot,
                     labelsToAdd.stream().map(l -> format("add %s %s", depsAttributeName, l)).collect(toList()),
-                    targetsUsingDependencies,
-                    "Add dependency '%s'");
+                    targetsForBuildozerToUpdate,
+                    format(
+                        "Add label(s) '%s' to '%s'",
+                        labelsToAdd.stream().map(Label::toString).collect(joining(", ")),
+                        buildFile.getLocation()));
             bazelProject.getBazelWorkspace()
                     .getCommandExecutor()
                     .runDirectlyWithinExistingWorkspaceLock(
@@ -156,5 +187,7 @@ public final class AddDependenciesJob extends WorkspaceJob {
                         List.of(bazelProject.getBuildFile()),
                         monitor);
         }
+
+        return targetsForBuildozerToUpdate.size();
     }
 }

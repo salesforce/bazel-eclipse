@@ -178,6 +178,10 @@ public final class ClasspathEntry {
         return exported;
     }
 
+    public boolean isTest() {
+        return "true".equals(getExtraAttributes().get(IClasspathAttribute.TEST));
+    }
+
     public void setBazelTargetOrigin(Label origin) {
         getExtraAttributes().put(ATTRIBUTE_BAZEL_TARGET_NAME, origin.toString());
     }
@@ -192,5 +196,13 @@ public final class ClasspathEntry {
 
     public void setSourceAttachmentRootPath(IPath sourceAttachmentRootPath) {
         this.sourceAttachmentRootPath = sourceAttachmentRootPath;
+    }
+
+    public void setTest(boolean test) {
+        if (test) {
+            getExtraAttributes().put(IClasspathAttribute.TEST, "true");
+        } else {
+            getExtraAttributes().remove(IClasspathAttribute.TEST);
+        }
     }
 }

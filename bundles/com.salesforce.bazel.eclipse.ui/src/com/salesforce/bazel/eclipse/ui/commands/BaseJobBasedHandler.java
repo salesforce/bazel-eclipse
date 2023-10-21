@@ -12,6 +12,11 @@ public abstract class BaseJobBasedHandler extends AbstractHandler {
     @Override
     public Object execute(final ExecutionEvent event) throws ExecutionException {
         final var job = createJob(event);
+        if (job == null) {
+            // assume abort
+            return null;
+        }
+
         job.setUser(true);
         job.schedule();
         return null;
