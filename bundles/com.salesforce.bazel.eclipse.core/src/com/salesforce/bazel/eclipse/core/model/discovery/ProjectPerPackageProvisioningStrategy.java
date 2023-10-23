@@ -256,6 +256,9 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                                     .collect(joining(", ")))));
             }
 
+            // configure links
+            linkGeneratedSourcesIntoProject(project, javaInfo, monitor.split(1));
+
             // configure classpath
             configureRawClasspath(project, javaInfo, monitor.split(1));
 

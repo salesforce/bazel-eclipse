@@ -200,6 +200,16 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     }
 
     /**
+     * {@return absolute file system location to the <code>bazel-bin</code> symlink target}
+     *
+     * @throws CoreException
+     *             if the workspace does not exist
+     */
+    public IPath getBazelBinLocation() throws CoreException {
+        return getInfo().getBazelBin();
+    }
+
+    /**
      * Returns a Bazel package for the given label.
      * <p>
      * This is a handle-only method. The underlying package may or may not exist in the workspace.

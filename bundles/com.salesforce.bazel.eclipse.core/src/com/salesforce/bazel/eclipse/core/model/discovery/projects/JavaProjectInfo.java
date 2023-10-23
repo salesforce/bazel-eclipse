@@ -179,13 +179,13 @@ public class JavaProjectInfo {
     public IStatus analyzeProjectRecommendations(IProgressMonitor monitor) throws CoreException {
         var result = new MultiStatus(JavaProjectInfo.class, 0, "Java Analysis Result");
 
-        sourceInfo = new JavaSourceInfo(this.srcs, bazelPackage.getLocation());
+        sourceInfo = new JavaSourceInfo(this.srcs, bazelPackage);
         sourceInfo.analyzeSourceDirectories(result);
 
         resourceInfo = new JavaResourceInfo(resources, bazelPackage);
         resourceInfo.analyzeResourceDirectories(result);
 
-        testSourceInfo = new JavaSourceInfo(this.testSrcs, bazelPackage.getLocation(), sourceInfo);
+        testSourceInfo = new JavaSourceInfo(this.testSrcs, bazelPackage, sourceInfo);
         testSourceInfo.analyzeSourceDirectories(result);
 
         testResourceInfo = new JavaResourceInfo(testResources, bazelPackage);
