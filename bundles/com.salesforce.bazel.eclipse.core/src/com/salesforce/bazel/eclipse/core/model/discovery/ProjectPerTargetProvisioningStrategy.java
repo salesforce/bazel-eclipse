@@ -197,6 +197,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
 
         // configure links
         linkSourcesIntoProject(project, javaInfo, monitor.split(1));
+        linkGeneratedSourcesIntoProject(project, javaInfo, monitor.split(1));
 
         // configure classpath
         configureRawClasspath(project, javaInfo, monitor.split(1));

@@ -1,18 +1,27 @@
 package com.salesforce.bazel.eclipse.core.model.discovery.projects;
 
 import static java.lang.String.format;
+import static java.nio.file.Files.copy;
+import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.find;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.Files.readString;
+import static java.nio.file.Files.walkFileTree;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -21,15 +30,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.MultiStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
+
+import com.salesforce.bazel.eclipse.core.model.BazelPackage;
+import com.salesforce.bazel.eclipse.core.model.BazelTarget;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 
 /**
  * Source information used by {@link JavaProjectInfo} to analyze the <code>srcs</code> information in order to identify
@@ -38,7 +53,7 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
 public class JavaSourceInfo {
 
     private static final IPath NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE =
-            new Path("_not_following_java_package_structure_");
+            IPath.forPosix("_not_following_java_package_structure_");
 
     private static boolean isJavaFile(java.nio.file.Path file) {
         return isRegularFile(file) && file.getFileName().toString().endsWith(".java");
@@ -48,6 +63,7 @@ public class JavaSourceInfo {
     private final Collection<Entry> srcs;
     private final IPath bazelPackageLocation;
     private final JavaSourceInfo sharedSourceInfo;
+    private final BazelWorkspace bazelWorkspace;
 
     /**
      * A list of all source files impossible to identify a common root directory
@@ -60,10 +76,11 @@ public class JavaSourceInfo {
      */
     private Map<IPath, Object> sourceDirectoriesWithFilesOrGlobs;
 
-    public JavaSourceInfo(Collection<Entry> srcs, IPath bazelPackageLocation) {
+    public JavaSourceInfo(Collection<Entry> srcs, BazelPackage bazelPackage) {
         this.srcs = srcs;
-        this.bazelPackageLocation = bazelPackageLocation;
+        this.bazelPackageLocation = bazelPackage.getLocation();
         this.sharedSourceInfo = null;
+        this.bazelWorkspace = bazelPackage.getBazelWorkspace();
     }
 
     /**
@@ -79,19 +96,20 @@ public class JavaSourceInfo {
      * @param bazelPackageLocation
      * @param sharedSourceInfo
      */
-    public JavaSourceInfo(Collection<Entry> srcs, IPath bazelPackageLocation, JavaSourceInfo sharedSourceInfo) {
+    public JavaSourceInfo(Collection<Entry> srcs, BazelPackage bazelPackage, JavaSourceInfo sharedSourceInfo) {
         this.srcs = srcs;
-        this.bazelPackageLocation = bazelPackageLocation;
+        this.bazelPackageLocation = bazelPackage.getLocation();
         this.sharedSourceInfo = sharedSourceInfo;
+        this.bazelWorkspace = bazelPackage.getBazelWorkspace();
     }
 
     @SuppressWarnings("unchecked")
     public void analyzeSourceDirectories(MultiStatus result) throws CoreException {
         // build an index of all source files and their parent directories (does not need to maintain order)
-        Map<IPath, List<JavaSourceEntry>> sourceEntriesByParentFolder = new HashMap<>();
+        Map<IPath, List<? super JavaSourceEntry>> sourceEntriesByParentFolder = new HashMap<>();
 
         // group by potential source roots
-        Function<JavaSourceEntry, IPath> groupingByPotentialSourceRoots = fileEntry -> {
+        Function<? super JavaSourceEntry, IPath> groupingByPotentialSourceRoots = fileEntry -> {
             // detect package if necessary
             if (fileEntry.detectedPackagePath == null) {
                 fileEntry.detectedPackagePath = detectPackagePath(fileEntry);
@@ -109,37 +127,44 @@ public class JavaSourceInfo {
                 return NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE;
             }
 
-            // build second index of parent for all entries with a potential source root
-            // this is needed in order to identify split packages later
-            sourceEntriesByParentFolder.putIfAbsent(fileEntry.getPathParent(), new ArrayList<>());
-            sourceEntriesByParentFolder.get(fileEntry.getPathParent()).add(fileEntry);
-
-            // return the potential source root (relative)
-            return potentialSourceDirectoryRoot.makeRelative().removeTrailingSeparator();
+            // return the potential source root
+            return potentialSourceDirectoryRoot;
 
         };
 
         // collect the potential list of source directories
         var sourceEntriesBySourceRoot = new LinkedHashMap<IPath, Object>();
+
+        // define a function for JavaSourceEntry so we can reuse it for sources and extracted srcjars
+        Function<JavaSourceEntry, Void> javaSourceEntryCollector = javaSourceFile -> {
+            var sourceDirectory = groupingByPotentialSourceRoots.apply(javaSourceFile);
+            if (!sourceEntriesBySourceRoot.containsKey(sourceDirectory)) {
+                var list = new ArrayList<>();
+                list.add(javaSourceFile);
+                sourceEntriesBySourceRoot.put(sourceDirectory, list);
+            } else {
+                var maybeList = sourceEntriesBySourceRoot.get(sourceDirectory);
+                if (maybeList instanceof List list) {
+                    list.add(javaSourceFile);
+                } else {
+                    result.add(
+                        Status.error(
+                            format(
+                                "It looks like source root '%s' is already mapped to a glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
+                                sourceDirectory)));
+                }
+            }
+            return null; // not relevant
+        };
+
         for (Entry srcEntry : srcs) {
             if (srcEntry instanceof JavaSourceEntry javaSourceFile) {
-                var sourceDirectory = groupingByPotentialSourceRoots.apply(javaSourceFile);
-                if (!sourceEntriesBySourceRoot.containsKey(sourceDirectory)) {
-                    var list = new ArrayList<>();
-                    list.add(javaSourceFile);
-                    sourceEntriesBySourceRoot.put(sourceDirectory, list);
-                } else {
-                    var maybeList = sourceEntriesBySourceRoot.get(sourceDirectory);
-                    if (maybeList instanceof List list) {
-                        list.add(javaSourceFile);
-                    } else {
-                        result.add(
-                            Status.error(
-                                format(
-                                    "It looks like source root '%s' is already mapped to a glob pattern. Please split into a separate targets. We cannot support this in the IDE.",
-                                    sourceDirectory)));
-                    }
-                }
+                javaSourceEntryCollector.apply(javaSourceFile);
+
+                // build second index of parent for all entries with a potential source root
+                // this is needed in order to identify split packages (in same directory) later
+                sourceEntriesByParentFolder.putIfAbsent(javaSourceFile.getPathParent(), new ArrayList<>());
+                sourceEntriesByParentFolder.get(javaSourceFile.getPathParent()).add(javaSourceFile);
             } else if (srcEntry instanceof GlobEntry globEntry) {
                 if (sourceEntriesByParentFolder.containsKey(globEntry.getRelativeDirectoryPath())) {
                     result.add(
@@ -150,20 +175,25 @@ public class JavaSourceInfo {
                 } else {
                     sourceEntriesBySourceRoot.put(globEntry.getRelativeDirectoryPath(), globEntry);
                 }
+            } else if (srcEntry instanceof LabelEntry labelEntry) {
+                var bazelTarget = bazelWorkspace.getBazelTarget(labelEntry.getLabel());
+                var srcJars = bazelTarget.getRuleOutput()
+                        .stream()
+                        .filter(p -> "srcjar".equals(p.getFileExtension()))
+                        .collect(toList());
+                for (IPath srcjar : srcJars) {
+                    var srcjarFolder = extractSrcJar(bazelTarget, srcjar);
+                    collectJavaSourcesInFolder(srcjarFolder).forEach(javaSourceEntryCollector::apply);
+                }
             } else {
-                // check if the source has label dependencies
-                result.add(
-                    Status.warning(
-                        format(
-                            "Found source label reference '%s'. The project may not be fully supported in the IDE.",
-                            srcEntry)));
+                throw new CoreException(Status.error(format("Unexpected source '%s'!", srcEntry)));
             }
         }
 
         // discover folders that contain more .java files then declared in srcs
         // (this is a strong split-package indication)
         Set<IPath> potentialSplitPackageOrSubsetFolders = new HashSet<>();
-        for (Map.Entry<IPath, List<JavaSourceEntry>> entry : sourceEntriesByParentFolder.entrySet()) {
+        for (Map.Entry<IPath, List<? super JavaSourceEntry>> entry : sourceEntriesByParentFolder.entrySet()) {
             var potentialSourceRoot = entry.getKey();
             if (isContainedInSharedSourceDirectories(potentialSourceRoot)) {
                 // don't check for split packages for stuff covered in shared sources already
@@ -208,6 +238,10 @@ public class JavaSourceInfo {
                 // don't check for split packages for stuff covered in shared sources already
                 continue;
             }
+            if (potentialSourceRoot.isAbsolute()) {
+                // don't check for split packages in srcjars (generated code)
+                continue;
+            }
 
             var potentialSourceRootPath = bazelPackageLocation.append(potentialSourceRoot).toPath();
             try {
@@ -231,7 +265,8 @@ public class JavaSourceInfo {
             }
         }
 
-        // don't issue split packages warning nfor stuff covered in shared sources already
+        // don't issue split packages warning for stuff covered in shared sources already
+        // (test code is allowed to have same package)
         if ((sharedSourceInfo != null) && sharedSourceInfo.hasSourceDirectories()) {
             potentialSplitPackageOrSubsetFolders.removeIf(this::isContainedInSharedSourceDirectories);
         }
@@ -257,6 +292,25 @@ public class JavaSourceInfo {
         }
     }
 
+    private Collection<JavaSourceEntry> collectJavaSourcesInFolder(IPath directory) throws CoreException {
+        try {
+            List<JavaSourceEntry> result = new ArrayList<>();
+            walkFileTree(directory.toPath(), new SimpleFileVisitor<>() {
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    var path = IPath.fromPath(file);
+                    if ("java".equals(path.getFileExtension())) {
+                        result.add(new JavaSrcJarEntry(path.removeFirstSegments(directory.segmentCount()), directory));
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+            return result;
+        } catch (IOException e) {
+            throw new CoreException(
+                    Status.error(format("Unable to scan directory '%s' for .java source files.", directory), e));
+        }
+    }
+
     private IPath detectPackagePath(JavaSourceEntry fileEntry) {
         // we inspect at most one file per directory (anything else is too weird to support)
         var previouslyDetectedPackagePath = detectedPackagePathsByFileEntryPathParent.get(fileEntry.getPathParent());
@@ -265,7 +319,7 @@ public class JavaSourceInfo {
         }
 
         // assume empty by default
-        IPath packagePath = Path.EMPTY;
+        var packagePath = IPath.EMPTY;
         var packageName = readPackageName(fileEntry);
         if (packageName.length() > 0) {
             var packageNameSegments = new StringTokenizer(new String(packageName), ".");
@@ -278,6 +332,50 @@ public class JavaSourceInfo {
         detectedPackagePathsByFileEntryPathParent.put(fileEntry.getPathParent(), packagePath);
 
         return packagePath;
+    }
+
+    /**
+     * Extract the source jar (typically found in the bazel-bin directory of the package) into a directory for
+     * consumption as source folder in an Eclipse project.
+     * <p>
+     * The srcjar will be extracted into a directory inside bazel-bin.
+     * </p>
+     *
+     * @param bazelTarget
+     *            the target producing the source jar
+     * @param srcjar
+     *            the path to the source jar
+     * @return absolute file system path to the directory containing the extracted sources
+     * @throws CoreException
+     */
+    private IPath extractSrcJar(BazelTarget bazelTarget, IPath srcjar) throws CoreException {
+        var jarFile = bazelWorkspace.getBazelBinLocation()
+                .append(bazelTarget.getBazelPackage().getWorkspaceRelativePath())
+                .append(srcjar);
+        var targetDirectory = jarFile.removeLastSegments(1).append("_eclipse").append(srcjar.lastSegment());
+
+        // TODO: need a more sensitive delta/diff (including removal) for Eclipse resource refresh
+
+        var destination = targetDirectory.toPath();
+        try (var archive = new ZipFile(jarFile.toFile())) {
+            // sort entries by name to always create folders first
+            List<? extends ZipEntry> entries =
+                    archive.stream().sorted(Comparator.comparing(ZipEntry::getName)).collect(toList());
+            for (ZipEntry entry : entries) {
+                var entryDest = destination.resolve(entry.getName());
+                if (entry.isDirectory()) {
+                    createDirectories(entryDest);
+                } else {
+                    try (var is = archive.getInputStream(entry)) {
+                        copy(is, entryDest, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new CoreException(Status.error(format("Error extracting srcjar '%s'", srcjar), e));
+        }
+
+        return targetDirectory;
     }
 
     public IPath getBazelPackageLocation() {
@@ -330,7 +428,7 @@ public class JavaSourceInfo {
             if (excludePatterns != null) {
                 var exclusionPatterns = new IPath[excludePatterns.size()];
                 for (var i = 0; i < exclusionPatterns.length; i++) {
-                    exclusionPatterns[i] = Path.forPosix(excludePatterns.get(i));
+                    exclusionPatterns[i] = IPath.forPosix(excludePatterns.get(i));
                 }
                 return exclusionPatterns;
             }
@@ -355,7 +453,7 @@ public class JavaSourceInfo {
             if (includePatterns != null) {
                 var exclusionPatterns = new IPath[includePatterns.size()];
                 for (var i = 0; i < exclusionPatterns.length; i++) {
-                    exclusionPatterns[i] = Path.forPosix(includePatterns.get(i));
+                    exclusionPatterns[i] = IPath.forPosix(includePatterns.get(i));
                 }
                 return exclusionPatterns;
             }
@@ -399,6 +497,29 @@ public class JavaSourceInfo {
         var sharedSourceDirectories = sharedSourceInfo.getSourceDirectories();
         return sharedSourceDirectories.contains(potentialSourceRoot)
                 || sharedSourceDirectories.stream().anyMatch(p -> p.isPrefixOf(potentialSourceRoot));
+    }
+
+    /**
+     * Performs a check of all entries discovered for a source directory to match a given predicate.
+     *
+     * @param sourceDirectory
+     *            the source directory (must be contained in {@link #getSourceDirectories()})
+     * @param predicate
+     *            the predicate that all entries for the specified source directory must match
+     * @return <code>true</code> if all match, <code>false</code> otherwise
+     */
+    public boolean matchAllSourceDirectoryEntries(IPath sourceDirectory, Predicate<? super Entry> predicate) {
+        var fileOrGlob = requireNonNull(
+            requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").get(sourceDirectory),
+            () -> format("source directory '%s' unknown", sourceDirectory));
+        if (fileOrGlob instanceof GlobEntry globEntry) {
+            return predicate.test(globEntry);
+        }
+        if (fileOrGlob instanceof List<?> listOfEntries) {
+            // the case is save assuming no programming mistakes in this class
+            return listOfEntries.stream().map(JavaSourceEntry.class::cast).allMatch(predicate);
+        }
+        return false;
     }
 
     @SuppressWarnings("deprecation") // use of TokenNameIdentifier is ok here

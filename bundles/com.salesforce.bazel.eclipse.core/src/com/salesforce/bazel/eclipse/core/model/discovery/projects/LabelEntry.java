@@ -30,6 +30,13 @@ public class LabelEntry implements Entry {
         return Objects.equals(label, other.label);
     }
 
+    /**
+     * @return the label
+     */
+    public BazelLabel getLabel() {
+        return label;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(label);

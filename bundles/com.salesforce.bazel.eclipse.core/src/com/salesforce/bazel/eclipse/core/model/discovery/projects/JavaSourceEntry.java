@@ -7,12 +7,12 @@ import java.util.Objects;
 import org.eclipse.core.runtime.IPath;
 
 /**
- * A source entry points to exactly one <code>.java</code> source file. It contains additional logic for extracting
- * the package path from the location.
+ * A source entry points to exactly one <code>.java</code> source file. It contains additional logic for extracting the
+ * package path from the location.
  */
 public class JavaSourceEntry implements Entry {
 
-    private static boolean endsWith(IPath path, IPath lastSegments) {
+    static boolean endsWith(IPath path, IPath lastSegments) {
         if (path.segmentCount() < lastSegments.segmentCount()) {
             return false;
         }
@@ -61,6 +61,13 @@ public class JavaSourceEntry implements Entry {
     }
 
     /**
+     * @return the Bazel package location this entry is contained in
+     */
+    public IPath getBazelPackageLocation() {
+        return bazelPackageLocation;
+    }
+
+    /**
      * {@return absolute location of of the container of this path entry}
      */
     public IPath getContainingFolderPath() {
@@ -93,8 +100,8 @@ public class JavaSourceEntry implements Entry {
     }
 
     /**
-     * @return first few segments of {@link #getPathParent()} which could be the source directory, or
-     *         <code>null</code> if unlikely
+     * @return first few segments of {@link #getPathParent()} (relative to {@link #getBazelPackageLocation()}) which
+     *         could be the source directory, or <code>null</code> if unlikely
      */
     public IPath getPotentialSourceDirectoryRoot() {
         var detectedPackagePath = getDetectedPackagePath();
@@ -111,6 +118,14 @@ public class JavaSourceEntry implements Entry {
     @Override
     public int hashCode() {
         return Objects.hash(bazelPackageLocation, relativePath);
+    }
+
+    /**
+     * {@return <code>true</code> if the entry is generated, i.e. located outside a Bazel package, <code>false</code>
+     * otherwise}
+     */
+    public boolean isExternalOrGenerated() {
+        return false;
     }
 
     @Override

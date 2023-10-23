@@ -61,6 +61,28 @@ public class BazelProjectFileSystemMapper {
     }
 
     /**
+     * Returns the folder where source files links to generated sources will be created.
+     * <p>
+     * This can be used whenever there is a need to bring generated sources into a project (eg., <code>.srcjar</code> ).
+     * It is expected that this folder is used as a parent. It should only contain symlinks to folders with the
+     * generated sources. Do not copy generated sources in here.
+     * </p>
+     *
+     * @param project
+     * @return the folder to use for generated sources
+     */
+    public IFolder getGeneratedSourcesFolder(BazelProject project) {
+        return project.getProject().getFolder("generated-srcs");
+    }
+
+    /**
+     * @see #getGeneratedSourcesFolder(BazelProject)
+     */
+    public IFolder getGeneratedSourcesFolderForTests(BazelProject project) {
+        return project.getProject().getFolder("generated-test-srcs");
+    }
+
+    /**
      * @see #getVirtualSourceFolder(BazelProject)
      */
     public IFolder getOutputFolder(BazelProject project) {
