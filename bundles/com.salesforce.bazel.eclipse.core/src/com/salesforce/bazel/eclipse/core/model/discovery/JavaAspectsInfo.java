@@ -15,6 +15,7 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
+import static java.nio.file.Files.isReadable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.bazel.BazelBuildSystemProvider;
+import com.google.idea.blaze.base.command.buildresult.BlazeArtifact.LocalFileArtifact;
 import com.google.idea.blaze.base.command.buildresult.LocalFileOutputArtifact;
 import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
 import com.google.idea.blaze.base.command.buildresult.ParsedBepOutput;
@@ -140,6 +142,20 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
             if (jar instanceof LocalFileOutputArtifact localJar) {
                 var classJar = ExecutionPathHelper
                         .parse(workspaceRoot, BazelBuildSystemProvider.BAZEL, localJar.getRelativePath());
+
+                if (classJar.isSource()) {
+                    LOG.error(
+                        "Did not expect runtime jar '{}' to be a source artifact. Please report bug! - {}",
+                        localJar,
+                        classJar);
+                    continue;
+                }
+                var resolveOutput = locationDecoder.resolveOutput(classJar);
+                if ((resolveOutput instanceof LocalFileArtifact localOutput) && !isReadable(localOutput.getPath())) {
+                    LOG.error("Wrong location for runtime jar '{}'. Please report bug!", localJar);
+                    continue;
+                }
+
                 var artifactData = fullArtifactData.get(localJar.getRelativePath());
                 for (String topLevelTarget : artifactData.topLevelTargets) {
 
