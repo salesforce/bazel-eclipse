@@ -120,10 +120,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             var command = new BazelBuildWithIntelliJAspectsCommand(
                     workspaceRoot,
                     targetsToBuild,
-                    outputGroups,
+                    outputGroupNames,
                     aspects,
-                    languages,
-                    onlyDirectDeps,
                     "Running build with IntelliJ aspects to collect classpath information");
 
             // sync_flags

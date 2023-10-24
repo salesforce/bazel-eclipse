@@ -145,12 +145,15 @@ public class IntellijAspects {
     /**
      * Collects the names of output groups created by the aspect for the given {@link OutputGroup} and languages.
      *
-     * @param outputGroups
-     *            list of requested {@link OutputGroup} for each language
+     * @param outputGroup
+     *            the output groups to request (usually {@link OutputGroup#INFO} and {@link OutputGroup#RESOLVE}
+     *            together or only {@link OutputGroup#COMPILE})
      * @param languages
-     *            list of requested languages
+     *            the set of languages to obtain information for (as configured in the project view)
      * @param directDepsOnly
-     *            <code>true</code> if only direct dependencies are requested, <code>false</code> otherwise
+     *            should be set to <code>true</code> when the project view specifies
+     *            <code>derive_targets_from_directories</code> (see
+     *            https://github.com/bazelbuild/intellij/blob/37813e607ad26716c4d1ccf4bc3e7163b2188658/base/src/com/google/idea/blaze/base/sync/aspects/BlazeIdeInterfaceAspectsImpl.java#L724)
      * @return list of output group names created by the aspect
      */
     public Collection<String> getOutputGroupNames(Set<OutputGroup> outputGroups, Set<LanguageClass> languages,

@@ -164,7 +164,9 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
                         runtimeJarsByToplevelTarget.putIfAbsent(topLevelTarget, new ArrayList<>());
                         runtimeJarsByToplevelTarget.get(topLevelTarget).add(jarLibrary);
                     } else {
-                        LOG.warn("Unable to compute target label for runtime jar '{}'. Please report!", localJar);
+                        LOG.warn(
+                            "Unable to compute target label for runtime jar '{}'. Please check if the rule producing the jar is adding the Target-Label to the jar manifest!",
+                            localJar);
                     }
 
                 }

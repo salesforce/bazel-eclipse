@@ -9,10 +9,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
-import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -26,37 +24,23 @@ public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
     private final IntellijAspects aspects;
     private final Collection<String> outputGroupNames;
 
-    public BazelBuildWithIntelliJAspectsCommand(Path workspaceRoot, List<BazelLabel> targets,
-            Collection<String> outputGroupNames, IntellijAspects aspects, String purpose) {
-        super(targets, workspaceRoot, true /* keepGoing */, purpose);
-        this.aspects = aspects;
-        this.outputGroupNames = outputGroupNames;
-    }
-
     /**
      * @param workspaceRoot
      *            the Bazel workspace root
      * @param targets
      *            the targets to build
-     * @param outputGroups
-     *            the output groups to request (usually {@link OutputGroup#INFO} and {@link OutputGroup#RESOLVE}
-     *            together or only {@link OutputGroup#COMPILE})
+     * @param outputGroupNames
+     *            the output groups to request (use {@link IntellijAspects#getOutputGroupNames(Set, Set, boolean)})
      * @param aspects
      *            the aspects to use
-     * @param languages
-     *            the set of languages to obtain information for (as configured in the project view)
-     * @param onlyDirectDeps
-     *            should be set to <code>true</code> when the project view specifies
-     *            <code>derive_targets_from_directories</code> (see
-     *            https://github.com/bazelbuild/intellij/blob/37813e607ad26716c4d1ccf4bc3e7163b2188658/base/src/com/google/idea/blaze/base/sync/aspects/BlazeIdeInterfaceAspectsImpl.java#L724)
      * @param purpose
+     *            a human readable message why the command is needed
      */
     public BazelBuildWithIntelliJAspectsCommand(Path workspaceRoot, List<BazelLabel> targets,
-            Set<OutputGroup> outputGroups, IntellijAspects aspects, Set<LanguageClass> languages,
-            boolean onlyDirectDeps, String purpose) {
+            Collection<String> outputGroupNames, IntellijAspects aspects, String purpose) {
         super(targets, workspaceRoot, true /* keepGoing */, purpose);
         this.aspects = aspects;
-        this.outputGroupNames = aspects.getOutputGroupNames(outputGroups, languages, onlyDirectDeps);
+        this.outputGroupNames = outputGroupNames;
     }
 
     @Override
