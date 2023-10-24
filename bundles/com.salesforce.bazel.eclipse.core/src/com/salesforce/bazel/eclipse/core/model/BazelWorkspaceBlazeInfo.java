@@ -24,9 +24,9 @@ public class BazelWorkspaceBlazeInfo implements BlazeInfo {
 
     public BazelWorkspaceBlazeInfo(BazelWorkspace bazelWorkspace) throws CoreException {
         var info = bazelWorkspace.getInfo();
-        bazelBin = new ExecutionRootPath(info.getBazelBin().toFile().getPath());
-        bazelGenfiles = new ExecutionRootPath(info.getBazelGenfiles().toFile().getPath());
-        bazelTestlogs = new ExecutionRootPath(info.getBazelTestlogs().toFile().getPath());
+        bazelBin = new ExecutionRootPath(info.getBazelBin().toPath());
+        bazelGenfiles = new ExecutionRootPath(info.getBazelGenfiles().toPath());
+        bazelTestlogs = new ExecutionRootPath(info.getBazelTestlogs().toPath());
         executionRoot = info.getExcutionRoot().toPath();
         outputBase = info.getOutputBase().toPath();
     }

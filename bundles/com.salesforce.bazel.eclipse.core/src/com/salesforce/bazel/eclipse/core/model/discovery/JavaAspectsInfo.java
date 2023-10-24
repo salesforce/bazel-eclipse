@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.isReadable;
+import static org.eclipse.core.runtime.IPath.fromPath;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -140,8 +141,12 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
         for (OutputArtifact jar : aspectsBuildResult
                 .getOutputGroupArtifacts(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH)) {
             if (jar instanceof LocalFileOutputArtifact localJar) {
-                var classJar = ExecutionPathHelper
-                        .parse(workspaceRoot, BazelBuildSystemProvider.BAZEL, localJar.getRelativePath());
+                var localJarExecutionRootRelativePath =
+                        getBlazeInfo().getExecutionRoot().relativize(localJar.getPath());
+                var classJar = ExecutionPathHelper.parse(
+                    workspaceRoot,
+                    BazelBuildSystemProvider.BAZEL,
+                    fromPath(localJarExecutionRootRelativePath).toString());
 
                 if (classJar.isSource()) {
                     LOG.error(
