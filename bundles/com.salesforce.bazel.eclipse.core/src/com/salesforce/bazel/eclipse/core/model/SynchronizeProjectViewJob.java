@@ -10,6 +10,7 @@ import static java.lang.String.format;
 import static java.nio.file.Files.isReadable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.concat;
 import static org.eclipse.core.resources.IContainer.INCLUDE_HIDDEN;
 import static org.eclipse.core.resources.IResource.DEPTH_ONE;
 import static org.eclipse.core.resources.IResource.FORCE;
@@ -60,6 +61,7 @@ import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathHelpers;
+import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryAndProvisioningExtensionLookup;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryStrategy;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetProvisioningStrategy;
@@ -452,6 +454,20 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
     }
 
+    private void initializeClasspaths(List<BazelProject> projects, BazelWorkspace workspace, SubMonitor monitor)
+            throws CoreException {
+        try {
+            // use the job to properly trigger the classpath manager
+            new InitializeOrRefreshClasspathJob(
+                    projects.contains(workspace.getBazelProject()) ? projects.stream()
+                            : concat(Stream.of(workspace.getBazelProject()), projects.stream()),
+                    workspace.getParent().getModelManager().getClasspathManager(),
+                    true).runInWorkspace(monitor);
+        } finally {
+            monitor.done();
+        }
+    }
+
     private List<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, SubMonitor monitor)
             throws CoreException {
         return getTargetProvisioningStrategy().provisionProjectsForSelectedTargets(targets, workspace, monitor);
@@ -607,6 +623,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // remove no longer needed projects
             removeObsoleteProjects(targetProjects, progress.split(1, SUPPRESS_NONE));
 
+            // after provisioning and cleanup we go over the projects a second time to initialize the classpaths
+            initializeClasspaths(targetProjects, workspace, progress.split(1, SUPPRESS_NONE));
             return Status.OK_STATUS;
         } finally {
             if (monitor != null) {

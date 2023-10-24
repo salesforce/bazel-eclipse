@@ -14,7 +14,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Stream.concat;
 import static org.eclipse.core.runtime.Platform.PI_RUNTIME;
 import static org.eclipse.core.runtime.Platform.PREF_LINE_SEPARATOR;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
@@ -76,8 +75,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
-import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
-import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
@@ -854,41 +851,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     /**
-     * Called by {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)} after the
-     * projects were created.
-     * <p>
-     * After all projects were created we go over them a second time to run the aspects and initialize the classpaths.
-     * This is needed to allow proper wiring of dependencies to source projects in Eclipse.
-     * </p>
-     * <p>
-     * The default implementation simply loops over all projects and calls
-     * {@link #computeClasspaths(Collection, BazelWorkspace, BazelClasspathScope, IProgressMonitor)}. Sub classes may
-     * override if there is a more efficient way of if this is not needed at all with a specific strategy.
-     * </p>
-     *
-     * @param projects
-     *            list of provisioned projects
-     * @param workspace
-     *            the workspace
-     * @param monitor
-     *            monitor for reporting progress and checking cancellation
-     * @throws CoreException
-     */
-    protected void doInitializeClasspaths(List<BazelProject> projects, BazelWorkspace workspace, SubMonitor monitor)
-            throws CoreException {
-        try {
-            // use the job to properly trigger the classpath manager
-            new InitializeOrRefreshClasspathJob(
-                    projects.contains(workspace.getBazelProject()) ? projects.stream()
-                            : concat(Stream.of(workspace.getBazelProject()), projects.stream()),
-                    workspace.getParent().getModelManager().getClasspathManager(),
-                    true).runInWorkspace(monitor);
-        } finally {
-            monitor.done();
-        }
-    }
-
-    /**
      * Called by {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)} after base
      * workspace information has been detected.
      * <p>
@@ -1319,13 +1281,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             detectDefaultJavaToolchain(workspace);
 
             // create projects
-            var result = doProvisionProjects(targets, monitor.split(1, SUPPRESS_NONE));
-
-            // after provisioning we go over the projects a second time to initialize the classpaths
-            doInitializeClasspaths(result, workspace, monitor.split(2, SUPPRESS_NONE));
-
-            // done
-            return result;
+            return doProvisionProjects(targets, monitor.split(1, SUPPRESS_NONE));
         } finally {
             progress.done();
         }
