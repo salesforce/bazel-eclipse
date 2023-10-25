@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
 import com.salesforce.bazel.sdk.command.BazelBinary;
+import com.salesforce.bazel.sdk.command.BazelBuildCommand;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.BazelQueryCommand;
 
@@ -87,7 +88,7 @@ public class BazelElementCommandExecutor {
         }
 
         var buildFlags = bazelWorkspace.getBazelProjectView().buildFlags();
-        if (!buildFlags.isEmpty()) {
+        if (!buildFlags.isEmpty() && (command instanceof BazelBuildCommand)) {
             command.addCommandArgs(buildFlags);
         }
     }
