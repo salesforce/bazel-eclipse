@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.isReadable;
+import static java.util.Objects.requireNonNull;
 import static org.eclipse.core.runtime.IPath.fromPath;
 
 import java.io.IOException;
@@ -163,33 +164,30 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
 
                 var artifactData = fullArtifactData.get(localJar.getRelativePath());
                 for (String topLevelTarget : artifactData.topLevelTargets) {
-
                     var jarLibrary = libraryByJdepsRootRelativePath.get(classJar.getRelativePath());
-
                     if (jarLibrary == null) {
                         var targetLabel = readTargetLabel(localJar);
-                        if (targetLabel != null) {
-                            var builder = LibraryArtifact.builder();
-                            builder.setClassJar(classJar);
-                            var sourceJar = SourceJarFinder.findSourceJar(classJar);
-                            if (sourceJar != null) {
-                                builder.addSourceJar(sourceJar);
-                            }
-
-                            jarLibrary = new BlazeJarLibrary(builder.build(), TargetKey.forPlainTarget(targetLabel));
-                            addLibrary(jarLibrary);
+                        if (targetLabel == null) {
+                            LOG.warn(
+                                "Unable to compute target label for runtime jar '{}'. Please check if the rule producing the jar is adding the Target-Label to the jar manifest!",
+                                classJar);
+                            continue;
                         }
+
+                        var builder = LibraryArtifact.builder();
+                        builder.setClassJar(classJar);
+                        var sourceJar = SourceJarFinder.findSourceJar(classJar);
+                        if (sourceJar != null) {
+                            builder.addSourceJar(sourceJar);
+                        }
+
+                        jarLibrary = new BlazeJarLibrary(builder.build(), TargetKey.forPlainTarget(targetLabel));
+                        addLibrary(jarLibrary);
                     }
 
-                    if (jarLibrary != null) {
-                        runtimeJarsByToplevelTarget.putIfAbsent(topLevelTarget, new ArrayList<>());
-                        runtimeJarsByToplevelTarget.get(topLevelTarget).add(jarLibrary);
-                    } else {
-                        LOG.warn(
-                            "Unable to compute target label for runtime jar '{}'. Please check if the rule producing the jar is adding the Target-Label to the jar manifest!",
-                            localJar);
-                    }
-
+                    runtimeJarsByToplevelTarget.putIfAbsent(topLevelTarget, new ArrayList<>());
+                    runtimeJarsByToplevelTarget.get(topLevelTarget)
+                            .add(requireNonNull(jarLibrary, "jarLibrary should not be null here"));
                 }
             }
         }
@@ -238,7 +236,7 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
         try (var jarFile = new BazelJarFile(localJar.getPath())) {
             return jarFile.getTargetLabel();
         } catch (IOException e) {
-            LOG.warn("Error inspecting manifest of jar '{}': {}", localJar, e.getMessage());
+            LOG.warn("Error inspecting manifest of jar '{}': {}", localJar, e.getMessage(), e);
         }
         return null;
     }

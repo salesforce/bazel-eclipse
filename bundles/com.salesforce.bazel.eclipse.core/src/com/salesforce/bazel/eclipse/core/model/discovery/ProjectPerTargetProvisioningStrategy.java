@@ -136,6 +136,12 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                     }
                 }
 
+                // remove references to the project
+                // (the runtime classpath will contain a reference to the project)
+                classpath.removeIf(
+                    entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
+                            && entry.getPath().equals(bazelProject.getProject().getFullPath()));
+
                 classpathsByProject.put(bazelProject, classpath);
                 monitor.worked(1);
             }

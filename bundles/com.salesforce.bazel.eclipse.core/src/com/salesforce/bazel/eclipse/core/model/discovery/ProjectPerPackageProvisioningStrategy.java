@@ -173,7 +173,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 }
 
                 // remove references to the project represented by the package
-                // (this can happen because we have tests and none tests in the same package)
+                // (this can happen because we have tests and none tests in the same package, also the runtime CP self-reference)
                 classpath.removeIf(
                     entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
                             && entry.getPath().equals(bazelProject.getProject().getFullPath()));

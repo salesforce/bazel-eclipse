@@ -3,6 +3,8 @@
  */
 package com.salesforce.bazel.eclipse.core.util.jar;
 
+import static java.lang.String.format;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.jar.JarFile;
@@ -42,6 +44,11 @@ public class BazelJarFile extends JarFile {
             return null;
         }
 
-        return Label.createIfValid(targetLabel);
+        var error = Label.validate(targetLabel);
+        if (error != null) {
+            throw new IOException(format("Invalid Target-Label in jar file: %s", error));
+        }
+
+        return Label.create(targetLabel);
     }
 }
