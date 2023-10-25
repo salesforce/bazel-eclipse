@@ -366,6 +366,7 @@ public class JavaSourceInfo {
                 if (entry.isDirectory()) {
                     createDirectories(entryDest);
                 } else {
+                    createDirectories(entryDest.getParent());
                     try (var is = archive.getInputStream(entry)) {
                         copy(is, entryDest, StandardCopyOption.REPLACE_EXISTING);
                     }
