@@ -3,6 +3,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery.projects;
 import static java.lang.String.format;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createDirectories;
+import static java.nio.file.Files.delete;
 import static java.nio.file.Files.find;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.Files.readString;
@@ -354,9 +355,8 @@ public class JavaSourceInfo {
                 .append(srcjar);
         var targetDirectory = jarFile.removeLastSegments(1).append("_eclipse").append(srcjar.lastSegment());
 
-        // TODO: need a more sensitive delta/diff (including removal) for Eclipse resource refresh
-
         var destination = targetDirectory.toPath();
+        var extractedFiles = new HashSet<Path>();
         try (var archive = new ZipFile(jarFile.toFile())) {
             // sort entries by name to always create folders first
             List<? extends ZipEntry> entries =
@@ -370,10 +370,29 @@ public class JavaSourceInfo {
                     try (var is = archive.getInputStream(entry)) {
                         copy(is, entryDest, StandardCopyOption.REPLACE_EXISTING);
                     }
+                    extractedFiles.add(entryDest);
                 }
             }
         } catch (IOException e) {
             throw new CoreException(Status.error(format("Error extracting srcjar '%s'", srcjar), e));
+        }
+
+        // purge no longer needed files
+        try {
+            walkFileTree(destination, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (!extractedFiles.contains(file)) {
+                        delete(file);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            throw new CoreException(
+                    Status.error(
+                        format("Error purging no longer needed files after extracting srcjar '%s'", srcjar),
+                        e));
         }
 
         return targetDirectory;
