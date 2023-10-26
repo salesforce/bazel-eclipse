@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -126,6 +127,9 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
     /** set of runtime dependencies (maintaining insertion order) */
     final Set<TargetKey> runtimeDeps = new LinkedHashSet<>();
+
+    /** set of exports (insertion order is not relevant) */
+    final Set<Label> exports = new HashSet<>();
 
     public JavaAspectsClasspathInfo(JavaAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace) throws CoreException {
         super(bazelWorkspace);
@@ -270,6 +274,14 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 if (runtimeDeps.add(jarLibrary.targetKey) && LOG.isDebugEnabled()) {
                     LOG.debug("Found transitive runtime dependency: {}", jarLibrary.targetKey);
                 }
+            }
+        }
+
+        // collect exports
+        var exports = bazelTarget.getRuleAttributes().getStringList("exports");
+        if (exports != null) {
+            for (String export : exports) {
+                this.exports.add(Label.create(export));
             }
         }
     }
@@ -442,7 +454,9 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Found workspace reference for '{}': {}", targetLabel, bazelProject.getProject());
         }
-        return ClasspathEntry.newProjectEntry(bazelProject.getProject());
+        var entry = ClasspathEntry.newProjectEntry(bazelProject.getProject());
+        entry.setExported(exports.contains(targetLabel));
+        return entry;
     }
 
     protected boolean relevantDep(Deps.Dependency dep) {
@@ -464,6 +478,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             }
             return Collections.emptyList();
         }
+        var exported = exports.contains(targetKey.getLabel());
         var result = new LinkedHashSet<ClasspathEntry>();
         for (BlazeJarLibrary library : jars) {
             var jarEntry = resolveJar(library.libraryArtifact);
@@ -473,6 +488,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 }
                 continue;
             }
+            jarEntry.setExported(exported);
             result.add(jarEntry);
         }
         return result;
