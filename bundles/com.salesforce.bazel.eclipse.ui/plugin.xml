@@ -65,7 +65,7 @@
              defaultHandler="com.salesforce.bazel.eclipse.ui.commands.classpath.AddCompileDependencyHandler"
              description="Searches for a Bazel target providing a Java type and adds it and its transitive dependencies to a BUILD.bazel file"
              id="com.salesforce.bazel.eclipse.ui.commands.classpath.addCompileDependency"
-             name="Add Compile Dependency">
+             name="Add Compile Dependency...">
        </command>
     </extension>
 
