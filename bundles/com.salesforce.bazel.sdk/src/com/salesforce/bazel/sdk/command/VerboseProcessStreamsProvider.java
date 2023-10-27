@@ -45,8 +45,6 @@ public abstract class VerboseProcessStreamsProvider extends ProcessStreamsProvid
 
     @Override
     public void beginExecution() {
-        // remove old output
-        //console.clearConsole();
         println();
 
         // print info about command

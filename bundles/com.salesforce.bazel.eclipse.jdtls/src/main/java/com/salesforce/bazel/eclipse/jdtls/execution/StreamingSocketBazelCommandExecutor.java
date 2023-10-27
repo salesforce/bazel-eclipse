@@ -1,7 +1,7 @@
 package com.salesforce.bazel.eclipse.jdtls.execution;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -16,9 +16,9 @@ public class StreamingSocketBazelCommandExecutor extends EclipseHeadlessBazelCom
 
     private static Logger LOG = LoggerFactory.getLogger(StreamingSocketBazelCommandExecutor.class);
 
-    private static volatile Supplier<Integer> localPortHostSupplier;
+    private static volatile Supplier<OutputStream> localPortHostSupplier;
 
-    public static void setLocalPortHostSupplier(Supplier<Integer> localPortHostSupplier) {
+    public static void setLocalPortHostSupplier(Supplier<OutputStream> localPortHostSupplier) {
         StreamingSocketBazelCommandExecutor.localPortHostSupplier = localPortHostSupplier;
     }
 
@@ -37,11 +37,10 @@ public class StreamingSocketBazelCommandExecutor extends EclipseHeadlessBazelCom
             throws IOException {
         var supplier = localPortHostSupplier;
         if (supplier != null) {
-            var port = supplier.get();
-            if (port != null) {
-                LOG.info("> {} (>>> locahost:{})", command.toString(), port);
-                var socket = new Socket("localhost", port);
-                return new SocketStreamProvider(socket, command, commandLine);
+            var out = supplier.get();
+            if (out != null) {
+                LOG.info("> {} (>>> {})", command.toString(), out);
+                return new ReusingOutputStreamProvider(out, command, commandLine);
             }
         }
 
