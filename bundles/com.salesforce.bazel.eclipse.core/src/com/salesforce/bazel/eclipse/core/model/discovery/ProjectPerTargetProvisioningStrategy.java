@@ -121,6 +121,9 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                 // compute the classpath
                 var classpath = classpathInfo.compute();
 
+                // remove old marker
+                deleteBuildPathProblems(bazelProject);
+
                 // check for non existing jars
                 for (ClasspathEntry entry : classpath) {
                     if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {

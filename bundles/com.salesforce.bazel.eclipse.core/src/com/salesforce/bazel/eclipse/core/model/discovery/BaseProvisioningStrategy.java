@@ -766,7 +766,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @throws CoreException
      */
     protected void deleteBuildPathProblems(BazelProject project) throws CoreException {
-        project.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, false, 0);
+        project.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
     }
 
     /**
@@ -1272,9 +1272,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             fileSystemMapper = new BazelProjectFileSystemMapper(workspace);
 
             // cleanup markers at workspace level
-            workspace.getBazelProject()
-                    .getProject()
-                    .deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
+            deleteBuildPathProblems(workspace.getBazelProject());
 
             // detect default Java level
             monitor.subTask("Detecting Java Toolchain");
