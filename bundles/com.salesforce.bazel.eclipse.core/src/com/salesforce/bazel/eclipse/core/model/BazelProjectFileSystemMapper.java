@@ -138,7 +138,7 @@ public class BazelProjectFileSystemMapper {
      * @return the virtual source folder
      */
     public IFolder getVirtualSourceFolder(BazelProject project) {
-        return project.getProject().getFolder("srcs");
+        return project.getProject().getFolder("linked-srcs");
     }
 
     /**
@@ -153,6 +153,6 @@ public class BazelProjectFileSystemMapper {
      * @return the virtual test source folder
      */
     public IFolder getVirtualSourceFolderForTests(BazelProject project) {
-        return project.getProject().getFolder("test-srcs");
+        return project.getProject().getFolder("linked-test-srcs");
     }
 }
