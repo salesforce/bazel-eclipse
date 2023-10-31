@@ -137,8 +137,8 @@ public final class ParsedBepOutput {
                     .forEach(child -> {
                         fileSets.get(child).updateFromParent(fileSet);
                         toVisit.add(child);
-                        visited.add(child);
                     });
+            visited.add(setId);
         }
         return fileSets.entrySet().stream().filter(e -> e.getValue().isValid(configIdToMnemonic))
                 .collect(toImmutableMap(Entry::getKey, e -> e.getValue().build(configIdToMnemonic, startTime, blazeInfo)));
