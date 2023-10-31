@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.command.buildresult.ParsedBepOutput;
+import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
@@ -27,10 +28,13 @@ public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
     private Path bepFile;
     private final boolean keepGoing;
     private final List<BazelLabel> targets;
+    private final BlazeInfo blazeInfo;
 
-    public BazelBuildCommand(List<BazelLabel> targets, Path workspaceRoot, boolean keepGoing, String purpose) {
+    public BazelBuildCommand(List<BazelLabel> targets, Path workspaceRoot, BlazeInfo blazeInfo, boolean keepGoing,
+            String purpose) {
         super("build", workspaceRoot, purpose);
         this.targets = targets;
+        this.blazeInfo = blazeInfo;
         this.keepGoing = keepGoing;
     }
 
@@ -43,7 +47,7 @@ public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
     public ParsedBepOutput generateResult(int exitCode) throws IOException {
         try (var in = newInputStream(
             requireNonNull(bepFile, "unusual code flow; prepareCommandLine not called or overridden incorrectly?"))) {
-            return ParsedBepOutput.parseBepArtifacts(in);
+            return ParsedBepOutput.parseBepArtifacts(in, blazeInfo);
         }
     }
 

@@ -144,18 +144,16 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
             if (jar instanceof LocalFileOutputArtifact localJar) {
                 var localJarExecutionRootRelativePath =
                         getBlazeInfo().getExecutionRoot().relativize(localJar.getPath());
+                // special case: if the execution root points to outside execution root, we route it back of ExecutionPathHelper
+                if (localJarExecutionRootRelativePath.startsWith("../../external/")) {
+                    localJarExecutionRootRelativePath = localJarExecutionRootRelativePath
+                            .subpath(2, localJarExecutionRootRelativePath.getNameCount());
+                }
                 var classJar = ExecutionPathHelper.parse(
                     workspaceRoot,
                     BazelBuildSystemProvider.BAZEL,
                     fromPath(localJarExecutionRootRelativePath).toString());
 
-                if (classJar.isSource()) {
-                    LOG.error(
-                        "Did not expect runtime jar '{}' to be a source artifact. Please report bug! - {}",
-                        localJar,
-                        classJar);
-                    continue;
-                }
                 var resolveOutput = locationDecoder.resolveOutput(classJar);
                 if ((resolveOutput instanceof LocalFileArtifact localOutput) && !isReadable(localOutput.getPath())) {
                     LOG.error("Wrong location for runtime jar '{}'. Please report bug!", localJar);
@@ -171,12 +169,12 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
                             LOG.warn(
                                 "Unable to compute target label for runtime jar '{}'. Please check if the rule producing the jar is adding the Target-Label to the jar manifest!",
                                 classJar);
-                            continue;
+                            targetLabel = Label.create(format("@_unknown_jar_//:%s", classJar.getRelativePath()));
                         }
 
                         var builder = LibraryArtifact.builder();
                         builder.setClassJar(classJar);
-                        var sourceJar = SourceJarFinder.findSourceJar(classJar);
+                        var sourceJar = SourceJarFinder.findSourceJar(classJar, getBlazeInfo());
                         if (sourceJar != null) {
                             builder.addSourceJar(sourceJar);
                         }

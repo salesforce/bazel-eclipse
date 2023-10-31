@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -37,8 +38,8 @@ public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
      *            a human readable message why the command is needed
      */
     public BazelBuildWithIntelliJAspectsCommand(Path workspaceRoot, List<BazelLabel> targets,
-            Collection<String> outputGroupNames, IntellijAspects aspects, String purpose) {
-        super(targets, workspaceRoot, true /* keepGoing */, purpose);
+            Collection<String> outputGroupNames, IntellijAspects aspects, BlazeInfo blazeInfo, String purpose) {
+        super(targets, workspaceRoot, blazeInfo, true /* keepGoing */, purpose);
         this.aspects = aspects;
         this.outputGroupNames = outputGroupNames;
     }

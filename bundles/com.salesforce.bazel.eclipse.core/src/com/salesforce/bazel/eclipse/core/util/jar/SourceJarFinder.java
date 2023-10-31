@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
 
+import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation.Builder;
 
@@ -25,8 +26,8 @@ public class SourceJarFinder {
     private final static List<String> KNOWN_PREFIXES =
             List.of("processed_" /* rules_jvm_external */, "" /* always try with empty prefix */);
 
-    public static ArtifactLocation findSourceJar(ArtifactLocation jar) {
-        var jarPath = Path.of(jar.getExecutionRootRelativePath());
+    public static ArtifactLocation findSourceJar(ArtifactLocation jar, BlazeInfo blazeInfo) {
+        var jarPath = blazeInfo.getExecutionRoot().resolve(jar.getExecutionRootRelativePath());
         var directory = jarPath.getParent();
         var srcJarNames = getPotentialSourceJarNames(jarPath.getFileName().toString());
 

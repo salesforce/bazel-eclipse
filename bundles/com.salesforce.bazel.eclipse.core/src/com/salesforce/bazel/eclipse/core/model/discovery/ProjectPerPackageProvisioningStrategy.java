@@ -31,6 +31,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceInfo;
@@ -122,6 +123,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     targetsToBuild,
                     outputGroupNames,
                     aspects,
+                    new BazelWorkspaceBlazeInfo(workspace),
                     "Running build with IntelliJ aspects to collect classpath information");
 
             // sync_flags

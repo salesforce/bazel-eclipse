@@ -664,7 +664,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         // check for name collection
-        if (project == null) {
+        if ((project == null) || !project.exists()) {
             project = getEclipseWorkspaceRoot().getProject(projectName);
             if (project.exists()) {
                 LOG.warn(

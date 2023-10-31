@@ -45,6 +45,7 @@ import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.Bui
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.NamedSetOfFiles;
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.OutputGroup;
 import com.google.idea.blaze.base.command.buildresult.BuildEventStreamProvider.BuildEventStreamException;
+import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.protobuf.Timestamp;
 
@@ -68,8 +69,9 @@ public final class ParsedBepOutput {
                 return this;
             }
 
-            FileSet build(Map<String, String> configIdToMnemonic, Timestamp startTime) {
-                return new FileSet(namedSet, configIdToMnemonic.get(configId), startTime, outputGroups, targets);
+            FileSet build(Map<String, String> configIdToMnemonic, Timestamp startTime, BlazeInfo blazeInfo) {
+                ImmutableList<OutputArtifact> parsedOutputs = parseFiles(namedSet, configIdToMnemonic.get(configId), startTime, blazeInfo);
+				return new FileSet(parsedOutputs,  outputGroups, targets);
             }
 
             boolean isValid(Map<String, String> configIdToMnemonic) {
@@ -104,9 +106,9 @@ public final class ParsedBepOutput {
 
         private final ImmutableSet<String> targets;
 
-        FileSet(NamedSetOfFiles namedSet, String configuration, Timestamp startTime, Set<String> outputGroups,
+        FileSet(List<OutputArtifact> parsedOutputs, Set<String> outputGroups,
                 Set<String> targets) {
-            parsedOutputs = parseFiles(namedSet, configuration, startTime);
+            this.parsedOutputs = ImmutableList.copyOf(parsedOutputs);
             this.outputGroups = ImmutableSet.copyOf(outputGroups);
             this.targets = ImmutableSet.copyOf(targets);
         }
@@ -119,9 +121,10 @@ public final class ParsedBepOutput {
     /**
      * Only top-level targets have configuration mnemonic, producing target, and output group data explicitly provided
      * in BEP. This method fills in that data for the transitive closure.
+     * @param blazeInfo
      */
     private static ImmutableMap<String, FileSet> fillInTransitiveFileSetData(Map<String, FileSet.Builder> fileSets,
-            Set<String> topLevelFileSets, Map<String, String> configIdToMnemonic, Timestamp startTime) {
+            Set<String> topLevelFileSets, Map<String, String> configIdToMnemonic, Timestamp startTime, BlazeInfo blazeInfo) {
         Deque<String> toVisit = Queues.newArrayDeque(topLevelFileSets);
         Set<String> visited = new HashSet<>(topLevelFileSets);
         while (!toVisit.isEmpty()) {
@@ -138,7 +141,7 @@ public final class ParsedBepOutput {
                     });
         }
         return fileSets.entrySet().stream().filter(e -> e.getValue().isValid(configIdToMnemonic))
-                .collect(toImmutableMap(Entry::getKey, e -> e.getValue().build(configIdToMnemonic, startTime)));
+                .collect(toImmutableMap(Entry::getKey, e -> e.getValue().build(configIdToMnemonic, startTime, blazeInfo)));
     }
 
     private static List<String> getFileSets(OutputGroup group) {
@@ -159,8 +162,8 @@ public final class ParsedBepOutput {
     }
 
     /** Parses BEP events into {@link ParsedBepOutput} */
-    public static ParsedBepOutput parseBepArtifacts(BuildEventStreamProvider stream) throws BuildEventStreamException {
-        return parseBepArtifacts(stream, null);
+    public static ParsedBepOutput parseBepArtifacts(BuildEventStreamProvider stream, BlazeInfo blazeInfo) throws BuildEventStreamException {
+        return parseBepArtifacts(stream, blazeInfo, null);
     }
 
     /**
@@ -171,7 +174,7 @@ public final class ParsedBepOutput {
      * BEP protos often contain many duplicate strings both within a single stream and across shards running in
      * parallel, so a {@link Interner} is used to share references.
      */
-    public static ParsedBepOutput parseBepArtifacts(BuildEventStreamProvider stream, Interner<String> interner)
+    public static ParsedBepOutput parseBepArtifacts(BuildEventStreamProvider stream, BlazeInfo blazeInfo, Interner<String> interner)
             throws BuildEventStreamException {
 
         if (interner == null) {
@@ -236,19 +239,19 @@ public final class ParsedBepOutput {
         if (emptyBuildEventStream) {
             throw new BuildEventStreamException("No build events found");
         }
-        var filesMap = fillInTransitiveFileSetData(fileSets, topLevelFileSets, configIdToMnemonic, startTime);
+        var filesMap = fillInTransitiveFileSetData(fileSets, topLevelFileSets, configIdToMnemonic, startTime, blazeInfo);
         return new ParsedBepOutput(buildId, localExecRoot, filesMap, targetToFileSets.build(), startTime, buildResult,
                 stream.getBytesConsumed());
     }
 
     /** Parses BEP events into {@link ParsedBepOutput} */
-    public static ParsedBepOutput parseBepArtifacts(InputStream bepStream) throws BuildEventStreamException {
-        return parseBepArtifacts(BuildEventStreamProvider.fromInputStream(bepStream));
+    public static ParsedBepOutput parseBepArtifacts(InputStream bepStream, BlazeInfo blazeInfo) throws BuildEventStreamException {
+        return parseBepArtifacts(BuildEventStreamProvider.fromInputStream(bepStream), blazeInfo);
     }
 
     private static ImmutableList<OutputArtifact> parseFiles(NamedSetOfFiles namedSet, String config,
-            Timestamp startTime) {
-        return namedSet.getFilesList().stream().map(f -> OutputArtifactParser.parseArtifact(f, config, startTime))
+            Timestamp startTime, BlazeInfo blazeInfo) {
+        return namedSet.getFilesList().stream().map(f -> OutputArtifactParser.parseArtifact(f, config, startTime, blazeInfo))
                 .filter(Objects::nonNull).collect(toImmutableList());
     }
 
