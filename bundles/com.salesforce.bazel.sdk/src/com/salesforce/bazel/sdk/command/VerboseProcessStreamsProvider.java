@@ -73,6 +73,7 @@ public abstract class VerboseProcessStreamsProvider extends ProcessStreamsProvid
         if (command instanceof BazelBuildCommand) {
             var executionTime = Duration.between(endInstant, Instant.now());
             println(ansi().a(ITALIC).a(" finished in ").a(humanReadableFormat(executionTime)).reset().toString());
+            println();
         }
     }
 
