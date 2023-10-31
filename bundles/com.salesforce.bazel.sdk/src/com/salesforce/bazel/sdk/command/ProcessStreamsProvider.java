@@ -29,13 +29,27 @@ public class ProcessStreamsProvider implements AutoCloseable {
      * Called by <code>try-with-resource</code> block to close/release any underlying streams.
      * <p>
      * Note, as the defaults in {@link #getErrorStream()} and {@link #getOutStream()} use streams which shouldn't be
-     * closed, the default implementation does nothing. Subclasses creating their own streams must override this
-     * method and close any resources.
+     * closed, the default implementation does nothing. Subclasses creating their own streams must override this method
+     * and close any resources.
      * </p>
      */
     @Override
     public void close() throws IOException {
         // nothing to close, i.e. System.err and System.out remain open
+    }
+
+    /**
+     * Hook called when the command result was generated.
+     * <p>
+     * Implementors can use this to collect/print additional details.
+     * </p>
+     *
+     * @param <R>
+     * @param commandResult
+     *            the produced command result
+     */
+    public void commandResultGenerated(Object commandResult) {
+        // empty
     }
 
     /**
@@ -51,8 +65,8 @@ public class ProcessStreamsProvider implements AutoCloseable {
     /**
      * Hook called when the process execution failse.
      * <p>
-     * Implementors can use this to collect/print additional details. They may also wrap/enrich the
-     * {@link IOException} and throw a more detailed one.
+     * Implementors can use this to collect/print additional details. They may also wrap/enrich the {@link IOException}
+     * and throw a more detailed one.
      * </p>
      *
      * @param cause

@@ -36,6 +36,11 @@ public class ReusingOutputStreamProvider extends VerboseProcessStreamsProvider {
     }
 
     @Override
+    protected void print(String message) {
+        writer.print(message);
+    }
+
+    @Override
     protected void println() {
         writer.println();
     }
@@ -44,5 +49,4 @@ public class ReusingOutputStreamProvider extends VerboseProcessStreamsProvider {
     protected void println(String message) {
         writer.println(message);
     }
-
 }

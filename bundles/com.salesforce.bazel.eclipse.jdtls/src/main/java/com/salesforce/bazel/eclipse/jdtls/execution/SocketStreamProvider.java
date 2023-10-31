@@ -41,6 +41,11 @@ public class SocketStreamProvider extends VerboseProcessStreamsProvider {
     }
 
     @Override
+    protected void print(String message) {
+        socketOutWriter.print(message);
+    }
+
+    @Override
     protected void println() {
         socketOutWriter.println();
     }

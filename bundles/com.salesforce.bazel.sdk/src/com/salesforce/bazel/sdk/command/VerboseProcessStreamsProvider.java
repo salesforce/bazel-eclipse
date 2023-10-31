@@ -69,6 +69,14 @@ public abstract class VerboseProcessStreamsProvider extends ProcessStreamsProvid
     }
 
     @Override
+    public void commandResultGenerated(Object commandResult) {
+        if (command instanceof BazelBuildCommand) {
+            var executionTime = Duration.between(endInstant, Instant.now());
+            println(ansi().a(ITALIC).a(" finished in ").a(humanReadableFormat(executionTime)).reset().toString());
+        }
+    }
+
+    @Override
     public void executionCanceled() {
         println();
         println(ansi().fgBrightMagenta().a(INTENSITY_FAINT).a("Operation cancelled!").reset().toString());
@@ -91,8 +99,20 @@ public abstract class VerboseProcessStreamsProvider extends ProcessStreamsProvid
             println(ansi().fgBrightBlack().a("Process exited with ").a(exitCode).reset().toString());
         }
 
-        println();
+        if (command instanceof BazelBuildCommand) {
+            print(ansi().a(ITALIC).a("Reading build events...").reset().toString());
+        } else {
+            println();
+        }
     }
+
+    /**
+     * Appends the specified message to this stream.
+     *
+     * @param message
+     *            message to append
+     */
+    protected abstract void print(String message);
 
     /**
      * Appends the system newline to {@link #getOutStream()}.

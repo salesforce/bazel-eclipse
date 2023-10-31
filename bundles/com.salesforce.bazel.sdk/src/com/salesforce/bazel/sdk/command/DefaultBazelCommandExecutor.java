@@ -177,7 +177,12 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
                 streamProvider.executionFinished(result);
 
                 // send result to command
-                return command.generateResult(result);
+                var commandResult = command.generateResult(result);
+
+                // call provider hook
+                streamProvider.commandResultGenerated(commandResult);
+
+                return commandResult;
             } catch (IOException e) {
                 streamProvider.executionFailed(e);
                 throw e;

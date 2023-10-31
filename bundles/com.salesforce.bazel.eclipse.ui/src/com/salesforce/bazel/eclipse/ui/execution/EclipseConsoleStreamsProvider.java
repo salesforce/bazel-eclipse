@@ -108,6 +108,11 @@ public class EclipseConsoleStreamsProvider extends VerboseProcessStreamsProvider
     }
 
     @Override
+    protected void print(String message) {
+        consoleStream.print(message);
+    }
+
+    @Override
     protected void println() {
         consoleStream.println();
     }

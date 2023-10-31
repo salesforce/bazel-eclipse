@@ -166,9 +166,11 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
                     if (jarLibrary == null) {
                         var targetLabel = readTargetLabel(localJar);
                         if (targetLabel == null) {
-                            LOG.warn(
-                                "Unable to compute target label for runtime jar '{}'. Please check if the rule producing the jar is adding the Target-Label to the jar manifest!",
-                                classJar);
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug(
+                                    "Unable to compute target label for runtime jar '{}'. Please check if the rule producing the jar is adding the Target-Label to the jar manifest!",
+                                    classJar);
+                            }
                             targetLabel = Label.create(format("@_unknown_jar_//:%s", classJar.getRelativePath()));
                         }
 
