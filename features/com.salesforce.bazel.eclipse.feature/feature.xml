@@ -9,7 +9,8 @@
       id="com.salesforce.bazel.eclipse.feature"
       label="Bazel Eclipse Feature"
       version="2.0.0.qualifier"
-      provider-name="Bazel Eclipse Feature">
+      provider-name="Bazel Eclipse Feature"
+      plugin="com.salesforce.bazel.eclipse.ui">
 
    <description url="https://github.com/salesforce/bazel-eclipse">
       The Bazel Eclipse Feature supports importing, building, and testing Java projects that are built using the Bazel build system.
@@ -228,10 +229,6 @@
       <import feature="org.eclipse.tm4e.feature" version="0.5.5" match="greaterOrEqual"/>
       <import feature="org.eclipse.jdt" version="3.19.100" match="greaterOrEqual"/>
       <import feature="org.eclipse.platform" version="4.28.0" match="greaterOrEqual"/>
-
-      <!-- This is only necessary until Aries can handle the absence of the servlet-api for logback:
-        https://github.com/apache/aries/pull/233 -->
-      <!-- see also https://github.com/eclipse-m2e/m2e-core/pull/1512 -->
       <import plugin="jakarta.servlet-api" version="5.0.0" match="compatible"/>
    </requires>
 
