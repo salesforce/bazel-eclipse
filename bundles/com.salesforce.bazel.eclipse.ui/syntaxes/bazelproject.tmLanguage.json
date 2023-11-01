@@ -1,0 +1,26 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "bazelproject",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#comments"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.bazelproject",
+				"match": "\\b(directories|targets|derive_targets_from_directories|import|workspace_type|additional_languages|java_language_level|test_sources|shard_sync|target_shard_size|exclude_library|build_flags|sync_flags|test_flags|import_run_configurations|bazel_binary|android_sdk_platform|android_min_sdk|generated_android_resource_directories|gazelle_target|ts_config_rules)\\b"
+			}]
+		},
+		"comments": {
+			"name": "comment.line.number-sign.bazelproject",
+			"begin": "#",
+			"end": "\n"
+		}
+	},
+	"scopeName": "source.bazelproject"
+}

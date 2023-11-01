@@ -83,6 +83,10 @@
              path="syntaxes/bazelrc.tmLanguage.json"
              scopeName="source.bazelrc">
        </grammar>
+       <grammar
+             path="syntaxes/bazelproject.tmLanguage.json"
+             scopeName="source.bazelproject">
+       </grammar>
        <scopeNameContentTypeBinding
              contentTypeId="com.salesforce.bazel.eclipse.content.starlark"
              scopeName="source.starlark">
@@ -94,6 +98,10 @@
        <scopeNameContentTypeBinding
              contentTypeId="com.salesforce.bazel.eclipse.content.bazel"
              scopeName="source.bazel">
+       </scopeNameContentTypeBinding>
+       <scopeNameContentTypeBinding
+             contentTypeId="com.salesforce.bazel.eclipse.content.bazelproject"
+             scopeName="source.bazelproject">
        </scopeNameContentTypeBinding>
     </extension>
 
@@ -111,6 +119,10 @@
              contentTypeId="com.salesforce.bazel.eclipse.content.bazelrc"
              path="syntaxes/bazelrc.configuration.json">
        </languageConfiguration>
+       <languageConfiguration
+             contentTypeId="com.salesforce.bazel.eclipse.content.bazelproject"
+             path="syntaxes/bazelproject.configuration.json">
+       </languageConfiguration>
     </extension>
 
     <extension
@@ -125,6 +137,10 @@
        </editorContentTypeBinding>
        <editorContentTypeBinding
              contentTypeId="com.salesforce.bazel.eclipse.content.bazelrc"
+             editorId="org.eclipse.ui.genericeditor.GenericEditor">
+       </editorContentTypeBinding>
+       <editorContentTypeBinding
+             contentTypeId="com.salesforce.bazel.eclipse.content.bazelproject"
              editorId="org.eclipse.ui.genericeditor.GenericEditor">
        </editorContentTypeBinding>
     </extension>
