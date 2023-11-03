@@ -184,7 +184,17 @@ public class JavaSourceInfo {
                         .collect(toList());
                 for (IPath srcjar : srcJars) {
                     var srcjarFolder = extractSrcJar(bazelTarget, srcjar);
-                    collectJavaSourcesInFolder(srcjarFolder).forEach(javaSourceEntryCollector::apply);
+                    if (srcjarFolder == null) {
+                        result.add(
+                            Status.error(
+                                format(
+                                    "The generated sources '%s' (produced by '%s') are missing. Please check the build output for errors. The project will not compile.",
+                                    srcjar,
+                                    bazelTarget.getLabel())));
+
+                    } else {
+                        collectJavaSourcesInFolder(srcjarFolder).forEach(javaSourceEntryCollector::apply);
+                    }
                 }
             } else {
                 throw new CoreException(Status.error(format("Unexpected source '%s'!", srcEntry)));
@@ -346,13 +356,18 @@ public class JavaSourceInfo {
      *            the target producing the source jar
      * @param srcjar
      *            the path to the source jar
-     * @return absolute file system path to the directory containing the extracted sources
+     * @return absolute file system path to the directory containing the extracted sources or <code>null</code> if the
+     *         srcjar does not exists
      * @throws CoreException
      */
     private IPath extractSrcJar(BazelTarget bazelTarget, IPath srcjar) throws CoreException {
         var jarFile = bazelWorkspace.getBazelBinLocation()
                 .append(bazelTarget.getBazelPackage().getWorkspaceRelativePath())
                 .append(srcjar);
+        if (!isRegularFile(jarFile.toPath())) {
+            return null;
+        }
+
         var targetDirectory = jarFile.removeLastSegments(1).append("_eclipse").append(srcjar.lastSegment());
 
         var destination = targetDirectory.toPath();
