@@ -152,6 +152,13 @@ public class BazelModelManager implements BazelCoreSharedContstants {
     }
 
     /**
+     * @return the resource change processor
+     */
+    ResourceChangeProcessor getResourceChangeProcessor() {
+        return resourceChangeProcessor;
+    }
+
+    /**
      * @return the Eclipse {@link IWorkspace}.
      */
     IWorkspace getWorkspace() {

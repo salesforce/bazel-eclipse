@@ -26,6 +26,7 @@ import static java.util.function.Predicate.not;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -464,8 +465,8 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
         for (BazelPackage bazelPackage : closedPackages) {
             var targets = targetsByPackage.get(bazelPackage);
             if (targets == null) {
-                LOG.debug("No result for: '{}'", bazelPackage);
-                continue;
+                LOG.debug("Empty package: '{}'", bazelPackage);
+                targets = Collections.emptyMap();
             }
             bazelPackage.openIfNecessary(
                 new BazelPackageInfo(

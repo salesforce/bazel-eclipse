@@ -571,6 +571,10 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // ideally we would monitor resource change events and invalidate individual targets/packages only when necessary
             workspace.getModel().getInfoCache().invalidateAll();
 
+            // during synchronization resource changes may occur; however, they are triggered by the synchronization activities
+            // therefore we suspend cache invalidation of the model due to resource changes
+            workspace.getModelManager().getResourceChangeProcessor().suspendInvalidationFor(workspace);
+
             // trigger loading of the project view
             projectView = workspace.getBazelProjectView();
             importRoots = createImportRoots(workspace);
@@ -627,6 +631,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             initializeClasspaths(targetProjects, workspace, progress.split(1, SUPPRESS_NONE));
             return Status.OK_STATUS;
         } finally {
+            // resume cache invalidation
+            workspace.getModelManager().getResourceChangeProcessor().resumeInvalidationFor(workspace);
+
             if (monitor != null) {
                 monitor.done();
             }

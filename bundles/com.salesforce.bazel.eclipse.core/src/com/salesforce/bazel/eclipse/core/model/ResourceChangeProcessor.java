@@ -29,6 +29,8 @@ import static com.salesforce.bazel.eclipse.core.model.BazelWorkspace.isWorkspace
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -47,6 +49,8 @@ import org.eclipse.core.runtime.CoreException;
 class ResourceChangeProcessor implements IResourceChangeListener {
 
     private final BazelModelManager modelManager;
+
+    private final ConcurrentMap<BazelElement<?, ?>, Integer> suspendedElement = new ConcurrentHashMap<>();
 
     public ResourceChangeProcessor(BazelModelManager modelManager) {
         this.modelManager = modelManager;
@@ -161,22 +165,30 @@ class ResourceChangeProcessor implements IResourceChangeListener {
     private void invalidateBazelWorkspaceCache(IProject project) {
         var bazelProject = modelManager.getBazelProject(project);
         try {
-            bazelProject.getBazelWorkspace().invalidateInfo();
+            invalidateCache(bazelProject.getBazelWorkspace());
         } catch (CoreException e) {
             // ignore
         }
+    }
+
+    private void invalidateCache(BazelElement<?, ?> element) {
+        if (isInvalidationSuspendedFor(element) || !element.hasInfo()) {
+            return;
+        }
+
+        element.invalidateInfo();
     }
 
     private void invalidateCache(IProject project) {
         var bazelProject = modelManager.getBazelProject(project);
         try {
             if (bazelProject.isWorkspaceProject()) {
-                bazelProject.getBazelWorkspace().invalidateInfo();
+                invalidateCache(bazelProject.getBazelWorkspace());
             } else if (bazelProject.isPackageProject()) {
-                bazelProject.getBazelPackage().invalidateInfo();
+                invalidateCache(bazelProject.getBazelPackage());
             } else if (bazelProject.isTargetProject()) {
                 // validate the whole package
-                bazelProject.getBazelPackage().invalidateInfo();
+                invalidateCache(bazelProject.getBazelPackage());
             }
         } catch (CoreException e) {
             // ignore
@@ -226,6 +238,17 @@ class ResourceChangeProcessor implements IResourceChangeListener {
         return ResourcesPlugin.getWorkspace().isAutoBuilding();
     }
 
+    boolean isInvalidationSuspendedFor(BazelElement<?, ?> element) {
+        while (element != null) {
+            var refCount = suspendedElement.get(element);
+            if ((refCount != null) && (refCount > 0)) {
+                return true;
+            }
+            element = element.getParent();
+        }
+        return false;
+    }
+
     @Override
     public void resourceChanged(IResourceChangeEvent event) {
         var resource = event.getResource();
@@ -250,4 +273,49 @@ class ResourceChangeProcessor implements IResourceChangeListener {
         }
     }
 
+    /**
+     * Instructs the processor to suspend cache invalidation for all children belonging to the element.
+     *
+     * @param element
+     */
+    void resumeInvalidationFor(BazelElement<?, ?> element) {
+        var refCount = suspendedElement.get(element);
+        if (refCount != null) {
+            var old = refCount;
+            Integer newRefCount = old - 1;
+            var removedOrReplaced = false;
+            while (!removedOrReplaced) {
+                if (newRefCount > 0) {
+                    removedOrReplaced = suspendedElement.replace(element, old, newRefCount);
+                } else {
+                    removedOrReplaced = suspendedElement.remove(element, old);
+                }
+                if (!removedOrReplaced) {
+                    old = suspendedElement.get(element);
+                    newRefCount = old != null ? old - 1 : 0;
+                }
+            }
+        }
+    }
+
+    /**
+     * Instructs the processor to suspend cache invalidation for all children belonging to the element.
+     * <p>
+     * Internally a counter is maintained, i.e. for each call to <code>suspendInvalidationFor</code>,
+     * <code>resumeInvalidationFor</code> must be called.
+     * </p>
+     *
+     * @param element
+     */
+    void suspendInvalidationFor(BazelElement<?, ?> element) {
+        var refCount = suspendedElement.putIfAbsent(element, 1);
+        if (refCount != null) {
+            var old = refCount;
+            Integer newRefCount = old + 1;
+            while (!suspendedElement.replace(element, old, newRefCount)) {
+                old = suspendedElement.get(element);
+                newRefCount = old != null ? old + 1 : 1;
+            }
+        }
+    }
 }
