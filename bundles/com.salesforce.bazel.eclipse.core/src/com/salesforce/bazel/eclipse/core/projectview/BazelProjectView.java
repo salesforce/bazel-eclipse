@@ -45,6 +45,7 @@ public record BazelProjectView(
         Collection<String> buildFlags,
         Collection<String> syncFlags,
         Collection<String> testFlags,
+        GlobSetMatcher testSourcesGlobs,
         boolean discoverAllExternalAndWorkspaceJars) {
 
     public BazelProjectView {

@@ -72,6 +72,7 @@ public class BazelProjectFileReader {
         final LinkedHashSet<String> buildFlags = new LinkedHashSet<>();
         final LinkedHashSet<String> syncFlags = new LinkedHashSet<>();
         final LinkedHashSet<String> testFlags = new LinkedHashSet<>();
+        final LinkedHashSet<String> testSourcesGlobs = new LinkedHashSet<>();
         boolean discoverAllExternalAndWorkspaceJars = false;
 
         public BazelProjectView build() throws IllegalStateException {
@@ -139,6 +140,7 @@ public class BazelProjectFileReader {
                     buildFlags,
                     syncFlags,
                     testFlags,
+                    new GlobSetMatcher(testSourcesGlobs),
                     discoverAllExternalAndWorkspaceJars);
         }
 
@@ -365,6 +367,10 @@ public class BazelProjectFileReader {
                     }
                     case "test_flags": {
                         parseSectionBodyIntoList(rawSection).forEach(builder.testFlags::add);
+                        break;
+                    }
+                    case "test_sources": {
+                        parseSectionBodyIntoList(rawSection).forEach(builder.testSourcesGlobs::add);
                         break;
                     }
                     case "discover_all_external_and_workspace_jars": {

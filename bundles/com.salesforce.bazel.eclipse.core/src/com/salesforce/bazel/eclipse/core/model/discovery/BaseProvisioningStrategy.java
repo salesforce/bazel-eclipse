@@ -88,6 +88,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntr
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSrcJarEntry;
 import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Base class for provisioning strategies, providing common base logic re-usable by multiple strategies.
@@ -126,7 +127,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @throws CoreException
      */
     private void addInfoFromTarget(JavaProjectInfo javaInfo, BazelTarget bazelTarget) throws CoreException {
-        var isTestTarget = isTestTarget(bazelTarget);
+        var isTestTarget = isTestTarget(bazelTarget) || hasTestSources(bazelTarget);
 
         var attributes = bazelTarget.getRuleAttributes();
         var srcs = attributes.getStringList("srcs");
@@ -1005,6 +1006,31 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         return (IEclipsePreferences) Platform.getPreferencesService().getRootNode().node(InstanceScope.SCOPE);
+    }
+
+    private boolean hasTestSources(BazelTarget bazelTarget) throws CoreException {
+        var testSourcesMatcher = bazelTarget.getBazelWorkspace().getBazelProjectView().testSourcesGlobs();
+        if (testSourcesMatcher.getGlobs().isEmpty()) {
+            return false;
+        }
+
+        if (testSourcesMatcher.matches(bazelTarget.getBazelPackage().getWorkspaceRelativePath().toPath())) {
+            return true;
+        }
+
+        var attributes = bazelTarget.getRuleAttributes();
+        var srcs = attributes.getStringList("srcs");
+        if (srcs != null) {
+            for (String src : srcs) {
+                if (src.contains(BazelLabel.BAZEL_COLON)) {
+                    continue; // ignore labels
+                }
+                if (testSourcesMatcher.matches(java.nio.file.Path.of(src))) {
+                    return true; // first match wins
+                }
+            }
+        }
+        return false;
     }
 
     private boolean isTestTarget(BazelTarget bazelTarget) throws CoreException {
