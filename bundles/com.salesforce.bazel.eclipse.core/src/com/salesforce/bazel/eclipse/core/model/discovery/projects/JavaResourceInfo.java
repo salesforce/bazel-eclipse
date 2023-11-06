@@ -162,7 +162,7 @@ public class JavaResourceInfo {
             if (!relativePackagePath.isPrefixOf(resourceStripPrefix)) {
                 throw new IllegalStateException(
                         format(
-                            "Found a resource_strip_prefix which is outside the expected package location '{}': {}",
+                            "Found a resource_strip_prefix which is outside the expected package location '%s': %s",
                             relativePackagePath,
                             resourceStripPrefix));
             }

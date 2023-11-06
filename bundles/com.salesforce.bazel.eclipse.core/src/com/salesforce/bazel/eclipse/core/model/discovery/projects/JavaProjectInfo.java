@@ -1,12 +1,16 @@
 package com.salesforce.bazel.eclipse.core.model.discovery.projects;
 
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.IPath.forPosix;
+import static org.eclipse.core.runtime.Status.warning;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -19,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
+import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.buildfile.GlobInfo;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
@@ -49,7 +54,12 @@ public class JavaProjectInfo {
     private final LinkedHashSet<Entry> testResources = new LinkedHashSet<>();
     private final LinkedHashSet<LabelEntry> testPluginDeps = new LinkedHashSet<>();
 
+    private final LinkedHashSet<Entry> jars = new LinkedHashSet<>();
+    private final LinkedHashSet<Entry> testJars = new LinkedHashSet<>();
+
     private final LinkedHashSet<String> javacOpts = new LinkedHashSet<>();
+
+    private final Set<BazelTarget> targets = new HashSet<>();
 
     private JavaSourceInfo sourceInfo;
     private JavaSourceInfo testSourceInfo;
@@ -58,6 +68,20 @@ public class JavaProjectInfo {
 
     public JavaProjectInfo(BazelPackage bazelPackage) {
         this.bazelPackage = bazelPackage;
+    }
+
+    /**
+     * Adds a jars entry.
+     * <p>
+     * Insertion order is maintained.
+     * </p>
+     *
+     * @param jarFileOrLabel
+     *            file or label
+     * @throws CoreException
+     */
+    public void addJar(String jarFileOrLabel) throws CoreException {
+        jars.add(toResourceFileOrLabelEntry(jarFileOrLabel, null));
     }
 
     public void addJavacOpt(String javacOpt) {
@@ -115,6 +139,10 @@ public class JavaProjectInfo {
      */
     public void addSrc(String srcFileOrLabel) throws CoreException {
         addToSrc(this.srcs, srcFileOrLabel);
+    }
+
+    public void addTestJar(String jarFileOrLabel) throws CoreException {
+        testJars.add(toResourceFileOrLabelEntry(jarFileOrLabel, null));
     }
 
     public void addTestResource(GlobInfo globInfo) throws CoreException {
@@ -191,6 +219,10 @@ public class JavaProjectInfo {
         testResourceInfo = new JavaResourceInfo(testResources, bazelPackage);
         testResourceInfo.analyzeResourceDirectories(result);
 
+        if (!jars.isEmpty() || !testJars.isEmpty()) {
+            result.add(warning("The project contains jar imports. This is not supported properly in IDEs."));
+        }
+
         return result.isOK() ? Status.OK_STATUS : result;
     }
 
@@ -207,6 +239,13 @@ public class JavaProjectInfo {
 
     public Collection<LabelEntry> getPluginDeps() {
         return pluginDeps;
+    }
+
+    /**
+     * @return a list of targets recorded while building this project info
+     */
+    public Set<BazelTarget> getRecordedTargets() {
+        return targets;
     }
 
     public JavaResourceInfo getResourceInfo() {
@@ -229,6 +268,24 @@ public class JavaProjectInfo {
         return requireNonNull(
             testSourceInfo,
             "Test source info not computed. Did you call analyzeProjectRecommendations?");
+    }
+
+    /**
+     * Records a target as used for resolving sources or resources in this package.
+     *
+     * @param target
+     *            the target (must be in the same package)
+     */
+    public void recordTarget(BazelTarget target) {
+        if (!target.getBazelPackage().equals(bazelPackage)) {
+            throw new IllegalArgumentException(
+                    format(
+                        "programming error: target '%s' is not in same package '%s'",
+                        target,
+                        bazelPackage.getLabel()));
+        }
+
+        targets.add(target);
     }
 
     private GlobEntry toGlobEntry(GlobInfo globInfo) {

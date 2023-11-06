@@ -74,6 +74,7 @@ import org.osgi.service.prefs.BackingStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
@@ -122,7 +123,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     private JvmConfigurator jvmConfigurator;
 
     /**
-     * Adds all information from a {@link BazelTarget} to the {@link JavaProjectInfo}.
+     * Adds all relevant information from a {@link BazelTarget} to the {@link JavaProjectInfo}.
+     * <p>
+     * This method obtains information from common <code>java_*</code> rule attributes.
+     * </p>
      *
      * @param target
      * @throws CoreException
@@ -165,6 +169,22 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         if (javacOpts != null) {
             for (String javacOpt : javacOpts) {
                 javaInfo.addJavacOpt(javacOpt);
+            }
+        }
+
+        var jars = attributes.getStringList("jars");
+        if (jars != null) {
+            for (String jar : jars) {
+                // java_import is generally used to make classes and resources available on the classpath
+                // lets check if we can translate this to resources in the same Bazel package
+                var jarTarget = resolveToTargetInSamePackage(bazelTarget, jar);
+                if (jarTarget != null) {
+                    addResourcesFromRulesPkgRules(javaInfo, jarTarget, isTestTarget);
+                } else if (isTestTarget) {
+                    javaInfo.addTestJar(jar);
+                } else {
+                    javaInfo.addJar(jar);
+                }
             }
         }
     }
@@ -215,6 +235,64 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         exclusionPatterns,
                         outputLocation,
                         classpathAttributes));
+            }
+        }
+    }
+
+    /**
+     * Attempts to resolve a jar import into resource to be added to {@link JavaProjectInfo}.
+     *
+     * @param javaInfo
+     *            the {@link JavaProjectInfo} to add resources to
+     * @param bazelTarget
+     *            the bazel target
+     * @param archiveFileOrLabel
+     *            the jar import (eg., from <code>java_import</code>)
+     * @param isTestTarget
+     *            whether or not the resources should be added as test resources
+     * @throws CoreException
+     */
+    private void addResourcesFromRulesPkgRules(JavaProjectInfo javaInfo, BazelTarget rulesPkgTarget,
+            boolean isTestTarget) throws CoreException {
+        var rulesPkgRuleClass = rulesPkgTarget.getRuleClass();
+        if (!rulesPkgRuleClass.startsWith("pkg_")) {
+            LOG.warn("Unsupport rule '{}' for target '{}'", rulesPkgRuleClass, rulesPkgTarget.getLabel());
+            return; // we don't support this
+        }
+
+        // record the target as consulted
+        javaInfo.recordTarget(rulesPkgTarget);
+
+        // inspect srcs
+        var srcs = rulesPkgTarget.getRuleAttributes().getStringList("srcs");
+        if (srcs != null) {
+            // the strip_prefix in rules_pkg is relative to the package, need to make it absolute
+            var resourceStripPrefix = rulesPkgTarget.getRuleAttributes().getString("strip_prefix");
+            if ((resourceStripPrefix != null) && !resourceStripPrefix.isEmpty()) {
+                resourceStripPrefix = rulesPkgTarget.getBazelPackage()
+                        .getWorkspaceRelativePath()
+                        .append(resourceStripPrefix)
+                        .toString();
+            }
+            for (String src : srcs) {
+                var srcTarget = resolveToTargetInSamePackage(rulesPkgTarget, src);
+                if (srcTarget != null) {
+                    // recurse into target
+                    addResourcesFromRulesPkgRules(javaInfo, srcTarget, isTestTarget);
+                } else {
+                    var label = Label.createIfValid(src);
+                    if ((label != null) && label.blazePackage()
+                            .relativePath()
+                            .equals(rulesPkgTarget.getBazelPackage().getWorkspaceRelativePath().toString())) {
+                        // remove package reference and treat as file
+                        src = label.targetName().toString();
+                        if (isTestTarget) {
+                            javaInfo.addTestResource(src, resourceStripPrefix);
+                        } else {
+                            javaInfo.addResource(src, resourceStripPrefix);
+                        }
+                    }
+                }
             }
         }
     }
@@ -1339,6 +1417,46 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         } finally {
             progress.done();
         }
+    }
+
+    /**
+     * Attempts to resolve the given label to a target within the same package.
+     *
+     * @param bazelTarget
+     *            the bazel target as reference
+     * @param maybeLabel
+     *            a potential label
+     * @return the resolved label or <code>null</code>
+     * @throws CoreException
+     */
+    private BazelTarget resolveToTargetInSamePackage(BazelTarget bazelTarget, String maybeLabel) throws CoreException {
+        // test if this may be a target in this package
+        var myPackagePath = bazelTarget.getBazelPackage().getLabel().toString();
+        if (maybeLabel.startsWith(myPackagePath + BazelLabel.BAZEL_COLON)) {
+            // drop the package name to identify a reference within package
+            maybeLabel = maybeLabel.substring(myPackagePath.length() + 1);
+        }
+
+        // starts with : then it must be treated as label; drop to colon so we can attempt to resolve it
+        if (maybeLabel.startsWith(BazelLabel.BAZEL_COLON)) {
+            maybeLabel = maybeLabel.substring(1);
+        }
+
+        // starts with // or @ then it must be treated as an external label
+        if (maybeLabel.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)
+                || maybeLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)) {
+            return null; // we don't support this
+        }
+
+        var resolvedTarget = bazelTarget.getBazelPackage().getBazelTarget(maybeLabel);
+        if (!resolvedTarget.exists()) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("'{}' is not a target in package '{}'.", maybeLabel, myPackagePath);
+            }
+            return null; // should be a jar file
+        }
+
+        return resolvedTarget;
     }
 
     private void setLineSeparator(IEclipsePreferences projectPreferences, String value) throws CoreException {
