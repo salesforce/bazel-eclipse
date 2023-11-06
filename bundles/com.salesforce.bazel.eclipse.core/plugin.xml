@@ -178,7 +178,7 @@
        <content-type
              base-type="org.eclipse.core.runtime.text"
              default-charset="utf-8"
-             file-patterns="*.bazelrc*"
+             file-patterns="*.bazelrc*,.bazelrc"
              id="com.salesforce.bazel.eclipse.content.bazelrc"
              name="Bazel RC"
              priority="normal">
@@ -194,7 +194,7 @@
        <content-type
              base-type="org.eclipse.core.runtime.text"
              default-charset="utf-8"
-             file-patterns="*.bazelproject*"
+             file-patterns="*.bazelproject*,.bazelproject"
              id="com.salesforce.bazel.eclipse.content.bazelproject"
              name="Bazel Project View"
              priority="normal">
