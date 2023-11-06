@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -1008,6 +1009,20 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         return (IEclipsePreferences) Platform.getPreferencesService().getRootNode().node(InstanceScope.SCOPE);
     }
 
+    /**
+     * Indicates if the target has sources matching any of the test_sources globs defined in the workspace's project
+     * view.
+     * <p>
+     * If the target package location matches any of the globs this method will return <code>true</code>. Otherwise the
+     * target rule attribute "<code>srcs</code>" is checked for matchinf files. Labels in referenced in
+     * <code>srcs</code> will not be checked.
+     * </p>
+     *
+     * @param bazelTarget
+     *            the target to check
+     * @return <code>true</code> if the target contains any test source, <code>false</code> otherwise
+     * @throws CoreException
+     */
     private boolean hasTestSources(BazelTarget bazelTarget) throws CoreException {
         var testSourcesMatcher = bazelTarget.getBazelWorkspace().getBazelProjectView().testSourcesGlobs();
         if (testSourcesMatcher.getGlobs().isEmpty()) {
@@ -1033,8 +1048,23 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         return false;
     }
 
+    /**
+     * Indicates if a target uses a test rule.
+     * <p>
+     * Per Bazel style-guide, a test rule must end with <code>_test</code> or the target name must end with
+     * <code>_test</code>, <code>_unittest</code>, <code>Test</code>, or <code>Tests</code>.
+     * </p>
+     *
+     * @param bazelTarget
+     *            the target to check
+     * @return <code>true</code> if this can be considered a test target
+     * @throws CoreException
+     * @see https://bazel.build/build/style-guide
+     */
     private boolean isTestTarget(BazelTarget bazelTarget) throws CoreException {
-        return bazelTarget.getRuleClass().contains("test");
+        var targetName = bazelTarget.getName().toLowerCase(Locale.US);
+        var ruleClass = bazelTarget.getRuleClass().toLowerCase(Locale.US);
+        return ruleClass.endsWith("_test") || targetName.endsWith("test") || targetName.endsWith("tests");
     }
 
     private void linkGeneratedSourceDirectories(JavaSourceInfo sourceInfo, IFolder generatedSourcesFolder,
