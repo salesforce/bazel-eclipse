@@ -16,7 +16,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.isReadable;
-import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.IPath.fromPath;
 
 import java.io.IOException;
@@ -24,17 +24,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.devtools.build.lib.collect.nestedset.NestedSetVisitor;
 import com.google.idea.blaze.base.bazel.BazelBuildSystemProvider;
 import com.google.idea.blaze.base.command.buildresult.BlazeArtifact.LocalFileArtifact;
 import com.google.idea.blaze.base.command.buildresult.LocalFileOutputArtifact;
 import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
 import com.google.idea.blaze.base.command.buildresult.ParsedBepOutput;
+import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
 import com.google.idea.blaze.base.ideinfo.TargetKey;
@@ -78,9 +83,6 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
     /** index of jars based on their root relative path, which allows lookup of jdeps entries */
     final Map<String, BlazeJarLibrary> libraryByJdepsRootRelativePath;
 
-    /** index of runtime jars by top level target */
-    final Map<String, List<BlazeJarLibrary>> runtimeJarsByToplevelTarget;
-
     public JavaAspectsInfo(ParsedBepOutput aspectsBuildResult, BazelWorkspace bazelWorkspace) throws CoreException {
         super(bazelWorkspace);
         this.aspectsBuildResult = aspectsBuildResult;
@@ -89,7 +91,6 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
         ideInfoByTargetKey = new HashMap<>();
         librariesByTargetKey = new HashMap<>();
         libraryByJdepsRootRelativePath = new HashMap<>();
-        runtimeJarsByToplevelTarget = new HashMap<>();
 
         // index all the info from each aspect
         var outputArtifacts = aspectsBuildResult
@@ -138,58 +139,47 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
         }
 
         // collect runtime classpath info
-        var fullArtifactData = aspectsBuildResult.getFullArtifactData();
-        for (OutputArtifact jar : aspectsBuildResult
-                .getOutputGroupArtifacts(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH)) {
+        var runtimeClasspathJars =
+                aspectsBuildResult.getOutputGroupArtifacts(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH);
+        var collector = new NestedSetVisitor<OutputArtifact>(jar -> {
             if (jar instanceof LocalFileOutputArtifact localJar) {
-                var localJarExecutionRootRelativePath =
-                        getBlazeInfo().getExecutionRoot().relativize(localJar.getPath());
-                // special case: if the execution root points to outside execution root, we route it back of ExecutionPathHelper
-                if (localJarExecutionRootRelativePath.startsWith("../../external/")) {
-                    localJarExecutionRootRelativePath = localJarExecutionRootRelativePath
-                            .subpath(2, localJarExecutionRootRelativePath.getNameCount());
-                }
-                var classJar = ExecutionPathHelper.parse(
-                    workspaceRoot,
-                    BazelBuildSystemProvider.BAZEL,
-                    fromPath(localJarExecutionRootRelativePath).toString());
+                var classJar = toArtifactLocation(localJar);
 
                 var resolveOutput = locationDecoder.resolveOutput(classJar);
                 if ((resolveOutput instanceof LocalFileArtifact localOutput) && !isReadable(localOutput.getPath())) {
                     LOG.error("Wrong location for runtime jar '{}'. Please report bug!", localJar);
-                    continue;
+                    return;
                 }
 
-                var artifactData = fullArtifactData.get(localJar.getRelativePath());
-                for (String topLevelTarget : artifactData.topLevelTargets) {
-                    var jarLibrary = libraryByJdepsRootRelativePath.get(classJar.getRelativePath());
-                    if (jarLibrary == null) {
-                        var targetLabel = readTargetLabel(localJar);
-                        if (targetLabel == null) {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug(
-                                    "Unable to compute target label for runtime jar '{}'. Please check if the rule producing the jar is adding the Target-Label to the jar manifest!",
-                                    classJar);
-                            }
-                            targetLabel = Label.create(format("@_unknown_jar_//:%s", classJar.getRelativePath()));
+                var jarLibrary = libraryByJdepsRootRelativePath.get(classJar.getRelativePath());
+                if (jarLibrary == null) {
+                    var targetLabel = readTargetLabel(localJar);
+                    if (targetLabel == null) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug(
+                                "Unable to compute target label for runtime jar '{}'. Please check if the rule producing the jar is adding the Target-Label to the jar manifest!",
+                                classJar);
                         }
-
-                        var builder = LibraryArtifact.builder();
-                        builder.setClassJar(classJar);
-                        var sourceJar = SourceJarFinder.findSourceJar(classJar, getBlazeInfo());
-                        if (sourceJar != null) {
-                            builder.addSourceJar(sourceJar);
-                        }
-
-                        jarLibrary = new BlazeJarLibrary(builder.build(), TargetKey.forPlainTarget(targetLabel));
-                        addLibrary(jarLibrary);
+                        targetLabel = Label.create(format("@_unknown_jar_//:%s", classJar.getRelativePath()));
                     }
 
-                    runtimeJarsByToplevelTarget.putIfAbsent(topLevelTarget, new ArrayList<>());
-                    runtimeJarsByToplevelTarget.get(topLevelTarget)
-                            .add(requireNonNull(jarLibrary, "jarLibrary should not be null here"));
+                    var builder = LibraryArtifact.builder();
+                    builder.setClassJar(classJar);
+                    var sourceJar = SourceJarFinder.findSourceJar(classJar, getBlazeInfo());
+                    if (sourceJar != null) {
+                        builder.addSourceJar(sourceJar);
+                    }
+
+                    jarLibrary = new BlazeJarLibrary(builder.build(), TargetKey.forPlainTarget(targetLabel));
+                    addLibrary(jarLibrary);
                 }
+
             }
+        }, new NestedSetVisitor.VisitedState<>());
+        try {
+            collector.visit(runtimeClasspathJars);
+        } catch (InterruptedException e) {
+            throw new OperationCanceledException("interrupted");
         }
     }
 
@@ -229,7 +219,20 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
     }
 
     public List<BlazeJarLibrary> getRuntimeClasspath(TargetKey targetKey) {
-        return runtimeJarsByToplevelTarget.get(targetKey.toString());
+        if (targetKey.isPlainTarget()) {
+            var outputGroupArtifacts = aspectsBuildResult
+                    .getOutputGroupArtifacts(targetKey.getLabel(), IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH);
+            return outputGroupArtifacts.toList()
+                    .stream()
+                    .filter(LocalFileOutputArtifact.class::isInstance)
+                    .map(LocalFileOutputArtifact.class::cast)
+                    .map(this::toArtifactLocation)
+                    .map(ArtifactLocation::getRelativePath)
+                    .map(this::getLibraryByJdepsRootRelativePath)
+                    .filter(Predicate.not(Objects::isNull))
+                    .collect(toList());
+        }
+        return null;
     }
 
     private Label readTargetLabel(LocalFileOutputArtifact localJar) {
@@ -239,5 +242,18 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
             LOG.warn("Error inspecting manifest of jar '{}': {}", localJar, e.getMessage(), e);
         }
         return null;
+    }
+
+    private ArtifactLocation toArtifactLocation(LocalFileOutputArtifact localJar) {
+        var localJarExecutionRootRelativePath = getBlazeInfo().getExecutionRoot().relativize(localJar.getPath());
+        // special case: if the execution root points to outside execution root, we route it back for ExecutionPathHelper to work
+        if (localJarExecutionRootRelativePath.startsWith("../../external/")) {
+            localJarExecutionRootRelativePath =
+                    localJarExecutionRootRelativePath.subpath(2, localJarExecutionRootRelativePath.getNameCount());
+        }
+        return ExecutionPathHelper.parse(
+            workspaceRoot,
+            BazelBuildSystemProvider.BAZEL,
+            fromPath(localJarExecutionRootRelativePath).toString());
     }
 }

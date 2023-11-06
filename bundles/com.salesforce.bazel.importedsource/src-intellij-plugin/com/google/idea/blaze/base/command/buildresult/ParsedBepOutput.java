@@ -15,8 +15,11 @@ package com.google.idea.blaze.base.command.buildresult;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.util.Objects.requireNonNull;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +27,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -44,6 +50,11 @@ import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.Bui
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.BuildEventId.NamedSetOfFilesId;
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.NamedSetOfFiles;
 import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.OutputGroup;
+import com.google.devtools.build.lib.buildeventstream.BuildEventStreamProtos.TargetComplete;
+import com.google.devtools.build.lib.collect.nestedset.NestedSet;
+import com.google.devtools.build.lib.collect.nestedset.NestedSetBuilder;
+import com.google.devtools.build.lib.collect.nestedset.NestedSetVisitor;
+import com.google.devtools.build.lib.collect.nestedset.NestedSetVisitor.Receiver;
 import com.google.idea.blaze.base.command.buildresult.BuildEventStreamProvider.BuildEventStreamException;
 import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.google.idea.blaze.base.model.primitives.Label;
@@ -118,6 +129,25 @@ public final class ParsedBepOutput {
         }
     }
 
+    private static class CompletedTarget {
+        private final ImmutableMap<String, List<String>> fileSetsByOutputGroup;
+		private final String label;
+		private final String configId;
+
+        final Map<String, NestedSet<OutputArtifact>> outputFilesByOutputGroup = new HashMap<>();
+        String configMnemonic;
+
+        CompletedTarget(String label, String configId, Map<String, List<String>> fileSetsByOutputGroup) {
+            this.label = label;
+			this.configId = configId;
+			this.fileSetsByOutputGroup = ImmutableMap.copyOf(fileSetsByOutputGroup);
+        }
+
+		public void putOutputFiles(String outputGroup, NestedSet<OutputArtifact> outputFiles) {
+			outputFilesByOutputGroup.put(outputGroup, outputFiles);
+		}
+    }
+
     /**
      * Only top-level targets have configuration mnemonic, producing target, and output group data explicitly provided
      * in BEP. This method fills in that data for the transitive closure.
@@ -183,9 +213,8 @@ public final class ParsedBepOutput {
 
         BuildEvent event;
         Map<String, String> configIdToMnemonic = new HashMap<>();
-        Set<String> topLevelFileSets = new HashSet<>();
-        Map<String, FileSet.Builder> fileSets = new LinkedHashMap<>();
-        ImmutableSetMultimap.Builder<String, String> targetToFileSets = ImmutableSetMultimap.builder();
+        Map<String, NamedSetOfFiles> namedSetOfFilesById = new LinkedHashMap<>();
+        List<CompletedTarget> topLevelTargets = new ArrayList<>();
         String localExecRoot = null;
         String buildId = null;
         Timestamp startTime = null;
@@ -199,30 +228,25 @@ public final class ParsedBepOutput {
                     localExecRoot = event.getWorkspaceInfo().getLocalExecRoot();
                     continue;
                 case CONFIGURATION:
-                    configIdToMnemonic.put(event.getId().getConfiguration().getId(),
-                        event.getConfiguration().getMnemonic());
+                    configIdToMnemonic.put(interner.intern(event.getId().getConfiguration().getId()),
+                        interner.intern(event.getConfiguration().getMnemonic()));
                     continue;
                 case NAMED_SET:
                     var namedSet = internNamedSet(event.getNamedSetOfFiles(), interner);
-                    fileSets.compute(event.getId().getNamedSet().getId(),
-                        (k, v) -> v != null ? v.setNamedSet(namedSet) : FileSet.builder().setNamedSet(namedSet));
+                    String fileSetId = event.getId().getNamedSet().getId();
+                    if(null != namedSetOfFilesById.putIfAbsent(fileSetId, namedSet))
+                    	throw new BuildEventStreamException("Unexpected duplicate file set: " +namedSetOfFilesById);
                     continue;
                 case TARGET_COMPLETED:
-                    var label = event.getId().getTargetCompleted().getLabel();
-                    var configId = event.getId().getTargetCompleted().getConfiguration().getId();
+                    var label = interner.intern(event.getId().getTargetCompleted().getLabel());
+                    var configId = interner.intern(event.getId().getTargetCompleted().getConfiguration().getId());
 
-                    event.getCompleted().getOutputGroupList().forEach(o -> {
-                        var sets = getFileSets(o);
-                        targetToFileSets.putAll(label, sets);
-                        topLevelFileSets.addAll(sets);
-                        for (String id : sets) {
-                            fileSets.compute(id, (k, v) -> {
-                                var builder = (v != null) ? v : FileSet.builder();
-                                return builder.setConfigId(configId).addOutputGroups(ImmutableSet.of(o.getName()))
-                                        .addTargets(ImmutableSet.of(label));
-                            });
-                        }
-                    });
+                    var outputs = ImmutableMap.<String, List<String>> builder();
+                    for (OutputGroup o : event.getCompleted().getOutputGroupList()) {
+                    	var sets = getFileSets(o);
+                    	outputs.put(interner.intern(o.getName()), sets);
+					}
+                    topLevelTargets.add(new CompletedTarget(label, configId, outputs.build()));
                     continue;
                 case STARTED:
                     buildId = Strings.emptyToNull(event.getStarted().getUuid());
@@ -239,10 +263,53 @@ public final class ParsedBepOutput {
         if (emptyBuildEventStream) {
             throw new BuildEventStreamException("No build events found");
         }
-        var filesMap = fillInTransitiveFileSetData(fileSets, topLevelFileSets, configIdToMnemonic, startTime, blazeInfo);
-        return new ParsedBepOutput(buildId, localExecRoot, filesMap, targetToFileSets.build(), startTime, buildResult,
+
+        // now that we got everything we can build the graph and resolve all things for each target
+        var filesGraph = new HashMap<String, NestedSet<OutputArtifact>>();
+        for (CompletedTarget completedTarget : topLevelTargets) {
+        	completedTarget.configMnemonic = configIdToMnemonic.get(completedTarget.configId);
+        	var timestamp = startTime;
+        	for (Entry<String, List<String>> outputGroupAndFileSets : completedTarget.fileSetsByOutputGroup.entrySet()) {
+        		var fileset = NestedSetBuilder.<OutputArtifact>stableOrder();
+        		String outputGroup = outputGroupAndFileSets.getKey();
+        		for (String fileSetId : outputGroupAndFileSets.getValue()) {
+        			fileset.addTransitive(computeOutputFiles(blazeInfo, namedSetOfFilesById, filesGraph,
+        					completedTarget.configMnemonic, timestamp, fileSetId));
+				};
+				completedTarget.putOutputFiles(outputGroup, fileset.build());
+			}
+		}
+        return new ParsedBepOutput(buildId, localExecRoot, topLevelTargets, startTime, buildResult,
                 stream.getBytesConsumed());
     }
+
+	private static NestedSet<OutputArtifact> computeOutputFiles(BlazeInfo blazeInfo,
+			Map<String, NamedSetOfFiles> namedSetOfFilesById,
+			HashMap<String, NestedSet<OutputArtifact>> filesGraph,
+			String configMnemonic, Timestamp timestamp, String fileSetId) {
+		String graphKey = getGraphKey(configMnemonic, fileSetId);
+		NestedSet<OutputArtifact> nestedSet = filesGraph.get(graphKey);
+		if(nestedSet != null)
+			return nestedSet;
+
+		NestedSetBuilder<OutputArtifact> builder = NestedSetBuilder.stableOrder();
+		NamedSetOfFiles fileSet = requireNonNull(namedSetOfFilesById.get(fileSetId), "Expected NamedFileSet not found: " + fileSetId);
+		ImmutableList<OutputArtifact> files = parseFiles(fileSet, configMnemonic, timestamp, blazeInfo);
+		builder.addAll(files);
+
+		for (NamedSetOfFilesId referencedFileSets : fileSet.getFileSetsList()) {
+			NestedSet<OutputArtifact> referencedSet = computeOutputFiles(blazeInfo, namedSetOfFilesById, filesGraph, configMnemonic, timestamp, referencedFileSets.getId());
+			builder.addTransitive(referencedSet);
+		}
+
+		nestedSet = builder.build();
+		filesGraph.put(graphKey, nestedSet);
+		return nestedSet;
+	}
+
+	private static String getGraphKey(String configMnemonic, String fileSetId) {
+		return fileSetId + ":" + configMnemonic;
+	}
 
     /** Parses BEP events into {@link ParsedBepOutput} */
     public static ParsedBepOutput parseBepArtifacts(InputStream bepStream, BlazeInfo blazeInfo) throws BuildEventStreamException {
@@ -260,34 +327,20 @@ public final class ParsedBepOutput {
     /** A path to the local execroot */
     private final String localExecRoot;
 
-    /** A map from file set ID to file set, with the same ordering as the BEP stream. */
-    private final ImmutableMap<String, FileSet> fileSets;
-    /** The set of named file sets directly produced by each target. */
-    private final SetMultimap<String, String> targetFileSets;
-
-    final Timestamp syncStartTime;
-
+    private final Timestamp syncStartTime;
     private final BuildResult buildResult;
-
     private final long bepBytesConsumed;
+	private final ImmutableList<CompletedTarget> topLevelTargets;
 
     @VisibleForTesting
-    public ParsedBepOutput(String buildId, String localExecRoot, ImmutableMap<String, FileSet> fileSets,
-            ImmutableSetMultimap<String, String> targetFileSets, Timestamp startTime, BuildResult buildResult,
+    public ParsedBepOutput(String buildId, String localExecRoot, List<CompletedTarget> topLevelTargets, Timestamp startTime, BuildResult buildResult,
             long bepBytesConsumed) {
         this.buildId = buildId;
         this.localExecRoot = localExecRoot;
-        this.fileSets = fileSets;
-        this.targetFileSets = targetFileSets;
+        this.topLevelTargets = ImmutableList.copyOf(topLevelTargets);
         syncStartTime = startTime;
         this.buildResult = buildResult;
         this.bepBytesConsumed = bepBytesConsumed;
-    }
-
-    /** Returns all output artifacts of the build. */
-    public Set<OutputArtifact> getAllOutputArtifacts(Predicate<String> pathFilter) {
-        return fileSets.values().stream().map(s -> s.parsedOutputs).flatMap(List::stream)
-                .filter(o -> pathFilter.test(o.getRelativePath())).collect(toImmutableSet());
     }
 
     public long getBepBytesConsumed() {
@@ -299,44 +352,52 @@ public final class ParsedBepOutput {
         return buildResult;
     }
 
-    /** Returns the set of artifacts directly produced by the given target. */
-    public ImmutableSet<OutputArtifact> getDirectArtifactsForTarget(Label label, Predicate<String> outputGroupFilter, Predicate<String> pathFilter) {
-        return targetFileSets.get(label.toString()).stream().map(s -> fileSets.get(s)).filter(f -> f.outputGroups.stream().anyMatch(outputGroupFilter)).map(f -> f.parsedOutputs)
-                .flatMap(List::stream).filter(o -> pathFilter.test(o.getRelativePath())).collect(toImmutableSet());
-    }
-
-    /**
-     * Returns a map from {@link OutputArtifact#getRelativePath()} to {@link BepArtifactData} for all artifacts reported
-     * during the build.
-     */
-    public ImmutableMap<String, BepArtifactData> getFullArtifactData() {
-        return fileSets.values().stream().flatMap(FileSet::toPerArtifactData)
-                .collect(toImmutableMap(d -> d.artifact.getRelativePath(), d -> d, BepArtifactData::update));
-    }
-
     /** Returns the local execroot. */
     public String getLocalExecRoot() {
         return localExecRoot;
     }
 
-    public List<OutputArtifact> getOutputGroupArtifacts(Predicate<String> outputGroupFilter) {
-        return getOutputGroupArtifacts(outputGroupFilter, s -> true);
-    }
-
-    public List<OutputArtifact> getOutputGroupArtifacts(Predicate<String> outputGroupFilter,
+    public Collection<OutputArtifact> getOutputGroupArtifacts(Predicate<String> outputGroupFilter,
             Predicate<String> pathFilter) {
-        return fileSets.values().stream().filter(f -> f.outputGroups.stream().anyMatch(outputGroupFilter))
-                .map(f -> f.parsedOutputs).flatMap(List::stream).filter(o -> pathFilter.test(o.getRelativePath()))
-                .distinct().collect(toImmutableList());
+		CopyOnWriteArraySet<OutputArtifact> result = new CopyOnWriteArraySet<>();
+		NestedSetVisitor<OutputArtifact> collector = new NestedSetVisitor<OutputArtifact>(
+				a -> {
+					if (pathFilter.test(a.getRelativePath()))
+						result.add(a);
+				}, new NestedSetVisitor.VisitedState<>());
+		topLevelTargets.parallelStream()
+				.flatMap(t -> t.outputFilesByOutputGroup.entrySet()
+						.parallelStream())
+				.filter(e -> outputGroupFilter.test(e.getKey()))
+				.map(Entry::getValue).forEach(set -> {
+					try {
+						collector.visit(set);
+					} catch (InterruptedException e) {
+						throw new IllegalStateException("interrupted", e);
+					}
+				});
+		return result;
     }
 
-    public List<OutputArtifact> getOutputGroupArtifacts(String outputGroup) {
-        return getOutputGroupArtifacts(outputGroup, s -> true);
+    public NestedSet<OutputArtifact> getOutputGroupArtifacts(String outputGroup) {
+		NestedSetBuilder<OutputArtifact> builder = NestedSetBuilder.stableOrder();
+		for (CompletedTarget target : topLevelTargets) {
+			NestedSet<OutputArtifact> set = target.outputFilesByOutputGroup.get(outputGroup);
+			if(set!=null)
+				builder.addTransitive(set);
+		}
+        return builder.build();
     }
 
-    public List<OutputArtifact> getOutputGroupArtifacts(String outputGroup, Predicate<String> pathFilter) {
-        return fileSets.values().stream().filter(f -> f.outputGroups.contains(outputGroup)).map(f -> f.parsedOutputs)
-                .flatMap(List::stream).filter(o -> pathFilter.test(o.getRelativePath())).distinct()
-                .collect(toImmutableList());
+    public NestedSet<OutputArtifact> getOutputGroupArtifacts(Label targetLabel, String outputGroup) {
+		NestedSetBuilder<OutputArtifact> builder = NestedSetBuilder.stableOrder();
+		for (CompletedTarget target : topLevelTargets) {
+			if(targetLabel.toString().equals(target.label)) {
+				NestedSet<OutputArtifact> set = target.outputFilesByOutputGroup.get(outputGroup);
+				if(set!=null)
+					builder.addTransitive(set);
+			}
+		}
+        return builder.build();
     }
 }
