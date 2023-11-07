@@ -8,7 +8,6 @@ import static java.lang.String.format;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.List;
 
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
@@ -121,12 +120,6 @@ public class EclipseHeadlessBazelCommandExecutor extends DefaultBazelCommandExec
         var defaultValue = getSystemUtil().isMac(); // mimic super-class default, which is *true* only on Mac
         var value = Platform.getPreferencesService().get(PREF_KEY_USE_SHELL_ENVIRONMENT, null, preferencesLookup);
         setWrapExecutionIntoShell(value == null ? defaultValue : Boolean.valueOf(value).booleanValue());
-    }
-
-    @Override
-    protected ProcessBuilder newProcessBuilder(List<String> commandLine) throws IOException {
-        // TODO Auto-generated method stub
-        return super.newProcessBuilder(commandLine);
     }
 
     @Override

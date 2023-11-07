@@ -118,6 +118,9 @@ public class DebugBazelExecutionHandler extends AbstractHandler {
                                 workspaceRoot,
                                 "Workspace binary"),
                         monitor::isCanceled);
+                    executor.execute(
+                        new ArbitraryCommand(Path.of("pwd"), List.of(), workspaceRoot, "working directory"),
+                        monitor::isCanceled);
                 }
             }
         } catch (CoreException | IOException e) {
