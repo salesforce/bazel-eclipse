@@ -268,7 +268,7 @@ public abstract class BazelCommand<R> {
         startupArgs = args != null ? List.of(args) : emptyList();
     }
 
-    boolean supportsInjectionOfAdditionalBazelOptions() {
+    protected boolean supportsInjectionOfAdditionalBazelOptions() {
         return true; // default is yes
     }
 

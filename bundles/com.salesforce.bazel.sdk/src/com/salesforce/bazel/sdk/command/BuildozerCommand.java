@@ -134,7 +134,7 @@ public class BuildozerCommand extends BazelCommand<List<Output>> {
     }
 
     @Override
-    boolean supportsInjectionOfAdditionalBazelOptions() {
+    protected boolean supportsInjectionOfAdditionalBazelOptions() {
         return false; // buildozer doesn't support --tool_tag & co
     }
 

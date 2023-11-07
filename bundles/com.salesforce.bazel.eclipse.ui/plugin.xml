@@ -67,6 +67,13 @@
              id="com.salesforce.bazel.eclipse.ui.commands.classpath.addCompileDependency"
              name="Add Compile Dependency...">
        </command>
+       <command
+             categoryId="com.salesforce.bazel.eclipse.ui.commands.category"
+             defaultHandler="com.salesforce.bazel.eclipse.ui.commands.DebugBazelExecutionHandler"
+             description="Executes a few commands to print diagnose Bazel execution"
+             id="com.salesforce.bazel.eclipse.ui.commands.debugBazelExecution"
+             name="Diagnose Bazel Command Execution">
+       </command>
     </extension>
 
     <extension

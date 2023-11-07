@@ -196,7 +196,7 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
      * @return the {@link BazelBinary} specified by the project view (or <code>null</code> if a default should be used)
      * @throws CoreException
      */
-    BazelBinary getBazelBinary() throws CoreException {
+    public BazelBinary getBazelBinary() throws CoreException {
         return getInfo().getBazelBinary();
     }
 
