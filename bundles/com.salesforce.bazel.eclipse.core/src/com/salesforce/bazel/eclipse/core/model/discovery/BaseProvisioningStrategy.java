@@ -260,9 +260,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             return; // we don't support this
         }
 
-        // record the target as consulted
-        javaInfo.recordTarget(rulesPkgTarget);
-
         // inspect srcs
         var srcs = rulesPkgTarget.getRuleAttributes().getStringList("srcs");
         if (srcs != null) {

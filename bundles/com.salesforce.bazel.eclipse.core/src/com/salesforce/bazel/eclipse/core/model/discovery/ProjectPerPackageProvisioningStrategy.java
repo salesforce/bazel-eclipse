@@ -265,13 +265,6 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             // configure classpath
             configureRawClasspath(project, javaInfo, monitor.split(1));
 
-            // update the list of targets
-            if (!javaInfo.getRecordedTargets().isEmpty()) {
-                List<BazelTarget> updatedTargets = new ArrayList<>(packageTargets);
-                updatedTargets.addAll(javaInfo.getRecordedTargets());
-                project.setBazelTargets(updatedTargets, monitor.split(1));
-            }
-
             result.add(project);
         }
         return result;
