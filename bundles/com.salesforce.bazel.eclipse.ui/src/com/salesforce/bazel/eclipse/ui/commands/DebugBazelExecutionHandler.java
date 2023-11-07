@@ -101,6 +101,16 @@ public class DebugBazelExecutionHandler extends AbstractHandler {
                 executor.execute(
                     new ArbitraryCommand(Path.of("bazel"), List.of("info"), workspaceRoot, bazelWorkspace.getName()),
                     monitor::isCanceled);
+                executor.execute(
+                    new ArbitraryCommand(
+                            Path.of("echo"),
+                            List.of(workspaceRoot.toString()),
+                            workspaceRoot,
+                            "working directory"),
+                    monitor::isCanceled);
+                executor.execute(
+                    new ArbitraryCommand(Path.of("pwd"), List.of(), workspaceRoot, "working directory"),
+                    monitor::isCanceled);
 
                 var workspaceBinary = bazelWorkspace.getBazelBinary();
                 if (workspaceBinary != null) {
@@ -117,9 +127,6 @@ public class DebugBazelExecutionHandler extends AbstractHandler {
                                 List.of("info"),
                                 workspaceRoot,
                                 "Workspace binary"),
-                        monitor::isCanceled);
-                    executor.execute(
-                        new ArbitraryCommand(Path.of("pwd"), List.of(), workspaceRoot, "working directory"),
                         monitor::isCanceled);
                 }
             }
