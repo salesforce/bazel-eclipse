@@ -306,12 +306,10 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             // we use the BazelModelCommandExecutionService directly because there is a cycle dependency between
             // BazelModelCommandExecutor and BazelWorkspace#getBazelBinary
 
-            var infoResult =
-                    executionService
-                            .executeOutsideWorkspaceLockAsync(
-                                new BazelInfoCommand(workspaceRoot, "Reading workspace info"),
-                                bazelWorkspace)
-                            .get();
+            var workspaceCommand = new BazelInfoCommand(workspaceRoot, "Reading workspace info");
+            workspaceCommand.setBazelBinary(getBazelBinary());
+
+            var infoResult = executionService.executeOutsideWorkspaceLockAsync(workspaceCommand, bazelWorkspace).get();
 
             // sanity check
             if (infoResult.isEmpty()) {

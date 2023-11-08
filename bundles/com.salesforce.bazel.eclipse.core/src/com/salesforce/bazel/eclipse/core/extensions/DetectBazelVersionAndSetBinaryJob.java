@@ -17,9 +17,6 @@ import com.salesforce.bazel.sdk.command.BazelBinaryVersionDetector;
 
 /**
  * Calls <code>bazel --version</code> on a provided binary to identify the version use.
- * <p>
- * Calls {@link EclipseHeadlessBazelCommandExecutor#setBazelBinary(BazelBinary)} when done.
- * </p>
  */
 public final class DetectBazelVersionAndSetBinaryJob extends Job {
     private final Path binary;
@@ -33,8 +30,8 @@ public final class DetectBazelVersionAndSetBinaryJob extends Job {
      * @param wrapExecutionIntoShell
      *            <code>true</code> if shell wrapping is desired, <code>false</code> otherwise
      * @param binaryConsumer
-     *            receiver of the binary including the detected version (will be called with a fallback value in
-     *            case of errors)
+     *            receiver of the binary including the detected version (will be called with a fallback value in case of
+     *            errors)
      * @param fallbackSupplier
      *            supplier for fallback value in case of errors
      */
@@ -59,7 +56,8 @@ public final class DetectBazelVersionAndSetBinaryJob extends Job {
             binaryConsumer.accept(fallbackSupplier.get());
             return Status.error(format("Unable to detect Bazel version of binary '%s'!", binary), e);
         } catch (InterruptedException e) {
-            EclipseHeadlessBazelCommandExecutor.LOG.warn("Interrupted waiting for bazel --version to respond for binary '{}'", binary, e);
+            EclipseHeadlessBazelCommandExecutor.LOG
+                    .warn("Interrupted waiting for bazel --version to respond for binary '{}'", binary, e);
             binaryConsumer.accept(fallbackSupplier.get());
             return Status.CANCEL_STATUS;
         }

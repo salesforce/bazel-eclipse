@@ -70,22 +70,7 @@ public class BazelElementCommandExecutor {
             return;
         }
 
-        var bazelBinary = bazelWorkspace.getBazelBinary();
-        if (bazelBinary == null) {
-            bazelBinary = getExecutionService().getBazelBinary();
-        } else {
-            LOG.trace("Using binary from workspace: {}", bazelBinary);
-        }
-        var workspaceBazelVersion = bazelWorkspace.getBazelVersion();
-        if (!bazelBinary.bazelVersion().equals(workspaceBazelVersion)) {
-            LOG.trace(
-                "Forcing (overriding) workspace Bazel version '{}' for command: {}",
-                workspaceBazelVersion,
-                command);
-            command.setBazelBinary(new BazelBinary(bazelBinary.executable(), workspaceBazelVersion));
-        } else {
-            command.setBazelBinary(bazelBinary);
-        }
+        command.setBazelBinary(selectBazelBinary(bazelWorkspace));
 
         var buildFlags = bazelWorkspace.getBazelProjectView().buildFlags();
         if (!buildFlags.isEmpty() && (command instanceof BazelBuildCommand)) {
@@ -173,7 +158,7 @@ public class BazelElementCommandExecutor {
 
     /**
      * Execute a Bazel command using
-     * {@link BazelModelCommandExecutionService#executeOutsideWorkspaceLockAsync(BazelCommand, BazelElement)}.
+     * {@link BazelModelCommandExecutionService#executeWithWorkspaceLockAsync(BazelCommand, BazelElement, ISchedulingRule, List)}.
      * <p>
      * The method will block the current thread and wait for the result. However, the command execution will happen in a
      * different {@link Job thread} in the background for proper progress handling/reporting.
@@ -209,6 +194,30 @@ public class BazelElementCommandExecutor {
         } catch (InterruptedException e) {
             throw new OperationCanceledException("Interrupted while waiting for bazel output to complete.");
         }
+    }
+
+    private BazelBinary selectBazelBinary(BazelWorkspace bazelWorkspace) throws CoreException {
+        var bazelBinary = bazelWorkspace.getBazelBinary();
+        if (bazelBinary != null) {
+            // we don't adjust the version here; the user explicitly set a binary in the project view
+            LOG.trace("Using binary from workspace: {}", bazelBinary);
+            return bazelBinary;
+        }
+
+        // use the default
+        bazelBinary = getExecutionService().getBazelBinary();
+
+        // adjust the version when the workspace wants a specific one
+        var workspaceBazelVersion = bazelWorkspace.getBazelVersion();
+        if (!bazelBinary.bazelVersion().equals(workspaceBazelVersion)) {
+            LOG.trace(
+                "Forcing (overriding) workspace Bazel version '{}' for executable: {}",
+                workspaceBazelVersion,
+                bazelBinary);
+            bazelBinary = new BazelBinary(bazelBinary.executable(), workspaceBazelVersion);
+        }
+
+        return bazelBinary;
     }
 
     private IStatus toStatus(Throwable e) {

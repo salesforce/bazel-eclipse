@@ -585,6 +585,18 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
             var progress = SubMonitor.convert(monitor, format("Synchronizing workspace %s", workspaceName), 50);
 
+            // log an event so we can verify a few things later
+            if (LOG.isInfoEnabled()) {
+                var syncInfo = new StringBuilder();
+                syncInfo.append("Synchronizing workspace '")
+                        .append(workspaceName)
+                        .append("'")
+                        .append(System.lineSeparator());
+                syncInfo.append("  bazel binary: ")
+                        .append(null != workspace.getBazelBinary() ? workspace.getBazelBinary().toString() : "default");
+                LOG.info(syncInfo.toString());
+            }
+
             // import preferences
             importPreferences(projectView.importPreferences(), progress.split(1, SUPPRESS_NONE));
 
