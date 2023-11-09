@@ -191,6 +191,20 @@ This can be done with the following in your `.bazelrc` file:
 build --output_groups=+_source_jars
 ```
 
+###  `test_sources`
+
+A list of globs with directories to flag as containing test sources.
+
+```
+test_sources:
+  **/test/unit
+```
+
+This attribute also support exclusions if they begin with `-`.
+
+If the glob matches a package which is provisioned with the `project-per-package` strategy, all source folders in the project will be marked as containing test sources.
+
+
 ## Unsupported Features / Limitations
 
 All deprecated items are not supported.
@@ -203,6 +217,5 @@ In addition to those, the following items are not supported as well:
 * `import_target_output`
 * `ts_config_rules`
 * `android_sdk_platform` and `android_min_sdk` (`android_*`)
-* `test_sources`
 
 
