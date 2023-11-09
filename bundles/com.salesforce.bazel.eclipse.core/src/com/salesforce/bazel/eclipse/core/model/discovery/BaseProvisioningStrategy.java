@@ -75,6 +75,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.Label;
+import com.google.idea.blaze.base.model.primitives.TargetName;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
@@ -1445,7 +1446,15 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             return null; // we don't support this
         }
 
-        var resolvedTarget = bazelTarget.getBazelPackage().getBazelTarget(maybeLabel);
+        var targetName = TargetName.createIfValid(maybeLabel);
+        if (targetName == null) {
+            // likely a file
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("'{}' is not a valid target name.", maybeLabel);
+            }
+            return null;
+        }
+        var resolvedTarget = bazelTarget.getBazelPackage().getBazelTarget(targetName.toString());
         if (!resolvedTarget.exists()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("'{}' is not a target in package '{}'.", maybeLabel, myPackagePath);
