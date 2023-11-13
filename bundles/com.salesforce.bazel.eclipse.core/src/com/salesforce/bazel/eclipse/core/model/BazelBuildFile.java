@@ -61,7 +61,11 @@ public final class BazelBuildFile extends BazelElement<BazelBuildFileInfo, Bazel
             throw new CoreException(
                     Status.error(format("Unable to read build file '%s': %s", buildFileLocation, e.getMessage()), e));
         }
-        return new BazelBuildFileInfo(this, reader.getLoadStatements(), reader.getMacroCalls());
+        return new BazelBuildFileInfo(
+                this,
+                reader.getLoadStatements(),
+                reader.getMacroCalls(),
+                reader.getPackageCall());
     }
 
     @Override

@@ -14,8 +14,11 @@
 package com.salesforce.bazel.eclipse.core.model.cache;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 import java.time.Duration;
+import java.util.Collection;
+import java.util.Map.Entry;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -29,6 +32,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
  */
 public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCache {
 
+    private static final String CACHE_KEY_SEPARATOR = "::";
     private static final String EMPTY_STRING = "";
     private final Cache<String, BazelElementInfo> cache;
 
@@ -57,6 +61,23 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
         cache = Caffeine.newBuilder().maximumSize(maximumSize).expireAfterAccess(expireAfterAccessDuration).build();
     }
 
+    private boolean belongsToWorkspace(BazelWorkspace bazelWorkspace, String stableCacheKey) {
+        var workspaceLocationHash = bazelWorkspace.getLocation().toString().hashCode();
+        return stableCacheKey.equals(workspaceLocationHash)
+                || stableCacheKey.startsWith(workspaceLocationHash + CACHE_KEY_SEPARATOR);
+    }
+
+    @Override
+    public Collection<BazelElement<?, ?>> getAll(BazelWorkspace bazelWorkspace) {
+        return cache.asMap()
+                .entrySet()
+                .stream()
+                .filter(e -> belongsToWorkspace(bazelWorkspace, e.getKey()))
+                .map(Entry::getValue)
+                .map(BazelElementInfo::getOwner)
+                .collect(toList());
+    }
+
     /**
      * Exposes the underlying Caffeine {@link Cache}.
      * <p>
@@ -65,7 +86,7 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
      *
      * @return the underlying cache
      */
-    public Cache<String, ? extends BazelElementInfo> getCache() {
+    Cache<String, ? extends BazelElementInfo> getCache() {
         return cache;
     }
 
@@ -83,7 +104,8 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
         }
 
         // use a combination of workspace name and label to ensure we support multiple workspaces
-        var workspace = requireNonNull(bazelElement.getBazelWorkspace(),
+        var workspace = requireNonNull(
+            bazelElement.getBazelWorkspace(),
             "every element is required to have a workspace at this point");
         var workspaceLocationHash = workspace.getLocation().toString().hashCode();
 
@@ -97,7 +119,7 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
             return String.valueOf(workspaceLocationHash);
         }
 
-        return String.valueOf(workspaceLocationHash) + label.toString();
+        return String.valueOf(workspaceLocationHash) + CACHE_KEY_SEPARATOR + label.toString();
     }
 
     @Override

@@ -19,7 +19,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 /**
  * The information representing a {@link BazelElement} after it has been read/queried from Bazel.
  * <p>
- * Element infos are used by the model. SDK users should not access them directly. If they believe the have to please
+ * Element infos are used by the model. SDK users should not access them directly. If they believe they have to please
  * open a discussion thread with the SDK team for lack of API in the {@link BazelElement} model.
  * </p>
  */
@@ -30,4 +30,8 @@ public abstract sealed class BazelElementInfo
         return ResourcesPlugin.getWorkspace().getRoot();
     }
 
+    /**
+     * @return the owning element handle of the element info
+     */
+    public abstract BazelElement<?, ?> getOwner();
 }

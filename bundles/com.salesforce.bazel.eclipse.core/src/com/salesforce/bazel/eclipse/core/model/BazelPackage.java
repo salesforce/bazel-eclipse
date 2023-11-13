@@ -209,6 +209,17 @@ public final class BazelPackage extends BazelElement<BazelPackageInfo, BazelWork
         return getLocation().append(getInfo().getBuildFile().getFileName().toString());
     }
 
+    /**
+     * {@return the default visibility for the package}
+     *
+     * @throws CoreException
+     *             if the package does not exist or there was an error reading the {@link #getBazelBuildFile() build
+     *             file}
+     */
+    public BazelVisibility getDefaultVisibility() throws CoreException {
+        return getInfo().getDefaultVisibility();
+    }
+
     @Override
     public BazelLabel getLabel() {
         return label;

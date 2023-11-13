@@ -39,6 +39,8 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 
 public final class BazelPackageInfo extends BazelElementInfo {
 
+    private static final BazelVisibility DEFAULT_VISIBILITY_PRIVATE = new BazelVisibility(BazelVisibility.PRIVATE);
+
     private static Logger LOG = LoggerFactory.getLogger(BazelPackageInfo.class);
 
     /**
@@ -133,10 +135,11 @@ public final class BazelPackageInfo extends BazelElementInfo {
 
     private final Path buildFile;
     private final BazelPackage bazelPackage;
-
     private final Map<String, Target> indexOfTargetInfoByTargetName;
 
     private volatile BazelProject bazelProject;
+
+    private BazelVisibility defaultVisibility;
 
     BazelPackageInfo(Path buildFile, BazelPackage bazelPackage, Map<String, Target> indexOfTargetInfoByTargetName) {
         this.buildFile = buildFile;
@@ -167,6 +170,29 @@ public final class BazelPackageInfo extends BazelElementInfo {
 
     public Path getBuildFile() {
         return buildFile;
+    }
+
+    public BazelVisibility getDefaultVisibility() throws CoreException {
+        var cachedVisibility = defaultVisibility;
+        if (cachedVisibility != null) {
+            return cachedVisibility;
+        }
+        var bazelBuildFile = getBazelPackage().getBazelBuildFile();
+        var packageCall = bazelBuildFile.getInfo().getPackageCall();
+        if (packageCall == null) {
+            return defaultVisibility = DEFAULT_VISIBILITY_PRIVATE;
+        }
+        var defaultVisibilityValue = packageCall.getStringListArgument("default_visibility");
+        if ((defaultVisibilityValue == null) || defaultVisibilityValue.isEmpty()) {
+            return defaultVisibility = DEFAULT_VISIBILITY_PRIVATE;
+        }
+
+        return defaultVisibility = new BazelVisibility(defaultVisibilityValue);
+    }
+
+    @Override
+    public BazelPackage getOwner() {
+        return bazelPackage;
     }
 
     Target getTarget(String targetName) {

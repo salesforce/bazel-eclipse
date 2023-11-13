@@ -124,7 +124,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             return cachedBazelProjectFileSystemMapper;
         }
 
-        return bazelProjectFileSystemMapper = new BazelProjectFileSystemMapper(getBazelWorkspace());
+        return bazelProjectFileSystemMapper = new BazelProjectFileSystemMapper(getOwner());
     }
 
     public BazelProjectView getBazelProjectView() throws CoreException {
@@ -154,10 +154,6 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
 
     public BazelVersion getBazelVersion() {
         return bazelVersion;
-    }
-
-    public BazelWorkspace getBazelWorkspace() {
-        return bazelWorkspace;
     }
 
     public IPath getCommandLog() {
@@ -218,6 +214,11 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
 
     public IPath getOutputPath() {
         return outputPath;
+    }
+
+    @Override
+    public BazelWorkspace getOwner() {
+        return bazelWorkspace;
     }
 
     IProject getProject() throws CoreException {

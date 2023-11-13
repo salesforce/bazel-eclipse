@@ -160,6 +160,16 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
         return targetName;
     }
 
+    /**
+     * {@return the visibility of this target}
+     *
+     * @throws CoreException
+     *             if there was an error reading the visibility info
+     */
+    public BazelVisibility getVisibility() throws CoreException {
+        return getInfo().getVisibility();
+    }
+
     public boolean hasBazelProject() throws CoreException {
         return findProject(this) != null;
     }

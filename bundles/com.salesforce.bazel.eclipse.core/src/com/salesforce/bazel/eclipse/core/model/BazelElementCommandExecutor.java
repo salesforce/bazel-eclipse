@@ -196,7 +196,15 @@ public class BazelElementCommandExecutor {
         }
     }
 
-    private BazelBinary selectBazelBinary(BazelWorkspace bazelWorkspace) throws CoreException {
+    /**
+     * Performs a selection of the effective {@link BazelBinary} to use.
+     *
+     * @param bazelWorkspace
+     *            the workspace
+     * @return the {@link BazelBinary} to use
+     * @throws CoreException
+     */
+    public BazelBinary selectBazelBinary(BazelWorkspace bazelWorkspace) throws CoreException {
         var bazelBinary = bazelWorkspace.getBazelBinary();
         if (bazelBinary != null) {
             // we don't adjust the version here; the user explicitly set a binary in the project view

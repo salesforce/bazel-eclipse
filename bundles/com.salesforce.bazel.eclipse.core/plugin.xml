@@ -200,5 +200,19 @@
              priority="normal">
        </content-type>
     </extension>
+    <extension
+          point="org.eclipse.debug.core.launchConfigurationTypes">
+       <launchConfigurationType
+             delegate="com.salesforce.bazel.eclipse.core.launchconfiguration.BazelRunLaunchConfigurationDelegate"
+             delegateDescription="The Bazel Eclipse Feature auncher support running java_binaries with attaching a Java debugger"
+             delegateName="BEF Launcher"
+             id="com.salesforce.bazel.eclipse.core.launchconfiguration"
+             modes="run,debug"
+             name="Bazel"
+             public="true"
+             sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
+       </launchConfigurationType>
+    </extension>
 
 </plugin>

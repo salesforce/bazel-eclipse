@@ -68,6 +68,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
     private volatile BazelRuleAttributes ruleAttributes;
 
     private List<IPath> ruleOutput;
+    private BazelVisibility visibility;
 
     public BazelTargetInfo(String targetName, BazelTarget bazelTarget) {
         this.targetName = targetName;
@@ -92,6 +93,11 @@ public final class BazelTargetInfo extends BazelElementInfo {
     }
 
     public BazelTarget getBazelTarget() {
+        return bazelTarget;
+    }
+
+    @Override
+    public BazelTarget getOwner() {
         return bazelTarget;
     }
 
@@ -142,6 +148,21 @@ public final class BazelTargetInfo extends BazelElementInfo {
         return targetName;
     }
 
+    public BazelVisibility getVisibility() throws CoreException {
+        var cachedVisibility = visibility;
+        if (cachedVisibility != null) {
+            return cachedVisibility;
+        }
+
+        var visibilityValue = getRuleAttributes().getStringList("visibility");
+        if ((visibilityValue == null) || visibilityValue.isEmpty()) {
+            // lookup from package
+            return visibility = getBazelTarget().getBazelPackage().getDefaultVisibility();
+        }
+
+        return visibility = new BazelVisibility(visibilityValue);
+    }
+
     public void load(BazelPackageInfo packageInfo) throws CoreException {
         // re-use the info obtained from bazel query for the whole package
         var target = packageInfo.getTarget(getTargetName());
@@ -156,5 +177,4 @@ public final class BazelTargetInfo extends BazelElementInfo {
 
         this.target = target;
     }
-
 }

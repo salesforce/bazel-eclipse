@@ -23,6 +23,7 @@ import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.toList;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -190,6 +191,17 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     public boolean exists() {
         var path = workspacePath();
         return isDirectory(path) && (findWorkspaceFile(path) != null);
+    }
+
+    /**
+     * @return a collection of all targets loaded in memory
+     */
+    public Collection<BazelTarget> getAllOpenTargets() {
+        return getInfoCache().getAll(this)
+                .stream()
+                .filter(BazelTarget.class::isInstance)
+                .map(BazelTarget.class::cast)
+                .collect(toList());
     }
 
     /**

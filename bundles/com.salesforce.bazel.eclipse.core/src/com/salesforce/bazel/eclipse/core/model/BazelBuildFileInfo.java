@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.model;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -33,9 +34,10 @@ public final class BazelBuildFileInfo extends BazelElementInfo {
     private final List<LoadStatement> loadStatements;
     private final List<MacroCall> macroCalls;
     private final Map<String, String> macroCallBindingsByLocalName;
+    private final MacroCall packageCall;
 
     BazelBuildFileInfo(BazelBuildFile bazelBuildFile, List<LoadStatement> loadStatements,
-            List<CallExpression> macroCalls) {
+            List<CallExpression> macroCalls, CallExpression packageCall) {
         this.bazelBuildFile = bazelBuildFile;
         // note: the load statements become relevant at some point to map from private to public name
         this.loadStatements = loadStatements;
@@ -45,6 +47,7 @@ public final class BazelBuildFileInfo extends BazelElementInfo {
         this.macroCalls = macroCalls.stream()
                 .map(e -> new MacroCall(bazelBuildFile, e, macroCallBindingsByLocalName))
                 .collect(toList());
+        this.packageCall = new MacroCall(bazelBuildFile, packageCall, Collections.emptyMap()); // not allowed to be rebound
     }
 
     public BazelBuildFile getBazelBuildFile() {
@@ -74,5 +77,14 @@ public final class BazelBuildFileInfo extends BazelElementInfo {
         var function = macroCallBindingsByLocalName.containsKey(functionName)
                 ? macroCallBindingsByLocalName.get(functionName) : functionName;
         return macroCalls.stream().filter(m -> function.equals(m.getResolvedFunctionName())).collect(toList());
+    }
+
+    @Override
+    public BazelBuildFile getOwner() {
+        return bazelBuildFile;
+    }
+
+    public MacroCall getPackageCall() {
+        return packageCall;
     }
 }

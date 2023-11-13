@@ -22,7 +22,7 @@ import com.salesforce.bazel.sdk.command.BazelQueryForPackagesCommand;
 /**
  * Default implementation of {@link TargetDiscoveryStrategy} using <code>bazel query</code> to discovery targets.
  * <p>
- * Discovery is a two step process. In the first step, the workspace is queries for <strong>all</strong> available
+ * Discovery is a two step process. In the first step, the workspace is queried for <strong>all</strong> available
  * packages. In the second step, a list of packages is queried for available targets. The list may be filtered (eg.,
  * based on list of directories in the project view).
  * </p>
@@ -45,7 +45,7 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
                             bazelWorkspace.getLocation().toPath(),
                             "buildfiles(//...)",
                             true,
-                            "Queringy for all available packages in workspace"));
+                            "Querying for all available packages in workspace"));
 
         monitor.worked(1);
         monitor.setWorkRemaining(labels.size());
@@ -56,12 +56,12 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
 
             // ignore external packages
             if (label.startsWith("@")) {
-                LOG.debug("Ignored external package during discover: {}", label);
+                LOG.debug("Ignored external package during discovery: {}", label);
                 continue;
             }
 
             // ignore workspaces within the workspace (eg., test projects)
-            // (if there is no entry in .bazelignore the query will return those folders)
+            // (if there is no entry in .bazelignore then query will return those folders)
             var packagePath = new Path(label);
             var packageWorkspaceLocation = findWorkspaceLocation(bazelWorkspace, packagePath);
             if (!bazelWorkspace.getLocation().equals(packageWorkspaceLocation)) {

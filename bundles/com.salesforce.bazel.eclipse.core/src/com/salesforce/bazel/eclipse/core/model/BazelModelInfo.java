@@ -33,4 +33,9 @@ public final class BazelModelInfo extends BazelElementInfo {
         }
         return result;
     }
+
+    @Override
+    public BazelModel getOwner() {
+        return bazelModel;
+    }
 }

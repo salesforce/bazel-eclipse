@@ -15,10 +15,12 @@ package com.salesforce.bazel.eclipse.core.model.cache;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
 import com.salesforce.bazel.eclipse.core.model.BazelElementInfo;
+import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 
 /**
  * A cache for managing the lifecycle of {@link BazelElementInfo} objects.
@@ -64,6 +66,15 @@ public abstract sealed class BazelElementInfoCache permits CaffeineBasedBazelEle
             throw new IllegalStateException("The cache was already initialized. Cannot initialize multiple times!");
         }
     }
+
+    /**
+     * Collects all elements available in the cache for the given workspace.
+     *
+     * @param bazelWorkspace
+     *            the bazel workspace
+     * @return an in-time snapshot collection of all elements of the workspace available in the cache
+     */
+    public abstract Collection<BazelElement<?, ?>> getAll(BazelWorkspace bazelWorkspace);
 
     /**
      * Returns an element info from the cache if it's present.

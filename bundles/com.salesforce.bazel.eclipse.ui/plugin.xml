@@ -269,4 +269,21 @@
              name="Bazel Quick Fixes">
        </quickFixProcessor>
     </extension>
+    <extension
+          point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+       <launchConfigurationTypeImage
+             configTypeID="com.salesforce.bazel.eclipse.core.launchconfiguration"
+             icon="resources/logo.png"
+             id="com.salesforce.bazel.eclipse.ui.launchconfiguration.image">
+       </launchConfigurationTypeImage>
+    </extension>
+    <extension
+          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+       <launchConfigurationTabGroup
+             class="com.salesforce.bazel.eclipse.ui.launchconfiguration.BazelRunLaunchConfigurationTabGroup"
+             description="Runs a Bazel binary target and connects a remote Java debugger if necessary"
+             id="com.salesforce.bazel.eclipse.ui.launchconfiguration.tabs.run"
+             type="com.salesforce.bazel.eclipse.core.launchconfiguration">
+       </launchConfigurationTabGroup>
+    </extension>
 </plugin>

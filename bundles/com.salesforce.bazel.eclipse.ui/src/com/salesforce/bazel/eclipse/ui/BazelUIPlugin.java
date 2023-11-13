@@ -18,6 +18,7 @@ public class BazelUIPlugin extends AbstractUIPlugin {
     private static BazelUIPlugin plugin;
 
     public static final String ICON_BAZEL = "icon_bazel";
+    public static final String IMG_VIEW_ARGUMENTS_TAB = "views/variable_tab.png";
 
     private static String bundleVersion;
 
@@ -42,6 +43,7 @@ public class BazelUIPlugin extends AbstractUIPlugin {
     @Override
     protected void initializeImageRegistry(ImageRegistry reg) {
         reg.put(ICON_BAZEL, imageDescriptorFromPlugin(PLUGIN_ID, "resources/bazelicon.gif"));
+        reg.put(IMG_VIEW_ARGUMENTS_TAB, imageDescriptorFromPlugin(PLUGIN_ID, "resources/" + IMG_VIEW_ARGUMENTS_TAB));
     }
 
     @Override
