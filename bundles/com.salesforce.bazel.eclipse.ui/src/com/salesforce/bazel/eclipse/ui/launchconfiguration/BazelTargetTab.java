@@ -14,10 +14,18 @@
  */
 package com.salesforce.bazel.eclipse.ui.launchconfiguration;
 
+import static com.salesforce.bazel.eclipse.core.launchconfiguration.BazelLaunchConfigurationConstants.JAVA_DEBUG;
+import static com.salesforce.bazel.eclipse.core.launchconfiguration.BazelLaunchConfigurationConstants.PROJECT_NAME;
 import static java.lang.String.format;
+import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_ALLOW_TERMINATE;
+import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_CONNECT_MAP;
+import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_VM_CONNECTOR;
+import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ID_SOCKET_ATTACH_VM_CONNECTOR;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -38,24 +46,42 @@ import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
 import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.jdt.launching.IVMConnector;
+import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.ui.JavaElementLabelProvider;
+import org.eclipse.jface.action.LegacyActionTools;
 import org.eclipse.jface.fieldassist.AutoCompleteField;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
+import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.ComboFieldEditor;
+import org.eclipse.jface.preference.FieldEditor;
+import org.eclipse.jface.preference.IntegerFieldEditor;
+import org.eclipse.jface.preference.PreferenceStore;
+import org.eclipse.jface.preference.StringFieldEditor;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
+import org.eclipse.ui.statushandlers.StatusAdapter;
+import org.eclipse.ui.statushandlers.StatusManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,9 +93,10 @@ import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.ui.BazelUIPlugin;
 import com.salesforce.bazel.eclipse.ui.utils.BazelProjectUtilitis;
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.sun.jdi.connect.Connector;
 
 @SuppressWarnings("restriction")
-public class BazelTargetTab extends AbstractLaunchConfigurationTab {
+public class BazelTargetTab extends AbstractLaunchConfigurationTab implements IPropertyChangeListener {
 
     final class TargetProposalRefreshJob extends Job {
         final BazelProject bazelProject;
@@ -172,6 +199,18 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
 
     private TargetProposalRefreshJob targetProposalRefreshJob;
 
+    private Composite fArgumentComposite;
+    private Combo fConnectorCombo;
+
+    private Button fAllowTerminateButton;
+
+    // the selected connector
+    private IVMConnector fConnector;
+    private final IVMConnector[] fConnectors = JavaRuntime.getVMConnectors();
+
+    private Map<String, Connector.Argument> fArgumentMap;
+    private final Map<String, FieldEditor> fFieldEditorMap = new HashMap<>();
+
     /**
      * chooses a project for the type of java launch config that it is
      *
@@ -210,24 +249,10 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
         ((GridLayout) comp.getLayout()).verticalSpacing = 0;
         createProjectEditor(comp);
         createVerticalSpacer(comp, 1);
-        createMainTypeEditor(comp, "Target:");
+        createTargetEditor(comp, "Target:");
+        createVerticalSpacer(comp, 1);
+        createJavaDebuggerEditor(comp);
         setControl(comp);
-    }
-
-    /**
-     * Creates the widgets for specifying a main type.
-     *
-     * @param parent
-     *            the parent composite
-     */
-    protected void createMainTypeEditor(Composite parent, String text) {
-        var group = SWTFactory.createGroup(parent, text, 2, 1, GridData.FILL_HORIZONTAL);
-        fMainText = SWTFactory.createSingleText(group, 1);
-        fMainText.addModifyListener(e -> updateLaunchConfigurationDialog());
-
-        targetAutoCompleteField = new AutoCompleteField(fMainText, new TextContentAdapter());
-
-        createMainTypeExtensions(group);
     }
 
     /**
@@ -238,9 +263,30 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
      *            the parent to add to
      * @since 3.3
      */
-    protected void createMainTypeExtensions(Composite parent) {
-        attachJavaDebuggerCheckButton = SWTFactory.createCheckButton(parent, "Attach Java debugger", null, false, 1);
+    protected void createJavaDebuggerEditor(Composite parent) {
+
+        //connection type
+        var group = SWTFactory.createGroup(parent, "Java Remote Debugger", 1, 1, GridData.FILL_HORIZONTAL);
+
+        attachJavaDebuggerCheckButton = createCheckButton(group, "Attach Java debugger to the launched JVM process");
         attachJavaDebuggerCheckButton.addSelectionListener(getDefaultListener());
+
+        var names = new String[fConnectors.length];
+        for (var i = 0; i < fConnectors.length; i++) {
+            names[i] = fConnectors[i].getName();
+        }
+        fConnectorCombo = SWTFactory.createCombo(group, SWT.READ_ONLY, 1, GridData.FILL_HORIZONTAL, names);
+        fConnectorCombo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                handleConnectorComboModified();
+            }
+        });
+
+        fArgumentComposite = SWTFactory.createComposite(group, parent.getFont(), 1, 1, GridData.FILL_HORIZONTAL);
+
+        fAllowTerminateButton = createCheckButton(group, "Allow termination of the remote VM");
+        fAllowTerminateButton.addSelectionListener(getDefaultListener());
     }
 
     /**
@@ -256,6 +302,20 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
         fProjText.addModifyListener(fListener);
         fProjButton = createPushButton(group, "Browse...", null);
         fProjButton.addSelectionListener(fListener);
+    }
+
+    /**
+     * Creates the widgets for specifying a main type.
+     *
+     * @param parent
+     *            the parent composite
+     */
+    protected void createTargetEditor(Composite parent, String text) {
+        var group = SWTFactory.createGroup(parent, text, 2, 1, GridData.FILL_HORIZONTAL);
+        fMainText = SWTFactory.createSingleText(group, 1);
+        fMainText.addModifyListener(e -> updateLaunchConfigurationDialog());
+
+        targetAutoCompleteField = new AutoCompleteField(fMainText, new TextContentAdapter());
     }
 
     private BazelLabel findFirstPublicBinaryRule(List<BazelTarget> bazelTargets) throws CoreException {
@@ -320,10 +380,83 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
     }
 
     /**
+     * Returns the selected connector
+     *
+     * @return the selected {@link IVMConnector}
+     */
+    private IVMConnector getSelectedConnector() {
+        return fConnector;
+    }
+
+    /**
      * Convenience method to get the workspace root.
      */
     protected IWorkspaceRoot getWorkspaceRoot() {
         return ResourcesPlugin.getWorkspace().getRoot();
+    }
+
+    /**
+     * Update the argument area to show the selected connector's arguments
+     */
+    private void handleConnectorComboModified() {
+        var index = fConnectorCombo.getSelectionIndex();
+        if ((index < 0) || (index >= fConnectors.length)) {
+            return;
+        }
+        var vm = fConnectors[index];
+        if (vm.equals(fConnector)) {
+            return; // selection did not change
+        }
+        fConnector = vm;
+        try {
+            fArgumentMap = vm.getDefaultArguments();
+        } catch (CoreException e) {
+            var status = new StatusAdapter(Status.error("Unable to display connection arguments.", e));
+            StatusManager.getManager().handle(status, StatusManager.BLOCK | StatusManager.LOG);
+            return;
+        }
+
+        // Dispose of any current child widgets in the tab holder area
+        var children = fArgumentComposite.getChildren();
+        for (Control child : children) {
+            child.dispose();
+        }
+        fFieldEditorMap.clear();
+        var store = new PreferenceStore();
+        for (String key : vm.getArgumentOrder()) {
+            var arg = fArgumentMap.get(key);
+            FieldEditor field = null;
+            if (arg instanceof Connector.IntegerArgument integerArg) {
+                store.setDefault(arg.name(), integerArg.intValue());
+                field = new IntegerFieldEditor(arg.name(), arg.label(), fArgumentComposite);
+            } else if (arg instanceof Connector.SelectedArgument selectedArg) {
+                var choices = selectedArg.choices();
+                var namesAndValues = new String[choices.size()][2];
+                var count = 0;
+                for (String choice : choices) {
+                    namesAndValues[count][0] = choice;
+                    namesAndValues[count][1] = choice;
+                    count++;
+                }
+                store.setDefault(arg.name(), arg.value());
+                field = new ComboFieldEditor(arg.name(), arg.label(), namesAndValues, fArgumentComposite);
+            } else if (arg instanceof Connector.StringArgument) {
+                store.setDefault(arg.name(), arg.value());
+                field = new StringFieldEditor(arg.name(), arg.label(), fArgumentComposite);
+            } else if (arg instanceof Connector.BooleanArgument bool) {
+                store.setDefault(arg.name(), bool.booleanValue());
+                field = new BooleanFieldEditor(arg.name(), arg.label(), fArgumentComposite);
+            }
+            if (field != null) {
+                field.setPreferenceStore(store);
+                field.loadDefault();
+                field.setPropertyChangeListener(this);
+                fFieldEditorMap.put(key, field);
+            }
+        }
+        fArgumentComposite.getParent().getParent().layout();
+        fArgumentComposite.layout(true);
+        updateLaunchConfigurationDialog();
     }
 
     /**
@@ -341,17 +474,17 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
 
     @Override
     protected void initializeAttributes() {
-        getAttributesLabelsForPrototype()
-                .put(BazelLaunchConfigurationConstants.PROJECT_NAME, "Bazel Workspace Project");
+        getAttributesLabelsForPrototype().put(PROJECT_NAME, "Bazel Workspace Project");
         getAttributesLabelsForPrototype().put(BazelLaunchConfigurationConstants.TARGET_LABEL, "Target");
-        getAttributesLabelsForPrototype().put(BazelLaunchConfigurationConstants.JAVA_DEBUG, "Attach Java Debugger");
+        getAttributesLabelsForPrototype().put(JAVA_DEBUG, "Attach Java Debugger");
+        getAttributesLabelsForPrototype().put(ATTR_ALLOW_TERMINATE, "Allow termination of the remote VM");
     }
 
     @Override
     public void initializeFrom(ILaunchConfiguration config) {
         updateProjectFromConfig(config);
-        updateMainTypeFromConfig(config);
-        updateStopInMainFromConfig(config);
+        updateTargetFromConfig(config);
+        updateJavaDebugConnectionFromConfig(config);
     }
 
     /**
@@ -369,7 +502,7 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
         if ((project != null) && project.exists()) {
             name = project.getName();
         }
-        config.setAttribute(BazelLaunchConfigurationConstants.PROJECT_NAME, name);
+        config.setAttribute(PROJECT_NAME, name);
     }
 
     /**
@@ -392,7 +525,6 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
 
         var name = target == null ? EMPTY_STRING : target.toString();
         config.setAttribute(BazelLaunchConfigurationConstants.TARGET_LABEL, name);
-        config.setAttribute(BazelLaunchConfigurationConstants.JAVA_DEBUG, true);
         if (target != null) {
             // use just the targetName
             name = getLaunchConfigurationDialog().generateName(target.getTargetName());
@@ -464,6 +596,23 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
             setErrorMessage(NLS.bind("Error resolving target: {0}", new String[] { e.getStatus().getMessage() }));
             return false;
         }
+
+        for (String key : fFieldEditorMap.keySet()) {
+            var arg = fArgumentMap.get(key);
+            var editor = fFieldEditorMap.get(key);
+            if (editor instanceof StringFieldEditor stringEditor) {
+                var value = stringEditor.getStringValue();
+                if (!arg.isValid(value)) {
+                    var argLabel = new StringBuilder(LegacyActionTools.removeMnemonics(arg.label()));
+                    if (argLabel.lastIndexOf(":") == (argLabel.length() - 1)) {
+                        argLabel = argLabel.deleteCharAt(argLabel.length() - 1);
+                    }
+                    setErrorMessage(label.toString() + " is invalid.");
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 
@@ -481,10 +630,38 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
 
     @Override
     public void performApply(ILaunchConfigurationWorkingCopy config) {
-        config.setAttribute(BazelLaunchConfigurationConstants.PROJECT_NAME, fProjText.getText().trim());
+        config.setAttribute(PROJECT_NAME, fProjText.getText().trim());
         config.setAttribute(BazelLaunchConfigurationConstants.TARGET_LABEL, fMainText.getText().trim());
-        config.setAttribute(BazelLaunchConfigurationConstants.JAVA_DEBUG, attachJavaDebuggerCheckButton.getSelection());
+        config.setAttribute(JAVA_DEBUG, attachJavaDebuggerCheckButton.getSelection());
+        config.setAttribute(ATTR_ALLOW_TERMINATE, fAllowTerminateButton.getSelection());
         mapResources(config);
+
+        config.setAttribute(
+            IJavaLaunchConfigurationConstants.ATTR_VM_CONNECTOR,
+            getSelectedConnector().getIdentifier());
+        Map<String, String> attrMap = new HashMap<>(fFieldEditorMap.size());
+        for (String key : fFieldEditorMap.keySet()) {
+            var editor = fFieldEditorMap.get(key);
+            if (!editor.isValid()) {
+                return;
+            }
+            var arg = fArgumentMap.get(key);
+            editor.store();
+            if ((arg instanceof Connector.StringArgument) || (arg instanceof Connector.SelectedArgument)) {
+                attrMap.put(key, editor.getPreferenceStore().getString(key));
+            } else if (arg instanceof Connector.BooleanArgument) {
+                attrMap.put(key, Boolean.toString(editor.getPreferenceStore().getBoolean(key)));
+            } else if (arg instanceof Connector.IntegerArgument) {
+                attrMap.put(key, Integer.toString(editor.getPreferenceStore().getInt(key)));
+            }
+        }
+        config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_CONNECT_MAP, attrMap);
+
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent event) {
+        updateLaunchConfigurationDialog();
     }
 
     private void refreshTargetPropsals(BazelProject bazelProject) {
@@ -503,26 +680,55 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
         var bazelProject = getContext();
         if (bazelProject != null) {
             initializeProject(bazelProject, config);
+            initializeTargetAndName(bazelProject, config);
         } else {
-            config.setAttribute(BazelLaunchConfigurationConstants.PROJECT_NAME, EMPTY_STRING);
+            config.setAttribute(PROJECT_NAME, EMPTY_STRING);
         }
-        initializeTargetAndName(bazelProject, config);
+
+        config.setAttribute(ATTR_VM_CONNECTOR, ID_SOCKET_ATTACH_VM_CONNECTOR);
+        config.setAttribute(JAVA_DEBUG, true);
+        config.setAttribute(ATTR_ALLOW_TERMINATE, true);
+        config.setAttribute(ATTR_CONNECT_MAP, Map.of("hostname", "localhost", "port", "5005"));
     }
 
     /**
-     * Loads the main type from the launch configuration's preference store
+     * Updates the connection argument field editors from the specified configuration
      *
      * @param config
-     *            the config to load the main type from
+     *            the config to load from
      */
-    protected void updateMainTypeFromConfig(ILaunchConfiguration config) {
-        var mainTypeName = EMPTY_STRING;
+    private void updateJavaDebugConnectionFromConfig(ILaunchConfiguration config) {
         try {
-            mainTypeName = config.getAttribute(BazelLaunchConfigurationConstants.TARGET_LABEL, EMPTY_STRING);
+            attachJavaDebuggerCheckButton.setSelection(config.getAttribute(JAVA_DEBUG, true));
+            fAllowTerminateButton.setSelection(config.getAttribute(ATTR_ALLOW_TERMINATE, true));
+
+            var id = config.getAttribute(ATTR_VM_CONNECTOR, JavaRuntime.getDefaultVMConnector().getIdentifier());
+            fConnectorCombo.setText(JavaRuntime.getVMConnector(id).getName());
+            handleConnectorComboModified();
+
+            var attrMap =
+                    config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_CONNECT_MAP, (Map<String, String>) null);
+            if (attrMap == null) {
+                return;
+            }
+            for (String key : attrMap.keySet()) {
+                var arg = fArgumentMap.get(key);
+                var editor = fFieldEditorMap.get(key);
+                if ((arg != null) && (editor != null)) {
+                    var value = attrMap.get(key);
+                    if ((arg instanceof Connector.StringArgument) || (arg instanceof Connector.SelectedArgument)) {
+                        editor.getPreferenceStore().setValue(key, value);
+                    } else if (arg instanceof Connector.BooleanArgument) {
+                        editor.getPreferenceStore().setValue(key, Boolean.parseBoolean(value));
+                    } else if (arg instanceof Connector.IntegerArgument) {
+                        editor.getPreferenceStore().setValue(key, Integer.parseInt(value));
+                    }
+                    editor.load();
+                }
+            }
         } catch (CoreException ce) {
-            LOG.error("Error reading launch config", ce);
+            LOG.error("Unable to load connection info from config", ce);
         }
-        fMainText.setText(mainTypeName);
     }
 
     /**
@@ -534,7 +740,7 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
     private void updateProjectFromConfig(ILaunchConfiguration config) {
         var projectName = EMPTY_STRING;
         try {
-            projectName = config.getAttribute(BazelLaunchConfigurationConstants.PROJECT_NAME, EMPTY_STRING);
+            projectName = config.getAttribute(PROJECT_NAME, EMPTY_STRING);
         } catch (CoreException ce) {
             LOG.error("Error reading launch config", ce);
         }
@@ -542,19 +748,19 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab {
     }
 
     /**
-     * updates the stop in main attribute from the specified launch config
+     * Loads the main type from the launch configuration's preference store
      *
      * @param config
-     *            the config to load the stop in main attribute from
+     *            the config to load the main type from
      */
-    private void updateStopInMainFromConfig(ILaunchConfiguration config) {
-        var stop = false;
+    protected void updateTargetFromConfig(ILaunchConfiguration config) {
+        var mainTypeName = EMPTY_STRING;
         try {
-            stop = config.getAttribute(BazelLaunchConfigurationConstants.JAVA_DEBUG, false);
-        } catch (CoreException e) {
-            LOG.error("Error reading launch config", e);
+            mainTypeName = config.getAttribute(BazelLaunchConfigurationConstants.TARGET_LABEL, EMPTY_STRING);
+        } catch (CoreException ce) {
+            LOG.error("Error reading launch config", ce);
         }
-        attachJavaDebuggerCheckButton.setSelection(stop);
+        fMainText.setText(mainTypeName);
     }
 
 }

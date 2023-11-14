@@ -25,7 +25,6 @@ import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
 import org.eclipse.debug.ui.ILaunchConfigurationDialog;
 import org.eclipse.debug.ui.StringVariableSelectionDialog;
 import org.eclipse.debug.ui.WorkingDirectoryBlock;
-import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -39,6 +38,7 @@ import org.eclipse.swt.widgets.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.salesforce.bazel.eclipse.core.launchconfiguration.BazelLaunchConfigurationConstants;
 import com.salesforce.bazel.eclipse.ui.BazelUIPlugin;
 
 /**
@@ -199,8 +199,7 @@ public class BazelArgumentsTab extends AbstractLaunchConfigurationTab {
     @Override
     public void initializeFrom(ILaunchConfiguration configuration) {
         try {
-            programArgumentsText
-                    .setText(configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "")); //$NON-NLS-1$
+            programArgumentsText.setText(configuration.getAttribute(BazelLaunchConfigurationConstants.TARGET_ARGS, "")); //$NON-NLS-1$
             bazelRunArgumentsBlock.initializeFrom(configuration);
             workingDirectoryBlock.initializeFrom(configuration);
         } catch (CoreException e) {
@@ -217,7 +216,7 @@ public class BazelArgumentsTab extends AbstractLaunchConfigurationTab {
     @Override
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(
-            IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
+            BazelLaunchConfigurationConstants.TARGET_ARGS,
             getAttributeValueFrom(programArgumentsText));
         bazelRunArgumentsBlock.performApply(configuration);
         workingDirectoryBlock.performApply(configuration);
@@ -225,7 +224,7 @@ public class BazelArgumentsTab extends AbstractLaunchConfigurationTab {
 
     @Override
     public void setDefaults(ILaunchConfigurationWorkingCopy config) {
-        config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, (String) null);
+        config.setAttribute(BazelLaunchConfigurationConstants.TARGET_ARGS, (String) null);
         bazelRunArgumentsBlock.setDefaults(config);
         workingDirectoryBlock.setDefaults(config);
     }

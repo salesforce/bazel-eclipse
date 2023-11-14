@@ -14,7 +14,10 @@
 package com.salesforce.bazel.eclipse.core.launchconfiguration;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Collections.addAll;
 import static java.util.stream.Collectors.toList;
+import static org.eclipse.debug.core.DebugPlugin.parseArguments;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -33,6 +36,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -95,11 +99,9 @@ public class BazelRunLaunchConfigurationDelegate extends AbstractJavaLaunchConfi
     }
 
     private IVMConnector getConnector(ILaunchConfiguration configuration) throws CoreException {
-        var connector = JavaRuntime.getVMConnector(
-            org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ID_SOCKET_ATTACH_VM_CONNECTOR);
+        var connector = JavaRuntime.getVMConnector(getVMConnectorId(configuration));
         if (connector == null) {
-            throw new CoreException(
-                    Status.error("Socket attach connector is not available! Unable to connect remote debugger!"));
+            throw new CoreException(Status.error("VM connector is not available! Unable to connect remote debugger!"));
         }
         return connector;
     }
@@ -107,9 +109,9 @@ public class BazelRunLaunchConfigurationDelegate extends AbstractJavaLaunchConfi
     private Map<String, String> getConnectorArgs(ILaunchConfiguration configuration) throws CoreException {
         var argMap = configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_CONNECT_MAP, new HashMap<>());
         var connectTimeout = getConnectTimeoutFromPreferences();
-        argMap.put("timeout", Integer.toString(connectTimeout));
-        argMap.put("hostname", "localhost");
-        argMap.put("port", Integer.toString(5005));
+        argMap.putIfAbsent("timeout", Integer.toString(connectTimeout));
+        argMap.putIfAbsent("hostname", "localhost");
+        argMap.putIfAbsent("port", Integer.toString(5005));
         return argMap;
     }
 
@@ -142,6 +144,12 @@ public class BazelRunLaunchConfigurationDelegate extends AbstractJavaLaunchConfi
         return projects.toArray(new IProject[projects.size()]);
     }
 
+    private String getRunArguments(ILaunchConfiguration configuration) throws CoreException {
+        return VariablesPlugin.getDefault()
+                .getStringVariableManager()
+                .performStringSubstitution(configuration.getAttribute(BazelLaunchConfigurationConstants.RUN_ARGS, ""));
+    }
+
     @Override
     public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor progress)
             throws CoreException {
@@ -165,14 +173,18 @@ public class BazelRunLaunchConfigurationDelegate extends AbstractJavaLaunchConfi
 
             var targetArgs = new ArrayList<String>();
 
-            var attachDebugger = ILaunchManager.DEBUG_MODE.equals(mode);
+            var attachDebugger = ILaunchManager.DEBUG_MODE.equals(mode)
+                    && configuration.getAttribute(BazelLaunchConfigurationConstants.JAVA_DEBUG, true);
             if (attachDebugger) {
                 targetArgs.add(0, "--debug");
             }
 
+            addAll(targetArgs, parseArguments(getProgramArguments(configuration)));
+
             var workspaceRoot = bazelWorkspace.getLocation().toPath();
             var command =
                     new BazelRunCommand(bazelTarget.toPrimitive(), targetArgs, workspaceRoot, configuration.getName());
+            command.addCommandArgs(asList(parseArguments(getRunArguments(configuration))));
 
             monitor.subTask("Staring Bazel");
             var bazelBinary = bazelWorkspace.getCommandExecutor().selectBazelBinary(bazelWorkspace);
@@ -219,10 +231,14 @@ public class BazelRunLaunchConfigurationDelegate extends AbstractJavaLaunchConfi
                 monitor.worked(1);
 
                 // wait for bazel to be ready
-                waitForJdwpPort(Duration.ofMinutes(5), monitor.split(1, SubMonitor.SUPPRESS_NONE), bazelProcess);
+                waitForJdwpPort(
+                    Duration.ofMinutes(10),
+                    monitor.split(1, SubMonitor.SUPPRESS_NONE),
+                    bazelProcess,
+                    argMap);
 
                 // connect to remote VM
-                if (!monitor.isCanceled()) {
+                if (!monitor.isCanceled() && !bazelProcess.isTerminated()) {
                     connector.connect(argMap, monitor, launch);
                 }
 
@@ -262,13 +278,16 @@ public class BazelRunLaunchConfigurationDelegate extends AbstractJavaLaunchConfi
         }
     }
 
-    private void waitForJdwpPort(Duration duration, SubMonitor monitor, IProcess bazelProcess) {
+    private void waitForJdwpPort(Duration duration, SubMonitor monitor, IProcess bazelProcess,
+            Map<String, String> connectorArgs) {
+        var port = Integer.parseInt(connectorArgs.get("port"));
+        var host = connectorArgs.get("hostname");
         var timeout = Instant.now().plus(duration);
-        monitor.beginTask("Waiting for JDWP", IProgressMonitor.UNKNOWN);
+        monitor.beginTask("Waiting for JDWP debugger to become available", IProgressMonitor.UNKNOWN);
         while (Instant.now().isBefore(timeout) && !monitor.isCanceled() && !bazelProcess.isTerminated()) {
             try (var s = new Socket()) {
                 s.bind(null);
-                s.connect(new InetSocketAddress("localhost", 5005), 500);
+                s.connect(new InetSocketAddress(host, port), 500);
                 return; // success
             } catch (IOException e) {
                 if (monitor.isCanceled()) {
