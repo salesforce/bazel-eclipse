@@ -70,7 +70,7 @@ jobs:
         uses: actions/deploy-pages@v2
           
       - name: Trigger VS Code Extension publish workflow
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.BAZEL_VSCODE_JAVA_TOKEN }}
           script: |
