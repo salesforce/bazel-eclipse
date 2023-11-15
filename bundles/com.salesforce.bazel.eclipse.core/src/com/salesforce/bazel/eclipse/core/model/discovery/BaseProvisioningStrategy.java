@@ -257,7 +257,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             boolean isTestTarget) throws CoreException {
         var rulesPkgRuleClass = rulesPkgTarget.getRuleClass();
         if (!rulesPkgRuleClass.startsWith("pkg_")) {
-            LOG.warn("Unsupport rule '{}' for target '{}'", rulesPkgRuleClass, rulesPkgTarget.getLabel());
+            LOG.debug("Unsupport rule '{}' for target '{}'", rulesPkgRuleClass, rulesPkgTarget.getLabel());
             return; // we don't support this
         }
 
