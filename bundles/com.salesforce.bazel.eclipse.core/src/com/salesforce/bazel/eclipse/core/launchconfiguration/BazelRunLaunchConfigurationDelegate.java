@@ -147,7 +147,7 @@ public class BazelRunLaunchConfigurationDelegate extends AbstractJavaLaunchConfi
     private String getRunArguments(ILaunchConfiguration configuration) throws CoreException {
         return VariablesPlugin.getDefault()
                 .getStringVariableManager()
-                .performStringSubstitution(configuration.getAttribute(BazelLaunchConfigurationConstants.RUN_ARGS, ""));
+                .performStringSubstitution(configuration.getAttribute(RUN_ARGS, ""));
     }
 
     @Override
@@ -173,9 +173,8 @@ public class BazelRunLaunchConfigurationDelegate extends AbstractJavaLaunchConfi
 
             var targetArgs = new ArrayList<String>();
 
-            var attachDebugger = ILaunchManager.DEBUG_MODE.equals(mode)
-                    && configuration.getAttribute(BazelLaunchConfigurationConstants.JAVA_DEBUG, true);
-            if (attachDebugger) {
+            var attachDebugger = ILaunchManager.DEBUG_MODE.equals(mode) && configuration.getAttribute(JAVA_DEBUG, true);
+            if (attachDebugger && configuration.getAttribute(ADD_DEBUG_TARGET_ARG, true)) {
                 targetArgs.add(0, "--debug");
             }
 

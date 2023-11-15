@@ -48,6 +48,11 @@ public interface BazelLaunchConfigurationConstants extends BazelCoreSharedContst
     String JAVA_DEBUG = PLUGIN_ID + ".launchconfiguration.java_debug";
 
     /**
+     * Indicates if the '--debug' argument should be added when attaching the Java debugger (value is a boolean)
+     */
+    String ADD_DEBUG_TARGET_ARG = PLUGIN_ID + ".launchconfiguration.add_debug_target_arg";
+
+    /**
      * The working directory (value is a string)
      */
     String WORKING_DIRECTORY = IJavaLaunchConfigurationConstants.ATTR_WORKING_DIRECTORY;

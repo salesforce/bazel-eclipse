@@ -14,6 +14,7 @@
  */
 package com.salesforce.bazel.eclipse.ui.launchconfiguration;
 
+import static com.salesforce.bazel.eclipse.core.launchconfiguration.BazelLaunchConfigurationConstants.ADD_DEBUG_TARGET_ARG;
 import static com.salesforce.bazel.eclipse.core.launchconfiguration.BazelLaunchConfigurationConstants.JAVA_DEBUG;
 import static com.salesforce.bazel.eclipse.core.launchconfiguration.BazelLaunchConfigurationConstants.PROJECT_NAME;
 import static java.lang.String.format;
@@ -211,6 +212,8 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab implements IP
     private Map<String, Connector.Argument> fArgumentMap;
     private final Map<String, FieldEditor> fFieldEditorMap = new HashMap<>();
 
+    private Button addDebugProgramArgumentButton;
+
     /**
      * chooses a project for the type of java launch config that it is
      *
@@ -270,6 +273,9 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab implements IP
 
         attachJavaDebuggerCheckButton = createCheckButton(group, "Attach Java debugger to the launched JVM process");
         attachJavaDebuggerCheckButton.addSelectionListener(getDefaultListener());
+
+        addDebugProgramArgumentButton = createCheckButton(group, "Add '--debug' argument when attaching debugger");
+        addDebugProgramArgumentButton.addSelectionListener(getDefaultListener());
 
         var names = new String[fConnectors.length];
         for (var i = 0; i < fConnectors.length; i++) {
@@ -477,6 +483,7 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab implements IP
         getAttributesLabelsForPrototype().put(PROJECT_NAME, "Bazel Workspace Project");
         getAttributesLabelsForPrototype().put(BazelLaunchConfigurationConstants.TARGET_LABEL, "Target");
         getAttributesLabelsForPrototype().put(JAVA_DEBUG, "Attach Java Debugger");
+        getAttributesLabelsForPrototype().put(ADD_DEBUG_TARGET_ARG, "Add '--debug' when attaching debugger");
         getAttributesLabelsForPrototype().put(ATTR_ALLOW_TERMINATE, "Allow termination of the remote VM");
     }
 
@@ -633,6 +640,7 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab implements IP
         config.setAttribute(PROJECT_NAME, fProjText.getText().trim());
         config.setAttribute(BazelLaunchConfigurationConstants.TARGET_LABEL, fMainText.getText().trim());
         config.setAttribute(JAVA_DEBUG, attachJavaDebuggerCheckButton.getSelection());
+        config.setAttribute(ADD_DEBUG_TARGET_ARG, addDebugProgramArgumentButton.getSelection());
         config.setAttribute(ATTR_ALLOW_TERMINATE, fAllowTerminateButton.getSelection());
         mapResources(config);
 
@@ -687,6 +695,7 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab implements IP
 
         config.setAttribute(ATTR_VM_CONNECTOR, ID_SOCKET_ATTACH_VM_CONNECTOR);
         config.setAttribute(JAVA_DEBUG, true);
+        config.setAttribute(ADD_DEBUG_TARGET_ARG, true);
         config.setAttribute(ATTR_ALLOW_TERMINATE, true);
         config.setAttribute(ATTR_CONNECT_MAP, Map.of("hostname", "localhost", "port", "5005"));
     }
@@ -700,6 +709,7 @@ public class BazelTargetTab extends AbstractLaunchConfigurationTab implements IP
     private void updateJavaDebugConnectionFromConfig(ILaunchConfiguration config) {
         try {
             attachJavaDebuggerCheckButton.setSelection(config.getAttribute(JAVA_DEBUG, true));
+            addDebugProgramArgumentButton.setSelection(config.getAttribute(ADD_DEBUG_TARGET_ARG, true));
             fAllowTerminateButton.setSelection(config.getAttribute(ATTR_ALLOW_TERMINATE, true));
 
             var id = config.getAttribute(ATTR_VM_CONNECTOR, JavaRuntime.getDefaultVMConnector().getIdentifier());
