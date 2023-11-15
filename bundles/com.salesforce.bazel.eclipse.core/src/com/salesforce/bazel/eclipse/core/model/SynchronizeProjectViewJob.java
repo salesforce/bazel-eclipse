@@ -642,6 +642,10 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // after provisioning and cleanup we go over the projects a second time to initialize the classpaths
             initializeClasspaths(targetProjects, workspace, progress.split(1, SUPPRESS_NONE));
             return Status.OK_STATUS;
+        } catch (Exception e) {
+            LOG.error("Error synchronizing workspace '{}': {}", workspace.getLocation(), e.getMessage(), e);
+            return e instanceof CoreException ce ? ce.getStatus()
+                    : Status.error(format("Error synchronizing workspace '%s'", workspace.getLocation()), e);
         } finally {
             // resume cache invalidation
             workspace.getModelManager().getResourceChangeProcessor().resumeInvalidationFor(workspace);
