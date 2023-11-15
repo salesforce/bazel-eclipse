@@ -68,6 +68,7 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.osgi.service.prefs.BackingStoreException;
@@ -560,7 +561,18 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                     null /* nothing */));
         }
 
-        javaProject.setRawClasspath(rawClasspath.toArray(new IClasspathEntry[rawClasspath.size()]), true, progress);
+        try {
+            javaProject.setRawClasspath(rawClasspath.toArray(new IClasspathEntry[rawClasspath.size()]), true, progress);
+        } catch (JavaModelException e) {
+            // enrich error message with project name
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Unable to configure raw classpath for project '%s': %s",
+                            javaProject.getElementName(),
+                            e.getMessage()),
+                        e));
+        }
 
         if (javaToolchainVm != null) {
             getJvmConfigurator().configureJVMSettings(javaProject, javaToolchainVm);
