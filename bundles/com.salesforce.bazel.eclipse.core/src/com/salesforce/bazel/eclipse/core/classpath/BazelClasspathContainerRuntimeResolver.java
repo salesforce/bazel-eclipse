@@ -4,6 +4,7 @@
 package com.salesforce.bazel.eclipse.core.classpath;
 
 import static java.lang.String.format;
+import static java.nio.file.Files.isRegularFile;
 import static java.util.Arrays.stream;
 import static org.eclipse.jdt.launching.JavaRuntime.newProjectRuntimeClasspathEntry;
 
@@ -25,6 +26,8 @@ import org.eclipse.jdt.launching.IRuntimeClasspathEntryResolver;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntryResolver2;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
@@ -33,6 +36,19 @@ import com.salesforce.bazel.eclipse.core.model.BazelProject;
 @SuppressWarnings("restriction")
 public class BazelClasspathContainerRuntimeResolver
         implements IRuntimeClasspathEntryResolver, IRuntimeClasspathEntryResolver2 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BazelClasspathContainerRuntimeResolver.class);
+
+    private static String extractRealJarName(String jarName) {
+        // copied (and adapted) from BlazeJavaWorkspaceImporter
+        if (jarName.endsWith("-hjar.jar")) {
+            return jarName.substring(0, jarName.length() - "-hjar.jar".length()) + ".jar";
+        }
+        if (jarName.endsWith("-ijar.jar")) {
+            return jarName.substring(0, jarName.length() - "-ijar.jar".length()) + ".jar";
+        }
+        return jarName;
+    }
 
     ISchedulingRule getBuildRule() {
         return ResourcesPlugin.getWorkspace().getRuleFactory().buildRule();
@@ -45,6 +61,26 @@ public class BazelClasspathContainerRuntimeResolver
     @Override
     public boolean isVMInstallReference(IClasspathEntry entry) {
         return false;
+    }
+
+    private void populateWithRealJar(Collection<IRuntimeClasspathEntry> resolvedClasspath, IClasspathEntry e) {
+        var jarPath = e.getPath();
+        var jarName = extractRealJarName(jarPath.lastSegment());
+        if (!jarName.equals(jarPath.lastSegment())) {
+            var realJarPath = jarPath.removeLastSegments(1).append(jarName);
+
+            // ensure it exists
+            if (!isRegularFile(jarPath.toPath())) {
+                LOG.warn("Dropped ijar from runtime classpath: {}", jarPath);
+                return;
+            }
+
+            // replace entry with new jar
+            LOG.debug("Replacing ijar '{}' on classpath with real jar '{}", jarPath.lastSegment(), realJarPath);
+            e = JavaCore.newProjectEntry(realJarPath);
+        }
+
+        resolvedClasspath.add(new RuntimeClasspathEntry(e));
     }
 
     /**
@@ -89,7 +125,8 @@ public class BazelClasspathContainerRuntimeResolver
                     }
                     case IClasspathEntry.CPE_LIBRARY: {
                         // we can rely on the assumption that this is an absolute path pointing into Bazel's execroot
-                        resolvedClasspath.add(new RuntimeClasspathEntry(e));
+                        // but we have to exclude ijars from runtime
+                        populateWithRealJar(resolvedClasspath, e);
                         break;
                     }
                     default:
