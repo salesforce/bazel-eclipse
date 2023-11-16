@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -38,6 +39,7 @@ import org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin;
 import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.setup.DefaultProjectViewFileInitializer;
 import com.salesforce.bazel.eclipse.core.setup.ImportBazelWorkspaceJob;
@@ -124,8 +126,29 @@ public final class BazelProjectImporter extends AbstractProjectImporter {
 
         JavaLanguageServerPlugin.logInfo("Importing Bazel workspace(s)");
         var monitor = SubMonitor.convert(progress, "Importing Bazel workspace(s)", directories.size() * 100);
+        var root = ResourcesPlugin.getWorkspace().getRoot();
 
         for (Path directory : directories) {
+            var workspaceLocation = IPath.fromPath(directory);
+
+            // if there is a workspace project we do nothing because it is imported already
+            var workspaceContainer = root.getContainerForLocation(workspaceLocation);
+            if (workspaceContainer != null) {
+                var existingWorkspaceProject = workspaceContainer.getProject();
+                if (BazelProject.isBazelProject(existingWorkspaceProject)) {
+                    var bazelProject = BazelCore.create(existingWorkspaceProject);
+                    if (bazelProject.isWorkspaceProject()
+                            && bazelProject.getBazelWorkspace().getLocation().equals(workspaceLocation)) {
+                        continue;
+                    }
+                }
+                JavaLanguageServerPlugin.logError(
+                    format(
+                        "Found an exising project for workspace '%s', which is not a Bazel workspace (%s). Please consider resetting the workspace if the import fails.",
+                        workspaceLocation,
+                        workspaceContainer));
+            }
+
             var workspace = BazelCore.createWorkspace(new org.eclipse.core.runtime.Path(directory.toString()));
 
             // find or create project view
