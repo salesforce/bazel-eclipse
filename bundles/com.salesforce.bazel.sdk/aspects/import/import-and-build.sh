@@ -20,7 +20,7 @@ echo "Using '$tar' on $(uname)!"
 
 if ! command -v $tar &> /dev/null; then
     echo "$tar could not be found"
-    echo "On macOS: brew install gtar"
+    echo "On macOS: brew install gnu-tar"
     echo "Also, check PATH environment: $PATH"
     exit 1
 fi
