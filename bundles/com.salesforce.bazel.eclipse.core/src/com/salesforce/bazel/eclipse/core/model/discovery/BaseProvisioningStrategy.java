@@ -611,7 +611,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             return;
         }
 
-        var targetPreferences = getPreferences(target.getProject());
+        var targetPreferences = getPreferences(target);
 
         for (WorkspacePath projectSettingsFile : projectSettings) {
             var srcPreferencesFile = bazelWorkspace.getLocation().toPath().resolve(projectSettingsFile.asPath());
