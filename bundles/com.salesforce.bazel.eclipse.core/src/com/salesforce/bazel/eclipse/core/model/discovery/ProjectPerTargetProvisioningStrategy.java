@@ -216,6 +216,12 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         return project;
     }
 
+    protected BazelProject provisionJavaTestProject(BazelTarget target, SubMonitor monitor) throws CoreException {
+        // there is a bug in Eclipse preventing execution of JUnit tests
+        // https://github.com/eclipse-jdt/eclipse.jdt.ui/issues/957
+        return provisionJavaLibraryProject(target, monitor);
+    }
+
     protected BazelProject provisionProjectForTarget(BazelTarget target, SubMonitor monitor) throws CoreException {
         var ruleName = target.getRuleClass();
         return switch (ruleName) {
@@ -227,6 +233,9 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             }
             case "java_binary": {
                 yield provisionJavaBinaryProject(target, monitor);
+            }
+            case "java_test": {
+                yield provisionJavaTestProject(target, monitor);
             }
             default: {
                 LOG.debug("{}: Skipping provisioning due to unsupported rule '{}'.", target, ruleName);
