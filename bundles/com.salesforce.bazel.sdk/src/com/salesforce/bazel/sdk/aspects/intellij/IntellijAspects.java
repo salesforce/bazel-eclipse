@@ -61,7 +61,7 @@ public class IntellijAspects {
 
     public static final String OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH = "runtime_classpath";
 
-    public static final String ASPECTS_VERSION = "3e0ba2";
+    public static final String ASPECTS_VERSION = "76ff40";
 
     public static final String OVERRIDE_REPOSITORY_FLAG = "--override_repository=intellij_aspect";
 
