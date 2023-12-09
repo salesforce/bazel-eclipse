@@ -875,7 +875,19 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         var command = new BazelCQueryWithStarlarkExpressionCommand(
                 workspace.getLocation().toPath(),
                 "@bazel_tools//tools/jdk:current_java_toolchain",
-                "providers(target)['JavaToolchainInfo'].source_version + '::' + providers(target)['JavaToolchainInfo'].target_version + '::' + providers(target)['JavaToolchainInfo'].java_runtime.java_home",
+                """
+                        def format(target):
+                            toolchain_infos = {k: v for k, v in providers(target).items() if k.endswith('JavaToolchainInfo')}
+
+                            if len(toolchain_infos) < 1:
+                                fail("Unable to obtain JavaToolchainInfo. No providers available.")
+                            elif len(toolchain_infos) > 1:
+                                fail("Unable to obtain JavaToolchainInfo. Multiple providers found.")
+
+                            java_toolchain_info = toolchain_infos.values()[0]
+
+                            return java_toolchain_info.source_version + '::' + java_toolchain_info.target_version + '::' + java_toolchain_info.java_runtime.java_home
+                            """,
                 false,
                 "Querying for Java toolchain information");
         var result = workspace.getCommandExecutor().runQueryWithoutLock(command).trim();
