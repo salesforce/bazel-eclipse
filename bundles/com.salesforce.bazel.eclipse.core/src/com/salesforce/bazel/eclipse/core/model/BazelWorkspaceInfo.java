@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.toMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.eclipse.core.extensions.DetectBazelVersionAndSetBinaryJob;
+import com.salesforce.bazel.eclipse.core.model.buildfile.FunctionCall;
 import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectFileReader;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
@@ -340,11 +342,27 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             // in bzlmod the execution root segment seems to be broken, it's always _main (https://github.com/bazelbuild/bazel/issues/2317#issuecomment-1849740317)
             var moduleFile = bazelWorkspace.getBazelModuleFile();
             if (moduleFile.exists()) {
-                name = moduleFile.getRepoName();
+                // read the file directly as we are within a loading lock already
+                try {
+                    var reader = new BazelStarlarkFileReader(moduleFile.getLocation().toPath());
+                    reader.read();
+                    var moduleCall = reader.getModuleCall();
+                    if (moduleCall != null) {
+                        var module = new FunctionCall(null, moduleCall, Collections.emptyMap());
+                        name = module.getStringArgument("repo_name");
 
-                // fallback to module name if repo name is undefined
-                if (name == null) {
-                    name = moduleFile.getModuleName();
+                        // fallback to module name if repo name is undefined
+                        if (name == null) {
+                            name = module.getStringArgument("name");
+                        }
+                    }
+                } catch (IOException e) {
+                    // ignore (fallback to pre-bzlmod)
+                    LOG.debug(
+                        "Ignored exception reading MODULE.bazel file '{}': {}",
+                        moduleFile.getLocation(),
+                        e.getMessage(),
+                        e);
                 }
             }
 
