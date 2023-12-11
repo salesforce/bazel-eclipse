@@ -13,7 +13,10 @@
 */
 package com.salesforce.bazel.eclipse.core.model;
 
+import java.util.Collections;
 import java.util.List;
+
+import com.salesforce.bazel.eclipse.core.model.buildfile.FunctionCall;
 
 import net.starlark.java.syntax.CallExpression;
 import net.starlark.java.syntax.LoadStatement;
@@ -23,15 +26,16 @@ import net.starlark.java.syntax.LoadStatement;
  */
 public final class BazelModuleFileInfo extends BazelFileInfo<BazelModuleFile> {
 
-    private final CallExpression moduleCall;
+    private final FunctionCall moduleCall;
 
     BazelModuleFileInfo(BazelModuleFile bazelModuleFile, List<LoadStatement> loadStatements,
             List<CallExpression> macroCalls, CallExpression moduleCall) {
         super(bazelModuleFile, loadStatements, macroCalls);
-        this.moduleCall = moduleCall;
+        this.moduleCall =
+                moduleCall != null ? new FunctionCall(bazelModuleFile, moduleCall, Collections.emptyMap()) : null; // not allowed to be rebound
     }
 
-    public CallExpression getModuleCall() {
+    public FunctionCall getModuleCall() {
         return moduleCall;
     }
 

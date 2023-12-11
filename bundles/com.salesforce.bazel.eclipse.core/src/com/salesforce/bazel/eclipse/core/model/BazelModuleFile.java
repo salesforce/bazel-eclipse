@@ -43,4 +43,14 @@ public final class BazelModuleFile extends BazelFile<BazelModuleFileInfo, BazelW
     public BazelWorkspace getBazelWorkspace() {
         return getParent();
     }
+
+    public String getModuleName() throws CoreException {
+        var moduleCall = getInfo().getModuleCall();
+        return moduleCall != null ? moduleCall.getName() : null;
+    }
+
+    public String getRepoName() throws CoreException {
+        var moduleCall = getInfo().getModuleCall();
+        return moduleCall != null ? moduleCall.getStringArgument("repo_name") : null;
+    }
 }

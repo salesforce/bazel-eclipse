@@ -323,7 +323,6 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             }
 
             excutionRoot = getExpectedOutputAsPath(infoResult, "execution_root");
-            name = excutionRoot.lastSegment(); // https://github.com/bazelbuild/bazel/issues/2317
             release = getExpectedOutput(infoResult, "release");
             repositoryCache = getExpectedOutputAsPath(infoResult, "repository_cache");
             bazelBin = getExpectedOutputAsPath(infoResult, "bazel-bin");
@@ -336,6 +335,27 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
             if (release.startsWith(RELEASE_VERSION_PREFIX)) {
                 // parse the version from bazel info instead of using BazelBinary (if available)
                 bazelVersion = BazelVersion.parseVersion(release.substring(RELEASE_VERSION_PREFIX.length()));
+            }
+
+            // in bzlmod the execution root segment seems to be broken, it's always _main (https://github.com/bazelbuild/bazel/issues/2317#issuecomment-1849740317)
+            var moduleFile = bazelWorkspace.getBazelModuleFile();
+            if (moduleFile.exists()) {
+                name = moduleFile.getRepoName();
+
+                // fallback to module name if repo name is undefined
+                if (name == null) {
+                    name = moduleFile.getModuleName();
+                }
+            }
+
+            // in none bzlmod or if name is empty we use the execution root per https://github.com/bazelbuild/bazel/issues/2317
+            if ((name == null) || name.isBlank()) {
+                name = excutionRoot.lastSegment();
+            }
+
+            // we don't want to use '_main' because it's useless and makes resolution challenging
+            if ("_main".equals(name)) {
+                name = bazelWorkspace.getLocation().lastSegment();
             }
         } catch (InterruptedException e) {
             throw new OperationCanceledException("cancelled");

@@ -31,7 +31,8 @@ public final class BazelBuildFileInfo extends BazelFileInfo<BazelBuildFile> {
     BazelBuildFileInfo(BazelBuildFile bazelBuildFile, List<LoadStatement> loadStatements,
             List<CallExpression> macroCalls, CallExpression packageCall) {
         super(bazelBuildFile, loadStatements, macroCalls);
-        this.packageCall = new FunctionCall(bazelBuildFile, packageCall, Collections.emptyMap()); // not allowed to be rebound
+        this.packageCall =
+                packageCall != null ? new FunctionCall(bazelBuildFile, packageCall, Collections.emptyMap()) : null; // not allowed to be rebound
     }
 
     public FunctionCall getPackageCall() {
