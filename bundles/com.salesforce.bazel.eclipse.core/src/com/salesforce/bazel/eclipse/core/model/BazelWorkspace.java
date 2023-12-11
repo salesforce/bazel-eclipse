@@ -223,6 +223,14 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
     }
 
     /**
+     * @return the {@link BazelBuildFile build file for this package}
+     * @throws CoreException
+     */
+    public BazelModuleFile getBazelModuleFile() throws CoreException {
+        return new BazelModuleFile(this, getLocation().append(FILE_NAME_MODULE_BAZEL));
+    }
+
+    /**
      * Returns a Bazel package for the given label.
      * <p>
      * This is a handle-only method. The underlying package may or may not exist in the workspace.

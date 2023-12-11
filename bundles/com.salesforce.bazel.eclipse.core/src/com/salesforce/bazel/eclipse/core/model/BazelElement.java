@@ -47,7 +47,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  *            type of element parent
  */
 public sealed abstract class BazelElement<I extends BazelElementInfo, P extends BazelElement<?, ?>>
-        permits BazelModel, BazelWorkspace, BazelPackage, BazelTarget, BazelBuildFile {
+        permits BazelModel, BazelWorkspace, BazelPackage, BazelTarget, BazelFile {
 
     private static final String NO_NAME = "";
 

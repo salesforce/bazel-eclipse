@@ -13,19 +13,8 @@
 */
 package com.salesforce.bazel.eclipse.core.model;
 
-import static java.lang.String.format;
-import static java.nio.file.Files.isRegularFile;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Status;
-
-import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
-import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * This class represents the <code>BUILD.bazel</code> or <code>BUILD</code> file found inside a {@link BazelPackage}.
@@ -42,25 +31,15 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * for further details.
  * </p>
  */
-public final class BazelBuildFile extends BazelElement<BazelBuildFileInfo, BazelPackage> {
-
-    private final BazelPackage bazelPackage;
-    private final IPath buildFileLocation;
+public final class BazelBuildFile extends BazelFile<BazelBuildFileInfo, BazelPackage> {
 
     BazelBuildFile(BazelPackage bazelPackage, IPath buildFileLocation) {
-        this.bazelPackage = bazelPackage;
-        this.buildFileLocation = buildFileLocation; /* this can be a BUILD or a BUILD.bazel file */
+        super(bazelPackage, bazelPackage.getWorkspaceRelativePath(), buildFileLocation);
     }
 
     @Override
     protected BazelBuildFileInfo createInfo() throws CoreException {
-        var reader = new BazelBuildFileReader(buildFileLocation.toPath());
-        try {
-            reader.read();
-        } catch (IOException e) {
-            throw new CoreException(
-                    Status.error(format("Unable to read build file '%s': %s", buildFileLocation, e.getMessage()), e));
-        }
+        var reader = readBuildFile();
         return new BazelBuildFileInfo(
                 this,
                 reader.getLoadStatements(),
@@ -69,53 +48,7 @@ public final class BazelBuildFile extends BazelElement<BazelBuildFileInfo, Bazel
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        var other = (BazelBuildFile) obj;
-        return Objects.equals(bazelPackage, other.bazelPackage)
-                && Objects.equals(buildFileLocation, other.buildFileLocation);
-    }
-
-    @Override
-    public boolean exists() throws CoreException {
-        return isRegularFile(buildFileLocation.toPath());
-    }
-
-    @Override
     public BazelWorkspace getBazelWorkspace() {
         return getParent().getBazelWorkspace();
     }
-
-    @Override
-    public BazelLabel getLabel() {
-        return new BazelLabel(bazelPackage.getWorkspaceRelativePath().toString(), "BUILD.bazel"); // hardcode to BUILD.bazel to there is only one build file info in the model cache
-    }
-
-    @Override
-    public IPath getLocation() {
-        return buildFileLocation;
-    }
-
-    @Override
-    public BazelPackage getParent() {
-        return bazelPackage;
-    }
-
-    public List<MacroCall> getTopLevelMacroCalls() throws CoreException {
-        return getInfo().getMacroCalls();
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(bazelPackage, buildFileLocation);
-    }
-
 }

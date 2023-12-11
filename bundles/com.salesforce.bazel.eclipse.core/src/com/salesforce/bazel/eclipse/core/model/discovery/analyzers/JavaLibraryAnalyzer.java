@@ -16,7 +16,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery.analyzers;
 import org.eclipse.core.runtime.CoreException;
 
 import com.salesforce.bazel.eclipse.core.model.buildfile.GlobInfo;
-import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
+import com.salesforce.bazel.eclipse.core.model.buildfile.FunctionCall;
 import com.salesforce.bazel.eclipse.core.model.discovery.MacroCallAnalyzer;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 
@@ -43,7 +43,7 @@ public class JavaLibraryAnalyzer implements MacroCallAnalyzer {
     }
 
     @Override
-    public boolean analyze(MacroCall macroCall, JavaProjectInfo javaInfo) throws CoreException {
+    public boolean analyze(FunctionCall macroCall, JavaProjectInfo javaInfo) throws CoreException {
         // note: for absolute correctness all 'srcs' should be processed in their order; we deliberately say no to this effort
 
         var addedSomething = false;

@@ -13,14 +13,10 @@
 */
 package com.salesforce.bazel.eclipse.core.model;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
+import com.salesforce.bazel.eclipse.core.model.buildfile.FunctionCall;
 
 import net.starlark.java.syntax.CallExpression;
 import net.starlark.java.syntax.LoadStatement;
@@ -28,63 +24,17 @@ import net.starlark.java.syntax.LoadStatement;
 /**
  * Element info for {@link BazelBuildFile}
  */
-public final class BazelBuildFileInfo extends BazelElementInfo {
+public final class BazelBuildFileInfo extends BazelFileInfo<BazelBuildFile> {
 
-    private final BazelBuildFile bazelBuildFile;
-    private final List<LoadStatement> loadStatements;
-    private final List<MacroCall> macroCalls;
-    private final Map<String, String> macroCallBindingsByLocalName;
-    private final MacroCall packageCall;
+    private final FunctionCall packageCall;
 
     BazelBuildFileInfo(BazelBuildFile bazelBuildFile, List<LoadStatement> loadStatements,
             List<CallExpression> macroCalls, CallExpression packageCall) {
-        this.bazelBuildFile = bazelBuildFile;
-        // note: the load statements become relevant at some point to map from private to public name
-        this.loadStatements = loadStatements;
-        macroCallBindingsByLocalName = loadStatements.stream()
-                .flatMap(l -> l.getBindings().stream())
-                .collect(toMap(b -> b.getLocalName().getName(), b -> b.getOriginalName().getName()));
-        this.macroCalls = macroCalls.stream()
-                .map(e -> new MacroCall(bazelBuildFile, e, macroCallBindingsByLocalName))
-                .collect(toList());
-        this.packageCall = new MacroCall(bazelBuildFile, packageCall, Collections.emptyMap()); // not allowed to be rebound
+        super(bazelBuildFile, loadStatements, macroCalls);
+        this.packageCall = new FunctionCall(bazelBuildFile, packageCall, Collections.emptyMap()); // not allowed to be rebound
     }
 
-    public BazelBuildFile getBazelBuildFile() {
-        return bazelBuildFile;
-    }
-
-    List<LoadStatement> getLoadStatements() {
-        return loadStatements;
-    }
-
-    public List<MacroCall> getMacroCalls() {
-        return macroCalls;
-    }
-
-    /**
-     * Returns a list of all macro calls calling a specific function.
-     * <p>
-     * Note, the macros will be searched based on their {@link MacroCall#getResolvedFunctionName() resolved function
-     * name}. Thus, any local name in the build file is resolved to the original public name.
-     * </p>
-     *
-     * @param functionName
-     *            the original name
-     * @return a list of macro calls
-     */
-    public List<MacroCall> getMacroCallsForFunction(String functionName) {
-        var function = macroCallBindingsByLocalName.containsKey(functionName)
-                ? macroCallBindingsByLocalName.get(functionName) : functionName;
-        return macroCalls.stream().filter(m -> function.equals(m.getResolvedFunctionName())).collect(toList());
-    }
-
-    @Override
-    public BazelBuildFile getOwner() {
-        return bazelBuildFile;
-    }
-
-    public MacroCall getPackageCall() {
+    public FunctionCall getPackageCall() {
         return packageCall;
     }
 }

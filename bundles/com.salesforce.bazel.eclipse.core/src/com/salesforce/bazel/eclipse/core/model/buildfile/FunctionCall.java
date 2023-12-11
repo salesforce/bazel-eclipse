@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.salesforce.bazel.eclipse.core.model.BazelBuildFile;
+import com.salesforce.bazel.eclipse.core.model.BazelFile;
 
 import net.starlark.java.syntax.Argument;
 import net.starlark.java.syntax.CallExpression;
@@ -34,38 +34,45 @@ import net.starlark.java.syntax.NodeVisitor;
 import net.starlark.java.syntax.StringLiteral;
 
 /**
- * A macro call defined in a build file
+ * A function call defined in a bazel file.
+ * <p>
+ * This may be a built-in function, macro or a rule call. The nature is not defined because the Bazel model is not
+ * loaded. This is just a reflection based on the Bazel's file AST.
+ * </p>
  */
-public class MacroCall {
+public class FunctionCall {
 
-    private final BazelBuildFile buildFile;
+    private final BazelFile<?, ?> bazelFile;
     private final CallExpression callExpression;
     private final String localFunctionName;
     private final Map<String, Argument> argumentsByArgumentName;
     private final String originalFunctionName;
 
     /**
-     * @param buildFile
+     * @param bazelFile
      *            the owning build file
      * @param callExpression
      *            the call expression
      * @param buildFileBindings
-     *            map of bindings in the build file to lookup an original macro name by its local name
+     *            optional map of bindings in the build file to lookup an original function name by its local name
      */
-    public MacroCall(BazelBuildFile buildFile, CallExpression callExpression, Map<String, String> buildFileBindings) {
-        this.buildFile = buildFile;
+    public FunctionCall(BazelFile<?, ?> bazelFile, CallExpression callExpression, Map<String, String> buildFileBindings) {
+        this.bazelFile = bazelFile;
         this.callExpression = callExpression;
 
         if (!(callExpression.getFunction() instanceof Identifier)) {
             throw new IllegalArgumentException(
-                    format("Unsupported call statement - must use an identifer as function (%s)",
+                    format(
+                        "Unsupported call statement - must use an identifer as function (%s)",
                         callExpression.getStartLocation()));
         }
 
-        localFunctionName = requireNonNull(((Identifier) callExpression.getFunction()).getName(),
+        localFunctionName = requireNonNull(
+            ((Identifier) callExpression.getFunction()).getName(),
             "null identifier is unexpected at this point");
 
-        originalFunctionName = buildFileBindings.get(localFunctionName);
+        originalFunctionName = buildFileBindings.containsKey(localFunctionName)
+                ? buildFileBindings.get(localFunctionName) : localFunctionName;
 
         // this might fail if there are multiple attributes of the same name
         // TODO: confirm with Bazel what the behavior/expectation should be
@@ -73,8 +80,8 @@ public class MacroCall {
                 callExpression.getArguments().stream().collect(toMap(Argument::getName, Function.identity()));
     }
 
-    public BazelBuildFile getBazelBuildFile() {
-        return buildFile;
+    public BazelFile<?, ?> getBazelFile() {
+        return bazelFile;
     }
 
     public CallExpression getCallExpression() {
@@ -234,7 +241,11 @@ public class MacroCall {
         }
 
         if (originalFunctionName != null) {
-            return format("%s(%s, kind %s) in %s", localFunctionName, name, originalFunctionName,
+            return format(
+                "%s(%s, kind %s) in %s",
+                localFunctionName,
+                name,
+                originalFunctionName,
                 callExpression.getStartLocation());
         }
         return format("%s(%s) in %s", localFunctionName, name, callExpression.getStartLocation());

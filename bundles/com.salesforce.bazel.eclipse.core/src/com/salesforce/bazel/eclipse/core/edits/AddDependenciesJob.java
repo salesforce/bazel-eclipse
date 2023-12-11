@@ -154,7 +154,7 @@ public final class AddDependenciesJob extends WorkspaceJob {
 
         // filter that targets to update based on top level macro calls actually using the attribute name
         var buildFile = bazelProject.getBazelBuildFile();
-        var affactedMacroCalls = buildFile.getTopLevelMacroCalls()
+        var affactedMacroCalls = buildFile.getTopLevelCalls()
                 .stream()
                 .filter(m -> (m.getStringListArgument(depsAttributeName) != null))
                 .map(m -> buildFile.getParent().getLabel().toString() + ":" + m.getName())

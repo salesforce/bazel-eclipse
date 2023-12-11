@@ -32,22 +32,24 @@ import net.starlark.java.syntax.ParserInput;
 import net.starlark.java.syntax.StarlarkFile;
 
 /**
- * A reader for <code>BUILD</code> files.
+ * A somewhat generic reader for Bazel Starlark files (eg., <code>BUILD.bazel</code>, <code>WORKSPACE.bazel</code> and
+ * <code>MODULE.bazel</code>).
  * <p>
  * This class is not thread-safe.
  * </p>
  */
-public class BazelBuildFileReader {
+public class BazelStarlarkFileReader {
 
     private final Path buildFile;
 
     private List<LoadStatement> loadStatements;
-    private List<CallExpression> macroCalls;
+    private List<CallExpression> functionCalls;
     private Optional<CallExpression> packageCall;
+    private Optional<CallExpression> moduleCall;
 
     private StarlarkFile file;
 
-    public BazelBuildFileReader(Path buildFile) {
+    public BazelStarlarkFileReader(Path buildFile) {
         this.buildFile = buildFile;
     }
 
@@ -76,7 +78,17 @@ public class BazelBuildFileReader {
      * @return a list of all load statements defined in the build file (never <code>null</code> after {@link #read()})
      */
     public List<CallExpression> getMacroCalls() {
-        return requireNonNull(macroCalls, "no macro calls initialized; did you forget to call #read?");
+        return requireNonNull(functionCalls, "no macro calls initialized; did you forget to call #read?");
+    }
+
+    /**
+     * {@return the first <code>module</code> function call found in this build file (maybe <code>null</code> if none
+     * was found)}
+     */
+    public CallExpression getModuleCall() {
+        Optional<CallExpression> moduleCall =
+                requireNonNull(this.moduleCall, "no module call initialized; did you forget to call #read?");
+        return moduleCall.isPresent() ? moduleCall.get() : null;
     }
 
     /**
@@ -131,7 +143,7 @@ public class BazelBuildFileReader {
                 .map(LoadStatement.class::cast)
                 .collect(toList());
 
-        macroCalls = file.getStatements()
+        functionCalls = file.getStatements()
                 .stream()
                 .filter(ExpressionStatement.class::isInstance)
                 .map(ExpressionStatement.class::cast)
@@ -140,8 +152,13 @@ public class BazelBuildFileReader {
                 .filter(c -> (c.getFunction() instanceof Identifier))
                 .collect(toList());
 
-        packageCall =
-                macroCalls.stream().filter(c -> ((Identifier) c.getFunction()).getName().equals("package")).findFirst();
+        packageCall = functionCalls.stream()
+                .filter(c -> ((Identifier) c.getFunction()).getName().equals("package"))
+                .findFirst();
+
+        moduleCall = functionCalls.stream()
+                .filter(c -> ((Identifier) c.getFunction()).getName().equals("module"))
+                .findFirst();
     }
 
 }

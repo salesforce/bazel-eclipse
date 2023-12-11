@@ -41,7 +41,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.core.model.buildfile.MacroCall;
+import com.salesforce.bazel.eclipse.core.model.buildfile.FunctionCall;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.ExternalLibrariesDiscovery;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
@@ -416,12 +416,12 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             }
 
             // get the top-level macro calls
-            var topLevelMacroCalls = bazelPackage.getBazelBuildFile().getTopLevelMacroCalls();
+            var topLevelMacroCalls = bazelPackage.getBazelBuildFile().getTopLevelCalls();
 
             // build the project information as we traverse the macros
             var javaInfo = new JavaProjectInfo(bazelPackage);
             var relevantTargets = new ArrayList<BazelTarget>();
-            for (MacroCall macroCall : topLevelMacroCalls) {
+            for (FunctionCall macroCall : topLevelMacroCalls) {
                 var relevant = processMacroCall(macroCall, javaInfo);
                 if (!relevant) {
                     if (LOG.isDebugEnabled()) {
@@ -482,7 +482,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
         return result;
     }
 
-    private boolean processMacroCall(MacroCall macroCall, JavaProjectInfo javaInfo) throws CoreException {
+    private boolean processMacroCall(FunctionCall macroCall, JavaProjectInfo javaInfo) throws CoreException {
         var analyzers = extensionLookup.createMacroCallAnalyzers(macroCall.getResolvedFunctionName());
         if (analyzers.isEmpty()) {
             if (LOG.isDebugEnabled()) {
