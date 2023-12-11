@@ -373,6 +373,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
 
             // we don't want to use '_main' because it's useless and makes resolution challenging
             if ("_main".equals(name)) {
+                // according to https://github.com/bazelbuild/bazel/issues/2317#issuecomment-1849830507 the parent directory name is not wrong
                 name = bazelWorkspace.getLocation().lastSegment();
             }
         } catch (InterruptedException e) {
