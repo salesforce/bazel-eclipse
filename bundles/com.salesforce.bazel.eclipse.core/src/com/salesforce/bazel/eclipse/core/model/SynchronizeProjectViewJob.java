@@ -622,6 +622,15 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                 configureWorkspaceProjectClasspath(workspaceProject, progress.split(1, SUPPRESS_NONE));
             }
 
+            // sanity check
+            if (!workspaceProject.isAccessible()) {
+                throw new CoreException(
+                        Status.error(
+                            format(
+                                "Unable to sync workspace '%s' because the project is not accessible!",
+                                workspaceRoot)));
+            }
+
             // ensure Bazel symlinks are filtered
             configureFilters(workspaceProject, progress.split(5, SUPPRESS_NONE));
 
