@@ -193,7 +193,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             throw new CoreException(
                     Status.error(
                         format(
-                            "Unable to create project for workspace '%s'. A project with name '%s' exist in the workspace but points to a different location. Please delete it.",
+                            "Unable to create project for workspace '%s'. A project with name '%s' already exist in the workspace but points to a different location. Please delete it.",
                             workspaceRoot,
                             workspaceName)));
         }
