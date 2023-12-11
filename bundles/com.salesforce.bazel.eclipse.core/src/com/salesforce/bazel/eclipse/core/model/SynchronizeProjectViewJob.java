@@ -187,7 +187,16 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         projectDescription.setLocation(workspaceRoot);
         projectDescription.setComment(getWorkspaceProjectComment(workspaceRoot));
         var project = getWorkspaceRoot().getProject(workspaceName);
-        project.create(projectDescription, monitor.split(1));
+        if (!project.exists()) {
+            project.create(projectDescription, monitor.split(1));
+        } else if (!workspaceRoot.equals(project.getLocation())) { // project.getLocation() should work regardless of project being open or closed (according to API spec)
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Unable to create project for workspace '%s'. A project with name '%s' exist in the workspace but points to a different location. Please delete it.",
+                            workspaceRoot,
+                            workspaceName)));
+        }
 
         // open project but refresh in the background (there is another one coming later)
         project.open(IResource.BACKGROUND_REFRESH, monitor.split(1, SUPPRESS_NONE));
