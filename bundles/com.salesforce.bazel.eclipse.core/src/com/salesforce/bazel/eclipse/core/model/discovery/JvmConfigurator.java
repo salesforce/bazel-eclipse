@@ -50,6 +50,7 @@ public class JvmConfigurator {
 
     static final String STANDARD_VM_TYPE = "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType"; //$NON-NLS-1$
     static final String MAC_OSX_VM_TYPE = "org.eclipse.jdt.internal.launching.macosx.MacOSXType"; //$NON-NLS-1$
+
     final List<String> supportedSources;
     final List<String> supportedTargets;
     final List<String> supportedReleases;
@@ -231,7 +232,11 @@ public class JvmConfigurator {
 
     public String getExecutionEnvironmentId(IJavaProject javaProject) {
         var options = javaProject.getOptions(false);
-        return environmentIdByComplianceVersion.get(options.get(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM));
+        return getExecutionEnvironmentId(options.get(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM));
+    }
+
+    public String getExecutionEnvironmentId(String target) {
+        return environmentIdByComplianceVersion.get(target);
     }
 
     public IClasspathEntry getJreClasspathContainerForExecutionEnvironment(String environmentId,

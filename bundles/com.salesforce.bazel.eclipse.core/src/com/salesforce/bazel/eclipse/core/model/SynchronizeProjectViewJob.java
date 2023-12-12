@@ -4,7 +4,6 @@
 package com.salesforce.bazel.eclipse.core.model;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID;
 import static java.lang.String.format;
 import static java.nio.file.Files.isReadable;
@@ -51,16 +50,13 @@ import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IPreferenceFilter;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.core.runtime.preferences.PreferenceFilterEntry;
-import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
-import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathHelpers;
 import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryAndProvisioningExtensionLookup;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryStrategy;
@@ -159,17 +155,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
     }
 
-    private void configureWorkspaceProjectClasspath(IProject project, IProgressMonitor monitor)
-            throws JavaModelException {
-        var javaProject = JavaCore.create(project);
-        if (BazelClasspathHelpers.getBazelContainerEntry(javaProject) == null) {
-            javaProject.setRawClasspath(
-                new IClasspathEntry[] { JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)) },
-                true,
-                monitor);
-        }
-    }
-
     private IPath convertProjectViewDirectoryEntryToRelativPathWithoutTrailingSeparator(WorkspacePath path) {
         // special handling for '.'
         if (path.isWorkspaceRoot()) {
@@ -209,9 +194,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         // set properties
         project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT, workspaceRoot.toString());
         project.setDefaultCharset(StandardCharsets.UTF_8.name(), monitor.split(1));
-
-        // configure the classpath container
-        configureWorkspaceProjectClasspath(project, monitor.split(1));
 
         return project;
     }
@@ -627,8 +609,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                     projectDescription.setComment(getWorkspaceProjectComment(workspaceRoot));
                     workspaceProject.move(projectDescription, true, progress.split(1, SUPPRESS_NONE));
                 }
-                // fix classpath container
-                configureWorkspaceProjectClasspath(workspaceProject, progress.split(1, SUPPRESS_NONE));
             }
 
             // sanity check

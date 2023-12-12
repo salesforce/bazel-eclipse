@@ -20,9 +20,7 @@ import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 import static org.eclipse.jdt.core.IClasspathAttribute.ADD_EXPORTS;
 import static org.eclipse.jdt.core.IClasspathAttribute.ADD_OPENS;
 import static org.eclipse.jdt.core.IClasspathAttribute.MODULE;
-import static org.eclipse.jdt.core.JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM;
 import static org.eclipse.jdt.core.JavaCore.COMPILER_RELEASE;
-import static org.eclipse.jdt.core.JavaCore.COMPILER_SOURCE;
 import static org.eclipse.jdt.core.JavaCore.DISABLED;
 
 import java.io.IOException;
@@ -67,6 +65,7 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IVMInstall;
@@ -189,6 +188,38 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 }
             }
         }
+    }
+
+    private void addJavaContainerEntryAndConfigureJavaCompileSettings(List<IClasspathEntry> rawClasspath,
+            IJavaProject javaProject, IClasspathAttribute[] extraAttributesForJdk) {
+        var executionEnvironmentId = getJvmConfigurator().getExecutionEnvironmentId(javaToolchainTargetVersion);
+        if (executionEnvironmentId != null) {
+            // prefer setting EE based JDK for compilation
+            rawClasspath.add(
+                getJvmConfigurator().getJreClasspathContainerForExecutionEnvironment(
+                    executionEnvironmentId,
+                    extraAttributesForJdk));
+        } else if (javaToolchainVm != null) {
+            // use toolchain specific entry
+            rawClasspath.add(
+                JavaCore.newContainerEntry(
+                    JavaRuntime.newJREContainerPath(javaToolchainVm),
+                    null /* no access rules */,
+                    extraAttributesForJdk,
+                    false /* not exported */));
+
+        } else {
+            rawClasspath.add(
+                JavaCore.newContainerEntry(
+                    JavaRuntime.getDefaultJREContainerEntry().getPath(),
+                    null /* no access rules */,
+                    extraAttributesForJdk,
+                    false /* not exported */));
+        }
+
+        // tweak to current JVMconfiguration
+        getJvmConfigurator()
+                .applyJavaProjectOptions(javaProject, javaToolchainSourceVersion, javaToolchainTargetVersion, null);
     }
 
     private void addResourceFolders(BazelProject project, List<IClasspathEntry> rawClasspath,
@@ -515,35 +546,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         // apply settings configured in project view
         copyProjectSettings(project.getProject(), project.getBazelWorkspace());
 
-        // tweak to current JVMconfiguration
-        getJvmConfigurator()
-                .applyJavaProjectOptions(javaProject, javaToolchainSourceVersion, javaToolchainTargetVersion, null);
-
+        // configure JDK
         var extraAttributesForJdk = getExtraJvmAttributes(javaInfo);
-        var executionEnvironmentId = getJvmConfigurator().getExecutionEnvironmentId(javaProject);
-        if (executionEnvironmentId != null) {
-            // prefer setting EE based JDK for compilation
-            rawClasspath.add(
-                getJvmConfigurator().getJreClasspathContainerForExecutionEnvironment(
-                    executionEnvironmentId,
-                    extraAttributesForJdk));
-        } else if (javaToolchainVm != null) {
-            // use toolchain specific entry
-            rawClasspath.add(
-                JavaCore.newContainerEntry(
-                    JavaRuntime.newJREContainerPath(javaToolchainVm),
-                    null /* no access rules */,
-                    extraAttributesForJdk,
-                    false /* not exported */));
-
-        } else {
-            rawClasspath.add(
-                JavaCore.newContainerEntry(
-                    JavaRuntime.getDefaultJREContainerEntry().getPath(),
-                    null /* no access rules */,
-                    extraAttributesForJdk,
-                    false /* not exported */));
-        }
+        addJavaContainerEntryAndConfigureJavaCompileSettings(rawClasspath, javaProject, extraAttributesForJdk);
 
         // if the classpath has no source folder Eclipse will default to the whole project
         // this is not good for us because this could cause duplication of an entire hierarchy
@@ -574,16 +579,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         e));
         }
 
-        if (javaToolchainVm != null) {
-            getJvmConfigurator().configureJVMSettings(javaProject, javaToolchainVm);
-        }
-        if (javaToolchainSourceVersion != null) {
-            javaProject.setOption(COMPILER_SOURCE, javaToolchainSourceVersion);
-        }
-        if (javaToolchainTargetVersion != null) {
-            javaProject.setOption(COMPILER_CODEGEN_TARGET_PLATFORM, javaToolchainTargetVersion);
-        }
-
         // if we have add-opens or add-export we need to turn release flag off
         // (https://stackoverflow.com/questions/45370178/exporting-a-package-from-system-module-is-not-allowed-with-release)
         if (Stream.of(extraAttributesForJdk)
@@ -591,6 +586,29 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             javaProject.setOption(COMPILER_RELEASE, DISABLED);
         }
 
+    }
+
+    /**
+     * Configures the raw classpath of the workspace project according to the needs of the strategy.
+     *
+     * @param project
+     *            the workspace project
+     * @param monitor
+     * @throws JavaModelException
+     */
+    protected void configureRawClasspathOfWorkspaceProject(IProject project, IProgressMonitor monitor)
+            throws JavaModelException {
+        var javaProject = JavaCore.create(project);
+
+        // configure JDK and update project settings
+        List<IClasspathEntry> rawClasspath = new ArrayList<>();
+        addJavaContainerEntryAndConfigureJavaCompileSettings(rawClasspath, javaProject, new IClasspathAttribute[] {});
+
+        // container for all external libraries
+        rawClasspath.add(JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)));
+
+        // apply to project
+        javaProject.setRawClasspath(rawClasspath.toArray(new IClasspathEntry[rawClasspath.size()]), true, monitor);
     }
 
     /**
@@ -1433,6 +1451,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             // detect default Java level
             monitor.subTask("Detecting Java Toolchain");
             detectDefaultJavaToolchain(workspace);
+
+            // configure the classpath of the workspace project
+            configureRawClasspathOfWorkspaceProject(workspace.getBazelProject().getProject(), monitor.split(1));
 
             // create projects
             return doProvisionProjects(targets, monitor.split(1, SUPPRESS_NONE));
