@@ -41,6 +41,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -640,6 +641,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // after provisioning and cleanup we go over the projects a second time to initialize the classpaths
             initializeClasspaths(targetProjects, workspace, progress.split(1, SUPPRESS_NONE));
             return Status.OK_STATUS;
+        } catch (OperationCanceledException e) {
+            LOG.warn("Workspace synchronization cancelled: {}", workspace.getLocation(), e);
+            return Status.CANCEL_STATUS;
         } catch (Exception e) {
             LOG.error("Error synchronizing workspace '{}': {}", workspace.getLocation(), e.getMessage(), e);
             return e instanceof CoreException ce ? ce.getStatus()
