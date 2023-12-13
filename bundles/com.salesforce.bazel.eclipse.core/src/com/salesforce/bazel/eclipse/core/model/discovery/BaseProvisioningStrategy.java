@@ -1182,7 +1182,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     private boolean isTestTarget(BazelTarget bazelTarget) throws CoreException {
         var targetName = bazelTarget.getName().toLowerCase(Locale.US);
         var ruleClass = bazelTarget.getRuleClass().toLowerCase(Locale.US);
-        return ruleClass.endsWith("_test") || targetName.endsWith("test") || targetName.endsWith("tests");
+        return ruleClass.endsWith("_test") // java_test
+                || targetName.endsWith("test") // we allow this too
+                || targetName.endsWith("tests") // we allow this too
+                || targetName.endsWith("-test-lib"); // java_test_suite shared lib from @contrib_rules_jvm
     }
 
     private void linkGeneratedSourceDirectories(JavaSourceInfo sourceInfo, IFolder generatedSourcesFolder,
