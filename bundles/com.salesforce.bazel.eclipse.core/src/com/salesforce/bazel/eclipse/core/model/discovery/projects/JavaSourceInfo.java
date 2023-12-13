@@ -382,8 +382,11 @@ public class JavaSourceInfo {
                     createDirectories(entryDest);
                 } else {
                     createDirectories(entryDest.getParent());
+                    var destinationFile = entryDest.toFile();
                     try (var is = archive.getInputStream(entry)) {
+                        destinationFile.setWritable(true);
                         copy(is, entryDest, StandardCopyOption.REPLACE_EXISTING);
+                        destinationFile.setWritable(false);
                     }
                     extractedFiles.add(entryDest);
                 }
@@ -398,6 +401,7 @@ public class JavaSourceInfo {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     if (!extractedFiles.contains(file)) {
+                        file.toFile().setWritable(true);
                         delete(file);
                     }
                     return FileVisitResult.CONTINUE;
