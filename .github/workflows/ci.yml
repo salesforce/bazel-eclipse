@@ -91,14 +91,14 @@ jobs:
           run: ./mvnw --batch-mode --no-transfer-progress --strict-checksums --fail-at-end -update-snapshots --show-version --errors clean verify
           
       - name: Upload Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-${{ matrix.os }}
           path: tests/**/target/surefire-reports/*.xml
 
       - name: Upload p2 Repository
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: success() && matrix.os == 'ubuntu-latest'
         with:
           name: p2-repository
@@ -112,7 +112,7 @@ jobs:
     # needed for publishing test results from forks
     steps:
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ci-event-file
           path: ${{ github.event_path }}
