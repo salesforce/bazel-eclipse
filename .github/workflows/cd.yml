@@ -63,7 +63,7 @@ jobs:
         run: ls -R _site/
 
       - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v2
           
       - name: Deploy Update Site 🚀
         id: deployment
