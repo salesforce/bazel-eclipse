@@ -55,6 +55,7 @@ public class JavaSourceInfo {
 
     private static final IPath NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE =
             IPath.forPosix("_not_following_java_package_structure_");
+    private static final IPath MISSING_PACKAGE = IPath.forPosix("_misson_package_info_");
 
     private static boolean isJavaFile(java.nio.file.Path file) {
         return isRegularFile(file) && file.getFileName().toString().endsWith(".java");
@@ -114,6 +115,11 @@ public class JavaSourceInfo {
             // detect package if necessary
             if (fileEntry.detectedPackagePath == null) {
                 fileEntry.detectedPackagePath = detectPackagePath(fileEntry);
+
+                // if unable to detect; collect for rescue in 2nd pass later
+                if (fileEntry.detectedPackagePath == null) {
+                    return MISSING_PACKAGE;
+                }
             }
 
             // calculate potential source root
@@ -198,6 +204,32 @@ public class JavaSourceInfo {
                 }
             } else {
                 throw new CoreException(Status.error(format("Unexpected source '%s'!", srcEntry)));
+            }
+        }
+
+        // rescue missing packages
+        if (sourceEntriesBySourceRoot.containsKey(MISSING_PACKAGE)) {
+            // we use the MISSING_PACKAGE when a package could not be calculated
+            // in this pass we try to "rescue" them
+            var entriesWithMissingPackageInfo =
+                    (List<JavaSourceEntry>) sourceEntriesBySourceRoot.remove(MISSING_PACKAGE);
+            for (JavaSourceEntry javaSourceEntry : entriesWithMissingPackageInfo) {
+                // try applying one more time (maybe this time a directory is cached)
+                javaSourceEntryCollector.apply(javaSourceEntry);
+
+                // find a source that that's containing the file if it's still missing
+                if (javaSourceEntry.detectedPackagePath == null) {
+                    result.add(
+                        Status.error(
+                            format(
+                                "Unable to detect packakage for Java file '%s'. Please double check it has a package declaration!",
+                                javaSourceEntry.getPath())));
+                } else {
+                    // build second index of parent for all entries with a potential source root
+                    // this is needed in order to identify split packages (in same directory) later
+                    sourceEntriesByParentFolder.putIfAbsent(javaSourceEntry.getPathParent(), new ArrayList<>());
+                    sourceEntriesByParentFolder.get(javaSourceEntry.getPathParent()).add(javaSourceEntry);
+                }
             }
         }
 
@@ -324,14 +356,38 @@ public class JavaSourceInfo {
 
     private IPath detectPackagePath(JavaSourceEntry fileEntry) {
         // we inspect at most one file per directory (anything else is too weird to support)
-        var previouslyDetectedPackagePath = detectedPackagePathsByFileEntryPathParent.get(fileEntry.getPathParent());
+        var parentPath = fileEntry.getPathParent();
+        var previouslyDetectedPackagePath = detectedPackagePathsByFileEntryPathParent.get(parentPath);
         if (previouslyDetectedPackagePath != null) {
             return previouslyDetectedPackagePath;
         }
 
+        // read package from .java file
+        var packageName = readPackageName(fileEntry);
+        if (packageName == null) {
+            // try to walk up the path for a possible match
+            List<String> removedSegments = new ArrayList<>();
+            var parent = parentPath;
+            while (parent.segmentCount() > 0) {
+                removedSegments.add(0, parent.lastSegment());
+                parent = parent.removeLastSegments(1);
+
+                var packagePath = detectedPackagePathsByFileEntryPathParent.get(parent);
+                if (packagePath != null) {
+                    // we have a hit, re-add the removed segments
+                    for (String segment : removedSegments) {
+                        packagePath = packagePath.append(segment);
+                    }
+                    // just return, don't remember this one in cache (maybe we should?)
+                    return packagePath;
+                }
+                parent = parent.removeLastSegments(1);
+            }
+            return null; // unable to compute
+        }
+
         // assume empty by default
         var packagePath = IPath.EMPTY;
-        var packageName = readPackageName(fileEntry);
         if (packageName.length() > 0) {
             var packageNameSegments = new StringTokenizer(new String(packageName), ".");
             while (packageNameSegments.hasMoreElements()) {
@@ -563,7 +619,6 @@ public class JavaSourceInfo {
 
     @SuppressWarnings("deprecation") // use of TokenNameIdentifier is ok here
     private String readPackageName(JavaSourceEntry fileEntry) {
-        var packageName = new StringBuilder();
 
         var scanner = ToolFactory.createScanner( //
             false, // tokenizeComments
@@ -576,10 +631,12 @@ public class JavaSourceInfo {
             scanner.setSource(content.toCharArray());
 
             var token = scanner.getNextToken();
+            StringBuilder packageName = null;
             while (true) {
                 switch (token) {
                     case ITerminalSymbols.TokenNamepackage:
                         token = scanner.getNextToken();
+                        packageName = new StringBuilder();
                         while (token == ITerminalSymbols.TokenNameIdentifier) {
                             var packageNameChars = scanner.getCurrentTokenSource();
                             packageName.append(packageNameChars);
@@ -592,7 +649,7 @@ public class JavaSourceInfo {
                         continue;
                     case ITerminalSymbols.TokenNameimport: // stop at imports
                     case ITerminalSymbols.TokenNameEOF: // stop at EOF
-                        return packageName.toString();
+                        return packageName != null ? packageName.toString() : null;
                     default:
                         token = scanner.getNextToken();
                         continue;
@@ -601,6 +658,8 @@ public class JavaSourceInfo {
         } catch (InvalidInputException | IndexOutOfBoundsException | IOException e) {
             // ignore
         }
-        return packageName.toString();
+
+        // give up
+        return null;
     }
 }
