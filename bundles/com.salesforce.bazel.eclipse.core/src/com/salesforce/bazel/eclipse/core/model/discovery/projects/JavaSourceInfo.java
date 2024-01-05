@@ -55,7 +55,7 @@ public class JavaSourceInfo {
 
     private static final IPath NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE =
             IPath.forPosix("_not_following_java_package_structure_");
-    private static final IPath MISSING_PACKAGE = IPath.forPosix("_misson_package_info_");
+    private static final IPath MISSING_PACKAGE = IPath.forPosix("_missing_package_declaration_");
 
     private static boolean isJavaFile(java.nio.file.Path file) {
         return isRegularFile(file) && file.getFileName().toString().endsWith(".java");
