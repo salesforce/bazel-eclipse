@@ -1,6 +1,6 @@
 target "bazel-eclipse-feature-target-platform" with source configurePhase requirements environment JavaSE-17
 
-location "https://download.eclipse.org/eclipse/updates/4.28/" {
+location "https://download.eclipse.org/eclipse/updates/4.30/" {
 	org.eclipse.e4.rcp.feature.group
 	org.eclipse.ecf.core.feature.feature.group
 	org.eclipse.ecf.core.ssl.feature.feature.group
@@ -15,7 +15,6 @@ location "https://download.eclipse.org/eclipse/updates/4.28/" {
 	org.eclipse.equinox.sdk.feature.group
 	org.eclipse.equinox.p2.discovery.feature.feature.group
 	org.eclipse.rcp.feature.group
-	org.eclipse.rcp.sdk.id
 	org.eclipse.sdk.ide
 	org.eclipse.test.feature.group
 	org.eclipse.equinox.executable
@@ -36,57 +35,52 @@ location "https://download.eclipse.org/eclipse/updates/4.28/" {
 	org.objectweb.asm.util
 }
 
-location "https://download.eclipse.org/tools/orbit/downloads/drops/R20230531010532/repository/" {
+location "https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2023-12/" {
+	slf4j.api
+	ch.qos.logback.core
+	ch.qos.logback.classic
+	jakarta.servlet-api [5.0.0,6.0.0)
+	jakarta.servlet-api [6.0.0,7.0.0)
+	com.google.errorprone.annotations
 	com.google.gson
 	com.google.javascript
-	com.google.protobuf
-	javax.annotation
 	org.apache.commons.lang3
-	org.apache.commons.io
 	org.apache.xerces
 	org.apache.xalan
-	org.slf4j.api
 	org.hamcrest
+	org.mockito.junit-jupiter
+	org.mockito.mockito-core
 }
 
-location "https://download.eclipse.org/releases/2023-06/" {
+location "https://download.eclipse.org/releases/2023-12/" {
 	// TextMate
 	org.eclipse.tm4e.feature.feature.group
 }
 
-location "https://download.eclipse.org/jdtls/milestones/1.26.0/repository/" {
+location "https://download.eclipse.org/jdtls/milestones/1.30.1/repository/" {
 	org.eclipse.jdt.ls.core
 }
 
 // locations below taken from eclipse.jdt.ls project (to allow building the JDT LS in same workspace)
-location "https://download.eclipse.org/releases/2023-06/" {
+location "https://download.eclipse.org/releases/2023-12/" {
 	org.eclipse.xtext.xbase.lib
-}
-
-location "https://download.eclipse.org/scout/releases/4.0/testing" {
-	org.mockito.mockito-all
 }
 
 location "https://download.eclipse.org/lsp4j/updates/releases/0.21.1/" {
 	org.eclipse.lsp4j.sdk.feature.group
 }
 
-// https://github.com/eclipse-lsp4j/lsp4j/issues/702
-location "https://download.eclipse.org/lsp4j/updates/releases/0.19.1/" {
-	// org.eclipse.lsp4j.sdk.feature.group [0.19.1,0.20.0)
-}
-
-location "https://download.eclipse.org/technology/m2e/releases/2.4.0/" {
+location "https://download.eclipse.org/technology/m2e/releases/2.5.0/" {
 	org.eclipse.m2e.feature.feature.group
 	org.eclipse.m2e.logback.feature.feature.group
 	org.eclipse.m2e.sdk.feature.feature.group
 }
 
-location "https://download.eclipse.org/wildwebdeveloper/releases/1.3.0/" {
+location "https://download.eclipse.org/wildwebdeveloper/releases/1.3.3/" {
 	org.eclipse.wildwebdeveloper.xml.feature.feature.group // required by M2E
 }
 
-location "https://download.eclipse.org/buildship/updates/e423/releases/3.x/3.1.7.v20230428-1420/" {
+location "https://download.eclipse.org/buildship/updates/e423/releases/3.x/3.1.8.v20231117-1734/" {
 	org.eclipse.buildship.feature.group
 }
 
@@ -132,11 +126,6 @@ maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=g
 		version="2.4.0"
 	}
 	dependency {
-		groupId="com.google.errorprone"
-		artifactId="error_prone_annotations"
-		version="2.18.0"
-	}
-	dependency {
 		groupId="com.google.code.findbugs"
 		artifactId="jsr305"
 		version="3.0.2"
@@ -150,21 +139,6 @@ maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=g
 		groupId="com.google.auto.value"
 		artifactId="auto-value-annotations"
 		version="1.10.1"
-	}
-	dependency {
-		groupId="org.slf4j"
-		artifactId="slf4j-api"
-		version="2.0.7"
-	}
-	dependency {
-		groupId="ch.qos.logback"
-		artifactId="logback-core"
-		version="1.4.11"
-	}
-	dependency {
-		groupId="ch.qos.logback"
-		artifactId="logback-classic"
-		version="1.4.11"
 	}
 	dependency { // Logback provides a Servlet Container service which is also loaded and that needs servlet (by default optional)
 		groupId="jakarta.servlet"
