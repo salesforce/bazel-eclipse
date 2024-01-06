@@ -24,7 +24,7 @@ location "https://download.eclipse.org/modeling/emf/emf/builds/release/2.32/" {
 //    org.eclipse.emf.ecore.xcore.sdk.feature.group
 //    org.eclipse.emf.sdk.feature.group
 }
-location "https://download.eclipse.org/releases/2023-06/" {
+location "https://download.eclipse.org/releases/2023-12/" {
 	// EMF & Co
 //    org.eclipse.emf.ecore.xcore.sdk.feature.group
 //    org.eclipse.emf.sdk.feature.group
@@ -41,10 +41,48 @@ location "https://download.eclipse.org/releases/2023-06/" {
 //    org.eclipse.xtext.sdk.feature.group
 }
 
-location "https://download.eclipse.org/mylyn/docs/releases/3.0.46/" {
+location "https://download.eclipse.org/mylyn/docs/releases/3.0.48/" {
     org.eclipse.mylyn.wikitext_feature.feature.group lazy
     org.eclipse.mylyn.wikitext.editors_feature.feature.group lazy
     org.eclipse.mylyn.wikitext.sdk.feature.group lazy
     org.eclipse.mylyn.wikitext.markdown lazy
     org.eclipse.mylyn.wikitext.markdown.ui lazy
+}
+
+location "https://raw.githubusercontent.com/iloveeclipse/plugins/latest/" {
+	AnyEditTools.feature.group lazy
+}
+
+location "https://de-jcup.github.io/update-site-eclipse-asciidoctor-editor/update-site/" {
+	de.jcup.asciidoctoreditor.feature.group lazy
+}
+
+location "https://de-jcup.github.io/update-site-eclipse-bash-editor/update-site/" {
+	de.jcup.basheditor.feature.group lazy
+}
+
+location "https://de-jcup.github.io/update-site-eclipse-batch-editor/update-site/" {
+	de.jcup.batcheditor.feature.group lazy
+}
+
+location "https://de-jcup.github.io/update-site-eclipse-jenkins-editor/update-site/" {
+	de.jcup.jenkinseditor.feature.feature.group lazy
+}
+
+location "https://de-jcup.github.io/update-site-eclipse-sql-editor/update-site/" {
+	de.jcup.sqleditor.feature.group lazy
+}
+
+location "https://de-jcup.github.io/update-site-eclipse-yaml-editor/update-site/" {
+	de.jcup.yamleditor.feature.group lazy
+}
+
+location "https://github.com/MoreUnit/MoreUnit-Eclipse/releases/latest/download/" {
+	org.moreunit.feature.feature.group lazy
+	org.moreunit.light.feature.feature.group lazy
+	org.moreunit.mock.feature.feature.group lazy
+}
+
+location "https://eclipseguru.github.io/io.takari.m2e.lifecycle/" {
+    io.takari.m2e.lifecycle.feature.feature.group lazy
 }
