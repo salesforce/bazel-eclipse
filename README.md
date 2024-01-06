@@ -9,6 +9,8 @@ Both provide IDE integrations for Java projects built by the [Bazel](https://baz
 
 ## BEF: Bazel Eclipse Feature ![BEF Logo](docs/logos/bef_logo_small.png)
 
+[![Drag to your running Eclipse workspace. Requires Eclipse Marketplace Client](https://marketplace.eclipse.org/modules/custom/eclipsefdn/eclipsefdn_marketplace/images/btn-install.svg)](/marketplace-client-intro?mpc_install=5403450"Drag to your running Eclipse workspace. Requires Eclipse Marketplace Client")
+
 This is the Eclipse Feature for developing [Bazel](http://bazel.io) projects in Eclipse.
 The Bazel Eclipse Feature supports importing, building, and testing Java projects that are built using the Bazel build system.
 
