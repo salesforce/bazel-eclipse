@@ -6,6 +6,8 @@ package com.salesforce.bazel.eclipse.core.classpath;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.Arrays.stream;
+import static org.eclipse.jdt.launching.JavaRuntime.computeUnresolvedRuntimeClasspath;
+import static org.eclipse.jdt.launching.JavaRuntime.newProjectRuntimeClasspathEntry;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -100,8 +102,15 @@ public class BazelClasspathContainerRuntimeResolver
         // never exclude test code because we use it for runtime dependencies as well
         final var excludeTestCode = false;
 
-        // get the full transitive closure of the project
-        var unresolvedRuntimeClasspath = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject, excludeTestCode);
+        // output locations of the project first
+        stream(
+            JavaRuntime.resolveRuntimeClasspathEntry(
+                newProjectRuntimeClasspathEntry(javaProject),
+                javaProject,
+                excludeTestCode)).forEach(resolvedClasspath::add);
+
+        // then the full transitive closure of the project
+        var unresolvedRuntimeClasspath = computeUnresolvedRuntimeClasspath(javaProject, excludeTestCode);
         for (IRuntimeClasspathEntry unresolvedEntry : unresolvedRuntimeClasspath) {
             // resolve and add
             stream(JavaRuntime.resolveRuntimeClasspathEntry(unresolvedEntry, javaProject, excludeTestCode))
