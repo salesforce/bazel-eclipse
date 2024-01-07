@@ -6,7 +6,6 @@ package com.salesforce.bazel.eclipse.core.classpath;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.Arrays.stream;
-import static org.eclipse.jdt.launching.JavaRuntime.newProjectRuntimeClasspathEntry;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -84,7 +83,8 @@ public class BazelClasspathContainerRuntimeResolver
     }
 
     /**
-     * Resolves a project classpath reference into all possible output folders and adds it to the resolved classpath.
+     * Resolves a project classpath reference into all possible output folders and transitives and adds it to the
+     * resolved classpath.
      *
      * @param resolvedClasspath
      *            the resolved classpath
@@ -96,17 +96,17 @@ public class BazelClasspathContainerRuntimeResolver
     private void populateWithResolvedProject(Collection<IRuntimeClasspathEntry> resolvedClasspath,
             IProject sourceProject) throws CoreException {
         var javaProject = JavaCore.create(sourceProject);
-        var classpath = newProjectRuntimeClasspathEntry(javaProject);
 
-        // add the project itself for source code lookup
-        resolvedClasspath.add(classpath);
+        // never exclude test code because we use it for runtime dependencies as well
+        final var excludeTestCode = false;
 
-        // add all possible output folders
-        stream(
-            JavaRuntime.resolveRuntimeClasspathEntry(
-                classpath,
-                javaProject,
-                false /* test code is used for runtime dependencies */)).forEach(resolvedClasspath::add);
+        // get the full transitive closure of the project
+        var unresolvedRuntimeClasspath = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject, excludeTestCode);
+        for (IRuntimeClasspathEntry unresolvedEntry : unresolvedRuntimeClasspath) {
+            // resolve and add
+            stream(JavaRuntime.resolveRuntimeClasspathEntry(unresolvedEntry, javaProject, excludeTestCode))
+                    .forEach(resolvedClasspath::add);
+        }
     }
 
     private void populateWithSavedContainer(IJavaProject project, Collection<IRuntimeClasspathEntry> resolvedClasspath)
@@ -118,7 +118,7 @@ public class BazelClasspathContainerRuntimeResolver
             for (IClasspathEntry e : entries) {
                 switch (e.getEntryKind()) {
                     case IClasspathEntry.CPE_PROJECT: {
-                        // projects need to be resolved properly so we have all the output folders on the classpath
+                        // projects need to be resolved properly so we have all the output folders and exported jars on the classpath
                         var sourceProject = workspaceRoot.getProject(e.getPath().segment(0));
                         populateWithResolvedProject(resolvedClasspath, sourceProject);
                         break;
