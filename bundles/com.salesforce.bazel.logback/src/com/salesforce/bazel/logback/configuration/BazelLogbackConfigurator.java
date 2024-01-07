@@ -166,6 +166,10 @@ public class BazelLogbackConfigurator extends BasicConfigurator implements Confi
             // we tried to integrate but M2E developers not very receptive
             disableBundle(Platform.getBundle("org.eclipse.m2e.logback"));
 
+            // Eclipse 2023-09 started to ship SLF4J Simple logger implementation
+            // disable it as well because we really want log event to go to the Eclipse .log
+            disableBundle(Platform.getBundle("slf4j.simple"));
+
             var bundle = Platform.getBundle("com.salesforce.bazel.logback"); // This is a fragment -> FrameworkUtil.getBundle() returns host
             var stateDir = Platform.getStateLocation(bundle).toPath();
             var configFile = stateDir.resolve("logback." + bundle.getVersion() + ".xml"); //$NON-NLS-1$  //$NON-NLS-2$
