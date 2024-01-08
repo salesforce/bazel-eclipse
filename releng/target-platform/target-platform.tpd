@@ -43,6 +43,8 @@ location "https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2023
 	jakarta.servlet-api [6.0.0,7.0.0)
 	com.google.errorprone.annotations
 	com.google.gson
+	com.google.guava
+	com.google.guava.failureaccess
 	com.google.javascript
 	org.apache.commons.lang3
 	org.apache.xerces
@@ -99,16 +101,6 @@ maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=g
 		groupId="com.github.ben-manes.caffeine"
 		artifactId="guava"
 		version="3.1.8"
-	}
-	dependency {
-		groupId="com.google.guava"
-		artifactId="guava"
-		version="32.1.2-jre"
-	}
-	dependency {
-		groupId="com.google.guava"
-		artifactId="failureaccess"
-		version="1.0.1"
 	}
 	dependency {
 		groupId="com.google.protobuf"
