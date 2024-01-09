@@ -116,8 +116,8 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
     final JavaAspectsInfo aspectsInfo;
 
-    /** set of generated source jars (maintaining insertion order) */
-    final Set<BlazeJarLibrary> generatedSourceJars = new LinkedHashSet<>();
+    /** set of generated jars from source generators or annotation processors (maintaining insertion order) */
+    final Set<BlazeJarLibrary> generatedCodeJars = new LinkedHashSet<>();
 
     /** set of compile jars from jdeps file (maintaining insertion order) */
     final Set<JdepsDependency> jdepsCompileJars = new LinkedHashSet<>();
@@ -211,7 +211,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Found generated jar: {}", jar);
             }
-            generatedSourceJars.add(jar);
+            generatedCodeJars.add(jar);
         });
         if (javaIdeInfo.getFilteredGenJar() != null) {
             // the filtered-gen jar is produced by the IJ aspects
@@ -222,7 +222,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Found filtered gen jar: {}", javaIdeInfo.getFilteredGenJar());
             }
-            generatedSourceJars.add(new BlazeJarLibrary(javaIdeInfo.getFilteredGenJar(), targetKey));
+            generatedCodeJars.add(new BlazeJarLibrary(javaIdeInfo.getFilteredGenJar(), targetKey));
         }
 
         // special handling for protobuf targets
@@ -233,7 +233,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Found proto library jar: {}", jar);
                 }
-                generatedSourceJars.add(jar);
+                generatedCodeJars.add(jar);
             });
         }
 
@@ -336,7 +336,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         }
 
         // Collect generated jars from source rules
-        for (BlazeJarLibrary library : generatedSourceJars) {
+        for (BlazeJarLibrary library : generatedCodeJars) {
             var jarEntry = resolveJar(library.libraryArtifact);
             if (jarEntry == null) {
                 if (LOG.isDebugEnabled()) {
