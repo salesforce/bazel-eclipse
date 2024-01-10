@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import com.google.idea.blaze.base.model.primitives.Label;
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.edits.AddDependenciesJob;
+import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.util.TypeLocator;
@@ -142,7 +143,7 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
 
         if (binding.isAnonymous() || binding.isPrimitive() || binding.isNullType() || binding.isGenericType()
                 || binding.isTypeVariable() || binding.isCapture() || binding.isWildcardType()
-                || binding.isRecovered()) {
+                || binding.isIntersectionType() || binding.isRecovered()) {
             return;
         }
 
@@ -161,12 +162,33 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
             return;
         }
 
-        if (processedTypes.contains(binding.getQualifiedName())) {
+        if (binding.isParameterizedType()) {
+            collectLabelAndClasspathEntryFromTypeBinding(
+                binding.getTypeDeclaration(),
+                labels,
+                classpathEntries,
+                typeLocator,
+                processedTypes,
+                monitor);
+            for (final ITypeBinding typeArgument : binding.getTypeArguments()) {
+                collectLabelAndClasspathEntryFromTypeBinding(
+                    typeArgument,
+                    labels,
+                    classpathEntries,
+                    typeLocator,
+                    processedTypes,
+                    monitor);
+            }
             return;
         }
 
-        processedTypes.add(binding.getQualifiedName());
-        monitor.subTask(binding.getQualifiedName());
+        var qualifiedName = binding.getQualifiedName();
+        if (processedTypes.contains(qualifiedName) || !processedTypes.add(qualifiedName)) {
+            return;
+        }
+
+        monitor.subTask(qualifiedName);
+        LOG.debug("Processing type '{}'", qualifiedName);
 
         var collected = collectLabelAndClasspathEntryForType(
             (IType) binding.getJavaElement(),
@@ -219,6 +241,11 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
         }
     }
 
+    protected Job createAddDependenciesJob(BazelProject bazelProject, Set<Label> dependencyLabels,
+            Set<ClasspathEntry> newClasspathEntries) throws CoreException {
+        return new AddDependenciesJob(bazelProject, dependencyLabels, newClasspathEntries);
+    }
+
     @Override
     protected Job createJob(IProject project, ExecutionEvent event) throws CoreException {
         var activeShell = HandlerUtil.getActiveShell(event);
@@ -256,7 +283,7 @@ public class AddCompileDependencyHandler extends BaseBazelProjectHandler {
                 });
 
                 if (!dependencyLabels.isEmpty()) {
-                    return new AddDependenciesJob(bazelProject, dependencyLabels, newClasspathEntries);
+                    return createAddDependenciesJob(bazelProject, dependencyLabels, newClasspathEntries);
                 }
 
                 MessageDialog.openWarning(

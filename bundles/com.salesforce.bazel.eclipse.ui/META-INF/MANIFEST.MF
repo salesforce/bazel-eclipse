@@ -36,7 +36,10 @@ Automatic-Module-Name: com.salesforce.bazel.eclipse.ui
 Bundle-ActivationPolicy: lazy
 Export-Package: com.salesforce.bazel.eclipse.ui,
  com.salesforce.bazel.eclipse.ui.commands,
+ com.salesforce.bazel.eclipse.ui.commands.classpath,
  com.salesforce.bazel.eclipse.ui.execution,
+ com.salesforce.bazel.eclipse.ui.jdt,
+ com.salesforce.bazel.eclipse.ui.launchconfiguration,
  com.salesforce.bazel.eclipse.ui.preferences,
  com.salesforce.bazel.eclipse.ui.utils,
  com.salesforce.bazel.eclipse.ui.wizards
