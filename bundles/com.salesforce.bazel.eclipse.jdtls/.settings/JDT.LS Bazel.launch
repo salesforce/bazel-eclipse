@@ -181,7 +181,6 @@
         <setEntry value="org.tukaani.xz@default:default"/>
         <setEntry value="slf4j.api@default:default"/>
         <setEntry value="wrapped.com.google.auto.value.auto-value-annotations@default:default"/>
-        <setEntry value="wrapped.com.google.errorprone.error_prone_annotations@default:default"/>
         <setEntry value="wrapped.com.google.protobuf.protobuf-java@default:default"/>
     </setAttribute>
     <setAttribute key="selected_workspace_bundles">
@@ -195,6 +194,9 @@
     <stringAttribute key="timestamp" value="1702118169683"/>
     <booleanAttribute key="tracing" value="true"/>
     <mapAttribute key="tracingOptions">
+        <mapEntry key="com.perforce.team.core/debug" value="false"/>
+        <mapEntry key="com.perforce.team.core/debug/activation" value="false"/>
+        <mapEntry key="com.perforce.team.core/debug/time" value="false"/>
         <mapEntry key="com.salesforce.bazel.eclipse.core/debugLog" value="true"/>
         <mapEntry key="com.salesforce.bazel.eclipse.ui/debugLog" value="true"/>
         <mapEntry key="com.salesforce.bazel.sdk/debugLog" value="true"/>
@@ -248,6 +250,8 @@
         <mapEntry key="org.eclipse.core.resources/save/syncinfo" value="false"/>
         <mapEntry key="org.eclipse.core.resources/save/tree" value="false"/>
         <mapEntry key="org.eclipse.core.resources/strings" value="false"/>
+        <mapEntry key="org.eclipse.core.resources/tree/immutable" value="false"/>
+        <mapEntry key="org.eclipse.core.resources/tree/immutablestack" value="false"/>
         <mapEntry key="org.eclipse.core.runtime/compatibility/debug" value="false"/>
         <mapEntry key="org.eclipse.core.runtime/debug" value="false"/>
         <mapEntry key="org.eclipse.core.runtime/debug/context" value="false"/>
@@ -614,6 +618,7 @@
         <mapEntry key="org.eclipse.wst.common.environment/trace/ws_ant" value="true"/>
         <mapEntry key="org.eclipse.wst.common.environment/trace/ws_dt_cmd_engine" value="true"/>
         <mapEntry key="org.eclipse.wst.common.environment/trace/ws_framework" value="true"/>
+        <mapEntry key="org.eclipse.wst.common.search/perf" value="false"/>
         <mapEntry key="org.eclipse.wst.sse.core/debug" value="false"/>
         <mapEntry key="org.eclipse.wst.sse.core/dom/adapter/notification/time" value="false"/>
         <mapEntry key="org.eclipse.wst.sse.core/dom/adapter/notification/time/criteria" value="10"/>
