@@ -11,20 +11,22 @@ location "https://download.eclipse.org/eclipse/updates/4.30/" {
 	org.eclipse.emf.ecore.feature.group
 	org.eclipse.equinox.core.feature.feature.group
 	org.eclipse.equinox.core.sdk.feature.group
-	org.eclipse.equinox.p2.core.feature.source.feature.group
-	org.eclipse.equinox.sdk.feature.group
-	org.eclipse.equinox.p2.discovery.feature.feature.group
-	org.eclipse.rcp.feature.group
-	org.eclipse.sdk.ide
-	org.eclipse.test.feature.group
 	org.eclipse.equinox.executable
 	org.eclipse.equinox.executable.feature.group
+	org.eclipse.equinox.p2.core.feature.source.feature.group
+	org.eclipse.equinox.p2.discovery.feature.feature.group
+	org.eclipse.equinox.sdk.feature.group
 	org.eclipse.jdt.feature.group
 	org.eclipse.platform.feature.group
+	org.eclipse.rcp.feature.group
+	org.eclipse.sdk.feature.group
+	org.eclipse.sdk.ide
+
+    // test
 	org.eclipse.test
 	org.eclipse.jface.text.tests
 	org.eclipse.text.tests
-	org.eclipse.sdk.feature.group
+	org.eclipse.test.feature.group
 
 	// for SLF4J 2.0 Aries Spy Fly is needed (and all the ASM stuff)
 	org.apache.aries.spifly.dynamic.bundle
