@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1704880494">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1704881393">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.30.0.v20231113-1355"/>
@@ -136,6 +136,15 @@
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="io.takari.m2e.lifecycle.feature.feature.group" version="0.0.0"/>
       <repository location="https://eclipseguru.github.io/io.takari.m2e.lifecycle/"/>
+    </location>
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
+      <unit id="com.perforce.team.feature.feature.group" version="0.0.0"/>
+      <unit id="com.perforce.team.folder.feature.feature.group" version="0.0.0"/>
+      <unit id="com.perforce.team.java.galileo.feature.feature.group" version="0.0.0"/>
+      <unit id="com.perforce.team.mergequest.feature.feature.group" version="0.0.0"/>
+      <unit id="com.perforce.team.patch.feature.feature.group" version="0.0.0"/>
+      <unit id="com.perforce.team.search.feature.feature.group" version="0.0.0"/>
+      <repository location="https://eclipseguru.github.io/p4eclipse/"/>
     </location>
     <location includeDependencyDepth="infinite" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="MavenDependencies">
     <feature id="com.salesforce.bazel.eclipse.dependencies.feature" label="Third-Party Dependencies used by the Bazel Eclipse Feature" provider-name="" version="2.0.0.qualifier">

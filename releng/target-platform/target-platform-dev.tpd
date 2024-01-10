@@ -71,3 +71,12 @@ location "https://github.com/MoreUnit/MoreUnit-Eclipse/releases/latest/download/
 location "https://eclipseguru.github.io/io.takari.m2e.lifecycle/" {
     io.takari.m2e.lifecycle.feature.feature.group lazy
 }
+
+location "https://eclipseguru.github.io/p4eclipse/" {
+    com.perforce.team.feature.feature.group lazy
+    com.perforce.team.folder.feature.feature.group lazy
+    com.perforce.team.java.galileo.feature.feature.group lazy
+    com.perforce.team.mergequest.feature.feature.group lazy
+    com.perforce.team.patch.feature.feature.group lazy
+    com.perforce.team.search.feature.feature.group lazy
+}
