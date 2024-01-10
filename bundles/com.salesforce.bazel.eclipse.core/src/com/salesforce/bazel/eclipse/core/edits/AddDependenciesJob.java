@@ -28,11 +28,11 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntr
 import com.salesforce.bazel.sdk.command.BuildozerCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
-public final class AddDependenciesJob extends WorkspaceJob {
+public class AddDependenciesJob extends WorkspaceJob {
 
-    private final BazelProject bazelProject;
-    private final Collection<Label> labelsToAdd;
-    private final Collection<ClasspathEntry> newClasspathEntries;
+    protected final BazelProject bazelProject;
+    protected final Collection<Label> labelsToAdd;
+    protected final Collection<ClasspathEntry> newClasspathEntries;
 
     public AddDependenciesJob(BazelProject bazelProject, Collection<Label> labelsToAdd,
             Collection<ClasspathEntry> newClasspathEntries) throws CoreException {
@@ -45,6 +45,37 @@ public final class AddDependenciesJob extends WorkspaceJob {
         setRule(getRuleFactory().buildRule());
     }
 
+    /**
+     * Called by {@link #runInWorkspace(IProgressMonitor)} to update the project's BUILD file.
+     * <p>
+     * The default implementation calls {@link #updateTargetsUsingBuildozer(List, String, SubMonitor)} for the
+     * <code>deps</code> attribute.
+     * </p>
+     *
+     * @param monitor
+     *            {@link SubMonitor} for reporting progress
+     * @return the number of updated targets
+     * @throws CoreException
+     */
+    protected int addDependenciesToProject(SubMonitor monitor) throws CoreException {
+        List<String> targetsToUpdate;
+        if (bazelProject.isTargetProject()) {
+            targetsToUpdate = List.of(bazelProject.getBazelTarget().getLabel().toString());
+        } else if (bazelProject.isPackageProject()) {
+            targetsToUpdate = bazelProject.getBazelTargets()
+                    .stream()
+                    .map(BazelTarget::getLabel)
+                    .map(BazelLabel::toString)
+                    .collect(toList());
+        } else {
+            throw new CoreException(
+                    Status.error(
+                        format("Project '%s' cannot be updated! No targets found to update.", bazelProject.getName())));
+        }
+
+        return updateTargetsUsingBuildozer(targetsToUpdate, "deps", monitor.split(1));
+    }
+
     IResourceRuleFactory getRuleFactory() {
         return ResourcesPlugin.getWorkspace().getRuleFactory();
     }
@@ -53,28 +84,7 @@ public final class AddDependenciesJob extends WorkspaceJob {
     public IStatus runInWorkspace(IProgressMonitor progress) throws CoreException {
         try {
             var monitor = SubMonitor.convert(progress, 2);
-            List<String> targetsToUpdate;
-            if (bazelProject.isTargetProject()) {
-                targetsToUpdate = List.of(bazelProject.getBazelTarget().getLabel().toString());
-            } else if (bazelProject.isPackageProject()) {
-                targetsToUpdate = bazelProject.getBazelTargets()
-                        .stream()
-                        .map(BazelTarget::getLabel)
-                        .map(BazelLabel::toString)
-                        .collect(toList());
-            } else {
-                throw new CoreException(
-                        Status.error(
-                            format(
-                                "Project '%s' cannot be updated! No targets found to update.",
-                                bazelProject.getName())));
-            }
-
-            // java_library & co
-            var updated = updateTargetsUsingAttribute(targetsToUpdate, "deps", monitor.split(1));
-
-            // some other macros may use this
-            updated += updateTargetsUsingAttribute(targetsToUpdate, "dependencies", monitor.split(1));
+            var updated = addDependenciesToProject(monitor);
 
             // log a message if nothing was updated
             if (updated == 0) {
@@ -149,12 +159,12 @@ public final class AddDependenciesJob extends WorkspaceJob {
         workspaceJob.schedule();
     }
 
-    private int updateTargetsUsingAttribute(List<String> targetsToUpdate, String depsAttributeName, SubMonitor monitor)
-            throws CoreException {
+    protected int updateTargetsUsingBuildozer(List<String> targetsToUpdate, String depsAttributeName,
+            SubMonitor monitor) throws CoreException {
 
-        // filter that targets to update based on top level macro calls actually using the attribute name
+        // filter that targets to update based on top level function calls actually using the attribute name
         var buildFile = bazelProject.getBazelBuildFile();
-        var affactedMacroCalls = buildFile.getTopLevelCalls()
+        var affactedTopLevelCalls = buildFile.getTopLevelCalls()
                 .stream()
                 .filter(m -> (m.getStringListArgument(depsAttributeName) != null))
                 .map(m -> buildFile.getParent().getLabel().toString() + ":" + m.getName())
@@ -163,11 +173,11 @@ public final class AddDependenciesJob extends WorkspaceJob {
         // if there is only one top level macro call we use it directly
         // otherwise we try to match based on targetsToUpdate
         List<String> targetsForBuildozerToUpdate;
-        if (affactedMacroCalls.size() > 1) {
+        if (affactedTopLevelCalls.size() > 1) {
             targetsForBuildozerToUpdate =
-                    affactedMacroCalls.stream().filter(targetsToUpdate::contains).collect(toList());
+                    affactedTopLevelCalls.stream().filter(targetsToUpdate::contains).collect(toList());
         } else {
-            targetsForBuildozerToUpdate = affactedMacroCalls;
+            targetsForBuildozerToUpdate = affactedTopLevelCalls;
         }
 
         if (!targetsForBuildozerToUpdate.isEmpty()) {
