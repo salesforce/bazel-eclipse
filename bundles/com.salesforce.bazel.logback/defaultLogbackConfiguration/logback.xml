@@ -25,7 +25,7 @@
 
   <appender name="EclipseLog" class="com.salesforce.bazel.logback.appender.EclipseLogAppender">
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-      <level>WARN</level>
+      <level>INFO</level>
     </filter>
   </appender>
 
