@@ -28,15 +28,7 @@ import com.salesforce.bazel.eclipse.core.model.buildfile.FunctionCall;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
- * This class represents the <code>BUILD.bazel</code> or <code>BUILD</code> file found inside a {@link BazelPackage}.
- * <p>
- * Although technically not necessary for building Bazel projects when working with <code>bazel query</code> and
- * <code>bazel build</code>, the build file becomes very important for IDEs. Often <code>bazel query</code> tells you
- * how Bazel sees the world. This may be different from how a developers describes it. For example, with
- * <code>bazel query</code> you will see {@link BazelPackage packages} and {@link BazelTarget targets} but not
- * <a href="https://bazel.build/extending/macros">macros</a> and functions such as <code>glob</code>. Therefore this
- * class exist in the Bazel model to allow the IDEs to drill down into the build file and discovers those.
- * </p>
+ * This class represents a Starlark file.
  * <p>
  * See <a href="https://bazel.build/concepts/build-ref">Workspaces, packages, and targets</a> in the Bazel documentation
  * for further details.

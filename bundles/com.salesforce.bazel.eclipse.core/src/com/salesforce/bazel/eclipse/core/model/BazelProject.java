@@ -300,6 +300,28 @@ public class BazelProject implements IProjectNature {
                     format("'%s' is neither a target nor a package project. Unable to obtain build file", getName())));
     }
 
+    /**
+     * Returns the underlying {@link IFile} of the {@link BazelBuildFile} of this project.
+     *
+     * @return the build file of this project
+     * @throws CoreException
+     *             if this is neither a package nor a target project
+     */
+    public IFile getBazelBuildFileResource() throws CoreException {
+        if (isTargetProject()) {
+            // expected to be linked
+            return project.getFile(getBazelTarget().getBazelPackage().getBazelBuildFile().getLocation().lastSegment());
+        }
+        if (isPackageProject()) {
+            // expected to be in the package
+            return project.getFile(getBazelPackage().getBazelBuildFile().getLocation().lastSegment());
+        }
+
+        throw new CoreException(
+                Status.error(
+                    format("'%s' is neither a target nor a package project. Unable to obtain build file", getName())));
+    }
+
     BazelModel getBazelModel() {
         return requireNonNull(bazelModel, "not properly initialized - missing Bazel element");
     }
