@@ -164,8 +164,10 @@ public class JvmConfigurator {
             bazelWorkspace.getName());
         var vm = findVmForNameOrPath(resolvedJavaHomePath, name);
 
-        // delete if location does not match
-        if ((vm != null) && !vm.getInstallLocation().toPath().equals(resolvedJavaHomePath)) {
+        // delete if location or other attributes don't not match
+        if ((vm instanceof AbstractVMInstall realVm) && (!vm.getInstallLocation().toPath().equals(resolvedJavaHomePath)
+                || !bazelWorkspace.getLocation().toString().equals(realVm.getAttribute(VM_ATTR_WORKSPACE))
+                || !vmType.equals(realVm.getAttribute(VM_ATTR_TYPE)))) {
             LOG.debug(
                 "Disposing existing VMInstall at '{}' ({}, {})",
                 vm.getInstallLocation(),
