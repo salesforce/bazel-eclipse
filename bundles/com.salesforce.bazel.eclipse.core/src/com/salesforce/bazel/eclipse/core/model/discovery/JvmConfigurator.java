@@ -51,6 +51,12 @@ public class JvmConfigurator {
     static final String STANDARD_VM_TYPE = "org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType"; //$NON-NLS-1$
     static final String MAC_OSX_VM_TYPE = "org.eclipse.jdt.internal.launching.macosx.MacOSXType"; //$NON-NLS-1$
 
+    public static final String VM_ATTR_TYPE = "bazel_type";
+    public static final String VM_ATTR_WORKSPACE = "bazel_workspace";
+
+    public static final String VM_TYPE_TOOLCHAIN = "bazel_java_toolchain";
+    public static final String VM_TYPE_RUNTIME = "bazel_java_runtime";
+
     final List<String> supportedSources;
     final List<String> supportedTargets;
     final List<String> supportedReleases;
@@ -148,10 +154,12 @@ public class JvmConfigurator {
         }
     }
 
-    public IVMInstall configureVMInstall(java.nio.file.Path resolvedJavaHomePath, BazelWorkspace bazelWorkspace)
-            throws CoreException {
+    public IVMInstall configureVMInstall(java.nio.file.Path resolvedJavaHomePath, BazelWorkspace bazelWorkspace,
+            String vmType) throws CoreException {
+
         var name = format(
-            "Bazel Java Toolchain (%s, %s)",
+            "%s (%s, %s)",
+            getPrefix(vmType),
             resolvedJavaHomePath.getFileName().toString(),
             bazelWorkspace.getName());
         var vm = findVmForNameOrPath(resolvedJavaHomePath, name);
@@ -181,6 +189,8 @@ public class JvmConfigurator {
             var vmStandin = new VMStandin(installType, vmId);
             vmStandin.setName(name);
             vmStandin.setInstallLocation(resolvedJavaHomePath.toFile());
+            vmStandin.setAttribute(VM_ATTR_WORKSPACE, bazelWorkspace.getLocation().toString());
+            vmStandin.setAttribute(VM_ATTR_TYPE, vmType);
             vm = vmStandin.convertToRealVM();
             JavaRuntime.saveVMConfiguration();
         }
@@ -253,6 +263,19 @@ public class JvmConfigurator {
             null /* no access rules */,
             extraAttributes,
             false /* not exported */);
+    }
+
+    private String getPrefix(String vmType) {
+        return switch (vmType) {
+            case VM_TYPE_TOOLCHAIN: {
+                yield "Bazel Java Toolchain";
+            }
+            case VM_TYPE_RUNTIME: {
+                yield "Bazel Java Runtime";
+            }
+            default:
+                throw new IllegalArgumentException("Unexpected VM Type: " + vmType);
+        };
     }
 
 }

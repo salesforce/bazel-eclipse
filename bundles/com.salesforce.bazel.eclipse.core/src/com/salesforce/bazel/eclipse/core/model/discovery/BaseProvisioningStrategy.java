@@ -8,6 +8,8 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDP
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PROBLEM_MARKER;
 import static com.salesforce.bazel.eclipse.core.model.discovery.EclipsePreferencesHelper.convertToPreferences;
+import static com.salesforce.bazel.eclipse.core.model.discovery.JvmConfigurator.VM_TYPE_RUNTIME;
+import static com.salesforce.bazel.eclipse.core.model.discovery.JvmConfigurator.VM_TYPE_TOOLCHAIN;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -24,6 +26,7 @@ import static org.eclipse.jdt.core.JavaCore.COMPILER_RELEASE;
 import static org.eclipse.jdt.core.JavaCore.DISABLED;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -37,7 +40,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -107,19 +109,25 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     private static final IClasspathAttribute CLASSPATH_ATTRIBUTE_FOR_TEST =
             JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, Boolean.TRUE.toString());
 
-    private static final IPath[] EXCLUDE_JAVA_SOURCE = { IPath.forPosix("**/*.java") };
+    private static final IPath[] EXCLUDE_JAVA_SOURCE = {
+            IPath.forPosix("**/*.java") };
 
     private static Logger LOG = LoggerFactory.getLogger(BaseProvisioningStrategy.class);
 
     private BazelProjectFileSystemMapper fileSystemMapper;
 
     /**
-     * Eclipse VM representing the current
+     * Eclipse VM representing the currecurrent_java_toolchain
      */
     protected IVMInstall javaToolchainVm;
 
     protected String javaToolchainSourceVersion;
     protected String javaToolchainTargetVersion;
+
+    /**
+     * Eclipse VM representing current_java_runtime
+     */
+    protected IVMInstall javaRuntimeVm;
 
     private JvmConfigurator jvmConfigurator;
 
@@ -228,8 +236,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 : getFileSystemMapper().getVirtualResourceFolder(project);
         var outputLocation = useTestsClasspath ? getFileSystemMapper().getOutputFolderForTests(project).getFullPath()
                 : getFileSystemMapper().getOutputFolder(project).getFullPath();
-        var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] { CLASSPATH_ATTRIBUTE_FOR_TEST }
-                : new IClasspathAttribute[] {};
+        var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] {
+                CLASSPATH_ATTRIBUTE_FOR_TEST } : new IClasspathAttribute[] {};
         if (resourceInfo.hasResourceFilesWithoutCommonRoot()) {
             // add the virtual folder for resources
             rawClasspath.add(
@@ -333,8 +341,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 : getFileSystemMapper().getVirtualSourceFolder(project);
         var outputLocation = useTestsClasspath ? getFileSystemMapper().getOutputFolderForTests(project).getFullPath()
                 : getFileSystemMapper().getOutputFolder(project).getFullPath();
-        var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] { CLASSPATH_ATTRIBUTE_FOR_TEST }
-                : new IClasspathAttribute[] {};
+        var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] {
+                CLASSPATH_ATTRIBUTE_FOR_TEST } : new IClasspathAttribute[] {};
         if (javaSourceInfo.hasSourceFilesWithoutCommonRoot()) {
             // add the virtual folder for resources
             rawClasspath.add(
@@ -808,7 +816,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         // set natures separately in order to ensure they are configured properly
         var projectDescription = project.getDescription();
-        projectDescription.setNatureIds(new String[] { JavaCore.NATURE_ID, BAZEL_NATURE_ID });
+        projectDescription.setNatureIds(
+            new String[] {
+                    JavaCore.NATURE_ID,
+                    BAZEL_NATURE_ID });
         project.setDescription(projectDescription, monitor.newChild(1));
 
         // set properties
@@ -892,80 +903,64 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     protected void detectDefaultJavaToolchain(BazelWorkspace workspace) throws CoreException {
         var command = new BazelCQueryWithStarlarkExpressionCommand(
                 workspace.getLocation().toPath(),
-                "@bazel_tools//tools/jdk:current_java_toolchain",
+                "@bazel_tools//tools/jdk:current_java_toolchain + @bazel_tools//tools/jdk:current_java_runtime",
                 """
                         def format(target):
                             toolchain_infos = {k: v for k, v in providers(target).items() if k.endswith('JavaToolchainInfo')}
+                            runtime_infos = {k: v for k, v in providers(target).items() if k.endswith('JavaRuntimeInfo')}
 
-                            if len(toolchain_infos) < 1:
-                                fail("Unable to obtain JavaToolchainInfo. No providers available.")
-                            elif len(toolchain_infos) > 1:
-                                fail("Unable to obtain JavaToolchainInfo. Multiple providers found.")
+                            if len(toolchain_infos) == 1:
+                                java_toolchain_info = toolchain_infos.values()[0]
+                                return 'java_toolchain_info_source_version=' + java_toolchain_info.source_version + '\\njava_toolchain_info_target_version=' + java_toolchain_info.target_version + '\\njava_toolchain_info_java_home=' + java_toolchain_info.java_runtime.java_home
 
-                            java_toolchain_info = toolchain_infos.values()[0]
+                            if len(runtime_infos) == 1:
+                                java_runtime_info = runtime_infos.values()[0]
+                                return 'java_runtime_info_java_home=' + java_runtime_info.java_home
 
-                            return java_toolchain_info.source_version + '::' + java_toolchain_info.target_version + '::' + java_toolchain_info.java_runtime.java_home
+                            fail("Unable to obtain JavaToolchainInfo or JavaRuntimeInfo.")
                             """,
                 false,
                 "Querying for Java toolchain information");
         var result = workspace.getCommandExecutor().runQueryWithoutLock(command).trim();
         try {
-            var tokenizer = new StringTokenizer(result, "::");
-            javaToolchainSourceVersion = tokenizer.nextToken();
-            javaToolchainTargetVersion = tokenizer.nextToken();
-            var javaHome = tokenizer.nextToken();
+            var properties = new Properties();
+            properties.load(new StringReader(result));
+
+            javaToolchainSourceVersion = requireNonNull(
+                properties.getProperty("java_toolchain_info_source_version"),
+                "java_toolchain_info_source_version missing");
+            javaToolchainTargetVersion = requireNonNull(
+                properties.getProperty("java_toolchain_info_target_version"),
+                "java_toolchain_info_target_version missing");
+            var javaHome = requireNonNull(
+                properties.getProperty("java_toolchain_info_java_home"),
+                "java_toolchain_info_java_home missing");
             LOG.debug(
-                "source_level: {}, target_level: {}, java_home: {}",
+                "JavaToolchainInfo source_level: {}, target_level: {}, java_home: {}",
                 javaToolchainSourceVersion,
                 javaToolchainTargetVersion,
                 javaHome);
+            var javaRuntimeHome = requireNonNull(
+                properties.getProperty("java_runtime_info_java_home"),
+                "java_runtime_info_java_home missing");
+            LOG.debug("JavaRuntimeInfo java_home: {}", javaRuntimeHome);
 
             // sanitize versions
-            try {
-                if (Integer.parseInt(javaToolchainSourceVersion) < 9) {
-                    javaToolchainSourceVersion = "1." + javaToolchainSourceVersion;
-                }
-            } catch (NumberFormatException e) {
-                throw new CoreException(
-                        Status.error(
-                            format(
-                                "Unable to detect Java Toolchain information. Error parsing source level (%s)",
-                                javaToolchainSourceVersion),
-                            e));
-            }
-            try {
-                if (Integer.parseInt(javaToolchainTargetVersion) < 9) {
-                    javaToolchainTargetVersion = "1." + javaToolchainTargetVersion;
-                }
-            } catch (NumberFormatException e) {
-                throw new CoreException(
-                        Status.error(
-                            format(
-                                "Unable to detect Java Toolchain information. Error parsing target level (%s)",
-                                javaToolchainTargetVersion),
-                            e));
-            }
+            javaToolchainSourceVersion = sanitizeVersion(javaToolchainSourceVersion, "source level");
+            javaToolchainTargetVersion = sanitizeVersion(javaToolchainTargetVersion, "target level");
 
             // resolve java home
-            var resolvedJavaHomePath = java.nio.file.Path.of(javaHome);
-            if (!resolvedJavaHomePath.isAbsolute()) {
-                if (!javaHome.startsWith("external/")) {
-                    throw new CoreException(
-                            Status.error(
-                                format(
-                                    "Unable to resolved java_home of '%s' into something meaningful. Please report as reproducible bug!",
-                                    javaHome)));
-                }
-                resolvedJavaHomePath = new BazelWorkspaceBlazeInfo(workspace).getOutputBase().resolve(javaHome);
-            }
+            var resolvedJavaHomePath = resolveJavaHome(workspace, javaHome, "Java Toolchain");
+            var resolvedJavaRuntimeHomePath = resolveJavaHome(workspace, javaRuntimeHome, "Java Runtime");
 
-            javaToolchainVm = getJvmConfigurator().configureVMInstall(resolvedJavaHomePath, workspace);
-        } catch (NoSuchElementException e) {
+            javaToolchainVm =
+                    getJvmConfigurator().configureVMInstall(resolvedJavaHomePath, workspace, VM_TYPE_TOOLCHAIN);
+            javaRuntimeVm =
+                    getJvmConfigurator().configureVMInstall(resolvedJavaRuntimeHomePath, workspace, VM_TYPE_RUNTIME);
+        } catch (NoSuchElementException | IOException e) {
             throw new CoreException(
                     Status.error(
-                        format(
-                            "Unable to detect Java Toolchain information. Error parsing output of bazel cquery (%s)",
-                            result),
+                        format("Unable to detect Java information. Error parsing output of bazel cquery (%s)", result),
                         e));
         }
     }
@@ -1465,6 +1460,23 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
     }
 
+    private java.nio.file.Path resolveJavaHome(BazelWorkspace workspace, String javaHome, String description)
+            throws CoreException {
+        var resolvedJavaHomePath = java.nio.file.Path.of(javaHome);
+        if (!resolvedJavaHomePath.isAbsolute()) {
+            if (!javaHome.startsWith("external/")) {
+                throw new CoreException(
+                        Status.error(
+                            format(
+                                "Unable to resolved java_home of %s (%s) into something meaningful. Please report as reproducible bug!",
+                                description,
+                                javaHome)));
+            }
+            resolvedJavaHomePath = new BazelWorkspaceBlazeInfo(workspace).getOutputBase().resolve(javaHome);
+        }
+        return resolvedJavaHomePath;
+    }
+
     /**
      * Attempts to resolve the given label to a target within the same package.
      *
@@ -1511,6 +1523,23 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         return resolvedTarget;
+    }
+
+    private String sanitizeVersion(String version, String description) throws CoreException {
+        try {
+            if (Integer.parseInt(version) < 9) {
+                return "1." + version;
+            }
+            return version;
+        } catch (NumberFormatException e) {
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Unable to detect Java Toolchain information. Error parsing %s (%s)",
+                            description,
+                            version),
+                        e));
+        }
     }
 
     private void setLineSeparator(IEclipsePreferences projectPreferences, String value) throws CoreException {
