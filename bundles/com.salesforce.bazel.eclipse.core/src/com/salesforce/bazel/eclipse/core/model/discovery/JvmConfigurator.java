@@ -57,8 +57,21 @@ public class JvmConfigurator {
     public static final String VM_TYPE_TOOLCHAIN = "bazel_java_toolchain";
     public static final String VM_TYPE_RUNTIME = "bazel_java_runtime";
 
+    public static IVMInstallType getVmInstallType() {
+        var installType = JavaRuntime.getVMInstallType(STANDARD_VM_TYPE);
+        if ((installType == null) || (installType.getVMInstalls().length == 0)) {
+            // https://github.com/eclipse/eclipse.jdt.ls/issues/1646
+            var macInstallType = JavaRuntime.getVMInstallType(MAC_OSX_VM_TYPE);
+            if (macInstallType != null) {
+                installType = macInstallType;
+            }
+        }
+        return installType;
+    }
+
     final List<String> supportedSources;
     final List<String> supportedTargets;
+
     final List<String> supportedReleases;
 
     private final LinkedHashMap<String, String> environmentIdByComplianceVersion = new LinkedHashMap<>();
@@ -179,14 +192,7 @@ public class JvmConfigurator {
 
         // create new if missing
         if (vm == null) {
-            var installType = JavaRuntime.getVMInstallType(STANDARD_VM_TYPE);
-            if ((installType == null) || (installType.getVMInstalls().length == 0)) {
-                // https://github.com/eclipse/eclipse.jdt.ls/issues/1646
-                var macInstallType = JavaRuntime.getVMInstallType(MAC_OSX_VM_TYPE);
-                if (macInstallType != null) {
-                    installType = macInstallType;
-                }
-            }
+            var installType = getVmInstallType();
             var vmId = generateUnusedVmId(installType);
             var vmStandin = new VMStandin(installType, vmId);
             vmStandin.setName(name);

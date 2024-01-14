@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1704881393">
+<target name="bazel-eclipse-feature-target-platform-for-development" sequenceNumber="1705191851">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.30.0.v20231113-1355"/>
@@ -211,6 +211,18 @@
     		<groupId>jakarta.servlet</groupId>
     		<artifactId>jakarta.servlet-api</artifactId>
     		<version>5.0.0</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>org.apache.commons</groupId>
+    		<artifactId>commons-configuration2</artifactId>
+    		<version>2.9.0</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>org.apache.commons</groupId>
+    		<artifactId>commons-text</artifactId>
+    		<version>1.11.0</version>
     		<type>jar</type>
     	</dependency>
     </dependencies>
