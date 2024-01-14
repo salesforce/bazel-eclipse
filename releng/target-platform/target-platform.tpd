@@ -26,7 +26,7 @@ location "https://download.eclipse.org/eclipse/updates/4.30/" {
 	org.eclipse.test
 	org.eclipse.jface.text.tests
 	org.eclipse.text.tests
-
+	org.eclipse.test.feature.group
 
 	// for SLF4J 2.0 Aries Spy Fly is needed (and all the ASM stuff)
 	org.apache.aries.spifly.dynamic.bundle
