@@ -21,11 +21,13 @@ location "https://download.eclipse.org/eclipse/updates/4.30/" {
 	org.eclipse.rcp.feature.group
 	org.eclipse.sdk.feature.group
 	org.eclipse.sdk.ide
+
 	// test
 	org.eclipse.test
 	org.eclipse.jface.text.tests
 	org.eclipse.text.tests
-	org.eclipse.test.feature.group
+
+
 	// for SLF4J 2.0 Aries Spy Fly is needed (and all the ASM stuff)
 	org.apache.aries.spifly.dynamic.bundle
 	org.objectweb.asm
@@ -52,6 +54,8 @@ location "https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2023
 	org.hamcrest
 	org.mockito.junit-jupiter
 	org.mockito.mockito-core
+	org.jdom
+	org.jdom2
 }
 
 location "https://download.eclipse.org/releases/2023-12/" {
