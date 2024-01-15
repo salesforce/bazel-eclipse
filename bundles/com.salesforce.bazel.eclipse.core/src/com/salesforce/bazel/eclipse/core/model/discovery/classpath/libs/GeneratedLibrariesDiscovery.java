@@ -92,6 +92,7 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
         // group by generating targets
         Map<String, List<String>> jarsByGeneratingRuleLabel = generatedJarTargets.stream()
                 .map(Target::getGeneratedFile)
+                .filter(f -> !f.getName().endsWith("_deploy.jar")) // ignore deploy jars (they just duplicate class files)
                 .collect(groupingBy(GeneratedFile::getGeneratingRule, mapping(GeneratedFile::getName, toList())));
 
         // ensure all packages are open
