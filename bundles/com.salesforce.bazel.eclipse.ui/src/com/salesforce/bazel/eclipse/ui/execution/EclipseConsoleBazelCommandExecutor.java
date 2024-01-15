@@ -26,13 +26,13 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
     }
 
     @Override
-    protected void injectAdditionalOptions(List<String> commandLine) {
-        super.injectAdditionalOptions(commandLine);
+    protected void injectAdditionalOptions(List<String> commandLine, int injectPositionForNoneStartupOptions) {
+        super.injectAdditionalOptions(commandLine, injectPositionForNoneStartupOptions);
 
         // tweak for Eclipse Console
-        commandLine.add(0, "--color=yes");
-        commandLine.add(0, "--curses=no");
-        commandLine.add(0, "--progress_in_terminal_title=no");
+        commandLine.add(injectPositionForNoneStartupOptions, "--color=yes");
+        commandLine.add(injectPositionForNoneStartupOptions, "--curses=no");
+        commandLine.add(injectPositionForNoneStartupOptions, "--progress_in_terminal_title=no");
     }
 
     @Override

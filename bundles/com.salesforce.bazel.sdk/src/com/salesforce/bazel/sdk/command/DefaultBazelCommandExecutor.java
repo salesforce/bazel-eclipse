@@ -263,10 +263,12 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
      *
      * @param commandLine
      *            the command line to manipulate (never <code>null</code>)
+     * @param injectPositionForNoneStartupOptions
+     *            the position to inject options which must come afte the Bazel command (eg., build/query/run/etc.)
      */
-    protected void injectAdditionalOptions(List<String> commandLine) {
+    protected void injectAdditionalOptions(List<String> commandLine, int injectPositionForNoneStartupOptions) {
         // add --tool_tag
-        commandLine.add(0, getToolTagArgument());
+        commandLine.add(injectPositionForNoneStartupOptions, getToolTagArgument());
     }
 
     public boolean isWrapExecutionIntoShell() {
@@ -327,7 +329,11 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
 
         // inject options required by executor implementation
         if (command.supportsInjectionOfAdditionalBazelOptions()) {
-            injectAdditionalOptions(fullCommandLine);
+            // options such as --tool_tag need to come after the Bazel command (build/run/query/etc.)
+            // we rely on the default implementation for BazelCommand#prepareCommandLine that the command is first item after startup arguments
+            var injectPosition = command.getStartupArgs().size() + 1;
+
+            injectAdditionalOptions(fullCommandLine, injectPosition);
         }
 
         // the binary must be the first argument
