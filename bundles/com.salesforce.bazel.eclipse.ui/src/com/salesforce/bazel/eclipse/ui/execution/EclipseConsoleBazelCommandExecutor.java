@@ -30,9 +30,9 @@ public class EclipseConsoleBazelCommandExecutor extends EclipseHeadlessBazelComm
         super.injectAdditionalOptions(commandLine);
 
         // tweak for Eclipse Console
-        commandLine.add("--color=yes");
-        commandLine.add("--curses=no");
-        commandLine.add("--progress_in_terminal_title=no");
+        commandLine.add(0, "--color=yes");
+        commandLine.add(0, "--curses=no");
+        commandLine.add(0, "--progress_in_terminal_title=no");
     }
 
     @Override

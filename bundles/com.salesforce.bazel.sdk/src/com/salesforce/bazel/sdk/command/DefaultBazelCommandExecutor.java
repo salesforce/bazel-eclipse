@@ -266,7 +266,7 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
      */
     protected void injectAdditionalOptions(List<String> commandLine) {
         // add --tool_tag
-        commandLine.add(getToolTagArgument());
+        commandLine.add(0, getToolTagArgument());
     }
 
     public boolean isWrapExecutionIntoShell() {
@@ -318,13 +318,14 @@ public class DefaultBazelCommandExecutor implements BazelCommandExecutor {
      *             in case of IO issues creating temporary files or other resources required for command execution
      */
     protected PreparedCommandLine prepareCommandLine(BazelCommand<?> command) throws IOException {
+        // build command line
         var bazelBinary = command.ensureBazelBinary();
         var commandLine = command.prepareCommandLine(bazelBinary.bazelVersion());
 
         // create a copy (for manipulation)
         var fullCommandLine = new ArrayList<>(commandLine);
 
-        // inject more options required by executor implementation
+        // inject options required by executor implementation
         if (command.supportsInjectionOfAdditionalBazelOptions()) {
             injectAdditionalOptions(fullCommandLine);
         }
