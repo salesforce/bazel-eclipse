@@ -1,16 +1,15 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toCollection;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 
+import com.salesforce.bazel.eclipse.core.extensions.EclipseExtensionRegistryLookup;
 import com.salesforce.bazel.eclipse.core.extensions.PriorityAttributeComparator;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 
@@ -18,16 +17,20 @@ import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
  * A simple lookup strategy for {@link TargetDiscoveryStrategy} and {@link TargetProvisioningStrategy} implementations
  * using the Eclipse extension registry.
  */
-public final class TargetDiscoveryAndProvisioningExtensionLookup {
+public final class TargetDiscoveryAndProvisioningExtensionLookup extends EclipseExtensionRegistryLookup {
 
     private static final String EXTENSION_POINT_TARGET_DISCOVERY_STRATEGY =
             "com.salesforce.bazel.eclipse.core.model.target.discovery";
+
     private static final String ELLEMENT_TARGET_DISCOVERY_STRATEGY = "targetDiscoveryStrategy";
     private static final String ELLEMENT_TARGET_PROVISIONING_STRATEGY = "targetProvisioningStrategy";
-    private static final String ELLEMENT_MACRO_CALL_ANALYZER = "macroCallAnalyzer";
-    private static final String ATTR_CLASS = "class";
+    private static final String ELEMENT_MACRO_CALL_ANALYZER = "macroCallAnalyzer";
     private static final String ATTR_NAME = "name";
     private static final String ATTR_FUNCTION_NAME = "functionName";
+
+    public TargetDiscoveryAndProvisioningExtensionLookup() {
+        super(EXTENSION_POINT_TARGET_DISCOVERY_STRATEGY);
+    }
 
     /**
      * Searches the Eclipse extension registry for all {@link MacroCallAnalyzer} registered for a specific function
@@ -40,7 +43,10 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup {
      *             if there was an error creating analyzers
      */
     public List<MacroCallAnalyzer> createMacroCallAnalyzers(String functionName) throws CoreException {
-        var elements = findExtensionsWithAttributeValue(ELLEMENT_MACRO_CALL_ANALYZER, ATTR_FUNCTION_NAME, functionName);
+        var elements = findExtensionsByElementNameAndAttributeValue(
+            ELEMENT_MACRO_CALL_ANALYZER,
+            ATTR_FUNCTION_NAME,
+            functionName);
 
         // sort based on priority
         elements.sort(new PriorityAttributeComparator());
@@ -87,7 +93,10 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup {
      *             if no strategy was found
      */
     public TargetDiscoveryStrategy createTargetDiscoveryStrategy(String name) throws CoreException {
-        return (TargetDiscoveryStrategy) findAndCreateStrategy(name, ELLEMENT_TARGET_DISCOVERY_STRATEGY);
+        return (TargetDiscoveryStrategy) findAndCreateSingleObjectByElementNameAndAttributeValue(
+            ELLEMENT_TARGET_DISCOVERY_STRATEGY,
+            ATTR_NAME,
+            name);
     }
 
     /**
@@ -120,35 +129,10 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup {
      *             if no strategy was found
      */
     public TargetProvisioningStrategy createTargetProvisioningStrategy(String name) throws CoreException {
-        return (TargetProvisioningStrategy) findAndCreateStrategy(name, ELLEMENT_TARGET_PROVISIONING_STRATEGY);
-    }
-
-    Object findAndCreateStrategy(String strategyName, String elementName) throws CoreException {
-        var elements = findExtensionsWithAttributeValue(elementName, ATTR_NAME, strategyName);
-        if (elements.isEmpty()) {
-            throw new CoreException(
-                    Status.error(
-                        format("No extensions available providing a '%s' with name '%s'!", elementName, strategyName)));
-        }
-
-        // use the first one in the list
-        var element = elements.iterator().next();
-        var strategy = element.createExecutableExtension(ATTR_CLASS);
-        if (strategy == null) {
-            throw new CoreException(
-                    Status.error(format("No object returned from extension factory for name '%s'", strategyName)));
-        }
-        return strategy;
-    }
-
-    private ArrayList<IConfigurationElement> findExtensionsWithAttributeValue(String elementName, String attributeName,
-            String attributeValue) {
-        var elements =
-                Platform.getExtensionRegistry().getConfigurationElementsFor(EXTENSION_POINT_TARGET_DISCOVERY_STRATEGY);
-        return List.of(elements)
-                .stream()
-                .filter(p -> elementName.equals(p.getName()) && attributeValue.equals(p.getAttribute(attributeName)))
-                .collect(toCollection(ArrayList::new)); // by contract - return a modifiable ArrayList which may be sorted later
+        return (TargetProvisioningStrategy) findAndCreateSingleObjectByElementNameAndAttributeValue(
+            ELLEMENT_TARGET_PROVISIONING_STRATEGY,
+            ATTR_NAME,
+            name);
     }
 
 }

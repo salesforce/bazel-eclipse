@@ -4,6 +4,7 @@
 >
    <extension-point id="com.salesforce.bazel.eclipse.core.executor" name="Bazel Command Executor" schema="schema/com.salesforce.bazel.eclipse.core.executor.exsd"/>
    <extension-point id="com.salesforce.bazel.eclipse.core.model.target.discovery" name="Bazel Target Discovery and Provisioning Strategies Extensions" schema="schema/com.salesforce.bazel.eclipse.core.model.target.discovery.exsd"/>
+   <extension-point id="com.salesforce.bazel.eclipse.core.model.sync.participant" name="Bazel Synchronization Participant" schema="schema/com.salesforce.bazel.eclipse.core.model.sync.participant.exsd"/>
 
    <extension
          point="org.eclipse.core.runtime.preferences">

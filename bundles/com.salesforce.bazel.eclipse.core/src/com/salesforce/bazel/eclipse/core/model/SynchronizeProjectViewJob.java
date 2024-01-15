@@ -189,7 +189,10 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
         // set natures separately in order to ensure they are configured properly
         projectDescription = project.getDescription();
-        projectDescription.setNatureIds(new String[] { JavaCore.NATURE_ID, BAZEL_NATURE_ID });
+        projectDescription.setNatureIds(
+            new String[] {
+                    JavaCore.NATURE_ID,
+                    BAZEL_NATURE_ID });
         project.setDescription(projectDescription, monitor.split(1));
 
         // set properties
@@ -343,6 +346,10 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         return workspace.getModelManager().getBazelProject(project);
     }
 
+    List<SynchronizationParticipant> getSynchronizationParticipants() throws CoreException {
+        return new SynchronizationParticipantExtensionLookup().createSynchronizationParticipants();
+    }
+
     TargetDiscoveryStrategy getTargetDiscoveryStrategy() throws CoreException {
         return new TargetDiscoveryAndProvisioningExtensionLookup().createTargetDiscoveryStrategy(projectView);
     }
@@ -432,7 +439,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
                     @Override
                     public String[] getScopes() {
-                        return new String[] { InstanceScope.SCOPE, ConfigurationScope.SCOPE };
+                        return new String[] {
+                                InstanceScope.SCOPE,
+                                ConfigurationScope.SCOPE };
                     }
                 };
 
@@ -640,6 +649,15 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
             // after provisioning and cleanup we go over the projects a second time to initialize the classpaths
             initializeClasspaths(targetProjects, workspace, progress.split(1, SUPPRESS_NONE));
+
+            // last but not least we call any sync participants
+            var synchronizationParticipants = getSynchronizationParticipants();
+            progress.setWorkRemaining(synchronizationParticipants.size());
+            for (SynchronizationParticipant synchronizationParticipant : synchronizationParticipants) {
+                synchronizationParticipant
+                        .afterSynchronizationCompleted(workspace, targetProjects, progress.split(1, SUPPRESS_NONE));
+            }
+
             return Status.OK_STATUS;
         } catch (OperationCanceledException e) {
             LOG.warn("Workspace synchronization cancelled: {}", workspace.getLocation(), e);
