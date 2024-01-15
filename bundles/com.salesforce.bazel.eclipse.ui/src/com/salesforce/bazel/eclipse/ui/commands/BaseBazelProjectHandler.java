@@ -1,5 +1,7 @@
 package com.salesforce.bazel.eclipse.ui.commands;
 
+import java.util.List;
+
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.expressions.IEvaluationContext;
@@ -22,7 +24,9 @@ public abstract class BaseBazelProjectHandler extends BaseJobBasedHandler {
                 BazelProjectUtilitis.findSelectedProjects(HandlerUtil.getActiveWorkbenchWindowChecked(event));
 
         if (projects.size() != 1) {
-            MessageDialog.openError(HandlerUtil.getActiveShell(event), "Cannot Execute",
+            MessageDialog.openError(
+                HandlerUtil.getActiveShell(event),
+                "Cannot Execute",
                 "Please select only one Bazel projects!");
             throw new ExecutionException("No Bazel project selected");
         }
@@ -44,10 +48,14 @@ public abstract class BaseBazelProjectHandler extends BaseJobBasedHandler {
             final var object = context.getVariable(ISources.ACTIVE_WORKBENCH_WINDOW_NAME);
             if (object instanceof IWorkbenchWindow) {
                 final var selectedProjects = BazelProjectUtilitis.findSelectedProjects((IWorkbenchWindow) object);
-                enabled = selectedProjects.size() == 1;
+                enabled = shouldBeEnabled(selectedProjects);
             }
         }
         setBaseEnabled(enabled);
+    }
+
+    protected boolean shouldBeEnabled(final List<IProject> selectedProjects) {
+        return selectedProjects.size() == 1;
     }
 
 }
