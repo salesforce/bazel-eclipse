@@ -42,9 +42,6 @@
          <run
                class="com.salesforce.bazel.eclipse.core.builder.BazelProjectBuilder">
          </run>
-         <dynamicReference
-               class="com.salesforce.bazel.eclipse.core.resources.BazelProjectReferencesProvider">
-         </dynamicReference>
       </builder>
    </extension>
 

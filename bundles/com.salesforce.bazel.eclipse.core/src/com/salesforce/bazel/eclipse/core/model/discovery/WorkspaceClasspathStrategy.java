@@ -4,12 +4,14 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDPATH_PROBLEM_MARKER;
+import static com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry.newProjectEntry;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -63,12 +65,23 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
             // clean-up any markers created previously on the workspace project
             workspaceProject.getProject().deleteMarkers(WORKSPACE_BUILDPATH_PROBLEM_MARKER, false, 0);
 
-            if (!bazelWorkspace.getBazelProjectView().discoverAllExternalAndWorkspaceJars()) {
-                // discovery is disabled
-                return Collections.emptyList();
+            List<ClasspathEntry> result = new ArrayList<>();
+
+            // the workspace project depends on all its package & target projects
+            SortedSet<String> projectLabels = new TreeSet<>();
+            for (BazelProject bazelProject : workspaceProject.getBazelWorkspace().getBazelProjects()) {
+                if (!bazelProject.isWorkspaceProject()) {
+                    result.add(newProjectEntry(bazelProject.getProject()));
+
+                    // collect the owner labels so we can avoid duplicate classes later
+                    projectLabels.add(bazelProject.getOwnerLabel().toString());
+                }
             }
 
-            List<ClasspathEntry> result = new ArrayList<>();
+            if (!bazelWorkspace.getBazelProjectView().discoverAllExternalAndWorkspaceJars()) {
+                // abort early when discovery is disabled
+                return result;
+            }
 
             var externalLibrariesDiscovery = new ExternalLibrariesDiscovery(bazelWorkspace);
             result.addAll(externalLibrariesDiscovery.query(monitor.split(1, SubMonitor.SUPPRESS_NONE)));
@@ -81,7 +94,15 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
             }
 
             var generatedLibrariesDiscovery = new GeneratedLibrariesDiscovery(bazelWorkspace);
-            result.addAll(generatedLibrariesDiscovery.query(monitor.split(1, SubMonitor.SUPPRESS_NONE)));
+            generatedLibrariesDiscovery.query(monitor.split(1, SubMonitor.SUPPRESS_NONE)).stream().filter(e -> {
+                var origin = e.getBazelTargetOrigin();
+                if (origin != null) {
+                    // don't include any libraries who's target is already represented in a Bazel project
+                    return !projectLabels.contains(origin.toString())
+                            && !projectLabels.contains("//" + origin.blazePackage().relativePath());
+                }
+                return true;
+            }).forEach(result::add);
             if (generatedLibrariesDiscovery.isFoundMissingJars()) {
                 createMarker(
                     workspaceProject.getProject(),
