@@ -82,7 +82,7 @@ public class SourceJarFinder {
             if ((prefix.length() > 0) && jarName.startsWith(prefix)) {
                 jarName = jarName.substring(prefix.length());
             }
-            // try removing known suffixes
+            // create candidate by adding known suffixes
             for (String suffix : KNOWN_SUFFIXES) {
                 var srcJar = jarName.replace(".jar", suffix);
                 potentialJarNames.add(srcJar);
