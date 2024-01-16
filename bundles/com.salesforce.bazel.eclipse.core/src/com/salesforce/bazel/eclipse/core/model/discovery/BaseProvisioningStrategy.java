@@ -539,6 +539,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      */
     protected void configureRawClasspath(BazelProject project, JavaProjectInfo javaInfo, IProgressMonitor progress)
             throws CoreException {
+        var monitor = SubMonitor.convert(progress, "Setting classpath", 60);
+
         List<IClasspathEntry> rawClasspath = new ArrayList<>();
 
         addSourceFolders(project, rawClasspath, javaInfo.getSourceInfo(), false /* useTestsClasspath */);
@@ -564,7 +566,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         if (!rawClasspath.stream().anyMatch(e -> e.getEntryKind() == IClasspathEntry.CPE_SOURCE)) {
             // add the virtual folder for resources
             var virtualSourceFolder = getFileSystemMapper().getVirtualSourceFolder(project);
-            createFolderAndParents(virtualSourceFolder, progress);
+            createFolderAndParents(virtualSourceFolder, monitor.slice(20));
             rawClasspath.add(
                 JavaCore.newSourceEntry(
                     virtualSourceFolder.getFullPath(),
@@ -575,7 +577,12 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         try {
-            javaProject.setRawClasspath(rawClasspath.toArray(new IClasspathEntry[rawClasspath.size()]), true, progress);
+            javaProject.setRawClasspath(
+                rawClasspath.toArray(new IClasspathEntry[rawClasspath.size()]),
+                true,
+                monitor.slice(20));
+            javaProject
+                    .setOutputLocation(getFileSystemMapper().getOutputFolder(project).getFullPath(), monitor.slice(20));
         } catch (JavaModelException e) {
             // enrich error message with project name
             throw new CoreException(
