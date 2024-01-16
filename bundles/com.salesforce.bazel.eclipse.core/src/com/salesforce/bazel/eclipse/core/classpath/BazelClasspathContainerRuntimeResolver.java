@@ -68,6 +68,10 @@ public class BazelClasspathContainerRuntimeResolver
         var jarName = extractRealJarName(jarPath.lastSegment());
         if (!jarName.equals(jarPath.lastSegment())) {
             var realJarPath = jarPath.removeLastSegments(1).append(jarName);
+            LOG.error(
+                "Found ijar on classpath. This is no longer expected. Consider running a sync to update the Bazel classpath. ({} -> {})",
+                jarPath.lastSegment(),
+                realJarPath);
 
             // ensure it exists
             if (!isRegularFile(jarPath.toPath())) {
@@ -77,7 +81,7 @@ public class BazelClasspathContainerRuntimeResolver
 
             // replace entry with new jar
             LOG.debug("Replacing ijar '{}' on classpath with real jar '{}", jarPath.lastSegment(), realJarPath);
-            e = JavaCore.newProjectEntry(realJarPath);
+            e = JavaCore.newLibraryEntry(realJarPath, e.getSourceAttachmentPath(), e.getSourceAttachmentRootPath());
         }
 
         resolvedClasspath.add(new RuntimeClasspathEntry(e));
