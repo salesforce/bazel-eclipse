@@ -654,8 +654,15 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             var synchronizationParticipants = getSynchronizationParticipants();
             progress.setWorkRemaining(synchronizationParticipants.size());
             for (SynchronizationParticipant synchronizationParticipant : synchronizationParticipants) {
-                synchronizationParticipant
-                        .afterSynchronizationCompleted(workspace, targetProjects, progress.split(1, SUPPRESS_NONE));
+                try {
+                    synchronizationParticipant
+                            .afterSynchronizationCompleted(workspace, targetProjects, progress.split(1, SUPPRESS_NONE));
+                } catch (CoreException | RuntimeException | LinkageError | AssertionError e) {
+                    LOG.error(
+                        "Synchronization participant '{}' failed to execute. Please report this to the extension authors.",
+                        synchronizationParticipant.getClass().toString(),
+                        e);
+                }
             }
 
             return Status.OK_STATUS;
