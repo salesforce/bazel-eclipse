@@ -1,5 +1,6 @@
 package com.salesforce.bazel.eclipse.core.model;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.List;
@@ -23,9 +24,18 @@ public class BazelRuleAttributes {
     BazelRuleAttributes(Rule rule) {
         this.rule = rule;
         // this might fail if there are multiple attributes of the same name
-        // TODO: confirm with Bazel what the behavior/expectation should be
-        attributesByAttributeName =
-                rule.getAttributeList().stream().collect(toMap(Attribute::getName, Function.identity()));
+        // TODO: confirm with Bazel what the behavior/expectation should be (see https://github.com/bazelbuild/bazel/issues/20918)
+        try {
+            attributesByAttributeName =
+                    rule.getAttributeList().stream().collect(toMap(Attribute::getName, Function.identity()));
+        } catch (IllegalStateException e) {
+            throw new IllegalStateException(
+                    format(
+                        "Error loading attributes of rule '%s(%s)'. There were duplicate attributes. Is this allowed?",
+                        rule.getRuleClass(),
+                        rule.getName()),
+                    e);
+        }
     }
 
     public Boolean getBoolean(String name) {
