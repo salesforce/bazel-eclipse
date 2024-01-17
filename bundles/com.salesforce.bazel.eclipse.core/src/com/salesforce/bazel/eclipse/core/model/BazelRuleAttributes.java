@@ -26,8 +26,9 @@ public class BazelRuleAttributes {
         // this might fail if there are multiple attributes of the same name
         // TODO: confirm with Bazel what the behavior/expectation should be (see https://github.com/bazelbuild/bazel/issues/20918)
         try {
-            attributesByAttributeName =
-                    rule.getAttributeList().stream().collect(toMap(Attribute::getName, Function.identity()));
+            attributesByAttributeName = rule.getAttributeList()
+                    .stream()
+                    .collect(toMap(Attribute::getName, Function.identity(), (first, second) -> first));
         } catch (IllegalStateException e) {
             throw new IllegalStateException(
                     format(
