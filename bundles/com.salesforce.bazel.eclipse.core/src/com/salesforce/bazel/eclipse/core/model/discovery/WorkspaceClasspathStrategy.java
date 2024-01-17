@@ -68,6 +68,9 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
             List<ClasspathEntry> result = new ArrayList<>();
 
             // the workspace project depends on all its package & target projects
+            // note, this dependency is also important to help discover incomplete project views
+            // for example, when discover_all_external_and_workspace_jars is enabled, refactorings will trigger
+            // a warning dialog if they impact binary references
             SortedSet<String> projectLabels = new TreeSet<>();
             for (BazelProject bazelProject : workspaceProject.getBazelWorkspace().getBazelProjects()) {
                 if (!bazelProject.isWorkspaceProject()) {

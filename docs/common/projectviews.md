@@ -181,8 +181,11 @@ The folder will be ignored.
 
 A boolean flag to discover external and workspace jars for making them available on the workspace project classpath (default is `false`).
 
-When this flag is set to true, an attempt will be made to discover all jars in the workspace and from external repositories to make them available to the IDE.
+When this flag is set to `true`, an attempt will be made to discover all jars in the workspace and from external repositories to make them available to the IDE.
 This will increase the sync time but allows to use discover types for everything in the workspace.
+As an additional benefit, refactorings in the IDE might become less risky.
+It allows IDE to discover and find binary references, i.e. references by/from code not in the current project view.
+This will trigger a pop-up or some other warnings so that you will have a chance discovering early that a refactoring will break the Bazel workspace.
 
 Note, it's recommended to add the `--output_groups=+_source_jars` when building to force Bazel to always build sources.
 This can be done with the following in your `.bazelrc` file:
