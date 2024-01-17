@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toMap;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Attribute;
@@ -18,7 +19,12 @@ import com.google.devtools.build.lib.query2.proto.proto2api.Build.Rule;
  */
 public class BazelRuleAttributes {
 
+    /**
+     * Workaround for https://github.com/bazelbuild/bazel/issues/20918
+     */
+    private static BinaryOperator<Attribute> firstOneWinsBazelDuplicateWorkaround = (first, second) -> first;
     private final Rule rule;
+
     private final Map<String, Attribute> attributesByAttributeName;
 
     BazelRuleAttributes(Rule rule) {
@@ -28,7 +34,7 @@ public class BazelRuleAttributes {
         try {
             attributesByAttributeName = rule.getAttributeList()
                     .stream()
-                    .collect(toMap(Attribute::getName, Function.identity(), (first, second) -> first));
+                    .collect(toMap(Attribute::getName, Function.identity(), firstOneWinsBazelDuplicateWorkaround));
         } catch (IllegalStateException e) {
             throw new IllegalStateException(
                     format(
