@@ -59,6 +59,13 @@
                </appinfo>
             </annotation>
          </attribute>
+         <attribute name="priority" type="string" use="default" value="10">
+            <annotation>
+               <documentation>
+                  (integer) priority of the participant (the higher the more important)
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

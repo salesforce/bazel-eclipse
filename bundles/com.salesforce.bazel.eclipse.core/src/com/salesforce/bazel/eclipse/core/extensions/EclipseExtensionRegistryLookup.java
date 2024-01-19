@@ -53,6 +53,9 @@ public abstract class EclipseExtensionRegistryLookup {
             return Collections.emptyList();
         }
 
+        // sort by priority
+        sortByPriorityAttribute(elements);
+
         List<Object> result = new ArrayList<>(elements.size());
         for (IConfigurationElement element : elements) {
             var object = element.createExecutableExtension(ATTR_CLASS);
