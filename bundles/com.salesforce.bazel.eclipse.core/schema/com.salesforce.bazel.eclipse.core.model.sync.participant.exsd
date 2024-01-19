@@ -17,9 +17,9 @@
          </appinfo>
       </annotation>
       <complexType>
-         <sequence>
+         <choice minOccurs="1" maxOccurs="unbounded">
             <element ref="synchronizationParticipant"/>
-         </sequence>
+         </choice>
          <attribute name="point" type="string" use="required">
             <annotation>
                <documentation>
