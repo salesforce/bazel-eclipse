@@ -80,3 +80,8 @@ location "https://eclipseguru.github.io/p4eclipse/" {
     com.perforce.team.patch.feature.feature.group lazy
     com.perforce.team.search.feature.feature.group lazy
 }
+
+// cream theme
+location "https://fappel.github.io/xiliary/" {
+	com.codeaffine.eclipse.ui.swt.theme.feature.feature.group lazy
+}
