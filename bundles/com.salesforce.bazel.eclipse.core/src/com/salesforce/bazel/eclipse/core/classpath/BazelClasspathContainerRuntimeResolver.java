@@ -68,10 +68,17 @@ public class BazelClasspathContainerRuntimeResolver
         var jarName = extractRealJarName(jarPath.lastSegment());
         if (!jarName.equals(jarPath.lastSegment())) {
             var realJarPath = jarPath.removeLastSegments(1).append(jarName);
-            LOG.error(
-                "Found ijar on classpath. This is no longer expected. Consider running a sync to update the Bazel classpath. ({} -> {})",
-                jarPath.lastSegment(),
-                realJarPath);
+            if ("Runner_deploy-ijar.jar".equals(jarPath.lastSegment())) {
+                LOG.error(
+                    "Found Bazel's test runner dependencies on classpath. This is not recommended. Consider setting '--explicit_java_test_deps' in .bazelrc. ({} -> {})",
+                    jarPath.lastSegment(),
+                    realJarPath);
+            } else {
+                LOG.error(
+                    "Found ijar on classpath. This is no longer expected. Consider running a sync to update the Bazel classpath. ({} -> {})",
+                    jarPath.lastSegment(),
+                    realJarPath);
+            }
 
             // ensure it exists
             if (!isRegularFile(jarPath.toPath())) {
