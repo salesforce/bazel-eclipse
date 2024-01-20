@@ -88,6 +88,11 @@ public abstract sealed class BazelElementInfoCache permits CaffeineBasedBazelEle
     public abstract <I extends BazelElementInfo> I getIfPresent(BazelElement<I, ?> bazelElement);
 
     /**
+     * @return a string summarizing the cache statistics for logging purposes
+     */
+    public abstract CharSequence getStatsSummary();
+
+    /**
      * Discards an entry for the specified element from the cache.
      * <p>
      * The behavior of this operation is undefined for an entry that is being loaded (or reloaded) and is otherwise not

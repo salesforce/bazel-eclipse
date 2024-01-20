@@ -132,6 +132,11 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
     }
 
     @Override
+    public CharSequence getStatsSummary() {
+        return cache.stats().toString();
+    }
+
+    @Override
     public void invalidate(BazelElement<?, ?> bazelElement) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Bazel model cache stats: {}", cache.stats());
@@ -143,7 +148,7 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
     @Override
     public void invalidateAll() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Bazel model cache stats: {}", cache.stats());
+            LOG.debug("Bazel model cache statistics: {}", cache.stats());
             LOG.debug("Invalidating entire cache.");
         }
         cache.invalidateAll();
