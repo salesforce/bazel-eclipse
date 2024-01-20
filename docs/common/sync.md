@@ -46,6 +46,24 @@ Using Eclipse ![BEF Logo](../logos/bef_logo_small.png) see [Sync and Build in BE
 Using the Bazel Java Language Server ![BJLS Logo](../logos/bjls_logo_small.jpeg) please check the documentation of the IDE/editor plug-in.
 
 
+### Memory & Performance Tuning
+
+The Sync process processes a lot of Bazel metadata.
+The data is read into memory and stored in an internal cache.
+The cache size and TTL can be configured to allow tuning of the Sync process.
+
+The general recommendation is to design the the cache size and TTL so that the entire Sync process produces the most cache hits.
+A cache miss means that a Bazel query command needs to be executed.
+Thus, if you see a lot of query commands for loading/obtaining Bazel package/target information this may be an indication of a cache miss.
+
+The following system properties can be used to tune the cache:
+* `eclipse.bazel.model.cache.maximumSize` - the maximum cache size (roughly the sum of number of packages plus targets plus build files to expect during sync);
+  default is [100,000,000 entries](https://github.com/search?q=repo%3Asalesforce%2Fbazel-eclipse+getCacheMaximumSize+language%3Ajava&type=code)
+* `eclipse.bazel.model.cache.expireAfterAccessSeconds` - how long to retain information in the cache (should be higher than the maximum expected sync time);
+  default is [30 minutes](https://github.com/search?q=repo%3Asalesforce%2Fbazel-eclipse+getCacheExpireAfterAccessDuration+language%3Ajava&type=code)
+
+System properties should be declared as additional JVM arguments (eg., `-Declipse.bazel.model.cache.maximumSize=500000` as VM arguments).
+
 ### Next Topic: Understanding the Java Classpath
 
 The next page in our guide discusses the [Java classpath](classpath.md).

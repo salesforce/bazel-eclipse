@@ -20,8 +20,12 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Scheduler;
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
 import com.salesforce.bazel.eclipse.core.model.BazelElementInfo;
 import com.salesforce.bazel.eclipse.core.model.BazelModel;
@@ -31,6 +35,8 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
  * Implementation of {@link BazelElementInfoCache} which uses an LRU
  */
 public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCache {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CaffeineBasedBazelElementInfoCache.class);
 
     private static final String CACHE_KEY_SEPARATOR = "::";
     private static final String EMPTY_STRING = "";
@@ -58,11 +64,15 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
      * @see Caffeine#expireAfterAccess(Duration)
      */
     public CaffeineBasedBazelElementInfoCache(int maximumSize, Duration expireAfterAccessDuration) {
-        cache = Caffeine.newBuilder().maximumSize(maximumSize).expireAfterAccess(expireAfterAccessDuration).build();
+        cache = Caffeine.newBuilder()
+                .maximumSize(maximumSize)
+                .expireAfterAccess(expireAfterAccessDuration)
+                .scheduler(Scheduler.systemScheduler())
+                .build();
     }
 
     private boolean belongsToWorkspace(BazelWorkspace bazelWorkspace, String stableCacheKey) {
-        var workspaceLocationHash = bazelWorkspace.getLocation().toString().hashCode();
+        var workspaceLocationHash = String.valueOf(bazelWorkspace.getLocation().toString().hashCode()); // same as #getStableCacheKey
         return stableCacheKey.equals(workspaceLocationHash)
                 || stableCacheKey.startsWith(workspaceLocationHash + CACHE_KEY_SEPARATOR);
     }
@@ -97,7 +107,6 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
     }
 
     private String getStableCacheKey(BazelElement<?, ?> bazelElement) {
-
         if (bazelElement instanceof BazelModel) {
             // this can only happen for the BazelModel
             return EMPTY_STRING;
@@ -124,11 +133,19 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
 
     @Override
     public void invalidate(BazelElement<?, ?> bazelElement) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Bazel model cache stats: {}", cache.stats());
+            LOG.debug("Invalidating: {}", bazelElement);
+        }
         cache.invalidate(getStableCacheKey(bazelElement));
     }
 
     @Override
     public void invalidateAll() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Bazel model cache stats: {}", cache.stats());
+            LOG.debug("Invalidating entire cache.");
+        }
         cache.invalidateAll();
     }
 

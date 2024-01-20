@@ -15,6 +15,7 @@ package com.salesforce.bazel.eclipse.core.model;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.resources.IProject;
@@ -55,8 +56,29 @@ public class BazelModelManager implements BazelCoreSharedContstants {
 
     private static Logger LOG = LoggerFactory.getLogger(BazelModelManager.class);
 
+    /**
+     * @return the duration after which cache entries should expire (this should be large enough to allow maximum cache
+     *         hits during a full Sync)
+     */
+    private static Duration getCacheExpireAfterAccessDuration() {
+        var seconds = Integer.getInteger("eclipse.bazel.model.cache.expireAfterAccessSeconds", 1800); // assuming Sync max is 30 minutes
+        if (seconds <= 0) {
+            return Duration.ofHours(72); // up to 72 hours
+        }
+        return Duration.ofSeconds(seconds);
+    }
+
+    /**
+     * @return the maximum cache size (this should be large enough to hold all packages, targets and build files needed
+     *         during a full Sync)
+     */
+    private static int getCacheMaximumSize() {
+        return Integer.getInteger("eclipse.bazel.model.cache.maximumSize", 100000000 /* is hundred million enough?*/);
+    }
+
     private final ResourceChangeProcessor resourceChangeProcessor;
     private final AtomicReference<IWorkspace> workspaceReference = new AtomicReference<>();
+
     private final ISaveParticipant saveParticipant = new ISaveParticipant() {
 
         @Override
@@ -99,8 +121,8 @@ public class BazelModelManager implements BazelCoreSharedContstants {
             // TODO: save all existing Bazel mappings
         }
     };
-
     private final IPath stateLocation;
+
     private final BazelModel model;
 
     private final JobsBasedExecutionService executionService =
@@ -183,8 +205,8 @@ public class BazelModelManager implements BazelCoreSharedContstants {
         }
 
         // configure cache
-        BazelElementInfoCache
-                .setInstance(new CaffeineBasedBazelElementInfoCache(100000000 /* is hundred million enough?*/));
+        BazelElementInfoCache.setInstance(
+            new CaffeineBasedBazelElementInfoCache(getCacheMaximumSize(), getCacheExpireAfterAccessDuration()));
 
         // ensure aspects are usable
         aspects = new IntellijAspects(stateLocation.append("intellij-aspects").toPath());
