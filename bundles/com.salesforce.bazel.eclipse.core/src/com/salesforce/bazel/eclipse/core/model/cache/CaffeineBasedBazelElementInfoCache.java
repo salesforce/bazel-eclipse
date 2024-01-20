@@ -50,7 +50,7 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
      * @see Caffeine#maximumSize(long)
      */
     public CaffeineBasedBazelElementInfoCache(int maximumSize) {
-        cache = Caffeine.newBuilder().maximumSize(maximumSize).build();
+        cache = Caffeine.newBuilder().maximumSize(maximumSize).recordStats().build();
     }
 
     /**
@@ -68,6 +68,7 @@ public final class CaffeineBasedBazelElementInfoCache extends BazelElementInfoCa
                 .maximumSize(maximumSize)
                 .expireAfterAccess(expireAfterAccessDuration)
                 .scheduler(Scheduler.systemScheduler())
+                .recordStats()
                 .build();
     }
 
