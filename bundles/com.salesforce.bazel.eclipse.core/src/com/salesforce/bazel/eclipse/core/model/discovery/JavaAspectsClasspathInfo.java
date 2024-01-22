@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -525,19 +524,19 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 var projectMappingUri = new URI(projectMapping);
                 var scheme = projectMappingUri.getScheme();
                 if ("project".equals(scheme)) {
-                    var path = projectMappingUri.getPath();
+                    var projectName = projectMappingUri.getSchemeSpecificPart();
                     LOG.debug(
                         "Discovered project mapping for target '{}': {} (path '{}')",
                         targetLabel,
                         projectMapping,
-                        path);
-                    if (path != null) {
-                        var member = getEclipseWorkspaceRoot().findMember(IPath.forPosix(path));
-                        if ((member != null) && (member.getType() == IResource.PROJECT)) {
+                        projectName);
+                    if (projectName != null) {
+                        var project = getEclipseWorkspaceRoot().getProject(projectName);
+                        if (project.isAccessible()) {
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("Found project reference for '{}': {}", targetLabel, member.getProject());
+                                LOG.debug("Found project reference for '{}': {}", targetLabel, project.getProject());
                             }
-                            return ClasspathEntry.newProjectEntry(member.getProject());
+                            return ClasspathEntry.newProjectEntry(project);
                         }
                     }
                 } else {
