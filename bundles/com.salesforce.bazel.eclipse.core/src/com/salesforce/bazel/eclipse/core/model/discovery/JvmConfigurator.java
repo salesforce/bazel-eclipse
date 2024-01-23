@@ -135,11 +135,8 @@ public class JvmConfigurator {
         if (javaProjectOptions.get(JavaCore.COMPILER_CODEGEN_METHOD_PARAMETERS_ATTR) == null) {
             javaProject.setOption(JavaCore.COMPILER_CODEGEN_METHOD_PARAMETERS_ATTR, JavaCore.GENERATE);
         }
-        if (javaProjectOptions.get(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES) == null) {
-            javaProject.setOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.ENABLED);
-            if (javaProjectOptions.get(JavaCore.COMPILER_PB_REPORT_PREVIEW_FEATURES) == null) {
-                javaProject.setOption(JavaCore.COMPILER_PB_REPORT_PREVIEW_FEATURES, JavaCore.IGNORE);
-            }
+        if ((javaProjectOptions.get(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES) == null) && (source != null)) {
+            enablePreviewIfPossible(javaProject, source);
         }
     }
 
@@ -157,14 +154,7 @@ public class JvmConfigurator {
 
             javaProject.setOptions(options);
         }
-        if (JavaCore.isSupportedJavaVersion(version)
-                && (JavaCore.compareJavaVersions(version, JavaCore.latestSupportedJavaVersion()) >= 0)) {
-            //Enable Java preview features for the latest JDK release by default and stfu about it
-            javaProject.setOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.ENABLED);
-            javaProject.setOption(JavaCore.COMPILER_PB_REPORT_PREVIEW_FEATURES, JavaCore.IGNORE);
-        } else {
-            javaProject.setOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.DISABLED);
-        }
+        enablePreviewIfPossible(javaProject, version);
     }
 
     public IVMInstall configureVMInstall(java.nio.file.Path resolvedJavaHomePath, BazelWorkspace bazelWorkspace,
@@ -205,6 +195,18 @@ public class JvmConfigurator {
 
         LOG.debug("Configured VMInstall at '{}' ({}, {})", resolvedJavaHomePath, vm.getName(), vm.getId());
         return vm;
+    }
+
+    private void enablePreviewIfPossible(IJavaProject javaProject, String version) {
+        if (JavaCore.isSupportedJavaVersion(version)
+                && (JavaCore.compareJavaVersions(version, JavaCore.latestSupportedJavaVersion()) >= 0)) {
+            //Enable Java preview features for the latest JDK release by default
+            javaProject.setOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.ENABLED);
+            javaProject.setOption(JavaCore.COMPILER_PB_REPORT_PREVIEW_FEATURES, JavaCore.IGNORE);
+        } else {
+            javaProject.setOption(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.DISABLED);
+            javaProject.setOption(JavaCore.COMPILER_PB_REPORT_PREVIEW_FEATURES, JavaCore.WARNING);
+        }
     }
 
     private IVMInstall findVmForNameOrPath(java.nio.file.Path javaHome, String name) {
