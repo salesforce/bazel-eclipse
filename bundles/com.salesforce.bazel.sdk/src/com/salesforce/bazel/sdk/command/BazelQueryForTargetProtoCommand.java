@@ -1,6 +1,7 @@
 package com.salesforce.bazel.sdk.command;
 
 import static java.nio.file.Files.createTempFile;
+import static java.nio.file.Files.deleteIfExists;
 import static java.nio.file.Files.newInputStream;
 
 import java.io.IOException;
@@ -8,6 +9,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.devtools.build.lib.query2.proto.proto2api.Build;
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
@@ -17,6 +21,8 @@ import com.salesforce.bazel.sdk.BazelVersion;
  * <code>bazel query --output streamed_proto --order_output=no</code>
  */
 public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collection<Build.Target>> {
+
+    private static Logger LOG = LoggerFactory.getLogger(BazelQueryForTargetProtoCommand.class);
 
     public BazelQueryForTargetProtoCommand(Path workspaceRoot, String query, boolean keepGoing, String purpose) {
         super(workspaceRoot, query, keepGoing, purpose);
@@ -34,6 +40,12 @@ public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collectio
                     result.add(target);
                 }
             } while (target != null);
+        } finally {
+            try {
+                deleteIfExists(getStdOutFile());
+            } catch (IOException e) {
+                LOG.warn("Error deleting '{}'. Please delete manually to save some space.", getStdOutFile(), e);
+            }
         }
         return result;
     }
