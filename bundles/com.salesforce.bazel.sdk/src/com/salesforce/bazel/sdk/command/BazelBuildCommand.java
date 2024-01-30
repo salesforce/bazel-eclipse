@@ -2,6 +2,7 @@ package com.salesforce.bazel.sdk.command;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.createTempFile;
+import static java.nio.file.Files.deleteIfExists;
 import static java.nio.file.Files.newInputStream;
 import static java.util.Objects.requireNonNull;
 
@@ -48,6 +49,14 @@ public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
         try (var in = newInputStream(
             requireNonNull(bepFile, "unusual code flow; prepareCommandLine not called or overridden incorrectly?"))) {
             return ParsedBepOutput.parseBepArtifacts(in, blazeInfo);
+        } finally {
+            try {
+                if (deleteIfExists(bepFile)) {
+                    LOG.debug("Deleted '{}'", bepFile);
+                }
+            } catch (IOException e) {
+                LOG.warn("Unable to delete '{}'. Please clean up manually to free some space.", bepFile, e);
+            }
         }
     }
 
