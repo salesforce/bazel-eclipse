@@ -16,7 +16,27 @@ public class StreamingSocketBazelCommandExecutor extends EclipseHeadlessBazelCom
 
     private static Logger LOG = LoggerFactory.getLogger(StreamingSocketBazelCommandExecutor.class);
 
+    private static final Supplier<OutputStream> staticLocalPortHostSupplier = initializeStaticSupplier();
+
     private static volatile Supplier<OutputStream> localPortHostSupplier;
+
+    private static Supplier<OutputStream> initializeStaticSupplier() {
+        var port = Integer.getInteger("java.bazel.staticProcessStreamSocket");
+        if ((port != null) && (port > 0) && (port < 65535)) {
+            var staticPort = port;
+            try {
+                LOG.debug("Initializing static socket stream using port {}.", staticPort);
+                return new ReconnectingSocket(staticPort);
+            } catch (IOException e) {
+                LOG.error(
+                    "Invalid 'java.bazel.staticProcessStreamSocket' property. Connection to port {} failed.",
+                    staticPort,
+                    e);
+            }
+        }
+
+        return null;
+    }
 
     public static void setLocalPortHostSupplier(Supplier<OutputStream> localPortHostSupplier) {
         StreamingSocketBazelCommandExecutor.localPortHostSupplier = localPortHostSupplier;
@@ -37,6 +57,9 @@ public class StreamingSocketBazelCommandExecutor extends EclipseHeadlessBazelCom
     protected ProcessStreamsProvider newProcessStreamProvider(BazelCommand<?> command, PreparedCommandLine commandLine)
             throws IOException {
         var supplier = localPortHostSupplier;
+        if (supplier == null) {
+            supplier = staticLocalPortHostSupplier;
+        }
         if (supplier != null) {
             var out = supplier.get();
             if (out != null) {

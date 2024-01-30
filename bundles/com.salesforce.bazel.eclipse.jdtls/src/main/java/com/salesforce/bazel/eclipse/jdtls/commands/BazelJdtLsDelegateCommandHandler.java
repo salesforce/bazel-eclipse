@@ -5,30 +5,24 @@ package com.salesforce.bazel.eclipse.jdtls.commands;
 
 import static org.eclipse.jdt.ls.core.internal.JavaLanguageServerPlugin.logInfo;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.ls.core.internal.IDelegateCommandHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.SynchronizeProjectViewJob;
+import com.salesforce.bazel.eclipse.jdtls.execution.ReconnectingSocket;
 import com.salesforce.bazel.eclipse.jdtls.execution.StreamingSocketBazelCommandExecutor;
 
 /**
@@ -36,53 +30,6 @@ import com.salesforce.bazel.eclipse.jdtls.execution.StreamingSocketBazelCommandE
  */
 @SuppressWarnings("restriction")
 public class BazelJdtLsDelegateCommandHandler implements IDelegateCommandHandler {
-
-    static class ReconnectingSocket implements Supplier<OutputStream> {
-
-        private static Logger LOG = LoggerFactory.getLogger(BazelJdtLsDelegateCommandHandler.ReconnectingSocket.class);
-
-        private final int port;
-        private Socket socket;
-        private boolean closed;
-
-        public ReconnectingSocket(int port) throws UnknownHostException, IOException {
-            this.port = port;
-            connect();
-        }
-
-        public synchronized void close() {
-            closed = true;
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-                socket = null;
-            }
-        }
-
-        private void connect() throws UnknownHostException, IOException {
-            LOG.debug("Connecting socket to localhost:{}", port);
-            this.socket = new Socket("localhost", port);
-        }
-
-        @Override
-        public synchronized OutputStream get() {
-            if (!closed) {
-                try {
-                    if (!socket.isConnected()) {
-                        connect();
-                    }
-                    return socket.getOutputStream();
-                } catch (IOException e) {
-                    LOG.warn("Error retreiving output", e);
-                }
-            }
-            return System.out; // fallback
-        }
-
-    }
 
     private static final AtomicReference<ReconnectingSocket> reconnectingSocketRef = new AtomicReference<>();
 
