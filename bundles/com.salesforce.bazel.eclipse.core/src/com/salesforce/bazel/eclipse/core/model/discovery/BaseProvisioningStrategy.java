@@ -102,8 +102,11 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
     private static final String FILE_EXTENSION_DOT_PREFS = ".prefs";
 
-    private static final String JAVAC_OPT_ADD_OPENS = "--add-opens";
+    private static final String JRE_SYSTEM_LIBRARY = "jre_system_library";
+    private static final String JRE_SYSTEM_LIBRARY_RUNTIME = "current_java_runtime";
+    private static final String JRE_SYSTEM_LIBRARY_EE = "execution_environment";
 
+    private static final String JAVAC_OPT_ADD_OPENS = "--add-opens";
     private static final String JAVAC_OPT_ADD_EXPORTS = "--add-exports";
 
     private static final IClasspathAttribute CLASSPATH_ATTRIBUTE_FOR_TEST =
@@ -130,6 +133,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     protected IVMInstall javaRuntimeVm;
 
     private JvmConfigurator jvmConfigurator;
+
+    private String jreSystemLibraryConfiguration;
 
     /**
      * Adds all relevant information from a {@link BazelTarget} to the {@link JavaProjectInfo}.
@@ -200,13 +205,27 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
     private void addJavaContainerEntryAndConfigureJavaCompileSettings(List<IClasspathEntry> rawClasspath,
             IJavaProject javaProject, IClasspathAttribute[] extraAttributesForJdk) {
+        var useEE =
+                (jreSystemLibraryConfiguration == null) || JRE_SYSTEM_LIBRARY_EE.equals(jreSystemLibraryConfiguration);
         var executionEnvironmentId = getJvmConfigurator().getExecutionEnvironmentId(javaToolchainTargetVersion);
-        if (executionEnvironmentId != null) {
+        if (useEE && (executionEnvironmentId != null)) {
             // prefer setting EE based JDK for compilation
             rawClasspath.add(
                 getJvmConfigurator().getJreClasspathContainerForExecutionEnvironment(
                     executionEnvironmentId,
                     extraAttributesForJdk));
+        } else if (JRE_SYSTEM_LIBRARY_RUNTIME.equals(jreSystemLibraryConfiguration) && (javaRuntimeVm != null)) {
+            // Bazel 7 changed the Java compilation.
+            // The runtime JVM is now responsible for the bootclasspath as well as the compilation java home (--system)
+            // Of course, this is only considered when --release is not used.
+            // We don't support --release yet.
+            // But we prefer the runtime VM now because this indicates compile issues earlier.
+            rawClasspath.add(
+                JavaCore.newContainerEntry(
+                    JavaRuntime.newJREContainerPath(javaRuntimeVm),
+                    null /* no access rules */,
+                    extraAttributesForJdk,
+                    false /* not exported */));
         } else if (javaToolchainVm != null) {
             // use toolchain specific entry
             rawClasspath.add(
@@ -215,7 +234,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                     null /* no access rules */,
                     extraAttributesForJdk,
                     false /* not exported */));
-
         } else {
             rawClasspath.add(
                 JavaCore.newContainerEntry(
@@ -964,6 +982,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                     getJvmConfigurator().configureVMInstall(resolvedJavaHomePath, workspace, VM_TYPE_TOOLCHAIN);
             javaRuntimeVm =
                     getJvmConfigurator().configureVMInstall(resolvedJavaRuntimeHomePath, workspace, VM_TYPE_RUNTIME);
+
+            jreSystemLibraryConfiguration = workspace.getBazelProjectView()
+                    .targetProvisioningSettings()
+                    .getOrDefault(JRE_SYSTEM_LIBRARY, JRE_SYSTEM_LIBRARY_EE);
         } catch (NoSuchElementException | IOException e) {
             throw new CoreException(
                     Status.error(

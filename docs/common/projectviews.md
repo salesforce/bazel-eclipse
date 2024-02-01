@@ -149,6 +149,9 @@ For details please read the JavaDoc (and Java code) of [ProjectPerPackageProvisi
 A list of settings to further tweak the `target_provisioning_strategy`.
 The syntax of each entry is `key=value`, where `key` and `value` are expected string values (note the absence of whitespace characters).
 
+* `jre_system_library` (possible values: `current_java_runtime` and `execution_environment`, configures the JRE System Library classpath container to use either the Bazel workspace's Java runtime or an execution environment id)
+* `project_name_separator_char` (used by `project-per-package` to replace `/` in package path for project name)
+
 
 ### `project_mappings`
 
