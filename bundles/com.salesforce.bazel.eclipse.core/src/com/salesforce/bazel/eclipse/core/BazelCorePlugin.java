@@ -86,8 +86,13 @@ public class BazelCorePlugin extends Plugin implements BazelCoreSharedContstants
     @Override
     public void stop(BundleContext context) throws Exception {
         plugin = null;
-        super.stop(context);
+        try {
+            bazelModelManager.shutdown();
+        } catch (Exception e) {
+            // this might fail because other bundles are already stopped
+            // at least we tried
+        }
 
-        bazelModelManager.shutdown();
+        super.stop(context);
     }
 }
