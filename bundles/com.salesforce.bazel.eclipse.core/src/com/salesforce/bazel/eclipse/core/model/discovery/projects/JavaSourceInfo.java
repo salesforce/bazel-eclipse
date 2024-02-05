@@ -183,6 +183,15 @@ public class JavaSourceInfo {
                     sourceEntriesBySourceRoot.put(globEntry.getRelativeDirectoryPath(), globEntry);
                 }
             } else if (srcEntry instanceof LabelEntry labelEntry) {
+                if (!bazelWorkspace.isRootedAtThisWorkspace(labelEntry.getLabel())) {
+                    result.add(
+                        Status.error(
+                            format(
+                                "The referenced sources '%s' are outside of this workspace. The project will not compile. Please consider excluding that target.",
+                                labelEntry.getLabel())));
+                    continue;
+
+                }
                 var bazelTarget = bazelWorkspace.getBazelTarget(labelEntry.getLabel());
                 var srcJars = bazelTarget.getRuleOutput()
                         .stream()
@@ -197,7 +206,6 @@ public class JavaSourceInfo {
                                     "The generated sources '%s' (produced by '%s') are missing. Please check the build output for errors. The project will not compile.",
                                     srcjar,
                                     bazelTarget.getLabel())));
-
                     } else {
                         collectJavaSourcesInFolder(srcjarFolder).forEach(javaSourceEntryCollector::apply);
                     }
