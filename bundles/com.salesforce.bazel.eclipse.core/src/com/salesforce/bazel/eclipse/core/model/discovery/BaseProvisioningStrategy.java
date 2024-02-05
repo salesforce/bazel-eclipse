@@ -1204,9 +1204,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @see https://bazel.build/build/style-guide
      */
     private boolean isTestTarget(BazelTarget bazelTarget) throws CoreException {
-        var targetName = bazelTarget.getName().toLowerCase(Locale.US);
+        var targetName = bazelTarget.getTargetName().toLowerCase(Locale.US);
         var ruleClass = bazelTarget.getRuleClass().toLowerCase(Locale.US);
         return ruleClass.endsWith("_test") // java_test
+                || targetName.startsWith("test") // we allow this too
                 || targetName.endsWith("test") // we allow this too
                 || targetName.endsWith("tests") // we allow this too
                 || targetName.endsWith("-test-lib"); // java_test_suite shared lib from @contrib_rules_jvm
