@@ -21,8 +21,9 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntr
 /**
  * The target discovery strategy is responsible for provisioning targets into Eclipse as Eclipse projects.
  * <p>
- * Implementors should not persist state in instances of this class. It's expected that any method invocation is
- * hermetic and idempotent. The objects maybe short lived.
+ * Implementors must not expect state in instances of this class persisted for a longer duration. It's expected that any
+ * method invocation is hermetic and idempotent. However, object instances of this class are short lived and never
+ * re-used for multiple method invocations. Thus, caching within the boundary of a method call is acceptable.
  * </p>
  */
 public interface TargetProvisioningStrategy {
@@ -58,6 +59,9 @@ public interface TargetProvisioningStrategy {
      * {@link CoreException#getStatus() the exception status} is {@link IStatus#isMultiStatus() a multi-status} then the
      * children will be reported as classpath error markers on the workspace project. In general, implementor is
      * expected to create more detailed error markers when applicable.
+     * </p>
+     * <p>
+     * This method will be called at most once per {@link TargetProvisioningStrategy} object instance.
      * </p>
      *
      * @param bazelProjects
@@ -113,8 +117,7 @@ public interface TargetProvisioningStrategy {
      * want to obtain resource level locking. This is likely going to cause deadlocks.
      * </p>
      * <p>
-     * This method will be called at most once per {@link TargetProvisioningStrategy} object instance. Implementors
-     * should ensure to release any resources when this method returns to allow proper garbage collection.
+     * This method will be called at most once per {@link TargetProvisioningStrategy} object instance.
      * </p>
      *
      * @param targets

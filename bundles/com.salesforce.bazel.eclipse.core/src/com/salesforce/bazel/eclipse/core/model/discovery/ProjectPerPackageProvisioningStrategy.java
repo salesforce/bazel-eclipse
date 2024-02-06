@@ -3,6 +3,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -56,10 +58,12 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrategy {
 
     private static final String PROJECT_NAME_SEPARATOR_CHAR = "project_name_separator_char";
+    private static final String JAVA_LIKE_RULES = "java_like_rules";
 
     public static final String STRATEGY_NAME = "project-per-package";
 
     private static Logger LOG = LoggerFactory.getLogger(ProjectPerPackageProvisioningStrategy.class);
+    private final Set<String> additionalJavaLikeRules = new HashSet<>();
 
     @Override
     public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
@@ -210,6 +214,18 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     @Override
     protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, SubMonitor monitor)
             throws CoreException {
+        // initialize the list of allowed java like rules
+        var javaLikeRulesValue = getFileSystemMapper().getBazelWorkspace()
+                .getBazelProjectView()
+                .targetProvisioningSettings()
+                .get(JAVA_LIKE_RULES);
+        if (javaLikeRulesValue != null) {
+            Stream.of(javaLikeRulesValue.split(","))
+                    .map(String::trim)
+                    .filter(not(String::isEmpty))
+                    .forEach(additionalJavaLikeRules::add);
+        }
+
         // group into packages
         Map<BazelPackage, List<BazelTarget>> targetsByPackage =
                 targets.stream().filter(this::isSupported).collect(groupingBy(BazelTarget::getBazelPackage));
@@ -300,7 +316,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
             }
             default: {
-                yield false;
+                yield requireNonNull(additionalJavaLikeRules, "additional java like rules not initialized")
+                        .contains(ruleName);
             }
         };
     }

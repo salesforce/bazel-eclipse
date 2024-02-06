@@ -151,7 +151,7 @@ The syntax of each entry is `key=value`, where `key` and `value` are expected st
 
 * `jre_system_library` (possible values: `current_java_runtime` and `execution_environment`, configures the JRE System Library classpath container to use either the Bazel workspace's Java runtime or an execution environment id)
 * `project_name_separator_char` (used by `project-per-package` to replace `/` in package path for project name)
-
+* `java_like_rules` (used by `project-per-package`, comma separated list of additional java like rules to analyze when collecting targets for each package)
 
 ### `project_mappings`
 
