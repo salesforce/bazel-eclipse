@@ -42,6 +42,7 @@ import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 
 import com.salesforce.bazel.eclipse.core.model.BazelModelManager;
+import com.salesforce.bazel.eclipse.core.osgi.OsgiServiceTracker;
 import com.salesforce.bazel.sdk.init.BazelJavaSDKInit;
 
 /**
@@ -60,13 +61,22 @@ public class BazelCorePlugin extends Plugin implements BazelCoreSharedContstants
     }
 
     public static BazelCorePlugin getInstance() {
-        return requireNonNull(plugin, "not initialized");
+        return requireNonNull(plugin, "plugin not initialized");
     }
 
     private BazelModelManager bazelModelManager;
+    private volatile OsgiServiceTracker serviceTracker;
 
     public BazelModelManager getBazelModelManager() {
-        return requireNonNull(bazelModelManager, "not initialized");
+        return requireNonNull(bazelModelManager, "model manager not initialized");
+    }
+
+    public OsgiServiceTracker getServiceTracker() {
+        return requireNonNull(serviceTracker, "service tracker not initialized");
+    }
+
+    public void setServiceTracker(OsgiServiceTracker serviceTracker) {
+        this.serviceTracker = serviceTracker;
     }
 
     @Override
