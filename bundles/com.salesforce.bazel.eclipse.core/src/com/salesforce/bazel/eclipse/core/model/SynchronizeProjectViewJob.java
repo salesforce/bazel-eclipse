@@ -19,6 +19,8 @@ import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -52,13 +54,16 @@ import org.eclipse.core.runtime.preferences.IPreferenceFilter;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.core.runtime.preferences.PreferenceFilterEntry;
 import org.eclipse.jdt.core.JavaCore;
+import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
+import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
+import com.salesforce.bazel.eclipse.core.events.SyncFinishedEvent;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryAndProvisioningExtensionLookup;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryStrategy;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetProvisioningStrategy;
@@ -346,6 +351,10 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         return workspace.getModelManager().getBazelProject(project);
     }
 
+    EventAdmin getEventAdmin() {
+        return BazelCorePlugin.getInstance().getServiceTracker().getEventAdmin();
+    }
+
     List<SynchronizationParticipant> getSynchronizationParticipants() throws CoreException {
         return new SynchronizationParticipantExtensionLookup().createSynchronizationParticipants();
     }
@@ -566,6 +575,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
+        // track the start
+        var start = Instant.now();
+
         try {
             // invalidate the entire cache because we want to ensure we sync fresh
             // FIXME: this should not be required but currently is because our ResourceChangeProcessor is very light
@@ -665,11 +677,21 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                 }
             }
 
+            // broadcast sync metrics
+            var duration = Duration.between(start, Instant.now());
+            getEventAdmin().postEvent(new SyncFinishedEvent(start, duration, "ok").build());
+
             return Status.OK_STATUS;
         } catch (OperationCanceledException e) {
+            // broadcast sync metrics
+            var duration = Duration.between(start, Instant.now());
+            getEventAdmin().postEvent(new SyncFinishedEvent(start, duration, "cancelled").build());
             LOG.warn("Workspace synchronization cancelled: {}", workspace.getLocation(), e);
             return Status.CANCEL_STATUS;
         } catch (Exception e) {
+            // broadcast sync metrics
+            var duration = Duration.between(start, Instant.now());
+            getEventAdmin().postEvent(new SyncFinishedEvent(start, duration, "failed").build());
             LOG.error("Error synchronizing workspace '{}': {}", workspace.getLocation(), e.getMessage(), e);
             return e instanceof CoreException ce ? ce.getStatus()
                     : Status.error(format("Error synchronizing workspace '%s'", workspace.getLocation()), e);
