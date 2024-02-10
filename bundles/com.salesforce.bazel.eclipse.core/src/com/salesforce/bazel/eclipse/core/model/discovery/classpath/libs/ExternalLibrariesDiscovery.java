@@ -55,7 +55,7 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
         //      > bazel query "kind(jvm_import_external, //external:*)"
         //
 
-        var monitor = SubMonitor.convert(progress, "Quering Bazel..", 2);
+        var monitor = SubMonitor.convert(progress, "Querying Bazel..", 2);
         try {
             Set<ClasspathEntry> result = new LinkedHashSet<>();
 

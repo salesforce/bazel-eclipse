@@ -85,7 +85,7 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
     public Collection<BazelTarget> discoverTargets(BazelWorkspace bazelWorkspace,
             Collection<BazelPackage> bazelPackages, IProgressMonitor progress) throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, "Quering targets", 1 + bazelPackages.size());
+            var monitor = SubMonitor.convert(progress, "Querying targets", 1 + bazelPackages.size());
 
             // open all packages at once
             monitor.subTask("Loading package info");
