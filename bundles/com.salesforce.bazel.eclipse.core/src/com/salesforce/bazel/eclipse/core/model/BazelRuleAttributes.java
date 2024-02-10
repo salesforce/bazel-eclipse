@@ -29,8 +29,8 @@ public class BazelRuleAttributes {
 
     BazelRuleAttributes(Rule rule) {
         this.rule = rule;
-        // this might fail if there are multiple attributes of the same name
-        // TODO: confirm with Bazel what the behavior/expectation should be (see https://github.com/bazelbuild/bazel/issues/20918)
+        // multiple attributes with the same name are not expected but can happen (https://github.com/bazelbuild/bazel/issues/20918)
+        // we therefore use a merge function which discards all duplicates
         try {
             attributesByAttributeName = rule.getAttributeList()
                     .stream()
