@@ -46,7 +46,9 @@ public record BazelProjectView(
         Collection<String> syncFlags,
         Collection<String> testFlags,
         GlobSetMatcher testSourcesGlobs,
-        boolean discoverAllExternalAndWorkspaceJars) {
+        boolean discoverAllExternalAndWorkspaceJars,
+        boolean shardSync,
+        int targetShardSize) {
 
     public BazelProjectView {
         directoriesToImport = Collections.unmodifiableCollection(directoriesToImport);

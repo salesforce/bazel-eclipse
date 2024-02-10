@@ -74,6 +74,8 @@ public class BazelProjectFileReader {
         final LinkedHashSet<String> testFlags = new LinkedHashSet<>();
         final LinkedHashSet<String> testSourcesGlobs = new LinkedHashSet<>();
         boolean discoverAllExternalAndWorkspaceJars = false;
+        int targetShardSize = 500;
+        boolean shardSync = true;
 
         public BazelProjectView build() throws IllegalStateException {
             // check mandatory parameters
@@ -141,7 +143,9 @@ public class BazelProjectFileReader {
                     syncFlags,
                     testFlags,
                     new GlobSetMatcher(testSourcesGlobs),
-                    discoverAllExternalAndWorkspaceJars);
+                    discoverAllExternalAndWorkspaceJars,
+                    shardSync,
+                    targetShardSize);
         }
 
         public ImportHandle startImporting(Path bazelProjectViewFile) throws IOException {
@@ -217,10 +221,8 @@ public class BazelProjectFileReader {
                         break;
                     }
                     case "derive_targets_from_directories": {
-                        var rawBody = rawSection.getRawBody();
-                        if ((rawBody != null) && !rawBody.isBlank()) {
-                            builder.deriveTargetsFromDirectories = Boolean.parseBoolean(rawBody.trim());
-                        }
+                        builder.deriveTargetsFromDirectories =
+                                parseSectionBodyAsBoolean(rawSection, builder.deriveTargetsFromDirectories);
                         break;
                     }
                     case "import": {
@@ -374,10 +376,16 @@ public class BazelProjectFileReader {
                         break;
                     }
                     case "discover_all_external_and_workspace_jars": {
-                        var rawBody = rawSection.getRawBody();
-                        if ((rawBody != null) && !rawBody.isBlank()) {
-                            builder.discoverAllExternalAndWorkspaceJars = Boolean.parseBoolean(rawBody.trim());
-                        }
+                        builder.discoverAllExternalAndWorkspaceJars =
+                                parseSectionBodyAsBoolean(rawSection, builder.discoverAllExternalAndWorkspaceJars);
+                        break;
+                    }
+                    case "shard_sync": {
+                        builder.shardSync = parseSectionBodyAsBoolean(rawSection, builder.shardSync);
+                        break;
+                    }
+                    case "target_shard_size": {
+                        builder.targetShardSize = parseSectionBodyAsInt(rawSection, builder.targetShardSize);
                         break;
                     }
                     case "import_target_output":
@@ -414,6 +422,31 @@ public class BazelProjectFileReader {
         }
         return results;
 
+    }
+
+    private boolean parseSectionBodyAsBoolean(RawSection rawSection, boolean defaultValue) {
+        var rawBody = rawSection.getRawBody();
+        if ((rawBody != null) && !rawBody.isBlank()) {
+            return Boolean.parseBoolean(rawBody.trim());
+        }
+        return defaultValue;
+    }
+
+    private int parseSectionBodyAsInt(RawSection rawSection, int defaultValue) {
+        var rawBody = rawSection.getRawBody();
+        if ((rawBody != null) && !rawBody.isBlank()) {
+            try {
+                return Integer.parseInt(rawBody.trim());
+            } catch (NumberFormatException e) {
+                LOG.warn(
+                    "Invalid integer for section '{}' (falling back to default {}): {}",
+                    rawSection.getName(),
+                    defaultValue,
+                    e.getMessage(),
+                    e);
+            }
+        }
+        return defaultValue;
     }
 
     private Stream<String> parseSectionBodyIntoList(RawSection rawSection) {

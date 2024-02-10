@@ -56,9 +56,11 @@ Only `java` is supported.
 
 ### `java_language_level`
 
-Ignored and inferred from current/workspace `JavaToolchainInfo`.
+Ignored and queried from current/workspace `JavaToolchainInfo`.
 
 ###  `build_flags`,  `sync_flags` and `test_flags`
+
+### `shard_sync` and `target_shard_size`
 
 
 ## Additional Features
@@ -216,7 +218,6 @@ If the glob matches a package which is provisioned with the `project-per-package
 All deprecated items are not supported.
 
 In addition to those, the following items are not supported as well:
-* `shard_sync` and `target_shard_size`
 * `exclude_library`
 * `import_run_configurations`
 * `exclude_target`

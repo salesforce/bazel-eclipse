@@ -11,12 +11,17 @@ import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_ALL_LABELS;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.CoreException;
@@ -27,6 +32,8 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Interner;
+import com.google.common.collect.Interners;
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
@@ -72,8 +79,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         try {
             var monitor = SubMonitor.convert(progress, "Computing Bazel project classpaths", 1 + bazelProjects.size());
 
-            List<BazelLabel> targetsToBuild = new ArrayList<>(bazelProjects.size());
-            Map<BazelProject, List<BazelTarget>> activeTargetsPerProject = new HashMap<>();
+            Map<BazelProject, Collection<BazelTarget>> activeTargetsPerProject = new HashMap<>();
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.checkCanceled();
 
@@ -91,24 +97,18 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     LOG.warn(
                         "Targets to build not properly set for project '{}'. Building all targets for computing the classpath, which may be too expensive!",
                         bazelProject);
-                    bazelProject.getBazelPackage()
-                            .getBazelTargets()
-                            .stream()
-                            .map(BazelTarget::getLabel)
-                            .forEach(targetsToBuild::add);
                     activeTargetsPerProject.put(bazelProject, bazelProject.getBazelPackage().getBazelTargets());
                     continue;
                 }
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Found targets for project '{}': {}", bazelProject, targetsToBuild);
-                }
-
-                for (BazelTarget target : projectTargetsToBuild) {
-                    targetsToBuild.add(target.getLabel());
+                    LOG.debug("Found targets for project '{}': {}", bazelProject, projectTargetsToBuild);
                 }
                 activeTargetsPerProject.put(bazelProject, projectTargetsToBuild);
             }
+
+            // collect classpaths by project
+            Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
 
             var workspaceRoot = workspace.getLocation().toPath();
 
@@ -122,73 +122,99 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 outputGroupNames = new HashSet<>(outputGroupNames);
                 outputGroupNames.add(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH);
             }
-            var command = new BazelBuildWithIntelliJAspectsCommand(
-                    workspaceRoot,
-                    targetsToBuild,
-                    outputGroupNames,
-                    aspects,
-                    new BazelWorkspaceBlazeInfo(workspace),
-                    "Running build with IntelliJ aspects to collect classpath information");
 
-            // sync_flags
-            command.addCommandArgs(workspace.getBazelProjectView().syncFlags());
+            // optimize parsing
+            Interner<String> interner = Interners.newStrongInterner();
 
-            monitor.subTask("Running Bazel build with aspects");
-            var result = workspace.getCommandExecutor()
-                    .runDirectlyWithinExistingWorkspaceLock(
-                        command,
-                        bazelProjects.stream().map(BazelProject::getProject).collect(toList()),
-                        monitor.split(1, SUPPRESS_ALL_LABELS));
+            // split into shards
+            var shardsToBuild = createShards(activeTargetsPerProject, workspace);
 
-            // populate map from result
-            Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
-            var aspectsInfo = new JavaAspectsInfo(result, workspace);
-            for (BazelProject bazelProject : bazelProjects) {
-                monitor.subTask(bazelProject.getName());
-                monitor.checkCanceled();
+            // run the build per shard
+            var currentShardCount = 0;
+            for (Map<BazelProject, Collection<BazelTarget>> shard : shardsToBuild) {
+                currentShardCount++;
+                var targetsToBuild = shard.values()
+                        .stream()
+                        .flatMap(Collection::stream)
+                        .map(BazelTarget::getLabel)
+                        .collect(Collectors.toList());
+                var command = new BazelBuildWithIntelliJAspectsCommand(
+                        workspaceRoot,
+                        targetsToBuild,
+                        outputGroupNames,
+                        aspects,
+                        new BazelWorkspaceBlazeInfo(workspace),
+                        format(
+                            "Running build with IntelliJ aspects to collect classpath information (shard %d of %d, %d targets)",
+                            currentShardCount,
+                            shardsToBuild.size(),
+                            targetsToBuild.size()));
+                // sync_flags
+                command.addCommandArgs(workspace.getBazelProjectView().syncFlags());
 
-                // build index of classpath info
-                var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
+                // optimize memory during parsing
+                command.setInterner(interner);
 
-                // add the targets
-                List<BazelTarget> projectTargets = requireNonNull(
-                    activeTargetsPerProject.get(bazelProject),
-                    () -> format("programming error: not targets for project: %s", bazelProject));
-                for (BazelTarget target : projectTargets) {
-                    classpathInfo.addTarget(target);
-                }
+                monitor.subTask(
+                    format(
+                        "Running Bazel build with aspects (shard %d of %d)",
+                        currentShardCount,
+                        shardsToBuild.size()));
+                var result = workspace.getCommandExecutor()
+                        .runDirectlyWithinExistingWorkspaceLock(
+                            command,
+                            shard.keySet().stream().map(BazelProject::getProject).collect(toList()),
+                            monitor.split(1, SUPPRESS_ALL_LABELS));
 
-                // compute the classpath
-                var classpath = classpathInfo.compute();
+                // populate map from result
+                var aspectsInfo = new JavaAspectsInfo(result, workspace);
+                for (BazelProject bazelProject : shard.keySet()) {
+                    monitor.subTask(bazelProject.getName());
+                    monitor.checkCanceled();
 
-                // remove old marker
-                deleteBuildPathProblems(bazelProject);
+                    // build index of classpath info
+                    var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
 
-                // check for non existing jars
-                for (ClasspathEntry entry : classpath) {
-                    if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
-                        continue;
+                    // add the targets
+                    Collection<BazelTarget> projectTargets = requireNonNull(
+                        activeTargetsPerProject.get(bazelProject),
+                        () -> format("programming error: not targets for project: %s", bazelProject));
+                    for (BazelTarget target : projectTargets) {
+                        classpathInfo.addTarget(target);
                     }
 
-                    if (!isRegularFile(entry.getPath().toPath())) {
-                        createBuildPathProblem(
-                            bazelProject,
-                            Status.error(
-                                format(
-                                    "Library '%s' is missing. Please consider running 'bazel fetch'",
-                                    entry.getPath())));
-                        break;
+                    // compute the classpath
+                    var classpath = classpathInfo.compute();
+
+                    // remove old marker
+                    deleteBuildPathProblems(bazelProject);
+
+                    // check for non existing jars
+                    for (ClasspathEntry entry : classpath) {
+                        if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
+                            continue;
+                        }
+
+                        if (!isRegularFile(entry.getPath().toPath())) {
+                            createBuildPathProblem(
+                                bazelProject,
+                                Status.error(
+                                    format(
+                                        "Library '%s' is missing. Please consider running 'bazel fetch'",
+                                        entry.getPath())));
+                            break;
+                        }
                     }
+
+                    // remove references to the project represented by the package
+                    // (this can happen because we have tests and none tests in the same package, also the runtime CP self-reference)
+                    classpath.removeIf(
+                        entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
+                                && entry.getPath().equals(bazelProject.getProject().getFullPath()));
+
+                    classpathsByProject.put(bazelProject, classpath);
+                    monitor.worked(1);
                 }
-
-                // remove references to the project represented by the package
-                // (this can happen because we have tests and none tests in the same package, also the runtime CP self-reference)
-                classpath.removeIf(
-                    entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
-                            && entry.getPath().equals(bazelProject.getProject().getFullPath()));
-
-                classpathsByProject.put(bazelProject, classpath);
-                monitor.worked(1);
             }
 
             return classpathsByProject;
@@ -197,6 +223,60 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 progress.done();
             }
         }
+    }
+
+    /**
+     * This methods splits the given project and target map into multiple shards for separate execution based on the
+     * project view settings.
+     * <p>
+     * Although there is no specific order, the implementation tries to be deterministic, i.e. for the same input the
+     * same shards are returned.
+     * </p>
+     *
+     * @param targetsByProjectMap
+     * @param workspace
+     * @return a list of shards (maybe just one in case sharding is disabled in the project view)
+     * @throws CoreException
+     */
+    private List<Map<BazelProject, Collection<BazelTarget>>> createShards(
+            Map<BazelProject, Collection<BazelTarget>> targetsByProjectMap, BazelWorkspace workspace)
+            throws CoreException {
+        if (!workspace.getBazelProjectView().shardSync()) {
+            LOG.warn("Sharding is disabled. Please monitor system carefuly for memory issues during sync.");
+            return List.of(targetsByProjectMap);
+        }
+
+        List<Map<BazelProject, Collection<BazelTarget>>> allShards = new ArrayList<>();
+
+        // we then collect as many targets into a shard as possible
+        var targetShardSize = workspace.getBazelProjectView().targetShardSize();
+
+        // in order to be predictable we sort the project alphabetically
+        SortedSet<BazelProject> sortedProjects = new TreeSet<>(Comparator.comparing(BazelProject::getName));
+        sortedProjects.addAll(targetsByProjectMap.keySet());
+        NEXT_PROJECT: for (BazelProject bazelProject : sortedProjects) {
+            // again, in order to be predictable we sort the targets alphabetically
+            SortedSet<BazelTarget> sortedTargets = new TreeSet<>(Comparator.comparing(BazelTarget::getTargetName));
+            sortedTargets.addAll(targetsByProjectMap.get(bazelProject));
+
+            // find room in an existing shard
+            for (var existingShard : allShards) {
+                int existingShardSize =
+                        existingShard.values().stream().map(Collection::size).reduce(0, (a, b) -> a + b);
+                if ((existingShardSize + sortedTargets.size()) <= targetShardSize) {
+                    existingShard.put(bazelProject, sortedTargets);
+                    continue NEXT_PROJECT;
+                }
+            }
+
+            // add a new shard
+            // note, we may have to exceed the target size because we never split targets belonging to the same project
+            Map<BazelProject, Collection<BazelTarget>> newShard = new LinkedHashMap<>();
+            newShard.put(bazelProject, sortedTargets);
+            allShards.add(newShard);
+        }
+
+        return allShards;
     }
 
     private void createWarningsForFilesWithoutCommonRoot(BazelProject project, JavaSourceInfo sourceInfo)

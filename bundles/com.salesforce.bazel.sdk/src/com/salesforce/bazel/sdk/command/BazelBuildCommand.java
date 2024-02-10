@@ -13,6 +13,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Interner;
+import com.google.idea.blaze.base.command.buildresult.BuildEventStreamProvider;
 import com.google.idea.blaze.base.command.buildresult.ParsedBepOutput;
 import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.salesforce.bazel.sdk.BazelVersion;
@@ -27,6 +29,7 @@ public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
     private static Logger LOG = LoggerFactory.getLogger(BazelBuildCommand.class);
 
     private Path bepFile;
+    private Interner<String> interner;
     private final boolean keepGoing;
     private final List<BazelLabel> targets;
     private final BlazeInfo blazeInfo;
@@ -48,7 +51,7 @@ public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
     public ParsedBepOutput generateResult(int exitCode) throws IOException {
         try (var in = newInputStream(
             requireNonNull(bepFile, "unusual code flow; prepareCommandLine not called or overridden incorrectly?"))) {
-            return ParsedBepOutput.parseBepArtifacts(in, blazeInfo);
+            return ParsedBepOutput.parseBepArtifacts(BuildEventStreamProvider.fromInputStream(in), blazeInfo, interner);
         } finally {
             try {
                 if (deleteIfExists(bepFile)) {
@@ -83,6 +86,14 @@ public class BazelBuildCommand extends BazelCommand<ParsedBepOutput> {
         }
 
         return commandLine;
+    }
+
+    /**
+     * @param interner
+     *            the interner to use when generating the {@link ParsedBepOutput result}
+     */
+    public void setInterner(Interner<String> interner) {
+        this.interner = interner;
     }
 
 }
