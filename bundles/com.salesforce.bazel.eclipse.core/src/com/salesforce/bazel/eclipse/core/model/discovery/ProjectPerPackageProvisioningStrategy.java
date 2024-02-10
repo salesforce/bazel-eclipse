@@ -128,6 +128,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
             // split into shards
             var shardsToBuild = createShards(activeTargetsPerProject, workspace);
+            monitor.setWorkRemaining(5 * shardsToBuild.size());
 
             // run the build per shard
             var currentShardCount = 0;
@@ -164,7 +165,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         .runDirectlyWithinExistingWorkspaceLock(
                             command,
                             shard.keySet().stream().map(BazelProject::getProject).collect(toList()),
-                            monitor.split(1, SUPPRESS_ALL_LABELS));
+                            monitor.split(3, SUPPRESS_ALL_LABELS));
 
                 // populate map from result
                 var aspectsInfo = new JavaAspectsInfo(result, workspace);
