@@ -105,6 +105,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
                     workspaceRoot,
                     query,
                     true /* keep going */,
+                    List.of("--noproto:locations", "--noproto:default_values"),
                     format(
                         "Loading targets for %d %s",
                         bazelPackages.size(),

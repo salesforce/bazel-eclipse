@@ -18,6 +18,7 @@ import static java.util.stream.Collectors.joining;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
@@ -91,6 +92,11 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
                 workspaceRoot.directory(),
                 format("kind('java_import rule', set( %s ))", setOfExternalsToQuery),
                 false,
+                List.of(
+                    "--proto:output_rule_attrs='srcjar,jars,testonly'",
+                    "--noproto:rule_inputs_and_outputs",
+                    "--noproto:locations",
+                    "--noproto:default_values"),
                 "Querying for external java_import library information");
         Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
 
@@ -124,6 +130,11 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
                 workspaceRoot.directory(),
                 format("kind('jvm_import rule', set( %s ))", setOfExternalsToQuery),
                 false,
+                List.of(
+                    "--proto:output_rule_attrs='srcjar,jars,testonly'",
+                    "--noproto:rule_inputs_and_outputs",
+                    "--noproto:locations",
+                    "--noproto:default_values"),
                 "Querying for rules_jvm_external library information");
         Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
 

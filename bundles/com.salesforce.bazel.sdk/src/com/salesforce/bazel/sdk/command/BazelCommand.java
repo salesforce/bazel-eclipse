@@ -237,6 +237,19 @@ public abstract class BazelCommand<R> {
      * @param args
      *            the command arguments
      */
+    protected void setCommandArgs(Collection<String> args) {
+        commandArgs = List.copyOf(args);
+    }
+
+    /**
+     * Sets the command arguments to use for this command.
+     * <p>
+     * command arguments are appended to the Bazel command line after <code>command</code>.
+     * </p>
+     *
+     * @param args
+     *            the command arguments
+     */
     protected void setCommandArgs(String... args) {
         commandArgs = args != null ? List.of(args) : emptyList();
     }

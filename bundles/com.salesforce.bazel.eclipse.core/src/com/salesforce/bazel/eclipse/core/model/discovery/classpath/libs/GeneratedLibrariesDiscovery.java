@@ -85,6 +85,7 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
                 workspaceRoot.directory(),
                 "filter(\".*\\.jar$\", kind(\"generated file\", //...:*))",
                 false,
+                List.of("--proto:output_rule_attrs=''", "--noproto:locations", "--noproto:default_values"),
                 "Querying for generated jar files");
         Collection<Target> generatedJarTargets =
                 bazelWorkspace.getCommandExecutor().runQueryWithoutLock(generatedJarQuery);

@@ -24,9 +24,16 @@ public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collectio
 
     private static Logger LOG = LoggerFactory.getLogger(BazelQueryForTargetProtoCommand.class);
 
-    public BazelQueryForTargetProtoCommand(Path workspaceRoot, String query, boolean keepGoing, String purpose) {
+    public BazelQueryForTargetProtoCommand(Path workspaceRoot, String query, boolean keepGoing,
+            List<String> additionalProtoArgs, String purpose) {
         super(workspaceRoot, query, keepGoing, purpose);
-        setCommandArgs("--output", "streamed_proto", "--order_output=no");
+
+        List<String> commandArgs = new ArrayList<>();
+        commandArgs.add("--output");
+        commandArgs.add("streamed_proto");
+        commandArgs.add("--order_output=no");
+        commandArgs.addAll(additionalProtoArgs);
+        setCommandArgs(commandArgs);
     }
 
     @Override

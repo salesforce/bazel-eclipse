@@ -406,6 +406,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
                 workspaceRoot,
                 "//external:*",
                 false,
+                List.of("--noproto:rule_inputs_and_outputs", "--noproto:locations", "--noproto:default_values"),
                 "Querying for external repositories");
         var externalRepositories = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
 
