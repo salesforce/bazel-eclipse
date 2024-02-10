@@ -286,4 +286,19 @@
              type="com.salesforce.bazel.eclipse.core.launchconfiguration">
        </launchConfigurationTabGroup>
     </extension>
+    <extension
+          point="org.eclipse.ui.views">
+       <category
+             id="com.salesforce.bazel.eclipse.ui.views"
+             name="Bazel">
+       </category>
+       <e4view
+             allowMultiple="false"
+             category="com.salesforce.bazel.eclipse.ui.views"
+             class="com.salesforce.bazel.eclipse.ui.execution.commandview.BazelCommandsView"
+             id="com.salesforce.bazel.eclipse.ui.execution.commandview"
+             name="Bazel Commands"
+             restorable="true">
+       </e4view>
+    </extension>
 </plugin>
