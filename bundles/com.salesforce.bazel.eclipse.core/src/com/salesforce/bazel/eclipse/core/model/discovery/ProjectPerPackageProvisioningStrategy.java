@@ -78,6 +78,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
             var monitor = SubMonitor.convert(progress, "Computing Bazel project classpaths", 1 + bazelProjects.size());
+            monitor.subTask("Collecting shards...");
 
             Map<BazelProject, Collection<BazelTarget>> activeTargetsPerProject = new HashMap<>();
             for (BazelProject bazelProject : bazelProjects) {
