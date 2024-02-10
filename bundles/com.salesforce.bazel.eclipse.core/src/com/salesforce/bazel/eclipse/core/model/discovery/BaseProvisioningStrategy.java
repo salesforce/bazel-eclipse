@@ -111,6 +111,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
     private static final IClasspathAttribute CLASSPATH_ATTRIBUTE_FOR_TEST =
             JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, Boolean.TRUE.toString());
+    private static final IClasspathAttribute CLASSPATH_ATTRIBUTE_IGNORE_OPTIONAL_PROBLEMS =
+            JavaCore.newClasspathAttribute(IClasspathAttribute.IGNORE_OPTIONAL_PROBLEMS, Boolean.TRUE.toString());
 
     private static final IPath[] EXCLUDE_JAVA_SOURCE = {
             IPath.forPosix("**/*.java") };
@@ -361,6 +363,11 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 : getFileSystemMapper().getOutputFolder(project).getFullPath();
         var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] {
                 CLASSPATH_ATTRIBUTE_FOR_TEST } : new IClasspathAttribute[] {};
+        var classpathAttributesSrcJar = useTestsClasspath ? new IClasspathAttribute[] {
+                CLASSPATH_ATTRIBUTE_FOR_TEST,
+                CLASSPATH_ATTRIBUTE_IGNORE_OPTIONAL_PROBLEMS }
+                : new IClasspathAttribute[] {
+                        CLASSPATH_ATTRIBUTE_IGNORE_OPTIONAL_PROBLEMS };
         if (javaSourceInfo.hasSourceFilesWithoutCommonRoot()) {
             // add the virtual folder for resources
             rawClasspath.add(
@@ -397,7 +404,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                                 null,
                                 null,
                                 outputLocation,
-                                classpathAttributes));
+                                classpathAttributesSrcJar));
                     }
 
                     continue;

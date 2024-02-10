@@ -207,6 +207,9 @@ public class JavaSourceInfo {
                                     srcjar,
                                     bazelTarget.getLabel())));
                     } else {
+                        // collect all sources as JavaSourceEntry
+                        // it will be possible to differentiate them later because their directory is absolute
+                        // (it's outside the package)
                         collectJavaSourcesInFolder(srcjarFolder).forEach(javaSourceEntryCollector::apply);
                     }
                 }
