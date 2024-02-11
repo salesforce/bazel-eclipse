@@ -42,6 +42,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceInfo;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
@@ -227,6 +228,20 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         }
     }
 
+    @Override
+    protected void configureRawClasspath(BazelProject project, JavaProjectInfo javaInfo, IProgressMonitor progress)
+            throws CoreException {
+        // log an error if we have sources without root - this is not wanted in this strategy
+        if (javaInfo.getSourceInfo().hasSourceFilesWithoutCommonRoot()) {
+            logSourceFilesWithoutCommonRoot(project, javaInfo.getSourceInfo(), false);
+        }
+        if (javaInfo.getTestSourceInfo().hasSourceFilesWithoutCommonRoot()) {
+            logSourceFilesWithoutCommonRoot(project, javaInfo.getTestSourceInfo(), true);
+        }
+        // use default implementation
+        super.configureRawClasspath(project, javaInfo, progress);
+    }
+
     /**
      * This methods splits the given project and target map into multiple shards for separate execution based on the
      * project view settings.
@@ -404,6 +419,29 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         };
     }
 
+    private void logSourceFilesWithoutCommonRoot(BazelProject project, JavaSourceInfo sourceInfo, boolean isTestSources)
+            throws CoreException {
+        var sourceFilesInfo = new StringBuilder();
+        for (JavaSourceEntry src : sourceInfo.getSourceFilesWithoutCommonRoot()) {
+            sourceFilesInfo.append(" - ")
+                    .append(src.getPath().lastSegment())
+                    .append(": ")
+                    .append(src.toString())
+                    .append(System.lineSeparator());
+        }
+        LOG.error(
+            "Unable to map {} completely to Bazel package '{}'. Please analyse sources for problems.\n\n{}",
+            isTestSources ? "test sources" : "sources",
+            project.getBazelPackage().getLabel(),
+            sourceFilesInfo);
+        createBuildPathProblem(
+            project,
+            Status.error(
+                isTestSources
+                        ? "Unable to map all test sources to a proper source directory. The project setup is incomplete. Please reach out for help."
+                        : "Unable to map all sources to a proper source directory. The project setup is incomplete. Please reach out for help."));
+    }
+
     protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,
             SubMonitor monitor) throws CoreException {
         try {
@@ -436,5 +474,4 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         e));
         }
     }
-
 }
