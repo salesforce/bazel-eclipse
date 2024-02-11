@@ -360,6 +360,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             JavaSourceInfo javaSourceInfo, boolean useTestsClasspath) throws CoreException {
         var virtualSourceFolder = useTestsClasspath ? getFileSystemMapper().getVirtualSourceFolderForTests(project)
                 : getFileSystemMapper().getVirtualSourceFolder(project);
+        var generatedSourceFolder = useTestsClasspath ? getFileSystemMapper().getGeneratedSourcesFolderForTests(project)
+                : getFileSystemMapper().getGeneratedSourcesFolder(project);
         var outputLocation = useTestsClasspath ? getFileSystemMapper().getOutputFolderForTests(project).getFullPath()
                 : getFileSystemMapper().getOutputFolder(project).getFullPath();
         var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] {
@@ -390,8 +392,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                                 format("programming error: found unsupported content for source directory '%s'", dir));
                     }
 
-                    var srcjarFolder =
-                            getFileSystemMapper().getGeneratedSourcesFolder(project).getFolder(dir.lastSegment());
+                    var srcjarFolder = generatedSourceFolder.getFolder(dir.lastSegment());
                     if (!srcjarFolder.exists()) {
                         createBuildPathProblem(
                             project,
