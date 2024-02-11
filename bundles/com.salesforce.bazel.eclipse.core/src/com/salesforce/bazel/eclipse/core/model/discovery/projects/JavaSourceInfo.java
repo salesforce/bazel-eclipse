@@ -252,19 +252,21 @@ public class JavaSourceInfo {
                     (List<JavaSourceEntry>) sourceEntriesBySourceRoot.get(NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE);
             var rescuedEntries = new HashSet<JavaSourceEntry>();
             for (IPath sourceRoot : sourceEntriesBySourceRoot.keySet()) {
-                if (sourceRoot.equals(MISSING_PACKAGE)) {
+                if (sourceRoot.equals(MISSING_PACKAGE) || sourceRoot.equals(NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE)) {
                     continue;
                 }
-                for (JavaSourceEntry javaSourceEntry : entriesWithWrongPackageInfo) {
-                    // rescue the entry, the source folder matches
-                    if (sourceRoot.isPrefixOf(javaSourceEntry.getPathParent())
-                            && (sourceEntriesBySourceRoot.get(sourceRoot) instanceof List entriesList)) {
-                        entriesList.add(javaSourceEntry);
-                        rescuedEntries.add(javaSourceEntry);
+                // only rescue when we have a list but not a glob
+                if (sourceEntriesBySourceRoot.get(sourceRoot) instanceof List sourceEntries) {
+                    for (JavaSourceEntry javaSourceEntry : entriesWithWrongPackageInfo) {
+                        // rescue the entry, the source folder matches
+                        if (sourceRoot.isPrefixOf(javaSourceEntry.getPathParent())) {
+                            sourceEntries.add(javaSourceEntry);
+                            rescuedEntries.add(javaSourceEntry);
+                        }
                     }
+                    // remove all rescued entries
+                    entriesWithWrongPackageInfo.removeIf(rescuedEntries::contains);
                 }
-                // remove all rescued entries
-                entriesWithWrongPackageInfo.removeIf(rescuedEntries::contains);
             }
             if (entriesWithWrongPackageInfo.isEmpty()) {
                 // all rescued
