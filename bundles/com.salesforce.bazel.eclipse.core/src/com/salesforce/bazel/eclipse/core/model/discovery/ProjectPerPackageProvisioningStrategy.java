@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -400,6 +401,13 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         return separatorChar.charAt(0);
     }
 
+    @Override
+    protected IStatus getProjectRecommendations(JavaProjectInfo javaInfo, IProgressMonitor monitor)
+            throws CoreException {
+        // with project-per-package we don't report additional java sources; the IDE will take care of it for us
+        return javaInfo.analyzeProjectRecommendations(false, monitor);
+    }
+
     private boolean isSupported(BazelTarget bazeltarget) {
         String ruleName;
         try {
@@ -424,9 +432,9 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         var sourceFilesInfo = new StringBuilder();
         for (JavaSourceEntry src : sourceInfo.getSourceFilesWithoutCommonRoot()) {
             sourceFilesInfo.append(" - ")
-                    .append(src.getPath().lastSegment())
+                    .append(src.getPath())
                     .append(": ")
-                    .append(src.toString())
+                    .append(src.getPotentialSourceDirectoryRoot())
                     .append(System.lineSeparator());
         }
         LOG.error(
@@ -437,9 +445,9 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         createBuildPathProblem(
             project,
             Status.error(
-                isTestSources
-                        ? "Unable to map all test sources to a proper source directory. The project setup is incomplete. Please reach out for help."
-                        : "Unable to map all sources to a proper source directory. The project setup is incomplete. Please reach out for help."));
+                (isTestSources ? "Unable to map all test sources to a proper source directory."
+                        : "Unable to map all sources to a proper source directory.")
+                        + " Please check the error log and reach out for help."));
     }
 
     protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,

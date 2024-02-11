@@ -191,6 +191,9 @@ public class JavaProjectInfo {
      * folder. We don't get this information from Bazel with <code>bazel query</code>.
      * </p>
      *
+     * @param reportSourceFoldersWithMoreJavaSourcesThanDeclaredAsProblem
+     *            <code>true</code> to report source folders with more Java files then expected as a problem,
+     *            <code>false</code> otherwise
      * @param monitor
      *            monitor for reporting progress and tracking cancellation (never <code>null</code>)
      * @return a status (with at most one level of children) indicating potential problems (never <code>null</code>)
@@ -198,17 +201,18 @@ public class JavaProjectInfo {
      * @todo Review if this belongs here or should be moved outside. It kind a meshs Bazel Java information with Eclipse
      *       project constraints.
      */
-    public IStatus analyzeProjectRecommendations(IProgressMonitor monitor) throws CoreException {
+    public IStatus analyzeProjectRecommendations(boolean reportSourceFoldersWithMoreJavaSourcesThanDeclaredAsProblem,
+            IProgressMonitor monitor) throws CoreException {
         var result = new MultiStatus(JavaProjectInfo.class, 0, "Java Analysis Result");
 
         sourceInfo = new JavaSourceInfo(this.srcs, bazelPackage);
-        sourceInfo.analyzeSourceDirectories(result);
+        sourceInfo.analyzeSourceDirectories(result, reportSourceFoldersWithMoreJavaSourcesThanDeclaredAsProblem);
 
         resourceInfo = new JavaResourceInfo(resources, bazelPackage);
         resourceInfo.analyzeResourceDirectories(result);
 
         testSourceInfo = new JavaSourceInfo(this.testSrcs, bazelPackage, sourceInfo);
-        testSourceInfo.analyzeSourceDirectories(result);
+        testSourceInfo.analyzeSourceDirectories(result, reportSourceFoldersWithMoreJavaSourcesThanDeclaredAsProblem);
 
         testResourceInfo = new JavaResourceInfo(testResources, bazelPackage);
         testResourceInfo.analyzeResourceDirectories(result);

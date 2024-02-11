@@ -58,6 +58,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -370,6 +371,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                         CLASSPATH_ATTRIBUTE_IGNORE_OPTIONAL_PROBLEMS };
         if (javaSourceInfo.hasSourceFilesWithoutCommonRoot()) {
             // add the virtual folder for resources
+            createFolderAndParents(virtualSourceFolder, new NullProgressMonitor());
             rawClasspath.add(
                 JavaCore.newSourceEntry(
                     virtualSourceFolder.getFullPath(),
@@ -463,7 +465,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     protected void analyzeProjectInfo(BazelProject project, JavaProjectInfo javaInfo, IProgressMonitor monitor)
             throws CoreException {
         // analyze for recommended project setup
-        var recommendations = javaInfo.analyzeProjectRecommendations(monitor);
+        var recommendations = getProjectRecommendations(javaInfo, monitor);
 
         if (LOG.isDebugEnabled()) {
             var sourceInfo = javaInfo.getSourceInfo();
@@ -1156,6 +1158,26 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         return (IEclipsePreferences) Platform.getPreferencesService().getRootNode().node(InstanceScope.SCOPE);
+    }
+
+    /**
+     * Calls and returns {@link JavaProjectInfo#analyzeProjectRecommendations(boolean, IProgressMonitor)} with
+     * recommended defaults.
+     * <p>
+     * Subclasses may override to customize defaults
+     * </p>
+     *
+     * @param javaInfo
+     *            the {@link JavaProjectInfo}
+     * @param monitor
+     *            progress monitor
+     * @return the recommendations returned by
+     *         {@link JavaProjectInfo#analyzeProjectRecommendations(boolean, IProgressMonitor)}
+     * @throws CoreException
+     */
+    protected IStatus getProjectRecommendations(JavaProjectInfo javaInfo, IProgressMonitor monitor)
+            throws CoreException {
+        return javaInfo.analyzeProjectRecommendations(true, monitor);
     }
 
     /**

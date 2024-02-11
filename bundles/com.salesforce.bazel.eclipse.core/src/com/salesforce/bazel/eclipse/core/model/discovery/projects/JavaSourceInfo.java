@@ -6,15 +6,18 @@ import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.delete;
 import static java.nio.file.Files.find;
 import static java.nio.file.Files.isRegularFile;
+import static java.nio.file.Files.list;
 import static java.nio.file.Files.readString;
 import static java.nio.file.Files.walkFileTree;
 import static java.util.Objects.requireNonNull;
+import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
@@ -29,7 +32,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
@@ -106,7 +111,8 @@ public class JavaSourceInfo {
     }
 
     @SuppressWarnings("unchecked")
-    public void analyzeSourceDirectories(MultiStatus result) throws CoreException {
+    public void analyzeSourceDirectories(MultiStatus result,
+            boolean reportFoldersWithMoreJavaSourcesThanDeclaredAsProblem) throws CoreException {
         // build an index of all source files and their parent directories (does not need to maintain order)
         Map<IPath, List<? super JavaSourceEntry>> sourceEntriesByParentFolder = new HashMap<>();
 
@@ -125,12 +131,6 @@ public class JavaSourceInfo {
             // calculate potential source root
             var potentialSourceDirectoryRoot = fileEntry.getPotentialSourceDirectoryRoot();
             if (potentialSourceDirectoryRoot == null) {
-                result.add(
-                    Status.warning(
-                        format(
-                            "Java file '%s' (with detected package '%s') does not meet IDE standards. Please move into a folder hierarchy which follows Java package structure!",
-                            fileEntry.getPath(),
-                            fileEntry.getDetectedPackagePath())));
                 return NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE;
             }
 
@@ -139,7 +139,7 @@ public class JavaSourceInfo {
 
         };
 
-        // collect the potential list of source directories
+        // collect the potential list of source directories (value is list of JavaSourceEntry or single GlobEntry)
         var sourceEntriesBySourceRoot = new LinkedHashMap<IPath, Object>();
 
         // define a function for JavaSourceEntry so we can reuse it for sources and extracted srcjars
@@ -244,78 +244,110 @@ public class JavaSourceInfo {
             }
         }
 
-        // discover folders that contain more .java files then declared in srcs
-        // (this is a strong split-package indication)
-        Set<IPath> potentialSplitPackageOrSubsetFolders = new HashSet<>();
-        for (Map.Entry<IPath, List<? super JavaSourceEntry>> entry : sourceEntriesByParentFolder.entrySet()) {
-            var potentialSourceRoot = entry.getKey();
-            if (isContainedInSharedSourceDirectories(potentialSourceRoot)) {
-                // don't check for split packages for stuff covered in shared sources already
-                continue;
+        // rescue wrong package declarations
+        if (sourceEntriesBySourceRoot.containsKey(NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE)) {
+            // we use the NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE when a package could be calculated
+            // but does not meet the IDE standards; however, if there is a common source folder we attempt to rescue it
+            var entriesWithWrongPackageInfo =
+                    (List<JavaSourceEntry>) sourceEntriesBySourceRoot.get(NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE);
+            var rescuedEntries = new HashSet<JavaSourceEntry>();
+            for (IPath sourceRoot : sourceEntriesBySourceRoot.keySet()) {
+                if (sourceRoot.equals(MISSING_PACKAGE)) {
+                    continue;
+                }
+                for (JavaSourceEntry javaSourceEntry : entriesWithWrongPackageInfo) {
+                    // rescue the entry, the source folder matches
+                    if (sourceRoot.isPrefixOf(javaSourceEntry.getPathParent())
+                            && (sourceEntriesBySourceRoot.get(sourceRoot) instanceof List entriesList)) {
+                        entriesList.add(javaSourceEntry);
+                        rescuedEntries.add(javaSourceEntry);
+                    }
+                }
+                // remove all rescued entries
+                entriesWithWrongPackageInfo.removeIf(rescuedEntries::contains);
             }
+            if (entriesWithWrongPackageInfo.isEmpty()) {
+                // all rescued
+                sourceEntriesBySourceRoot.remove(NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE);
+            } else {
+                // report problems for entries impossible to rescue
+                for (JavaSourceEntry javaSourceEntry : entriesWithWrongPackageInfo) {
+                    result.add(
+                        Status.error(
+                            format(
+                                "Java file '%s' (with detected package '%s') does not meet IDE standards. Please move into a folder hierarchy which follows Java package structure!",
+                                javaSourceEntry.getPath(),
+                                javaSourceEntry.getDetectedPackagePath())));
 
-            var entryParentLocation = bazelPackageLocation.append(potentialSourceRoot).toPath();
-            var declaredJavaFilesInFolder = entry.getValue().size();
-            try {
-                // when there are declared Java files, expect them to match
-                if (declaredJavaFilesInFolder > 0) {
-                    try (var files = Files.list(entryParentLocation)) {
-                        var javaFilesInParent = files.filter(JavaSourceInfo::isJavaFile).count();
+                }
+            }
+        }
+
+        Set<IPath> potentialSplitPackageOrSubsetFolders = new HashSet<>();
+        if (reportFoldersWithMoreJavaSourcesThanDeclaredAsProblem) {
+            // discover folders that contain more .java files then declared in srcs
+            // (this is a strong split-package indication)
+            for (Map.Entry<IPath, List<? super JavaSourceEntry>> entry : sourceEntriesByParentFolder.entrySet()) {
+                var potentialSourceRoot = entry.getKey();
+                if (isContainedInSharedSourceDirectories(potentialSourceRoot)) {
+                    // don't check for split packages for stuff covered in shared sources already
+                    continue;
+                }
+
+                var entryParentLocation = bazelPackageLocation.append(potentialSourceRoot).toPath();
+                try {
+                    // when there are declared Java files, expect them to match
+                    var declaredJavaFilesInFolder = entry.getValue().size();
+                    if (declaredJavaFilesInFolder > 0) {
+                        var foundJavaFiles = findJavaFilesNoneRecursive(entryParentLocation);
+                        var javaFilesInParent = foundJavaFiles.size();
                         if (javaFilesInParent != declaredJavaFilesInFolder) {
                             if (potentialSplitPackageOrSubsetFolders.add(potentialSourceRoot)) {
-                                result.add(
-                                    Status.warning(
-                                        format(
-                                            "Folder '%s' contains more Java files then configured in Bazel. This is a split-package scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
-                                            entryParentLocation)));
+                                reportDeltaAsProblem(result, entryParentLocation, entry.getValue(), foundJavaFiles);
                             }
                             continue; // continue with next so we capture all possible warnings (we could also abort, though)
                         }
                     }
+                } catch (IOException e) {
+                    throw new CoreException(
+                            Status.error(format("Error searching files in '%s'", entryParentLocation), e));
                 }
-            } catch (IOException e) {
-                throw new CoreException(Status.error(format("Error searching files in '%s'", entryParentLocation), e));
-            }
-        }
-
-        // discover folders that contain more Java files (including package fragments) then declared in srcs
-        // (eg., glob(["src/test/java/some/package/only/*.java"])
-        for (var potentialSourceRootAndSourceEntries : sourceEntriesBySourceRoot.entrySet()) {
-            var potentialSourceRoot = potentialSourceRootAndSourceEntries.getKey();
-            if (NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE.equals(potentialSourceRoot)) {
-                continue;
-            }
-            if (!(potentialSourceRootAndSourceEntries.getValue() instanceof List)) {
-                continue;
-            }
-            if (isContainedInSharedSourceDirectories(potentialSourceRoot)) {
-                // don't check for split packages for stuff covered in shared sources already
-                continue;
-            }
-            if (potentialSourceRoot.isAbsolute()) {
-                // don't check for split packages in srcjars (generated code)
-                continue;
             }
 
-            var potentialSourceRootPath = bazelPackageLocation.append(potentialSourceRoot).toPath();
-            try {
-                var registeredFiles = ((List<?>) potentialSourceRootAndSourceEntries.getValue()).size();
-                var foundJavaFilesInSourceRoot = find(
-                    potentialSourceRootPath,
-                    Integer.MAX_VALUE,
-                    (p, a) -> isJavaFile(p),
-                    FileVisitOption.FOLLOW_LINKS).count();
-                if ((registeredFiles != foundJavaFilesInSourceRoot)
-                        && potentialSplitPackageOrSubsetFolders.add(potentialSourceRoot)) {
-                    result.add(
-                        Status.warning(
-                            format(
-                                "Folder '%s' contains more Java files then configured in Bazel. This is a scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.",
-                                potentialSourceRootPath)));
+            // discover folders that contain more Java files (including package fragments) then declared in srcs
+            // (eg., glob(["src/test/java/some/package/only/*.java"])
+            for (var potentialSourceRootAndSourceEntries : sourceEntriesBySourceRoot.entrySet()) {
+                var potentialSourceRoot = potentialSourceRootAndSourceEntries.getKey();
+                if (NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE.equals(potentialSourceRoot)) {
+                    continue;
                 }
-            } catch (IOException e) {
-                throw new CoreException(
-                        Status.error(format("Error searching files in '%s'", potentialSourceRootPath), e));
+                if (!(potentialSourceRootAndSourceEntries.getValue() instanceof List)) {
+                    continue;
+                }
+                if (isContainedInSharedSourceDirectories(potentialSourceRoot)) {
+                    // don't check for split packages for stuff covered in shared sources already
+                    continue;
+                }
+                if (potentialSourceRoot.isAbsolute()) {
+                    // don't check for split packages in srcjars (generated code)
+                    continue;
+                }
+
+                var potentialSourceRootPath = bazelPackageLocation.append(potentialSourceRoot).toPath();
+                try {
+                    var registeredFiles = ((List<?>) potentialSourceRootAndSourceEntries.getValue()).size();
+                    var foundJavaFiles = findJavaFilesRecursive(potentialSourceRootPath);
+                    var foundJavaFilesInSourceRoot = foundJavaFiles.size();
+                    if ((registeredFiles != foundJavaFilesInSourceRoot)
+                            && potentialSplitPackageOrSubsetFolders.add(potentialSourceRoot)) {
+                        List<? super JavaSourceEntry> declaredEntries =
+                                (List<? super JavaSourceEntry>) potentialSourceRootAndSourceEntries.getValue();
+                        reportDeltaAsProblem(result, potentialSourceRootPath, declaredEntries, foundJavaFiles);
+                    }
+                } catch (IOException e) {
+                    throw new CoreException(
+                            Status.error(format("Error searching files in '%s'", potentialSourceRootPath), e));
+                }
             }
         }
 
@@ -482,6 +514,18 @@ public class JavaSourceInfo {
         }
 
         return targetDirectory;
+    }
+
+    private List<Path> findJavaFilesNoneRecursive(Path directory) throws IOException {
+        try (var stream = list(directory)) {
+            return stream.filter(JavaSourceInfo::isJavaFile).collect(toList());
+        }
+    }
+
+    private List<Path> findJavaFilesRecursive(Path directory) throws IOException {
+        try (var stream = find(directory, Integer.MAX_VALUE, (p, a) -> isJavaFile(p), FileVisitOption.FOLLOW_LINKS)) {
+            return stream.collect(toList());
+        }
     }
 
     public IPath getBazelPackageLocation() {
@@ -672,5 +716,32 @@ public class JavaSourceInfo {
 
         // give up
         return null;
+    }
+
+    private void reportDeltaAsProblem(MultiStatus result, Path rootDirectory,
+            List<? super JavaSourceEntry> declaredEntries, List<Path> foundJavaFiles) {
+        SortedSet<Path> registeredFilesSet = declaredEntries.stream()
+                .map(o -> ((JavaSourceEntry) o).getLocation().toPath())
+                .collect(toCollection(TreeSet::new));
+        SortedSet<Path> foundFilesSet = new TreeSet<>(foundJavaFiles);
+        var packageRoot = bazelPackageLocation.toPath();
+        String delta;
+        if (registeredFilesSet.size() < foundFilesSet.size()) {
+            delta = foundFilesSet.stream()
+                    .filter(not(registeredFilesSet::contains))
+                    .map(p -> packageRoot.relativize(p).toString())
+                    .collect(joining("\n - ", " - ", "\n"));
+        } else {
+            delta = registeredFilesSet.stream()
+                    .filter(not(foundFilesSet::contains))
+                    .map(p -> packageRoot.relativize(p).toString())
+                    .collect(joining("\n - ", " - ", "\n"));
+        }
+        result.add(
+            Status.error(
+                format(
+                    "Folder '%s' contains more Java files then configured in Bazel. This is a scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.\n%s",
+                    rootDirectory,
+                    delta)));
     }
 }
