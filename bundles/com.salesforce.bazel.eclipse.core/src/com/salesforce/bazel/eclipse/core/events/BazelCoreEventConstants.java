@@ -29,4 +29,8 @@ public interface BazelCoreEventConstants {
 
     String EVENT_DATA_COUNT_PROJECT = "count.projects";
     String EVENT_DATA_COUNT_TARGETS = "count.targets";
+
+    String EVENT_DATA_TARGET_DISCOVERY_STRATEGY = "target.discovery_stratregy";
+    String EVENT_DATA_TARGET_PROVISIONING_STRATEGY = "target.provisioning_strategy";
+
 }

@@ -23,9 +23,21 @@ import org.osgi.service.event.Event;
 /**
  * A synchronization finished event.
  */
-public record SyncFinishedEvent(Instant start, Duration duration, String status, int projectsCount, int targetsCount)
-        implements
-            BazelCoreEventConstants {
+public record SyncFinishedEvent(
+        Instant start,
+        Duration duration,
+        String status,
+        int projectsCount,
+        int targetsCount,
+        String targetDiscoveryStrategy,
+        String targetProvisioningStrategy) implements BazelCoreEventConstants {
+
+    /**
+     * Convenience constructor for events without additional information (in case of none-ok status)
+     */
+    public SyncFinishedEvent(Instant start, Duration duration, String status) {
+        this(start, duration, status, 0, 0, null /* target discover */, null /* target provisioning */);
+    }
 
     public static SyncFinishedEvent fromMap(Map<String, ?> eventData) {
         var start = (Instant) eventData.get(EVENT_DATA_START_INSTANT);
@@ -33,12 +45,16 @@ public record SyncFinishedEvent(Instant start, Duration duration, String status,
         var status = (String) eventData.get(EVENT_DATA_STATUS);
         var projectsCount = (Integer) eventData.get(EVENT_DATA_COUNT_PROJECT);
         var targetsCount = (Integer) eventData.get(EVENT_DATA_COUNT_TARGETS);
+        var targetDiscoveryStrategy = (String) eventData.get(EVENT_DATA_TARGET_DISCOVERY_STRATEGY);
+        var targetProvisionintStrategy = (String) eventData.get(EVENT_DATA_TARGET_PROVISIONING_STRATEGY);
         return new SyncFinishedEvent(
                 start,
                 duration,
                 status,
                 projectsCount != null ? projectsCount : 0,
-                targetsCount != null ? targetsCount : 0);
+                targetsCount != null ? targetsCount : 0,
+                targetDiscoveryStrategy,
+                targetProvisionintStrategy);
     }
 
     public Event build() {
@@ -48,6 +64,8 @@ public record SyncFinishedEvent(Instant start, Duration duration, String status,
         eventData.put(EVENT_DATA_STATUS, status());
         eventData.put(EVENT_DATA_COUNT_PROJECT, projectsCount());
         eventData.put(EVENT_DATA_COUNT_TARGETS, targetsCount());
+        eventData.put(EVENT_DATA_TARGET_DISCOVERY_STRATEGY, targetDiscoveryStrategy());
+        eventData.put(EVENT_DATA_TARGET_PROVISIONING_STRATEGY, targetProvisioningStrategy());
         return new Event(TOPIC_SYNC_FINISHED, eventData);
     }
 }
