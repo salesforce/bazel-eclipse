@@ -5,6 +5,7 @@ package com.salesforce.bazel.eclipse.core.model;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID;
+import static com.salesforce.bazel.sdk.util.DurationUtil.humanReadableFormat;
 import static java.lang.String.format;
 import static java.nio.file.Files.isReadable;
 import static java.util.stream.Collectors.toList;
@@ -677,17 +678,25 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                 }
             }
 
-            // broadcast sync metrics
+            // broadcast & log sync metrics
             var duration = Duration.between(start, Instant.now());
+            var projectsCount = targetProjects.size();
+            var targetsCount = targets.size();
             getEventAdmin().postEvent(
                 new SyncFinishedEvent(
                         start,
                         duration,
                         "ok",
-                        targetProjects.size(),
-                        targets.size(),
+                        projectsCount,
+                        targetsCount,
                         workspace.getBazelProjectView().targetDiscoveryStrategy(),
                         workspace.getBazelProjectView().targetProvisioningStrategy()).build());
+            LOG.info(
+                "Synchronization of workspace '{}' finished successfully (duration {}, {} targets, {} projects)",
+                workspaceName,
+                humanReadableFormat(duration),
+                targetsCount,
+                projectsCount);
 
             return Status.OK_STATUS;
         } catch (OperationCanceledException e) {
@@ -712,5 +721,4 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             }
         }
     }
-
 }
