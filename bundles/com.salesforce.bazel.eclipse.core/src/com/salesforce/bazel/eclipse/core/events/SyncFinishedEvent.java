@@ -23,20 +23,31 @@ import org.osgi.service.event.Event;
 /**
  * A synchronization finished event.
  */
-public record SyncFinishedEvent(Instant start, Duration duration, String status) implements BazelCoreEventConstants {
+public record SyncFinishedEvent(Instant start, Duration duration, String status, int projectsCount, int targetsCount)
+        implements
+            BazelCoreEventConstants {
 
     public static SyncFinishedEvent fromMap(Map<String, ?> eventData) {
         var start = (Instant) eventData.get(EVENT_DATA_START_INSTANT);
         var duration = (Duration) eventData.get(EVENT_DATA_DURATION);
         var status = (String) eventData.get(EVENT_DATA_STATUS);
-        return new SyncFinishedEvent(start, duration, status);
+        var projectsCount = (Integer) eventData.get(EVENT_DATA_COUNT_PROJECT);
+        var targetsCount = (Integer) eventData.get(EVENT_DATA_COUNT_TARGETS);
+        return new SyncFinishedEvent(
+                start,
+                duration,
+                status,
+                projectsCount != null ? projectsCount : 0,
+                targetsCount != null ? targetsCount : 0);
     }
 
     public Event build() {
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(EVENT_DATA_START_INSTANT, start);
-        eventData.put(EVENT_DATA_DURATION, duration);
-        eventData.put(EVENT_DATA_STATUS, status);
+        eventData.put(EVENT_DATA_START_INSTANT, start());
+        eventData.put(EVENT_DATA_DURATION, duration());
+        eventData.put(EVENT_DATA_STATUS, status());
+        eventData.put(EVENT_DATA_COUNT_PROJECT, projectsCount());
+        eventData.put(EVENT_DATA_COUNT_TARGETS, targetsCount());
         return new Event(TOPIC_SYNC_FINISHED, eventData);
     }
 }

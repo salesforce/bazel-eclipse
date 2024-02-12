@@ -26,4 +26,7 @@ public interface BazelCoreEventConstants {
     String EVENT_DATA_START_INSTANT = "start";
     String EVENT_DATA_DURATION = "duration";
     String EVENT_DATA_STATUS = "status";
+
+    String EVENT_DATA_COUNT_PROJECT = "count.projects";
+    String EVENT_DATA_COUNT_TARGETS = "count.targets";
 }

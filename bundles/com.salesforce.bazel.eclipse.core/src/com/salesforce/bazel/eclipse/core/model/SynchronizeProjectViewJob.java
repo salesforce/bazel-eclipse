@@ -679,19 +679,20 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
             // broadcast sync metrics
             var duration = Duration.between(start, Instant.now());
-            getEventAdmin().postEvent(new SyncFinishedEvent(start, duration, "ok").build());
+            getEventAdmin().postEvent(
+                new SyncFinishedEvent(start, duration, "ok", targetProjects.size(), targets.size()).build());
 
             return Status.OK_STATUS;
         } catch (OperationCanceledException e) {
             // broadcast sync metrics
             var duration = Duration.between(start, Instant.now());
-            getEventAdmin().postEvent(new SyncFinishedEvent(start, duration, "cancelled").build());
+            getEventAdmin().postEvent(new SyncFinishedEvent(start, duration, "cancelled", 0, 0).build());
             LOG.warn("Workspace synchronization cancelled: {}", workspace.getLocation(), e);
             return Status.CANCEL_STATUS;
         } catch (Exception e) {
             // broadcast sync metrics
             var duration = Duration.between(start, Instant.now());
-            getEventAdmin().postEvent(new SyncFinishedEvent(start, duration, "failed").build());
+            getEventAdmin().postEvent(new SyncFinishedEvent(start, duration, "failed", 0, 0).build());
             LOG.error("Error synchronizing workspace '{}': {}", workspace.getLocation(), e.getMessage(), e);
             return e instanceof CoreException ce ? ce.getStatus()
                     : Status.error(format("Error synchronizing workspace '%s'", workspace.getLocation()), e);
