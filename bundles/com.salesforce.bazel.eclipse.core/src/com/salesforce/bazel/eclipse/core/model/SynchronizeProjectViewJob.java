@@ -578,7 +578,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
         // track the start
         var start = Instant.now();
-
         try {
             // invalidate the entire cache because we want to ensure we sync fresh
             // FIXME: this should not be required but currently is because our ResourceChangeProcessor is very light
@@ -682,7 +681,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             var duration = Duration.between(start, Instant.now());
             var projectsCount = targetProjects.size();
             var targetsCount = targets.size();
-            getEventAdmin().postEvent(
+            safePostEvent(
                 new SyncFinishedEvent(
                         start,
                         duration,
@@ -690,7 +689,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                         projectsCount,
                         targetsCount,
                         workspace.getBazelProjectView().targetDiscoveryStrategy(),
-                        workspace.getBazelProjectView().targetProvisioningStrategy()).build());
+                        workspace.getBazelProjectView().targetProvisioningStrategy()));
             LOG.info(
                 "Synchronization of workspace '{}' finished successfully (duration {}, {} targets, {} projects)",
                 workspaceName,
@@ -702,13 +701,13 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         } catch (OperationCanceledException e) {
             // broadcast sync metrics
             var duration = Duration.between(start, Instant.now());
-            getEventAdmin().postEvent(new SyncFinishedEvent(start, duration, "cancelled").build());
+            safePostEvent(new SyncFinishedEvent(start, duration, "cancelled"));
             LOG.warn("Workspace synchronization cancelled: {}", workspace.getLocation(), e);
             return Status.CANCEL_STATUS;
         } catch (Exception e) {
             // broadcast sync metrics
             var duration = Duration.between(start, Instant.now());
-            getEventAdmin().postEvent(new SyncFinishedEvent(start, duration, "failed").build());
+            safePostEvent(new SyncFinishedEvent(start, duration, "failed"));
             LOG.error("Error synchronizing workspace '{}': {}", workspace.getLocation(), e.getMessage(), e);
             return e instanceof CoreException ce ? ce.getStatus()
                     : Status.error(format("Error synchronizing workspace '%s'", workspace.getLocation()), e);
@@ -719,6 +718,16 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             if (monitor != null) {
                 monitor.done();
             }
+        }
+    }
+
+    private void safePostEvent(SyncFinishedEvent syncFinishedEvent) {
+        try {
+            getEventAdmin().postEvent(syncFinishedEvent.build());
+        } catch (RuntimeException | AssertionError | LinkageError e) {
+            LOG.error(
+                "Unable to post event. OSGi Event Admin does not seem to be available. Please check the deployment.",
+                e);
         }
     }
 }

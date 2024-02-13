@@ -136,13 +136,23 @@ public class ImportBazelWorkspaceJob extends WorkspaceJob {
 
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
-        // create the default project view if none exist yet
-        createWorkspaceProjectViewIfNecessary();
+        try {
+            // create the default project view if none exist yet
+            createWorkspaceProjectViewIfNecessary();
 
-        // at this point the workspace lock has been acquired because the import job used the workspace root as scheduling rule
-        // thus, it's safe to call runInWorkspace directly
+            // at this point the workspace lock has been acquired because the import job used the workspace root as scheduling rule
+            // thus, it's safe to call runInWorkspace directly
 
-        return new SynchronizeProjectViewJob(workspace).runInWorkspace(monitor);
+            return new SynchronizeProjectViewJob(workspace).runInWorkspace(monitor);
+        } catch (RuntimeException | AssertionError | LinkageError e) {
+            throw new CoreException(
+                    Status.error(
+                        format(
+                            "Import of workspace '%s' failed. %s",
+                            workspace.getLocation().toOSString(),
+                            e.getMessage()),
+                        e));
+        }
     }
 
 }
