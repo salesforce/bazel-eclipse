@@ -42,15 +42,11 @@ import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
  */
 public class BazelJdtLsPlugin extends Plugin implements BazelJdtLsSharedContstants {
-
-    private static Logger LOG = LoggerFactory.getLogger(BazelJdtLsPlugin.class);
 
     private static BazelJdtLsPlugin plugin;
 
