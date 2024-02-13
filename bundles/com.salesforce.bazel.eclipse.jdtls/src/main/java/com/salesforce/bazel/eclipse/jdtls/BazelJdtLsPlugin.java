@@ -37,13 +37,20 @@ package com.salesforce.bazel.eclipse.jdtls;
 
 import static java.util.Objects.requireNonNull;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
  */
 public class BazelJdtLsPlugin extends Plugin implements BazelJdtLsSharedContstants {
+
+    private static Logger LOG = LoggerFactory.getLogger(BazelJdtLsPlugin.class);
 
     private static BazelJdtLsPlugin plugin;
 
@@ -54,6 +61,35 @@ public class BazelJdtLsPlugin extends Plugin implements BazelJdtLsSharedContstan
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
+
+        // ensure scr is running
+        var bundle = Platform.getBundle("org.apache.felix.scr");
+        if (bundle == null) {
+            throw new IllegalStateException(
+                    "Bundle org.apache.felix.scr is not available. The Bazel LS cannot be activated properly!");
+        }
+        switch (bundle.getState()) {
+            case Bundle.INSTALLED:
+            case Bundle.RESOLVED:
+                try {
+                    bundle.start();
+                } catch (BundleException e) {
+                    throw new IllegalStateException(
+                            "Bundle org.apache.felix.scr could not be started. The Bazel LS cannot be activated properly!",
+                            e);
+                }
+                break;
+
+            case Bundle.STARTING:
+            case Bundle.ACTIVE:
+                // ok
+                break;
+
+            default:
+                throw new IllegalStateException(
+                        "Bundle org.apache.felix.scr is not started. The Bazel LS cannot be activated properly!");
+        }
+
         plugin = this;
     }
 
