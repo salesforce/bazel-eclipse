@@ -75,15 +75,12 @@ public class BazelCorePlugin extends Plugin implements BazelCoreSharedContstants
         return requireNonNull(serviceTracker, "service tracker not initialized");
     }
 
-    public void setServiceTracker(OsgiServiceTracker serviceTracker) {
-        this.serviceTracker = serviceTracker;
-    }
-
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
         plugin = this;
         bundleVersion = bundleContext.getBundle().getVersion().toString();
+        serviceTracker = new OsgiServiceTracker(bundleContext);
 
         // initialize the SDK
         BazelJavaSDKInit.initialize("Bazel Eclipse Feature");
@@ -101,6 +98,12 @@ public class BazelCorePlugin extends Plugin implements BazelCoreSharedContstants
         } catch (Exception e) {
             // this might fail because other bundles are already stopped
             // at least we tried
+        }
+
+        try {
+            serviceTracker.close();
+        } catch (Exception e) {
+            // ignore
         }
 
         super.stop(context);

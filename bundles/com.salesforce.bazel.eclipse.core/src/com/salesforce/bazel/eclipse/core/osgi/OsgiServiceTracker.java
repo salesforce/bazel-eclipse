@@ -15,34 +15,30 @@ package com.salesforce.bazel.eclipse.core.osgi;
 
 import static java.util.Objects.requireNonNull;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.event.EventAdmin;
-
-import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * A tracker for various OSGi services we consume/need.
  */
-@Component
 public class OsgiServiceTracker {
 
-    @Reference
-    EventAdmin eventAdmin;
+    private final ServiceTracker<EventAdmin, EventAdmin> eventAdminTracker;
 
-    @Activate
-    public void activate() {
-        BazelCorePlugin.getInstance().setServiceTracker(this);
+    public OsgiServiceTracker(BundleContext bundleContext) {
+        eventAdminTracker = new ServiceTracker<>(bundleContext, EventAdmin.class, null);
     }
 
-    @Deactivate
-    public void deactivate() {
-        BazelCorePlugin.getInstance().setServiceTracker(null);
+    public void close() {
+        if (eventAdminTracker != null) {
+            eventAdminTracker.close();
+        }
     }
 
     public EventAdmin getEventAdmin() {
-        return requireNonNull(eventAdmin, "no event admin; possible bug");
+        ServiceTracker<EventAdmin, EventAdmin> tracker =
+                requireNonNull(eventAdminTracker, "the service tracker was not initialized properly");
+        return requireNonNull(tracker.getService(), "no event admin; possible deployment bug");
     }
 }
