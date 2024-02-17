@@ -49,13 +49,15 @@ public final class Trace {
         }
 
         public void done() {
-            if (isNotDone()) {
-                done = true;
-                stopWatch.stop();
-
-                // clean up any un-finished children (we do not tolerate bad spans)
-                children.removeIf(Span::isNotDone);
+            if (done) {
+                return;
             }
+
+            // stop all children
+            children.forEach(Span::done);
+
+            done = true;
+            stopWatch.stop();
         }
 
         List<Span> getChildren() {
@@ -70,8 +72,8 @@ public final class Trace {
             return name;
         }
 
-        private boolean isNotDone() {
-            return !done;
+        boolean isDone() {
+            return done;
         }
 
         private Span newChild(String name) {
@@ -89,27 +91,63 @@ public final class Trace {
 
     private static final ThreadLocal<Trace> activeTrace = new ThreadLocal<>();
 
-    public static Trace getActiveTrace() {
+    /**
+     * @return Trace of the current thread
+     */
+    public static Trace getCurrentTrace() {
         return activeTrace.get();
     }
 
     /**
+     * Sets the current threads {@link Trace}.
+     *
      * @param trace
      *            the trace to set
      * @return the old trace
      */
-    public static Trace setActiveTrace(Trace trace) {
+    public static Trace setCurrentTrace(Trace trace) {
         var old = activeTrace.get();
         activeTrace.set(trace);
         return old;
     }
 
+    /**
+     * Starts and returns a new {@link Span} in the tracing hierarchy if tracing is active.
+     *
+     * @param name
+     *            the span name
+     * @return a new span (maybe <code>null</code>)
+     */
     public static Span startSpanIfTraceIsActive(String name) {
         var trace = activeTrace.get();
-        if (trace == null) {
+        if ((trace == null) || trace.getRoot().isDone()) {
             return null;
         }
         return trace.newSpan(name);
+    }
+
+    /**
+     * Checks if there is an active Trace.
+     * <p>
+     * If there is one, a new {@link Span} in the hierarchy of the trace is created. Otherwise tracing is activated and
+     * the root span returned.
+     * </p>
+     *
+     * @param name
+     *            name of the span
+     * @return a new span in the tracing hierarchy
+     */
+    public static Span startSpanOrTracing(String name) {
+        var trace = activeTrace.get();
+        if ((trace != null) && !trace.getRoot().isDone()) {
+            // new span from active trace
+            return trace.newSpan(name);
+        }
+
+        // activate new trace and use root span
+        trace = new Trace(name);
+        setCurrentTrace(trace);
+        return trace.getRoot();
     }
 
     private final Span root;
@@ -132,9 +170,20 @@ public final class Trace {
         created = Instant.now();
     }
 
+    /**
+     * Finishes tracing and removes this from the {@link #getCurrentTrace()}.
+     *
+     * @return Duration from the beginning of this {@link Trace}
+     */
     public Duration done() {
         root.done();
-        setActiveTrace(null); // remove from automatically from this thread
+
+        // clear stack
+        spanStack.clear();
+
+        // remove from automatically from this thread
+        setCurrentTrace(null);
+
         return Duration.ofNanos(root.getDuration(TimeUnit.NANOSECONDS));
     }
 

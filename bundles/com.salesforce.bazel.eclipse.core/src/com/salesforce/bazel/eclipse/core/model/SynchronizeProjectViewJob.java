@@ -5,10 +5,12 @@ package com.salesforce.bazel.eclipse.core.model;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID;
-import static com.salesforce.bazel.eclipse.core.util.trace.Trace.setActiveTrace;
+import static com.salesforce.bazel.eclipse.core.util.trace.Trace.getCurrentTrace;
+import static com.salesforce.bazel.eclipse.core.util.trace.Trace.setCurrentTrace;
 import static com.salesforce.bazel.sdk.util.DurationUtil.humanReadableFormat;
 import static java.lang.String.format;
 import static java.nio.file.Files.isReadable;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -50,7 +52,6 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IPreferenceFilter;
@@ -530,7 +531,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private List<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, TracingSubMonitor monitor, int work)
             throws CoreException {
-        return getTargetProvisioningStrategy().provisionProjectsForSelectedTargets(targets, workspace, monitor);
+        return getTargetProvisioningStrategy()
+                .provisionProjectsForSelectedTargets(targets, workspace, monitor.split(work, "Provisioning Projects"));
     }
 
     private void refreshFolderAndHideMembersIfNecessary(TracingSubMonitor monitor, Set<IPath> alwaysAllowedFolders,
@@ -628,8 +630,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
         // track the start
-        var trace = new Trace(format("Synchronizing %s", workspace.getLocation().lastSegment()));
-        var oldTrace = setActiveTrace(trace);
+        var progress = TracingSubMonitor
+                .convert(monitor, format("Synchronizing %s", workspace.getLocation().lastSegment()), 60);
+        var trace = requireNonNull(getCurrentTrace(), "Tracing is supposed to be active at this point!");
         try {
             // invalidate the entire cache because we want to ensure we sync fresh
             // FIXME: this should not be required but currently is because our ResourceChangeProcessor is very light
@@ -647,8 +650,6 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // ensure workspace project exists
             var workspaceName = workspace.getName();
             var workspaceRoot = workspace.getLocation();
-
-            var progress = TracingSubMonitor.convert(monitor, format("Synchronizing %s", workspaceName), 60);
 
             // log an event so we can verify a few things later
             if (LOG.isInfoEnabled()) {
@@ -714,6 +715,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // last but not least we call any sync participants
             callSynParticipants(targetProjects, progress, 1);
 
+            // required per spec to finish the span properly
+            progress.done();
+
             // broadcast & log sync metrics
             var duration = trace.done();
             var start = trace.getCreated();
@@ -753,8 +757,13 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         } finally {
             // resume cache invalidation
             workspace.getModelManager().getResourceChangeProcessor().resumeInvalidationFor(workspace);
-            SubMonitor.done(monitor);
-            setActiveTrace(oldTrace);
+
+            // stop tracing
+            trace.done();
+            setCurrentTrace(null);
+
+            // finish outer monitor
+            IProgressMonitor.done(monitor);
         }
     }
 

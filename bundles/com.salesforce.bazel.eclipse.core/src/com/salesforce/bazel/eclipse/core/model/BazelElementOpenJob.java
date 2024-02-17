@@ -3,7 +3,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
-import static com.salesforce.bazel.eclipse.core.util.trace.Trace.setActiveTrace;
+import static com.salesforce.bazel.eclipse.core.util.trace.Trace.setCurrentTrace;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -43,7 +43,9 @@ class BazelElementOpenJob<I extends BazelElementInfo> extends Job implements ISc
         this.location = location;
         this.bazelElement = bazelElement;
         this.infoCache = infoCache;
-        trace = Trace.getActiveTrace();
+
+        // use the trace of the calling thread
+        trace = Trace.getCurrentTrace();
 
         setSystem(true);
         setUser(false);
@@ -105,7 +107,7 @@ class BazelElementOpenJob<I extends BazelElementInfo> extends Job implements ISc
     protected IStatus run(IProgressMonitor monitor) {
         // we only set the active trace but do not create a span
         // a span will only be created when a command is executed
-        var oldTrace = setActiveTrace(trace);
+        var oldTrace = setCurrentTrace(trace);
         try {
             // check check within scheduling rule to ensure we don't load twice
             info = infoCache.getIfPresent(bazelElement);
@@ -132,7 +134,7 @@ class BazelElementOpenJob<I extends BazelElementInfo> extends Job implements ISc
             opened.countDown();
 
             // restore old trace
-            setActiveTrace(oldTrace);
+            setCurrentTrace(oldTrace);
         }
 
         return Status.OK_STATUS;

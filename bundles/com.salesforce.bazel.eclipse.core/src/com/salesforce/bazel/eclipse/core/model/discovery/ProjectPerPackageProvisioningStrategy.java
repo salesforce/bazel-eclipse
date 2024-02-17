@@ -7,7 +7,6 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_ALL_LABELS;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +27,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +78,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
-            var monitor = SubMonitor.convert(progress, "Computing Bazel project classpaths", 1 + bazelProjects.size());
+            var monitor =
+                    TracingSubMonitor.convert(progress, "Computing Bazel project classpaths", 1 + bazelProjects.size());
             monitor.subTask("Collecting shards...");
 
             Map<BazelProject, Collection<BazelTarget>> activeTargetsPerProject = new HashMap<>();
@@ -169,7 +168,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         .runDirectlyWithinExistingWorkspaceLock(
                             command,
                             shard.keySet().stream().map(BazelProject::getProject).collect(toList()),
-                            monitor.split(3, SUPPRESS_ALL_LABELS));
+                            monitor.slice(3));
 
                 // populate map from result
                 var aspectsInfo = new JavaAspectsInfo(result, workspace);

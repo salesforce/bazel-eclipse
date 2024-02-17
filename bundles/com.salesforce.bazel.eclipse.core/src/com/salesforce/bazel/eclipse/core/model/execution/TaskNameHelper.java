@@ -10,6 +10,10 @@ class TaskNameHelper {
 
     static final int TASK_LENGTH_LIMIT = 120;
 
+    static String getSpanName(BazelCommand<?> command) {
+        return command.getPurpose();
+    }
+
     static String getTaskName(BazelCommand<?> command) {
         var taskName = command.toString();
         if (taskName.length() <= TASK_LENGTH_LIMIT) {
@@ -19,5 +23,4 @@ class TaskNameHelper {
         // see https://github.com/eclipse-platform/eclipse.platform.ui/issues/1112 why we should limit the length on task name
         return taskName.substring(0, TASK_LENGTH_LIMIT - 3) + "...";
     }
-
 }

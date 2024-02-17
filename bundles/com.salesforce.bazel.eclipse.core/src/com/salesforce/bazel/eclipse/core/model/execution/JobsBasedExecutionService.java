@@ -13,6 +13,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model.execution;
 
+import static com.salesforce.bazel.eclipse.core.model.execution.TaskNameHelper.getSpanName;
 import static com.salesforce.bazel.eclipse.core.model.execution.TaskNameHelper.getTaskName;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
@@ -60,7 +61,7 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
     public <R> Future<R> executeOutsideWorkspaceLockAsync(BazelCommand<R> command,
             BazelElement<?, ?> executionContext) {
         var future = new CompletableFuture<R>(); // this is ok to be a completable future
-        var span = Trace.startSpanIfTraceIsActive(getTaskName(command));
+        var span = Trace.startSpanIfTraceIsActive(getSpanName(command));
         new BazelReadOnlyJob<>(executor, command, getJobGroup(executionContext), future).schedule();
         if (span != null) {
             return future.whenComplete((r, t) -> span.done());
@@ -72,11 +73,10 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
     public <R> R executeWithinExistingWorkspaceLock(BazelCommand<R> command, BazelElement<?, ?> executionContext,
             List<IResource> resourcesToRefresh, IProgressMonitor progress) throws CoreException {
         var result = new AtomicReference<R>();
-        var taskName = getTaskName(command);
-        var span = Trace.startSpanIfTraceIsActive(taskName);
+        var span = Trace.startSpanIfTraceIsActive(getSpanName(command));
         try {
             ResourcesPlugin.getWorkspace().run(pm -> {
-                var monitor = SubMonitor.convert(pm, taskName, IProgressMonitor.UNKNOWN);
+                var monitor = SubMonitor.convert(pm, getTaskName(command), IProgressMonitor.UNKNOWN);
                 try {
                     if (command.getPurpose() != null) {
                         monitor.subTask(command.getPurpose());
@@ -105,7 +105,7 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
     public <R> Future<R> executeWithWorkspaceLockAsync(BazelCommand<R> command, BazelElement<?, ?> executionContext,
             ISchedulingRule rule, List<IResource> resourcesToRefresh) {
         var future = new WorkspaceLockDetectingFuture<R>();
-        var span = Trace.startSpanIfTraceIsActive(getTaskName(command));
+        var span = Trace.startSpanIfTraceIsActive(getSpanName(command));
         new BazelWorkspaceJob<>(executor, command, getJobGroup(executionContext), rule, resourcesToRefresh, future)
                 .schedule();
         if (span != null) {

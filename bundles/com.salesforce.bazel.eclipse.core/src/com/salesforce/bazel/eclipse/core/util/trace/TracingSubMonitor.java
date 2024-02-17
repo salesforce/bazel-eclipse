@@ -14,6 +14,7 @@
 package com.salesforce.bazel.eclipse.core.util.trace;
 
 import static com.salesforce.bazel.eclipse.core.util.trace.Trace.startSpanIfTraceIsActive;
+import static com.salesforce.bazel.eclipse.core.util.trace.Trace.startSpanOrTracing;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -40,8 +41,9 @@ public class TracingSubMonitor implements IProgressMonitor {
      * </p>
      * <p>
      * This method should generally be called at the beginning of a method that accepts an IProgressMonitor in order to
-     * convert the IProgressMonitor into a {@link TracingSubMonitor}. A {@link Trace} is expected to be
-     * {@link Trace#getActiveTrace() active in the current thread} otherwise tracing is a no-op.
+     * convert the IProgressMonitor into a {@link TracingSubMonitor}. A {@link Trace} will be created if there is no
+     * {@link Trace#getCurrentTrace() active in the current thread}. Thus, callers are required to call
+     * {@link Trace#done()} when they are finished tracing.
      * </p>
      * <p>
      * Since it is illegal to call beginTask on the same IProgressMonitor more than once, the same instance of
@@ -72,7 +74,7 @@ public class TracingSubMonitor implements IProgressMonitor {
         var subMonitor = SubMonitor.convert(monitor, taskName, work);
 
         // start the span
-        var span = startSpanIfTraceIsActive(taskName);
+        var span = startSpanOrTracing(taskName);
 
         return new TracingSubMonitor(subMonitor, span);
     }
@@ -210,7 +212,7 @@ public class TracingSubMonitor implements IProgressMonitor {
 
     @Override
     public String toString() {
-        return subMonitor.toString();
+        return "TracingSubMonitor [span=" + span + ", " + subMonitor.toString();
     }
 
     @Override
