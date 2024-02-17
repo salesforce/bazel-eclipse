@@ -417,10 +417,7 @@ public class BazelClasspathManager {
                 var projectClasspath =
                         bazelProject.isWorkspaceProject() ? workspaceProjectClasspath : classpaths.get(bazelProject);
 
-                saveAndSetContainer(
-                    javaProject,
-                    projectClasspath,
-                    monitor.split(1, "Setting classpath " + bazelProject.getName()));
+                saveAndSetContainer(javaProject, projectClasspath, monitor.slice(1));
             }
         } finally {
             if (progress != null) {

@@ -149,7 +149,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         aspects,
                         new BazelWorkspaceBlazeInfo(workspace),
                         format(
-                            "Running build with IntelliJ aspects to collect classpath information (shard %d of %d, %d targets)",
+                            "Running build with IDE aspects (shard %d of %d, %d targets)",
                             currentShardCount,
                             shardsToBuild.size(),
                             targetsToBuild.size()));
@@ -160,10 +160,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 command.setInterner(interner);
 
                 monitor.subTask(
-                    format(
-                        "Running Bazel build with aspects (shard %d of %d)",
-                        currentShardCount,
-                        shardsToBuild.size()));
+                    format("Running build with IDE aspects (shard %d of %d)", currentShardCount, shardsToBuild.size()));
                 var result = workspace.getCommandExecutor()
                         .runDirectlyWithinExistingWorkspaceLock(
                             command,
@@ -171,10 +168,17 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                             monitor.slice(3));
 
                 // populate map from result
+                var subMonitor = monitor.split(
+                    2,
+                    format(
+                        "Analyze Bazel aspect info (shard %d of %d, %d targets)",
+                        currentShardCount,
+                        shardsToBuild.size(),
+                        targetsToBuild.size()));
                 var aspectsInfo = new JavaAspectsInfo(result, workspace);
                 for (BazelProject bazelProject : shard.keySet()) {
-                    monitor.subTask(bazelProject.getName());
-                    monitor.checkCanceled();
+                    subMonitor.subTask(bazelProject.getName());
+                    subMonitor.checkCanceled();
 
                     // build index of classpath info
                     var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
@@ -217,7 +221,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                                 && entry.getPath().equals(bazelProject.getProject().getFullPath()));
 
                     classpathsByProject.put(bazelProject, classpath);
-                    monitor.worked(1);
+                    subMonitor.worked(1);
                 }
             }
 
