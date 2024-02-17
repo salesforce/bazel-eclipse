@@ -535,7 +535,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                 .provisionProjectsForSelectedTargets(targets, workspace, monitor.split(work, "Provisioning Projects"));
     }
 
-    private void refreshFolderAndHideMembersIfNecessary(TracingSubMonitor monitor, Set<IPath> alwaysAllowedFolders,
+    private void refreshFolderAndHideMembersIfNecessary(IProgressMonitor monitor, Set<IPath> alwaysAllowedFolders,
             boolean foundWorkspaceRoot, Set<IPath> visiblePaths, int maxDepth, IContainer container)
             throws CoreException {
         monitor.subTask(container.getFullPath().toString());
@@ -584,7 +584,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // folder is visible then check its children
             if ((maxDepth - 1) > 0) {
                 refreshFolderAndHideMembersIfNecessary(
-                    monitor.split(1, resource.getFullPath().toString()),
+                    monitor.slice(1),
                     alwaysAllowedFolders,
                     foundWorkspaceRoot,
                     visiblePaths,
