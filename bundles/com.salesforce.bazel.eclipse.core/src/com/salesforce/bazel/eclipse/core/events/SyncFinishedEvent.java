@@ -13,10 +13,17 @@
  */
 package com.salesforce.bazel.eclipse.core.events;
 
+import static com.salesforce.bazel.eclipse.core.util.trace.TraceGraphDumper.dumpTrace;
+import static org.fusesource.jansi.Ansi.ansi;
+import static org.fusesource.jansi.Ansi.Attribute.INTENSITY_BOLD;
+import static org.fusesource.jansi.Ansi.Attribute.ITALIC;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import org.eclipse.core.runtime.IPath;
 import org.osgi.service.event.Event;
@@ -64,6 +71,41 @@ public record SyncFinishedEvent(
         eventData.put(EVENT_DATA_TARGET_PROVISIONING_STRATEGY, targetProvisioningStrategy());
         eventData.put(EVENT_DATA_TRACE, trace());
         return new Event(TOPIC_SYNC_FINISHED, eventData);
+    }
+
+    /**
+     * Prints an ANSI formatted summary of the event to the given <code>println</code> consumer.
+     * <p>
+     * The output will be colorful and is suitable for printing to terminals/console.
+     * </p>
+     *
+     * @param println
+     *            the <code>println</code> consumer
+     */
+    public void printFormatted(Consumer<String> println) {
+        println.accept("");
+        println.accept(ansi().a(INTENSITY_BOLD).a("Synchronization Summary").reset().toString());
+        println.accept(ansi().a(INTENSITY_BOLD).a("=======================").reset().toString());
+        println.accept("");
+
+        TimeUnit resultion;
+        if (duration().getSeconds() >= 1200) {
+            resultion = TimeUnit.MINUTES;
+        } else if (duration().getSeconds() >= 30) {
+            resultion = TimeUnit.SECONDS;
+        } else {
+            resultion = TimeUnit.MILLISECONDS;
+        }
+
+        println.accept(ansi().a(ITALIC).a("Projects: ").reset().a(projectsCount()).toString());
+        println.accept(ansi().a(ITALIC).a(" Targets: ").reset().a(targetsCount()).toString());
+        println.accept(ansi().a(ITALIC).a("Strategy: ").reset().a(targetProvisioningStrategy()).toString());
+        println.accept("");
+
+        var lines = dumpTrace(trace(), 100, 0.1F, resultion);
+        for (String line : lines) {
+            println.accept(line);
+        }
     }
 
     public static SyncFinishedEvent fromEvent(Event event) {

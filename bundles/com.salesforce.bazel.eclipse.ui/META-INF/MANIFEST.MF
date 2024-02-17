@@ -32,7 +32,7 @@ Require-Bundle: org.eclipse.ui,
  com.salesforce.bazel.eclipse.core,
  org.eclipse.ltk.core.refactoring,
  org.eclipse.tm4e.ui
-Service-Component: OSGI-INF/com.salesforce.bazel.eclipse.ui.execution.SyncStatsOutputComponent.xml
+Service-Component: OSGI-INF/com.salesforce.bazel.eclipse.ui.execution.BazelUiSyncStatsOutputComponent.xml
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: com.salesforce.bazel.eclipse.ui
 Bundle-ActivationPolicy: lazy

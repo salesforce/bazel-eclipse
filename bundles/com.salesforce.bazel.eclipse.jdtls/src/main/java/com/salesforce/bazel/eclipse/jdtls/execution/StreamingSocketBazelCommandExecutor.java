@@ -20,6 +20,14 @@ public class StreamingSocketBazelCommandExecutor extends EclipseHeadlessBazelCom
 
     private static volatile Supplier<OutputStream> localPortHostSupplier;
 
+    static Supplier<OutputStream> getConfiguredOutputStreamSupplier() {
+        var supplier = localPortHostSupplier;
+        if (supplier == null) {
+            supplier = staticLocalPortHostSupplier;
+        }
+        return supplier;
+    }
+
     private static Supplier<OutputStream> initializeStaticSupplier() {
         var port = Integer.getInteger("java.bazel.staticProcessStreamSocket");
         if ((port != null) && (port > 0) && (port < 65535)) {
@@ -56,10 +64,7 @@ public class StreamingSocketBazelCommandExecutor extends EclipseHeadlessBazelCom
     @Override
     protected ProcessStreamsProvider newProcessStreamProvider(BazelCommand<?> command, PreparedCommandLine commandLine)
             throws IOException {
-        var supplier = localPortHostSupplier;
-        if (supplier == null) {
-            supplier = staticLocalPortHostSupplier;
-        }
+        var supplier = getConfiguredOutputStreamSupplier();
         if (supplier != null) {
             var out = supplier.get();
             if (out != null) {
