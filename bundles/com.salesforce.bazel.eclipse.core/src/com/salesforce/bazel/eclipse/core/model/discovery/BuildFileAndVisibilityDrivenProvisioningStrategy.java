@@ -46,6 +46,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntr
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.ExternalLibrariesDiscovery;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
+import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
@@ -78,10 +79,10 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             private final WildcardTargetPattern wildcardPattern;
 
             TargetData(TargetExpression expression) {
-                this.originalExpression = expression;
-                this.unexcludedExpression = expression.isExcluded()
+                originalExpression = expression;
+                unexcludedExpression = expression.isExcluded()
                         ? TargetExpression.fromStringSafe(expression.toString().substring(1)) : expression;
-                this.wildcardPattern = WildcardTargetPattern.fromExpression(expression);
+                wildcardPattern = WildcardTargetPattern.fromExpression(expression);
             }
 
             /** Returns true if the entire package is covered by this expression. */
@@ -134,7 +135,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             }
             // the last target expression to cover a label overrides all previous expressions
             // that's why we use a reversed list
-            this.reversedTargets = builder.build();
+            reversedTargets = builder.build();
         }
 
         private int getPosition(BazelPackage toPackage) {
@@ -391,7 +392,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
     }
 
     @Override
-    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, SubMonitor monitor)
+    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
             throws CoreException {
         // group into packages
         Map<BazelPackage, List<BazelTarget>> targetsByPackage =
@@ -441,7 +442,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             }
 
             // create the project for the package
-            var project = provisionPackageProject(bazelPackage, packageTargets, monitor.split(1));
+            var project = provisionPackageProject(bazelPackage, packageTargets, monitor.slice(1));
 
             // create markers
             analyzeProjectInfo(project, javaInfo, monitor);
@@ -472,10 +473,10 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             }
 
             // configure links
-            linkGeneratedSourcesIntoProject(project, javaInfo, monitor.split(1));
+            linkGeneratedSourcesIntoProject(project, javaInfo, monitor.slice(1));
 
             // configure classpath
-            configureRawClasspath(project, javaInfo, monitor.split(1));
+            configureRawClasspath(project, javaInfo, monitor.slice(1));
 
             result.add(project);
         }

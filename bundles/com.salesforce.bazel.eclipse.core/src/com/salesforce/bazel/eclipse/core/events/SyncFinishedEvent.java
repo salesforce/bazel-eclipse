@@ -18,47 +18,43 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.core.runtime.IPath;
 import org.osgi.service.event.Event;
+
+import com.salesforce.bazel.eclipse.core.util.trace.Trace;
 
 /**
  * A synchronization finished event.
  */
 public record SyncFinishedEvent(
+        IPath workspaceLocation,
         Instant start,
         Duration duration,
         String status,
         int projectsCount,
         int targetsCount,
         String targetDiscoveryStrategy,
-        String targetProvisioningStrategy) implements BazelCoreEventConstants {
+        String targetProvisioningStrategy,
+        Trace trace) implements BazelCoreEventConstants {
 
     /**
      * Convenience constructor for events without additional information (in case of none-ok status)
      */
-    public SyncFinishedEvent(Instant start, Duration duration, String status) {
-        this(start, duration, status, 0, 0, null /* target discover */, null /* target provisioning */);
-    }
-
-    public static SyncFinishedEvent fromMap(Map<String, ?> eventData) {
-        var start = (Instant) eventData.get(EVENT_DATA_START_INSTANT);
-        var duration = (Duration) eventData.get(EVENT_DATA_DURATION);
-        var status = (String) eventData.get(EVENT_DATA_STATUS);
-        var projectsCount = (Integer) eventData.get(EVENT_DATA_COUNT_PROJECT);
-        var targetsCount = (Integer) eventData.get(EVENT_DATA_COUNT_TARGETS);
-        var targetDiscoveryStrategy = (String) eventData.get(EVENT_DATA_TARGET_DISCOVERY_STRATEGY);
-        var targetProvisionintStrategy = (String) eventData.get(EVENT_DATA_TARGET_PROVISIONING_STRATEGY);
-        return new SyncFinishedEvent(
+    public SyncFinishedEvent(IPath workspaceLocation, Instant start, Duration duration, String status) {
+        this(workspaceLocation,
                 start,
                 duration,
                 status,
-                projectsCount != null ? projectsCount : 0,
-                targetsCount != null ? targetsCount : 0,
-                targetDiscoveryStrategy,
-                targetProvisionintStrategy);
+                0,
+                0,
+                null /* target discover */,
+                null /* target provisioning */,
+                null /* trace */);
     }
 
     public Event build() {
         Map<String, Object> eventData = new HashMap<>();
+        eventData.put(EVENT_DATA_BAZEL_WORKSPACE_LOCATION, workspaceLocation());
         eventData.put(EVENT_DATA_START_INSTANT, start());
         eventData.put(EVENT_DATA_DURATION, duration());
         eventData.put(EVENT_DATA_STATUS, status());
@@ -66,6 +62,29 @@ public record SyncFinishedEvent(
         eventData.put(EVENT_DATA_COUNT_TARGETS, targetsCount());
         eventData.put(EVENT_DATA_TARGET_DISCOVERY_STRATEGY, targetDiscoveryStrategy());
         eventData.put(EVENT_DATA_TARGET_PROVISIONING_STRATEGY, targetProvisioningStrategy());
+        eventData.put(EVENT_DATA_TRACE, trace());
         return new Event(TOPIC_SYNC_FINISHED, eventData);
+    }
+
+    public static SyncFinishedEvent fromEvent(Event event) {
+        var workspaceLocation = (IPath) event.getProperty(EVENT_DATA_BAZEL_WORKSPACE_LOCATION);
+        var start = (Instant) event.getProperty(EVENT_DATA_START_INSTANT);
+        var duration = (Duration) event.getProperty(EVENT_DATA_DURATION);
+        var status = (String) event.getProperty(EVENT_DATA_STATUS);
+        var projectsCount = (Integer) event.getProperty(EVENT_DATA_COUNT_PROJECT);
+        var targetsCount = (Integer) event.getProperty(EVENT_DATA_COUNT_TARGETS);
+        var targetDiscoveryStrategy = (String) event.getProperty(EVENT_DATA_TARGET_DISCOVERY_STRATEGY);
+        var targetProvisionintStrategy = (String) event.getProperty(EVENT_DATA_TARGET_PROVISIONING_STRATEGY);
+        var trace = (Trace) event.getProperty(EVENT_DATA_TRACE);
+        return new SyncFinishedEvent(
+                workspaceLocation,
+                start,
+                duration,
+                status,
+                projectsCount != null ? projectsCount : 0,
+                targetsCount != null ? targetsCount : 0,
+                targetDiscoveryStrategy,
+                targetProvisionintStrategy,
+                trace);
     }
 }

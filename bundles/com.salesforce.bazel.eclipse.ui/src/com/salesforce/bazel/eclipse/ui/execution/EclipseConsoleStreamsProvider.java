@@ -8,13 +8,8 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.function.Predicate;
 
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.console.ConsolePlugin;
-import org.eclipse.ui.console.IConsole;
-import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 
-import com.salesforce.bazel.eclipse.ui.BazelUIPlugin;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.DefaultBazelCommandExecutor.PreparedCommandLine;
 import com.salesforce.bazel.sdk.command.ProcessStreamsProvider;
@@ -33,8 +28,8 @@ public class EclipseConsoleStreamsProvider extends VerboseProcessStreamsProvider
     public EclipseConsoleStreamsProvider(BazelCommand<?> command, PreparedCommandLine commandLine) throws IOException {
         super(command, commandLine);
 
-        var console = findConsole(format("Bazel Workspace (%s)", command.getWorkingDirectory()));
-        showConsole(console);
+        var console = new BazelWorkspaceConsole(command.getWorkingDirectory());
+        console.show();
 
         consoleStream = console.newMessageStream();
         errorStream = new CapturingLiniesAndForwardingOutputStream(
@@ -79,27 +74,9 @@ public class EclipseConsoleStreamsProvider extends VerboseProcessStreamsProvider
         throw new IOException(format("%s%n(no error output was captured)", cause.getMessage()), cause);
     }
 
-    MessageConsole findConsole(final String consoleName) {
-        final var consoleManager = ConsolePlugin.getDefault().getConsoleManager();
-        for (final IConsole existing : consoleManager.getConsoles()) {
-            if (consoleName.equals(existing.getName())) {
-                return (MessageConsole) existing;
-            }
-        }
-
-        // no console found, so create a new one
-        final var console = new MessageConsole(consoleName, getImageDescriptoForConsole());
-        consoleManager.addConsoles(new IConsole[] { console });
-        return console;
-    }
-
     @Override
     public OutputStream getErrorStream() {
         return errorStream;
-    }
-
-    ImageDescriptor getImageDescriptoForConsole() {
-        return BazelUIPlugin.getDefault().getImageRegistry().getDescriptor(BazelUIPlugin.ICON_BAZEL);
     }
 
     @Override
@@ -120,10 +97,6 @@ public class EclipseConsoleStreamsProvider extends VerboseProcessStreamsProvider
     @Override
     protected void println(String line) {
         consoleStream.println(line);
-    }
-
-    private void showConsole(MessageConsole console) {
-        ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
     }
 
 }

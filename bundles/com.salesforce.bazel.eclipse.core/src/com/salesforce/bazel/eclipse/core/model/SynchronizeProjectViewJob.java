@@ -5,9 +5,11 @@ package com.salesforce.bazel.eclipse.core.model;
 
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID;
+import static com.salesforce.bazel.eclipse.core.util.trace.Trace.setActiveTrace;
 import static com.salesforce.bazel.sdk.util.DurationUtil.humanReadableFormat;
 import static java.lang.String.format;
 import static java.nio.file.Files.isReadable;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
@@ -15,7 +17,6 @@ import static org.eclipse.core.resources.IContainer.INCLUDE_HIDDEN;
 import static org.eclipse.core.resources.IResource.DEPTH_ONE;
 import static org.eclipse.core.resources.IResource.FORCE;
 import static org.eclipse.core.resources.IResource.NEVER_DELETE_PROJECT_CONTENT;
-import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.eclipse.core.filesystem.URIUtil;
@@ -69,6 +71,9 @@ import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryAndProvi
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryStrategy;
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetProvisioningStrategy;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
+import com.salesforce.bazel.eclipse.core.util.trace.Trace;
+import com.salesforce.bazel.eclipse.core.util.trace.TraceGraphDumper;
+import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.projectview.ImportRoots;
@@ -145,7 +150,29 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         setRule(getWorkspaceRoot());
     }
 
-    private void configureFilters(IProject workspaceProject, SubMonitor monitor) throws CoreException {
+    private void callSynParticipants(List<BazelProject> targetProjects, TracingSubMonitor monitor, int work)
+            throws CoreException {
+        var synchronizationParticipants = getSynchronizationParticipants();
+        if (synchronizationParticipants.isEmpty()) {
+            monitor.worked(work);
+            return;
+        }
+
+        monitor = monitor.split(work, "Calling synchronization participants")
+                .setWorkRemaining(synchronizationParticipants.size());
+        for (SynchronizationParticipant synchronizationParticipant : synchronizationParticipants) {
+            try {
+                synchronizationParticipant.afterSynchronizationCompleted(workspace, targetProjects, monitor.slice(1));
+            } catch (CoreException | RuntimeException | LinkageError | AssertionError e) {
+                LOG.error(
+                    "Synchronization participant '{}' failed to execute. Please report this to the extension authors.",
+                    synchronizationParticipant.getClass().toString(),
+                    e);
+            }
+        }
+    }
+
+    private void configureFilters(IProject workspaceProject, TracingSubMonitor monitor, int work) throws CoreException {
         var filterExists = Stream.of(workspaceProject.getFilters()).anyMatch(f -> {
             var matcher = f.getFileInfoMatcherDescription();
             return RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID.equals(matcher.getId());
@@ -158,7 +185,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                         | IResourceFilterDescription.FOLDERS,
                 new FileInfoMatcherDescription(RESOURCE_FILTER_BAZEL_OUTPUT_SYMLINKS_ID, null),
                 NONE,
-                monitor);
+                monitor.slice(work));
+        } else {
+            monitor.worked(work);
         }
     }
 
@@ -171,16 +200,16 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         return new Path(path.relativePath()).makeRelative().removeTrailingSeparator();
     }
 
-    private IProject createWorkspaceProject(IPath workspaceRoot, String workspaceName, SubMonitor monitor)
-            throws CoreException {
-        monitor.beginTask("Creating workspace project", 4);
+    private IProject createWorkspaceProject(IPath workspaceRoot, String workspaceName, TracingSubMonitor monitor,
+            int work) throws CoreException {
+        monitor = monitor.split(work, "Creating workspace project").setWorkRemaining(4);
 
         var projectDescription = getWorkspace().newProjectDescription(workspaceName);
         projectDescription.setLocation(workspaceRoot);
         projectDescription.setComment(getWorkspaceProjectComment(workspaceRoot));
         var project = getWorkspaceRoot().getProject(workspaceName);
         if (!project.exists()) {
-            project.create(projectDescription, monitor.split(1));
+            project.create(projectDescription, monitor.slice(1));
         } else if (!workspaceRoot.equals(project.getLocation())) { // project.getLocation() should work regardless of project being open or closed (according to API spec)
             throw new CoreException(
                     Status.error(
@@ -191,7 +220,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
 
         // open project but refresh in the background (there is another one coming later)
-        project.open(IResource.BACKGROUND_REFRESH, monitor.split(1, SUPPRESS_NONE));
+        project.open(IResource.BACKGROUND_REFRESH, monitor.slice(1));
 
         // set natures separately in order to ensure they are configured properly
         projectDescription = project.getDescription();
@@ -199,11 +228,11 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             new String[] {
                     JavaCore.NATURE_ID,
                     BAZEL_NATURE_ID });
-        project.setDescription(projectDescription, monitor.split(1));
+        project.setDescription(projectDescription, monitor.slice(1));
 
         // set properties
         project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT, workspaceRoot.toString());
-        project.setDefaultCharset(StandardCharsets.UTF_8.name(), monitor.split(1));
+        project.setDefaultCharset(StandardCharsets.UTF_8.name(), monitor.slice(1));
 
         return project;
     }
@@ -240,9 +269,9 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         return null;
     }
 
-    private Set<BazelTarget> detectTargetsToMaterializeInEclipse(IProject workspaceProject, SubMonitor monitor)
-            throws CoreException {
-        monitor.beginTask("Detecting targets", 2);
+    private Set<BazelTarget> detectTargetsToMaterializeInEclipse(IProject workspaceProject, TracingSubMonitor monitor,
+            int work) throws CoreException {
+        monitor = monitor.split(work, "Detecting targets");
 
         Set<BazelTarget> result = new HashSet<>();
 
@@ -261,7 +290,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                     .collect(toSet());
 
             // query workspace for all targets
-            var bazelPackages = targetDiscoveryStrategy.discoverPackages(workspace, monitor.split(1));
+            var bazelPackages = targetDiscoveryStrategy.discoverPackages(workspace, monitor.slice(1));
 
             // if the '.' is listed in the project view it literal means include "everything"
             var includeEverything = allowedDirectories.contains(Path.EMPTY);
@@ -282,7 +311,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             }).collect(toList());
 
             // get targets
-            var bazelTargets = targetDiscoveryStrategy.discoverTargets(workspace, bazelPackages, monitor.split(1));
+            var bazelTargets = targetDiscoveryStrategy.discoverTargets(workspace, bazelPackages, monitor.slice(1));
 
             // add only targets not explicitly excluded
             for (BazelTarget t : bazelTargets) {
@@ -364,8 +393,16 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         return new TargetDiscoveryAndProvisioningExtensionLookup().createTargetDiscoveryStrategy(projectView);
     }
 
+    String getTargetDiscoveryStrategyName() throws CoreException {
+        return new TargetDiscoveryAndProvisioningExtensionLookup().getTargetDiscoveryStrategyName(projectView);
+    }
+
     TargetProvisioningStrategy getTargetProvisioningStrategy() throws CoreException {
         return new TargetDiscoveryAndProvisioningExtensionLookup().createTargetProvisioningStrategy(projectView);
+    }
+
+    String getTargetProvisioningStrategyName() throws CoreException {
+        return new TargetDiscoveryAndProvisioningExtensionLookup().getTargetProvisioningStrategyName(projectView);
     }
 
     IWorkspace getWorkspace() {
@@ -383,8 +420,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
     }
 
     private void hideFoldersNotVisibleAccordingToProjectViewAndSmartRefresh(IProject workspaceProject,
-            SubMonitor monitor) throws CoreException {
-        monitor.beginTask("Configuring visible folders", 10);
+            TracingSubMonitor monitor, int work) throws CoreException {
+        monitor = monitor.split(work, "Configuring visible folders").setWorkRemaining(10);
 
         // we are comparing using project relative paths
         Set<IPath> alwaysAllowedFolders = Set.of(new Path(".settings"), new Path(".eclipse"));
@@ -411,15 +448,16 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             workspaceProject);
     }
 
-    private void importPreferences(Collection<WorkspacePath> importPreferences, SubMonitor monitor)
+    private void importPreferences(Collection<WorkspacePath> importPreferences, TracingSubMonitor monitor, int work)
             throws CoreException {
         if (importPreferences.isEmpty()) {
+            monitor.worked(work);
             return;
         }
 
         var workspaceRoot = workspace.getLocation().toPath();
 
-        monitor.beginTask("Importing preferences...", importPreferences.size());
+        monitor = monitor.split(work, "Importing preferences...").setWorkRemaining(importPreferences.size());
         for (WorkspacePath epfFile : importPreferences) {
             monitor.subTask(epfFile.toString());
 
@@ -465,26 +503,37 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
     }
 
-    private void initializeClasspaths(List<BazelProject> projects, BazelWorkspace workspace, SubMonitor monitor)
-            throws CoreException {
-        try {
-            // use the job to properly trigger the classpath manager
-            new InitializeOrRefreshClasspathJob(
-                    projects.contains(workspace.getBazelProject()) ? projects.stream()
-                            : concat(Stream.of(workspace.getBazelProject()), projects.stream()),
-                    workspace.getParent().getModelManager().getClasspathManager(),
-                    true).runInWorkspace(monitor);
-        } finally {
-            monitor.done();
-        }
+    private void initializeClasspaths(List<BazelProject> projects, BazelWorkspace workspace, TracingSubMonitor monitor,
+            int work) throws CoreException {
+        monitor = monitor.split(work, format("Initializing Classpaths for %d projects", projects.size()));
+
+        // use the job to properly trigger the classpath manager
+        new InitializeOrRefreshClasspathJob(
+                projects.contains(workspace.getBazelProject()) ? projects.stream()
+                        : concat(Stream.of(workspace.getBazelProject()), projects.stream()),
+                workspace.getParent().getModelManager().getClasspathManager(),
+                true).runInWorkspace(monitor);
     }
 
-    private List<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, SubMonitor monitor)
+    private void logSyncStats(String workspaceName, Duration duration, int projectsCount, int targetsCount,
+            Trace trace) {
+        var lines = TraceGraphDumper.dumpTrace(trace, 100, 0F, TimeUnit.MILLISECONDS);
+        LOG.info(
+            "Synchronization of workspace '{}' finished successfully (duration {}, {} targets, {} projects){}{}",
+            workspaceName,
+            humanReadableFormat(duration),
+            targetsCount,
+            projectsCount,
+            System.lineSeparator(),
+            lines.stream().collect(joining(System.lineSeparator())));
+    }
+
+    private List<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, TracingSubMonitor monitor, int work)
             throws CoreException {
         return getTargetProvisioningStrategy().provisionProjectsForSelectedTargets(targets, workspace, monitor);
     }
 
-    private void refreshFolderAndHideMembersIfNecessary(SubMonitor monitor, Set<IPath> alwaysAllowedFolders,
+    private void refreshFolderAndHideMembersIfNecessary(TracingSubMonitor monitor, Set<IPath> alwaysAllowedFolders,
             boolean foundWorkspaceRoot, Set<IPath> visiblePaths, int maxDepth, IContainer container)
             throws CoreException {
         monitor.subTask(container.getFullPath().toString());
@@ -533,7 +582,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // folder is visible then check its children
             if ((maxDepth - 1) > 0) {
                 refreshFolderAndHideMembersIfNecessary(
-                    monitor.newChild(1),
+                    monitor.split(1, resource.getFullPath().toString()),
                     alwaysAllowedFolders,
                     foundWorkspaceRoot,
                     visiblePaths,
@@ -543,7 +592,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
     }
 
-    private void removeObsoleteProjects(List<BazelProject> provisionedProjects, SubMonitor monitor)
+    private void removeObsoleteProjects(List<BazelProject> provisionedProjects, TracingSubMonitor monitor, int work)
             throws CoreException {
         var obsoleteProjects = new ArrayList<IProject>();
         for (IProject project : getWorkspaceRoot().getProjects()) {
@@ -567,17 +616,20 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
 
         if (obsoleteProjects.size() > 0) {
-            monitor.beginTask("Cleaning up", obsoleteProjects.size());
+            var pm = monitor.split(work, "Cleaning up").setWorkRemaining(obsoleteProjects.size());
             for (IProject project : obsoleteProjects) {
-                project.delete(FORCE | NEVER_DELETE_PROJECT_CONTENT, monitor.split(1));
+                project.delete(FORCE | NEVER_DELETE_PROJECT_CONTENT, pm.slice(1));
             }
+        } else {
+            monitor.worked(work);
         }
     }
 
     @Override
     public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
         // track the start
-        var start = Instant.now();
+        var trace = new Trace(format("Synchronizing %s", workspace.getLocation().lastSegment()));
+        var oldTrace = setActiveTrace(trace);
         try {
             // invalidate the entire cache because we want to ensure we sync fresh
             // FIXME: this should not be required but currently is because our ResourceChangeProcessor is very light
@@ -596,7 +648,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             var workspaceName = workspace.getName();
             var workspaceRoot = workspace.getLocation();
 
-            var progress = SubMonitor.convert(monitor, format("Synchronizing workspace %s", workspaceName), 50);
+            var progress = TracingSubMonitor.convert(monitor, format("Synchronizing %s", workspaceName), 60);
 
             // log an event so we can verify a few things later
             if (LOG.isInfoEnabled()) {
@@ -611,25 +663,24 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             }
 
             // import preferences
-            importPreferences(projectView.importPreferences(), progress.split(1, SUPPRESS_NONE));
+            importPreferences(projectView.importPreferences(), progress, 1);
 
             // we don't care about the actual project name - we look for the path
             var workspaceProject = findProjectForLocation(workspaceRoot);
             if (workspaceProject == null) {
                 // create new project
-                workspaceProject =
-                        createWorkspaceProject(workspaceRoot, workspaceName, progress.split(1, SUPPRESS_NONE));
+                workspaceProject = createWorkspaceProject(workspaceRoot, workspaceName, progress, 1);
             } else {
                 // open existing
                 if (!workspaceProject.isOpen()) {
-                    workspaceProject.open(progress.split(1, SUPPRESS_NONE));
+                    workspaceProject.open(progress.slice(1));
                 }
                 // fix name
                 if (!workspaceName.equals(workspaceProject.getName())) {
                     var projectDescription = workspaceProject.getDescription();
                     projectDescription.setName(workspaceName);
                     projectDescription.setComment(getWorkspaceProjectComment(workspaceRoot));
-                    workspaceProject.move(projectDescription, true, progress.split(1, SUPPRESS_NONE));
+                    workspaceProject.move(projectDescription, true, progress.slice(1));
                 }
             }
 
@@ -643,81 +694,67 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             }
 
             // ensure Bazel symlinks are filtered
-            configureFilters(workspaceProject, progress.split(5, SUPPRESS_NONE));
+            configureFilters(workspaceProject, progress, 1);
 
             // apply excludes
-            hideFoldersNotVisibleAccordingToProjectViewAndSmartRefresh(
-                workspaceProject,
-                progress.split(10, SUPPRESS_NONE));
+            hideFoldersNotVisibleAccordingToProjectViewAndSmartRefresh(workspaceProject, progress, 10);
 
             // detect targets
-            var targets = detectTargetsToMaterializeInEclipse(workspaceProject, progress.split(5, SUPPRESS_NONE));
+            var targets = detectTargetsToMaterializeInEclipse(workspaceProject, progress, 2);
 
             // ensure project exists
-            var targetProjects = provisionProjectsForTarget(targets, progress.split(20, SUPPRESS_NONE));
+            var targetProjects = provisionProjectsForTarget(targets, progress, 20);
 
             // remove no longer needed projects
-            removeObsoleteProjects(targetProjects, progress.split(1, SUPPRESS_NONE));
+            removeObsoleteProjects(targetProjects, progress, 1);
 
             // after provisioning and cleanup we go over the projects a second time to initialize the classpaths
-            initializeClasspaths(targetProjects, workspace, progress.split(1, SUPPRESS_NONE));
+            initializeClasspaths(targetProjects, workspace, progress, 40);
 
             // last but not least we call any sync participants
-            var synchronizationParticipants = getSynchronizationParticipants();
-            progress.setWorkRemaining(synchronizationParticipants.size());
-            for (SynchronizationParticipant synchronizationParticipant : synchronizationParticipants) {
-                try {
-                    synchronizationParticipant
-                            .afterSynchronizationCompleted(workspace, targetProjects, progress.split(1, SUPPRESS_NONE));
-                } catch (CoreException | RuntimeException | LinkageError | AssertionError e) {
-                    LOG.error(
-                        "Synchronization participant '{}' failed to execute. Please report this to the extension authors.",
-                        synchronizationParticipant.getClass().toString(),
-                        e);
-                }
-            }
+            callSynParticipants(targetProjects, progress, 1);
 
             // broadcast & log sync metrics
-            var duration = Duration.between(start, Instant.now());
+            var duration = trace.done();
+            var start = trace.getCreated();
             var projectsCount = targetProjects.size();
             var targetsCount = targets.size();
+            var targetDiscoveryStrategyName = getTargetDiscoveryStrategyName();
+            var targetProvisioningStrategyName = getTargetProvisioningStrategyName();
             safePostEvent(
                 new SyncFinishedEvent(
+                        workspaceRoot,
                         start,
                         duration,
                         "ok",
                         projectsCount,
                         targetsCount,
-                        workspace.getBazelProjectView().targetDiscoveryStrategy(),
-                        workspace.getBazelProjectView().targetProvisioningStrategy()));
-            LOG.info(
-                "Synchronization of workspace '{}' finished successfully (duration {}, {} targets, {} projects)",
-                workspaceName,
-                humanReadableFormat(duration),
-                targetsCount,
-                projectsCount);
+                        targetDiscoveryStrategyName,
+                        targetProvisioningStrategyName,
+                        trace));
+            logSyncStats(workspaceName, duration, projectsCount, targetsCount, trace);
 
             return Status.OK_STATUS;
         } catch (OperationCanceledException e) {
             // broadcast sync metrics
+            var start = trace.getCreated();
             var duration = Duration.between(start, Instant.now());
-            safePostEvent(new SyncFinishedEvent(start, duration, "cancelled"));
+            safePostEvent(new SyncFinishedEvent(workspace.getLocation(), start, duration, "cancelled"));
             LOG.warn("Workspace synchronization cancelled: {}", workspace.getLocation(), e);
             return Status.CANCEL_STATUS;
         } catch (Exception e) {
             // broadcast sync metrics
+            var start = trace.getCreated();
             var duration = Duration.between(start, Instant.now());
-            safePostEvent(new SyncFinishedEvent(start, duration, "failed"));
+            safePostEvent(new SyncFinishedEvent(workspace.getLocation(), start, duration, "failed"));
             LOG.error("Error synchronizing workspace '{}': {}", workspace.getLocation(), e.getMessage(), e);
             return e instanceof CoreException ce ? ce.getStatus()
                     : Status.error(format("Error synchronizing workspace '%s'", workspace.getLocation()), e);
         } finally {
             // resume cache invalidation
             workspace.getModelManager().getResourceChangeProcessor().resumeInvalidationFor(workspace);
-
-            if (monitor != null) {
-                monitor.done();
-            }
+            SubMonitor.done(monitor);
+            setActiveTrace(oldTrace);
         }
     }
 

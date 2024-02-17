@@ -15,7 +15,11 @@ package com.salesforce.bazel.eclipse.core.util.trace;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -25,22 +29,33 @@ import java.util.concurrent.TimeUnit;
  * It maintains a hierarchy of nested operations (spans) for measuring their execution time.
  * </p>
  */
-public final class Trace implements AutoCloseable {
+public final class Trace {
 
-    public static final class Span implements AutoCloseable {
+    public static final class Span {
 
-        private String name;
+        private final String name;
         private final StopWatch stopWatch;
         private final List<Span> children = new ArrayList<>();
+        private boolean done = false;
 
-        Span() {
+        Span(String name) {
+            this.name = requireNonNull(name, "name must not be null");
+            if (name.isBlank()) {
+                throw new IllegalArgumentException("A blank name is not allowed!");
+            }
+
             stopWatch = new StopWatch();
             stopWatch.start();
         }
 
-        @Override
-        public void close() {
-            stopWatch.stop();
+        public void done() {
+            if (isNotDone()) {
+                done = true;
+                stopWatch.stop();
+
+                // clean up any un-finished children (we do not tolerate bad spans)
+                children.removeIf(Span::isNotDone);
+            }
         }
 
         List<Span> getChildren() {
@@ -55,14 +70,14 @@ public final class Trace implements AutoCloseable {
             return name;
         }
 
-        public Span newChild() {
-            var child = new Span();
-            children.add(child);
-            return child;
+        private boolean isNotDone() {
+            return !done;
         }
 
-        public void setName(String name) {
-            this.name = requireNonNull(name, "name must not be null");
+        private Span newChild(String name) {
+            var child = new Span(name);
+            children.add(child);
+            return child;
         }
 
         @Override
@@ -72,8 +87,34 @@ public final class Trace implements AutoCloseable {
 
     }
 
+    private static final ThreadLocal<Trace> activeTrace = new ThreadLocal<>();
+
+    public static Trace getActiveTrace() {
+        return activeTrace.get();
+    }
+
+    /**
+     * @param trace
+     *            the trace to set
+     * @return the old trace
+     */
+    public static Trace setActiveTrace(Trace trace) {
+        var old = activeTrace.get();
+        activeTrace.set(trace);
+        return old;
+    }
+
+    public static Span startSpanIfTraceIsActive(String name) {
+        var trace = activeTrace.get();
+        if (trace == null) {
+            return null;
+        }
+        return trace.newSpan(name);
+    }
+
     private final Span root;
-    private final long created;
+    private final Instant created;
+    private final Deque<Span> spanStack = new ArrayDeque<>();
 
     /**
      * Creates a new trace.
@@ -85,21 +126,22 @@ public final class Trace implements AutoCloseable {
      *            the trace name
      */
     public Trace(final String name) {
-        root = new Span();
-        root.setName(name);
+        root = new Span(name);
+
         // mark creation time
-        created = System.currentTimeMillis();
+        created = Instant.now();
     }
 
-    @Override
-    public void close() {
-        root.close();
+    public Duration done() {
+        root.done();
+        setActiveTrace(null); // remove from automatically from this thread
+        return Duration.ofNanos(root.getDuration(TimeUnit.NANOSECONDS));
     }
 
     /**
-     * @return the creation time (obtained via <code>System.currentTimeMillis()</code>)
+     * @return the creation time (obtained via <code>Instant.now()</code> at creation time)
      */
-    public long getCreatedTimestamp() {
+    public Instant getCreated() {
         return created;
     }
 
@@ -115,12 +157,45 @@ public final class Trace implements AutoCloseable {
         return root;
     }
 
-    public Span newSpan() {
-        return root.newChild();
+    public Span newSpan(String name) {
+        var lastSpan = spanStack.peek();
+        if (lastSpan == null) {
+            lastSpan = root;
+            spanStack.push(lastSpan);
+        }
+
+        // clean up closed spans
+        // note: it is illegal to call newSpan on a done Trace
+        while (lastSpan.done) {
+            // if there is no name, the span is not good
+            // we remove it from the stack and discard it
+            removeFromSpanStack(lastSpan);
+            lastSpan = spanStack.peek();
+            if (lastSpan == null) {
+                throw new IllegalStateException("Attempted to create a new span on a done trace!");
+            }
+        }
+
+        var child = lastSpan.newChild(name);
+        spanStack.push(child);
+        return child;
+    }
+
+    private void removeFromSpanStack(Span child) {
+        if (spanStack.contains(child)) {
+            // start from the last and remove all up to (including) the child
+            while (!spanStack.isEmpty()) {
+                var removed = spanStack.poll();
+                if (removed == child) {
+                    return;
+                }
+            }
+        }
     }
 
     @Override
     public String toString() {
         return root.toString();
     }
+
 }

@@ -18,7 +18,6 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.Platform.PI_RUNTIME;
 import static org.eclipse.core.runtime.Platform.PREF_LINE_SEPARATOR;
-import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 import static org.eclipse.jdt.core.IClasspathAttribute.ADD_EXPORTS;
 import static org.eclipse.jdt.core.IClasspathAttribute.ADD_OPENS;
 import static org.eclipse.jdt.core.IClasspathAttribute.MODULE;
@@ -93,6 +92,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaResourceIn
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSrcJarEntry;
+import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
@@ -797,79 +797,83 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @throws CoreException
      */
     protected IProject createProjectForElement(String projectName, IPath projectLocation, BazelElement<?, ?> owner,
-            SubMonitor monitor) throws CoreException {
-        monitor.setWorkRemaining(5);
+            IProgressMonitor monitor) throws CoreException {
+        monitor.beginTask("Creating Project " + projectName, 10);
+        try {
+            // locate existing project by its location (never use the name)
+            var project = findProjectForLocation(projectLocation);
 
-        // locate existing project by its location (never use the name)
-        var project = findProjectForLocation(projectLocation);
-
-        // open existing
-        if ((project != null) && !project.isOpen()) {
-            try {
-                project.open(monitor.split(1, SUPPRESS_NONE));
-            } catch (CoreException e) {
-                LOG.warn("Unable to open existing project '{}'. Deleting and re-creating the project.", project, e);
-                project.delete(IResource.NEVER_DELETE_PROJECT_CONTENT, monitor.split(1, SUPPRESS_NONE));
-                project = null;
-            }
-        }
-
-        // check for name collection
-        if ((project == null) || !project.exists()) {
-            project = getEclipseWorkspaceRoot().getProject(projectName);
-            if (project.exists()) {
-                LOG.warn(
-                    "Found existing project with name'{}' at different location. Deleting and re-creating the project.",
-                    project);
-                project.delete(IResource.NEVER_DELETE_PROJECT_CONTENT, monitor.split(1, SUPPRESS_NONE));
-            }
-
-            // create new project
-            var projectDescription = getEclipseWorkspace().newProjectDescription(projectName);
-            projectDescription.setLocation(projectLocation);
-            projectDescription.setComment(format("Bazel project representing '%s'", owner.getLabel()));
-            project.create(projectDescription, monitor.split(1, SUPPRESS_NONE));
-
-            // ensure project is open (creating a project which failed opening previously will create a closed project)
-            if (!project.isOpen()) {
-                project.open(monitor.split(1, SUPPRESS_NONE));
-            }
-        } else {
             // open existing
-            if (!project.isOpen()) {
-                project.open(monitor.split(1, SUPPRESS_NONE));
+            if ((project != null) && !project.isOpen()) {
+                try {
+                    project.open(monitor.slice(1));
+                } catch (CoreException e) {
+                    LOG.warn("Unable to open existing project '{}'. Deleting and re-creating the project.", project, e);
+                    project.delete(IResource.NEVER_DELETE_PROJECT_CONTENT, monitor.slice(1));
+                    project = null;
+                }
             }
 
-            // fix name
-            if (!projectName.equals(project.getName())) {
-                var projectDescription = project.getDescription();
-                projectDescription.setName(projectName);
+            // check for name collection
+            if ((project == null) || !project.exists()) {
+                project = getEclipseWorkspaceRoot().getProject(projectName);
+                if (project.exists()) {
+                    LOG.warn(
+                        "Found existing project with name'{}' at different location. Deleting and re-creating the project.",
+                        project);
+                    project.delete(IResource.NEVER_DELETE_PROJECT_CONTENT, monitor.slice(1));
+                }
+
+                // create new project
+                var projectDescription = getEclipseWorkspace().newProjectDescription(projectName);
+                projectDescription.setLocation(projectLocation);
                 projectDescription.setComment(format("Bazel project representing '%s'", owner.getLabel()));
-                project.move(projectDescription, true, monitor.split(1, SUPPRESS_NONE));
+                project.create(projectDescription, monitor.slice(1));
+
+                // ensure project is open (creating a project which failed opening previously will create a closed project)
+                if (!project.isOpen()) {
+                    project.open(monitor.slice(1));
+                }
+            } else {
+                // open existing
+                if (!project.isOpen()) {
+                    project.open(monitor.slice(1));
+                }
+
+                // fix name
+                if (!projectName.equals(project.getName())) {
+                    var projectDescription = project.getDescription();
+                    projectDescription.setName(projectName);
+                    projectDescription.setComment(format("Bazel project representing '%s'", owner.getLabel()));
+                    project.move(projectDescription, true, monitor.slice(1));
+                }
             }
+
+            // set natures separately in order to ensure they are configured properly
+            var projectDescription = project.getDescription();
+            projectDescription.setNatureIds(
+                new String[] {
+                        JavaCore.NATURE_ID,
+                        BAZEL_NATURE_ID });
+            project.setDescription(projectDescription, monitor.slice(1));
+
+            // set properties
+            project.setPersistentProperty(
+                BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT,
+                getFileSystemMapper().getBazelWorkspace().getLocation().toString());
+            project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_OWNER, owner.getLabel().getLabelPath());
+
+            // set encoding to UTF-8
+            project.setDefaultCharset(StandardCharsets.UTF_8.name(), monitor.slice(1));
+
+            // set line separator to posix
+            setLineSeparator(getPreferences(project), "\n");
+
+            return project;
+        } finally {
+            monitor.done();
         }
 
-        // set natures separately in order to ensure they are configured properly
-        var projectDescription = project.getDescription();
-        projectDescription.setNatureIds(
-            new String[] {
-                    JavaCore.NATURE_ID,
-                    BAZEL_NATURE_ID });
-        project.setDescription(projectDescription, monitor.newChild(1));
-
-        // set properties
-        project.setPersistentProperty(
-            BazelProject.PROJECT_PROPERTY_WORKSPACE_ROOT,
-            getFileSystemMapper().getBazelWorkspace().getLocation().toString());
-        project.setPersistentProperty(BazelProject.PROJECT_PROPERTY_OWNER, owner.getLabel().getLabelPath());
-
-        // set encoding to UTF-8
-        project.setDefaultCharset(StandardCharsets.UTF_8.name(), monitor.split(1));
-
-        // set line separator to posix
-        setLineSeparator(getPreferences(project), "\n");
-
-        return project;
     }
 
     private void deleteAllFilesMatchingPredicate(IFolder root, Predicate<IFile> selector, IProgressMonitor progress)
@@ -1018,8 +1022,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @return list of provisioned projects
      * @throws CoreException
      */
-    protected abstract List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, SubMonitor monitor)
-            throws CoreException;
+    protected abstract List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets,
+            TracingSubMonitor monitor) throws CoreException;
 
     private void ensureFolderLinksToTarget(IFolder folderWhichShouldBeALink, IPath linkTarget, SubMonitor monitor)
             throws CoreException {
@@ -1495,7 +1499,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     public List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets,
             BazelWorkspace workspace, IProgressMonitor progress) throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, "Provisioning projects", 3);
+            var monitor = TracingSubMonitor.convert(progress, "Provisioning projects", 3);
 
             // load all packages to be provisioned
             workspace.open(targets.stream().map(BazelTarget::getBazelPackage).distinct().toList());
@@ -1511,10 +1515,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             detectDefaultJavaToolchain(workspace);
 
             // configure the classpath of the workspace project
-            configureRawClasspathOfWorkspaceProject(workspace.getBazelProject().getProject(), monitor.split(1));
+            configureRawClasspathOfWorkspaceProject(workspace.getBazelProject().getProject(), monitor.slice(1));
 
             // create projects
-            return doProvisionProjects(targets, monitor.split(1, SUPPRESS_NONE));
+            return doProvisionProjects(targets, monitor);
         } finally {
             progress.done();
         }

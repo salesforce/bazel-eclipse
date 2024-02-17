@@ -3,6 +3,7 @@ package com.salesforce.bazel.eclipse.core.util.trace;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import com.salesforce.bazel.eclipse.core.util.trace.TraceTree.SpanNode;
 import com.salesforce.bazel.eclipse.core.util.trace.TraceTree.TraceTreeVisitor;
@@ -32,7 +33,13 @@ public class TraceGraphDumper implements TraceTreeVisitor {
 
     }
 
-    private final float minimumPercentage;
+    public static List<String> dumpTrace(Trace trace, int nameLength, float minimumPercentage, TimeUnit timeUnit) {
+        var dumper = new TraceGraphDumper(nameLength, minimumPercentage, timeUnit);
+        TraceTree.create(trace).visit(dumper);
+        return dumper.getDump();
+    }
+
+    private final Predicate<SpanNode> nodeFilter;
 
     private final List<String> out = new ArrayList<>();
 
@@ -44,7 +51,7 @@ public class TraceGraphDumper implements TraceTreeVisitor {
 
     public TraceGraphDumper(int nameLength, float minimumPercentage, TimeUnit timeUnit) {
         this.nameLength = nameLength;
-        this.minimumPercentage = minimumPercentage;
+        nodeFilter = node -> node.percentageOfRoot() >= minimumPercentage;
         this.timeUnit = timeUnit;
     }
 
@@ -61,10 +68,16 @@ public class TraceGraphDumper implements TraceTreeVisitor {
 
         buffer.append(String.format("%5.1f%% ", node.percentageOfRoot()));
         var indentation = formatIndentation();
-        buffer.append(indentation);
-        buffer.append(node.name());
-        for (var i = node.name().length() + indentation.length(); i < nameLength; i++) {
-            buffer.append(" ");
+        var labelLength = node.name().length() + indentation.length();
+        if (labelLength >= nameLength) {
+            buffer.append(indentation + node.name(), 0, nameLength - 3);
+            buffer.append("...");
+        } else {
+            buffer.append(indentation);
+            buffer.append(node.name());
+            for (var i = labelLength; i < nameLength; i++) {
+                buffer.append(" ");
+            }
         }
 
         var duration = timeUnit.convert(node.durationNanos(), TimeUnit.NANOSECONDS);
@@ -89,11 +102,14 @@ public class TraceGraphDumper implements TraceTreeVisitor {
 
     @Override
     public boolean visitEnter(SpanNode node) {
+        var isVisible = nodeFilter.test(node);
+
+        if (isVisible) {}
         out.add(formatNode(node));
         childInfos.add(new ChildInfo(node.children().size()));
 
-        // skip children if percentage is below threshold
-        return node.percentageOfRoot() >= minimumPercentage;
+        // skip children if not visible
+        return isVisible;
     }
 
     @Override

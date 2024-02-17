@@ -28,6 +28,7 @@ public class OsgiServiceTracker {
 
     public OsgiServiceTracker(BundleContext bundleContext) {
         eventAdminTracker = new ServiceTracker<>(bundleContext, EventAdmin.class, null);
+        eventAdminTracker.open();
     }
 
     public void close() {

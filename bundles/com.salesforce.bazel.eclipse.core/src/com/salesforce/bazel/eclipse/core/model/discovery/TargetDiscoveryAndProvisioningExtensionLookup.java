@@ -75,10 +75,7 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup extends Eclipse
      *             if no strategy was found
      */
     public TargetDiscoveryStrategy createTargetDiscoveryStrategy(BazelProjectView projectView) throws CoreException {
-        var discoveryStrategy = projectView.targetDiscoveryStrategy();
-        if ((discoveryStrategy == null) || discoveryStrategy.equals("default")) {
-            discoveryStrategy = BazelQueryTargetDiscovery.STRATEGY_NAME;
-        }
+        var discoveryStrategy = getTargetDiscoveryStrategyName(projectView);
 
         return createTargetDiscoveryStrategy(discoveryStrategy);
     }
@@ -111,10 +108,7 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup extends Eclipse
      */
     public TargetProvisioningStrategy createTargetProvisioningStrategy(BazelProjectView projectView)
             throws CoreException {
-        var provisioningStrategy = projectView.targetProvisioningStrategy();
-        if ((provisioningStrategy == null) || provisioningStrategy.equals("default")) {
-            provisioningStrategy = ProjectPerTargetProvisioningStrategy.STRATEGY_NAME;
-        }
+        var provisioningStrategy = getTargetProvisioningStrategyName(projectView);
 
         return createTargetProvisioningStrategy(provisioningStrategy);
     }
@@ -133,6 +127,22 @@ public final class TargetDiscoveryAndProvisioningExtensionLookup extends Eclipse
             ELLEMENT_TARGET_PROVISIONING_STRATEGY,
             ATTR_NAME,
             name);
+    }
+
+    public String getTargetDiscoveryStrategyName(BazelProjectView projectView) {
+        var discoveryStrategy = projectView.targetDiscoveryStrategy();
+        if ((discoveryStrategy == null) || discoveryStrategy.equals("default")) {
+            discoveryStrategy = BazelQueryTargetDiscovery.STRATEGY_NAME;
+        }
+        return discoveryStrategy;
+    }
+
+    public String getTargetProvisioningStrategyName(BazelProjectView projectView) {
+        var provisioningStrategy = projectView.targetProvisioningStrategy();
+        if ((provisioningStrategy == null) || provisioningStrategy.equals("default")) {
+            provisioningStrategy = ProjectPerTargetProvisioningStrategy.STRATEGY_NAME;
+        }
+        return provisioningStrategy;
     }
 
 }

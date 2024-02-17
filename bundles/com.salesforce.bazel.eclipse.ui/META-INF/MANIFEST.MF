@@ -4,6 +4,7 @@ Bundle-Name: Bazel Eclipse Feature UI Plug-In
 Bundle-SymbolicName: com.salesforce.bazel.eclipse.ui;singleton:=true
 Bundle-Version: 2.0.0.qualifier
 Import-Package: org.fusesource.jansi;version="2.4.0",
+ org.osgi.service.event;version="1.4.0",
  org.slf4j;version="2.0.0"
 Bundle-Activator: com.salesforce.bazel.eclipse.ui.BazelUIPlugin
 Bundle-Vendor: Bazel Eclipse Feature
@@ -31,6 +32,7 @@ Require-Bundle: org.eclipse.ui,
  com.salesforce.bazel.eclipse.core,
  org.eclipse.ltk.core.refactoring,
  org.eclipse.tm4e.ui
+Service-Component: OSGI-INF/com.salesforce.bazel.eclipse.ui.execution.SyncStatsOutputComponent.xml
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: com.salesforce.bazel.eclipse.ui
 Bundle-ActivationPolicy: lazy

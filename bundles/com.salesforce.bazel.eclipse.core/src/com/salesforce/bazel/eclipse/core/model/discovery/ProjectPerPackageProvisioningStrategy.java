@@ -46,6 +46,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntr
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceInfo;
+import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
@@ -310,7 +311,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     }
 
     @Override
-    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, SubMonitor monitor)
+    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
             throws CoreException {
         // initialize the list of allowed java like rules
         var javaLikeRulesValue = getFileSystemMapper().getBazelWorkspace()
@@ -328,7 +329,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
         Map<BazelPackage, List<BazelTarget>> targetsByPackage =
                 targets.stream().filter(this::isSupported).collect(groupingBy(BazelTarget::getBazelPackage));
 
-        monitor.beginTask("Provisioning projects", targetsByPackage.size() * 3);
+        monitor.setWorkRemaining(targetsByPackage.size() * 3);
 
         var result = new ArrayList<BazelProject>();
         for (Entry<BazelPackage, List<BazelTarget>> entry : targetsByPackage.entrySet()) {
@@ -347,10 +348,10 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             }
 
             // create the project for the package
-            var project = provisionPackageProject(bazelPackage, packageTargets, monitor.split(1));
+            var project = provisionPackageProject(bazelPackage, packageTargets, monitor.slice(1));
 
             // build the Java information
-            var javaInfo = collectJavaInfo(project, packageTargets, monitor.split(1));
+            var javaInfo = collectJavaInfo(project, packageTargets, monitor.slice(1));
 
             // sanity check
             if (javaInfo.getSourceInfo().hasSourceFilesWithoutCommonRoot()) {
@@ -374,10 +375,10 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             }
 
             // configure links
-            linkGeneratedSourcesIntoProject(project, javaInfo, monitor.split(1));
+            linkGeneratedSourcesIntoProject(project, javaInfo, monitor.slice(1));
 
             // configure classpath
-            configureRawClasspath(project, javaInfo, monitor.split(1));
+            configureRawClasspath(project, javaInfo, monitor.slice(1));
 
             result.add(project);
         }
@@ -451,7 +452,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     }
 
     protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,
-            SubMonitor monitor) throws CoreException {
+            IProgressMonitor monitor) throws CoreException {
         try {
             monitor.beginTask(format("Provisioning project for '//%s'", bazelPackage.getLabel().getPackagePath()), 2);
             if (!bazelPackage.hasBazelProject()) {
@@ -462,7 +463,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
                 // create the project directly within the package (note, there can be at most one project per package with this strategy anyway)
                 var projectLocation = bazelPackage.getLocation();
-                createProjectForElement(projectName, projectLocation, bazelPackage, monitor.split(1));
+                createProjectForElement(projectName, projectLocation, bazelPackage, monitor.slice(1));
             } else {
                 // use existing project
                 bazelPackage.getBazelProject().getProject();
@@ -472,7 +473,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             var bazelProject = bazelPackage.getBazelProject();
 
             // remember/update the targets to build for the project
-            bazelProject.setBazelTargets(targets, monitor.split(1));
+            bazelProject.setBazelTargets(targets, monitor.slice(1));
 
             return bazelProject;
         } catch (CoreException e) {
@@ -480,6 +481,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     Status.error(
                         format("Error provisioning project for package '%s' (targets [%s])", bazelPackage, targets),
                         e));
+        } finally {
+            monitor.done();
         }
     }
 }

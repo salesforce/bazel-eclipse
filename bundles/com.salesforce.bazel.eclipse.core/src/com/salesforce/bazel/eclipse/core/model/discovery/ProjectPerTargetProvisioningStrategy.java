@@ -28,6 +28,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
@@ -160,15 +161,15 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
     }
 
     @Override
-    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, SubMonitor monitor)
+    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
             throws CoreException {
-        monitor.beginTask("Provisioning projects", targets.size());
+        monitor.setWorkRemaining(targets.size());
         List<BazelProject> result = new ArrayList<>();
         for (BazelTarget target : targets) {
             monitor.subTask(target.getLabel().toString());
 
             // provision project
-            var project = provisionProjectForTarget(target, monitor.split(1));
+            var project = provisionProjectForTarget(target, monitor);
             if (project != null) {
                 result.add(project);
             }
@@ -176,15 +177,15 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         return result;
     }
 
-    protected BazelProject provisionJavaBinaryProject(BazelTarget target, SubMonitor monitor) throws CoreException {
-
+    protected BazelProject provisionJavaBinaryProject(BazelTarget target, TracingSubMonitor monitor)
+            throws CoreException {
         // TODO: create a shared launch configuration
-
         return provisionJavaLibraryProject(target, monitor);
     }
 
-    protected BazelProject provisionJavaImportProject(BazelTarget target, SubMonitor monitor) throws CoreException {
-        // TODO Auto-generated method stub
+    protected BazelProject provisionJavaImportProject(BazelTarget target, TracingSubMonitor monitor)
+            throws CoreException {
+        monitor.worked(1);
         return null;
     }
 
@@ -198,31 +199,34 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
      * @return the provisioned project
      * @throws CoreException
      */
-    protected BazelProject provisionJavaLibraryProject(BazelTarget target, SubMonitor monitor) throws CoreException {
-        monitor.beginTask(format("Provision project for target %s", target.getLabel()), 4);
+    protected BazelProject provisionJavaLibraryProject(BazelTarget target, TracingSubMonitor monitor)
+            throws CoreException {
+        monitor = monitor.split(1, "Provisioning Java project for target " + target.getLabel());
 
-        var project = provisionTargetProject(target, monitor.split(1));
+        var project = provisionTargetProject(target, monitor.slice(1));
 
         // build the Java information
-        var javaInfo = collectJavaInfo(project, List.of(target), monitor.split(1));
+        var javaInfo = collectJavaInfo(project, List.of(target), monitor.slice(1));
 
         // configure links
-        linkSourcesIntoProject(project, javaInfo, monitor.split(1));
-        linkGeneratedSourcesIntoProject(project, javaInfo, monitor.split(1));
+        linkSourcesIntoProject(project, javaInfo, monitor.slice(1));
+        linkGeneratedSourcesIntoProject(project, javaInfo, monitor.slice(1));
 
         // configure classpath
-        configureRawClasspath(project, javaInfo, monitor.split(1));
+        configureRawClasspath(project, javaInfo, monitor.slice(1));
 
         return project;
     }
 
-    protected BazelProject provisionJavaTestProject(BazelTarget target, SubMonitor monitor) throws CoreException {
+    protected BazelProject provisionJavaTestProject(BazelTarget target, TracingSubMonitor monitor)
+            throws CoreException {
         // there is a bug in Eclipse preventing execution of JUnit tests
         // https://github.com/eclipse-jdt/eclipse.jdt.ui/issues/957
         return provisionJavaLibraryProject(target, monitor);
     }
 
-    protected BazelProject provisionProjectForTarget(BazelTarget target, SubMonitor monitor) throws CoreException {
+    protected BazelProject provisionProjectForTarget(BazelTarget target, TracingSubMonitor monitor)
+            throws CoreException {
         var ruleName = target.getRuleClass();
         return switch (ruleName) {
             case "java_library": {
@@ -239,12 +243,13 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             }
             default: {
                 LOG.debug("{}: Skipping provisioning due to unsupported rule '{}'.", target, ruleName);
+                monitor.worked(1);
                 yield null;
             }
         };
     }
 
-    protected BazelProject provisionTargetProject(BazelTarget target, SubMonitor monitor) throws CoreException {
+    protected BazelProject provisionTargetProject(BazelTarget target, IProgressMonitor monitor) throws CoreException {
         if (target.hasBazelProject()) {
             return target.getBazelProject();
         }

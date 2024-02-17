@@ -3,8 +3,6 @@ package com.salesforce.bazel.eclipse.core.classpath;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
-import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
-import static org.eclipse.core.runtime.SubMonitor.convert;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,9 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
-import com.salesforce.bazel.eclipse.core.model.BazelModelManager;
+import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 
 /**
  * A {@link WorkspaceJob} for refreshing the classpath of Bazel projects.
@@ -96,7 +95,7 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
         this.classpathManager = classpathManager;
         this.forceRefresh = forceRefresh;
         // group by workspace
-        this.bazelProjects = projects.filter(this::needsRefresh).collect(groupingBy(p -> {
+        bazelProjects = projects.filter(this::needsRefresh).collect(groupingBy(p -> {
             try {
                 return p.getBazelWorkspace();
             } catch (CoreException e) {
@@ -109,7 +108,7 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
 
     @Override
     public boolean belongsTo(Object family) {
-        return BazelModelManager.PLUGIN_ID.equals(family);
+        return BazelCoreSharedContstants.PLUGIN_ID.equals(family);
     }
 
     BazelClasspathManager getClasspathManager() {
@@ -138,9 +137,11 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
     @Override
     public IStatus runInWorkspace(IProgressMonitor progress) throws CoreException {
         try {
-            var monitor = convert(progress, "Computing Bazel Classpaths", bazelProjects.size());
-            var status =
-                    new MultiStatus(BazelModelManager.PLUGIN_ID, 0, "Some Bazel build paths could not be initialized.");
+            var monitor = TracingSubMonitor.convert(progress, "Computing Bazel Classpaths", bazelProjects.size());
+            var status = new MultiStatus(
+                    BazelCoreSharedContstants.PLUGIN_ID,
+                    0,
+                    "Some Bazel build paths could not be initialized.");
 
             nextProjectSet: for (Entry<BazelWorkspace, List<BazelProject>> projectSet : bazelProjects.entrySet()) {
                 try {
@@ -152,7 +153,7 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
                     getClasspathManager().updateClasspath(
                         projectSet.getKey(),
                         projectSet.getValue(),
-                        monitor.split(1, SUPPRESS_NONE));
+                        monitor.split(1, "Updating classpath for workspace " + projectSet.getKey().getName()));
                 } catch (CoreException e) {
                     status.add(e.getStatus());
 
@@ -172,11 +173,10 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
                             e.getStatus().getMessage(),
                             IMarker.SEVERITY_ERROR,
                             "Bazel BUILD",
-                            BazelModelManager.MARKER_SOURCE_ID,
+                            BazelCoreSharedContstants.MARKER_SOURCE_ID,
                         }
                     ); // @formatter:on
                 }
-                monitor.worked(1);
             }
 
             // return error if we have one!

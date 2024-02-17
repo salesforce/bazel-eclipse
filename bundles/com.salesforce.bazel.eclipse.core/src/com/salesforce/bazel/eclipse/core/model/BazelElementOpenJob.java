@@ -3,6 +3,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
+import static com.salesforce.bazel.eclipse.core.util.trace.Trace.setActiveTrace;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -18,11 +19,12 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 
 import com.salesforce.bazel.eclipse.core.model.cache.BazelElementInfoCache;
+import com.salesforce.bazel.eclipse.core.util.trace.Trace;
 
 /**
  * A special job for opening a {@link BazelElement} preventing concurrent load attempts.
  * <p>
- * The job can only be used once!
+ * The job can only be used once! It is intended to be used from a single thread only.
  * </p>
  */
 class BazelElementOpenJob<I extends BazelElementInfo> extends Job implements ISchedulingRule {
@@ -34,12 +36,14 @@ class BazelElementOpenJob<I extends BazelElementInfo> extends Job implements ISc
     private volatile CoreException openException;
     private volatile OperationCanceledException cancelException;
     private final BazelElementInfoCache infoCache;
+    private final Trace trace;
 
     BazelElementOpenJob(IPath location, BazelElement<I, ?> bazelElement, BazelElementInfoCache infoCache) {
         super(format("Opening '%s'...", location.toOSString()));
         this.location = location;
         this.bazelElement = bazelElement;
         this.infoCache = infoCache;
+        trace = Trace.getActiveTrace();
 
         setSystem(true);
         setUser(false);
@@ -83,6 +87,7 @@ class BazelElementOpenJob<I extends BazelElementInfo> extends Job implements ISc
 
         schedule();
         opened.await();
+
         if (cancelException != null) {
             throw new OperationCanceledException("Opening canceled");
         }
@@ -98,6 +103,9 @@ class BazelElementOpenJob<I extends BazelElementInfo> extends Job implements ISc
 
     @Override
     protected IStatus run(IProgressMonitor monitor) {
+        // we only set the active trace but do not create a span
+        // a span will only be created when a command is executed
+        var oldTrace = setActiveTrace(trace);
         try {
             // check check within scheduling rule to ensure we don't load twice
             info = infoCache.getIfPresent(bazelElement);
@@ -122,6 +130,9 @@ class BazelElementOpenJob<I extends BazelElementInfo> extends Job implements ISc
             return Status.error(format("Opening element at '%s' failed with: '%s'", location, e.getMessage()), e);
         } finally {
             opened.countDown();
+
+            // restore old trace
+            setActiveTrace(oldTrace);
         }
 
         return Status.OK_STATUS;

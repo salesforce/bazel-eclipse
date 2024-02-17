@@ -23,6 +23,8 @@ public interface BazelCoreEventConstants {
 
     String TOPIC_SYNC_FINISHED = TOPIC_BASE + "sync-finished";
 
+    String EVENT_DATA_BAZEL_WORKSPACE_LOCATION = "bazel.workspace_location";
+
     String EVENT_DATA_START_INSTANT = "start";
     String EVENT_DATA_DURATION = "duration";
     String EVENT_DATA_STATUS = "status";
@@ -33,4 +35,5 @@ public interface BazelCoreEventConstants {
     String EVENT_DATA_TARGET_DISCOVERY_STRATEGY = "target.discovery_stratregy";
     String EVENT_DATA_TARGET_PROVISIONING_STRATEGY = "target.provisioning_strategy";
 
+    String EVENT_DATA_TRACE = "trace";
 }

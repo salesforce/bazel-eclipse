@@ -27,17 +27,34 @@ import com.salesforce.bazel.eclipse.core.util.trace.Trace.Span;
 public class TraceTree {
 
     interface TraceTreeVisitor {
+        /**
+         * Begin visiting a node.
+         *
+         * @param node
+         *            the node to visit
+         * @return <code>true</code> if the node is relevant and its children should be processed, <code>false</code>
+         *         otherwise
+         */
         boolean visitEnter(SpanNode node);
 
+        /**
+         * Called after a node's children were visited.
+         * <p>
+         * Will always be called for each node where {@link #visitEnter(SpanNode)} was called.
+         * </p>
+         *
+         * @param node
+         *            the visited node
+         */
         void visitLeave(SpanNode node);
     }
 
     public static record SpanNode(
             String name,
             long durationNanos,
-            float percentageOfRoot,
+            double percentageOfRoot,
             java.util.List<SpanNode> children) {
-        public SpanNode(String name, long durationNanos, float percentageOfRoot, java.util.List<SpanNode> children) {
+        public SpanNode(String name, long durationNanos, double percentageOfRoot, java.util.List<SpanNode> children) {
             this.name = requireNonNull(name);
             this.durationNanos = durationNanos;
             this.percentageOfRoot = percentageOfRoot;
@@ -52,7 +69,7 @@ public class TraceTree {
         }
     }
 
-    public static TraceTree create(Trace trace, TimeUnit resolution) {
+    public static TraceTree create(Trace trace) {
         var span = trace.getRoot();
         var rootDurationNanos = span.getDuration(TimeUnit.NANOSECONDS);
 
@@ -62,12 +79,17 @@ public class TraceTree {
     private static SpanNode createNode(Span span, long rootDurationNanos) {
         List<SpanNode> children =
                 span.getChildren().stream().map(c -> createNode(c, rootDurationNanos)).collect(toList());
+        // if there is only one child, we flatten the hierarchy
+        if (children.size() == 1) {
+            return children.get(0);
+        }
+
         var durationNanos = span.getDuration(TimeUnit.NANOSECONDS);
         return new SpanNode(span.getName(), durationNanos, percentage(durationNanos, rootDurationNanos), children);
     }
 
-    private static float percentage(long duration, long rootDuration) {
-        return rootDuration == 0 ? 0 : ((float) duration / rootDuration) * 100;
+    private static double percentage(long duration, long rootDuration) {
+        return rootDuration == 0 ? 0 : ((double) duration / rootDuration) * 100;
     }
 
     private final SpanNode rootNode;

@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.eclipse.core.util.trace.Trace;
 import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.command.BazelCommand;
 import com.salesforce.bazel.sdk.command.BazelCommandExecutor;
@@ -59,7 +60,11 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
     public <R> Future<R> executeOutsideWorkspaceLockAsync(BazelCommand<R> command,
             BazelElement<?, ?> executionContext) {
         var future = new CompletableFuture<R>(); // this is ok to be a completable future
+        var span = Trace.startSpanIfTraceIsActive(getTaskName(command));
         new BazelReadOnlyJob<>(executor, command, getJobGroup(executionContext), future).schedule();
+        if (span != null) {
+            return future.whenComplete((r, t) -> span.done());
+        }
         return future;
     }
 
@@ -67,23 +72,32 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
     public <R> R executeWithinExistingWorkspaceLock(BazelCommand<R> command, BazelElement<?, ?> executionContext,
             List<IResource> resourcesToRefresh, IProgressMonitor progress) throws CoreException {
         var result = new AtomicReference<R>();
-        ResourcesPlugin.getWorkspace().run(pm -> {
-            var monitor = SubMonitor.convert(pm, getTaskName(command), IProgressMonitor.UNKNOWN);
-            try {
-                if (command.getPurpose() != null) {
-                    monitor.subTask(command.getPurpose());
-                }
-                result.set(executor.execute(command, pm::isCanceled));
-            } catch (IOException e) {
-                throw new CoreException(Status.error("Error executing command: " + e.getMessage(), e));
-            } finally {
+        var taskName = getTaskName(command);
+        var span = Trace.startSpanIfTraceIsActive(taskName);
+        try {
+            ResourcesPlugin.getWorkspace().run(pm -> {
+                var monitor = SubMonitor.convert(pm, taskName, IProgressMonitor.UNKNOWN);
                 try {
-                    refreshResources(resourcesToRefresh, monitor);
+                    if (command.getPurpose() != null) {
+                        monitor.subTask(command.getPurpose());
+                    }
+                    result.set(executor.execute(command, pm::isCanceled));
+                } catch (IOException e) {
+                    throw new CoreException(Status.error("Error executing command: " + e.getMessage(), e));
                 } finally {
-                    pm.done();
+                    try {
+                        refreshResources(resourcesToRefresh, monitor);
+                        monitor.done();
+                    } finally {
+                        pm.done();
+                    }
                 }
+            }, progress);
+        } finally {
+            if (span != null) {
+                span.done();
             }
-        }, progress);
+        }
         return result.get();
     }
 
@@ -91,8 +105,12 @@ public class JobsBasedExecutionService implements BazelModelCommandExecutionServ
     public <R> Future<R> executeWithWorkspaceLockAsync(BazelCommand<R> command, BazelElement<?, ?> executionContext,
             ISchedulingRule rule, List<IResource> resourcesToRefresh) {
         var future = new WorkspaceLockDetectingFuture<R>();
+        var span = Trace.startSpanIfTraceIsActive(getTaskName(command));
         new BazelWorkspaceJob<>(executor, command, getJobGroup(executionContext), rule, resourcesToRefresh, future)
                 .schedule();
+        if (span != null) {
+            return future.whenComplete((r, t) -> span.done());
+        }
         return future;
     }
 

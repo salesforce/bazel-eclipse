@@ -25,6 +25,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.ExternalLibrariesDiscovery;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.GeneratedLibrariesDiscovery;
+import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 
 /**
  * This strategy implements computation of the {@link BazelWorkspace workspace project's} classpath.
@@ -137,7 +138,7 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
     }
 
     @Override
-    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, SubMonitor monitor)
+    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
             throws CoreException {
         throw new IllegalStateException("this method must not be called");
     }

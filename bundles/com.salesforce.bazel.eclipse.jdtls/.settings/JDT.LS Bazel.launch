@@ -191,7 +191,7 @@
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
     <stringAttribute key="templateConfig" value="${target_home}/configuration/config.ini"/>
-    <stringAttribute key="timestamp" value="1702118169683"/>
+    <stringAttribute key="timestamp" value="1708116844511"/>
     <booleanAttribute key="tracing" value="true"/>
     <mapAttribute key="tracingOptions">
         <mapEntry key="com.perforce.team.core/debug" value="false"/>

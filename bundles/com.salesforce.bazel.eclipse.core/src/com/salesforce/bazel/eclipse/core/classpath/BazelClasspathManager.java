@@ -18,7 +18,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_ALL_LABELS;
-import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_NONE;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -62,6 +61,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.TargetDiscoveryAndProvi
 import com.salesforce.bazel.eclipse.core.model.discovery.TargetProvisioningStrategy;
 import com.salesforce.bazel.eclipse.core.model.discovery.WorkspaceClasspathStrategy;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 
 /**
  * The central point for for mapping classpath between Bazel and JDT.
@@ -338,7 +338,7 @@ public class BazelClasspathManager {
         }
     }
 
-    void saveAndSetContainer(IJavaProject javaProject, Collection<ClasspathEntry> classpath, SubMonitor monitor)
+    void saveAndSetContainer(IJavaProject javaProject, Collection<ClasspathEntry> classpath, IProgressMonitor monitor)
             throws CoreException, JavaModelException {
         var containerEntry = getBazelContainerEntry(javaProject);
         var path = containerEntry != null ? containerEntry.getPath()
@@ -347,16 +347,15 @@ public class BazelClasspathManager {
         var sourceAttachmentProperties = getSourceAttachmentProperties(javaProject.getProject());
         var container = new BazelClasspathContainer(
                 path,
-                configureClasspathWithSourceAttachments(
-                    classpath,
-                    sourceAttachmentProperties,
-                    monitor.split(1, SUPPRESS_NONE)));
+                configureClasspathWithSourceAttachments(classpath, sourceAttachmentProperties, monitor.slice(1)));
 
         JavaCore.setClasspathContainer(
             container.getPath(),
-            new IJavaProject[] { javaProject },
-            new IClasspathContainer[] { container },
-            monitor.split(1, SUPPRESS_NONE));
+            new IJavaProject[] {
+                    javaProject },
+            new IClasspathContainer[] {
+                    container },
+            monitor.slice(1));
         saveContainerState(javaProject.getProject(), container);
     }
 
@@ -383,14 +382,17 @@ public class BazelClasspathManager {
     void updateClasspath(BazelWorkspace bazelWorkspace, List<BazelProject> projects, IProgressMonitor progress)
             throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, "Computing classpath of Bazel projects", 4 + projects.size());
+            var monitor =
+                    TracingSubMonitor.convert(progress, "Computing classpath of Bazel projects", 4 + projects.size());
 
             // we need to refresh the workspace project differently
             var workspaceProject = bazelWorkspace.getBazelProject();
-            var workspaceProjectClasspath = projects.contains(workspaceProject)
-                    ? new WorkspaceClasspathStrategy()
-                            .computeClasspath(workspaceProject, bazelWorkspace, DEFAULT_CLASSPATH, monitor.split(1))
-                    : null;
+            var workspaceProjectClasspath =
+                    projects.contains(workspaceProject) ? new WorkspaceClasspathStrategy().computeClasspath(
+                        workspaceProject,
+                        bazelWorkspace,
+                        DEFAULT_CLASSPATH,
+                        monitor.split(1, "Computing classpath for workspace project")) : null;
 
             // extract all non workspace projects
             List<BazelProject> nonWorkspaceProjects = projects.stream()
@@ -406,7 +408,7 @@ public class BazelClasspathManager {
                 nonWorkspaceProjects,
                 bazelWorkspace,
                 DEFAULT_CLASSPATH,
-                monitor.split(1, SUPPRESS_NONE));
+                monitor.split(1, "Computing classpath for projects using " + strategy.getClass().getSimpleName()));
 
             // apply classpaths for each project
             for (BazelProject bazelProject : projects) {
@@ -415,7 +417,10 @@ public class BazelClasspathManager {
                 var projectClasspath =
                         bazelProject.isWorkspaceProject() ? workspaceProjectClasspath : classpaths.get(bazelProject);
 
-                saveAndSetContainer(javaProject, projectClasspath, monitor);
+                saveAndSetContainer(
+                    javaProject,
+                    projectClasspath,
+                    monitor.split(1, "Setting classpath " + bazelProject.getName()));
             }
         } finally {
             if (progress != null) {
