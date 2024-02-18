@@ -34,7 +34,6 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.BasicConfigurator;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
@@ -47,7 +46,7 @@ import ch.qos.logback.core.joran.spi.JoranException;
  * required a restart of JDTLS.
  * </p>
  */
-public class BazelJdtLsLogbackConfigurator extends BasicConfigurator {
+public class BazelJdtLsLogbackConfigurator {
 
     private static final ILog LOG = Platform.getLog(BazelJdtLsLogbackConfigurator.class);
 
@@ -119,14 +118,8 @@ public class BazelJdtLsLogbackConfigurator extends BasicConfigurator {
         return tracker;
     }
 
-    @Override
-    public ExecutionStatus configure(LoggerContext lc) {
-        setContext(lc);
-        addInfo("Setting up Bazel JDTLS Logback configuration.");
-
+    public void configure(LoggerContext lc) {
         configureLogback(lc);
-
-        return ExecutionStatus.DO_NOT_INVOKE_NEXT_IF_ANY;
     }
 
     private synchronized void configureLogback(LoggerContext lc) {
