@@ -40,9 +40,11 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.classic.spi.Configurator;
+import ch.qos.logback.classic.spi.ConfiguratorRank;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
 
+@ConfiguratorRank(value = ConfiguratorRank.CUSTOM_HIGH_PRIORITY)
 public class BazelLogbackConfigurator extends BasicConfigurator implements Configurator {
 
     private static final ILog LOG = Platform.getLog(BazelLogbackConfigurator.class);
@@ -169,6 +171,9 @@ public class BazelLogbackConfigurator extends BasicConfigurator implements Confi
             // Eclipse 2023-09 started to ship SLF4J Simple logger implementation
             // disable it as well because we really want log event to go to the Eclipse .log
             disableBundle(Platform.getBundle("slf4j.simple"));
+
+            // JDT LS has its own Logback configuration which prevents others from integrating with it
+            disableBundle(Platform.getBundle("org.eclipse.jdt.ls.logback.appender"));
 
             var bundle = Platform.getBundle("com.salesforce.bazel.logback"); // This is a fragment -> FrameworkUtil.getBundle() returns host
             var stateDir = Platform.getStateLocation(bundle).toPath();

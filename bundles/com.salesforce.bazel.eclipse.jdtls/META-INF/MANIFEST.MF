@@ -23,7 +23,8 @@ Export-Package: com.salesforce.bazel.eclipse.jdtls,
  com.salesforce.bazel.eclipse.jdtls.commands,
  com.salesforce.bazel.eclipse.jdtls.execution,
  com.salesforce.bazel.eclipse.jdtls.managers
-Import-Package: org.fusesource.jansi;version="2.4.0",
+Import-Package: ch.qos.logback.classic;version="1.4.11",
+ org.fusesource.jansi;version="2.4.0",
  org.osgi.service.event;version="1.4.1",
  org.slf4j;version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
