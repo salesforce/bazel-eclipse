@@ -19,6 +19,8 @@
    <bundle id="jakarta.servlet-api"/>
    <bundle id="org.apache.aries.spifly.dynamic.bundle"/>
    <bundle id="org.apache.aries.spifly.dynamic.bundle.source"/>
+   <bundle id="org.eclipse.equinox.event"/>
+   <bundle id="org.eclipse.equinox.event.source"/>
    <bundle id="org.objectweb.asm"/>
    <bundle id="org.objectweb.asm.commons"/>
    <bundle id="org.objectweb.asm.util"/>
