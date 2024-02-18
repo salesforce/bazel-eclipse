@@ -31,9 +31,9 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
     <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -console"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -console -noExit"/>
     <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
-    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Djava.import.generatesMetadataFilesAtProjectRoot=false"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Djava.import.generatesMetadataFilesAtProjectRoot=false&#10;-Xmx22G &#10;-XX:+UseG1GC &#10;-XX:+UseStringDeduplication &#10;--add-modules=ALL-SYSTEM &#10;-Djdt.codeCompleteSubstringMatch=false &#10;-Dorg.eclipse.jdt.core.index.disk.cache.categorylimit=500000 &#10;-Dorg.eclipse.jdt.core.javamodelcache.jartyperatio=10 &#10;-Dorg.eclipse.jdt.core.javamodelcache.ratio=1.5 &#10;-Djava.bazel.staticProcessStreamSocket=22222"/>
     <stringAttribute key="pde.version" value="3.3"/>
     <stringAttribute key="product" value="org.eclipse.sdk.ide"/>
     <setAttribute key="selected_features"/>
@@ -54,7 +54,9 @@
         <setEntry value="jakarta.annotation-api*2.1.1@default:default"/>
         <setEntry value="jakarta.inject.jakarta.inject-api*1.0.5@default:default"/>
         <setEntry value="jakarta.inject.jakarta.inject-api*2.0.1@default:default"/>
+        <setEntry value="jakarta.servlet-api@default:default"/>
         <setEntry value="org.apache.ant@default:default"/>
+        <setEntry value="org.apache.aries.spifly.dynamic.bundle@1:true"/>
         <setEntry value="org.apache.commons.cli@default:default"/>
         <setEntry value="org.apache.commons.commons-codec*1.16.0@default:default"/>
         <setEntry value="org.apache.commons.commons-compress@default:default"/>
@@ -164,6 +166,11 @@
         <setEntry value="org.hamcrest@default:default"/>
         <setEntry value="org.jsr-305@default:default"/>
         <setEntry value="org.junit@default:default"/>
+        <setEntry value="org.objectweb.asm.commons@default:default"/>
+        <setEntry value="org.objectweb.asm.tree.analysis@default:default"/>
+        <setEntry value="org.objectweb.asm.tree@default:default"/>
+        <setEntry value="org.objectweb.asm.util@default:default"/>
+        <setEntry value="org.objectweb.asm@default:default"/>
         <setEntry value="org.osgi.service.cm@default:default"/>
         <setEntry value="org.osgi.service.component@default:default"/>
         <setEntry value="org.osgi.service.device@default:default"/>
@@ -193,7 +200,7 @@
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
     <stringAttribute key="templateConfig" value="${target_home}/configuration/config.ini"/>
-    <stringAttribute key="timestamp" value="1708198565060"/>
+    <stringAttribute key="timestamp" value="1708248043310"/>
     <booleanAttribute key="tracing" value="true"/>
     <mapAttribute key="tracingOptions">
         <mapEntry key="com.perforce.team.core/debug" value="false"/>
