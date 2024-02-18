@@ -58,6 +58,13 @@ public class BazelJdtLsPlugin extends Plugin implements BazelJdtLsSharedContstan
         return requireNonNull(plugin, "not initialized");
     }
 
+    private static boolean isBundleActive(Bundle bundle) {
+        return switch (bundle.getState()) {
+            case Bundle.ACTIVE, Bundle.STARTING, Bundle.RESOLVED -> true;
+            default -> false;
+        };
+    }
+
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
@@ -66,8 +73,7 @@ public class BazelJdtLsPlugin extends Plugin implements BazelJdtLsSharedContstan
         // retrigger Logback configuration
         // this is needed because our bundle gets installed after JDTLS already configured Logback
         var logbackBundle = Platform.getBundle("com.salesforce.bazel.logback");
-        if (((logbackBundle != null) && (logbackBundle.getState() == Bundle.ACTIVE))
-                || (logbackBundle.getState() == Bundle.STARTING) || (logbackBundle.getState() == Bundle.RESOLVED)) {
+        if ((logbackBundle != null) && isBundleActive(logbackBundle)) {
             try {
                 var loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
                 new ContextInitializer(loggerContext).autoConfig();
