@@ -39,7 +39,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
-import ch.qos.logback.core.util.StatusPrinter;
 
 /**
  * This is a copy of our Logback fragment to configure Logback within JDTLS.
@@ -96,7 +95,7 @@ public class BazelJdtLsLogbackConfigurator extends BasicConfigurator {
         configurator.setContext(lc);
         configurator.doConfigure(configFile);
 
-        StatusPrinter.printInCaseOfErrorsOrWarnings(lc);
+        StatusPrinter.logInCaseOfErrorsOrWarnings(lc, LOG);
 
         applyDebugLogLevels(lc);
 

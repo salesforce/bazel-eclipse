@@ -195,12 +195,11 @@
         <setEntry value="com.salesforce.bazel.eclipse.core@default:default"/>
         <setEntry value="com.salesforce.bazel.eclipse.jdtls@default:default"/>
         <setEntry value="com.salesforce.bazel.importedsource@default:default"/>
-        <setEntry value="com.salesforce.bazel.logback@default:false"/>
         <setEntry value="com.salesforce.bazel.sdk@default:default"/>
     </setAttribute>
     <booleanAttribute key="show_selected_only" value="false"/>
     <stringAttribute key="templateConfig" value="${target_home}/configuration/config.ini"/>
-    <stringAttribute key="timestamp" value="1708248043310"/>
+    <stringAttribute key="timestamp" value="1708258207165"/>
     <booleanAttribute key="tracing" value="true"/>
     <mapAttribute key="tracingOptions">
         <mapEntry key="com.perforce.team.core/debug" value="false"/>
