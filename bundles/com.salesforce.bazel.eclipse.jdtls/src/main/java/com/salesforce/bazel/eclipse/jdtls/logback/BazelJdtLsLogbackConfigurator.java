@@ -121,6 +121,7 @@ public class BazelJdtLsLogbackConfigurator extends BasicConfigurator {
 
     @Override
     public ExecutionStatus configure(LoggerContext lc) {
+        setContext(lc);
         addInfo("Setting up Bazel JDTLS Logback configuration.");
 
         configureLogback(lc);
