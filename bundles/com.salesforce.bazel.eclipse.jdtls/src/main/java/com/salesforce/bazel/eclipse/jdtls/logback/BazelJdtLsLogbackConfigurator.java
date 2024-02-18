@@ -27,7 +27,6 @@ import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.service.debug.DebugOptions;
-import org.eclipse.osgi.service.environment.EnvironmentInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.util.tracker.ServiceTracker;
@@ -45,6 +44,9 @@ import ch.qos.logback.core.joran.spi.JoranException;
  * The fragment does not work in JDTLS because our bundles gets installed after Logback already started. This would
  * required a restart of JDTLS.
  * </p>
+ * <p>
+ * Important note: Logging to the console must be prevented!
+ * </p>
  */
 public class BazelJdtLsLogbackConfigurator {
 
@@ -52,9 +54,6 @@ public class BazelJdtLsLogbackConfigurator {
 
     // This has to match the log directory in defaultLogbackConfiguration/logback.xml
     private static final String PROPERTY_LOG_DIRECTORY = "com.salesforce.bazel.log.dir"; //$NON-NLS-1$
-
-    // This has to match the log directory in defaultLogbackConfiguration/logback.xml
-    private static final String PROPERTY_LOG_CONSOLE_THRESHOLD = "com.salesforce.bazel.log.console.threshold"; //$NON-NLS-1$
 
     private static void applyDebugLogLevels(LoggerContext lc) {
         ServiceTracker<DebugOptions, Object> tracker = openServiceTracker(DebugOptions.class);
@@ -122,7 +121,7 @@ public class BazelJdtLsLogbackConfigurator {
         configureLogback(lc);
     }
 
-    private synchronized void configureLogback(LoggerContext lc) {
+    private void configureLogback(LoggerContext lc) {
         try {
             // https://github.com/eclipse-m2e/m2e-core/pull/1366
             // check for m2e logback bundle and override its configuration
@@ -144,23 +143,9 @@ public class BazelJdtLsLogbackConfigurator {
             if (System.getProperty(PROPERTY_LOG_DIRECTORY, "").length() <= 0) { //$NON-NLS-1$
                 System.setProperty(PROPERTY_LOG_DIRECTORY, stateDir.toAbsolutePath().toString());
             }
-            if ((System.getProperty(PROPERTY_LOG_CONSOLE_THRESHOLD, "").length() <= 0) && isConsoleLogEnable()) {
-                System.setProperty(PROPERTY_LOG_CONSOLE_THRESHOLD, Level.DEBUG.levelStr);
-            }
             loadConfiguration(lc, configFile.toUri().toURL());
         } catch (Exception e) {
             LOG.log(Status.warning("Exception while setting up logging:" + e.getMessage(), e));
         }
     }
-
-    private boolean isConsoleLogEnable() {
-        ServiceTracker<EnvironmentInfo, Object> tracker = openServiceTracker(EnvironmentInfo.class);
-        try {
-            var environmentInfo = (EnvironmentInfo) tracker.getService();
-            return (environmentInfo != null) && "true".equals(environmentInfo.getProperty("eclipse.consoleLog")); //$NON-NLS-1$
-        } finally {
-            tracker.close();
-        }
-    }
-
 }
