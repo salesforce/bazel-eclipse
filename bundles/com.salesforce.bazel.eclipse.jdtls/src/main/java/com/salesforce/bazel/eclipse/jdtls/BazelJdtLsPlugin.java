@@ -37,15 +37,14 @@ package com.salesforce.bazel.eclipse.jdtls;
 
 import static java.util.Objects.requireNonNull;
 
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.slf4j.LoggerFactory;
 
+import com.salesforce.bazel.eclipse.jdtls.logback.BazelJdtLsLogbackConfigurator;
+
 import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.util.ContextInitializer;
 
 /**
  * The activator class controls the Bazel Eclipse plugin life cycle
@@ -58,33 +57,17 @@ public class BazelJdtLsPlugin extends Plugin implements BazelJdtLsSharedContstan
         return requireNonNull(plugin, "not initialized");
     }
 
-    private static boolean isBundleActive(Bundle bundle) {
-        return switch (bundle.getState()) {
-            case Bundle.ACTIVE, Bundle.STARTING, Bundle.RESOLVED -> true;
-            default -> false;
-        };
-    }
-
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
         plugin = this;
 
         // retrigger Logback configuration
-        // this is needed because our bundle gets installed after JDTLS already configured Logback
-        var logbackBundle = Platform.getBundle("com.salesforce.bazel.logback");
-        if ((logbackBundle != null) && isBundleActive(logbackBundle)) {
-            try {
-                var loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-                new ContextInitializer(loggerContext).autoConfig();
-            } catch (Exception e) {
-                getLog().log(Status.error("Failed to re-configure Logback configuration.", e));
-            }
-        } else {
-            getLog().log(
-                Status.error(
-                    "Unable to configure Logback. Please check the installaton." + (logbackBundle == null
-                            ? " Bundle is missing." : (" Bundle state is: " + logbackBundle.getState()))));
+        try {
+            var loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+            new BazelJdtLsLogbackConfigurator().configure(loggerContext);
+        } catch (Exception e) {
+            getLog().log(Status.error("Failed to re-configure Logback configuration.", e));
         }
     }
 
