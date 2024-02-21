@@ -1,5 +1,7 @@
 package com.salesforce.bazel.eclipse.core.projectview;
 
+import static java.util.Collections.unmodifiableCollection;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -47,22 +49,23 @@ public record BazelProjectView(
         Collection<String> testFlags,
         GlobSetMatcher testSourcesGlobs,
         boolean discoverAllExternalAndWorkspaceJars,
+        GlobSetMatcher externalJarsDiscoveryFilter,
         boolean shardSync,
         int targetShardSize) {
 
     public BazelProjectView {
-        directoriesToImport = Collections.unmodifiableCollection(directoriesToImport);
-        directoriesToExclude = Collections.unmodifiableCollection(directoriesToExclude);
-        targets = Collections.unmodifiableCollection(targets);
-        additionalLanguages = Collections.unmodifiableCollection(additionalLanguages);
-        tsConfigRules = Collections.unmodifiableCollection(tsConfigRules);
+        directoriesToImport = unmodifiableCollection(directoriesToImport);
+        directoriesToExclude = unmodifiableCollection(directoriesToExclude);
+        targets = unmodifiableCollection(targets);
+        additionalLanguages = unmodifiableCollection(additionalLanguages);
+        tsConfigRules = unmodifiableCollection(tsConfigRules);
         targetProvisioningSettings = Collections.unmodifiableMap(targetProvisioningSettings);
         projectMappings = Collections.unmodifiableMap(projectMappings);
-        importPreferences = Collections.unmodifiableCollection(importPreferences);
-        projectSettings = Collections.unmodifiableCollection(projectSettings);
-        buildFlags = Collections.unmodifiableCollection(buildFlags);
-        syncFlags = Collections.unmodifiableCollection(syncFlags);
-        testFlags = Collections.unmodifiableCollection(testFlags);
+        importPreferences = unmodifiableCollection(importPreferences);
+        projectSettings = unmodifiableCollection(projectSettings);
+        buildFlags = unmodifiableCollection(buildFlags);
+        syncFlags = unmodifiableCollection(syncFlags);
+        testFlags = unmodifiableCollection(testFlags);
     }
 
 }

@@ -16,10 +16,12 @@ package com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -30,6 +32,7 @@ import com.google.idea.blaze.base.model.primitives.Label;
 import com.salesforce.bazel.eclipse.core.model.BazelRuleAttributes;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.eclipse.core.projectview.GlobSetMatcher;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
 
 /**
@@ -37,8 +40,17 @@ import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
  */
 public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
 
+    private final GlobSetMatcher externalJarsDiscoveryFilter;
+
     public ExternalLibrariesDiscovery(BazelWorkspace bazelWorkspace) throws CoreException {
         super(bazelWorkspace);
+        externalJarsDiscoveryFilter = bazelWorkspace.getBazelProjectView().externalJarsDiscoveryFilter();
+    }
+
+    private Stream<BazelRuleAttributes> getExternalRepositoriesByRuleClassAndFiltered(Set<String> wantedRuleKinds)
+            throws CoreException {
+        return bazelWorkspace.getExternalRepositoriesByRuleClass(k -> wantedRuleKinds.contains(k))
+                .filter(a -> (a.getName() != null) && externalJarsDiscoveryFilter.matches(Path.of(a.getName())));
     }
 
     public Collection<ClasspathEntry> query(IProgressMonitor progress) throws CoreException {
@@ -79,7 +91,7 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
         // get list of all interesting external repo rules
         // note, some rules may do crazy stuff, just expand the set if you think we should be searching more for java_import
         Set<String> wantedRuleKinds = Set.of("jvm_import_external", "compat_repository");
-        var externals = bazelWorkspace.getExternalRepositoriesByRuleClass(k -> wantedRuleKinds.contains(k));
+        var externals = getExternalRepositoriesByRuleClassAndFiltered(wantedRuleKinds);
 
         // get java_import details from each external
         var setOfExternalsToQuery =
@@ -114,7 +126,7 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
     private void queryForRulesJvmExternalJars(Set<ClasspathEntry> result) throws CoreException {
         // get list of all external repos (
         Set<String> wantedRuleKinds = Set.of("coursier_fetch", "pinned_coursier_fetch"); // pinned is not always available
-        var externals = bazelWorkspace.getExternalRepositoriesByRuleClass(k -> wantedRuleKinds.contains(k));
+        var externals = getExternalRepositoriesByRuleClassAndFiltered(wantedRuleKinds);
 
         // filter out "unpinned" repositories
         var setOfExternalsToQuery = externals.map(BazelRuleAttributes::getName)

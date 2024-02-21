@@ -199,6 +199,12 @@ This can be done with the following in your `.bazelrc` file:
 build --output_groups=+_source_jars
 ```
 
+### `external_jars_discovery_filters`
+
+When `discover_all_external_and_workspace_jars` is set to `true` this can be set to apply additional filtering to the discovered external repository names.
+
+The value is a list. Wildcard globbing can be used for matching repository names as well as `-` prefix for exclusions.
+
 ###  `test_sources`
 
 A list of globs with directories to flag as containing test sources.

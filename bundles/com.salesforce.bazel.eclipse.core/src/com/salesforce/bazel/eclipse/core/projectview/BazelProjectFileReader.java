@@ -74,6 +74,7 @@ public class BazelProjectFileReader {
         final LinkedHashSet<String> testFlags = new LinkedHashSet<>();
         final LinkedHashSet<String> testSourcesGlobs = new LinkedHashSet<>();
         boolean discoverAllExternalAndWorkspaceJars = false;
+        final LinkedHashSet<String> externalJarsFilters = new LinkedHashSet<>();
         int targetShardSize = 500;
         boolean shardSync = true;
 
@@ -144,6 +145,7 @@ public class BazelProjectFileReader {
                     testFlags,
                     new GlobSetMatcher(testSourcesGlobs),
                     discoverAllExternalAndWorkspaceJars,
+                    new GlobSetMatcher(externalJarsFilters),
                     shardSync,
                     targetShardSize);
         }
@@ -341,6 +343,7 @@ public class BazelProjectFileReader {
                         break;
                     }
                     case "target_provisioning_settings": {
+                        // extension for BEF
                         parseSectionBodyIntoList(rawSection).forEach(s -> {
                             var separator = s.indexOf('=');
                             if (separator != -1) {
@@ -352,10 +355,12 @@ public class BazelProjectFileReader {
                         break;
                     }
                     case "import_preferences": {
+                        // extension for BEF
                         parseSectionBodyIntoList(rawSection).forEach(builder.importPreferences::add);
                         break;
                     }
                     case "project_settings": {
+                        // extension for BEF
                         parseSectionBodyIntoList(rawSection).forEach(builder.projectSettings::add);
                         break;
                     }
@@ -376,8 +381,14 @@ public class BazelProjectFileReader {
                         break;
                     }
                     case "discover_all_external_and_workspace_jars": {
+                        // extension for BEF
                         builder.discoverAllExternalAndWorkspaceJars =
                                 parseSectionBodyAsBoolean(rawSection, builder.discoverAllExternalAndWorkspaceJars);
+                        break;
+                    }
+                    case "external_jars_discovery_filters": {
+                        // extension for BEF
+                        parseSectionBodyIntoList(rawSection).forEach(builder.externalJarsFilters::add);
                         break;
                     }
                     case "shard_sync": {
