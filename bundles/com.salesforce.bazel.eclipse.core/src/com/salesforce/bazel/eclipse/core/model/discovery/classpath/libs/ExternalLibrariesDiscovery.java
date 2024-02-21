@@ -13,6 +13,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs;
 
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.TAG_NO_IDE;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
@@ -50,6 +51,7 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
     private Stream<BazelRuleAttributes> getExternalRepositoriesByRuleClassAndFiltered(Set<String> wantedRuleKinds)
             throws CoreException {
         return bazelWorkspace.getExternalRepositoriesByRuleClass(k -> wantedRuleKinds.contains(k))
+                .filter(a -> !a.hasTag(TAG_NO_IDE))
                 .filter(a -> (a.getName() != null) && externalJarsDiscoveryFilter.matches(Path.of(a.getName())));
     }
 

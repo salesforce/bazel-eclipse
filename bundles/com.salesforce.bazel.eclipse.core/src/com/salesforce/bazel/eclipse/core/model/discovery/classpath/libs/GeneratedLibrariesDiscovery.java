@@ -64,7 +64,6 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
     }
 
     public Collection<ClasspathEntry> query(IProgressMonitor progress) throws CoreException {
-
         var monitor = SubMonitor.convert(progress, "Querying Bazel..", 1);
         try {
             Set<ClasspathEntry> result = new LinkedHashSet<>();
@@ -77,7 +76,6 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
         } finally {
             progress.done();
         }
-
     }
 
     private void queryForGeneratedJars(Set<ClasspathEntry> result) throws CoreException {

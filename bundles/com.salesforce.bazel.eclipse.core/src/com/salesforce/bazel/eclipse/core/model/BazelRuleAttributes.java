@@ -101,6 +101,19 @@ public class BazelRuleAttributes {
         };
     }
 
+    /**
+     * Returns <code>true</code> if there is an attribute named <code>tags</code> containing the specified tag.
+     *
+     * @param tag
+     *            the tag to check
+     * @return <code>true</code> if the attribute <code>tags</code> is present and has the specified tag,
+     *         <code>false</code> otherwise
+     */
+    public boolean hasTag(String tag) {
+        var tags = getStringList("tags");
+        return (tags != null) && tags.contains(tag);
+    }
+
     @Override
     public String toString() {
         return "BazelRuleAttributes [rule=" + rule + "]";

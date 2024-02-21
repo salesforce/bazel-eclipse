@@ -35,7 +35,7 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
 
         this.bazelPackage = bazelPackage;
         this.targetName = targetName;
-        this.label = new BazelLabel(bazelPackage.getLabel().getPackagePath(true), targetName);
+        label = new BazelLabel(bazelPackage.getLabel().getPackagePath(true), targetName);
     }
 
     @Override
@@ -189,8 +189,7 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
      * @throws CoreException
      */
     public boolean hasTag(String tag) throws CoreException {
-        var tags = getInfo().getRuleAttributes().getStringList("tags");
-        return (tags != null) && tags.contains(tag);
+        return getInfo().getRuleAttributes().hasTag(tag);
     }
 
     /**
