@@ -116,14 +116,17 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                 // build index of classpath info
                 var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
 
+                // remove old marker
+                deleteBuildPathProblems(bazelProject);
+
                 // add the target
-                classpathInfo.addTarget(bazelProject.getBazelTarget());
+                var problem = classpathInfo.addTarget(bazelProject.getBazelTarget());
+                if (!problem.isOK()) {
+                    createBuildPathProblem(bazelProject, problem);
+                }
 
                 // compute the classpath
                 var classpath = classpathInfo.compute();
-
-                // remove old marker
-                deleteBuildPathProblems(bazelProject);
 
                 // check for non existing jars
                 for (ClasspathEntry entry : classpath) {

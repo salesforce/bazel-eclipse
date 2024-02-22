@@ -35,6 +35,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IAccessRule;
@@ -170,8 +171,9 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
      *
      * @param bazelTarget
      *            the target to resolve
+     * @return status object indicating if there was a problem handling the target
      */
-    public void addTarget(BazelTarget bazelTarget) throws CoreException {
+    public IStatus addTarget(BazelTarget bazelTarget) throws CoreException {
         var targetLabel = bazelTarget.getLabel().toPrimitive();
         var targetKey = TargetKey.forPlainTarget(targetLabel);
 
@@ -181,20 +183,20 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
         var targetIdeInfo = aspectsInfo.get(targetKey);
         if (targetIdeInfo == null) {
-            //  this could be a failing build, abort with a warning
-            LOG.warn(
-                "Unable to compute classpath for target '{}' because of missing IDE info! Please check the Bazel build for problems building the target.",
-                bazelTarget.getLabel());
-            return;
+            //  this could be a failing build, abort with an error so it gets properly recored on the build path
+            return Status.error(
+                format(
+                    "Unable to compute classpath for target '%s' because of missing IDE info! Please check the Bazel build for problems building the target.",
+                    bazelTarget.getLabel()));
         }
 
         var javaIdeInfo = targetIdeInfo.getJavaIdeInfo();
         if (javaIdeInfo == null) {
-            //  this could be a failing build, abort with a warning
-            LOG.warn(
-                "Unable to compute classpath for target '{}' because of missing Java IDE info! Please check the Bazel build for problems building the target.",
-                bazelTarget.getLabel());
-            return;
+            //  this could be a failing build, abort with an error so it gets properly recored on the build path
+            return Status.error(
+                format(
+                    "Unable to compute classpath for target '%s' because of missing Java IDE info! Please check the Bazel build for problems building the target.",
+                    bazelTarget.getLabel()));
         }
 
         // the following is inspired from IJ BlazeJavaWorkspaceImporter
@@ -283,6 +285,8 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 this.exports.add(Label.create(export));
             }
         }
+
+        return Status.OK_STATUS;
     }
 
     /**

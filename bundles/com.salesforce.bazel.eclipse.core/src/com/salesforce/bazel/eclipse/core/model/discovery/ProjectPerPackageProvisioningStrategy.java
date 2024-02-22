@@ -182,13 +182,17 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
                     // build index of classpath info
                     var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
+                    var buildPathProblems = new ArrayList<IStatus>();
 
                     // add the targets
                     Collection<BazelTarget> projectTargets = requireNonNull(
                         activeTargetsPerProject.get(bazelProject),
                         () -> format("programming error: not targets for project: %s", bazelProject));
                     for (BazelTarget target : projectTargets) {
-                        classpathInfo.addTarget(target);
+                        var status = classpathInfo.addTarget(target);
+                        if (!status.isOK()) {
+                            buildPathProblems.add(status);
+                        }
                     }
 
                     // compute the classpath
@@ -196,6 +200,11 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
                     // remove old marker
                     deleteBuildPathProblems(bazelProject);
+
+                    // create problem markers for detected issues
+                    for (IStatus problem : buildPathProblems) {
+                        createBuildPathProblem(bazelProject, problem);
+                    }
 
                     // check for non existing jars
                     for (ClasspathEntry entry : classpath) {
