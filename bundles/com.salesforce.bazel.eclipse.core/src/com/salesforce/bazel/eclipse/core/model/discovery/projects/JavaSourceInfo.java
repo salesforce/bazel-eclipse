@@ -85,9 +85,9 @@ public class JavaSourceInfo {
 
     public JavaSourceInfo(Collection<Entry> srcs, BazelPackage bazelPackage) {
         this.srcs = srcs;
-        this.bazelPackageLocation = bazelPackage.getLocation();
-        this.sharedSourceInfo = null;
-        this.bazelWorkspace = bazelPackage.getBazelWorkspace();
+        bazelPackageLocation = bazelPackage.getLocation();
+        sharedSourceInfo = null;
+        bazelWorkspace = bazelPackage.getBazelWorkspace();
     }
 
     /**
@@ -105,9 +105,9 @@ public class JavaSourceInfo {
      */
     public JavaSourceInfo(Collection<Entry> srcs, BazelPackage bazelPackage, JavaSourceInfo sharedSourceInfo) {
         this.srcs = srcs;
-        this.bazelPackageLocation = bazelPackage.getLocation();
+        bazelPackageLocation = bazelPackage.getLocation();
         this.sharedSourceInfo = sharedSourceInfo;
-        this.bazelWorkspace = bazelPackage.getBazelWorkspace();
+        bazelWorkspace = bazelPackage.getBazelWorkspace();
     }
 
     @SuppressWarnings("unchecked")
@@ -233,13 +233,26 @@ public class JavaSourceInfo {
                     result.add(
                         Status.error(
                             format(
-                                "Unable to detect packakage for Java file '%s'. Please double check it has a package declaration!",
+                                "Unable to detect package for Java file '%s'. Please double check it has a package declaration!",
                                 javaSourceEntry.getPath())));
                 } else {
                     // build second index of parent for all entries with a potential source root
                     // this is needed in order to identify split packages (in same directory) later
                     sourceEntriesByParentFolder.putIfAbsent(javaSourceEntry.getPathParent(), new ArrayList<>());
                     sourceEntriesByParentFolder.get(javaSourceEntry.getPathParent()).add(javaSourceEntry);
+                }
+            }
+
+            // migrate all remaining entries to NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE
+            // this may allow to rescue some (but more importantly, we do not want the MISSING_PACKAGE as source folder reported)
+            if (sourceEntriesBySourceRoot.containsKey(MISSING_PACKAGE)) {
+                entriesWithMissingPackageInfo =
+                        (List<JavaSourceEntry>) sourceEntriesBySourceRoot.remove(MISSING_PACKAGE);
+                if (!sourceEntriesBySourceRoot.containsKey(NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE)) {
+                    sourceEntriesBySourceRoot.put(NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE, entriesWithMissingPackageInfo);
+                } else {
+                    ((List<JavaSourceEntry>) sourceEntriesBySourceRoot.get(NOT_FOLLOWING_JAVA_PACKAGE_STRUCTURE))
+                            .addAll(entriesWithMissingPackageInfo);
                 }
             }
         }
@@ -368,7 +381,7 @@ public class JavaSourceInfo {
             }
 
             // create source directories
-            this.sourceDirectoriesWithFilesOrGlobs = sourceEntriesBySourceRoot;
+            sourceDirectoriesWithFilesOrGlobs = sourceEntriesBySourceRoot;
 
         } else {
             // treat all sources as if they don't have a directory
