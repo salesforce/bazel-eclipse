@@ -15,8 +15,10 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
+import static java.nio.file.Files.exists;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.IPath.forPosix;
+import static org.eclipse.core.runtime.IPath.fromPath;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -379,7 +381,33 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     }
 
     private BazelWorkspace findExternalWorkspace(Label label) throws CoreException {
-        var externalRepository = bazelWorkspace.getExternalRepository(label.externalWorkspaceName());
+        var externalWorkspaceName = label.externalWorkspaceName();
+        if (externalWorkspaceName.startsWith("@")) {
+            // we have a canonical repository name; try to see if it links to workspace in the IDE
+            // IJ does similar thing: https://github.com/bazelbuild/intellij/blob/8b64eb559811a803e07bc07c278168f3607c0f50/base/src/com/google/idea/blaze/base/sync/workspace/WorkspaceHelper.java#L169-L184
+            try {
+                var externalWorkspacePath =
+                        getBlazeInfo().getOutputBase().resolve("external").resolve(externalWorkspaceName.substring(1));
+                if (exists(externalWorkspacePath)) {
+                    var path = fromPath(externalWorkspacePath.toRealPath());
+                    var externalWorkspace = bazelWorkspace.getParent().getBazelWorkspace(path);
+                    if (externalWorkspace.exists()) {
+                        return externalWorkspace;
+                    }
+                }
+            } catch (IOException e) {
+                throw new CoreException(
+                        Status.error(
+                            format(
+                                "Error while resolving canonical repository name '%s': %s",
+                                externalWorkspaceName.substring(1),
+                                e.getMessage()),
+                            e));
+            }
+        }
+
+        // lookup and see if it maps to 'local_repository'
+        var externalRepository = bazelWorkspace.getExternalRepository(externalWorkspaceName);
         if (externalRepository != null) {
             switch (externalRepository.getRuleClass()) {
                 case "local_repository": {
@@ -398,6 +426,8 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 }
             }
         }
+
+        LOG.debug("External workspace '{}' not found in current IDE workspace.", externalWorkspaceName);
         return null;
     }
 
