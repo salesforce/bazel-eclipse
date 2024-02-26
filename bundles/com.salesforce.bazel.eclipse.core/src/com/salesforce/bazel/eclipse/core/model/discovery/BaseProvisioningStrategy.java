@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -1254,12 +1253,13 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      * @see https://bazel.build/build/style-guide
      */
     private boolean isTestTarget(BazelTarget bazelTarget) throws CoreException {
-        var targetName = bazelTarget.getTargetName().toLowerCase(Locale.US);
-        var ruleClass = bazelTarget.getRuleClass().toLowerCase(Locale.US);
+        var targetName = bazelTarget.getTargetName();
+        var ruleClass = bazelTarget.getRuleClass();
         return ruleClass.endsWith("_test") // java_test
-                || targetName.startsWith("test") // we allow this too
-                || targetName.endsWith("test") // we allow this too
-                || targetName.endsWith("tests") // we allow this too
+                || targetName.endsWith("_test") // Bazel style guide
+                || targetName.endsWith("_unittest") // Bazel style guide
+                || targetName.endsWith("Test") // Bazel style guide
+                || targetName.endsWith("Tests") // Bazel style guide
                 || targetName.endsWith("-test-lib"); // java_test_suite shared lib from @contrib_rules_jvm
     }
 
