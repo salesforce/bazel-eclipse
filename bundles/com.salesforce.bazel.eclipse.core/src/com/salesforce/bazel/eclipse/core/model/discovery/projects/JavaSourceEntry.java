@@ -75,7 +75,7 @@ public class JavaSourceEntry implements Entry {
     }
 
     public IPath getDetectedPackagePath() {
-        return requireNonNull(detectedPackagePath, () -> "no package path detected for: " + relativePath);
+        return requireNonNull(detectedPackagePath, () -> "no package path detected for: " + getLocation());
     }
 
     /**
