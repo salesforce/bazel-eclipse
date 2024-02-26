@@ -750,7 +750,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // broadcast sync metrics
             var start = trace.getCreated();
             var duration = Duration.between(start, Instant.now());
-            safePostEvent(new SyncFinishedEvent(workspace.getLocation(), start, duration, "failed"));
+            safePostEvent(new SyncFinishedEvent(workspace.getLocation(), start, duration, "Failed: " + e.getMessage()));
             LOG.error("Error synchronizing workspace '{}': {}", workspace.getLocation(), e.getMessage(), e);
             return e instanceof CoreException ce ? ce.getStatus()
                     : Status.error(format("Error synchronizing workspace '%s'", workspace.getLocation()), e);
