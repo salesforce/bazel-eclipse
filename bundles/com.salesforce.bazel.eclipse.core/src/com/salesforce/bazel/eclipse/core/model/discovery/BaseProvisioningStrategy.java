@@ -420,11 +420,15 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 var exclusionPatterns = javaSourceInfo.getExclutionPatternsForSourceDirectory(dir);
                 var existingEntry =
                         rawClasspath.stream().anyMatch(entry -> entry.getPath().equals(sourceFolder.getFullPath()));
+                var isNested = rawClasspath.stream()
+                        .anyMatch(
+                            entry -> entry.getPath().isPrefixOf(sourceFolder.getFullPath())
+                                    || sourceFolder.getFullPath().isPrefixOf(entry.getPath()));
                 if (existingEntry) {
                     if (useTestsClasspath) {
                         createBuildPathProblem(
                             project,
-                            Status.warning(
+                            Status.error(
                                 format(
                                     "Folder '%s' found twice on the classpath. This is likely because it's used as test as well as non-test source. Please consider modifying the project setup!",
                                     sourceFolder)));
@@ -436,6 +440,13 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                                     "Folder '%s' found twice on the classpath. This is an unexpected situation. Please consider modifying the project setup! Don't hesitate and reach out for help.",
                                     sourceFolder)));
                     }
+                } else if (isNested) {
+                    createBuildPathProblem(
+                        project,
+                        Status.error(
+                            format(
+                                "Folder '%s' is nested within an existing folder on the classpath. This is an unexpected situation. Please consider modifying the project setup! Don't hesitate and reach out for help.",
+                                sourceFolder)));
                 } else {
                     rawClasspath.add(
                         JavaCore.newSourceEntry(
