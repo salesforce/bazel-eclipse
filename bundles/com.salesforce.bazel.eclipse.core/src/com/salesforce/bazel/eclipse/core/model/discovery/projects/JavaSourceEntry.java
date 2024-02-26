@@ -115,6 +115,10 @@ public class JavaSourceEntry implements Entry {
         return null; // not following Java package structure conventions
     }
 
+    public boolean hasDetectedPackagePath() {
+        return detectedPackagePath != null;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(bazelPackageLocation, relativePath);

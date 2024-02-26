@@ -289,10 +289,13 @@ public class JavaSourceInfo {
                 for (JavaSourceEntry javaSourceEntry : entriesWithWrongPackageInfo) {
                     result.add(
                         Status.error(
-                            format(
+                            javaSourceEntry.hasDetectedPackagePath() ? format(
                                 "Java file '%s' (with detected package '%s') does not meet IDE standards. Please move into a folder hierarchy which follows Java package structure!",
                                 javaSourceEntry.getPath(),
-                                javaSourceEntry.getDetectedPackagePath())));
+                                javaSourceEntry.getDetectedPackagePath())
+                                    : format(
+                                        "Java file '%s' (unable to detect package) does not meet IDE standards. Please move into a folder hierarchy which follows Java package structure!",
+                                        javaSourceEntry.getPath())));
 
                 }
             }
