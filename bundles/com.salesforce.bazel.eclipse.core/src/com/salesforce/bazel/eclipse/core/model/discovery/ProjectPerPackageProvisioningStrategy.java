@@ -447,7 +447,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             sourceFilesInfo.append(" - ")
                     .append(src.getPath())
                     .append(": ")
-                    .append(src.getPotentialSourceDirectoryRoot())
+                    .append(src.hasDetectedPackagePath() ? src.getPotentialSourceDirectoryRoot() : "<no package found>")
                     .append(System.lineSeparator());
         }
         LOG.error(
