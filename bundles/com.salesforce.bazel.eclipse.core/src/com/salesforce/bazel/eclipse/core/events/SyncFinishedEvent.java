@@ -88,6 +88,11 @@ public record SyncFinishedEvent(
         println.accept(ansi().a(INTENSITY_BOLD).a("=======================").reset().toString());
         println.accept("");
 
+        if (trace() == null) {
+            println.accept(status());
+            return;
+        }
+
         TimeUnit resultion;
         if (duration().getSeconds() >= 1200) {
             resultion = TimeUnit.MINUTES;
@@ -97,6 +102,7 @@ public record SyncFinishedEvent(
             resultion = TimeUnit.MILLISECONDS;
         }
 
+        println.accept(ansi().a(ITALIC).a("  Status: ").reset().a(status()).toString());
         println.accept(ansi().a(ITALIC).a("Projects: ").reset().a(projectsCount()).toString());
         println.accept(ansi().a(ITALIC).a(" Targets: ").reset().a(targetsCount()).toString());
         println.accept(ansi().a(ITALIC).a("Strategy: ").reset().a(targetProvisioningStrategy()).toString());
