@@ -765,6 +765,11 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             message = status.getException().getMessage();
         }
 
+        if (message.length() >= 21000) {
+            // marker content is limited in length
+            message = message.substring(0, 20997).concat("...");
+        }
+
         Map<String, Object> markerAttributes = new HashMap<>();
         markerAttributes.put(IMarker.MESSAGE, message);
         markerAttributes.put(IMarker.SOURCE_ID, "Bazel Project Provisioning");
