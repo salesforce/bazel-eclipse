@@ -9,13 +9,15 @@ import java.nio.file.Path;
 
 public class UnixLoginShellFinder {
 
+    public static final String SHELL_VARIABLE_NAME = "SHELL";
+
     public Path detectLoginShell() throws IOException {
         return detectLoginShell(System.getProperty("user.name"));
     }
 
     Path detectLoginShell(String username) throws IOException {
         // prefer environment variable
-        var shell = EnvironmentUtil.getShell();
+        var shell = System.getenv(SHELL_VARIABLE_NAME);
         if (shell != null) {
             var shellBinary = Path.of(shell);
             if (!isExecutable(shellBinary)) {
