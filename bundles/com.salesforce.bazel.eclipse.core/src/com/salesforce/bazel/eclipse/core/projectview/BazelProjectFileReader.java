@@ -239,7 +239,7 @@ public class BazelProjectFileReader {
                         if (fileToImport.isAbsolute()) {
                             throw new IOException(
                                     format(
-                                        "Invalid import (%s) defined in '%s': imports must be relative to the file they are defined in",
+                                        "Invalid import (%s) defined in '%s': imports must be relative to the workspace root",
                                         fileToImport,
                                         bazelProjectFile));
                         }
