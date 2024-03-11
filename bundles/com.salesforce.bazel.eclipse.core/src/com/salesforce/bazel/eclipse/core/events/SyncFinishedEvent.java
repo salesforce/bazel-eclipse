@@ -77,21 +77,21 @@ public record SyncFinishedEvent(
 
     public JsonObject toJson() {
         var eventData = new JsonObject();
-        eventData.addProperty(EVENT_DATA_BAZEL_WORKSPACE_LOCATION, workspaceLocation().toString());
+        eventData.addProperty("workspaceLocation", workspaceLocation().toString());
         eventData.addProperty("startEpochMilliseconds", start().toEpochMilli());
         eventData.addProperty("durationMilliseconds", duration().toMillis());
-        eventData.addProperty(EVENT_DATA_STATUS, status());
+        eventData.addProperty("status", status());
         if (projectsCount() > 0) {
-            eventData.addProperty(EVENT_DATA_COUNT_PROJECT, projectsCount());
+            eventData.addProperty("projectsCount", projectsCount());
         }
         if (targetsCount() > 0) {
-            eventData.addProperty(EVENT_DATA_COUNT_TARGETS, targetsCount());
+            eventData.addProperty("targetsCount", targetsCount());
         }
         if (targetDiscoveryStrategy() != null) {
-            eventData.addProperty(EVENT_DATA_TARGET_DISCOVERY_STRATEGY, targetDiscoveryStrategy());
+            eventData.addProperty("targetDiscoveryStrategy", targetDiscoveryStrategy());
         }
         if (targetProvisioningStrategy() != null) {
-            eventData.addProperty(EVENT_DATA_TARGET_PROVISIONING_STRATEGY, targetProvisioningStrategy());
+            eventData.addProperty("targetProvisioningStrategy", targetProvisioningStrategy());
         }
         var trace = trace();
         if (trace != null) {
