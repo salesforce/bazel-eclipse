@@ -19,6 +19,8 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.salesforce.bazel.eclipse.core.util.trace.Trace.Span;
 
 /**
@@ -66,6 +68,21 @@ public class TraceTree {
                 children().forEach(c -> c.visit(visitor));
             }
             visitor.visitLeave(this);
+        }
+
+        public JsonObject toJson() {
+            var node = new JsonObject();
+            node.addProperty("name", name());
+            node.addProperty("durationNanos", durationNanos());
+            node.addProperty("persentageOfRoot", percentageOfRoot());
+            if (!children().isEmpty()) {
+                var children = new JsonArray();
+                for (SpanNode child : children()) {
+                    children.add(child.toJson());
+                }
+                node.add("children", children);
+            }
+            return node;
         }
     }
 

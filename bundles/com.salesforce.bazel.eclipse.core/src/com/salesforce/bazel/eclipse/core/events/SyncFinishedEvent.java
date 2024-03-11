@@ -28,7 +28,9 @@ import java.util.function.Consumer;
 import org.eclipse.core.runtime.IPath;
 import org.osgi.service.event.Event;
 
+import com.google.gson.JsonObject;
 import com.salesforce.bazel.eclipse.core.util.trace.Trace;
+import com.salesforce.bazel.eclipse.core.util.trace.TraceTree;
 
 /**
  * A synchronization finished event.
@@ -59,7 +61,7 @@ public record SyncFinishedEvent(
                 null /* trace */);
     }
 
-    public Event build() {
+    public Event toEvent() {
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(EVENT_DATA_BAZEL_WORKSPACE_LOCATION, workspaceLocation());
         eventData.put(EVENT_DATA_START_INSTANT, start());
@@ -71,6 +73,32 @@ public record SyncFinishedEvent(
         eventData.put(EVENT_DATA_TARGET_PROVISIONING_STRATEGY, targetProvisioningStrategy());
         eventData.put(EVENT_DATA_TRACE, trace());
         return new Event(TOPIC_SYNC_FINISHED, eventData);
+    }
+
+    public JsonObject toJson() {
+        var eventData = new JsonObject();
+        eventData.addProperty(EVENT_DATA_BAZEL_WORKSPACE_LOCATION, workspaceLocation().toString());
+        eventData.addProperty("startEpochMilliseconds", start().toEpochMilli());
+        eventData.addProperty("durationMilliseconds", duration().toMillis());
+        eventData.addProperty(EVENT_DATA_STATUS, status());
+        if (projectsCount() > 0) {
+            eventData.addProperty(EVENT_DATA_COUNT_PROJECT, projectsCount());
+        }
+        if (targetsCount() > 0) {
+            eventData.addProperty(EVENT_DATA_COUNT_TARGETS, targetsCount());
+        }
+        if (targetDiscoveryStrategy() != null) {
+            eventData.addProperty(EVENT_DATA_TARGET_DISCOVERY_STRATEGY, targetDiscoveryStrategy());
+        }
+        if (targetProvisioningStrategy() != null) {
+            eventData.addProperty(EVENT_DATA_TARGET_PROVISIONING_STRATEGY, targetProvisioningStrategy());
+        }
+        var trace = trace();
+        if (trace != null) {
+            var traceTree = TraceTree.create(trace);
+            eventData.add("trace", traceTree.getRootNode().toJson());
+        }
+        return eventData;
     }
 
     /**

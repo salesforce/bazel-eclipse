@@ -769,7 +769,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
 
     private void safePostEvent(SyncFinishedEvent syncFinishedEvent) {
         try {
-            getEventAdmin().postEvent(syncFinishedEvent.build());
+            getEventAdmin().postEvent(syncFinishedEvent.toEvent());
         } catch (RuntimeException | AssertionError | LinkageError e) {
             LOG.error(
                 "Unable to post event. OSGi Event Admin does not seem to be available. Please check the deployment.",
