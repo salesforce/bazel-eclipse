@@ -38,8 +38,8 @@ public class TraceGraphDumperTest {
                 100000L,
                 80.0F,
                 List.of(
-                    new TraceTree.SpanNode("Child 1", 1999999L,50000L, 3.0F, Collections.emptyList()),
-                    new TraceTree.SpanNode("Child 2", 1999999L,30000L, 5.0F, Collections.emptyList())));
+                    new TraceTree.SpanNode("Child 1", 1999999L, 50000L, 3.0F, Collections.emptyList()),
+                    new TraceTree.SpanNode("Child 2", 1999999L, 30000L, 5.0F, Collections.emptyList())));
 
         return new TraceTree(rootNode);
     }
