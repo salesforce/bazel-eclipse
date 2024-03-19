@@ -34,7 +34,7 @@ public final class Trace {
     public static final class Span {
 
         private final String name;
-        private final long startTime;
+        private final long startTimeEpocMilli;
         private final StopWatch stopWatch;
         private final List<Span> children = new ArrayList<>();
         private boolean done = false;
@@ -44,7 +44,7 @@ public final class Trace {
             if (name.isBlank()) {
                 throw new IllegalArgumentException("A blank name is not allowed!");
             }
-            startTime = System.currentTimeMillis();
+            startTimeEpocMilli = System.currentTimeMillis();
             stopWatch = new StopWatch();
             stopWatch.start();
         }
@@ -69,8 +69,8 @@ public final class Trace {
             return stopWatch.getDuration(timeUnit);
         }
 
-        public long getStartTime() {
-            return startTime;
+        public long getStartTimeEpocMilli() {
+            return startTimeEpocMilli;
         }
 
         public String getName() {
