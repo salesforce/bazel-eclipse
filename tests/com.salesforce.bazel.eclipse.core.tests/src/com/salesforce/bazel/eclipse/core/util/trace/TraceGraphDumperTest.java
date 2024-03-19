@@ -34,11 +34,12 @@ public class TraceGraphDumperTest {
     private TraceTree simpleSampleTree() {
         var rootNode = new TraceTree.SpanNode(
                 "Root",
+                1999999L,
                 100000L,
                 80.0F,
                 List.of(
-                    new TraceTree.SpanNode("Child 1", 50000L, 3.0F, Collections.emptyList()),
-                    new TraceTree.SpanNode("Child 2", 30000L, 5.0F, Collections.emptyList())));
+                    new TraceTree.SpanNode("Child 1", 1999999L,50000L, 3.0F, Collections.emptyList()),
+                    new TraceTree.SpanNode("Child 2", 1999999L,30000L, 5.0F, Collections.emptyList())));
 
         return new TraceTree(rootNode);
     }
