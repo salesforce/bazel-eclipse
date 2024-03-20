@@ -53,11 +53,13 @@ public class TraceTree {
 
     public static record SpanNode(
             String name,
+            long startTimeEpocMilli,
             long durationNanos,
             double percentageOfRoot,
             java.util.List<SpanNode> children) {
-        public SpanNode(String name, long durationNanos, double percentageOfRoot, java.util.List<SpanNode> children) {
+        public SpanNode(String name, long startTimeEpocMilli, long durationNanos, double percentageOfRoot, java.util.List<SpanNode> children) {
             this.name = requireNonNull(name);
+            this.startTimeEpocMilli = startTimeEpocMilli;
             this.durationNanos = durationNanos;
             this.percentageOfRoot = percentageOfRoot;
             this.children = requireNonNull(children);
@@ -73,6 +75,7 @@ public class TraceTree {
         public JsonObject toJson() {
             var node = new JsonObject();
             node.addProperty("name", name());
+            node.addProperty("startTimeEpocMilli", startTimeEpocMilli());
             node.addProperty("durationNanos", durationNanos());
             node.addProperty("persentageOfRoot", percentageOfRoot());
             if (!children().isEmpty()) {
@@ -102,7 +105,8 @@ public class TraceTree {
         }
 
         var durationNanos = span.getDuration(TimeUnit.NANOSECONDS);
-        return new SpanNode(span.getName(), durationNanos, percentage(durationNanos, rootDurationNanos), children);
+        var startTimeEpocMilli = span.getStartTimeEpocMilli();
+        return new SpanNode(span.getName(), startTimeEpocMilli, durationNanos, percentage(durationNanos, rootDurationNanos), children);
     }
 
     private static double percentage(long duration, long rootDuration) {
