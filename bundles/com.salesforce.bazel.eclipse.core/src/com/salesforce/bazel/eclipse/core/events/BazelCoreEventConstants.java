@@ -29,7 +29,7 @@ public interface BazelCoreEventConstants {
     String EVENT_DATA_DURATION = "duration";
     String EVENT_DATA_STATUS = "status";
 
-    String EVENT_DATA_COUNT_PROJECT = "count.projects";
+    String EVENT_DATA_PROJECTS = "projects";
     String EVENT_DATA_COUNT_TARGETS = "count.targets";
 
     String EVENT_DATA_TARGET_DISCOVERY_STRATEGY = "target.discovery_stratregy";

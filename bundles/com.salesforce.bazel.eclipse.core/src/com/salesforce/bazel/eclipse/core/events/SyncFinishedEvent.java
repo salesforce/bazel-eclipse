@@ -20,11 +20,15 @@ import static org.fusesource.jansi.Ansi.Attribute.ITALIC;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import com.google.gson.JsonArray;
 import org.eclipse.core.runtime.IPath;
 import org.osgi.service.event.Event;
 
@@ -40,7 +44,7 @@ public record SyncFinishedEvent(
         Instant start,
         Duration duration,
         String status,
-        int projectsCount,
+        List<String> projects,
         int targetsCount,
         String targetDiscoveryStrategy,
         String targetProvisioningStrategy,
@@ -54,7 +58,7 @@ public record SyncFinishedEvent(
                 start,
                 duration,
                 status,
-                0,
+                Collections.emptyList(),
                 0,
                 null /* target discover */,
                 null /* target provisioning */,
@@ -67,7 +71,7 @@ public record SyncFinishedEvent(
         eventData.put(EVENT_DATA_START_INSTANT, start());
         eventData.put(EVENT_DATA_DURATION, duration());
         eventData.put(EVENT_DATA_STATUS, status());
-        eventData.put(EVENT_DATA_COUNT_PROJECT, projectsCount());
+        eventData.put(EVENT_DATA_PROJECTS, projects());
         eventData.put(EVENT_DATA_COUNT_TARGETS, targetsCount());
         eventData.put(EVENT_DATA_TARGET_DISCOVERY_STRATEGY, targetDiscoveryStrategy());
         eventData.put(EVENT_DATA_TARGET_PROVISIONING_STRATEGY, targetProvisioningStrategy());
@@ -83,6 +87,9 @@ public record SyncFinishedEvent(
         eventData.addProperty("status", status());
         if (projectsCount() > 0) {
             eventData.addProperty("projectsCount", projectsCount());
+            JsonArray projects = new JsonArray(projectsCount());
+            projects().forEach( projects::add );
+            eventData.add("projects", projects);
         }
         if (targetsCount() > 0) {
             eventData.addProperty("targetsCount", targetsCount());
@@ -147,7 +154,7 @@ public record SyncFinishedEvent(
         var start = (Instant) event.getProperty(EVENT_DATA_START_INSTANT);
         var duration = (Duration) event.getProperty(EVENT_DATA_DURATION);
         var status = (String) event.getProperty(EVENT_DATA_STATUS);
-        var projectsCount = (Integer) event.getProperty(EVENT_DATA_COUNT_PROJECT);
+        var projects = (List<String>) event.getProperty(EVENT_DATA_PROJECTS);
         var targetsCount = (Integer) event.getProperty(EVENT_DATA_COUNT_TARGETS);
         var targetDiscoveryStrategy = (String) event.getProperty(EVENT_DATA_TARGET_DISCOVERY_STRATEGY);
         var targetProvisionintStrategy = (String) event.getProperty(EVENT_DATA_TARGET_PROVISIONING_STRATEGY);
@@ -157,10 +164,14 @@ public record SyncFinishedEvent(
                 start,
                 duration,
                 status,
-                projectsCount != null ? projectsCount : 0,
+                projects,
                 targetsCount != null ? targetsCount : 0,
                 targetDiscoveryStrategy,
                 targetProvisionintStrategy,
                 trace);
+    }
+
+    public int projectsCount() {
+        return projects.size();
     }
 }

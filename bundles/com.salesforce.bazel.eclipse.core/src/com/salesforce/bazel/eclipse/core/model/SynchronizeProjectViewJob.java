@@ -721,22 +721,22 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // broadcast & log sync metrics
             var duration = trace.done();
             var start = trace.getCreated();
-            var projectsCount = targetProjects.size();
             var targetsCount = targets.size();
             var targetDiscoveryStrategyName = getTargetDiscoveryStrategyName();
             var targetProvisioningStrategyName = getTargetProvisioningStrategyName();
+            var projects = targetProjects.stream().map( BazelProject::getName ).toList();
             safePostEvent(
                 new SyncFinishedEvent(
                         workspaceRoot,
                         start,
                         duration,
                         "ok",
-                        projectsCount,
+                        projects,
                         targetsCount,
                         targetDiscoveryStrategyName,
                         targetProvisioningStrategyName,
                         trace));
-            logSyncStats(workspaceName, duration, projectsCount, targetsCount, trace);
+            logSyncStats(workspaceName, duration, projects.size(), targetsCount, trace);
 
             return Status.OK_STATUS;
         } catch (OperationCanceledException e) {
