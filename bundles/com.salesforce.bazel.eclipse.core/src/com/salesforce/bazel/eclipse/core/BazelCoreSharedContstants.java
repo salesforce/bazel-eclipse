@@ -17,6 +17,9 @@ public interface BazelCoreSharedContstants {
     /** Build Path related Bazel problem */
     String BUILDPATH_PROBLEM_MARKER = PLUGIN_ID + ".buildpath_problem";
 
+    /** Classpath Container related Bazel problem */
+    String CLASSPATH_CONTAINER_PROBLEM_MARKER = PLUGIN_ID + ".container_problem";
+
     /** transient Bazel problems, i.e. not persisted across restarts */
     String TRANSIENT_PROBLEM_MARKER = PLUGIN_ID + ".transient_problem";
 
