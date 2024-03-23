@@ -31,11 +31,11 @@ import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.google.protobuf.Timestamp;
 
 /** Parses output artifacts from the blaze build event protocol (BEP). */
-public interface OutputArtifactParser {
+public interface OutputOrSourceArtifactParser {
 
-    /** The default implementation of {@link OutputArtifactParser}, for local, absolute file paths. */
-    class LocalFileParser implements OutputArtifactParser {
-    	private static Logger LOG = LoggerFactory.getLogger(OutputArtifactParser.LocalFileParser.class);
+    /** The default implementation of {@link OutputOrSourceArtifactParser}, for local, absolute file paths. */
+    class LocalFileParser implements OutputOrSourceArtifactParser {
+    	private static Logger LOG = LoggerFactory.getLogger(OutputOrSourceArtifactParser.LocalFileParser.class);
         private static String getBlazeOutRelativePath(BuildEventStreamProtos.File file, Path pathFromUri, BlazeInfo blazeInfo) {
             List<String> pathPrefixList = file.getPathPrefixList();
             if (pathPrefixList.size() <= 1) {
@@ -56,7 +56,7 @@ public interface OutputArtifactParser {
 
         @Override
         @Nullable
-        public OutputArtifact parse(BuildEventStreamProtos.File file, String configurationMnemonic,
+        public BlazeArtifact parse(BuildEventStreamProtos.File file, String configurationMnemonic,
                 Timestamp startTime, BlazeInfo blazeInfo) {
             var uri = file.getUri();
             if (!uri.startsWith("file:")) {
@@ -67,8 +67,7 @@ public interface OutputArtifactParser {
                 String blazeOutRelativePath = getBlazeOutRelativePath(file, path, blazeInfo);
                 if(blazeOutRelativePath == null) {
                 	// this is a source artifact (java_import?)
-                	// fallback similar to https://github.com/bazelbuild/intellij/blob/efe6b2a540707ee79a6be7914ea9be4c232ef0df/base/src/com/google/idea/blaze/base/command/buildresult/OutputArtifactParser.java#L78-L80
-    				return new LocalFileOutputArtifact(path, configurationMnemonic + "/" + file.getName(), configurationMnemonic);
+    				return new SourceArtifact(path);
                 }
 				return new LocalFileOutputArtifact(path, blazeOutRelativePath, configurationMnemonic);
             } catch (URISyntaxException | IllegalArgumentException e) {
@@ -79,11 +78,11 @@ public interface OutputArtifactParser {
     }
 
     @Nullable
-    static OutputArtifact parseArtifact(BuildEventStreamProtos.File file, String configurationMnemonic,
+    static BlazeArtifact parseArtifact(BuildEventStreamProtos.File file, String configurationMnemonic,
             Timestamp startTime, BlazeInfo blazeInfo) {
         return new LocalFileParser().parse(file, configurationMnemonic, startTime, blazeInfo);
     }
 
     @Nullable
-    OutputArtifact parse(BuildEventStreamProtos.File file, String configurationMnemonic, Timestamp startTime, BlazeInfo blazeInfo);
+    BlazeArtifact parse(BuildEventStreamProtos.File file, String configurationMnemonic, Timestamp startTime, BlazeInfo blazeInfo);
 }
