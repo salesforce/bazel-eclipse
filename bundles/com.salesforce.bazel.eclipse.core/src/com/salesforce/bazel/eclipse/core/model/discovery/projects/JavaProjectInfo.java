@@ -3,9 +3,9 @@ package com.salesforce.bazel.eclipse.core.model.discovery.projects;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.IPath.forPosix;
-import static org.eclipse.core.runtime.Status.warning;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -50,8 +50,10 @@ public class JavaProjectInfo {
     private final LinkedHashSet<Entry> testResources = new LinkedHashSet<>();
     private final LinkedHashSet<LabelEntry> testPluginDeps = new LinkedHashSet<>();
 
-    private final LinkedHashSet<Entry> jars = new LinkedHashSet<>();
-    private final LinkedHashSet<Entry> testJars = new LinkedHashSet<>();
+    /** key = jar, value = srcjar (optional, maybe <code>null</code>) */
+    private final LinkedHashMap<Entry, Entry> jars = new LinkedHashMap<>();
+    /** key = jar, value = srcjar (optional, maybe <code>null</code>) */
+    private final LinkedHashMap<Entry, Entry> testJars = new LinkedHashMap<>();
 
     private final LinkedHashSet<String> javacOpts = new LinkedHashSet<>();
 
@@ -59,6 +61,10 @@ public class JavaProjectInfo {
     private JavaSourceInfo testSourceInfo;
     private JavaResourceInfo resourceInfo;
     private JavaResourceInfo testResourceInfo;
+
+    private JavaArchiveInfo jarInfo;
+
+    private JavaArchiveInfo testJarInfo;
 
     public JavaProjectInfo(BazelPackage bazelPackage) {
         this.bazelPackage = bazelPackage;
@@ -72,10 +78,14 @@ public class JavaProjectInfo {
      *
      * @param jarFileOrLabel
      *            file or label
+     * @param srcJarFileOrLabel
+     *            file or label (optional, maybe <code>null</code>)
      * @throws CoreException
      */
-    public void addJar(String jarFileOrLabel) throws CoreException {
-        jars.add(toResourceFileOrLabelEntry(jarFileOrLabel, null));
+    public void addJar(String jarFileOrLabel, String srcJarFileOrLabel) throws CoreException {
+        jars.put(
+            toResourceFileOrLabelEntry(jarFileOrLabel, null),
+            srcJarFileOrLabel != null ? toResourceFileOrLabelEntry(srcJarFileOrLabel, null) : null);
     }
 
     public void addJavacOpt(String javacOpt) {
@@ -118,7 +128,7 @@ public class JavaProjectInfo {
      * @throws CoreException
      */
     public void addSrc(GlobInfo globInfo) throws CoreException {
-        addToSrc(this.srcs, globInfo);
+        addToSrc(srcs, globInfo);
     }
 
     /**
@@ -132,11 +142,13 @@ public class JavaProjectInfo {
      * @throws CoreException
      */
     public void addSrc(String srcFileOrLabel) throws CoreException {
-        addToSrc(this.srcs, srcFileOrLabel);
+        addToSrc(srcs, srcFileOrLabel);
     }
 
-    public void addTestJar(String jarFileOrLabel) throws CoreException {
-        testJars.add(toResourceFileOrLabelEntry(jarFileOrLabel, null));
+    public void addTestJar(String jarFileOrLabel, String srcJarFileOrLabel) throws CoreException {
+        testJars.put(
+            toResourceFileOrLabelEntry(jarFileOrLabel, null),
+            srcJarFileOrLabel != null ? toResourceFileOrLabelEntry(srcJarFileOrLabel, null) : null);
     }
 
     public void addTestResource(GlobInfo globInfo) throws CoreException {
@@ -160,11 +172,11 @@ public class JavaProjectInfo {
     }
 
     public void addTestSrc(GlobInfo globInfo) {
-        addToSrc(this.testSrcs, globInfo);
+        addToSrc(testSrcs, globInfo);
     }
 
     public void addTestSrc(String srcFileOrLabel) throws CoreException {
-        addToSrc(this.testSrcs, srcFileOrLabel);
+        addToSrc(testSrcs, srcFileOrLabel);
     }
 
     private void addToResources(Collection<Entry> resources, GlobInfo globInfo) {
@@ -205,21 +217,23 @@ public class JavaProjectInfo {
             IProgressMonitor monitor) throws CoreException {
         var result = new MultiStatus(JavaProjectInfo.class, 0, "Java Analysis Result");
 
-        sourceInfo = new JavaSourceInfo(this.srcs, bazelPackage);
+        sourceInfo = new JavaSourceInfo(srcs, bazelPackage);
         sourceInfo.analyzeSourceDirectories(result, reportSourceFoldersWithMoreJavaSourcesThanDeclaredAsProblem);
 
         resourceInfo = new JavaResourceInfo(resources, bazelPackage);
         resourceInfo.analyzeResourceDirectories(result);
 
-        testSourceInfo = new JavaSourceInfo(this.testSrcs, bazelPackage, sourceInfo);
+        jarInfo = new JavaArchiveInfo(jars, bazelPackage);
+        jarInfo.analyzeJars(result);
+
+        testSourceInfo = new JavaSourceInfo(testSrcs, bazelPackage, sourceInfo);
         testSourceInfo.analyzeSourceDirectories(result, reportSourceFoldersWithMoreJavaSourcesThanDeclaredAsProblem);
 
         testResourceInfo = new JavaResourceInfo(testResources, bazelPackage);
         testResourceInfo.analyzeResourceDirectories(result);
 
-        if (!jars.isEmpty() || !testJars.isEmpty()) {
-            result.add(warning("The project contains jar imports. This is not supported properly in IDEs."));
-        }
+        testJarInfo = new JavaArchiveInfo(testJars, bazelPackage);
+        testJarInfo.analyzeJars(result);
 
         return result.isOK() ? Status.OK_STATUS : result;
     }
@@ -229,6 +243,10 @@ public class JavaProjectInfo {
      */
     public BazelPackage getBazelPackage() {
         return bazelPackage;
+    }
+
+    public JavaArchiveInfo getJarInfo() {
+        return requireNonNull(jarInfo, "Jar info not computed. Did you call analyzeProjectRecommendations?");
     }
 
     public Collection<String> getJavacOpts() {
@@ -245,6 +263,10 @@ public class JavaProjectInfo {
 
     public JavaSourceInfo getSourceInfo() {
         return requireNonNull(sourceInfo, "Source info not computed. Did you call analyzeProjectRecommendations?");
+    }
+
+    public JavaArchiveInfo getTestJarInfo() {
+        return requireNonNull(testJarInfo, "Test jar info not computed. Did you call analyzeProjectRecommendations?");
     }
 
     public Collection<LabelEntry> getTestPluginDeps() {

@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
@@ -86,6 +87,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaArchiveInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaResourceInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
@@ -190,18 +192,46 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         var jars = attributes.getStringList("jars");
         if (jars != null) {
+            var srcJar = attributes.getString("srcjar");
+            var testonly = attributes.getBoolean("testonly");
             for (String jar : jars) {
                 // java_import is generally used to make classes and resources available on the classpath
                 // lets check if we can translate this to resources in the same Bazel package
                 var jarTarget = resolveToTargetInSamePackage(bazelTarget, jar);
                 if (jarTarget != null) {
                     addResourcesFromRulesPkgRules(javaInfo, jarTarget, isTestTarget);
-                } else if (isTestTarget) {
-                    javaInfo.addTestJar(jar);
+                } else if (isTestTarget || ((testonly != null) && testonly.booleanValue())) {
+                    javaInfo.addTestJar(jar, srcJar);
                 } else {
-                    javaInfo.addJar(jar);
+                    javaInfo.addJar(jar, srcJar);
                 }
             }
+        }
+    }
+
+    private void addJars(BazelProject project, List<IClasspathEntry> rawClasspath, JavaArchiveInfo jarInfo,
+            boolean useTestsClasspath) {
+        if (!jarInfo.hasJars()) {
+            return;
+        }
+
+        var projectRoot = project.getProject().getFullPath();
+        var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] {
+                CLASSPATH_ATTRIBUTE_FOR_TEST } : new IClasspathAttribute[] {};
+
+        var jarsAndSrcJar = jarInfo.getJars();
+        for (Entry<IPath, IPath> entry : jarsAndSrcJar.entrySet()) {
+            var fullPath = projectRoot.append(entry.getKey());
+            var srcAttachmentPath = entry.getValue() != null ? projectRoot.append(entry.getValue()) : null;
+
+            rawClasspath.add(
+                JavaCore.newLibraryEntry(
+                    fullPath,
+                    srcAttachmentPath,
+                    null,
+                    null,
+                    classpathAttributes,
+                    true /* isExported */));
         }
     }
 
@@ -338,16 +368,12 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                     // recurse into target
                     addResourcesFromRulesPkgRules(javaInfo, srcTarget, isTestTarget);
                 } else {
-                    var label = Label.createIfValid(src);
-                    if ((label != null) && label.blazePackage()
-                            .relativePath()
-                            .equals(rulesPkgTarget.getBazelPackage().getWorkspaceRelativePath().toString())) {
-                        // remove package reference and treat as file
-                        src = label.targetName().toString();
+                    var fileResource = resolveToFileInSamePackage(rulesPkgTarget, src);
+                    if (fileResource != null) {
                         if (isTestTarget) {
-                            javaInfo.addTestResource(src, resourceStripPrefix);
+                            javaInfo.addTestResource(fileResource, resourceStripPrefix);
                         } else {
-                            javaInfo.addResource(src, resourceStripPrefix);
+                            javaInfo.addResource(fileResource, resourceStripPrefix);
                         }
                     }
                 }
@@ -586,6 +612,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         addSourceFolders(project, rawClasspath, javaInfo.getTestSourceInfo(), true /* useTestsClasspath */);
         addResourceFolders(project, rawClasspath, javaInfo.getTestResourceInfo(), true /* useTestsClasspath*/);
+
+        addJars(project, rawClasspath, javaInfo.getJarInfo(), false /* useTestsClasspath */);
+        addJars(project, rawClasspath, javaInfo.getTestJarInfo(), true /* useTestsClasspath */);
 
         rawClasspath.add(JavaCore.newContainerEntry(new Path(CLASSPATH_CONTAINER_ID)));
 
@@ -1263,6 +1292,13 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 || targetName.endsWith("-test-lib"); // java_test_suite shared lib from @contrib_rules_jvm
     }
 
+    private void linkFile(IFile file, IPath target, SubMonitor monitor) throws CoreException {
+        if (file.exists() && !file.isLinked()) {
+            file.delete(true, monitor.newChild(1));
+        }
+        file.createLink(target, IResource.REPLACE, monitor.newChild(1));
+    }
+
     private void linkGeneratedSourceDirectories(JavaSourceInfo sourceInfo, IFolder generatedSourcesFolder,
             SubMonitor monitor) throws CoreException {
         if (!sourceInfo.hasSourceDirectories()) {
@@ -1322,6 +1358,43 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 monitor);
         } finally {
             progress.done();
+        }
+    }
+
+    /**
+     * Creates Eclipse virtual files/folders for sources collected in the {@link JavaSourceInfo}.
+     *
+     * @param project
+     * @param sourceInfo
+     * @param progress
+     * @throws CoreException
+     */
+    protected void linkJarsIntoProject(BazelProject project, JavaProjectInfo javaInfo, IProgressMonitor progress)
+            throws CoreException {
+        var monitor = SubMonitor.convert(progress, 100);
+        try {
+            if (javaInfo.getJarInfo().hasJars()) {
+                linkJarsIntoProject(project, javaInfo, javaInfo.getJarInfo(), monitor);
+            }
+            if (javaInfo.getTestJarInfo().hasJars()) {
+                linkJarsIntoProject(project, javaInfo, javaInfo.getTestJarInfo(), monitor);
+            }
+        } finally {
+            progress.done();
+        }
+    }
+
+    private void linkJarsIntoProject(BazelProject project, JavaProjectInfo javaInfo, JavaArchiveInfo jarInfo,
+            SubMonitor monitor) throws CoreException {
+        for (Entry<IPath, IPath> entry : jarInfo.getJars().entrySet()) {
+            var jarFileLocation = javaInfo.getBazelPackage().getLocation().append(entry.getKey());
+            var jarFile = project.getProject().getFile(jarFileLocation.lastSegment());
+            linkFile(jarFile, jarFileLocation, monitor.split(1));
+            if (entry.getValue() != null) {
+                var srcjarFileLocation = javaInfo.getBazelPackage().getLocation().append(entry.getValue());
+                var srcjarFile = project.getProject().getFile(jarFileLocation.lastSegment());
+                linkFile(srcjarFile, srcjarFileLocation, monitor.split(1));
+            }
         }
     }
 
@@ -1502,10 +1575,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             // ensure the BUILD file is linked
             var buildFileLocation = javaInfo.getBazelPackage().getBuildFileLocation();
             var buildFile = project.getProject().getFile(buildFileLocation.lastSegment());
-            if (buildFile.exists() && !buildFile.isLinked()) {
-                buildFile.delete(true, monitor.newChild(1));
-            }
-            buildFile.createLink(buildFileLocation, IResource.REPLACE, monitor.newChild(1));
+            linkFile(buildFile, buildFileLocation, monitor);
         } finally {
             progress.done();
         }
@@ -1555,6 +1625,17 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             resolvedJavaHomePath = new BazelWorkspaceBlazeInfo(workspace).getOutputBase().resolve(javaHome);
         }
         return resolvedJavaHomePath;
+    }
+
+    private String resolveToFileInSamePackage(BazelTarget bazelTarget, String maybeLabel) {
+        var label = Label.createIfValid(maybeLabel);
+        if ((label != null) && label.blazePackage()
+                .relativePath()
+                .equals(bazelTarget.getBazelPackage().getWorkspaceRelativePath().toString())) {
+            // remove package reference and treat as file
+            return label.targetName().toString();
+        }
+        return null; // outside of package or not a valid label
     }
 
     /**
