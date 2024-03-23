@@ -188,8 +188,8 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
 
     protected BazelProject provisionJavaImportProject(BazelTarget target, TracingSubMonitor monitor)
             throws CoreException {
-        monitor.worked(1);
-        return null;
+        // java_import is implicitly supported
+        return provisionJavaLibraryProject(target, monitor);
     }
 
     /**
@@ -214,6 +214,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
         // configure links
         linkSourcesIntoProject(project, javaInfo, monitor.slice(1));
         linkGeneratedSourcesIntoProject(project, javaInfo, monitor.slice(1));
+        linkJarsIntoProject(project, javaInfo, monitor.slice(1));
 
         // configure classpath
         configureRawClasspath(project, javaInfo, monitor.slice(1));
