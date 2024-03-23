@@ -117,12 +117,12 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                 var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
 
                 // remove old marker
-                deleteBuildPathProblems(bazelProject);
+                deleteClasspathContainerProblems(bazelProject);
 
                 // add the target
                 var problem = classpathInfo.addTarget(bazelProject.getBazelTarget());
                 if (!problem.isOK()) {
-                    createBuildPathProblem(bazelProject, problem);
+                    createClasspathContainerProblem(bazelProject, problem);
                 }
 
                 // compute the classpath
@@ -135,7 +135,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                     }
 
                     if (!isRegularFile(entry.getPath().toPath())) {
-                        createBuildPathProblem(
+                        createClasspathContainerProblem(
                             bazelProject,
                             Status.error(
                                 format(

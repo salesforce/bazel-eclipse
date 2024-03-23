@@ -199,11 +199,11 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     var classpath = classpathInfo.compute();
 
                     // remove old marker
-                    deleteBuildPathProblems(bazelProject);
+                    deleteClasspathContainerProblems(bazelProject);
 
                     // create problem markers for detected issues
                     for (IStatus problem : buildPathProblems) {
-                        createBuildPathProblem(bazelProject, problem);
+                        createClasspathContainerProblem(bazelProject, problem);
                     }
 
                     // check for non existing jars
@@ -213,7 +213,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         }
 
                         if (!isRegularFile(entry.getPath().toPath())) {
-                            createBuildPathProblem(
+                            createClasspathContainerProblem(
                                 bazelProject,
                                 Status.error(
                                     format(

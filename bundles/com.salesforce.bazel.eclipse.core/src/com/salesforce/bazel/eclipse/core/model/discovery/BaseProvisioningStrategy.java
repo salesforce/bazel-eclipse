@@ -6,7 +6,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BAZEL_NATURE_ID;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDPATH_PROBLEM_MARKER;
 import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID;
-import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.PROBLEM_MARKER;
+import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSPATH_CONTAINER_PROBLEM_MARKER;
 import static com.salesforce.bazel.eclipse.core.model.discovery.EclipsePreferencesHelper.convertToPreferences;
 import static com.salesforce.bazel.eclipse.core.model.discovery.JvmConfigurator.VM_TYPE_RUNTIME;
 import static com.salesforce.bazel.eclipse.core.model.discovery.JvmConfigurator.VM_TYPE_TOOLCHAIN;
@@ -528,7 +528,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         // delete existing markers
-        project.getProject().deleteMarkers(PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
+        deleteBuildPathProblems(project);
 
         // abort if canceled
         if (monitor.isCanceled()) {
@@ -763,6 +763,21 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     /**
+     * Creates a problem marker of type {@link BazelCoreSharedContstants#CLASSPATH_CONTAINER_PROBLEM_MARKER} for the
+     * given status.
+     *
+     * @param project
+     *            the project to create the marker at (must not be <code>null</code>)
+     * @param status
+     *            the status to create the marker for (must not be <code>null</code>)
+     * @return the created marker (never <code>null</code>)
+     * @throws CoreException
+     */
+    protected IMarker createClasspathContainerProblem(BazelProject project, IStatus status) throws CoreException {
+        return createMarker(project.getProject(), CLASSPATH_CONTAINER_PROBLEM_MARKER, status);
+    }
+
+    /**
      * Creates a folder hierarchy and marks them as derived (because they are generated and should not go into SCM)
      *
      * @param folder
@@ -969,6 +984,18 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      */
     protected void deleteBuildPathProblems(BazelProject project) throws CoreException {
         project.getProject().deleteMarkers(BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
+    }
+
+    /**
+     * Convenience method to delete all markers of type
+     * {@link BazelCoreSharedContstants#CLASSPATH_CONTAINER_PROBLEM_MARKER} from the Bazel project
+     *
+     * @param project
+     *            the project to create the marker at (must not be <code>null</code>)
+     * @throws CoreException
+     */
+    protected void deleteClasspathContainerProblems(BazelProject project) throws CoreException {
+        project.getProject().deleteMarkers(CLASSPATH_CONTAINER_PROBLEM_MARKER, true, IResource.DEPTH_ZERO);
     }
 
     /**
