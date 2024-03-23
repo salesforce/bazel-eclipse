@@ -81,7 +81,7 @@ public final class ParsedBepOutput {
             }
 
             FileSet build(Map<String, String> configIdToMnemonic, Timestamp startTime, BlazeInfo blazeInfo) {
-                ImmutableList<OutputArtifact> parsedOutputs = parseFiles(namedSet, configIdToMnemonic.get(configId), startTime, blazeInfo);
+                ImmutableList<BlazeArtifact> parsedOutputs = parseFiles(namedSet, configIdToMnemonic.get(configId), startTime, blazeInfo);
 				return new FileSet(parsedOutputs,  outputGroups, targets);
             }
 
@@ -111,13 +111,13 @@ public final class ParsedBepOutput {
             return new Builder();
         }
 
-        private final ImmutableList<OutputArtifact> parsedOutputs;
+        private final ImmutableList<BlazeArtifact> parsedOutputs;
 
         private final ImmutableSet<String> outputGroups;
 
         private final ImmutableSet<String> targets;
 
-        FileSet(List<OutputArtifact> parsedOutputs, Set<String> outputGroups,
+        FileSet(List<BlazeArtifact> parsedOutputs, Set<String> outputGroups,
                 Set<String> targets) {
             this.parsedOutputs = ImmutableList.copyOf(parsedOutputs);
             this.outputGroups = ImmutableSet.copyOf(outputGroups);
@@ -134,7 +134,7 @@ public final class ParsedBepOutput {
 		private final String label;
 		private final String configId;
 
-        final Map<String, NestedSet<OutputArtifact>> outputFilesByOutputGroup = new HashMap<>();
+        final Map<String, NestedSet<BlazeArtifact>> outputFilesByOutputGroup = new HashMap<>();
         String configMnemonic;
 
         CompletedTarget(String label, String configId, Map<String, List<String>> fileSetsByOutputGroup) {
@@ -143,7 +143,7 @@ public final class ParsedBepOutput {
 			this.fileSetsByOutputGroup = ImmutableMap.copyOf(fileSetsByOutputGroup);
         }
 
-		public void putOutputFiles(String outputGroup, NestedSet<OutputArtifact> outputFiles) {
+		public void putOutputFiles(String outputGroup, NestedSet<BlazeArtifact> outputFiles) {
 			outputFilesByOutputGroup.put(outputGroup, outputFiles);
 		}
     }
@@ -265,12 +265,12 @@ public final class ParsedBepOutput {
         }
 
         // now that we got everything we can build the graph and resolve all things for each target
-        var filesGraph = new HashMap<String, NestedSet<OutputArtifact>>();
+        var filesGraph = new HashMap<String, NestedSet<BlazeArtifact>>();
         for (CompletedTarget completedTarget : topLevelTargets) {
         	completedTarget.configMnemonic = configIdToMnemonic.get(completedTarget.configId);
         	var timestamp = startTime;
         	for (Entry<String, List<String>> outputGroupAndFileSets : completedTarget.fileSetsByOutputGroup.entrySet()) {
-        		var fileset = NestedSetBuilder.<OutputArtifact>stableOrder();
+        		var fileset = NestedSetBuilder.<BlazeArtifact>stableOrder();
         		String outputGroup = outputGroupAndFileSets.getKey();
         		for (String fileSetId : outputGroupAndFileSets.getValue()) {
         			fileset.addTransitive(computeOutputFiles(blazeInfo, namedSetOfFilesById, filesGraph,
@@ -283,22 +283,22 @@ public final class ParsedBepOutput {
                 stream.getBytesConsumed());
     }
 
-	private static NestedSet<OutputArtifact> computeOutputFiles(BlazeInfo blazeInfo,
+	private static NestedSet<BlazeArtifact> computeOutputFiles(BlazeInfo blazeInfo,
 			Map<String, NamedSetOfFiles> namedSetOfFilesById,
-			HashMap<String, NestedSet<OutputArtifact>> filesGraph,
+			HashMap<String, NestedSet<BlazeArtifact>> filesGraph,
 			String configMnemonic, Timestamp timestamp, String fileSetId) {
 		String graphKey = getGraphKey(configMnemonic, fileSetId);
-		NestedSet<OutputArtifact> nestedSet = filesGraph.get(graphKey);
+		NestedSet<BlazeArtifact> nestedSet = filesGraph.get(graphKey);
 		if(nestedSet != null)
 			return nestedSet;
 
-		NestedSetBuilder<OutputArtifact> builder = NestedSetBuilder.stableOrder();
+		NestedSetBuilder<BlazeArtifact> builder = NestedSetBuilder.stableOrder();
 		NamedSetOfFiles fileSet = requireNonNull(namedSetOfFilesById.get(fileSetId), "Expected NamedFileSet not found: " + fileSetId);
-		ImmutableList<OutputArtifact> files = parseFiles(fileSet, configMnemonic, timestamp, blazeInfo);
+		ImmutableList<BlazeArtifact> files = parseFiles(fileSet, configMnemonic, timestamp, blazeInfo);
 		builder.addAll(files);
 
 		for (NamedSetOfFilesId referencedFileSets : fileSet.getFileSetsList()) {
-			NestedSet<OutputArtifact> referencedSet = computeOutputFiles(blazeInfo, namedSetOfFilesById, filesGraph, configMnemonic, timestamp, referencedFileSets.getId());
+			NestedSet<BlazeArtifact> referencedSet = computeOutputFiles(blazeInfo, namedSetOfFilesById, filesGraph, configMnemonic, timestamp, referencedFileSets.getId());
 			builder.addTransitive(referencedSet);
 		}
 
@@ -316,9 +316,9 @@ public final class ParsedBepOutput {
         return parseBepArtifacts(BuildEventStreamProvider.fromInputStream(bepStream), blazeInfo);
     }
 
-    private static ImmutableList<OutputArtifact> parseFiles(NamedSetOfFiles namedSet, String config,
+    private static ImmutableList<BlazeArtifact> parseFiles(NamedSetOfFiles namedSet, String config,
             Timestamp startTime, BlazeInfo blazeInfo) {
-        return namedSet.getFilesList().stream().map(f -> OutputArtifactParser.parseArtifact(f, config, startTime, blazeInfo))
+        return namedSet.getFilesList().stream().map(f -> OutputOrSourceArtifactParser.parseArtifact(f, config, startTime, blazeInfo))
                 .filter(Objects::nonNull).collect(toImmutableList());
     }
 
@@ -360,11 +360,10 @@ public final class ParsedBepOutput {
     public Collection<OutputArtifact> getOutputGroupArtifacts(Predicate<String> outputGroupFilter,
             Predicate<String> pathFilter) {
 		CopyOnWriteArraySet<OutputArtifact> result = new CopyOnWriteArraySet<>();
-		NestedSetVisitor<OutputArtifact> collector = new NestedSetVisitor<OutputArtifact>(
-				a -> {
-					if (pathFilter.test(a.getRelativePath()))
-						result.add(a);
-				}, new NestedSetVisitor.VisitedState<>());
+		NestedSetVisitor<BlazeArtifact> collector = new NestedSetVisitor<BlazeArtifact>(a -> {
+			if (a instanceof OutputArtifact outputArtifact && pathFilter.test(outputArtifact.getRelativePath()))
+				result.add(outputArtifact);
+		}, new NestedSetVisitor.VisitedState<>());
 		topLevelTargets.parallelStream()
 				.flatMap(t -> t.outputFilesByOutputGroup.entrySet()
 						.parallelStream())
@@ -379,21 +378,21 @@ public final class ParsedBepOutput {
 		return result;
     }
 
-    public NestedSet<OutputArtifact> getOutputGroupArtifacts(String outputGroup) {
-		NestedSetBuilder<OutputArtifact> builder = NestedSetBuilder.stableOrder();
+    public NestedSet<BlazeArtifact> getOutputGroupArtifacts(String outputGroup) {
+		NestedSetBuilder<BlazeArtifact> builder = NestedSetBuilder.stableOrder();
 		for (CompletedTarget target : topLevelTargets) {
-			NestedSet<OutputArtifact> set = target.outputFilesByOutputGroup.get(outputGroup);
+			NestedSet<BlazeArtifact> set = target.outputFilesByOutputGroup.get(outputGroup);
 			if(set!=null)
 				builder.addTransitive(set);
 		}
         return builder.build();
     }
 
-    public NestedSet<OutputArtifact> getOutputGroupArtifacts(Label targetLabel, String outputGroup) {
-		NestedSetBuilder<OutputArtifact> builder = NestedSetBuilder.stableOrder();
+    public NestedSet<BlazeArtifact> getOutputGroupArtifacts(Label targetLabel, String outputGroup) {
+		NestedSetBuilder<BlazeArtifact> builder = NestedSetBuilder.stableOrder();
 		for (CompletedTarget target : topLevelTargets) {
 			if(targetLabel.toString().equals(target.label)) {
-				NestedSet<OutputArtifact> set = target.outputFilesByOutputGroup.get(outputGroup);
+				NestedSet<BlazeArtifact> set = target.outputFilesByOutputGroup.get(outputGroup);
 				if(set!=null)
 					builder.addTransitive(set);
 			}

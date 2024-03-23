@@ -21,20 +21,30 @@ import javax.annotation.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.idea.blaze.base.command.buildresult.BlazeArtifact.LocalFileArtifact;
 
 /** All the relevant output data for a single {@link OutputArtifact}. */
 public class BepArtifactData {
 
-    public final OutputArtifact artifact;
+    public final BlazeArtifact artifact;
     /** The output groups this artifact belongs to. */
     public final ImmutableSet<String> outputGroups;
     /** The top-level targets this artifact is transitively associated with. */
     public final ImmutableSet<String> topLevelTargets;
+    /** The hashCode and identifier */
+	private final String artifactPath;
 
-    BepArtifactData(OutputArtifact artifact, Collection<String> outputGroups, Collection<String> topLevelTargets) {
+    BepArtifactData(BlazeArtifact artifact, Collection<String> outputGroups, Collection<String> topLevelTargets) {
         this.artifact = artifact;
         this.outputGroups = ImmutableSet.copyOf(outputGroups);
         this.topLevelTargets = ImmutableSet.copyOf(topLevelTargets);
+        if(artifact instanceof OutputArtifact outputArtifact) {
+        	this.artifactPath = outputArtifact.getRelativePath();
+        } else if(artifact instanceof LocalFileArtifact localFileArtifact) {
+        	artifactPath = String.valueOf(localFileArtifact.getPath());
+        } else {
+        	artifactPath = String.valueOf(artifact);
+        }
     }
 
     @Override
@@ -44,7 +54,7 @@ public class BepArtifactData {
 
     @Override
     public int hashCode() {
-        return artifact.getRelativePath().hashCode();
+        return artifactPath.hashCode();
     }
 
     /** Returns null if this was the only top-level target the artifact was associated with. */
@@ -57,7 +67,7 @@ public class BepArtifactData {
 
     /** Combines this data with a newer version. */
     public BepArtifactData update(BepArtifactData newer) {
-        Preconditions.checkState(artifact.getRelativePath().equals(newer.artifact.getRelativePath()));
+        Preconditions.checkState(artifactPath.equals(newer.artifactPath));
         return new BepArtifactData(newer.artifact, Sets.union(outputGroups, newer.outputGroups).immutableCopy(),
                 Sets.union(topLevelTargets, newer.topLevelTargets).immutableCopy());
     }

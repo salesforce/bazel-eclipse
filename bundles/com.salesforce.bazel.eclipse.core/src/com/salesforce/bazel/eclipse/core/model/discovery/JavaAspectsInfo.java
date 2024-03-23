@@ -20,6 +20,7 @@ import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.IPath.fromPath;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,10 +36,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.devtools.build.lib.collect.nestedset.NestedSetVisitor;
 import com.google.idea.blaze.base.bazel.BazelBuildSystemProvider;
+import com.google.idea.blaze.base.command.buildresult.BlazeArtifact;
 import com.google.idea.blaze.base.command.buildresult.BlazeArtifact.LocalFileArtifact;
 import com.google.idea.blaze.base.command.buildresult.LocalFileOutputArtifact;
 import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
 import com.google.idea.blaze.base.command.buildresult.ParsedBepOutput;
+import com.google.idea.blaze.base.command.buildresult.SourceArtifact;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
@@ -141,7 +144,10 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
         // collect runtime classpath info
         var runtimeClasspathJars =
                 aspectsBuildResult.getOutputGroupArtifacts(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH);
-        var collector = new NestedSetVisitor<OutputArtifact>(jar -> {
+        var collector = new NestedSetVisitor<BlazeArtifact>(jar -> {
+            if (jar instanceof LocalFileArtifact localJar) {
+                var classJar = toArtifactLocation(localJar);
+            }
             if (jar instanceof LocalFileOutputArtifact localJar) {
                 var classJar = toArtifactLocation(localJar);
 
@@ -153,7 +159,7 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
 
                 var jarLibrary = libraryByJdepsRootRelativePath.get(classJar.getRelativePath());
                 if (jarLibrary == null) {
-                    var targetLabel = readTargetLabel(localJar);
+                    var targetLabel = readTargetLabel(localJar.getPath());
                     if (targetLabel == null) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug(
@@ -235,22 +241,49 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
         return null;
     }
 
-    private Label readTargetLabel(LocalFileOutputArtifact localJar) {
-        try (var jarFile = new BazelJarFile(localJar.getPath())) {
+    private Label readTargetLabel(Path jarPath) {
+        try (var jarFile = new BazelJarFile(jarPath)) {
             return jarFile.getTargetLabel();
         } catch (IOException e) {
-            LOG.warn("Error inspecting manifest of jar '{}': {}", localJar, e.getMessage(), e);
+            LOG.warn("Error inspecting manifest of jar '{}': {}", jarPath, e.getMessage(), e);
         }
         return null;
     }
 
-    private ArtifactLocation toArtifactLocation(LocalFileOutputArtifact localJar) {
+    private ArtifactLocation toArtifactLocation(LocalFileArtifact localJar) {
+        // check for SourceArtifact and treat specal
+        if (localJar instanceof SourceArtifact sourceArtifact) {
+
+            if (!getWorkspaceRoot().isInWorkspace(sourceArtifact.getPath())) {
+                throw new IllegalArgumentException(
+                        format(
+                            "Invalid SourceArtifact (%s): expected absolute path pointing into workspace '%s'!",
+                            sourceArtifact,
+                            getWorkspaceRoot()));
+            }
+            return ArtifactLocation.builder()
+                    .setIsSource(true)
+                    .setRelativePath(getWorkspaceRoot().workspacePathFor(sourceArtifact.getPath()).relativePath())
+                    .build();
+        }
+
+        // assume is in execution root
+
         var localJarExecutionRootRelativePath = getBlazeInfo().getExecutionRoot().relativize(localJar.getPath());
         // special case: if the execution root points to outside execution root, we route it back for ExecutionPathHelper to work
         if (localJarExecutionRootRelativePath.startsWith("../../external/")) {
             localJarExecutionRootRelativePath =
                     localJarExecutionRootRelativePath.subpath(2, localJarExecutionRootRelativePath.getNameCount());
         }
+
+        if (localJarExecutionRootRelativePath.startsWith("../")) {
+            throw new IllegalArgumentException(
+                    format(
+                        "Unable to handle Bazel artifact '%s' (%s). Please report bug!",
+                        localJar,
+                        localJarExecutionRootRelativePath));
+        }
+
         return ExecutionPathHelper.parse(
             workspaceRoot,
             BazelBuildSystemProvider.BAZEL,
