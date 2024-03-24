@@ -53,7 +53,7 @@ public class JavaArchiveInfo {
                 var relativePath = jarResource.getRelativePath();
                 var srcJarEntry = jarsAndOptionalSrcJar.get(entry);
                 if (srcJarEntry instanceof ResourceEntry srcJarResource) {
-                    jarsInPackage.put(relativePath, jarResource.getRelativePath());
+                    jarsInPackage.put(relativePath, srcJarResource.getRelativePath());
                 } else {
                     jarsInPackage.put(relativePath, null);
                 }

@@ -93,6 +93,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaResourceIn
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSrcJarEntry;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.LabelEntry;
 import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -153,6 +154,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         var isTestTarget = isTestTarget(bazelTarget) || hasTestSources(bazelTarget);
 
         var attributes = bazelTarget.getRuleAttributes();
+
+        var testonly = attributes.getBoolean("testonly");
+        isTestTarget = isTestTarget || ((testonly != null) && testonly.booleanValue());
+
         var srcs = attributes.getStringList("srcs");
         if (srcs != null) {
             for (String src : srcs) {
@@ -179,36 +184,28 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         var pluginDeps = attributes.getStringList("plugins");
         if (pluginDeps != null) {
             for (String dep : pluginDeps) {
-                if (isTestTarget) {
-                    javaInfo.addTestPluginDep(dep);
-                } else {
-                    javaInfo.addPluginDep(dep);
-                }
+                javaInfo.addPluginDep(dep);
+
             }
         }
 
         var javacOpts = attributes.getStringList("javacopts");
         if (javacOpts != null) {
             for (String javacOpt : javacOpts) {
-                if (isTestTarget) {
-                    javaInfo.addTestJavacOpt(javacOpt);
-                } else {
-                    javaInfo.addJavacOpt(javacOpt);
-                }
+                javaInfo.addJavacOpt(javacOpt);
             }
         }
 
         var jars = attributes.getStringList("jars");
         if (jars != null) {
             var srcJar = attributes.getString("srcjar");
-            var testonly = attributes.getBoolean("testonly");
             for (String jar : jars) {
                 // java_import is generally used to make classes and resources available on the classpath
                 // lets check if we can translate this to resources in the same Bazel package
                 var jarTarget = resolveToTargetInSamePackage(bazelTarget, jar);
                 if (jarTarget != null) {
                     addResourcesFromRulesPkgRules(javaInfo, jarTarget, isTestTarget);
-                } else if (isTestTarget || ((testonly != null) && testonly.booleanValue())) {
+                } else if (isTestTarget) {
                     javaInfo.addTestJar(jar, srcJar);
                 } else {
                     javaInfo.addJar(jar, srcJar);
@@ -597,6 +594,15 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         return javaInfo;
     }
 
+    private void configureAnnotationProcessors(IJavaProject javaProject, Collection<LabelEntry> pluginDeps) {
+        //        var factoryPath = AptConfig.getDefaultFactoryPath(null);
+        //
+        //        for (LabelEntry pluginDep : pluginDeps) {
+        //
+        //        }
+        // TODO - we need to resolve the label to outputs, but we may not have aspects here?
+    }
+
     /**
      * Configures the raw classpath for a project based on the {@link JavaProjectInfo}.
      * <p>
@@ -676,6 +682,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             javaProject.setOption(COMPILER_RELEASE, DISABLED);
         }
 
+        // last (but not least) apply annotation processors
+        configureAnnotationProcessors(javaProject, javaInfo.getPluginDeps());
     }
 
     /**
