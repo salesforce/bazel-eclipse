@@ -45,17 +45,17 @@ public class JavaProjectInfo {
     private final LinkedHashSet<Entry> srcs = new LinkedHashSet<>();
     private final LinkedHashSet<Entry> resources = new LinkedHashSet<>();
     private final LinkedHashSet<LabelEntry> pluginDeps = new LinkedHashSet<>();
+    private final LinkedHashSet<String> javacOpts = new LinkedHashSet<>();
 
     private final LinkedHashSet<Entry> testSrcs = new LinkedHashSet<>();
     private final LinkedHashSet<Entry> testResources = new LinkedHashSet<>();
     private final LinkedHashSet<LabelEntry> testPluginDeps = new LinkedHashSet<>();
+    private final LinkedHashSet<String> testJavacOpts = new LinkedHashSet<>();
 
     /** key = jar, value = srcjar (optional, maybe <code>null</code>) */
     private final LinkedHashMap<Entry, Entry> jars = new LinkedHashMap<>();
     /** key = jar, value = srcjar (optional, maybe <code>null</code>) */
     private final LinkedHashMap<Entry, Entry> testJars = new LinkedHashMap<>();
-
-    private final LinkedHashSet<String> javacOpts = new LinkedHashSet<>();
 
     private JavaSourceInfo sourceInfo;
     private JavaSourceInfo testSourceInfo;
@@ -149,6 +149,14 @@ public class JavaProjectInfo {
         testJars.put(
             toResourceFileOrLabelEntry(jarFileOrLabel, null),
             srcJarFileOrLabel != null ? toResourceFileOrLabelEntry(srcJarFileOrLabel, null) : null);
+    }
+
+    public void addTestJavacOpt(String javacOpt) {
+        testJavacOpts.add(javacOpt);
+    }
+
+    public void addTestPluginDep(String label) {
+        testPluginDeps.add(new LabelEntry(new BazelLabel(label)));
     }
 
     public void addTestResource(GlobInfo globInfo) throws CoreException {
@@ -267,6 +275,10 @@ public class JavaProjectInfo {
 
     public JavaArchiveInfo getTestJarInfo() {
         return requireNonNull(testJarInfo, "Test jar info not computed. Did you call analyzeProjectRecommendations?");
+    }
+
+    public Collection<String> getTestJavacOpts() {
+        return testJavacOpts;
     }
 
     public Collection<LabelEntry> getTestPluginDeps() {

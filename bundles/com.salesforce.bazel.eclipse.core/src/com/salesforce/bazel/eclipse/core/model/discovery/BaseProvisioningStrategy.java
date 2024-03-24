@@ -179,14 +179,22 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         var pluginDeps = attributes.getStringList("plugins");
         if (pluginDeps != null) {
             for (String dep : pluginDeps) {
-                javaInfo.addPluginDep(dep);
+                if (isTestTarget) {
+                    javaInfo.addTestPluginDep(dep);
+                } else {
+                    javaInfo.addPluginDep(dep);
+                }
             }
         }
 
         var javacOpts = attributes.getStringList("javacopts");
         if (javacOpts != null) {
             for (String javacOpt : javacOpts) {
-                javaInfo.addJavacOpt(javacOpt);
+                if (isTestTarget) {
+                    javaInfo.addTestJavacOpt(javacOpt);
+                } else {
+                    javaInfo.addJavacOpt(javacOpt);
+                }
             }
         }
 

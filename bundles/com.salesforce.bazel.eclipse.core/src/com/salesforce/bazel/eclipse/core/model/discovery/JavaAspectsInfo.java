@@ -135,6 +135,9 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
                 if (javaIdeInfo.getFilteredGenJar() != null) {
                     addLibrary(new BlazeJarLibrary(javaIdeInfo.getFilteredGenJar(), targetKey));
                 }
+                for (var jar : javaIdeInfo.getPluginProcessorJars()) {
+                    addLibrary(new BlazeJarLibrary(jar, targetKey));
+                }
 
             } catch (IOException e) {
                 throw new CoreException(Status.error(format("Error reading aspect file '%s'.", outputArtifact), e));
@@ -146,9 +149,6 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
                 aspectsBuildResult.getOutputGroupArtifacts(IntellijAspects.OUTPUT_GROUP_JAVA_RUNTIME_CLASSPATH);
         var collector = new NestedSetVisitor<BlazeArtifact>(jar -> {
             if (jar instanceof LocalFileArtifact localJar) {
-                var classJar = toArtifactLocation(localJar);
-            }
-            if (jar instanceof LocalFileOutputArtifact localJar) {
                 var classJar = toArtifactLocation(localJar);
 
                 var resolveOutput = locationDecoder.resolveOutput(classJar);
