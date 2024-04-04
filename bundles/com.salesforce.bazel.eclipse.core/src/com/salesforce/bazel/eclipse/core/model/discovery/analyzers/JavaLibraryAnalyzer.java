@@ -15,9 +15,10 @@ package com.salesforce.bazel.eclipse.core.model.discovery.analyzers;
 
 import org.eclipse.core.runtime.CoreException;
 
-import com.salesforce.bazel.eclipse.core.model.buildfile.GlobInfo;
 import com.salesforce.bazel.eclipse.core.model.buildfile.FunctionCall;
+import com.salesforce.bazel.eclipse.core.model.buildfile.GlobInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.MacroCallAnalyzer;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.EntrySettings;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 
 /**
@@ -34,12 +35,14 @@ public class JavaLibraryAnalyzer implements MacroCallAnalyzer {
         javaInfo.addResource(glob);
     }
 
-    protected void addSrcFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel) throws CoreException {
-        javaInfo.addSrc(fileOrLabel);
+    protected void addSrcFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel, EntrySettings entrySettings)
+            throws CoreException {
+        javaInfo.addSrc(fileOrLabel, entrySettings);
     }
 
-    protected void addSrcGlob(JavaProjectInfo javaInfo, GlobInfo glob) throws CoreException {
-        javaInfo.addSrc(glob);
+    protected void addSrcGlob(JavaProjectInfo javaInfo, GlobInfo glob, EntrySettings entrySettings)
+            throws CoreException {
+        javaInfo.addSrc(glob, entrySettings);
     }
 
     @Override
@@ -48,12 +51,25 @@ public class JavaLibraryAnalyzer implements MacroCallAnalyzer {
 
         var addedSomething = false;
 
+        var nowarn = false;
+        var javacOpts = macroCall.getStringListArgument("javacopts");
+        if (javacOpts != null) {
+            for (String javacOpt : javacOpts) {
+                javaInfo.addJavacOpt(javacOpt);
+                if ("-nowarn".equals(javacOpt)) {
+                    nowarn = true;
+                }
+            }
+        }
+
+        var settings = nowarn ? new EntrySettings(nowarn) : EntrySettings.DEFAULT_SETTINGS;
+
         // process globs first
         var globs = macroCall.getGlobInfoFromArgument("srcs");
         if (globs != null) {
             addedSomething = true;
             for (GlobInfo glob : globs) {
-                addSrcGlob(javaInfo, glob);
+                addSrcGlob(javaInfo, glob, settings);
             }
         }
 
@@ -63,7 +79,7 @@ public class JavaLibraryAnalyzer implements MacroCallAnalyzer {
             addedSomething = true;
             // this can be null if glob is the only srcs
             for (String labelOrFile : labelsOrFiles) {
-                addSrcFileOrLabel(javaInfo, labelOrFile);
+                addSrcFileOrLabel(javaInfo, labelOrFile, settings);
             }
         }
 

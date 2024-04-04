@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery.analyzers;
 import org.eclipse.core.runtime.CoreException;
 
 import com.salesforce.bazel.eclipse.core.model.buildfile.GlobInfo;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.EntrySettings;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 
 /**
@@ -35,12 +36,14 @@ public class JavaTestAnalyzer extends JavaLibraryAnalyzer {
     }
 
     @Override
-    protected void addSrcFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel) throws CoreException {
-        javaInfo.addTestSrc(fileOrLabel);
+    protected void addSrcFileOrLabel(JavaProjectInfo javaInfo, String fileOrLabel, EntrySettings entrySettings)
+            throws CoreException {
+        javaInfo.addTestSrc(fileOrLabel, entrySettings);
     }
 
     @Override
-    protected void addSrcGlob(JavaProjectInfo javaInfo, GlobInfo glob) throws CoreException {
-        javaInfo.addTestSrc(glob);
+    protected void addSrcGlob(JavaProjectInfo javaInfo, GlobInfo glob, EntrySettings entrySettings)
+            throws CoreException {
+        javaInfo.addTestSrc(glob, entrySettings);
     }
 }

@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -42,10 +43,10 @@ public class JavaProjectInfo {
 
     private final BazelPackage bazelPackage;
 
-    private final LinkedHashSet<Entry> srcs = new LinkedHashSet<>();
+    private final LinkedHashMap<Entry, EntrySettings> srcs = new LinkedHashMap<>();
     private final LinkedHashSet<Entry> resources = new LinkedHashSet<>();
 
-    private final LinkedHashSet<Entry> testSrcs = new LinkedHashSet<>();
+    private final LinkedHashMap<Entry, EntrySettings> testSrcs = new LinkedHashMap<>();
     private final LinkedHashSet<Entry> testResources = new LinkedHashSet<>();
 
     /** key = jar, value = srcjar (optional, maybe <code>null</code>) */
@@ -122,13 +123,14 @@ public class JavaProjectInfo {
      * Insertion order is maintained.
      * </p>
      *
-     * @param relativeDirectoryPath
-     * @param includePattern
-     * @param excludePatterns
+     * @param globInfo
+     *            the gliob info
+     * @param entrySettings
+     *            optional entry setting (maybe <code>null</code>)
      * @throws CoreException
      */
-    public void addSrc(GlobInfo globInfo) throws CoreException {
-        addToSrc(srcs, globInfo);
+    public void addSrc(GlobInfo globInfo, EntrySettings entrySettings) throws CoreException {
+        addToSrc(srcs, globInfo, entrySettings);
     }
 
     /**
@@ -139,10 +141,12 @@ public class JavaProjectInfo {
      *
      * @param srcFileOrLabel
      *            file or label
+     * @param entrySettings
+     *            optional entry setting (maybe <code>null</code>)
      * @throws CoreException
      */
-    public void addSrc(String srcFileOrLabel) throws CoreException {
-        addToSrc(srcs, srcFileOrLabel);
+    public void addSrc(String srcFileOrLabel, EntrySettings entrySettings) throws CoreException {
+        addToSrc(srcs, srcFileOrLabel, entrySettings);
     }
 
     public void addTestJar(String jarFileOrLabel, String srcJarFileOrLabel) throws CoreException {
@@ -171,12 +175,12 @@ public class JavaProjectInfo {
         addToResources(testResources, resourceFileOrLabel, resourceStripPrefix);
     }
 
-    public void addTestSrc(GlobInfo globInfo) {
-        addToSrc(testSrcs, globInfo);
+    public void addTestSrc(GlobInfo globInfo, EntrySettings entrySettings) {
+        addToSrc(testSrcs, globInfo, entrySettings);
     }
 
-    public void addTestSrc(String srcFileOrLabel) throws CoreException {
-        addToSrc(testSrcs, srcFileOrLabel);
+    public void addTestSrc(String srcFileOrLabel, EntrySettings entrySettings) throws CoreException {
+        addToSrc(testSrcs, srcFileOrLabel, entrySettings);
     }
 
     private void addToResources(Collection<Entry> resources, GlobInfo globInfo) {
@@ -188,12 +192,15 @@ public class JavaProjectInfo {
         resources.add(toResourceFileOrLabelEntry(resourceFileOrLabel, resourceStripPrefix));
     }
 
-    private void addToSrc(Collection<Entry> srcs, GlobInfo globInfo) {
-        srcs.add(toGlobEntry(globInfo));
+    private void addToSrc(Map<Entry, EntrySettings> srcs, GlobInfo globInfo, EntrySettings entrySettings) {
+        srcs.put(toGlobEntry(globInfo), entrySettings != null ? entrySettings : EntrySettings.DEFAULT_SETTINGS);
     }
 
-    private void addToSrc(Collection<Entry> srcs, String srcFileOrLabel) throws CoreException {
-        srcs.add(toJavaSourceFileOrLabelEntry(srcFileOrLabel));
+    private void addToSrc(Map<Entry, EntrySettings> srcs, String srcFileOrLabel, EntrySettings entrySettings)
+            throws CoreException {
+        srcs.put(
+            toJavaSourceFileOrLabelEntry(srcFileOrLabel),
+            entrySettings != null ? entrySettings : EntrySettings.DEFAULT_SETTINGS);
     }
 
     /**

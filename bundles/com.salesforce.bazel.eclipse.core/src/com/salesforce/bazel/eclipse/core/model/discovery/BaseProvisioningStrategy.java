@@ -87,6 +87,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelProjectFileSystemMapper;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
+import com.salesforce.bazel.eclipse.core.model.discovery.projects.EntrySettings;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaArchiveInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaResourceInfo;
@@ -158,13 +159,25 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         var testonly = attributes.getBoolean("testonly");
         isTestTarget = isTestTarget || ((testonly != null) && testonly.booleanValue());
 
+        var nowarn = false;
+        var javacOpts = attributes.getStringList("javacopts");
+        if (javacOpts != null) {
+            for (String javacOpt : javacOpts) {
+                javaInfo.addJavacOpt(javacOpt);
+                if ("-nowarn".equals(javacOpt)) {
+                    nowarn = true;
+                }
+            }
+        }
+        var settings = nowarn ? new EntrySettings(nowarn) : EntrySettings.DEFAULT_SETTINGS;
+
         var srcs = attributes.getStringList("srcs");
         if (srcs != null) {
             for (String src : srcs) {
                 if (isTestTarget) {
-                    javaInfo.addTestSrc(src);
+                    javaInfo.addTestSrc(src, settings);
                 } else {
-                    javaInfo.addSrc(src);
+                    javaInfo.addSrc(src, settings);
                 }
             }
         }
@@ -186,13 +199,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             for (String dep : pluginDeps) {
                 javaInfo.addPluginDep(dep);
 
-            }
-        }
-
-        var javacOpts = attributes.getStringList("javacopts");
-        if (javacOpts != null) {
-            for (String javacOpt : javacOpts) {
-                javaInfo.addJavacOpt(javacOpt);
             }
         }
 
@@ -396,7 +402,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 : getFileSystemMapper().getOutputFolder(project).getFullPath();
         var classpathAttributes = useTestsClasspath ? new IClasspathAttribute[] {
                 CLASSPATH_ATTRIBUTE_FOR_TEST } : new IClasspathAttribute[] {};
-        var classpathAttributesSrcJar = useTestsClasspath ? new IClasspathAttribute[] {
+        var classpathAttributesForIgnoringOptionalCompileProblems = useTestsClasspath ? new IClasspathAttribute[] {
                 CLASSPATH_ATTRIBUTE_FOR_TEST,
                 CLASSPATH_ATTRIBUTE_IGNORE_OPTIONAL_PROBLEMS }
                 : new IClasspathAttribute[] {
@@ -410,7 +416,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                     null /* include all */,
                     null /* exclude nothing */,
                     outputLocation,
-                    classpathAttributes));
+                    javaSourceInfo.shouldDisableOptionalCompileProblemsForSourceFilesWithoutCommonRoot()
+                            ? classpathAttributesForIgnoringOptionalCompileProblems : classpathAttributes));
         }
         if (javaSourceInfo.hasSourceDirectories()) {
             for (IPath dir : javaSourceInfo.getSourceDirectories()) {
@@ -437,7 +444,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                                 null,
                                 null,
                                 outputLocation,
-                                classpathAttributesSrcJar));
+                                classpathAttributesForIgnoringOptionalCompileProblems));
                     }
 
                     continue;
@@ -484,7 +491,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                             inclusionPatterns,
                             exclusionPatterns,
                             outputLocation,
-                            classpathAttributes));
+                            javaSourceInfo.shouldDisableOptionalCompileProblemsForSourceDirectory(dir)
+                                    ? classpathAttributesForIgnoringOptionalCompileProblems : classpathAttributes));
                 }
 
             }

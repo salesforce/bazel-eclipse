@@ -67,7 +67,7 @@ public class JavaSourceInfo {
     }
 
     private final Map<IPath, IPath> detectedPackagePathsByFileEntryPathParent = new HashMap<>();
-    private final Collection<Entry> srcs;
+    private final Map<Entry, EntrySettings> srcs;
     private final IPath bazelPackageLocation;
     private final JavaSourceInfo sharedSourceInfo;
     private final BazelWorkspace bazelWorkspace;
@@ -83,7 +83,7 @@ public class JavaSourceInfo {
      */
     private Map<IPath, Object> sourceDirectoriesWithFilesOrGlobs;
 
-    public JavaSourceInfo(Collection<Entry> srcs, BazelPackage bazelPackage) {
+    public JavaSourceInfo(Map<Entry, EntrySettings> srcs, BazelPackage bazelPackage) {
         this.srcs = srcs;
         bazelPackageLocation = bazelPackage.getLocation();
         sharedSourceInfo = null;
@@ -103,7 +103,7 @@ public class JavaSourceInfo {
      * @param bazelPackageLocation
      * @param sharedSourceInfo
      */
-    public JavaSourceInfo(Collection<Entry> srcs, BazelPackage bazelPackage, JavaSourceInfo sharedSourceInfo) {
+    public JavaSourceInfo(Map<Entry, EntrySettings> srcs, BazelPackage bazelPackage, JavaSourceInfo sharedSourceInfo) {
         this.srcs = srcs;
         bazelPackageLocation = bazelPackage.getLocation();
         this.sharedSourceInfo = sharedSourceInfo;
@@ -164,7 +164,7 @@ public class JavaSourceInfo {
             return null; // not relevant
         };
 
-        for (Entry srcEntry : srcs) {
+        for (Entry srcEntry : srcs.keySet()) {
             if (srcEntry instanceof JavaSourceEntry javaSourceFile) {
                 javaSourceEntryCollector.apply(javaSourceFile);
 
@@ -389,7 +389,8 @@ public class JavaSourceInfo {
         } else {
             // treat all sources as if they don't have a directory
             // (if there are multiple source roots we could do an extra effort and try to filter the ones without split packages; but is this worth supporting?)
-            sourceFilesWithoutCommonRoot = srcs.stream()
+            sourceFilesWithoutCommonRoot = srcs.keySet()
+                    .stream()
                     .filter(JavaSourceEntry.class::isInstance)
                     .map(JavaSourceEntry.class::cast)
                     .collect(toList());
@@ -551,7 +552,7 @@ public class JavaSourceInfo {
     }
 
     public Collection<IPath> getDetectedJavaPackages() {
-        return requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").values()
+        return getSourceDirectoriesWithFilesOrGlobs().values()
                 .stream()
                 .filter(JavaSourceEntry.class::isInstance)
                 .map(JavaSourceEntry.class::cast)
@@ -566,10 +567,8 @@ public class JavaSourceInfo {
      * @return all detected Java packages for the specified source directory (collected from found files)
      */
     public Collection<IPath> getDetectedJavaPackagesForSourceDirectory(IPath sourceDirectory) {
-        var fileOrGlob = requireNonNull(
-            requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").get(sourceDirectory),
-            () -> format("source directory '%s' unknown", sourceDirectory));
-        if (fileOrGlob instanceof Collection<?> files) {
+        var filesOrGlob = getSourceDirectoryFilesOrGlob(sourceDirectory);
+        if (filesOrGlob instanceof Collection<?> files) {
             return files.stream()
                     .map(JavaSourceEntry.class::cast)
                     .map(JavaSourceEntry::getDetectedPackagePath)
@@ -581,6 +580,10 @@ public class JavaSourceInfo {
         return Collections.emptyList();
     }
 
+    private EntrySettings getEntrySettings(Entry e) {
+        return requireNonNull(srcs.get(e), () -> "software bug: no settings available for entry " + e);
+    }
+
     /**
      * @param sourceDirectory
      *            the source directory (must be contained in {@link #getSourceDirectories()})
@@ -588,9 +591,7 @@ public class JavaSourceInfo {
      *         nothing should be excluded <code>glob</code>)
      */
     public IPath[] getExclutionPatternsForSourceDirectory(IPath sourceDirectory) {
-        var fileOrGlob = requireNonNull(
-            requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").get(sourceDirectory),
-            () -> format("source directory '%s' unknown", sourceDirectory));
+        var fileOrGlob = getSourceDirectoryFilesOrGlob(sourceDirectory);
         if (fileOrGlob instanceof GlobEntry globEntry) {
             var excludePatterns = globEntry.getExcludePatterns();
             if (excludePatterns != null) {
@@ -613,9 +614,7 @@ public class JavaSourceInfo {
      *         everything should be included)
      */
     public IPath[] getInclusionPatternsForSourceDirectory(IPath sourceDirectory) {
-        var fileOrGlob = requireNonNull(
-            requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").get(sourceDirectory),
-            () -> format("source directory '%s' unknown", sourceDirectory));
+        var fileOrGlob = getSourceDirectoryFilesOrGlob(sourceDirectory);
         if (fileOrGlob instanceof GlobEntry globEntry) {
             var includePatterns = globEntry.getIncludePatterns();
             if (includePatterns != null) {
@@ -635,7 +634,17 @@ public class JavaSourceInfo {
      * {@return the list of detected source directories (relative to #getBazelPackageLocation())}
      */
     public Collection<IPath> getSourceDirectories() {
-        return requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").keySet();
+        return getSourceDirectoriesWithFilesOrGlobs().keySet();
+    }
+
+    private Map<IPath, Object> getSourceDirectoriesWithFilesOrGlobs() {
+        return requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered");
+    }
+
+    private Object getSourceDirectoryFilesOrGlob(IPath sourceDirectory) {
+        return requireNonNull(
+            getSourceDirectoriesWithFilesOrGlobs().get(sourceDirectory),
+            () -> format("source directory '%s' unknown", sourceDirectory));
     }
 
     public List<JavaSourceEntry> getSourceFilesWithoutCommonRoot() {
@@ -677,9 +686,7 @@ public class JavaSourceInfo {
      * @return <code>true</code> if all match, <code>false</code> otherwise
      */
     public boolean matchAllSourceDirectoryEntries(IPath sourceDirectory, Predicate<? super Entry> predicate) {
-        var fileOrGlob = requireNonNull(
-            requireNonNull(sourceDirectoriesWithFilesOrGlobs, "no source directories discovered").get(sourceDirectory),
-            () -> format("source directory '%s' unknown", sourceDirectory));
+        var fileOrGlob = getSourceDirectoryFilesOrGlob(sourceDirectory);
         if (fileOrGlob instanceof GlobEntry globEntry) {
             return predicate.test(globEntry);
         }
@@ -761,5 +768,25 @@ public class JavaSourceInfo {
                     "Folder '%s' contains more Java files then configured in Bazel. This is a scenario which is challenging to support in IDEs! Consider re-structuring your source code into separate folder hierarchies and Bazel packages.\n%s",
                     rootDirectory,
                     delta)));
+    }
+
+    public boolean shouldDisableOptionalCompileProblemsForSourceDirectory(IPath sourceDirectory) {
+        var fileOrGlob = getSourceDirectoryFilesOrGlob(sourceDirectory);
+        if (fileOrGlob instanceof GlobEntry globEntry) {
+            return getEntrySettings(globEntry).nowarn();
+        }
+        if (fileOrGlob instanceof List<?> listOfEntries) {
+            // the case is save assuming no programming mistakes in this class
+            return listOfEntries.stream()
+                    .map(JavaSourceEntry.class::cast)
+                    .map(this::getEntrySettings)
+                    .anyMatch(EntrySettings::nowarn);
+        }
+        return false;
+    }
+
+    public boolean shouldDisableOptionalCompileProblemsForSourceFilesWithoutCommonRoot() {
+        return getSourceFilesWithoutCommonRoot().stream().anyMatch(e -> getEntrySettings(e).nowarn());
+
     }
 }
