@@ -3,9 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Imported Dependencies
 Bundle-SymbolicName: com.salesforce.bazel.importedsource
 Bundle-Version: 2.0.0.qualifier
-Import-Package: com.github.benmanes.caffeine;version="3.1.8",
- com.github.benmanes.caffeine.cache;version="3.1.8",
- com.google.auto.value;resolution:=optional,
+Import-Package: com.google.auto.value;resolution:=optional,
  com.google.common.annotations;version="32.1.2",
  com.google.common.base;version="32.1.2",
  com.google.common.cache;version="32.1.2",
