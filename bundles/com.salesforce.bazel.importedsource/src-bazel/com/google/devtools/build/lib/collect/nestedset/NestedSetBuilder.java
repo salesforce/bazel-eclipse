@@ -197,38 +197,6 @@ public final class NestedSetBuilder<E> {
     return new NestedSet<>(order, direct, transitive, interruptStrategy);
   }
 
-  private static final LoadingCache<ImmutableList<?>, NestedSet<?>> stableOrderImmutableListCache =
-      CaffeinatedGuava.build(
-          Caffeine.newBuilder()
-              .initialCapacity(16)
-              .weakKeys(),
-          list -> new NestedSetBuilder<>(Order.STABLE_ORDER).addAll(list).build());
-
-  /** Creates a nested set from a given list of items. */
-  @SuppressWarnings("unchecked")
-  public static <E> NestedSet<E> wrap(Order order, Iterable<? extends E> wrappedItems) {
-    if (Iterables.isEmpty(wrappedItems)) {
-      return order.emptySet();
-    } else if (order == Order.STABLE_ORDER && wrappedItems instanceof ImmutableList) {
-      ImmutableList<E> wrappedList = (ImmutableList<E>) wrappedItems;
-      if (wrappedList.size() > 1) {
-        try {
-            return (NestedSet<E>) stableOrderImmutableListCache.get(wrappedList);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-      }
-    }
-    return new NestedSetBuilder<E>(order).addAll(wrappedItems).build();
-  }
-
-  /**
-   * Creates a nested set with the given list of items as its elements.
-   */
-  public static <E> NestedSet<E> create(Order order, E... elems) {
-    return wrap(order, ImmutableList.copyOf(elems));
-  }
-
   /**
    * Creates an empty nested set.
    */

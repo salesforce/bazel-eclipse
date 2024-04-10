@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
-<!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl --><target name="bazel-eclipse-feature-target-platform" sequenceNumber="1705240979">
+<!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
+<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1712715253">
   <locations>
-    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.e4.rcp.feature.group" version="4.30.0.v20231113-1355"/>
       <unit id="org.eclipse.ecf.core.feature.feature.group" version="1.6.2.v20231021-2127"/>
       <unit id="org.eclipse.ecf.core.ssl.feature.feature.group" version="1.1.501.v20230507-1921"/>
@@ -35,7 +36,7 @@
       <unit id="org.objectweb.asm.util" version="9.6.0"/>
       <repository location="https://download.eclipse.org/eclipse/updates/4.30/"/>
     </location>
-    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="slf4j.api" version="2.0.9"/>
       <unit id="ch.qos.logback.core" version="1.4.11"/>
       <unit id="ch.qos.logback.classic" version="1.4.11"/>
@@ -55,121 +56,108 @@
       <unit id="org.jdom2" version="2.0.6.v20230720-0727"/>
       <repository location="https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2023-12/"/>
     </location>
-    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.jdt.ls.core" version="1.30.1.202312071447"/>
       <repository location="https://download.eclipse.org/jdtls/milestones/1.30.1/repository/"/>
     </location>
-    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.xtext.xbase.lib" version="2.33.0.v20231121-0955"/>
       <unit id="org.eclipse.tm4e.feature.feature.group" version="0.6.1.202308132047"/>
       <repository location="https://download.eclipse.org/releases/2023-12/"/>
     </location>
-    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.lsp4j.sdk.feature.group" version="0.21.1.v20230829-0014"/>
       <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.21.1/"/>
     </location>
-    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.m2e.feature.feature.group" version="2.4.200.20231119-0901"/>
       <unit id="org.eclipse.m2e.logback.feature.feature.group" version="2.2.1.20231113-2319"/>
       <unit id="org.eclipse.m2e.sdk.feature.feature.group" version="2.5.0.20231119-0901"/>
       <repository location="https://download.eclipse.org/technology/m2e/releases/2.5.0/"/>
     </location>
-    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.wildwebdeveloper.xml.feature.feature.group" version="1.3.1.202310310352"/>
       <repository location="https://download.eclipse.org/wildwebdeveloper/releases/1.3.3/"/>
     </location>
-    <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.buildship.feature.group" version="3.1.8.v20231117-1734"/>
       <repository location="https://download.eclipse.org/buildship/updates/e423/releases/3.x/3.1.8.v20231117-1734/"/>
     </location>
-	  <location includeDependencyDepth="infinite" includeDependencyScopes="compile" includeSource="true" label="MavenDependencies" missingManifest="generate" type="Maven">
-
-		  <feature id="com.salesforce.bazel.eclipse.dependencies.feature" label="Third-Party Dependencies used by the Bazel Eclipse Feature" version="2.0.0.qualifier">
-
-   
-
-   
-
-   
-			  <description url="http://www.example.com/description">
-      [Enter Feature Description here.]
-   </description>
-			  <copyright url="http://www.example.com/copyright">
-      [Enter Copyright Description here.]
-   </copyright>
-			  <license url="http://www.example.com/license">
-      [Enter License Description here.]
-   </license>
-		  </feature>
-		  <dependencies>
-			  <dependency>
-				  <groupId>com.github.ben-manes.caffeine</groupId>
-				  <artifactId>caffeine</artifactId>
-				  <version>3.1.8</version>
-				  <type>jar</type>
-			  </dependency>
-			  <dependency>
-				  <groupId>com.github.ben-manes.caffeine</groupId>
-				  <artifactId>guava</artifactId>
-				  <version>3.1.8</version>
-				  <type>jar</type>
-			  </dependency>
-			  <dependency>
-				  <groupId>com.google.auto.value</groupId>
-				  <artifactId>auto-value-annotations</artifactId>
-				  <version>1.10.1</version>
-				  <type>jar</type>
-			  </dependency>
-			  <dependency>
-				  <groupId>com.google.auto.value</groupId>
-				  <artifactId>auto-value</artifactId>
-				  <version>1.10.1</version>
-				  <type>jar</type>
-			  </dependency>
-			  <dependency>
-				  <groupId>com.google.code.findbugs</groupId>
-				  <artifactId>jsr305</artifactId>
-				  <version>3.0.2</version>
-				  <type>jar</type>
-			  </dependency>
-			  <dependency>
-				  <groupId>com.google.protobuf</groupId>
-				  <artifactId>protobuf-java</artifactId>
-				  <version>3.22.0</version>
-				  <type>jar</type>
-			  </dependency>
-			  <dependency>
-				  <groupId>com.googlecode.json-simple</groupId>
-				  <artifactId>json-simple</artifactId>
-				  <version>1.1.1</version>
-				  <type>jar</type>
-			  </dependency>
-			  <dependency>
-				  <groupId>jakarta.servlet</groupId>
-				  <artifactId>jakarta.servlet-api</artifactId>
-				  <version>5.0.0</version>
-				  <type>jar</type>
-			  </dependency>
-			  <dependency>
-				  <groupId>org.apache.commons</groupId>
-				  <artifactId>commons-configuration2</artifactId>
-				  <version>2.9.0</version>
-				  <type>jar</type>
-			  </dependency>
-			  <dependency>
-				  <groupId>org.apache.commons</groupId>
-				  <artifactId>commons-text</artifactId>
-				  <version>1.11.0</version>
-				  <type>jar</type>
-			  </dependency>
-			  <dependency>
-				  <groupId>org.fusesource.jansi</groupId>
-				  <artifactId>jansi</artifactId>
-				  <version>2.4.0</version>
-				  <type>jar</type>
-			  </dependency>
-		  </dependencies>
-	  </location>
+    <location includeDependencyDepth="infinite" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="MavenDependencies">
+    <feature id="com.salesforce.bazel.eclipse.dependencies.feature" label="Third-Party Dependencies used by the Bazel Eclipse Feature" provider-name="" version="2.0.0.qualifier">
+    	<description url="http://www.example.com/description">
+    		[Enter Feature Description here.]
+    	</description>
+    	<copyright url="http://www.example.com/copyright">
+    		[Enter Copyright Description here.]
+    	</copyright>
+    	<license url="http://www.example.com/license">
+    		[Enter License Description here.]
+    	</license>
+    </feature>
+    <dependencies>
+    	<dependency>
+    		<groupId>com.github.ben-manes.caffeine</groupId>
+    		<artifactId>caffeine</artifactId>
+    		<version>3.1.8</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.google.protobuf</groupId>
+    		<artifactId>protobuf-java</artifactId>
+    		<version>3.22.0</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.googlecode.json-simple</groupId>
+    		<artifactId>json-simple</artifactId>
+    		<version>1.1.1</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>org.fusesource.jansi</groupId>
+    		<artifactId>jansi</artifactId>
+    		<version>2.4.0</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.google.code.findbugs</groupId>
+    		<artifactId>jsr305</artifactId>
+    		<version>3.0.2</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.google.auto.value</groupId>
+    		<artifactId>auto-value</artifactId>
+    		<version>1.10.1</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.google.auto.value</groupId>
+    		<artifactId>auto-value-annotations</artifactId>
+    		<version>1.10.1</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>jakarta.servlet</groupId>
+    		<artifactId>jakarta.servlet-api</artifactId>
+    		<version>5.0.0</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>org.apache.commons</groupId>
+    		<artifactId>commons-configuration2</artifactId>
+    		<version>2.9.0</version>
+    		<type>jar</type>
+    	</dependency>
+    	<dependency>
+    		<groupId>org.apache.commons</groupId>
+    		<artifactId>commons-text</artifactId>
+    		<version>1.11.0</version>
+    		<type>jar</type>
+    	</dependency>
+    </dependencies>
+    </location>
   </locations>
   <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17"/>
 </target>
