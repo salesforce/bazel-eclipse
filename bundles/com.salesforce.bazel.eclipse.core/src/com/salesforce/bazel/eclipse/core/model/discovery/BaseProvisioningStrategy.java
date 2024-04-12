@@ -1092,6 +1092,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             javaRuntimeVm =
                     getJvmConfigurator().configureVMInstall(resolvedJavaRuntimeHomePath, workspace, VM_TYPE_RUNTIME);
 
+            // remove old VMs
+            getJvmConfigurator()
+                    .deleteObsoleteVMInstallsKeepingOnlySpecified(workspace, javaToolchainVm, javaRuntimeVm);
+
             jreSystemLibraryConfiguration = workspace.getBazelProjectView()
                     .targetProvisioningSettings()
                     .getOrDefault(JRE_SYSTEM_LIBRARY, JRE_SYSTEM_LIBRARY_EE);

@@ -197,6 +197,36 @@ public class JvmConfigurator {
         return vm;
     }
 
+    /**
+     * Deletes obsolete {@link IVMInstall} for a workspace.
+     *
+     * @param workspace
+     *            the workspace to delete VM installations for
+     * @param installsToRetain
+     *            list of {@link IVMInstall} to retain
+     */
+    public void deleteObsoleteVMInstallsKeepingOnlySpecified(BazelWorkspace bazelWorkspace,
+            IVMInstall... installsToRetain) {
+        Set<IVMInstall> installsToRetainSet = Set.of(installsToRetain);
+        var types = JavaRuntime.getVMInstallTypes();
+        for (IVMInstallType type : types) {
+            var installs = type.getVMInstalls();
+            for (IVMInstall vm : installs) {
+                // delete if location or other attributes don't not match
+                if ((vm instanceof AbstractVMInstall realVm)
+                        && bazelWorkspace.getLocation().toString().equals(realVm.getAttribute(VM_ATTR_WORKSPACE))
+                        && !installsToRetainSet.contains(vm)) {
+                    LOG.debug(
+                        "Deleting obsolete VMInstall at '{}' ({}, {})",
+                        vm.getInstallLocation(),
+                        vm.getName(),
+                        vm.getId());
+                    vm.getVMInstallType().disposeVMInstall(vm.getId());
+                }
+            }
+        }
+    }
+
     private void enablePreviewIfPossible(IJavaProject javaProject, String version) {
         if (JavaCore.isSupportedJavaVersion(version)
                 && (JavaCore.compareJavaVersions(version, JavaCore.latestSupportedJavaVersion()) >= 0)) {
