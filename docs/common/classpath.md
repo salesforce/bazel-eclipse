@@ -8,7 +8,7 @@ This works well, but there are some limitations.
 In general Bazel is a very flexible build system.
 IDEs are not that flexible.
 
-The classpath is computed by a serious of Bazel command.
+The classpath is computed by a series of Bazel command.
 These commands querying Bazel for jar information and also execute a Bazel build with aspects to generate jars with generated code and obtain additional information.
 The aspects are re-used from the IntelliJ Bazel plugin.
 
