@@ -14,9 +14,9 @@ It will be used as is.
 
 **Import and Share**
 
-Instead of using only the `.eclipse/.bazelproject` file we recommend using `import`.
-Teams should share recommended  `.bazelproject` files in source control (eg. Git).
-Simply add an `import` statement for any  `.bazelproject` file you want to use.
+Instead of using only the `.eclipse/.bazelproject` file we recommend using [`import`](#import).
+Teams should share recommended `.bazelproject` files in source control (eg. Git).
+Simply add an `import` statement for any `.bazelproject` file you want to use.
 
 The `.eclipse/.bazelproject` file should not be shared in source control.
 It should be added to `.gitignore` instead (like most of the stuff within the `.eclipse` folder).
@@ -37,30 +37,30 @@ If you are looking for inspiration try this `target_provisioning_strategy`.
 It creates a more *traditional* IDE experience.
 
 
-## Supported Features
+## Supported Standard Features
 
-### `import`
+### [`import`](https://ij.bazel.build/docs/project-views.html#import)
 
-### `directories`
+### [`directories`](https://ij.bazel.build/docs/project-views.html#directories)
 
 *Eclipse:* Configures which directories are made visible in the workspace project.
 See JavaDoc of [BazelProject](../../bundles/com.salesforce.bazel.eclipse.core/src/com/salesforce/bazel/eclipse/core/model/BazelProject.java) for details about project types.
 
-### `targets`
+### [`targets`](https://ij.bazel.build/docs/project-views.html#targets)
 
-### `derive_targets_from_directories`
+### [`derive_targets_from_directories`](https://ij.bazel.build/docs/project-views.html#derive_targets_from_directories)
 
-### `workspace_type`
+### [`workspace_type`](https://ij.bazel.build/docs/project-views.html#workspace_type)
 
 Only `java` is supported.
 
-### `java_language_level`
+### [`java_language_level`](https://ij.bazel.build/docs/project-views.html#java_language_level)
 
 Ignored and queried from current/workspace `JavaToolchainInfo`.
 
-###  `build_flags`,  `sync_flags` and `test_flags`
+### [`build_flags`](https://ij.bazel.build/docs/project-views.html#build_flags), [`sync_flags`](https://ij.bazel.build/docs/project-views.html#sync_flags) and [`test_flags`](https://ij.bazel.build/docs/project-views.html#test_flags)
 
-### `shard_sync` and `target_shard_size`
+### [`shard_sync`](https://ij.bazel.build/docs/project-views.html#shard_sync) and [`target_shard_size`](https://ij.bazel.build/docs/project-views.html#target_shard_size)
 
 
 ## Additional Features
