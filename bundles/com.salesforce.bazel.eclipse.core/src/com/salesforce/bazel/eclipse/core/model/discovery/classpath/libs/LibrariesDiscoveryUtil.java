@@ -93,14 +93,14 @@ public class LibrariesDiscoveryUtil {
     protected Optional<Boolean> findBooleanAttribute(RuleInternal rule, String attributeName) {
         var attribute = rule.getAttribute(attributeName);
         if (attribute != null) {
-            return Optional.of(attribute.attributeBoolean());
+            return Optional.of(attribute.booleanValue());
         }
         return Optional.empty();
     }
 
     protected List<ArtifactLocation> findJars(RuleInternal rule, String attributeName, boolean generated) {
         List<ArtifactLocation> jars = new ArrayList<>();
-        rule.getAttribute(attributeName).attributeStringList().forEach(jar -> {
+        rule.getAttribute(attributeName).stringListValue().forEach(jar -> {
             var jarArtifact = jarLabelToArtifactLocation(jar, generated);
             if (jarArtifact != null) {
                 jars.add(jarArtifact);
@@ -115,7 +115,7 @@ public class LibrariesDiscoveryUtil {
             return null;
         }
 
-        return jarLabelToArtifactLocation(attribute.attribueString(), isGenerated);
+        return jarLabelToArtifactLocation(attribute.stringValue(), isGenerated);
     }
 
     public BazelWorkspace getBazelWorkspace() {

@@ -33,7 +33,7 @@ public class BazelRuleAttributes {
         }
 
         return switch (attribute.type()) {
-            case BOOLEAN -> attribute.attributeBoolean();
+            case BOOLEAN -> attribute.booleanValue();
             default -> throw new IllegalArgumentException("Unexpected value: " + attribute.type());
         };
     }
@@ -65,7 +65,7 @@ public class BazelRuleAttributes {
         }
 
         return switch (attribute.type()) {
-            case LABEL, STRING -> attribute.attribueString();
+            case LABEL, STRING -> attribute.stringValue();
             default -> throw new IllegalArgumentException("Unexpected value: " + attribute.type());
         };
     }
@@ -77,7 +77,7 @@ public class BazelRuleAttributes {
         }
 
         return switch (attribute.type()) {
-            case LABEL_LIST, STRING_LIST -> attribute.attributeStringList();
+            case LABEL_LIST, STRING_LIST -> attribute.stringListValue();
             default -> throw new IllegalArgumentException("Unexpected value: " + attribute.type());
         };
     }

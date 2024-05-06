@@ -22,9 +22,9 @@ import com.google.devtools.build.lib.query2.proto.proto2api.Build.Attribute.Disc
  * Internal representation of a Bazel Attribute. Used to capture only required data to reduce memory footprint
  */
 public record AttributeInternal(
-        String attribueString,
-        List<String> attributeStringList,
-        boolean attributeBoolean,
+        String stringValue,
+        List<String> stringListValue,
+        boolean booleanValue,
         Discriminator type) {
 
     AttributeInternal(Attribute from) {
