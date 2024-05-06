@@ -13,20 +13,22 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build;
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.sdk.BazelVersion;
+import com.salesforce.bazel.sdk.model.TargetInternal;
 
 /**
  * <code>bazel query --output streamed_proto --order_output=no</code>
  */
-public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collection<Build.Target>> {
+public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collection<TargetInternal>> {
 
     private static Logger LOG = LoggerFactory.getLogger(BazelQueryForTargetProtoCommand.class);
+    private final Path workspaceRoot;
 
     public BazelQueryForTargetProtoCommand(Path workspaceRoot, String query, boolean keepGoing,
             List<String> additionalProtoArgs, String purpose) {
         super(workspaceRoot, query, keepGoing, purpose);
+        this.workspaceRoot = workspaceRoot;
 
         List<String> commandArgs = new ArrayList<>();
         commandArgs.add("--output");
@@ -37,14 +39,14 @@ public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collectio
     }
 
     @Override
-    protected Collection<Target> doGenerateResult() throws IOException {
-        List<Target> result = new ArrayList<>();
+    protected Collection<TargetInternal> doGenerateResult() throws IOException {
+        List<TargetInternal> result = new ArrayList<>();
         try (var in = newInputStream(getStdOutFile())) {
             Target target;
             do {
                 target = Target.parseDelimitedFrom(in);
                 if (target != null) {
-                    result.add(target);
+                    result.add(new TargetInternal(target, workspaceRoot));
                 }
             } while (target != null);
         } finally {

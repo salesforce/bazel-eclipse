@@ -79,7 +79,7 @@ public abstract class BazelCommand<R> {
         }
         var newCommandArgs = new ArrayList<>(getCommandArgs());
         newCommandArgs.addAll(buildFlags);
-        this.commandArgs = Collections.unmodifiableList(newCommandArgs);
+        commandArgs = Collections.unmodifiableList(newCommandArgs);
     }
 
     protected void appendToStringDetails(ArrayList<String> toStringCommandLine) {

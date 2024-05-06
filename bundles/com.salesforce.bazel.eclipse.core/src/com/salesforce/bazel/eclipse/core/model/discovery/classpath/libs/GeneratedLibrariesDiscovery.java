@@ -34,8 +34,6 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.GeneratedFile;
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.base.model.primitives.TargetName;
@@ -45,6 +43,8 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntr
 import com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.GeneratedFileInternal;
+import com.salesforce.bazel.sdk.model.TargetInternal;
 
 /**
  * A tool for discovering external libraries in a Bazel workspace
@@ -85,14 +85,15 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
                 false,
                 List.of("--proto:output_rule_attrs=''", "--noproto:locations", "--noproto:default_values"),
                 "Querying for generated jar files");
-        Collection<Target> generatedJarTargets =
+        Collection<TargetInternal> generatedJarTargets =
                 bazelWorkspace.getCommandExecutor().runQueryWithoutLock(generatedJarQuery);
 
         // group by generating targets
         Map<String, List<String>> jarsByGeneratingRuleLabel = generatedJarTargets.stream()
-                .map(Target::getGeneratedFile)
-                .filter(f -> !f.getName().endsWith("_deploy.jar")) // ignore deploy jars (they just duplicate class files)
-                .collect(groupingBy(GeneratedFile::getGeneratingRule, mapping(GeneratedFile::getName, toList())));
+                .map(TargetInternal::generatedFile)
+                .filter(f -> !f.name().endsWith("_deploy.jar")) // ignore deploy jars (they just duplicate class files)
+                .collect(
+                    groupingBy(GeneratedFileInternal::generatingRule, mapping(GeneratedFileInternal::name, toList())));
 
         // ensure all packages are open
         bazelWorkspace.open(

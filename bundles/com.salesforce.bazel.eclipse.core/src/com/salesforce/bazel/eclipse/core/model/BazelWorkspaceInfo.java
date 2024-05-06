@@ -40,7 +40,6 @@ import org.eclipse.core.runtime.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.eclipse.core.extensions.DetectBazelVersionAndSetBinaryJob;
 import com.salesforce.bazel.eclipse.core.model.buildfile.FunctionCall;
 import com.salesforce.bazel.eclipse.core.model.execution.BazelModelCommandExecutionService;
@@ -50,6 +49,7 @@ import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.command.BazelInfoCommand;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
+import com.salesforce.bazel.sdk.model.TargetInternal;
 
 public final class BazelWorkspaceInfo extends BazelElementInfo {
 
@@ -112,7 +112,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
     }
 
     public BazelProject getBazelProject() throws CoreException {
-        var cachedBazelProject = this.bazelProject;
+        var cachedBazelProject = bazelProject;
         if (cachedBazelProject != null) {
             return cachedBazelProject;
         }
@@ -224,7 +224,7 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
     }
 
     IProject getProject() throws CoreException {
-        var cachedProject = this.project;
+        var cachedProject = project;
         if (cachedProject != null) {
             return cachedProject;
         }
@@ -411,8 +411,8 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         var externalRepositories = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
 
         return externalRepositoryRuleByName = externalRepositories.stream()
-                .filter(Target::hasRule)
-                .map(Target::getRule)
+                .filter(TargetInternal::hasRule)
+                .map(TargetInternal::rule)
                 .map(BazelRuleAttributes::new)
                 .collect(toMap(BazelRuleAttributes::getName, Function.identity())); // index by the "name" attribute
     }

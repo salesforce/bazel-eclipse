@@ -27,9 +27,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Rule;
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.sdk.model.BazelLabel;
+import com.salesforce.bazel.sdk.model.RuleInternal;
+import com.salesforce.bazel.sdk.model.TargetInternal;
 
 public final class BazelTargetInfo extends BazelElementInfo {
 
@@ -63,7 +63,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
 
     private final BazelTarget bazelTarget;
     private final String targetName;
-    private Target target;
+    private TargetInternal target;
     private volatile BazelProject bazelProject;
     private volatile BazelRuleAttributes ruleAttributes;
 
@@ -101,12 +101,12 @@ public final class BazelTargetInfo extends BazelElementInfo {
         return bazelTarget;
     }
 
-    Rule getRule() throws CoreException {
+    RuleInternal getRule() throws CoreException {
         var target = getTarget();
         if (!target.hasRule()) {
             throw new CoreException(Status.error(format("Bazel target '%s' is not backed by a rule!", bazelTarget)));
         }
-        return target.getRule();
+        return target.rule();
     }
 
     public BazelRuleAttributes getRuleAttributes() throws CoreException {
@@ -124,7 +124,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
             return cachedOutput;
         }
 
-        var ruleOutputList = getRule().getRuleOutputList();
+        var ruleOutputList = getRule().ruleOutputList();
         if (ruleOutputList != null) {
             return ruleOutput = ruleOutputList.stream()
                     .map(BazelLabel::new)
@@ -139,7 +139,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
     /**
      * @return the underlying <code>com.google.devtools.build.lib.query2.proto.proto2api.Build.Target</code>
      */
-    Target getTarget() {
+    TargetInternal getTarget() {
         // don't expose non com.salesforce.bazel.eclipse.core.model API widely (package visibility is ok)
         return requireNonNull(target, () -> "not loaded: " + targetName);
     }
