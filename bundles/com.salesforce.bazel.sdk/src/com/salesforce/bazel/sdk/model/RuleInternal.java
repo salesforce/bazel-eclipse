@@ -13,7 +13,6 @@
  */
 package com.salesforce.bazel.sdk.model;
 
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +26,9 @@ public record RuleInternal(
         String name,
         String ruleClass,
         List<String> ruleOutputList,
-        Map<String, AttributeInternal> attributeMap,
-        Path workspaceRoot) {
+        Map<String, AttributeInternal> attributeMap) {
 
-    //An illegal character for a path
-    static final String WORKSPACE_PATH_PACEHOLDER = "|";
-
-    RuleInternal(Rule rule, Path workspaceRoot) {
+    RuleInternal(Rule rule) {
         this(rule.getName(),
                 rule.getRuleClass(),
                 rule.getRuleOutputList(),
@@ -41,8 +36,7 @@ public record RuleInternal(
                     if (!map.containsKey(attribute.getName())) {
                         map.put(attribute.getName(), new AttributeInternal(attribute));
                     }
-                }, HashMap::putAll),
-                workspaceRoot);
+                }, HashMap::putAll));
     }
 
     public AttributeInternal getAttribute(String name) {

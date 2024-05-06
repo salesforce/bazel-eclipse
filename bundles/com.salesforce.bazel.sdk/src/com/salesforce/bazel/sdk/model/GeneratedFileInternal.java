@@ -13,8 +13,6 @@
  */
 package com.salesforce.bazel.sdk.model;
 
-import java.nio.file.Path;
-
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.GeneratedFile;
 
 /**
@@ -22,7 +20,7 @@ import com.google.devtools.build.lib.query2.proto.proto2api.Build.GeneratedFile;
  */
 public record GeneratedFileInternal(String name, String generatingRule) {
 
-    GeneratedFileInternal(GeneratedFile file, Path workspaceRoot) {
+    GeneratedFileInternal(GeneratedFile file) {
         this(file.getName(), file.getGeneratingRule());
     }
 }

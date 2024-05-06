@@ -13,18 +13,15 @@
  */
 package com.salesforce.bazel.sdk.model;
 
-import java.nio.file.Path;
-
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 
 /**
  * Internal representation of a Bazel target. Used to capture only required data to reduce memory footprint
  */
-public record TargetInternal(RuleInternal rule, GeneratedFileInternal generatedFile, Path workspaceRoot) {
-    public TargetInternal(Target from, Path workspaceRoot) {
-        this(new RuleInternal(from.getRule(), workspaceRoot),
-                from.hasGeneratedFile() ? new GeneratedFileInternal(from.getGeneratedFile(), workspaceRoot) : null,
-                workspaceRoot);
+public record TargetInternal(RuleInternal rule, GeneratedFileInternal generatedFile) {
+    public TargetInternal(Target from) {
+        this(new RuleInternal(from.getRule()),
+                from.hasGeneratedFile() ? new GeneratedFileInternal(from.getGeneratedFile()) : null);
     }
 
     public boolean hasRule() {

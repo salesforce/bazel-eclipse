@@ -23,12 +23,10 @@ import com.salesforce.bazel.sdk.model.TargetInternal;
 public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collection<TargetInternal>> {
 
     private static Logger LOG = LoggerFactory.getLogger(BazelQueryForTargetProtoCommand.class);
-    private final Path workspaceRoot;
 
     public BazelQueryForTargetProtoCommand(Path workspaceRoot, String query, boolean keepGoing,
             List<String> additionalProtoArgs, String purpose) {
         super(workspaceRoot, query, keepGoing, purpose);
-        this.workspaceRoot = workspaceRoot;
 
         List<String> commandArgs = new ArrayList<>();
         commandArgs.add("--output");
@@ -46,7 +44,7 @@ public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collectio
             do {
                 target = Target.parseDelimitedFrom(in);
                 if (target != null) {
-                    result.add(new TargetInternal(target, workspaceRoot));
+                    result.add(new TargetInternal(target));
                 }
             } while (target != null);
         } finally {
