@@ -2,7 +2,6 @@ package com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
-import static java.util.stream.Collectors.toList;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -27,7 +26,6 @@ import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaClasspathJarLocationResolver;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
-import com.salesforce.bazel.sdk.model.AttributeInternal;
 import com.salesforce.bazel.sdk.model.RuleInternal;
 
 public class LibrariesDiscoveryUtil {
@@ -93,39 +91,31 @@ public class LibrariesDiscoveryUtil {
     }
 
     protected Optional<Boolean> findBooleanAttribute(RuleInternal rule, String attributeName) {
-        var attribute = rule.getAttributes(attributeName);
-        if ((attribute != null) && !attribute.isEmpty()) {
-            return Optional.of(attribute.get(0).attributeBoolean());
+        var attribute = rule.getAttribute(attributeName);
+        if (attribute != null) {
+            return Optional.of(attribute.attributeBoolean());
         }
         return Optional.empty();
     }
 
     protected List<ArtifactLocation> findJars(RuleInternal rule, String attributeName, boolean generated) {
         List<ArtifactLocation> jars = new ArrayList<>();
-        rule.getAttributes(attributeName)
-                .stream()
-                .map(AttributeInternal::attributeStringList)
-                .collect(toList())
-                .forEach(list -> list.forEach(jar -> {
-                    var jarArtifact = jarLabelToArtifactLocation(jar, generated);
-                    if (jarArtifact != null) {
-                        jars.add(jarArtifact);
-                    }
-                }));
+        rule.getAttribute(attributeName).attributeStringList().forEach(jar -> {
+            var jarArtifact = jarLabelToArtifactLocation(jar, generated);
+            if (jarArtifact != null) {
+                jars.add(jarArtifact);
+            }
+        });
         return jars;
     }
 
     protected ArtifactLocation findSingleJar(RuleInternal rule, String attributeName, boolean isGenerated) {
-        var attributes = rule.getAttributes(attributeName);
-        if ((attributes == null) || attributes.isEmpty()) {
-            return null;
-        }
-        var attribute = attributes.get(0).attribueString();
-        if ((attribute == null) || attribute.isEmpty()) {
+        var attribute = rule.getAttribute(attributeName);
+        if (attribute == null) {
             return null;
         }
 
-        return jarLabelToArtifactLocation(attribute, isGenerated);
+        return jarLabelToArtifactLocation(attribute.attribueString(), isGenerated);
     }
 
     public BazelWorkspace getBazelWorkspace() {

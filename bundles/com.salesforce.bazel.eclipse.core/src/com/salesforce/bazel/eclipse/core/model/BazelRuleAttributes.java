@@ -27,12 +27,10 @@ public class BazelRuleAttributes {
     }
 
     public Boolean getBoolean(String name) {
-        var attributes = rule.getAttributes(name);
-        if ((attributes == null) || attributes.isEmpty()) {
+        var attribute = rule.getAttribute(name);
+        if (attribute == null) {
             return null;
         }
-
-        var attribute = attributes.get(0);
 
         return switch (attribute.type()) {
             case BOOLEAN -> attribute.attributeBoolean();
@@ -61,11 +59,10 @@ public class BazelRuleAttributes {
     }
 
     public String getString(String name) {
-        var attributes = rule.getAttributes(name);
-        if ((attributes == null) || attributes.isEmpty()) {
+        var attribute = rule.getAttribute(name);
+        if (attribute == null) {
             return null;
         }
-        var attribute = attributes.get(0);
 
         return switch (attribute.type()) {
             case LABEL, STRING -> attribute.attribueString();
@@ -74,11 +71,10 @@ public class BazelRuleAttributes {
     }
 
     public List<String> getStringList(String name) {
-        var attributes = rule.getAttributes(name);
-        if ((attributes == null) || attributes.isEmpty()) {
+        var attribute = rule.getAttribute(name);
+        if (attribute == null) {
             return null;
         }
-        var attribute = attributes.get(0);
 
         return switch (attribute.type()) {
             case LABEL_LIST, STRING_LIST -> attribute.attributeStringList();

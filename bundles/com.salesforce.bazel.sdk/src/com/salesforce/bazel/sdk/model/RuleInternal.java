@@ -14,11 +14,10 @@
 package com.salesforce.bazel.sdk.model;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Rule;
 
 /**
@@ -28,7 +27,7 @@ public record RuleInternal(
         String name,
         String ruleClass,
         List<String> ruleOutputList,
-        ListMultimap<String, AttributeInternal> attributeMap,
+        Map<String, AttributeInternal> attributeMap,
         Path workspaceRoot) {
 
     //An illegal character for a path
@@ -38,16 +37,15 @@ public record RuleInternal(
         this(rule.getName(),
                 rule.getRuleClass(),
                 rule.getRuleOutputList(),
-                rule.getAttributeList()
-                        .stream()
-                        .collect(
-                            ArrayListMultimap::create,
-                            (map, attribute) -> map.put(attribute.getName(), new AttributeInternal(attribute)),
-                            Multimap::putAll),
+                rule.getAttributeList().stream().collect(HashMap::new, (map, attribute) -> {
+                    if (!map.containsKey(attribute.getName())) {
+                        map.put(attribute.getName(), new AttributeInternal(attribute));
+                    }
+                }, HashMap::putAll),
                 workspaceRoot);
     }
 
-    public List<AttributeInternal> getAttributes(String name) {
+    public AttributeInternal getAttribute(String name) {
         return attributeMap.get(name);
     }
 
