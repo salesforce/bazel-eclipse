@@ -26,7 +26,7 @@ import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaClasspathJarLocationResolver;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
-import com.salesforce.bazel.sdk.model.RuleInternal;
+import com.salesforce.bazel.sdk.command.querylight.Rule;
 
 public class LibrariesDiscoveryUtil {
 
@@ -90,7 +90,7 @@ public class LibrariesDiscoveryUtil {
         }
     }
 
-    protected Optional<Boolean> findBooleanAttribute(RuleInternal rule, String attributeName) {
+    protected Optional<Boolean> findBooleanAttribute(Rule rule, String attributeName) {
         var attribute = rule.getAttribute(attributeName);
         if (attribute != null) {
             return Optional.of(attribute.booleanValue());
@@ -98,7 +98,7 @@ public class LibrariesDiscoveryUtil {
         return Optional.empty();
     }
 
-    protected List<ArtifactLocation> findJars(RuleInternal rule, String attributeName, boolean generated) {
+    protected List<ArtifactLocation> findJars(Rule rule, String attributeName, boolean generated) {
         List<ArtifactLocation> jars = new ArrayList<>();
         rule.getAttribute(attributeName).stringListValue().forEach(jar -> {
             var jarArtifact = jarLabelToArtifactLocation(jar, generated);
@@ -109,7 +109,7 @@ public class LibrariesDiscoveryUtil {
         return jars;
     }
 
-    protected ArtifactLocation findSingleJar(RuleInternal rule, String attributeName, boolean isGenerated) {
+    protected ArtifactLocation findSingleJar(Rule rule, String attributeName, boolean isGenerated) {
         var attribute = rule.getAttribute(attributeName);
         if (attribute == null) {
             return null;

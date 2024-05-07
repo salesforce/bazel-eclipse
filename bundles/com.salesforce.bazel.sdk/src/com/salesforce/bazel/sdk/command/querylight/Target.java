@@ -11,17 +11,16 @@
  * Contributors:
  *      Salesforce - adapted from M2E, JDT or other Eclipse project
  */
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.command.querylight;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
+import com.google.devtools.build.lib.query2.proto.proto2api.Build;
 
 /**
  * Internal representation of a Bazel target. Used to capture only required data to reduce memory footprint
  */
-public record TargetInternal(RuleInternal rule, GeneratedFileInternal generatedFile) {
-    public TargetInternal(Target from) {
-        this(new RuleInternal(from.getRule()),
-                from.hasGeneratedFile() ? new GeneratedFileInternal(from.getGeneratedFile()) : null);
+public record Target(Rule rule, GeneratedFile generatedFile) {
+    public Target(Build.Target from) {
+        this(new Rule(from.getRule()), from.hasGeneratedFile() ? new GeneratedFile(from.getGeneratedFile()) : null);
     }
 
     public boolean hasRule() {

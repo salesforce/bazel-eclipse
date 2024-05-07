@@ -11,35 +11,33 @@
  * Contributors:
  *      Salesforce - adapted from M2E, JDT or other Eclipse project
  */
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.command.querylight;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Rule;
+import com.google.devtools.build.lib.query2.proto.proto2api.Build;
 
 /**
  * Internal representation of a Bazel rule. Used to capture only required data to reduce memory footprint
  */
-public record RuleInternal(
-        String name,
-        String ruleClass,
-        List<String> ruleOutputList,
-        Map<String, AttributeInternal> attributeMap) {
+public record Rule(String name, String ruleClass, List<String> ruleOutputList, Map<String, Attribute> attributeMap) {
 
-    RuleInternal(Rule rule) {
+    Rule(Build.Rule rule) {
         this(rule.getName(),
                 rule.getRuleClass(),
                 rule.getRuleOutputList(),
                 rule.getAttributeList().stream().collect(HashMap::new, (map, attribute) -> {
+                    // multiple attributes with the same name are not expected but can happen (https://github.com/bazelbuild/bazel/issues/20918)
+                    // we therefore store the first occurrence of an attribute
                     if (!map.containsKey(attribute.getName())) {
-                        map.put(attribute.getName(), new AttributeInternal(attribute));
+                        map.put(attribute.getName(), new Attribute(attribute));
                     }
                 }, HashMap::putAll));
     }
 
-    public AttributeInternal getAttribute(String name) {
+    public Attribute getAttribute(String name) {
         return attributeMap.get(name);
     }
 

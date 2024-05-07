@@ -1,11 +1,8 @@
 package com.salesforce.bazel.eclipse.core.model;
 
 import java.util.List;
-import java.util.function.BinaryOperator;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Attribute;
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Rule;
-import com.salesforce.bazel.sdk.model.RuleInternal;
+import com.salesforce.bazel.sdk.command.querylight.Rule;
 
 /**
  * A structure for working with rule attributes.
@@ -15,13 +12,9 @@ import com.salesforce.bazel.sdk.model.RuleInternal;
  */
 public class BazelRuleAttributes {
 
-    /**
-     * Workaround for https://github.com/bazelbuild/bazel/issues/20918
-     */
-    private static BinaryOperator<Attribute> firstOneWinsBazelDuplicateWorkaround = (first, second) -> first;
-    private final RuleInternal rule;
+    private final Rule rule;
 
-    BazelRuleAttributes(RuleInternal rule) {
+    BazelRuleAttributes(Rule rule) {
         this.rule = rule;
 
     }
@@ -50,7 +43,7 @@ public class BazelRuleAttributes {
         return rule.name();
     }
 
-    RuleInternal getRule() {
+    Rule getRule() {
         return rule;
     }
 

@@ -42,9 +42,9 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
+import com.salesforce.bazel.sdk.command.querylight.GeneratedFile;
+import com.salesforce.bazel.sdk.command.querylight.Target;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.GeneratedFileInternal;
-import com.salesforce.bazel.sdk.model.TargetInternal;
 
 /**
  * A tool for discovering external libraries in a Bazel workspace
@@ -85,15 +85,15 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
                 false,
                 List.of("--proto:output_rule_attrs=''", "--noproto:locations", "--noproto:default_values"),
                 "Querying for generated jar files");
-        Collection<TargetInternal> generatedJarTargets =
+        Collection<Target> generatedJarTargets =
                 bazelWorkspace.getCommandExecutor().runQueryWithoutLock(generatedJarQuery);
 
         // group by generating targets
         Map<String, List<String>> jarsByGeneratingRuleLabel = generatedJarTargets.stream()
-                .map(TargetInternal::generatedFile)
+                .map(Target::generatedFile)
                 .filter(f -> !f.name().endsWith("_deploy.jar")) // ignore deploy jars (they just duplicate class files)
                 .collect(
-                    groupingBy(GeneratedFileInternal::generatingRule, mapping(GeneratedFileInternal::name, toList())));
+                    groupingBy(GeneratedFile::generatingRule, mapping(GeneratedFile::name, toList())));
 
         // ensure all packages are open
         bazelWorkspace.open(

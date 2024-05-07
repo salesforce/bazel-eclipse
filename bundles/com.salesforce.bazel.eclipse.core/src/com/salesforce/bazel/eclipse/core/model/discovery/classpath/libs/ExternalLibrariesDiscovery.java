@@ -34,7 +34,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.projectview.GlobSetMatcher;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
-import com.salesforce.bazel.sdk.model.TargetInternal;
+import com.salesforce.bazel.sdk.command.querylight.Target;
 
 /**
  * A tool for discovering external libraries in a Bazel workspace
@@ -112,11 +112,11 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
                     "--noproto:locations",
                     "--noproto:default_values"),
                 "Querying for external java_import library information");
-        Collection<TargetInternal> javaImportTargets =
+        Collection<Target> javaImportTargets =
                 bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
 
         // parse info from each found target
-        for (TargetInternal target : javaImportTargets) {
+        for (Target target : javaImportTargets) {
             var srcJar = findSingleJar(target.rule(), "srcjar", false /* not generated */);
             var jars = findJars(target.rule(), "jars", false /* not generated */);
             var testOnly = findBooleanAttribute(target.rule(), "testonly");
@@ -151,7 +151,7 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
                     "--noproto:locations",
                     "--noproto:default_values"),
                 "Querying for rules_jvm_external library information");
-        Collection<TargetInternal> javaImportTargets =
+        Collection<Target> javaImportTargets =
                 bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
 
         /*
@@ -162,7 +162,7 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
          */
 
         // parse info from each found target
-        for (TargetInternal target : javaImportTargets) {
+        for (Target target : javaImportTargets) {
             var srcJar = findSingleJar(target.rule(), "srcjar", true /* generated */);
             var jars = findJars(target.rule(), "jars", true /* generated */);
             var testOnly = findBooleanAttribute(target.rule(), "testonly");

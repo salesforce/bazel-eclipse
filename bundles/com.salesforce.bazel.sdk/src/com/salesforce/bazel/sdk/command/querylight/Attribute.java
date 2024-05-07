@@ -11,23 +11,19 @@
  * Contributors:
  *      Salesforce - adapted from M2E, JDT or other Eclipse project
  */
-package com.salesforce.bazel.sdk.model;
+package com.salesforce.bazel.sdk.command.querylight;
 
 import java.util.List;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Attribute;
+import com.google.devtools.build.lib.query2.proto.proto2api.Build;
 import com.google.devtools.build.lib.query2.proto.proto2api.Build.Attribute.Discriminator;
 
 /**
  * Internal representation of a Bazel Attribute. Used to capture only required data to reduce memory footprint
  */
-public record AttributeInternal(
-        String stringValue,
-        List<String> stringListValue,
-        boolean booleanValue,
-        Discriminator type) {
+public record Attribute(String stringValue, List<String> stringListValue, boolean booleanValue, Discriminator type) {
 
-    AttributeInternal(Attribute from) {
+    Attribute(Build.Attribute from) {
         this(from.getStringValue(), from.getStringListValueList(), from.getBooleanValue(), from.getType());
     }
 }

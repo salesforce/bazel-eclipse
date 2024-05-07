@@ -27,9 +27,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 
+import com.salesforce.bazel.sdk.command.querylight.Rule;
+import com.salesforce.bazel.sdk.command.querylight.Target;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.RuleInternal;
-import com.salesforce.bazel.sdk.model.TargetInternal;
 
 public final class BazelTargetInfo extends BazelElementInfo {
 
@@ -63,7 +63,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
 
     private final BazelTarget bazelTarget;
     private final String targetName;
-    private TargetInternal target;
+    private Target target;
     private volatile BazelProject bazelProject;
     private volatile BazelRuleAttributes ruleAttributes;
 
@@ -101,7 +101,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
         return bazelTarget;
     }
 
-    RuleInternal getRule() throws CoreException {
+    Rule getRule() throws CoreException {
         var target = getTarget();
         if (!target.hasRule()) {
             throw new CoreException(Status.error(format("Bazel target '%s' is not backed by a rule!", bazelTarget)));
@@ -139,7 +139,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
     /**
      * @return the underlying <code>com.google.devtools.build.lib.query2.proto.proto2api.Build.Target</code>
      */
-    TargetInternal getTarget() {
+    Target getTarget() {
         // don't expose non com.salesforce.bazel.eclipse.core.model API widely (package visibility is ok)
         return requireNonNull(target, () -> "not loaded: " + targetName);
     }

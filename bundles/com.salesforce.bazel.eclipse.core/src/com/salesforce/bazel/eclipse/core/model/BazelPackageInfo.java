@@ -34,8 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
+import com.salesforce.bazel.sdk.command.querylight.Target;
 import com.salesforce.bazel.sdk.model.BazelLabel;
-import com.salesforce.bazel.sdk.model.TargetInternal;
 
 public final class BazelPackageInfo extends BazelElementInfo {
 
@@ -71,7 +71,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
         return null;
     }
 
-    static Map<String, TargetInternal> queryForTargets(BazelPackage bazelPackage,
+    static Map<String, Target> queryForTargets(BazelPackage bazelPackage,
             BazelElementCommandExecutor bazelElementCommandExecutor) throws CoreException {
 
         var result =
@@ -80,7 +80,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
         return result != null ? result : Collections.emptyMap();
     }
 
-    static Map<BazelPackage, Map<String, TargetInternal>> queryForTargets(BazelWorkspace bazelWorkspace,
+    static Map<BazelPackage, Map<String, Target>> queryForTargets(BazelWorkspace bazelWorkspace,
             Collection<BazelPackage> bazelPackages, BazelElementCommandExecutor bazelElementCommandExecutor)
             throws CoreException {
         // bazel query '"//foo:all" + "//bar:all"'
@@ -98,7 +98,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
         bazelPackages.stream()
                 .forEach(p -> bazelPackageByWorkspaceRelativePath.put(p.getWorkspaceRelativePath().toString(), p));
 
-        Map<BazelPackage, Map<String, TargetInternal>> result = new HashMap<>();
+        Map<BazelPackage, Map<String, Target>> result = new HashMap<>();
         LOG.debug("{}: querying Bazel for list of targets from: {}", bazelWorkspace, query);
         var queryResult = bazelElementCommandExecutor.runQueryWithoutLock(
             new BazelQueryForTargetProtoCommand(
@@ -110,7 +110,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
                         "Loading targets for %d %s",
                         bazelPackages.size(),
                         bazelPackages.size() == 1 ? "package" : "packages")));
-        for (TargetInternal target : queryResult) {
+        for (Target target : queryResult) {
             if (!target.hasRule()) {
                 LOG.trace("{}: ignoring target: {}", bazelWorkspace, target);
                 continue;
@@ -136,14 +136,14 @@ public final class BazelPackageInfo extends BazelElementInfo {
 
     private final Path buildFile;
     private final BazelPackage bazelPackage;
-    private final Map<String, TargetInternal> indexOfTargetInfoByTargetName;
+    private final Map<String, Target> indexOfTargetInfoByTargetName;
 
     private volatile BazelProject bazelProject;
 
     private BazelVisibility defaultVisibility;
 
     BazelPackageInfo(Path buildFile, BazelPackage bazelPackage,
-            Map<String, TargetInternal> indexOfTargetInfoByTargetName) {
+            Map<String, Target> indexOfTargetInfoByTargetName) {
         this.buildFile = buildFile;
         this.bazelPackage = bazelPackage;
         this.indexOfTargetInfoByTargetName = indexOfTargetInfoByTargetName;
@@ -197,7 +197,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
         return bazelPackage;
     }
 
-    TargetInternal getTarget(String targetName) {
+    Target getTarget(String targetName) {
         return indexOfTargetInfoByTargetName.get(targetName);
     }
 

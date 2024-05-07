@@ -49,7 +49,7 @@ import com.salesforce.bazel.sdk.BazelVersion;
 import com.salesforce.bazel.sdk.command.BazelBinary;
 import com.salesforce.bazel.sdk.command.BazelInfoCommand;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
-import com.salesforce.bazel.sdk.model.TargetInternal;
+import com.salesforce.bazel.sdk.command.querylight.Target;
 
 public final class BazelWorkspaceInfo extends BazelElementInfo {
 
@@ -411,8 +411,8 @@ public final class BazelWorkspaceInfo extends BazelElementInfo {
         var externalRepositories = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(allExternalQuery);
 
         return externalRepositoryRuleByName = externalRepositories.stream()
-                .filter(TargetInternal::hasRule)
-                .map(TargetInternal::rule)
+                .filter(Target::hasRule)
+                .map(Target::rule)
                 .map(BazelRuleAttributes::new)
                 .collect(toMap(BazelRuleAttributes::getName, Function.identity())); // index by the "name" attribute
     }
