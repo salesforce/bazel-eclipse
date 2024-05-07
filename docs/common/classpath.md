@@ -38,7 +38,7 @@ common --explicit_java_test_deps
 ```
 
 
-**Project Dependencies**
+#### Project Dependencies
 
 Every dependency will be checked for a project first.
 The dependencie's target label will be used to discover existing projects.
@@ -50,7 +50,7 @@ In order for it to work the external workspace must also be imported into the ID
 For more intentional mappings setup `project_mappings` in the [project view](projectviews.md).
 It should allow to also connect other Java projects (eg. from Maven/M2E).
 
-**Jar Dependencies**
+#### Jar Dependencies
 
 Bazel uses header jars (or ijars) during compilation.
 We try to avoid these jars in the IDE setup, i.e. we prefer the full jars.
