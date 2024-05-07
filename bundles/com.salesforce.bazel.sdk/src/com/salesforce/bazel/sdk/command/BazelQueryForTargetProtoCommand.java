@@ -14,13 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.devtools.build.lib.query2.proto.proto2api.Build;
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.sdk.BazelVersion;
+import com.salesforce.bazel.sdk.command.querylight.Target;
 
 /**
  * <code>bazel query --output streamed_proto --order_output=no</code>
  */
-public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collection<Build.Target>> {
+public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collection<Target>> {
 
     private static Logger LOG = LoggerFactory.getLogger(BazelQueryForTargetProtoCommand.class);
 
@@ -40,11 +40,11 @@ public class BazelQueryForTargetProtoCommand extends BazelQueryCommand<Collectio
     protected Collection<Target> doGenerateResult() throws IOException {
         List<Target> result = new ArrayList<>();
         try (var in = newInputStream(getStdOutFile())) {
-            Target target;
+            Build.Target target;
             do {
-                target = Target.parseDelimitedFrom(in);
+                target = Build.Target.parseDelimitedFrom(in);
                 if (target != null) {
-                    result.add(target);
+                    result.add(new Target(target));
                 }
             } while (target != null);
         } finally {

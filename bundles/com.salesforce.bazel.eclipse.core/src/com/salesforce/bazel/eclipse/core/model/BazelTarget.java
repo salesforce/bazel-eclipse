@@ -135,7 +135,7 @@ public final class BazelTarget extends BazelElement<BazelTargetInfo, BazelPackag
      *             in case of errors loading the rules info
      */
     public String getRuleClass() throws CoreException {
-        return getInfo().getRule().getRuleClass();
+        return getInfo().getRule().ruleClass();
     }
 
     /**

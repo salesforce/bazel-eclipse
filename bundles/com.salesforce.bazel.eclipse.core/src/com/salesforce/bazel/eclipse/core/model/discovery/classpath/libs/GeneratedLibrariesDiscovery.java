@@ -34,8 +34,6 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.GeneratedFile;
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.base.model.primitives.TargetName;
@@ -44,6 +42,8 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
+import com.salesforce.bazel.sdk.command.querylight.GeneratedFile;
+import com.salesforce.bazel.sdk.command.querylight.Target;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -90,9 +90,10 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
 
         // group by generating targets
         Map<String, List<String>> jarsByGeneratingRuleLabel = generatedJarTargets.stream()
-                .map(Target::getGeneratedFile)
-                .filter(f -> !f.getName().endsWith("_deploy.jar")) // ignore deploy jars (they just duplicate class files)
-                .collect(groupingBy(GeneratedFile::getGeneratingRule, mapping(GeneratedFile::getName, toList())));
+                .map(Target::generatedFile)
+                .filter(f -> !f.name().endsWith("_deploy.jar")) // ignore deploy jars (they just duplicate class files)
+                .collect(
+                    groupingBy(GeneratedFile::generatingRule, mapping(GeneratedFile::name, toList())));
 
         // ensure all packages are open
         bazelWorkspace.open(

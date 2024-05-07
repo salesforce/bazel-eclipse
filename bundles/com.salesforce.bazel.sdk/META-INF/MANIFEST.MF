@@ -22,6 +22,7 @@ Export-Package: com.salesforce.bazel.sdk;uses:="org.osgi.framework,org.eclipse.c
    com.salesforce.bazel.sdk.aspects.intellij,
    com.salesforce.bazel.sdk.util",
  com.salesforce.bazel.sdk.command.shell;uses:="com.salesforce.bazel.sdk.util",
+ com.salesforce.bazel.sdk.command.querylight,
  com.salesforce.bazel.sdk.init,
  com.salesforce.bazel.sdk.model;uses:="com.google.idea.blaze.base.model.primitives",
  com.salesforce.bazel.sdk.projectview;uses:="com.google.common.collect,com.google.idea.blaze.base.model.primitives",

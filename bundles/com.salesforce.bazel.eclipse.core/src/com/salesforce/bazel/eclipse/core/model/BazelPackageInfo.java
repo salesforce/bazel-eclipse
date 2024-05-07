@@ -33,8 +33,8 @@ import org.eclipse.core.runtime.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
+import com.salesforce.bazel.sdk.command.querylight.Target;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 public final class BazelPackageInfo extends BazelElementInfo {
@@ -117,7 +117,7 @@ public final class BazelPackageInfo extends BazelElementInfo {
             }
 
             LOG.trace("{}: found target: {}", bazelWorkspace, target);
-            var targetLabel = new BazelLabel(target.getRule().getName());
+            var targetLabel = new BazelLabel(target.rule().name());
 
             var bazelPackage = bazelPackageByWorkspaceRelativePath.get(targetLabel.getPackagePath());
             if (bazelPackage == null) {
@@ -142,7 +142,8 @@ public final class BazelPackageInfo extends BazelElementInfo {
 
     private BazelVisibility defaultVisibility;
 
-    BazelPackageInfo(Path buildFile, BazelPackage bazelPackage, Map<String, Target> indexOfTargetInfoByTargetName) {
+    BazelPackageInfo(Path buildFile, BazelPackage bazelPackage,
+            Map<String, Target> indexOfTargetInfoByTargetName) {
         this.buildFile = buildFile;
         this.bazelPackage = bazelPackage;
         this.indexOfTargetInfoByTargetName = indexOfTargetInfoByTargetName;

@@ -2,7 +2,6 @@ package com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
-import static java.util.stream.Collectors.toList;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -16,8 +15,6 @@ import org.eclipse.jdt.core.IClasspathAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build;
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Rule;
 import com.google.idea.blaze.base.bazel.BazelBuildSystemProvider;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
@@ -29,6 +26,7 @@ import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.JavaClasspathJarLocationResolver;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.sdk.command.querylight.Rule;
 
 public class LibrariesDiscoveryUtil {
 
@@ -44,9 +42,9 @@ public class LibrariesDiscoveryUtil {
 
     public LibrariesDiscoveryUtil(BazelWorkspace bazelWorkspace) throws CoreException {
         this.bazelWorkspace = bazelWorkspace;
-        this.workspaceRoot = new WorkspaceRoot(bazelWorkspace.getLocation().toPath());
-        this.locationResolver = new JavaClasspathJarLocationResolver(bazelWorkspace);
-        this.outputBase = bazelWorkspace.getOutputBaseLocation().toPath();
+        workspaceRoot = new WorkspaceRoot(bazelWorkspace.getLocation().toPath());
+        locationResolver = new JavaClasspathJarLocationResolver(bazelWorkspace);
+        outputBase = bazelWorkspace.getOutputBaseLocation().toPath();
     }
 
     /**
@@ -93,36 +91,31 @@ public class LibrariesDiscoveryUtil {
     }
 
     protected Optional<Boolean> findBooleanAttribute(Rule rule, String attributeName) {
-        return rule.getAttributeList()
-                .stream()
-                .filter(a -> a.getName().equals(attributeName))
-                .map(Build.Attribute::getBooleanValue)
-                .findAny();
+        var attribute = rule.getAttribute(attributeName);
+        if (attribute != null) {
+            return Optional.of(attribute.booleanValue());
+        }
+        return Optional.empty();
     }
 
     protected List<ArtifactLocation> findJars(Rule rule, String attributeName, boolean generated) {
         List<ArtifactLocation> jars = new ArrayList<>();
-        rule.getAttributeList()
-                .stream()
-                .filter(a -> a.getName().equals(attributeName))
-                .map(Build.Attribute::getStringListValueList)
-                .collect(toList())
-                .forEach(list -> list.forEach(jar -> {
-                    var jarArtifact = jarLabelToArtifactLocation(jar, generated);
-                    if (jarArtifact != null) {
-                        jars.add(jarArtifact);
-                    }
-                }));
+        rule.getAttribute(attributeName).stringListValue().forEach(jar -> {
+            var jarArtifact = jarLabelToArtifactLocation(jar, generated);
+            if (jarArtifact != null) {
+                jars.add(jarArtifact);
+            }
+        });
         return jars;
     }
 
     protected ArtifactLocation findSingleJar(Rule rule, String attributeName, boolean isGenerated) {
-        var attribute = rule.getAttributeList().stream().filter(a -> a.getName().equals(attributeName)).findAny();
-        if (attribute.isEmpty()) {
+        var attribute = rule.getAttribute(attributeName);
+        if (attribute == null) {
             return null;
         }
 
-        return jarLabelToArtifactLocation(attribute.get().getStringValue(), isGenerated);
+        return jarLabelToArtifactLocation(attribute.stringValue(), isGenerated);
     }
 
     public BazelWorkspace getBazelWorkspace() {

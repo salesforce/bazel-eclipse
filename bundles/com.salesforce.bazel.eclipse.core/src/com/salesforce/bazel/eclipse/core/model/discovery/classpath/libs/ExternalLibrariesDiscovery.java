@@ -28,13 +28,13 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
 import com.google.idea.blaze.base.model.primitives.Label;
 import com.salesforce.bazel.eclipse.core.model.BazelRuleAttributes;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.projectview.GlobSetMatcher;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
+import com.salesforce.bazel.sdk.command.querylight.Target;
 
 /**
  * A tool for discovering external libraries in a Bazel workspace
@@ -112,14 +112,15 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
                     "--noproto:locations",
                     "--noproto:default_values"),
                 "Querying for external java_import library information");
-        Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
+        Collection<Target> javaImportTargets =
+                bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
 
         // parse info from each found target
         for (Target target : javaImportTargets) {
-            var srcJar = findSingleJar(target.getRule(), "srcjar", false /* not generated */);
-            var jars = findJars(target.getRule(), "jars", false /* not generated */);
-            var testOnly = findBooleanAttribute(target.getRule(), "testonly");
-            var origin = Label.create(target.getRule().getName());
+            var srcJar = findSingleJar(target.rule(), "srcjar", false /* not generated */);
+            var jars = findJars(target.rule(), "jars", false /* not generated */);
+            var testOnly = findBooleanAttribute(target.rule(), "testonly");
+            var origin = Label.create(target.rule().name());
 
             collectJarsAsClasspathEntries(jars, srcJar, testOnly, origin, result);
         }
@@ -150,7 +151,8 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
                     "--noproto:locations",
                     "--noproto:default_values"),
                 "Querying for rules_jvm_external library information");
-        Collection<Target> javaImportTargets = bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
+        Collection<Target> javaImportTargets =
+                bazelWorkspace.getCommandExecutor().runQueryWithoutLock(javaImportQuery);
 
         /*
          * RJE (maven_install) consumes the jar from bazel-out/mnemonic/bin directory because it's generated
@@ -161,10 +163,10 @@ public class ExternalLibrariesDiscovery extends LibrariesDiscoveryUtil {
 
         // parse info from each found target
         for (Target target : javaImportTargets) {
-            var srcJar = findSingleJar(target.getRule(), "srcjar", true /* generated */);
-            var jars = findJars(target.getRule(), "jars", true /* generated */);
-            var testOnly = findBooleanAttribute(target.getRule(), "testonly");
-            var origin = Label.create(target.getRule().getName());
+            var srcJar = findSingleJar(target.rule(), "srcjar", true /* generated */);
+            var jars = findJars(target.rule(), "jars", true /* generated */);
+            var testOnly = findBooleanAttribute(target.rule(), "testonly");
+            var origin = Label.create(target.rule().name());
 
             collectJarsAsClasspathEntries(jars, srcJar, testOnly, origin, result);
         }

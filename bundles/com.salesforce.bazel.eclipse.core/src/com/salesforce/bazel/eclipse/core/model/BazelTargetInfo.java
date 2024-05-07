@@ -27,8 +27,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Rule;
-import com.google.devtools.build.lib.query2.proto.proto2api.Build.Target;
+import com.salesforce.bazel.sdk.command.querylight.Rule;
+import com.salesforce.bazel.sdk.command.querylight.Target;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 public final class BazelTargetInfo extends BazelElementInfo {
@@ -106,7 +106,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
         if (!target.hasRule()) {
             throw new CoreException(Status.error(format("Bazel target '%s' is not backed by a rule!", bazelTarget)));
         }
-        return target.getRule();
+        return target.rule();
     }
 
     public BazelRuleAttributes getRuleAttributes() throws CoreException {
@@ -124,7 +124,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
             return cachedOutput;
         }
 
-        var ruleOutputList = getRule().getRuleOutputList();
+        var ruleOutputList = getRule().ruleOutputList();
         if (ruleOutputList != null) {
             return ruleOutput = ruleOutputList.stream()
                     .map(BazelLabel::new)
