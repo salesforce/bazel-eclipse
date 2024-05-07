@@ -1,6 +1,6 @@
 target "bazel-eclipse-feature-target-platform" with source configurePhase requirements environment JavaSE-17
 
-location "https://download.eclipse.org/eclipse/updates/4.30/" {
+location "https://download.eclipse.org/eclipse/updates/4.31/" {
 	org.eclipse.e4.rcp.feature.group
 	org.eclipse.ecf.core.feature.feature.group
 	org.eclipse.ecf.core.ssl.feature.feature.group
@@ -37,7 +37,7 @@ location "https://download.eclipse.org/eclipse/updates/4.30/" {
 	org.objectweb.asm.util
 }
 
-location "https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2023-12/" {
+location "https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2024-03/" {
 	slf4j.api
 	ch.qos.logback.core
 	ch.qos.logback.classic
@@ -58,35 +58,35 @@ location "https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2023
 	org.jdom2
 }
 
-location "https://download.eclipse.org/releases/2023-12/" {
+location "https://download.eclipse.org/releases/2024-03/" {
 	// TextMate
 	org.eclipse.tm4e.feature.feature.group
 }
 
-location "https://download.eclipse.org/jdtls/milestones/1.30.1/repository/" {
+location "https://download.eclipse.org/jdtls/milestones/1.35.0/repository/" {
 	org.eclipse.jdt.ls.core
 }
 
 // locations below taken from eclipse.jdt.ls project (to allow building the JDT LS in same workspace)
-location "https://download.eclipse.org/releases/2023-12/" {
+location "https://download.eclipse.org/releases/2024-03/" {
 	org.eclipse.xtext.xbase.lib
 }
 
-location "https://download.eclipse.org/lsp4j/updates/releases/0.21.1/" {
+location "https://download.eclipse.org/lsp4j/updates/releases/0.22.0/" {
 	org.eclipse.lsp4j.sdk.feature.group
 }
 
-location "https://download.eclipse.org/technology/m2e/releases/2.5.0/" {
+location "https://download.eclipse.org/technology/m2e/releases/2.6.0/" {
 	org.eclipse.m2e.feature.feature.group
 	org.eclipse.m2e.logback.feature.feature.group
 	org.eclipse.m2e.sdk.feature.feature.group
 }
 
-location "https://download.eclipse.org/wildwebdeveloper/releases/1.3.3/" {
+location "https://download.eclipse.org/wildwebdeveloper/releases/1.3.4/" {
 	org.eclipse.wildwebdeveloper.xml.feature.feature.group // required by M2E
 }
 
-location "https://download.eclipse.org/buildship/updates/e423/releases/3.x/3.1.8.v20231117-1734/" {
+location "https://download.eclipse.org/buildship/updates/e423/releases/3.x/3.1.9.v20240116-1334/" {
 	org.eclipse.buildship.feature.group
 }
 
@@ -104,7 +104,7 @@ maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=g
 	dependency {
 		groupId="com.google.protobuf"
 		artifactId="protobuf-java"
-		version="3.22.0"
+		version="3.25.3"
 	}
 	dependency {
 		groupId="com.googlecode.json-simple"
@@ -114,7 +114,7 @@ maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=g
 	dependency {
 		groupId="org.fusesource.jansi"
 		artifactId="jansi"
-		version="2.4.0"
+		version="2.4.1"
 	}
 	dependency {
 		groupId="com.google.code.findbugs"
@@ -139,11 +139,11 @@ maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=g
 	dependency {
 		groupId="org.apache.commons"
 		artifactId="commons-configuration2"
-		version="2.9.0"
+		version="2.10.1"
 	}
 	dependency {
 		groupId="org.apache.commons"
 		artifactId="commons-text"
-		version="1.11.0"
+		version="1.12.0"
 	}
 }
