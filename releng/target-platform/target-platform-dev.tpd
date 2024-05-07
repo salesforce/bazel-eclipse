@@ -19,15 +19,19 @@ location "https://download.eclipse.org/egit/updates/" {
     org.eclipse.egit.gitflow.feature.feature.group lazy
 }
 
-location "https://download.eclipse.org/releases/2024-03/" {
+location "https://download.eclipse.org/releases/2023-12/" {
     // Docker Tools
     org.eclipse.linuxtools.docker.feature.feature.group lazy
     org.eclipse.linuxtools.docker.editor.ls.feature.feature.group lazy
 }
 
-location "https://download.eclipse.org/mylyn/updates/release/4.2.0/" {
+location "https://download.eclipse.org/mylyn/docs/releases/3.0.48/" {
 	// Mylyn
-	org.eclipse.mylyn.wikitext.feature.feature.group lazy
+    org.eclipse.mylyn.wikitext_feature.feature.group lazy
+    org.eclipse.mylyn.wikitext.editors_feature.feature.group lazy
+    org.eclipse.mylyn.wikitext.sdk.feature.group lazy
+    org.eclipse.mylyn.wikitext.markdown lazy
+    org.eclipse.mylyn.wikitext.markdown.ui lazy
 }
 
 location "https://raw.githubusercontent.com/iloveeclipse/plugins/latest/" {
