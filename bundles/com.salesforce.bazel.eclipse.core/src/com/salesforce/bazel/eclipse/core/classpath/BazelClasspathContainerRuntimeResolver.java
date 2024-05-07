@@ -81,8 +81,11 @@ public class BazelClasspathContainerRuntimeResolver
             }
 
             // ensure it exists
-            if (!isRegularFile(jarPath.toPath())) {
-                LOG.warn("Dropped ijar from runtime classpath: {}", jarPath);
+            if (!isRegularFile(realJarPath.toPath())) {
+                LOG.warn(
+                    "Dropped ijar from runtime classpath: {} (real jar '{}' does not exist)",
+                    jarPath,
+                    realJarPath.lastSegment());
                 return;
             }
 
