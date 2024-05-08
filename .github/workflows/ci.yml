@@ -47,7 +47,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Cache local Maven repository
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml', '**/*.target') }}
@@ -55,13 +55,13 @@ jobs:
             ${{ runner.os }}-m2
 
       - name: Cache IntelliJ Aspects
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./bundles/com.salesforce.bazel.sdk/aspects
           key: ${{ runner.os }}-aspects-${{ hashFiles('**/aspects/import/import-and-build.sh', '**/aspects/import/WORKSPACE') }}
 
       - name: Cache  Bazel repository cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/bazel
