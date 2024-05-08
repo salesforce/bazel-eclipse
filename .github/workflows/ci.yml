@@ -69,7 +69,7 @@ jobs:
           key: ${{ runner.os }}-bazel
         
       - name: Setup Bazelisk
-        uses: bazelbuild/setup-bazelisk@v2
+        uses: bazelbuild/setup-bazelisk@v3
 
       - name: Print Maven toolchains.xml
         shell: bash
