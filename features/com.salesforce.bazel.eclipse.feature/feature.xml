@@ -226,7 +226,6 @@
    </license>
 
    <requires>
-      <import feature="org.eclipse.tm4e.feature" version="0.5.5" match="greaterOrEqual"/>
       <import feature="org.eclipse.jdt" version="3.19.100" match="greaterOrEqual"/>
       <import feature="org.eclipse.platform" version="4.28.0" match="greaterOrEqual"/>
       <import plugin="jakarta.servlet-api" version="5.0.0" match="compatible"/>
@@ -234,38 +233,22 @@
 
    <plugin
          id="com.salesforce.bazel.sdk"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.salesforce.bazel.eclipse.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.salesforce.bazel.eclipse.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.salesforce.bazel.logback"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.salesforce.bazel.importedsource"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
 </feature>
