@@ -77,6 +77,7 @@ public class BazelProjectFileReader {
         final LinkedHashSet<String> externalJarsFilters = new LinkedHashSet<>();
         int targetShardSize = 500;
         boolean shardSync = true;
+        int importDepth = 0;
 
         public BazelProjectView build() throws IllegalStateException {
             // check mandatory parameters
@@ -147,7 +148,8 @@ public class BazelProjectFileReader {
                     discoverAllExternalAndWorkspaceJars,
                     new GlobSetMatcher(externalJarsFilters),
                     shardSync,
-                    targetShardSize);
+                    targetShardSize,
+                    importDepth);
         }
 
         public ImportHandle startImporting(Path bazelProjectViewFile) throws IOException {
@@ -402,6 +404,10 @@ public class BazelProjectFileReader {
                     case "import_target_output":
                     case "exclude_target": {
                         // ignore deprecated
+                        break;
+                    }
+                    case "import_depth": {
+                        builder.importDepth = parseSectionBodyAsInt(rawSection, builder.importDepth);
                         break;
                     }
                     default:

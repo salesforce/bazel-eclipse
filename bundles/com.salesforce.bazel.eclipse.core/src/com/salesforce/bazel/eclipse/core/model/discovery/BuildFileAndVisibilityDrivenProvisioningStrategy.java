@@ -8,7 +8,6 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toSet;
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
 import java.util.ArrayList;
@@ -248,29 +247,17 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
 
                 // query for rdeps to find classpath exclusions
                 var projectTargets = activeTargetsPerProject.get(bazelProject);
-                var rdeps = workspace.getCommandExecutor()
-                        .runQueryWithoutLock(
-                            new BazelQueryForLabelsCommand(
-                                    workspaceRoot,
-                                    format(
-                                        "kind(java_library, rdeps(//..., %s))",
-                                        projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "))),
-                                    true,
-                                    format(
-                                        "Querying for reverse dependencies of '%s' for classpath computation",
-                                        bazelProject.getName())))
-                        .stream()
-                        .map(BazelLabel::new)
-                        .collect(toSet());
 
+                var targets = projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "));
                 // get all accessible targets based on visibility
                 Set<BazelLabel> allVisibleTargets = workspace.getCommandExecutor()
                         .runQueryWithoutLock(
                             new BazelQueryForLabelsCommand(
                                     workspaceRoot,
                                     format(
-                                        "kind(java_library, visible(%s, //...))",
-                                        projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "))),
+                                        "kind(java_library, visible(%s, //...)) except kind(java_library, rdeps(//..., %s))",
+                                        targets,
+                                        targets),
                                     true,
                                     format(
                                         "Querying for Java targets visibile to '%s' for classpath computation",
@@ -295,7 +282,6 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
 
                 // get the remaining list of visible deps based on workspace dependency graph
                 var visibleDeps = new ArrayList<>(allVisibleTargets);
-                visibleDeps.removeAll(rdeps); // exclude reverse deps
                 visibleDeps.removeAll(projectTargets); // exclude project targets (avoid dependencies on itself)
 
                 // compute the classpath
