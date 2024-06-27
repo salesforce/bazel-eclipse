@@ -51,7 +51,8 @@ public record BazelProjectView(
         boolean discoverAllExternalAndWorkspaceJars,
         GlobSetMatcher externalJarsDiscoveryFilter,
         boolean shardSync,
-        int targetShardSize) {
+        int targetShardSize,
+        int importDepth) {
 
     public BazelProjectView {
         directoriesToImport = unmodifiableCollection(directoriesToImport);

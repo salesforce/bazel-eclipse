@@ -66,6 +66,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.AccessRule;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Holds information for computing Java classpath configuration of a target or a package.
@@ -132,10 +133,13 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
     /** set of exports (insertion order is not relevant) */
     final Set<Label> exports = new HashSet<>();
+    final Set<BazelLabel> availableDependencies;
 
-    public JavaAspectsClasspathInfo(JavaAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace) throws CoreException {
+    public JavaAspectsClasspathInfo(JavaAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace,
+            Set<BazelLabel> availableDependencies) throws CoreException {
         super(bazelWorkspace);
         this.aspectsInfo = aspectsInfo;
+        this.availableDependencies = availableDependencies;
     }
 
     private void addDirectDependency(Dependency directDependency) {
@@ -363,6 +367,10 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
         // Collect jars referenced by runtime deps
         for (TargetKey targetKey : runtimeDeps) {
+            if ((availableDependencies.size() > 0)
+                    && !availableDependencies.contains(new BazelLabel(targetKey.getLabel().toString()))) {
+                continue;
+            }
             var entries = resolveDependency(targetKey);
             for (ClasspathEntry entry : entries) {
                 // runtime dependencies are only visible to tests
@@ -514,6 +522,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         var exported = exports.contains(targetKey.getLabel());
         var result = new LinkedHashSet<ClasspathEntry>();
         for (BlazeJarLibrary library : jars) {
+
             var jarEntry = resolveJar(library.libraryArtifact);
             if (jarEntry == null) {
                 if (LOG.isDebugEnabled()) {
