@@ -16,6 +16,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.eclipse.core.runtime.Platform.PI_RUNTIME;
 import static org.eclipse.core.runtime.Platform.PREF_LINE_SEPARATOR;
 import static org.eclipse.jdt.core.IClasspathAttribute.ADD_EXPORTS;
@@ -97,6 +98,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSrcJarEntr
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.LabelEntry;
 import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand;
+import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -562,6 +564,38 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                 createBuildPathProblem(project, recommendations);
             }
         }
+    }
+
+    /**
+     * Calculates the java_library and java_imports for the provided targets, limited by the depth
+     *
+     * @param workspace
+     *            the bazel workspace
+     * @param targetsToBuild
+     *            a list of targets as part of the build to query their dependencies
+     * @param dependencyDepth
+     *            the depth in the dependency graph to traverse and include in the result
+     * @return a set of java_library and java_imports
+     * @throws CoreException
+     */
+    protected final Set<BazelLabel> calculateWorkspaceDependencies(BazelWorkspace workspace,
+            List<BazelLabel> targetsToBuild, int dependencyDepth) throws CoreException {
+        var targetLabels = targetsToBuild.stream().map(BazelLabel::toString).collect(joining(" + "));
+        return workspace.getCommandExecutor()
+                .runQueryWithoutLock(
+                    new BazelQueryForLabelsCommand(
+                            workspace.getLocation().toPath(),
+                            format(
+                                "kind(java_library, deps(%s, %d)) + kind(java_import, deps(%s, %d))",
+                                targetLabels,
+                                dependencyDepth,
+                                targetLabels,
+                                dependencyDepth),
+                            true,
+                            format("Querying for depdendencies for projects: %s", targetLabels)))
+                .stream()
+                .map(BazelLabel::new)
+                .collect(toSet());
     }
 
     /**

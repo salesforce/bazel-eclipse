@@ -2,9 +2,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_ALL_LABELS;
 
 import java.util.ArrayList;
@@ -34,7 +32,6 @@ import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
-import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -82,25 +79,8 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             var workspaceRoot = workspace.getLocation().toPath();
 
             var importDepth = workspace.getBazelProjectView().importDepth();
-            Set<BazelLabel> availableDependencies = Set.of();
-            if (importDepth > 0) {
-                var targetLabels = targetsToBuild.stream().map(BazelLabel::toString).collect(joining(" + "));
-                availableDependencies = workspace.getCommandExecutor()
-                        .runQueryWithoutLock(
-                            new BazelQueryForLabelsCommand(
-                                    workspace.getLocation().toPath(),
-                                    format(
-                                        "kind(java_library, deps(%s, %d)) + kind(java_import, deps(%s, %d))",
-                                        targetLabels,
-                                        importDepth,
-                                        targetLabels,
-                                        importDepth),
-                                    true,
-                                    format("Querying for depdendencies for projects: %s", targetLabels)))
-                        .stream()
-                        .map(BazelLabel::new)
-                        .collect(toSet());
-            }
+            var availableDependencies = importDepth > 0
+                    ? calculateWorkspaceDependencies(workspace, targetsToBuild, importDepth) : Set.<BazelLabel> of();
 
             // run the aspect to compute all required information
             var aspects = workspace.getParent().getModelManager().getIntellijAspects();

@@ -133,13 +133,18 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
     /** set of exports (insertion order is not relevant) */
     final Set<Label> exports = new HashSet<>();
-    final Set<BazelLabel> availableDependencies;
+
+    /**
+     * Set of dependencies available to the whole project, to be used to filter out runtime dependencies that are not
+     * part of this set. Allows creating a partial classpath to improve performance on large projects.
+     */
+    final Set<BazelLabel> runtimeDependencyIncludes;
 
     public JavaAspectsClasspathInfo(JavaAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace,
-            Set<BazelLabel> availableDependencies) throws CoreException {
+            Set<BazelLabel> runtimeDependencyIncludes) throws CoreException {
         super(bazelWorkspace);
         this.aspectsInfo = aspectsInfo;
-        this.availableDependencies = availableDependencies;
+        this.runtimeDependencyIncludes = runtimeDependencyIncludes;
     }
 
     private void addDirectDependency(Dependency directDependency) {
@@ -367,8 +372,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
         // Collect jars referenced by runtime deps
         for (TargetKey targetKey : runtimeDeps) {
-            if ((availableDependencies.size() > 0)
-                    && !availableDependencies.contains(new BazelLabel(targetKey.getLabel().toString()))) {
+            if (!runtimeDependencyAvailable(targetKey)) {
                 continue;
             }
             var entries = resolveDependency(targetKey);
@@ -634,6 +638,18 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         }
 
         return resolveProject(targetKey.getLabel());
+    }
+
+    /**
+     * Allows filtering runtime dependencies based on the availability of the dependency in runtimeDependencyIncludes
+     * when it includes elements
+     *
+     * @param targetKey
+     *            the dependency to check
+     * @return true if runtimeDependencyAvailable is empty or it includes the dependency
+     */
+    private boolean runtimeDependencyAvailable(TargetKey targetKey) {
+        return runtimeDependencyIncludes.isEmpty() || runtimeDependencyIncludes.contains(targetKey.getLabel());
     }
 
 }

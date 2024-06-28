@@ -7,7 +7,6 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,7 +48,6 @@ import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
-import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -83,33 +81,6 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             var monitor =
                     TracingSubMonitor.convert(progress, "Computing Bazel project classpaths", 1 + bazelProjects.size());
 
-            var importDepth = workspace.getBazelProjectView().importDepth();
-            Set<BazelLabel> availableDependencies = Set.of();
-            if (importDepth > 0) {
-                List<BazelTarget> targets = new ArrayList<>();
-                for (BazelProject project : bazelProjects) {
-                    monitor.checkCanceled();
-                    targets.addAll(project.getBazelTargets());
-                }
-                var targetLabels =
-                        targets.stream().map(BazelTarget::getLabel).map(BazelLabel::toString).collect(joining(" + "));
-                availableDependencies = workspace.getCommandExecutor()
-                        .runQueryWithoutLock(
-                            new BazelQueryForLabelsCommand(
-                                    workspace.getLocation().toPath(),
-                                    format(
-                                        "kind(java_library, deps(%s, %d)) + kind(java_import, deps(%s, %d))",
-                                        targetLabels,
-                                        importDepth,
-                                        targetLabels,
-                                        importDepth),
-                                    true,
-                                    format("Querying for depdendencies for projects: %s", targetLabels)))
-                        .stream()
-                        .map(BazelLabel::new)
-                        .collect(toSet());
-            }
-
             monitor.subTask("Collecting shards...");
 
             Map<BazelProject, Collection<BazelTarget>> activeTargetsPerProject = new HashMap<>();
@@ -139,6 +110,15 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 }
                 activeTargetsPerProject.put(bazelProject, projectTargetsToBuild);
             }
+
+            var importDepth = workspace.getBazelProjectView().importDepth();
+            var targets = activeTargetsPerProject.values()
+                    .stream()
+                    .flatMap(Collection::stream)
+                    .map(BazelTarget::getLabel)
+                    .collect(toList());
+            var availableDependencies = importDepth > 0
+                    ? calculateWorkspaceDependencies(workspace, targets, importDepth) : Set.<BazelLabel> of();
 
             // collect classpaths by project
             Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
