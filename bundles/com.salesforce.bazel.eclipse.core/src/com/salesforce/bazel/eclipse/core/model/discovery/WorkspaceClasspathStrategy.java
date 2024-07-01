@@ -8,6 +8,7 @@ import static com.salesforce.bazel.eclipse.core.model.discovery.classpath.Classp
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -19,6 +20,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
@@ -57,7 +59,7 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
      * @return the computed classpath
      * @throws CoreException
      */
-    public Collection<ClasspathEntry> computeClasspath(BazelProject workspaceProject, BazelWorkspace bazelWorkspace,
+    public ClasspathHolder computeClasspath(BazelProject workspaceProject, BazelWorkspace bazelWorkspace,
             BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         try {
             var monitor = SubMonitor.convert(progress);
@@ -84,7 +86,7 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
 
             if (!bazelWorkspace.getBazelProjectView().discoverAllExternalAndWorkspaceJars()) {
                 // abort early when discovery is disabled
-                return result;
+                return new ClasspathHolder(result, Collections.emptyList());
             }
 
             var externalLibrariesDiscovery = new ExternalLibrariesDiscovery(bazelWorkspace);
@@ -121,14 +123,14 @@ public class WorkspaceClasspathStrategy extends BaseProvisioningStrategy {
                         "Some source jars are missing. Bazel does not build them by default. Consider runing 'bazel build  --output_groups=+_source_jars //...' to build any missing source jar."));
             }
 
-            return result;
+            return new ClasspathHolder(result, Collections.emptyList());
         } finally {
             progress.done();
         }
     }
 
     @Override
-    public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
+    public Map<BazelProject, ClasspathHolder> computeClasspaths(Collection<BazelProject> bazelProjects,
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor monitor) throws CoreException {
         if (bazelProjects.size() != 1) {
             throw new IllegalArgumentException("This strategy must only be used for the BazelWorkspace project!");

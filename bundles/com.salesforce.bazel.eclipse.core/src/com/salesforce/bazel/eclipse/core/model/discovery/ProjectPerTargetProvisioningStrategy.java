@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
@@ -55,7 +56,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
     public static final String STRATEGY_NAME = "project-per-target";
 
     @Override
-    public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
+    public Map<BazelProject, ClasspathHolder> computeClasspaths(Collection<BazelProject> bazelProjects,
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
@@ -111,7 +112,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                         monitor.split(1, SUPPRESS_ALL_LABELS));
 
             // populate map from result
-            Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
+            Map<BazelProject, ClasspathHolder> classpathsByProject = new HashMap<>();
             var aspectsInfo = new JavaAspectsInfo(result, workspace);
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.subTask(bazelProject.getName());
@@ -130,7 +131,8 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                 }
 
                 // compute the classpath
-                var classpath = classpathInfo.compute();
+                var targetClasspath = classpathInfo.compute();
+                var classpath = targetClasspath.loaded();
 
                 // check for non existing jars
                 for (ClasspathEntry entry : classpath) {
@@ -155,7 +157,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                     entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
                             && entry.getPath().equals(bazelProject.getProject().getFullPath()));
 
-                classpathsByProject.put(bazelProject, classpath);
+                classpathsByProject.put(bazelProject, new ClasspathHolder(classpath, targetClasspath.unloaded()));
                 monitor.worked(1);
             }
 

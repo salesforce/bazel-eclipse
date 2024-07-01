@@ -35,6 +35,7 @@ import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
@@ -71,10 +72,12 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     public static final String STRATEGY_NAME = "project-per-package";
 
     private static Logger LOG = LoggerFactory.getLogger(ProjectPerPackageProvisioningStrategy.class);
+    public static final Map<BazelProject, Collection<ClasspathEntry>> TEST = new HashMap<>();
+
     private final Set<String> additionalJavaLikeRules = new HashSet<>();
 
     @Override
-    public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
+    public Map<BazelProject, ClasspathHolder> computeClasspaths(Collection<BazelProject> bazelProjects,
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
@@ -121,7 +124,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     ? calculateWorkspaceDependencies(workspace, targets, importDepth) : Set.<BazelLabel> of();
 
             // collect classpaths by project
-            Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
+            Map<BazelProject, ClasspathHolder> classpathsByProject = new HashMap<>();
 
             var workspaceRoot = workspace.getLocation().toPath();
 
@@ -207,7 +210,12 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     }
 
                     // compute the classpath
-                    var classpath = classpathInfo.compute();
+                    var targetClasspath = classpathInfo.compute();
+                    var classpath = targetClasspath.loaded();
+
+                    if (!targetClasspath.unloaded().isEmpty()) {
+                        TEST.put(bazelProject, targetClasspath.unloaded());
+                    }
 
                     // remove old marker
                     deleteClasspathContainerProblems(bazelProject);
@@ -240,7 +248,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
                                 && entry.getPath().equals(bazelProject.getProject().getFullPath()));
 
-                    classpathsByProject.put(bazelProject, classpath);
+                    classpathsByProject.put(bazelProject, new ClasspathHolder(classpath, targetClasspath.unloaded()));
                     subMonitor.worked(1);
                 }
             }

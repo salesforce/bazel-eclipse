@@ -178,7 +178,7 @@ public class BazelClasspathManager {
      * @return a saved classpath container for the specified project (may be <code>null</code>)
      * @throws CoreException
      */
-    public IClasspathContainer getSavedContainer(IProject project) throws CoreException {
+    public BazelClasspathContainer getSavedContainer(IProject project) throws CoreException {
         var containerStateFile = getContainerStateFile(project);
         if (!containerStateFile.exists()) {
             return null;
@@ -239,8 +239,8 @@ public class BazelClasspathManager {
      * @param monitor
      * @throws CoreException
      */
-    public void patchClasspathContainer(BazelProject bazelProject, List<ClasspathEntry> classpath,
-            IProgressMonitor progress) throws CoreException {
+    public void patchClasspathContainer(BazelProject bazelProject, ClasspathHolder classpath, IProgressMonitor progress)
+            throws CoreException {
         var monitor = SubMonitor.convert(progress);
         try {
             monitor.beginTask("Patchig classpath: " + bazelProject.getName(), 2);
@@ -300,8 +300,10 @@ public class BazelClasspathManager {
                 bazelProject.getBazelWorkspace(),
                 DEFAULT_CLASSPATH,
                 monitor.split(1, SUPPRESS_ALL_LABELS));
-            entries =
-                    configureClasspathWithSourceAttachments(classpaths.get(bazelProject), null /* no props */, monitor);
+            entries = configureClasspathWithSourceAttachments(
+                classpaths.get(bazelProject).loaded(),
+                null /* no props */,
+                monitor);
             for (IClasspathEntry entry : entries) {
                 if (IClasspathEntry.CPE_LIBRARY == entry.getEntryKind()) {
                     var path = entry.getPath().toPortableString();
@@ -338,7 +340,7 @@ public class BazelClasspathManager {
         }
     }
 
-    void saveAndSetContainer(IJavaProject javaProject, Collection<ClasspathEntry> classpath, IProgressMonitor monitor)
+    void saveAndSetContainer(IJavaProject javaProject, ClasspathHolder classpath, IProgressMonitor monitor)
             throws CoreException, JavaModelException {
         var containerEntry = getBazelContainerEntry(javaProject);
         var path = containerEntry != null ? containerEntry.getPath()
@@ -347,7 +349,11 @@ public class BazelClasspathManager {
         var sourceAttachmentProperties = getSourceAttachmentProperties(javaProject.getProject());
         var container = new BazelClasspathContainer(
                 path,
-                configureClasspathWithSourceAttachments(classpath, sourceAttachmentProperties, monitor.slice(1)));
+                configureClasspathWithSourceAttachments(
+                    classpath.loaded(),
+                    sourceAttachmentProperties,
+                    monitor.slice(1)),
+                classpath.unloaded().stream().map(ClasspathEntry::build).toArray(IClasspathEntry[]::new));
 
         JavaCore.setClasspathContainer(
             container.getPath(),
@@ -359,7 +365,7 @@ public class BazelClasspathManager {
         saveContainerState(javaProject.getProject(), container);
     }
 
-    private void saveContainerState(IProject project, IClasspathContainer container) throws CoreException {
+    private void saveContainerState(IProject project, BazelClasspathContainer container) throws CoreException {
         var containerStateFile = getContainerStateFile(project);
         try (var is = new FileOutputStream(containerStateFile)) {
             new BazelClasspathContainerSaveHelper().writeContainer(container, is);

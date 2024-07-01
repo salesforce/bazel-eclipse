@@ -12,11 +12,11 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IClasspathEntry;
 
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.SynchronizeProjectViewJob;
-import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 
 /**
  * The target discovery strategy is responsible for provisioning targets into Eclipse as Eclipse projects.
@@ -78,7 +78,7 @@ public interface TargetProvisioningStrategy {
      * @throws CoreException
      *             in case of problems computing the classpath
      */
-    Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
+    Map<BazelProject, ClasspathHolder> computeClasspaths(Collection<BazelProject> bazelProjects,
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor monitor) throws CoreException;
 
     /**

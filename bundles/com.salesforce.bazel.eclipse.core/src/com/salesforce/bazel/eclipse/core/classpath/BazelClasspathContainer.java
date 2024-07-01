@@ -36,6 +36,8 @@
 package com.salesforce.bazel.eclipse.core.classpath;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathContainer;
@@ -49,14 +51,16 @@ import org.eclipse.jdt.core.IClasspathEntry;
  */
 public class BazelClasspathContainer implements IClasspathContainer, Serializable {
 
-    private static final long serialVersionUID = 390898179243551621L;
+    private static final long serialVersionUID = 390898179243551622L;
 
     private final IPath path;
     private final IClasspathEntry[] classpath;
+    private final IClasspathEntry[] unloadedClasspath;
 
-    public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath) {
+    public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath, IClasspathEntry[] unloadedClasspath) {
         this.path = path;
         this.classpath = classpath;
+        this.unloadedClasspath = unloadedClasspath;
     }
 
     @Override
@@ -69,6 +73,22 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
         return "Bazel Dependencies";
     }
 
+    public IClasspathEntry[] getFullClasspath() {
+        if (unloadedClasspath.length == 0) {
+            return classpath;
+        }
+        List<IClasspathEntry> entries = new ArrayList<>(unloadedClasspath.length);
+        var index = 0;
+        for (IClasspathEntry entry : unloadedClasspath) {
+            if (entry == null) {
+                entries.add(classpath[index++]);
+            } else {
+                entries.add(entry);
+            }
+        }
+        return entries.toArray(new IClasspathEntry[entries.size()]);
+    }
+
     @Override
     public int getKind() {
         return IClasspathContainer.K_APPLICATION;
@@ -77,5 +97,9 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
     @Override
     public IPath getPath() {
         return path;
+    }
+
+    public IClasspathEntry[] getUnloadedEntries() {
+        return unloadedClasspath;
     }
 }

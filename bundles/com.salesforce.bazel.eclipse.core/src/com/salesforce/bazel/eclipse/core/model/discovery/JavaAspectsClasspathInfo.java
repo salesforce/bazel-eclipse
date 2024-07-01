@@ -60,6 +60,7 @@ import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.java.JavaBlazeRules;
 import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
@@ -306,7 +307,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
      * @return the computed classpath
      * @throws CoreException
      */
-    public Collection<ClasspathEntry> compute() throws CoreException {
+    public ClasspathHolder compute() throws CoreException {
         // the code below is copied and adapted from BlazeJavaWorkspaceImporter
 
         // Preserve classpath order. Add leaf level dependencies first and work the way up. This
@@ -370,12 +371,14 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             }
         }
 
+        Map<IPath, ClasspathEntry> unloadedEntries = new LinkedHashMap<>();
+
+        var hasUnloadedEntries = false;
         // Collect jars referenced by runtime deps
         for (TargetKey targetKey : runtimeDeps) {
-            if (!runtimeDependencyAvailable(targetKey)) {
-                continue;
-            }
             var entries = resolveDependency(targetKey);
+            var runtimeDependencyAvailable = runtimeDependencyAvailable(targetKey);
+
             for (ClasspathEntry entry : entries) {
                 // runtime dependencies are only visible to tests
                 entry.getExtraAttributes().put(IClasspathAttribute.TEST, Boolean.toString(true));
@@ -385,11 +388,19 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                             new AccessRule(
                                     PATTERN_EVERYTHING,
                                     IAccessRule.K_DISCOURAGED | IAccessRule.IGNORE_IF_BETTER));
-                result.putIfAbsent(entry.getPath(), entry);
+                if (runtimeDependencyAvailable) {
+                    result.putIfAbsent(entry.getPath(), entry);
+                    unloadedEntries.putIfAbsent(entry.getPath(), null);
+                } else {
+                    unloadedEntries.putIfAbsent(entry.getPath(), entry);
+                    hasUnloadedEntries = true;
+                }
             }
         }
 
-        return result.values();
+        return new ClasspathHolder(
+                result.values(),
+                hasUnloadedEntries ? unloadedEntries.values() : Collections.emptyList());
     }
 
     private BazelWorkspace findExternalWorkspace(Label label) throws CoreException {
