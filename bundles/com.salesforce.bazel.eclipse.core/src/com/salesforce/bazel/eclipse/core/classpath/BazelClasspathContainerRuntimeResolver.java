@@ -130,17 +130,11 @@ public class BazelClasspathContainerRuntimeResolver
         if (bazelContainer != null) {
             var workspaceRoot = project.getResource().getWorkspace().getRoot();
             var entries = bazelContainer.getFullClasspath();
-            //            var entries = bazelContainer.getClasspathEntries();
             for (IClasspathEntry e : entries) {
                 switch (e.getEntryKind()) {
                     case IClasspathEntry.CPE_PROJECT: {
                         // projects need to be resolved properly so we have all the output folders and exported jars on the classpath
                         var sourceProject = workspaceRoot.getProject(e.getPath().segment(0));
-                        //TODO why is recursion happening / why is the project dependeing on itsel?
-                        if (sourceProject.equals(project.getProject())) {
-                            resolvedClasspath.add(new RuntimeClasspathEntry(e));
-                            continue;
-                        }
                         populateWithResolvedProject(resolvedClasspath, sourceProject);
                         break;
                     }
@@ -158,8 +152,6 @@ public class BazelClasspathContainerRuntimeResolver
                                         e)));
                 }
             }
-
-            //            resolvedClasspath.addAll(Arrays.stream(bazelContainer.getUnloadedEntries()).map(IRuntimeClasspathEntry::new).collect(toList()));
         }
     }
 
@@ -189,7 +181,9 @@ public class BazelClasspathContainerRuntimeResolver
             // however it is convenient with source code lookups for missing dependencies
             var bazelProjects = bazelProject.getBazelWorkspace().getBazelProjects();
             for (BazelProject sourceProject : bazelProjects) {
-                populateWithResolvedProject(result, sourceProject.getProject());
+                if (!sourceProject.isWorkspaceProject()) {
+                    populateWithResolvedProject(result, sourceProject.getProject());
+                }
             }
         }
 

@@ -1,7 +1,6 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
-import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
@@ -27,7 +26,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +39,6 @@ import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
-import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceInfo;
@@ -72,7 +69,6 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     public static final String STRATEGY_NAME = "project-per-package";
 
     private static Logger LOG = LoggerFactory.getLogger(ProjectPerPackageProvisioningStrategy.class);
-    public static final Map<BazelProject, Collection<ClasspathEntry>> TEST = new HashMap<>();
 
     private final Set<String> additionalJavaLikeRules = new HashSet<>();
 
@@ -195,7 +191,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     subMonitor.checkCanceled();
 
                     // build index of classpath info
-                    var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace, availableDependencies);
+                    var classpathInfo =
+                            new JavaAspectsClasspathInfo(aspectsInfo, workspace, availableDependencies, bazelProject);
                     var buildPathProblems = new ArrayList<IStatus>();
 
                     // add the targets
@@ -210,12 +207,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     }
 
                     // compute the classpath
-                    var targetClasspath = classpathInfo.compute();
-                    var classpath = targetClasspath.loaded();
-
-                    if (!targetClasspath.unloaded().isEmpty()) {
-                        TEST.put(bazelProject, targetClasspath.unloaded());
-                    }
+                    var classpath = classpathInfo.compute();
 
                     // remove old marker
                     deleteClasspathContainerProblems(bazelProject);
@@ -225,36 +217,12 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         createClasspathContainerProblem(bazelProject, problem);
                     }
 
-                    // check for non existing jars
-                    for (ClasspathEntry entry : classpath) {
-                        if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
-                            continue;
-                        }
-
-                        if (!isRegularFile(entry.getPath().toPath())) {
-                            createClasspathContainerProblem(
-                                bazelProject,
-                                Status.error(
-                                    format(
-                                        "Library '%s' is missing. Please consider running 'bazel fetch'",
-                                        entry.getPath())));
-                            break;
-                        }
-                    }
-
-                    // remove references to the project represented by the package
-                    // (this can happen because we have tests and none tests in the same package, also the runtime CP self-reference)
-                    classpath.removeIf(
-                        entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
-                                && entry.getPath().equals(bazelProject.getProject().getFullPath()));
-
-                    classpathsByProject.put(bazelProject, new ClasspathHolder(classpath, targetClasspath.unloaded()));
+                    classpathsByProject.put(bazelProject, classpath);
                     subMonitor.worked(1);
                 }
             }
 
             return classpathsByProject;
-
         } finally {
             if (progress != null) {
                 progress.done();

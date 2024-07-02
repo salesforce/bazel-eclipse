@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.exists;
+import static java.nio.file.Files.isRegularFile;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.IPath.forPosix;
 import static org.eclipse.core.runtime.IPath.fromPath;
@@ -42,6 +43,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathAttribute;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,6 +137,9 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     /** set of exports (insertion order is not relevant) */
     final Set<Label> exports = new HashSet<>();
 
+    /** bazel project for this aspect */
+    final BazelProject bazelProject;
+
     /**
      * Set of dependencies available to the whole project, to be used to filter out runtime dependencies that are not
      * part of this set. Allows creating a partial classpath to improve performance on large projects.
@@ -142,10 +147,11 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     final Set<BazelLabel> runtimeDependencyIncludes;
 
     public JavaAspectsClasspathInfo(JavaAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace,
-            Set<BazelLabel> runtimeDependencyIncludes) throws CoreException {
+            Set<BazelLabel> runtimeDependencyIncludes, BazelProject bazelProject) throws CoreException {
         super(bazelWorkspace);
         this.aspectsInfo = aspectsInfo;
         this.runtimeDependencyIncludes = runtimeDependencyIncludes;
+        this.bazelProject = bazelProject;
     }
 
     private void addDirectDependency(Dependency directDependency) {
@@ -332,6 +338,9 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             }
             var entry = resolveLibrary(library);
             if (entry != null) {
+                if (!entryAvailable(entry)) {
+                    continue;
+                }
                 if (jdepsDependency.dependencyKind == Kind.IMPLICIT) {
                     entry.getAccessRules()
                             .add(
@@ -359,6 +368,9 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 }
                 continue;
             }
+            if (!entryAvailable(jarEntry)) {
+                continue;
+            }
             jarEntry.setExported(true); // source jars should be exported
             result.putIfAbsent(jarEntry.getPath(), jarEntry);
         }
@@ -367,7 +379,9 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         for (TargetKey targetKey : directDeps) {
             var entries = resolveDependency(targetKey);
             for (ClasspathEntry entry : entries) {
-                result.putIfAbsent(entry.getPath(), entry);
+                if (entryAvailable(entry)) {
+                    result.putIfAbsent(entry.getPath(), entry);
+                }
             }
         }
 
@@ -380,6 +394,9 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             var runtimeDependencyAvailable = runtimeDependencyAvailable(targetKey);
 
             for (ClasspathEntry entry : entries) {
+                if (!entryAvailable(entry)) {
+                    continue;
+                }
                 // runtime dependencies are only visible to tests
                 entry.getExtraAttributes().put(IClasspathAttribute.TEST, Boolean.toString(true));
                 // runtime dependencies are never accessible
@@ -401,6 +418,29 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         return new ClasspathHolder(
                 result.values(),
                 hasUnloadedEntries ? unloadedEntries.values() : Collections.emptyList());
+    }
+
+    /**
+     * Validates the classpath entry is valid and returns true if the entry should be included
+     *
+     * @param entry
+     *            the classpath entry to validate and check
+     * @return false if the entry should not be included in the classpath
+     * @throws CoreException
+     *             if validation fails
+     */
+    private boolean entryAvailable(ClasspathEntry entry) throws CoreException {
+        if ((entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) && !isRegularFile(entry.getPath().toPath())) {
+            BaseProvisioningStrategy.createClasspathContainerProblem(
+                bazelProject,
+                Status.error(
+                    format("Library '%s' is missing. Please consider running 'bazel fetch'", entry.getPath())));
+        }
+
+        // remove references to the project represented by the package
+        // (this can happen because we have tests and none tests in the same package, also the runtime CP self-reference)
+        return (entry.getEntryKind() != IClasspathEntry.CPE_PROJECT)
+                || !entry.getPath().equals(bazelProject.getProject().getFullPath());
     }
 
     private BazelWorkspace findExternalWorkspace(Label label) throws CoreException {
@@ -652,7 +692,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     }
 
     /**
-     * Allows filtering runtime dependencies based on the availability of the dependency in runtimeDependencyIncludes
+     * Allows filtering runtime dependencies based on the availability of the dependency in runtimseDependencyIncludes
      * when it includes elements
      *
      * @param targetKey
@@ -660,7 +700,8 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
      * @return true if runtimeDependencyAvailable is empty or it includes the dependency
      */
     private boolean runtimeDependencyAvailable(TargetKey targetKey) {
-        return runtimeDependencyIncludes.isEmpty() || runtimeDependencyIncludes.contains(targetKey.getLabel());
+        return runtimeDependencyIncludes.isEmpty()
+                || runtimeDependencyIncludes.contains(new BazelLabel(targetKey.getLabel().toString()));
     }
 
 }

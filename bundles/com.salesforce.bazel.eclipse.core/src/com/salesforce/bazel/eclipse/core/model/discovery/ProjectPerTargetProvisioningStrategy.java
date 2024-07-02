@@ -1,7 +1,6 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
-import static java.nio.file.Files.isRegularFile;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_ALL_LABELS;
 
@@ -17,7 +16,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +26,6 @@ import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
-import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
@@ -119,7 +116,8 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                 monitor.checkCanceled();
 
                 // build index of classpath info
-                var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace, availableDependencies);
+                var classpathInfo =
+                        new JavaAspectsClasspathInfo(aspectsInfo, workspace, availableDependencies, bazelProject);
 
                 // remove old marker
                 deleteClasspathContainerProblems(bazelProject);
@@ -131,33 +129,9 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                 }
 
                 // compute the classpath
-                var targetClasspath = classpathInfo.compute();
-                var classpath = targetClasspath.loaded();
+                var classpath = classpathInfo.compute();
 
-                // check for non existing jars
-                for (ClasspathEntry entry : classpath) {
-                    if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
-                        continue;
-                    }
-
-                    if (!isRegularFile(entry.getPath().toPath())) {
-                        createClasspathContainerProblem(
-                            bazelProject,
-                            Status.error(
-                                format(
-                                    "Library '%s' is missing. Please consider running 'bazel fetch'",
-                                    entry.getPath())));
-                        break;
-                    }
-                }
-
-                // remove references to the project
-                // (the runtime classpath will contain a reference to the project)
-                classpath.removeIf(
-                    entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
-                            && entry.getPath().equals(bazelProject.getProject().getFullPath()));
-
-                classpathsByProject.put(bazelProject, new ClasspathHolder(classpath, targetClasspath.unloaded()));
+                classpathsByProject.put(bazelProject, classpath);
                 monitor.worked(1);
             }
 

@@ -125,14 +125,61 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
     private static Logger LOG = LoggerFactory.getLogger(BaseProvisioningStrategy.class);
 
-    private BazelProjectFileSystemMapper fileSystemMapper;
+    /**
+     * Creates a problem marker of type {@link BazelCoreSharedContstants#CLASSPATH_CONTAINER_PROBLEM_MARKER} for the
+     * given status.
+     *
+     * @param project
+     *            the project to create the marker at (must not be <code>null</code>)
+     * @param status
+     *            the status to create the marker for (must not be <code>null</code>)
+     * @return the created marker (never <code>null</code>)
+     * @throws CoreException
+     */
+    static IMarker createClasspathContainerProblem(BazelProject project, IStatus status) throws CoreException {
+        return createMarker(project.getProject(), CLASSPATH_CONTAINER_PROBLEM_MARKER, status);
+    }
 
+    static IMarker createMarker(IResource resource, String type, IStatus status) throws CoreException {
+        var message = status.getMessage();
+        if (status.isMultiStatus()) {
+            var children = status.getChildren();
+            if ((children != null) && (children.length > 0)) {
+                message = children[0].getMessage();
+            }
+        }
+        if ((message == null) && (status.getException() != null)) {
+            message = status.getException().getMessage();
+        }
+
+        if (message.length() >= 21000) {
+            // marker content is limited in length
+            message = message.substring(0, 20997).concat("...");
+        }
+
+        Map<String, Object> markerAttributes = new HashMap<>();
+        markerAttributes.put(IMarker.MESSAGE, message);
+        markerAttributes.put(IMarker.SOURCE_ID, "Bazel Project Provisioning");
+
+        if (status.matches(IStatus.ERROR)) {
+            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_ERROR));
+        } else if (status.matches(IStatus.WARNING)) {
+            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_WARNING));
+        } else if (status.matches(IStatus.INFO)) {
+            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_INFO));
+        }
+
+        return resource.createMarker(type, markerAttributes);
+    }
+
+    private BazelProjectFileSystemMapper fileSystemMapper;
     /**
      * Eclipse VM representing the currecurrent_java_toolchain
      */
     protected IVMInstall javaToolchainVm;
 
     protected String javaToolchainSourceVersion;
+
     protected String javaToolchainTargetVersion;
 
     /**
@@ -821,21 +868,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     /**
-     * Creates a problem marker of type {@link BazelCoreSharedContstants#CLASSPATH_CONTAINER_PROBLEM_MARKER} for the
-     * given status.
-     *
-     * @param project
-     *            the project to create the marker at (must not be <code>null</code>)
-     * @param status
-     *            the status to create the marker for (must not be <code>null</code>)
-     * @return the created marker (never <code>null</code>)
-     * @throws CoreException
-     */
-    protected IMarker createClasspathContainerProblem(BazelProject project, IStatus status) throws CoreException {
-        return createMarker(project.getProject(), CLASSPATH_CONTAINER_PROBLEM_MARKER, status);
-    }
-
-    /**
      * Creates a folder hierarchy and marks them as derived (because they are generated and should not go into SCM)
      *
      * @param folder
@@ -863,38 +895,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         } finally {
             progress.done();
         }
-    }
-
-    protected IMarker createMarker(IResource resource, String type, IStatus status) throws CoreException {
-        var message = status.getMessage();
-        if (status.isMultiStatus()) {
-            var children = status.getChildren();
-            if ((children != null) && (children.length > 0)) {
-                message = children[0].getMessage();
-            }
-        }
-        if ((message == null) && (status.getException() != null)) {
-            message = status.getException().getMessage();
-        }
-
-        if (message.length() >= 21000) {
-            // marker content is limited in length
-            message = message.substring(0, 20997).concat("...");
-        }
-
-        Map<String, Object> markerAttributes = new HashMap<>();
-        markerAttributes.put(IMarker.MESSAGE, message);
-        markerAttributes.put(IMarker.SOURCE_ID, "Bazel Project Provisioning");
-
-        if (status.matches(IStatus.ERROR)) {
-            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_ERROR));
-        } else if (status.matches(IStatus.WARNING)) {
-            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_WARNING));
-        } else if (status.matches(IStatus.INFO)) {
-            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_INFO));
-        }
-
-        return resource.createMarker(type, markerAttributes);
     }
 
     /**
