@@ -76,9 +76,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
 
             var workspaceRoot = workspace.getLocation().toPath();
 
-            var importDepth = workspace.getBazelProjectView().importDepth();
-            var availableDependencies = importDepth > 0
-                    ? calculateWorkspaceDependencies(workspace, targetsToBuild, importDepth) : Set.<BazelLabel> of();
+            var availableDependencies = calculateWorkspaceDependencies(workspace, targetsToBuild);
 
             // run the aspect to compute all required information
             var aspects = workspace.getParent().getModelManager().getIntellijAspects();

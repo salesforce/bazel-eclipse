@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -622,11 +623,18 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      *            a list of targets as part of the build to query their dependencies
      * @param dependencyDepth
      *            the depth in the dependency graph to traverse and include in the result
-     * @return a set of java_library and java_imports
+     * @return a set of java_library and java_imports, or null, if partial classpath is disabled
      * @throws CoreException
      */
     protected final Set<BazelLabel> calculateWorkspaceDependencies(BazelWorkspace workspace,
-            List<BazelLabel> targetsToBuild, int dependencyDepth) throws CoreException {
+            List<BazelLabel> targetsToBuild) throws CoreException {
+        var dependencyDepth = workspace.getBazelProjectView().importDepth();
+        if (dependencyDepth < 0) {
+            return null;
+        }
+        if (dependencyDepth == 0) {
+            return Collections.emptySet();
+        }
         var targetLabels = targetsToBuild.stream().map(BazelLabel::toString).collect(joining(" + "));
         return workspace.getCommandExecutor()
                 .runQueryWithoutLock(

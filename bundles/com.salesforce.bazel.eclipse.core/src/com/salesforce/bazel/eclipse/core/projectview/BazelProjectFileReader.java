@@ -77,7 +77,7 @@ public class BazelProjectFileReader {
         final LinkedHashSet<String> externalJarsFilters = new LinkedHashSet<>();
         int targetShardSize = 500;
         boolean shardSync = true;
-        int importDepth = 0;
+        int importDepth = -1;
 
         public BazelProjectView build() throws IllegalStateException {
             // check mandatory parameters

@@ -140,9 +140,10 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
     /**
      * Set of dependencies available to the whole project, to be used to filter out runtime dependencies that are not
-     * part of this set. Allows creating a partial classpath to improve performance on large projects.
+     * part of this set. Allows creating a partial classpath to improve performance on large projects. Null indicates
+     * full classpath to be used
      */
-    final Set<BazelLabel> runtimeDependencyIncludes;
+    final /*Nullable*/ Set<BazelLabel> runtimeDependencyIncludes;
 
     public JavaAspectsClasspathInfo(JavaAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace,
             Set<BazelLabel> runtimeDependencyIncludes, BazelProject bazelProject) throws CoreException {
@@ -314,7 +315,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     public ClasspathHolder compute() throws CoreException {
         // the code below is copied and adapted from BlazeJavaWorkspaceImporter
 
-        var classpathBuilder = new ClasspathHolderBuilder(!runtimeDependencyIncludes.isEmpty());
+        var classpathBuilder = new ClasspathHolderBuilder(runtimeDependencyIncludes != null);
 
         // Collect jars from jdep references
         for (JdepsDependency jdepsDependency : jdepsCompileJars) {
@@ -330,7 +331,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             }
             var entry = resolveLibrary(library);
             if (entry != null) {
-                if (!entryAvailable(entry)) {
+                if (!validateEntry(entry)) {
                     continue;
                 }
                 if (jdepsDependency.dependencyKind == Kind.IMPLICIT) {
@@ -360,7 +361,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 }
                 continue;
             }
-            if (!entryAvailable(jarEntry)) {
+            if (!validateEntry(jarEntry)) {
                 continue;
             }
             jarEntry.setExported(true); // source jars should be exported
@@ -371,7 +372,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         for (TargetKey targetKey : directDeps) {
             var entries = resolveDependency(targetKey);
             for (ClasspathEntry entry : entries) {
-                if (entryAvailable(entry)) {
+                if (validateEntry(entry)) {
                     classpathBuilder.putIfAbsent(entry.getPath(), entry);
                 }
             }
@@ -383,7 +384,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             var runtimeDependencyAvailable = runtimeDependencyAvailable(targetKey);
 
             for (ClasspathEntry entry : entries) {
-                if (!entryAvailable(entry)) {
+                if (!validateEntry(entry)) {
                     continue;
                 }
                 // runtime dependencies are only visible to tests
@@ -403,29 +404,6 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         }
 
         return classpathBuilder.build();
-    }
-
-    /**
-     * Validates the classpath entry is valid and returns true if the entry should be included
-     *
-     * @param entry
-     *            the classpath entry to validate and check
-     * @return false if the entry should not be included in the classpath
-     * @throws CoreException
-     *             if validation fails
-     */
-    private boolean entryAvailable(ClasspathEntry entry) throws CoreException {
-        if ((entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) && !isRegularFile(entry.getPath().toPath())) {
-            BaseProvisioningStrategy.createClasspathContainerProblem(
-                bazelProject,
-                Status.error(
-                    format("Library '%s' is missing. Please consider running 'bazel fetch'", entry.getPath())));
-        }
-
-        // remove references to the project represented by the package
-        // (this can happen because we have tests and none tests in the same package, also the runtime CP self-reference)
-        return (entry.getEntryKind() != IClasspathEntry.CPE_PROJECT)
-                || !entry.getPath().equals(bazelProject.getProject().getFullPath());
     }
 
     private BazelWorkspace findExternalWorkspace(Label label) throws CoreException {
@@ -685,8 +663,31 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
      * @return true if runtimeDependencyAvailable is empty or it includes the dependency
      */
     private boolean runtimeDependencyAvailable(TargetKey targetKey) {
-        return runtimeDependencyIncludes.isEmpty()
+        return (runtimeDependencyIncludes == null)
                 || runtimeDependencyIncludes.contains(new BazelLabel(targetKey.getLabel().toString()));
+    }
+
+    /**
+     * Validates the classpath entry is valid and returns true if the entry should be included
+     *
+     * @param entry
+     *            the classpath entry to validate and check
+     * @return false if the entry should not be included in the classpath
+     * @throws CoreException
+     *             if validation fails
+     */
+    private boolean validateEntry(ClasspathEntry entry) throws CoreException {
+        if ((entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) && !isRegularFile(entry.getPath().toPath())) {
+            BaseProvisioningStrategy.createClasspathContainerProblem(
+                bazelProject,
+                Status.error(
+                    format("Library '%s' is missing. Please consider running 'bazel fetch'", entry.getPath())));
+        }
+
+        // remove references to the project represented by the package
+        // (this can happen because we have tests and none tests in the same package, also the runtime CP self-reference)
+        return (entry.getEntryKind() != IClasspathEntry.CPE_PROJECT)
+                || !entry.getPath().equals(bazelProject.getProject().getFullPath());
     }
 
 }

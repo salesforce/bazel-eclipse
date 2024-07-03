@@ -110,14 +110,12 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 activeTargetsPerProject.put(bazelProject, projectTargetsToBuild);
             }
 
-            var importDepth = workspace.getBazelProjectView().importDepth();
             var targets = activeTargetsPerProject.values()
                     .stream()
                     .flatMap(Collection::stream)
                     .map(BazelTarget::getLabel)
                     .collect(toList());
-            var availableDependencies = importDepth > 0
-                    ? calculateWorkspaceDependencies(workspace, targets, importDepth) : Set.<BazelLabel> of();
+            var availableDependencies = calculateWorkspaceDependencies(workspace, targets);
 
             // collect classpaths by project
             Map<BazelProject, ClasspathHolder> classpathsByProject = new HashMap<>();

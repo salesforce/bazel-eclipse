@@ -219,6 +219,15 @@ This attribute also support exclusions if they begin with `-`.
 If the glob matches a package which is provisioned with the `project-per-package` strategy, all source folders in the project will be marked as containing test sources.
 
 
+### `import_depth`
+
+A integer indicating the depth of source targets dependencies pulled in to the project model during sync (default is `-1`, which pulls in all transitive dependencies in the graph).
+
+Providing a value greater or equal to 0 will filter transitive dependencies and provide a partial classpath to the project model.
+
+Note: While all required compile-time dependencies are added regardless, there may be edge cases with the Eclipse compiler
+which may result in compile errors.
+
 ## Unsupported Features / Limitations
 
 All deprecated items are not supported.
