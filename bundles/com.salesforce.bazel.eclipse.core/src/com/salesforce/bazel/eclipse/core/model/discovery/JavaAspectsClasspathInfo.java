@@ -28,16 +28,13 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
@@ -63,6 +60,7 @@ import com.google.idea.blaze.java.JavaBlazeRules;
 import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
 import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder.ClasspathHolderBuilder;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
@@ -316,13 +314,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     public ClasspathHolder compute() throws CoreException {
         // the code below is copied and adapted from BlazeJavaWorkspaceImporter
 
-        // Preserve classpath order. Add leaf level dependencies first and work the way up. This
-        // prevents conflicts when a JAR repackages it's dependencies. In such a case we prefer to
-        // resolve symbols from the original JAR rather than the repackaged version.
-        // Using accessOrdered LinkedHashMap because jars that are present in `workspaceBuilder.jdeps`
-        // and in `workspaceBuilder.directDeps`, we want to treat it as a directDep
-        Map<IPath, ClasspathEntry> result =
-                new LinkedHashMap<>(/* initialCapacity= */ 32, /* loadFactor= */ 0.75f, /* accessOrder= */ true);
+        var classpathBuilder = new ClasspathHolderBuilder(!runtimeDependencyIncludes.isEmpty());
 
         // Collect jars from jdep references
         for (JdepsDependency jdepsDependency : jdepsCompileJars) {
@@ -349,10 +341,10 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                                         IAccessRule.K_DISCOURAGED | IAccessRule.IGNORE_IF_BETTER));
 
                     // there might be an explicit entry, which we will never want to override!
-                    result.putIfAbsent(entry.getPath(), entry);
+                    classpathBuilder.putIfAbsent(entry.getPath(), entry);
                 } else {
                     entry.getAccessRules().add(new AccessRule(PATTERN_EVERYTHING, IAccessRule.K_ACCESSIBLE));
-                    result.put(entry.getPath(), entry);
+                    classpathBuilder.put(entry.getPath(), entry);
                 }
             } else if (LOG.isDebugEnabled()) {
                 LOG.warn("Unable to resolve compile jar: {}", jdepsDependency);
@@ -372,7 +364,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 continue;
             }
             jarEntry.setExported(true); // source jars should be exported
-            result.putIfAbsent(jarEntry.getPath(), jarEntry);
+            classpathBuilder.putIfAbsent(jarEntry.getPath(), jarEntry);
         }
 
         // Collect jars referenced by direct deps
@@ -380,14 +372,11 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             var entries = resolveDependency(targetKey);
             for (ClasspathEntry entry : entries) {
                 if (entryAvailable(entry)) {
-                    result.putIfAbsent(entry.getPath(), entry);
+                    classpathBuilder.putIfAbsent(entry.getPath(), entry);
                 }
             }
         }
 
-        Map<IPath, ClasspathEntry> unloadedEntries = new LinkedHashMap<>();
-
-        var hasUnloadedEntries = false;
         // Collect jars referenced by runtime deps
         for (TargetKey targetKey : runtimeDeps) {
             var entries = resolveDependency(targetKey);
@@ -406,18 +395,14 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                                     PATTERN_EVERYTHING,
                                     IAccessRule.K_DISCOURAGED | IAccessRule.IGNORE_IF_BETTER));
                 if (runtimeDependencyAvailable) {
-                    result.putIfAbsent(entry.getPath(), entry);
-                    unloadedEntries.putIfAbsent(entry.getPath(), null);
+                    classpathBuilder.putIfAbsent(entry.getPath(), entry);
                 } else {
-                    unloadedEntries.putIfAbsent(entry.getPath(), entry);
-                    hasUnloadedEntries = true;
+                    classpathBuilder.putUnloadedIfAbsent(entry.getPath(), entry);
                 }
             }
         }
 
-        return new ClasspathHolder(
-                result.values(),
-                hasUnloadedEntries ? unloadedEntries.values() : Collections.emptyList());
+        return classpathBuilder.build();
     }
 
     /**

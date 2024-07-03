@@ -55,7 +55,7 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
 
     private final IPath path;
     private final IClasspathEntry[] classpath;
-    private final IClasspathEntry[] unloadedClasspath;
+    private final IClasspathEntry[/*Nullable*/] unloadedClasspath;
 
     public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath, IClasspathEntry[] unloadedClasspath) {
         this.path = path;
@@ -86,6 +86,9 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
                 entries.add(entry);
             }
         }
+        for (var i = index; i < classpath.length; i++) {
+            entries.add(classpath[i]);
+        }
         return entries.toArray(new IClasspathEntry[entries.size()]);
     }
 
@@ -99,6 +102,11 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
         return path;
     }
 
+    /**
+     * A array of nullable unloaded classpath entries.
+     *
+     * @return
+     */
     public IClasspathEntry[] getUnloadedEntries() {
         return unloadedClasspath;
     }

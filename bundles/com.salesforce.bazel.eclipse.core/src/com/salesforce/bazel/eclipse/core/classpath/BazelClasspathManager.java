@@ -347,13 +347,16 @@ public class BazelClasspathManager {
                 : new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
 
         var sourceAttachmentProperties = getSourceAttachmentProperties(javaProject.getProject());
+        var unloadedClasspath =
+                classpath.unloaded().stream().map(ce -> ce.isPresent() ? ce.get().build() : null).collect(toList());
+
         var container = new BazelClasspathContainer(
                 path,
                 configureClasspathWithSourceAttachments(
                     classpath.loaded(),
                     sourceAttachmentProperties,
                     monitor.slice(1)),
-                classpath.unloaded().stream().map(ClasspathEntry::build).toArray(IClasspathEntry[]::new));
+                unloadedClasspath.toArray(new IClasspathEntry[unloadedClasspath.size()]));
 
         JavaCore.setClasspathContainer(
             container.getPath(),
