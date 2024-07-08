@@ -628,7 +628,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      */
     protected final Set<BazelLabel> calculateWorkspaceDependencies(BazelWorkspace workspace,
             List<BazelLabel> targetsToBuild) throws CoreException {
-        var dependencyDepth = workspace.getBazelProjectView().importDepth();
+        var dependencyDepth = workspace.getBazelProjectView().runtimeImportDepth();
         if (dependencyDepth < 0) {
             return null;
         }
