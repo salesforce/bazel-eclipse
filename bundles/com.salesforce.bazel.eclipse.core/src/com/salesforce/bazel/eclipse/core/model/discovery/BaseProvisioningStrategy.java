@@ -628,11 +628,11 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      */
     protected final Set<BazelLabel> calculateWorkspaceDependencies(BazelWorkspace workspace,
             List<BazelLabel> targetsToBuild) throws CoreException {
-        var dependencyDepth = workspace.getBazelProjectView().runtimeImportDepth();
-        if (dependencyDepth < 0) {
+        var classpathDepth = workspace.getBazelProjectView().classpathDepth();
+        if (classpathDepth <= 0) {
             return null;
         }
-        if (dependencyDepth == 0) {
+        if (classpathDepth == 1) {
             return Collections.emptySet();
         }
         var targetLabels = targetsToBuild.stream().map(BazelLabel::toString).collect(joining(" + "));
@@ -643,9 +643,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
                             format(
                                 "kind(java_library, deps(%s, %d)) + kind(java_import, deps(%s, %d))",
                                 targetLabels,
-                                dependencyDepth,
+                                classpathDepth,
                                 targetLabels,
-                                dependencyDepth),
+                                classpathDepth),
                             true,
                             format("Querying for depdendencies for projects: %s", targetLabels)))
                 .stream()
