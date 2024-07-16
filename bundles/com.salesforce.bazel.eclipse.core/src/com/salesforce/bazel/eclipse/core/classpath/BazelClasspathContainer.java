@@ -36,8 +36,7 @@
 package com.salesforce.bazel.eclipse.core.classpath;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathContainer;
@@ -55,7 +54,7 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
 
     private final IPath path;
     private final IClasspathEntry[] classpath;
-    private final IClasspathEntry[/*Nullable*/] unloadedClasspath;
+    private final IClasspathEntry[] unloadedClasspath;
 
     public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath, IClasspathEntry[] unloadedClasspath) {
         this.path = path;
@@ -77,19 +76,9 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
         if (unloadedClasspath.length == 0) {
             return classpath;
         }
-        List<IClasspathEntry> entries = new ArrayList<>(unloadedClasspath.length);
-        var index = 0;
-        for (IClasspathEntry entry : unloadedClasspath) {
-            if (entry == null) {
-                entries.add(classpath[index++]);
-            } else {
-                entries.add(entry);
-            }
-        }
-        for (var i = index; i < classpath.length; i++) {
-            entries.add(classpath[i]);
-        }
-        return entries.toArray(new IClasspathEntry[entries.size()]);
+        var fullClasspath = Arrays.copyOf(classpath, classpath.length + unloadedClasspath.length);
+        System.arraycopy(unloadedClasspath, 0, fullClasspath, classpath.length, unloadedClasspath.length);
+        return fullClasspath;
     }
 
     @Override
@@ -103,7 +92,7 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
     }
 
     /**
-     * A array of nullable unloaded classpath entries.
+     * A array of unloaded classpath entries.
      *
      * @return
      */

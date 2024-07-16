@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import org.eclipse.core.runtime.IPath;
 
@@ -29,7 +28,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntr
  *
  * Note: Unloaded contains null values to keep the order between loaded and unloaded
  */
-public record ClasspathHolder(Collection<ClasspathEntry> loaded, Collection<Optional<ClasspathEntry>> unloaded) {
+public record ClasspathHolder(Collection<ClasspathEntry> loaded, Collection<ClasspathEntry> unloaded) {
 
     public static class ClasspathHolderBuilder {
         // Preserve classpath order. Add leaf level dependencies first and work the way up. This
@@ -39,7 +38,7 @@ public record ClasspathHolder(Collection<ClasspathEntry> loaded, Collection<Opti
         // and in `workspaceBuilder.directDeps`, we want to treat it as a directDep
         private final Map<IPath, ClasspathEntry> loadedEntries =
                 new LinkedHashMap<>(/* initialCapacity= */ 32, /* loadFactor= */ 0.75f, /* accessOrder= */ true);
-        private final Map<IPath, Optional<ClasspathEntry>> unloadedEntries =
+        private final Map<IPath, ClasspathEntry> unloadedEntries =
                 new LinkedHashMap<>(/* initialCapacity= */ 32, /* loadFactor= */ 0.75f, /* accessOrder= */ true);
         private boolean hasUnloadedEntries = false;
 
@@ -57,21 +56,15 @@ public record ClasspathHolder(Collection<ClasspathEntry> loaded, Collection<Opti
 
         public void put(IPath path, ClasspathEntry entry) {
             loadedEntries.put(path, entry);
-            if (partialClasspathEnabled) {
-                unloadedEntries.put(path, Optional.empty());
-            }
         }
 
         public void putIfAbsent(IPath path, ClasspathEntry entry) {
             loadedEntries.putIfAbsent(path, entry);
-            if (partialClasspathEnabled) {
-                unloadedEntries.put(path, Optional.empty());
-            }
         }
 
         public void putUnloadedIfAbsent(IPath path, ClasspathEntry entry) {
             if (!loadedEntries.containsKey(path)) {
-                unloadedEntries.putIfAbsent(path, Optional.of(entry));
+                unloadedEntries.putIfAbsent(path, entry);
                 hasUnloadedEntries = true;
             }
         }

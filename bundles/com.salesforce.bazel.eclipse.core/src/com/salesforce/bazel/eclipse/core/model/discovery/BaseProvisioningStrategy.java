@@ -112,6 +112,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     private static final String JRE_SYSTEM_LIBRARY = "jre_system_library";
     private static final String JRE_SYSTEM_LIBRARY_RUNTIME = "current_java_runtime";
     private static final String JRE_SYSTEM_LIBRARY_EE = "execution_environment";
+    private static final String CLASSPATH_DEPTH = "classpath_depth";
 
     private static final String JAVAC_OPT_ADD_OPENS = "--add-opens";
     private static final String JAVAC_OPT_ADD_EXPORTS = "--add-exports";
@@ -184,7 +185,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     protected String javaToolchainTargetVersion;
 
     /**
-     * Eclipse VM representing current_java_runtime
+     * Eclipse VM representing current_jaclasspath_depthva_runtime
      */
     protected IVMInstall javaRuntimeVm;
 
@@ -628,7 +629,19 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      */
     protected final Set<BazelLabel> calculateWorkspaceDependencies(BazelWorkspace workspace,
             List<BazelLabel> targetsToBuild) throws CoreException {
-        var classpathDepth = workspace.getBazelProjectView().classpathDepth();
+        var classpathDepthStr =
+                workspace.getBazelProjectView().targetProvisioningSettings().getOrDefault(CLASSPATH_DEPTH, "0");
+        var classpathDepth = 0;
+        try {
+            classpathDepth = Integer.parseInt(classpathDepthStr);
+        } catch (NumberFormatException e) {
+            LOG.warn(
+                "Invalid integer for target provisioning setting {} (falling back to default 0): {}",
+                CLASSPATH_DEPTH,
+                e.getMessage(),
+                e);
+        }
+
         if (classpathDepth <= 0) {
             return null;
         }

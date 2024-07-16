@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.eclipse.core.resources.IResourceRuleFactory;
@@ -151,9 +150,7 @@ public class AddDependenciesJob extends WorkspaceJob {
 
                 if (modified) {
                     var unloaded = Arrays.stream(container.getUnloadedEntries())
-                            .map(
-                                ce -> ce != null ? Optional.of(ClasspathEntry.fromExisting(ce))
-                                        : Optional.<ClasspathEntry> empty())
+                            .map(ClasspathEntry::fromExisting)
                             .collect(toList());
                     classpathManager
                             .patchClasspathContainer(bazelProject, new ClasspathHolder(classpath, unloaded), monitor);

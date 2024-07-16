@@ -154,6 +154,9 @@ The syntax of each entry is `key=value`, where `key` and `value` are expected st
 * `jre_system_library` (possible values: `current_java_runtime` and `execution_environment`, configures the JRE System Library classpath container to use either the Bazel workspace's Java runtime or an execution environment id)
 * `project_name_separator_char` (used by `project-per-package` to replace `/` in package path for project name)
 * `java_like_rules` (used by `project-per-package`, comma separated list of additional java like rules to analyze when collecting targets for each package)
+* `classpath_depth` A integer indicating the depth of source targets runtime dependencies pulled in to the project model during sync (default is `0`, which pulls in all transitive dependencies in the graph).
+	* Providing a value greater then 0 will filter transitive dependencies and provide a partial classpath to the project model.
+	* Note: While all required compile-time dependencies are added regardless, there may be edge cases with the Eclipse compiler which may result in compile errors.
 
 ### `project_mappings`
 
@@ -218,15 +221,6 @@ This attribute also support exclusions if they begin with `-`.
 
 If the glob matches a package which is provisioned with the `project-per-package` strategy, all source folders in the project will be marked as containing test sources.
 
-
-### `classpath_depth`
-
-A integer indicating the depth of source targets runtime dependencies pulled in to the project model during sync (default is `0`, which pulls in all transitive dependencies in the graph).
-
-Providing a value greater then 0 will filter transitive dependencies and provide a partial classpath to the project model.
-
-Note: While all required compile-time dependencies are added regardless, there may be edge cases with the Eclipse compiler
-which may result in compile errors.
 
 ## Unsupported Features / Limitations
 
