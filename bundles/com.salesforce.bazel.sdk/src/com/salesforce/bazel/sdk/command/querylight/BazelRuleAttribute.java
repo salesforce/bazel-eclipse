@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Rule attribute names we need
+ * Rule attribute names we depend on during sync
  */
 public enum BazelRuleAttribute {
 

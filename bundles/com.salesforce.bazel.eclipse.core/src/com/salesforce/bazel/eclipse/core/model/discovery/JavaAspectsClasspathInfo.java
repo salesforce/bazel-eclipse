@@ -67,7 +67,6 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.AccessRule;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 import com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute;
-import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Holds information for computing Java classpath configuration of a target or a package.

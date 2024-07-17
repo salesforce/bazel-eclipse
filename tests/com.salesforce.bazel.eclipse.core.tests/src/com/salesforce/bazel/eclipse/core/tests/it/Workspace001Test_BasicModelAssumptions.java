@@ -86,7 +86,7 @@ public class Workspace001Test_BasicModelAssumptions {
         assertNotNull(ruleAttributes);
 
         assertThat(
-            ruleAttributes.getStringList(BazelRuleAttribute.SRCS),
+            ruleAttributes.getStringList(BazelRuleAttribute.DEPS),
             hasItems(
                 "//module2:module2",
                 "//module3:module3",
