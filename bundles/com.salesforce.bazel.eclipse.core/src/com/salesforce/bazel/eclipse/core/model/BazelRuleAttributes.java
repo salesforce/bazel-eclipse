@@ -2,6 +2,7 @@ package com.salesforce.bazel.eclipse.core.model;
 
 import java.util.List;
 
+import com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute;
 import com.salesforce.bazel.sdk.command.querylight.Rule;
 
 /**
@@ -19,8 +20,8 @@ public class BazelRuleAttributes {
 
     }
 
-    public Boolean getBoolean(String name) {
-        var attribute = rule.getAttribute(name);
+    public Boolean getBoolean(BazelRuleAttribute name) {
+        var attribute = rule.getAttribute(name.key);
         if (attribute == null) {
             return null;
         }
@@ -35,7 +36,7 @@ public class BazelRuleAttributes {
      * @return value of the attribute name if present, otherwise {@link Rule#getName()};
      */
     public String getName() {
-        var name = getString("name");
+        var name = getString(BazelRuleAttribute.NAME);
         if (name != null) {
             return name;
         }
@@ -51,8 +52,8 @@ public class BazelRuleAttributes {
         return rule.ruleClass();
     }
 
-    public String getString(String name) {
-        var attribute = rule.getAttribute(name);
+    public String getString(BazelRuleAttribute name) {
+        var attribute = rule.getAttribute(name.key);
         if (attribute == null) {
             return null;
         }
@@ -63,8 +64,8 @@ public class BazelRuleAttributes {
         };
     }
 
-    public List<String> getStringList(String name) {
-        var attribute = rule.getAttribute(name);
+    public List<String> getStringList(BazelRuleAttribute name) {
+        var attribute = rule.getAttribute(name.key);
         if (attribute == null) {
             return null;
         }
@@ -84,7 +85,7 @@ public class BazelRuleAttributes {
      *         <code>false</code> otherwise
      */
     public boolean hasTag(String tag) {
-        var tags = getStringList("tags");
+        var tags = getStringList(BazelRuleAttribute.TAGS);
         return (tags != null) && tags.contains(tag);
     }
 

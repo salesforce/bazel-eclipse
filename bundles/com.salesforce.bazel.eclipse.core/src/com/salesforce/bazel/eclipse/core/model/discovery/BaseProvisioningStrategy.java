@@ -10,6 +10,15 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.CLASSP
 import static com.salesforce.bazel.eclipse.core.model.discovery.EclipsePreferencesHelper.convertToPreferences;
 import static com.salesforce.bazel.eclipse.core.model.discovery.JvmConfigurator.VM_TYPE_RUNTIME;
 import static com.salesforce.bazel.eclipse.core.model.discovery.JvmConfigurator.VM_TYPE_TOOLCHAIN;
+import static com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute.JARS;
+import static com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute.JAVAC_OPTS;
+import static com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute.PLUGINS;
+import static com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute.RESOURCES;
+import static com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute.RESOURCES_STRIP_PREFIX;
+import static com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute.SRCS;
+import static com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute.SRC_JAR;
+import static com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute.STRIP_PREFIX;
+import static com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute.TEST_ONLY;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -156,11 +165,11 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
         var attributes = bazelTarget.getRuleAttributes();
 
-        var testonly = attributes.getBoolean("testonly");
+        var testonly = attributes.getBoolean(TEST_ONLY);
         isTestTarget = isTestTarget || ((testonly != null) && testonly.booleanValue());
 
         var nowarn = false;
-        var javacOpts = attributes.getStringList("javacopts");
+        var javacOpts = attributes.getStringList(JAVAC_OPTS);
         if (javacOpts != null) {
             for (String javacOpt : javacOpts) {
                 javaInfo.addJavacOpt(javacOpt);
@@ -171,7 +180,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
         var settings = nowarn ? new EntrySettings(nowarn) : EntrySettings.DEFAULT_SETTINGS;
 
-        var srcs = attributes.getStringList("srcs");
+        var srcs = attributes.getStringList(SRCS);
         if (srcs != null) {
             for (String src : srcs) {
                 if (isTestTarget) {
@@ -182,9 +191,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             }
         }
 
-        var resources = attributes.getStringList("resources");
+        var resources = attributes.getStringList(RESOURCES);
         if (resources != null) {
-            var resourceStripPrefix = attributes.getString("resource_strip_prefix");
+            var resourceStripPrefix = attributes.getString(RESOURCES_STRIP_PREFIX);
             for (String resource : resources) {
                 if (isTestTarget) {
                     javaInfo.addTestResource(resource, resourceStripPrefix);
@@ -194,7 +203,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             }
         }
 
-        var pluginDeps = attributes.getStringList("plugins");
+        var pluginDeps = attributes.getStringList(PLUGINS);
         if (pluginDeps != null) {
             for (String dep : pluginDeps) {
                 javaInfo.addPluginDep(dep);
@@ -202,9 +211,9 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             }
         }
 
-        var jars = attributes.getStringList("jars");
+        var jars = attributes.getStringList(JARS);
         if (jars != null) {
-            var srcJar = attributes.getString("srcjar");
+            var srcJar = attributes.getString(SRC_JAR);
             for (String jar : jars) {
                 // java_import is generally used to make classes and resources available on the classpath
                 // lets check if we can translate this to resources in the same Bazel package
@@ -363,10 +372,10 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         // inspect srcs
-        var srcs = rulesPkgTarget.getRuleAttributes().getStringList("srcs");
+        var srcs = rulesPkgTarget.getRuleAttributes().getStringList(SRCS);
         if (srcs != null) {
             // the strip_prefix in rules_pkg is relative to the package, need to make it absolute
-            var resourceStripPrefix = rulesPkgTarget.getRuleAttributes().getString("strip_prefix");
+            var resourceStripPrefix = rulesPkgTarget.getRuleAttributes().getString(STRIP_PREFIX);
             if ((resourceStripPrefix != null) && !resourceStripPrefix.isEmpty()) {
                 resourceStripPrefix = rulesPkgTarget.getBazelPackage()
                         .getWorkspaceRelativePath()
@@ -1309,7 +1318,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         }
 
         var attributes = bazelTarget.getRuleAttributes();
-        var srcs = attributes.getStringList("srcs");
+        var srcs = attributes.getStringList(SRCS);
         if (srcs != null) {
             for (String src : srcs) {
                 if (src.contains(BazelLabel.BAZEL_COLON)) {

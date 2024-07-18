@@ -42,6 +42,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder;
 import com.salesforce.bazel.sdk.command.BazelQueryForTargetProtoCommand;
+import com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute;
 import com.salesforce.bazel.sdk.command.querylight.GeneratedFile;
 import com.salesforce.bazel.sdk.command.querylight.Target;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -92,8 +93,7 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
         Map<String, List<String>> jarsByGeneratingRuleLabel = generatedJarTargets.stream()
                 .map(Target::generatedFile)
                 .filter(f -> !f.name().endsWith("_deploy.jar")) // ignore deploy jars (they just duplicate class files)
-                .collect(
-                    groupingBy(GeneratedFile::generatingRule, mapping(GeneratedFile::name, toList())));
+                .collect(groupingBy(GeneratedFile::generatingRule, mapping(GeneratedFile::name, toList())));
 
         // ensure all packages are open
         bazelWorkspace.open(
@@ -145,7 +145,8 @@ public class GeneratedLibrariesDiscovery extends LibrariesDiscoveryUtil {
                 LOG.debug("No jars left in target '{}", bazelTarget);
                 continue;
             }
-            var testOnly = Optional.ofNullable(bazelTarget.getRuleAttributes().getBoolean("testonly"));
+            var testOnly =
+                    Optional.ofNullable(bazelTarget.getRuleAttributes().getBoolean(BazelRuleAttribute.TEST_ONLY));
             var origin = bazelTarget.getLabel().toPrimitive();
 
             collectJarsAsClasspathEntries(classpathJars, srcJar, testOnly, origin, result);

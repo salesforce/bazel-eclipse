@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.sdk.BazelVersion;
+import com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 import testdata.SharedTestData;
@@ -84,7 +85,12 @@ public class Workspace001Test_BasicModelAssumptions {
         var ruleAttributes = module1.getRuleAttributes();
         assertNotNull(ruleAttributes);
 
-        assertThat(ruleAttributes.getStringList("deps"), hasItems("//module2:module2", "//module3:module3",
-            "@com_google_guava//jar:jar", "//module1:mybuilder_sources"));
+        assertThat(
+            ruleAttributes.getStringList(BazelRuleAttribute.DEPS),
+            hasItems(
+                "//module2:module2",
+                "//module3:module3",
+                "@com_google_guava//jar:jar",
+                "//module1:mybuilder_sources"));
     }
 }
