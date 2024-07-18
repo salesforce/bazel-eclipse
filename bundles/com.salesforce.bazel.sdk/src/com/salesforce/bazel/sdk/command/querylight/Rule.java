@@ -31,7 +31,8 @@ public record Rule(String name, String ruleClass, List<String> ruleOutputList, M
                 rule.getAttributeList().stream().collect(HashMap::new, (map, attribute) -> {
                     // multiple attributes with the same name are not expected but can happen (https://github.com/bazelbuild/bazel/issues/20918)
                     // we therefore store the first occurrence of an attribute
-                    if (!map.containsKey(attribute.getName())) {
+                    if (BazelRuleAttribute.KNOWN_ATTRIBUTES.contains(attribute.getName())
+                            && !map.containsKey(attribute.getName())) {
                         map.put(attribute.getName(), new Attribute(attribute));
                     }
                 }, HashMap::putAll));

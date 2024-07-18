@@ -67,6 +67,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.AccessRule;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
+import com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -296,7 +297,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         }
 
         // collect exports
-        var exports = bazelTarget.getRuleAttributes().getStringList("exports");
+        var exports = bazelTarget.getRuleAttributes().getStringList(BazelRuleAttribute.EXPORTS);
         if (exports != null) {
             for (String export : exports) {
                 this.exports.add(Label.create(export));
@@ -437,7 +438,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         if (externalRepository != null) {
             switch (externalRepository.getRuleClass()) {
                 case "local_repository": {
-                    var pathAttribute = externalRepository.getString("path");
+                    var pathAttribute = externalRepository.getString(BazelRuleAttribute.PATH);
                     if (pathAttribute != null) {
                         var path = forPosix(pathAttribute);
                         if (!path.isAbsolute()) {

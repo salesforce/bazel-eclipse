@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 
+import com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute;
 import com.salesforce.bazel.sdk.command.querylight.Rule;
 import com.salesforce.bazel.sdk.command.querylight.Target;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -154,7 +155,7 @@ public final class BazelTargetInfo extends BazelElementInfo {
             return cachedVisibility;
         }
 
-        var visibilityValue = getRuleAttributes().getStringList("visibility");
+        var visibilityValue = getRuleAttributes().getStringList(BazelRuleAttribute.VISIBILITY);
         if ((visibilityValue == null) || visibilityValue.isEmpty()) {
             // lookup from package
             return visibility = getBazelTarget().getBazelPackage().getDefaultVisibility();

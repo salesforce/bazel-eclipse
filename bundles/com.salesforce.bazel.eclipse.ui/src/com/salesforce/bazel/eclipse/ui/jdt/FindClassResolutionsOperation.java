@@ -41,6 +41,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntr
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.util.TypeLocator;
 import com.salesforce.bazel.eclipse.ui.jdt.JavaResolutionFactory.ProposalType;
 import com.salesforce.bazel.eclipse.ui.utils.JavaSearchUtil;
+import com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute;
 
 /**
  * This Operation is used to find possible resolutions to an unresolved class reference in a Bazel project.
@@ -179,7 +180,8 @@ public class FindClassResolutionsOperation implements IRunnableWithProgress {
             }
             new SearchEngine().search(
                 typeOrPackagePattern,
-                new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
+                new SearchParticipant[] {
+                        SearchEngine.getDefaultSearchParticipant() },
                 searchScope,
                 requestor,
                 subMonitor.split(1));
@@ -209,7 +211,7 @@ public class FindClassResolutionsOperation implements IRunnableWithProgress {
 
     private void removeAllTargetDepsFromMap(final Map<Label, ClasspathEntry> bazelInfos, BazelTarget bazelTarget)
             throws CoreException {
-        var deps = bazelTarget.getRuleAttributes().getStringList("deps");
+        var deps = bazelTarget.getRuleAttributes().getStringList(BazelRuleAttribute.DEPS);
         if (deps != null) {
             for (String dep : deps) {
                 bazelInfos.remove(Label.create(dep));
