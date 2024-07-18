@@ -662,7 +662,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
      *            the dependency to check
      * @return true if runtimeDependencyAvailable is empty or it includes the dependency
      */
-    private boolean runtimeDependencyAvailable(TargetKey targetKey) {
+    private boolean includeRuntimeDependencyAsCompileDependency(TargetKey targetKey) {
         return (runtimeDependencyIncludes == null)
                 || runtimeDependencyIncludes.contains(new BazelLabel(targetKey.getLabel().toString()));
     }

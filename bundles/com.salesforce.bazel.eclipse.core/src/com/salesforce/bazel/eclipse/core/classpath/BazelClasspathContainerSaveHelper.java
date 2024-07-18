@@ -105,7 +105,7 @@ public class BazelClasspathContainerSaveHelper {
             return JavaCore.newLibraryEntry(
                 path,
                 sourceAttachmentPath,
-                sourceAttachmentRootPath, //
+                sourceAttachmentRootPath,
                 accessRules,
                 extraAttributes,
                 exported);
@@ -156,7 +156,7 @@ public class BazelClasspathContainerSaveHelper {
         IClasspathEntry getEntry() {
             return JavaCore.newProjectEntry(
                 path,
-                accessRules, //
+                accessRules,
                 combineAccessRules,
                 extraAttributes,
                 exported);

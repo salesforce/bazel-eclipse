@@ -58,8 +58,8 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
 
     public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath, IClasspathEntry[] unloadedClasspath) {
         this.path = path;
-        this.classpath = classpath;
-        this.unloadedClasspath = unloadedClasspath;
+        this.classpath = requireNotNull(classpath);
+        this.unloadedClasspath = requireNotNull(unloadedClasspath);
     }
 
     @Override
