@@ -23,12 +23,11 @@ import org.eclipse.core.runtime.IPath;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 
 /**
- * Represents a targets classpath as two parts, loaded being the classpath entries that are loaded into the project
- * model, and unloaded being classpaths that are part of the target, but are not to be loaded in the project model.
- *
- * Note: Unloaded contains null values to keep the order between loaded and unloaded
+ * Represents a targets classpath as two parts, compile being the classpath entries that are loaded into the project
+ * model, and transtative as classpaths that are part of the targets runtime, but are not to be loaded in the project
+ * model.
  */
-public record ClasspathHolder(Collection<ClasspathEntry> loaded, Collection<ClasspathEntry> unloaded) {
+public record ClasspathHolder(Collection<ClasspathEntry> compile, Collection<ClasspathEntry> transitive) {
 
     public static class ClasspathHolderBuilder {
         // Preserve classpath order. Add leaf level dependencies first and work the way up. This
@@ -36,9 +35,9 @@ public record ClasspathHolder(Collection<ClasspathEntry> loaded, Collection<Clas
         // resolve symbols from the original JAR rather than the repackaged version.
         // Using accessOrdered LinkedHashMap because jars that are present in `workspaceBuilder.jdeps`
         // and in `workspaceBuilder.directDeps`, we want to treat it as a directDep
-        private final Map<IPath, ClasspathEntry> loadedEntries =
+        private final Map<IPath, ClasspathEntry> compileEntries =
                 new LinkedHashMap<>(/* initialCapacity= */ 32, /* loadFactor= */ 0.75f, /* accessOrder= */ true);
-        private final Map<IPath, ClasspathEntry> unloadedEntries =
+        private final Map<IPath, ClasspathEntry> transitiveEntries =
                 new LinkedHashMap<>(/* initialCapacity= */ 32, /* loadFactor= */ 0.75f, /* accessOrder= */ true);
         private boolean hasUnloadedEntries = false;
 
@@ -50,21 +49,21 @@ public record ClasspathHolder(Collection<ClasspathEntry> loaded, Collection<Clas
 
         public ClasspathHolder build() {
             return new ClasspathHolder(
-                    loadedEntries.values(),
-                    hasUnloadedEntries ? unloadedEntries.values() : Collections.emptyList());
+                    compileEntries.values(),
+                    hasUnloadedEntries ? transitiveEntries.values() : Collections.emptyList());
         }
 
         public void put(IPath path, ClasspathEntry entry) {
-            loadedEntries.put(path, entry);
+            compileEntries.put(path, entry);
         }
 
         public void putIfAbsent(IPath path, ClasspathEntry entry) {
-            loadedEntries.putIfAbsent(path, entry);
+            compileEntries.putIfAbsent(path, entry);
         }
 
         public void putUnloadedIfAbsent(IPath path, ClasspathEntry entry) {
-            if (!loadedEntries.containsKey(path)) {
-                unloadedEntries.putIfAbsent(path, entry);
+            if (!compileEntries.containsKey(path)) {
+                transitiveEntries.putIfAbsent(path, entry);
                 hasUnloadedEntries = true;
             }
         }

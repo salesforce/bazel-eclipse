@@ -35,6 +35,8 @@
  */
 package com.salesforce.bazel.eclipse.core.classpath;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.Serializable;
 import java.util.Arrays;
 
@@ -54,12 +56,12 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
 
     private final IPath path;
     private final IClasspathEntry[] classpath;
-    private final IClasspathEntry[] unloadedClasspath;
+    private final IClasspathEntry[] transitiveClasspath;
 
-    public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath, IClasspathEntry[] unloadedClasspath) {
+    public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath, IClasspathEntry[] transitiveClasspath) {
         this.path = path;
-        this.classpath = requireNotNull(classpath);
-        this.unloadedClasspath = requireNotNull(unloadedClasspath);
+        this.classpath = requireNonNull(classpath);
+        this.transitiveClasspath = requireNonNull(transitiveClasspath);
     }
 
     @Override
@@ -73,11 +75,11 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
     }
 
     public IClasspathEntry[] getFullClasspath() {
-        if (unloadedClasspath.length == 0) {
+        if (transitiveClasspath.length == 0) {
             return classpath;
         }
-        var fullClasspath = Arrays.copyOf(classpath, classpath.length + unloadedClasspath.length);
-        System.arraycopy(unloadedClasspath, 0, fullClasspath, classpath.length, unloadedClasspath.length);
+        var fullClasspath = Arrays.copyOf(classpath, classpath.length + transitiveClasspath.length);
+        System.arraycopy(transitiveClasspath, 0, fullClasspath, classpath.length, transitiveClasspath.length);
         return fullClasspath;
     }
 
@@ -92,11 +94,11 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
     }
 
     /**
-     * A array of unloaded classpath entries.
+     * A array of transitive classpath entries.
      *
      * @return
      */
-    public IClasspathEntry[] getUnloadedEntries() {
-        return unloadedClasspath;
+    public IClasspathEntry[] getTransitiveEntries() {
+        return transitiveClasspath;
     }
 }

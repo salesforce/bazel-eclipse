@@ -381,7 +381,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         // Collect jars referenced by runtime deps
         for (TargetKey targetKey : runtimeDeps) {
             var entries = resolveDependency(targetKey);
-            var runtimeDependencyAvailable = runtimeDependencyAvailable(targetKey);
+            var runtimeDependencyAvailable = includeRuntimeDependencyAsCompileDependency(targetKey);
 
             for (ClasspathEntry entry : entries) {
                 if (!validateEntry(entry)) {
@@ -476,6 +476,19 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
 
     IWorkspaceRoot getEclipseWorkspaceRoot() {
         return ResourcesPlugin.getWorkspace().getRoot();
+    }
+
+    /**
+     * Allows filtering runtime dependencies based on the availability of the dependency in runtimseDependencyIncludes
+     * when it includes elements
+     *
+     * @param targetKey
+     *            the dependency to check
+     * @return true if runtimeDependencyAvailable is empty or it includes the dependency
+     */
+    private boolean includeRuntimeDependencyAsCompileDependency(TargetKey targetKey) {
+        return (runtimeDependencyIncludes == null)
+                || runtimeDependencyIncludes.contains(new BazelLabel(targetKey.getLabel().toString()));
     }
 
     private List<JdepsDependency> loadJdeps(TargetIdeInfo targetIdeInfo) throws CoreException {
@@ -655,19 +668,6 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     }
 
     /**
-     * Allows filtering runtime dependencies based on the availability of the dependency in runtimseDependencyIncludes
-     * when it includes elements
-     *
-     * @param targetKey
-     *            the dependency to check
-     * @return true if runtimeDependencyAvailable is empty or it includes the dependency
-     */
-    private boolean includeRuntimeDependencyAsCompileDependency(TargetKey targetKey) {
-        return (runtimeDependencyIncludes == null)
-                || runtimeDependencyIncludes.contains(new BazelLabel(targetKey.getLabel().toString()));
-    }
-
-    /**
      * Validates the classpath entry is valid and returns true if the entry should be included
      *
      * @param entry
@@ -682,6 +682,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 bazelProject,
                 Status.error(
                     format("Library '%s' is missing. Please consider running 'bazel fetch'", entry.getPath())));
+            return false;
         }
 
         // remove references to the project represented by the package

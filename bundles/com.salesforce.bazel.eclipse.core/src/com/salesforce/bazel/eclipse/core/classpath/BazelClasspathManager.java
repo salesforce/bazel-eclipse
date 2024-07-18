@@ -301,7 +301,7 @@ public class BazelClasspathManager {
                 DEFAULT_CLASSPATH,
                 monitor.split(1, SUPPRESS_ALL_LABELS));
             entries = configureClasspathWithSourceAttachments(
-                classpaths.get(bazelProject).loaded(),
+                classpaths.get(bazelProject).compile(),
                 null /* no props */,
                 monitor);
             for (IClasspathEntry entry : entries) {
@@ -347,15 +347,15 @@ public class BazelClasspathManager {
                 : new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
 
         var sourceAttachmentProperties = getSourceAttachmentProperties(javaProject.getProject());
-        var unloadedClasspath = classpath.unloaded().stream().map(ClasspathEntry::build).collect(toList());
+        var transativeClasspath = classpath.transitive().stream().map(ClasspathEntry::build).collect(toList());
 
         var container = new BazelClasspathContainer(
                 path,
                 configureClasspathWithSourceAttachments(
-                    classpath.loaded(),
+                    classpath.compile(),
                     sourceAttachmentProperties,
                     monitor.slice(1)),
-                unloadedClasspath.toArray(new IClasspathEntry[unloadedClasspath.size()]));
+                transativeClasspath.toArray(new IClasspathEntry[transativeClasspath.size()]));
 
         JavaCore.setClasspathContainer(
             container.getPath(),

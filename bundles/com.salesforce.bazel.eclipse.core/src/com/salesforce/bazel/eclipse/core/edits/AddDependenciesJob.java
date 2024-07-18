@@ -149,11 +149,11 @@ public class AddDependenciesJob extends WorkspaceJob {
                 }
 
                 if (modified) {
-                    var unloaded = Arrays.stream(container.getUnloadedEntries())
+                    var transitive = Arrays.stream(container.getTransitiveEntries())
                             .map(ClasspathEntry::fromExisting)
                             .collect(toList());
                     classpathManager
-                            .patchClasspathContainer(bazelProject, new ClasspathHolder(classpath, unloaded), monitor);
+                            .patchClasspathContainer(bazelProject, new ClasspathHolder(classpath, transitive), monitor);
                 }
                 return Status.OK_STATUS;
             }

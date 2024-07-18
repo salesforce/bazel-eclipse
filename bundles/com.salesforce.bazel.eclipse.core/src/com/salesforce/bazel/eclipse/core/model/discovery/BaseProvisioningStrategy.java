@@ -629,19 +629,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      */
     protected final Set<BazelLabel> calculateWorkspaceDependencies(BazelWorkspace workspace,
             List<BazelLabel> targetsToBuild) throws CoreException {
-        var classpathDepthStr =
-                workspace.getBazelProjectView().targetProvisioningSettings().getOrDefault(CLASSPATH_DEPTH, "0");
-        var classpathDepth = 0;
-        try {
-            classpathDepth = Integer.parseInt(classpathDepthStr);
-        } catch (NumberFormatException e) {
-            LOG.warn(
-                "Invalid integer for target provisioning setting {} (falling back to default 0): {}",
-                CLASSPATH_DEPTH,
-                e.getMessage(),
-                e);
-        }
 
+        var classpathDepth = getClasspathDepthValue(workspace);
         if (classpathDepth <= 0) {
             return null;
         }
@@ -1248,6 +1237,22 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         if (folder.members().length == 0) {
             folder.delete(IResource.NONE, monitor.split(1));
         }
+    }
+
+    private final int getClasspathDepthValue(BazelWorkspace workspace) throws CoreException {
+        var classpathDepthStr =
+                workspace.getBazelProjectView().targetProvisioningSettings().getOrDefault(CLASSPATH_DEPTH, "0");
+        var classpathDepth = 0;
+        try {
+            classpathDepth = Integer.parseInt(classpathDepthStr);
+        } catch (NumberFormatException e) {
+            LOG.warn(
+                "Invalid integer for target provisioning setting {} (falling back to default 0): {}",
+                CLASSPATH_DEPTH,
+                e.getMessage(),
+                e);
+        }
+        return classpathDepth;
     }
 
     protected IWorkspace getEclipseWorkspace() {
