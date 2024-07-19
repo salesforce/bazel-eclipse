@@ -8,11 +8,11 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toSet;
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -37,6 +37,7 @@ import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.google.idea.blaze.base.model.primitives.WildcardTargetPattern;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
@@ -194,7 +195,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             new TargetDiscoveryAndProvisioningExtensionLookup();
 
     @Override
-    public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
+    public Map<BazelProject, ClasspathHolder> computeClasspaths(Collection<BazelProject> bazelProjects,
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
@@ -238,7 +239,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             // use the hints to avoid circular dependencies between projects in Eclipse
             var circularDependenciesHelper = new CircularDependenciesHelper(workspace.getBazelProjectView().targets());
 
-            Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
+            Map<BazelProject, ClasspathHolder> classpathsByProject = new HashMap<>();
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.subTask("Analyzing: " + bazelProject);
                 monitor.checkCanceled();
@@ -248,29 +249,17 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
 
                 // query for rdeps to find classpath exclusions
                 var projectTargets = activeTargetsPerProject.get(bazelProject);
-                var rdeps = workspace.getCommandExecutor()
-                        .runQueryWithoutLock(
-                            new BazelQueryForLabelsCommand(
-                                    workspaceRoot,
-                                    format(
-                                        "kind(java_library, rdeps(//..., %s))",
-                                        projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "))),
-                                    true,
-                                    format(
-                                        "Querying for reverse dependencies of '%s' for classpath computation",
-                                        bazelProject.getName())))
-                        .stream()
-                        .map(BazelLabel::new)
-                        .collect(toSet());
 
+                var targets = projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "));
                 // get all accessible targets based on visibility
                 Set<BazelLabel> allVisibleTargets = workspace.getCommandExecutor()
                         .runQueryWithoutLock(
                             new BazelQueryForLabelsCommand(
                                     workspaceRoot,
                                     format(
-                                        "kind(java_library, visible(%s, //...))",
-                                        projectTargets.stream().map(BazelLabel::toString).collect(joining(" + "))),
+                                        "kind(java_library, visible(%s, //...)) except kind(java_library, rdeps(//..., %s))",
+                                        targets,
+                                        targets),
                                     true,
                                     format(
                                         "Querying for Java targets visibile to '%s' for classpath computation",
@@ -295,7 +284,6 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
 
                 // get the remaining list of visible deps based on workspace dependency graph
                 var visibleDeps = new ArrayList<>(allVisibleTargets);
-                visibleDeps.removeAll(rdeps); // exclude reverse deps
                 visibleDeps.removeAll(projectTargets); // exclude project targets (avoid dependencies on itself)
 
                 // compute the classpath
@@ -379,7 +367,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                     }
                 }
 
-                classpathsByProject.put(bazelProject, classpath);
+                classpathsByProject.put(bazelProject, new ClasspathHolder(classpath, Collections.emptyList()));
                 monitor.worked(1);
             }
 

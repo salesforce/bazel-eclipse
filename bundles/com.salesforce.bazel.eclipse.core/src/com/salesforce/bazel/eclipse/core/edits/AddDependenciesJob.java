@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
@@ -21,6 +22,7 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 
 import com.google.idea.blaze.base.model.primitives.Label;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
 import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
@@ -147,7 +149,11 @@ public class AddDependenciesJob extends WorkspaceJob {
                 }
 
                 if (modified) {
-                    classpathManager.patchClasspathContainer(bazelProject, classpath, monitor);
+                    var transitive = Arrays.stream(container.getTransitiveEntries())
+                            .map(ClasspathEntry::fromExisting)
+                            .collect(toList());
+                    classpathManager
+                            .patchClasspathContainer(bazelProject, new ClasspathHolder(classpath, transitive), monitor);
                 }
                 return Status.OK_STATUS;
             }

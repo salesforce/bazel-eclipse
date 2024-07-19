@@ -25,6 +25,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.eclipse.core.runtime.Platform.PI_RUNTIME;
 import static org.eclipse.core.runtime.Platform.PREF_LINE_SEPARATOR;
 import static org.eclipse.jdt.core.IClasspathAttribute.ADD_EXPORTS;
@@ -39,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -106,6 +108,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSrcJarEntr
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.LabelEntry;
 import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.command.BazelCQueryWithStarlarkExpressionCommand;
+import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
@@ -118,6 +121,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     private static final String JRE_SYSTEM_LIBRARY = "jre_system_library";
     private static final String JRE_SYSTEM_LIBRARY_RUNTIME = "current_java_runtime";
     private static final String JRE_SYSTEM_LIBRARY_EE = "execution_environment";
+    private static final String CLASSPATH_DEPTH = "classpath_depth";
 
     private static final String JAVAC_OPT_ADD_OPENS = "--add-opens";
     private static final String JAVAC_OPT_ADD_EXPORTS = "--add-exports";
@@ -132,18 +136,65 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
 
     private static Logger LOG = LoggerFactory.getLogger(BaseProvisioningStrategy.class);
 
-    private BazelProjectFileSystemMapper fileSystemMapper;
+    /**
+     * Creates a problem marker of type {@link BazelCoreSharedContstants#CLASSPATH_CONTAINER_PROBLEM_MARKER} for the
+     * given status.
+     *
+     * @param project
+     *            the project to create the marker at (must not be <code>null</code>)
+     * @param status
+     *            the status to create the marker for (must not be <code>null</code>)
+     * @return the created marker (never <code>null</code>)
+     * @throws CoreException
+     */
+    static IMarker createClasspathContainerProblem(BazelProject project, IStatus status) throws CoreException {
+        return createMarker(project.getProject(), CLASSPATH_CONTAINER_PROBLEM_MARKER, status);
+    }
 
+    static IMarker createMarker(IResource resource, String type, IStatus status) throws CoreException {
+        var message = status.getMessage();
+        if (status.isMultiStatus()) {
+            var children = status.getChildren();
+            if ((children != null) && (children.length > 0)) {
+                message = children[0].getMessage();
+            }
+        }
+        if ((message == null) && (status.getException() != null)) {
+            message = status.getException().getMessage();
+        }
+
+        if (message.length() >= 21000) {
+            // marker content is limited in length
+            message = message.substring(0, 20997).concat("...");
+        }
+
+        Map<String, Object> markerAttributes = new HashMap<>();
+        markerAttributes.put(IMarker.MESSAGE, message);
+        markerAttributes.put(IMarker.SOURCE_ID, "Bazel Project Provisioning");
+
+        if (status.matches(IStatus.ERROR)) {
+            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_ERROR));
+        } else if (status.matches(IStatus.WARNING)) {
+            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_WARNING));
+        } else if (status.matches(IStatus.INFO)) {
+            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_INFO));
+        }
+
+        return resource.createMarker(type, markerAttributes);
+    }
+
+    private BazelProjectFileSystemMapper fileSystemMapper;
     /**
      * Eclipse VM representing the currecurrent_java_toolchain
      */
     protected IVMInstall javaToolchainVm;
 
     protected String javaToolchainSourceVersion;
+
     protected String javaToolchainTargetVersion;
 
     /**
-     * Eclipse VM representing current_java_runtime
+     * Eclipse VM representing current_jaclasspath_depthva_runtime
      */
     protected IVMInstall javaRuntimeVm;
 
@@ -574,6 +625,46 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     /**
+     * Calculates the java_library and java_imports for the provided targets, limited by the depth
+     *
+     * @param workspace
+     *            the bazel workspace
+     * @param targetsToBuild
+     *            a list of targets as part of the build to query their dependencies
+     * @param dependencyDepth
+     *            the depth in the dependency graph to traverse and include in the result
+     * @return a set of java_library and java_imports, or null, if partial classpath is disabled
+     * @throws CoreException
+     */
+    protected final Set<BazelLabel> calculateWorkspaceDependencies(BazelWorkspace workspace,
+            List<BazelLabel> targetsToBuild) throws CoreException {
+
+        var classpathDepth = getClasspathDepthValue(workspace);
+        if (classpathDepth <= 0) {
+            return null;
+        }
+        if (classpathDepth == 1) {
+            return Collections.emptySet();
+        }
+        var targetLabels = targetsToBuild.stream().map(BazelLabel::toString).collect(joining(" + "));
+        return workspace.getCommandExecutor()
+                .runQueryWithoutLock(
+                    new BazelQueryForLabelsCommand(
+                            workspace.getLocation().toPath(),
+                            format(
+                                "kind(java_library, deps(%s, %d)) + kind(java_import, deps(%s, %d))",
+                                targetLabels,
+                                classpathDepth,
+                                targetLabels,
+                                classpathDepth),
+                            true,
+                            format("Querying for depdendencies for projects: %s", targetLabels)))
+                .stream()
+                .map(BazelLabel::new)
+                .collect(toSet());
+    }
+
+    /**
      * Collects base Java information for a given project and the targets it represents.
      * <p>
      * This uses the target info from the model (as returned by <code>bazel query</code>) to discover source directories
@@ -796,21 +887,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     /**
-     * Creates a problem marker of type {@link BazelCoreSharedContstants#CLASSPATH_CONTAINER_PROBLEM_MARKER} for the
-     * given status.
-     *
-     * @param project
-     *            the project to create the marker at (must not be <code>null</code>)
-     * @param status
-     *            the status to create the marker for (must not be <code>null</code>)
-     * @return the created marker (never <code>null</code>)
-     * @throws CoreException
-     */
-    protected IMarker createClasspathContainerProblem(BazelProject project, IStatus status) throws CoreException {
-        return createMarker(project.getProject(), CLASSPATH_CONTAINER_PROBLEM_MARKER, status);
-    }
-
-    /**
      * Creates a folder hierarchy and marks them as derived (because they are generated and should not go into SCM)
      *
      * @param folder
@@ -838,38 +914,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         } finally {
             progress.done();
         }
-    }
-
-    protected IMarker createMarker(IResource resource, String type, IStatus status) throws CoreException {
-        var message = status.getMessage();
-        if (status.isMultiStatus()) {
-            var children = status.getChildren();
-            if ((children != null) && (children.length > 0)) {
-                message = children[0].getMessage();
-            }
-        }
-        if ((message == null) && (status.getException() != null)) {
-            message = status.getException().getMessage();
-        }
-
-        if (message.length() >= 21000) {
-            // marker content is limited in length
-            message = message.substring(0, 20997).concat("...");
-        }
-
-        Map<String, Object> markerAttributes = new HashMap<>();
-        markerAttributes.put(IMarker.MESSAGE, message);
-        markerAttributes.put(IMarker.SOURCE_ID, "Bazel Project Provisioning");
-
-        if (status.matches(IStatus.ERROR)) {
-            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_ERROR));
-        } else if (status.matches(IStatus.WARNING)) {
-            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_WARNING));
-        } else if (status.matches(IStatus.INFO)) {
-            markerAttributes.put(IMarker.SEVERITY, Integer.valueOf(IMarker.SEVERITY_INFO));
-        }
-
-        return resource.createMarker(type, markerAttributes);
     }
 
     /**
@@ -1202,6 +1246,22 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         if (folder.members().length == 0) {
             folder.delete(IResource.NONE, monitor.split(1));
         }
+    }
+
+    private final int getClasspathDepthValue(BazelWorkspace workspace) throws CoreException {
+        var classpathDepthStr =
+                workspace.getBazelProjectView().targetProvisioningSettings().getOrDefault(CLASSPATH_DEPTH, "0");
+        var classpathDepth = 0;
+        try {
+            classpathDepth = Integer.parseInt(classpathDepthStr);
+        } catch (NumberFormatException e) {
+            LOG.warn(
+                "Invalid integer for target provisioning setting {} (falling back to default 0): {}",
+                CLASSPATH_DEPTH,
+                e.getMessage(),
+                e);
+        }
+        return classpathDepth;
     }
 
     protected IWorkspace getEclipseWorkspace() {

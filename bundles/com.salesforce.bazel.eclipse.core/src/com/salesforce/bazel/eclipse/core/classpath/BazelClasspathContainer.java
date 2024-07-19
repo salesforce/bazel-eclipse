@@ -35,7 +35,10 @@
  */
 package com.salesforce.bazel.eclipse.core.classpath;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.Serializable;
+import java.util.Arrays;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathContainer;
@@ -49,14 +52,16 @@ import org.eclipse.jdt.core.IClasspathEntry;
  */
 public class BazelClasspathContainer implements IClasspathContainer, Serializable {
 
-    private static final long serialVersionUID = 390898179243551621L;
+    private static final long serialVersionUID = 390898179243551622L;
 
     private final IPath path;
     private final IClasspathEntry[] classpath;
+    private final IClasspathEntry[] transitiveClasspath;
 
-    public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath) {
+    public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath, IClasspathEntry[] transitiveClasspath) {
         this.path = path;
-        this.classpath = classpath;
+        this.classpath = requireNonNull(classpath);
+        this.transitiveClasspath = requireNonNull(transitiveClasspath);
     }
 
     @Override
@@ -69,6 +74,15 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
         return "Bazel Dependencies";
     }
 
+    public IClasspathEntry[] getFullClasspath() {
+        if (transitiveClasspath.length == 0) {
+            return classpath;
+        }
+        var fullClasspath = Arrays.copyOf(classpath, classpath.length + transitiveClasspath.length);
+        System.arraycopy(transitiveClasspath, 0, fullClasspath, classpath.length, transitiveClasspath.length);
+        return fullClasspath;
+    }
+
     @Override
     public int getKind() {
         return IClasspathContainer.K_APPLICATION;
@@ -77,5 +91,14 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
     @Override
     public IPath getPath() {
         return path;
+    }
+
+    /**
+     * A array of transitive classpath entries.
+     *
+     * @return
+     */
+    public IClasspathEntry[] getTransitiveEntries() {
+        return transitiveClasspath;
     }
 }

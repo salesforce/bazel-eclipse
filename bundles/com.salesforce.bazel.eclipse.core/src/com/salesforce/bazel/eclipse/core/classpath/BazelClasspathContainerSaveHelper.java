@@ -26,7 +26,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathAttribute;
-import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 
@@ -103,8 +102,13 @@ public class BazelClasspathContainerSaveHelper {
         }
 
         IClasspathEntry getEntry() {
-            return JavaCore.newLibraryEntry(path, sourceAttachmentPath, sourceAttachmentRootPath, //
-                accessRules, extraAttributes, exported);
+            return JavaCore.newLibraryEntry(
+                path,
+                sourceAttachmentPath,
+                sourceAttachmentRootPath,
+                accessRules,
+                extraAttributes,
+                exported);
         }
     }
 
@@ -150,12 +154,16 @@ public class BazelClasspathContainerSaveHelper {
         }
 
         IClasspathEntry getEntry() {
-            return JavaCore.newProjectEntry(path, accessRules, //
-                combineAccessRules, extraAttributes, exported);
+            return JavaCore.newProjectEntry(
+                path,
+                accessRules,
+                combineAccessRules,
+                extraAttributes,
+                exported);
         }
     }
 
-    public IClasspathContainer readContainer(InputStream input) throws IOException, ClassNotFoundException {
+    public BazelClasspathContainer readContainer(InputStream input) throws IOException, ClassNotFoundException {
         ObjectInputStream is = new ObjectInputStream(new BufferedInputStream(input)) {
             {
                 enableResolveObject(true);
@@ -181,10 +189,10 @@ public class BazelClasspathContainerSaveHelper {
                 return super.resolveObject(o);
             }
         };
-        return (IClasspathContainer) is.readObject();
+        return (BazelClasspathContainer) is.readObject();
     }
 
-    public void writeContainer(IClasspathContainer container, OutputStream output) throws IOException {
+    public void writeContainer(BazelClasspathContainer container, OutputStream output) throws IOException {
         ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(output)) {
             {
                 enableReplaceObject(true);

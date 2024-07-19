@@ -129,7 +129,7 @@ public class BazelClasspathContainerRuntimeResolver
         var bazelContainer = getClasspathManager().getSavedContainer(project.getProject());
         if (bazelContainer != null) {
             var workspaceRoot = project.getResource().getWorkspace().getRoot();
-            var entries = bazelContainer.getClasspathEntries();
+            var entries = bazelContainer.getFullClasspath();
             for (IClasspathEntry e : entries) {
                 switch (e.getEntryKind()) {
                     case IClasspathEntry.CPE_PROJECT: {

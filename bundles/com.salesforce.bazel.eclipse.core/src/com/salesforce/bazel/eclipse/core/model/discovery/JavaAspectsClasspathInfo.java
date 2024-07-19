@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.exists;
+import static java.nio.file.Files.isRegularFile;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.IPath.forPosix;
 import static org.eclipse.core.runtime.IPath.fromPath;
@@ -27,21 +28,19 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathAttribute;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +59,8 @@ import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.java.JavaBlazeRules;
 import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder.ClasspathHolderBuilder;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
@@ -67,6 +68,7 @@ import com.salesforce.bazel.eclipse.core.model.discovery.classpath.AccessRule;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.sdk.command.BazelBuildWithIntelliJAspectsCommand;
 import com.salesforce.bazel.sdk.command.querylight.BazelRuleAttribute;
+import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Holds information for computing Java classpath configuration of a target or a package.
@@ -134,9 +136,22 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     /** set of exports (insertion order is not relevant) */
     final Set<Label> exports = new HashSet<>();
 
-    public JavaAspectsClasspathInfo(JavaAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace) throws CoreException {
+    /** bazel project for this aspect */
+    final BazelProject bazelProject;
+
+    /**
+     * Set of dependencies available to the whole project, to be used to filter out runtime dependencies that are not
+     * part of this set. Allows creating a partial classpath to improve performance on large projects. Null indicates
+     * full classpath to be used
+     */
+    final /*Nullable*/ Set<BazelLabel> runtimeDependencyIncludes;
+
+    public JavaAspectsClasspathInfo(JavaAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace,
+            Set<BazelLabel> runtimeDependencyIncludes, BazelProject bazelProject) throws CoreException {
         super(bazelWorkspace);
         this.aspectsInfo = aspectsInfo;
+        this.runtimeDependencyIncludes = runtimeDependencyIncludes;
+        this.bazelProject = bazelProject;
     }
 
     private void addDirectDependency(Dependency directDependency) {
@@ -298,16 +313,10 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
      * @return the computed classpath
      * @throws CoreException
      */
-    public Collection<ClasspathEntry> compute() throws CoreException {
+    public ClasspathHolder compute() throws CoreException {
         // the code below is copied and adapted from BlazeJavaWorkspaceImporter
 
-        // Preserve classpath order. Add leaf level dependencies first and work the way up. This
-        // prevents conflicts when a JAR repackages it's dependencies. In such a case we prefer to
-        // resolve symbols from the original JAR rather than the repackaged version.
-        // Using accessOrdered LinkedHashMap because jars that are present in `workspaceBuilder.jdeps`
-        // and in `workspaceBuilder.directDeps`, we want to treat it as a directDep
-        Map<IPath, ClasspathEntry> result =
-                new LinkedHashMap<>(/* initialCapacity= */ 32, /* loadFactor= */ 0.75f, /* accessOrder= */ true);
+        var classpathBuilder = new ClasspathHolderBuilder(runtimeDependencyIncludes != null);
 
         // Collect jars from jdep references
         for (JdepsDependency jdepsDependency : jdepsCompileJars) {
@@ -323,6 +332,9 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             }
             var entry = resolveLibrary(library);
             if (entry != null) {
+                if (!validateEntry(entry)) {
+                    continue;
+                }
                 if (jdepsDependency.dependencyKind == Kind.IMPLICIT) {
                     entry.getAccessRules()
                             .add(
@@ -331,10 +343,10 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                                         IAccessRule.K_DISCOURAGED | IAccessRule.IGNORE_IF_BETTER));
 
                     // there might be an explicit entry, which we will never want to override!
-                    result.putIfAbsent(entry.getPath(), entry);
+                    classpathBuilder.putIfAbsent(entry.getPath(), entry);
                 } else {
                     entry.getAccessRules().add(new AccessRule(PATTERN_EVERYTHING, IAccessRule.K_ACCESSIBLE));
-                    result.put(entry.getPath(), entry);
+                    classpathBuilder.put(entry.getPath(), entry);
                 }
             } else if (LOG.isDebugEnabled()) {
                 LOG.warn("Unable to resolve compile jar: {}", jdepsDependency);
@@ -350,22 +362,32 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 }
                 continue;
             }
+            if (!validateEntry(jarEntry)) {
+                continue;
+            }
             jarEntry.setExported(true); // source jars should be exported
-            result.putIfAbsent(jarEntry.getPath(), jarEntry);
+            classpathBuilder.putIfAbsent(jarEntry.getPath(), jarEntry);
         }
 
         // Collect jars referenced by direct deps
         for (TargetKey targetKey : directDeps) {
             var entries = resolveDependency(targetKey);
             for (ClasspathEntry entry : entries) {
-                result.putIfAbsent(entry.getPath(), entry);
+                if (validateEntry(entry)) {
+                    classpathBuilder.putIfAbsent(entry.getPath(), entry);
+                }
             }
         }
 
         // Collect jars referenced by runtime deps
         for (TargetKey targetKey : runtimeDeps) {
             var entries = resolveDependency(targetKey);
+            var runtimeDependencyAvailable = includeRuntimeDependencyAsCompileDependency(targetKey);
+
             for (ClasspathEntry entry : entries) {
+                if (!validateEntry(entry)) {
+                    continue;
+                }
                 // runtime dependencies are only visible to tests
                 entry.getExtraAttributes().put(IClasspathAttribute.TEST, Boolean.toString(true));
                 // runtime dependencies are never accessible
@@ -374,11 +396,15 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                             new AccessRule(
                                     PATTERN_EVERYTHING,
                                     IAccessRule.K_DISCOURAGED | IAccessRule.IGNORE_IF_BETTER));
-                result.putIfAbsent(entry.getPath(), entry);
+                if (runtimeDependencyAvailable) {
+                    classpathBuilder.putIfAbsent(entry.getPath(), entry);
+                } else {
+                    classpathBuilder.putUnloadedIfAbsent(entry.getPath(), entry);
+                }
             }
         }
 
-        return result.values();
+        return classpathBuilder.build();
     }
 
     private BazelWorkspace findExternalWorkspace(Label label) throws CoreException {
@@ -453,6 +479,19 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         return ResourcesPlugin.getWorkspace().getRoot();
     }
 
+    /**
+     * Allows filtering runtime dependencies based on the availability of the dependency in runtimseDependencyIncludes
+     * when it includes elements
+     *
+     * @param targetKey
+     *            the dependency to check
+     * @return true if runtimeDependencyAvailable is empty or it includes the dependency
+     */
+    private boolean includeRuntimeDependencyAsCompileDependency(TargetKey targetKey) {
+        return (runtimeDependencyIncludes == null)
+                || runtimeDependencyIncludes.contains(new BazelLabel(targetKey.getLabel().toString()));
+    }
+
     private List<JdepsDependency> loadJdeps(TargetIdeInfo targetIdeInfo) throws CoreException {
         // load jdeps file
         var jdepsFile = resolveJdepsOutput(targetIdeInfo);
@@ -515,6 +554,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         var exported = exports.contains(targetKey.getLabel());
         var result = new LinkedHashSet<ClasspathEntry>();
         for (BlazeJarLibrary library : jars) {
+
             var jarEntry = resolveJar(library.libraryArtifact);
             if (jarEntry == null) {
                 if (LOG.isDebugEnabled()) {
@@ -626,6 +666,30 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         }
 
         return resolveProject(targetKey.getLabel());
+    }
+
+    /**
+     * Validates the classpath entry is valid and returns true if the entry should be included
+     *
+     * @param entry
+     *            the classpath entry to validate and check
+     * @return false if the entry should not be included in the classpath
+     * @throws CoreException
+     *             if validation fails
+     */
+    private boolean validateEntry(ClasspathEntry entry) throws CoreException {
+        if ((entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) && !isRegularFile(entry.getPath().toPath())) {
+            BaseProvisioningStrategy.createClasspathContainerProblem(
+                bazelProject,
+                Status.error(
+                    format("Library '%s' is missing. Please consider running 'bazel fetch'", entry.getPath())));
+            return false;
+        }
+
+        // remove references to the project represented by the package
+        // (this can happen because we have tests and none tests in the same package, also the runtime CP self-reference)
+        return (entry.getEntryKind() != IClasspathEntry.CPE_PROJECT)
+                || !entry.getPath().equals(bazelProject.getProject().getFullPath());
     }
 
 }

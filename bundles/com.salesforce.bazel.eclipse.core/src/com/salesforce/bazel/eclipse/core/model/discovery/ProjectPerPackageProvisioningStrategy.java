@@ -1,7 +1,6 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
-import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
@@ -27,7 +26,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,12 +33,12 @@ import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
-import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceInfo;
@@ -71,15 +69,17 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     public static final String STRATEGY_NAME = "project-per-package";
 
     private static Logger LOG = LoggerFactory.getLogger(ProjectPerPackageProvisioningStrategy.class);
+
     private final Set<String> additionalJavaLikeRules = new HashSet<>();
 
     @Override
-    public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
+    public Map<BazelProject, ClasspathHolder> computeClasspaths(Collection<BazelProject> bazelProjects,
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
             var monitor =
                     TracingSubMonitor.convert(progress, "Computing Bazel project classpaths", 1 + bazelProjects.size());
+
             monitor.subTask("Collecting shards...");
 
             Map<BazelProject, Collection<BazelTarget>> activeTargetsPerProject = new HashMap<>();
@@ -110,8 +110,15 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 activeTargetsPerProject.put(bazelProject, projectTargetsToBuild);
             }
 
+            var targets = activeTargetsPerProject.values()
+                    .stream()
+                    .flatMap(Collection::stream)
+                    .map(BazelTarget::getLabel)
+                    .collect(toList());
+            var availableDependencies = calculateWorkspaceDependencies(workspace, targets);
+
             // collect classpaths by project
-            Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
+            Map<BazelProject, ClasspathHolder> classpathsByProject = new HashMap<>();
 
             var workspaceRoot = workspace.getLocation().toPath();
 
@@ -137,6 +144,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             var currentShardCount = 0;
             for (Map<BazelProject, Collection<BazelTarget>> shard : shardsToBuild) {
                 currentShardCount++;
+
                 var targetsToBuild = shard.values()
                         .stream()
                         .flatMap(Collection::stream)
@@ -181,7 +189,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     subMonitor.checkCanceled();
 
                     // build index of classpath info
-                    var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
+                    var classpathInfo =
+                            new JavaAspectsClasspathInfo(aspectsInfo, workspace, availableDependencies, bazelProject);
                     var buildPathProblems = new ArrayList<IStatus>();
 
                     // add the targets
@@ -205,29 +214,6 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     for (IStatus problem : buildPathProblems) {
                         createClasspathContainerProblem(bazelProject, problem);
                     }
-
-                    // check for non existing jars
-                    for (ClasspathEntry entry : classpath) {
-                        if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
-                            continue;
-                        }
-
-                        if (!isRegularFile(entry.getPath().toPath())) {
-                            createClasspathContainerProblem(
-                                bazelProject,
-                                Status.error(
-                                    format(
-                                        "Library '%s' is missing. Please consider running 'bazel fetch'",
-                                        entry.getPath())));
-                            break;
-                        }
-                    }
-
-                    // remove references to the project represented by the package
-                    // (this can happen because we have tests and none tests in the same package, also the runtime CP self-reference)
-                    classpath.removeIf(
-                        entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
-                                && entry.getPath().equals(bazelProject.getProject().getFullPath()));
 
                     classpathsByProject.put(bazelProject, classpath);
                     subMonitor.worked(1);
@@ -438,6 +424,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         .contains(ruleName);
             }
         };
+
     }
 
     private void logSourceFilesWithoutCommonRoot(BazelProject project, JavaSourceInfo sourceInfo, boolean isTestSources)

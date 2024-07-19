@@ -1,7 +1,6 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
-import static java.nio.file.Files.isRegularFile;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.SubMonitor.SUPPRESS_ALL_LABELS;
 
@@ -17,17 +16,16 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
+import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
-import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
@@ -55,7 +53,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
     public static final String STRATEGY_NAME = "project-per-target";
 
     @Override
-    public Map<BazelProject, Collection<ClasspathEntry>> computeClasspaths(Collection<BazelProject> bazelProjects,
+    public Map<BazelProject, ClasspathHolder> computeClasspaths(Collection<BazelProject> bazelProjects,
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
@@ -77,6 +75,8 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
             }
 
             var workspaceRoot = workspace.getLocation().toPath();
+
+            var availableDependencies = calculateWorkspaceDependencies(workspace, targetsToBuild);
 
             // run the aspect to compute all required information
             var aspects = workspace.getParent().getModelManager().getIntellijAspects();
@@ -107,14 +107,15 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                         monitor.split(1, SUPPRESS_ALL_LABELS));
 
             // populate map from result
-            Map<BazelProject, Collection<ClasspathEntry>> classpathsByProject = new HashMap<>();
+            Map<BazelProject, ClasspathHolder> classpathsByProject = new HashMap<>();
             var aspectsInfo = new JavaAspectsInfo(result, workspace);
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.subTask(bazelProject.getName());
                 monitor.checkCanceled();
 
                 // build index of classpath info
-                var classpathInfo = new JavaAspectsClasspathInfo(aspectsInfo, workspace);
+                var classpathInfo =
+                        new JavaAspectsClasspathInfo(aspectsInfo, workspace, availableDependencies, bazelProject);
 
                 // remove old marker
                 deleteClasspathContainerProblems(bazelProject);
@@ -127,29 +128,6 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
 
                 // compute the classpath
                 var classpath = classpathInfo.compute();
-
-                // check for non existing jars
-                for (ClasspathEntry entry : classpath) {
-                    if (entry.getEntryKind() != IClasspathEntry.CPE_LIBRARY) {
-                        continue;
-                    }
-
-                    if (!isRegularFile(entry.getPath().toPath())) {
-                        createClasspathContainerProblem(
-                            bazelProject,
-                            Status.error(
-                                format(
-                                    "Library '%s' is missing. Please consider running 'bazel fetch'",
-                                    entry.getPath())));
-                        break;
-                    }
-                }
-
-                // remove references to the project
-                // (the runtime classpath will contain a reference to the project)
-                classpath.removeIf(
-                    entry -> (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT)
-                            && entry.getPath().equals(bazelProject.getProject().getFullPath()));
 
                 classpathsByProject.put(bazelProject, classpath);
                 monitor.worked(1);
