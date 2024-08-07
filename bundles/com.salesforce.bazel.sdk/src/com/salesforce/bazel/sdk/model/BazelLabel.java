@@ -33,7 +33,10 @@
  */
 package com.salesforce.bazel.sdk.model;
 
+import static java.lang.String.format;
+
 import com.google.idea.blaze.base.model.primitives.Label;
+import com.google.idea.blaze.base.model.primitives.TargetName;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 
 /**
@@ -407,33 +410,6 @@ public class BazelLabel {
         return localLabelPart.substring(colonIndex + 1);
     }
 
-    // PUBLIC STATIC HELPERS
-
-    /**
-     * Some Bazel target names use a path-like syntax. This method returns the last component of that path. If the
-     * target name doesn't use a path-like syntax, this method returns the target name.
-     * <p>
-     * For example: if the target name is "a/b/c/d", this method returns "d". if the target name is "a/b/c/", this
-     * method returns "c". if the target name is "foo", this method returns "foo".
-     *
-     * @return the last path component of the target name if the target name is path-like
-     */
-    @Deprecated
-    public String getTargetNameLastComponent() {
-        // TODO where did this method come from? I think it is from the maven_jar days, not convinced we still need this
-        var targetName = getTargetName();
-        if (targetName == null) {
-            return null;
-        }
-        var i = targetName.lastIndexOf(BazelLabel.BAZEL_SLASH);
-        if (i != -1) {
-            return targetName.substring(i + 1); // ok because target name cannot end with slash
-        }
-        return targetName;
-    }
-
-    // PRIVATE STATIC HELPERS
-
     @Override
     public int hashCode() {
         return fullLabel.hashCode();
@@ -489,6 +465,22 @@ public class BazelLabel {
     }
 
     public Label toPrimitive() {
+        if (!isConcrete()) {
+            throw new IllegalStateException(
+                    format("Label '%s' is not concrete and cannot be converted to a primitive label!", fullLabel));
+        }
+
+        if (isDefaultTarget()) {
+            if (isExternalRepoLabel()) {
+                return Label.create(
+                    getExternalRepositoryName(),
+                    new WorkspacePath(getPackagePath()),
+                    TargetName.create(getTargetName()));
+            } else {
+                return Label.create(new WorkspacePath(getPackagePath()), TargetName.create(getTargetName()));
+            }
+        }
+
         return Label.create(fullLabel);
     }
 
