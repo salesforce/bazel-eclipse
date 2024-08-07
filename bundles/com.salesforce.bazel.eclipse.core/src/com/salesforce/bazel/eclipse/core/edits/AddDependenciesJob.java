@@ -32,8 +32,31 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 
 public class AddDependenciesJob extends WorkspaceJob {
 
+    protected static String toUnqualifiedLabelIfPossible(Label l) {
+        var targetName = l.targetName().toString();
+
+        var externalWorkspaceName = l.externalWorkspaceName();
+        if (l.blazePackage().isWorkspaceRoot() && targetName.equals(externalWorkspaceName)) {
+            // just the external workspace
+            return "@" + externalWorkspaceName;
+        }
+
+        if (!l.blazePackage().isWorkspaceRoot()) {
+            var lastFolderInPackagePath = l.blazePackage().asPath().getFileName();
+            if ((lastFolderInPackagePath != null) && lastFolderInPackagePath.toString().equals(targetName)) {
+                // shorten to just the package path
+                var label = "//" + l.blazePackage();
+                return externalWorkspaceName != null ? "@" + externalWorkspaceName + label : label;
+            }
+        }
+
+        // use full qualified label
+        return l.toString();
+    }
+
     protected final BazelProject bazelProject;
     protected final Collection<Label> labelsToAdd;
+
     protected final Collection<ClasspathEntry> newClasspathEntries;
 
     public AddDependenciesJob(BazelProject bazelProject, Collection<Label> labelsToAdd,
@@ -190,7 +213,9 @@ public class AddDependenciesJob extends WorkspaceJob {
             var workspaceRoot = bazelProject.getBazelWorkspace().getLocation().toPath();
             var buildozerCommand = new BuildozerCommand(
                     workspaceRoot,
-                    labelsToAdd.stream().map(l -> format("add %s %s", depsAttributeName, l)).collect(toList()),
+                    labelsToAdd.stream()
+                            .map(l -> format("add %s %s", depsAttributeName, toUnqualifiedLabelIfPossible(l)))
+                            .collect(toList()),
                     targetsForBuildozerToUpdate,
                     format(
                         "Add label(s) '%s' to '%s'",
