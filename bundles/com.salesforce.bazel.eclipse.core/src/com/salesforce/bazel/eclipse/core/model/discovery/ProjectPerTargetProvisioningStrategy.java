@@ -142,10 +142,10 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
     }
 
     @Override
-    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
+    protected Set<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
             throws CoreException {
         monitor.setWorkRemaining(targets.size());
-        List<BazelProject> result = new ArrayList<>();
+        Set<BazelProject> result = new HashSet<>();
         for (BazelTarget target : targets) {
             monitor.subTask(target.getLabel().toString());
 

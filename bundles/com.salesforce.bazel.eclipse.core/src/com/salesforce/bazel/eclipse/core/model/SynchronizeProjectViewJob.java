@@ -151,7 +151,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         setRule(getWorkspaceRoot());
     }
 
-    private void callSynParticipants(List<BazelProject> targetProjects, TracingSubMonitor monitor, int work)
+    private void callSynParticipants(Set<BazelProject> targetProjects, TracingSubMonitor monitor, int work)
             throws CoreException {
         var synchronizationParticipants = getSynchronizationParticipants();
         if (synchronizationParticipants.isEmpty()) {
@@ -504,7 +504,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
     }
 
-    private void initializeClasspaths(List<BazelProject> projects, BazelWorkspace workspace, TracingSubMonitor monitor,
+    private void initializeClasspaths(Set<BazelProject> projects, BazelWorkspace workspace, TracingSubMonitor monitor,
             int work) throws CoreException {
         monitor = monitor.split(work, format("Initializing Classpaths for %d projects", projects.size()));
 
@@ -529,7 +529,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             lines.stream().collect(joining(System.lineSeparator())));
     }
 
-    private List<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, TracingSubMonitor monitor, int work)
+    private Set<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, TracingSubMonitor monitor, int work)
             throws CoreException {
         return getTargetProvisioningStrategy()
                 .provisionProjectsForSelectedTargets(targets, workspace, monitor.split(work, "Provisioning Projects"));
@@ -594,7 +594,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         }
     }
 
-    private void removeObsoleteProjects(List<BazelProject> provisionedProjects, TracingSubMonitor monitor, int work)
+    private void removeObsoleteProjects(Set<BazelProject> provisionedProjects, TracingSubMonitor monitor, int work)
             throws CoreException {
         var obsoleteProjects = new ArrayList<IProject>();
         for (IProject project : getWorkspaceRoot().getProjects()) {

@@ -1,8 +1,8 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -126,9 +126,9 @@ public interface TargetProvisioningStrategy {
      *            the workspace all targets belong to (never <code>null</code>)
      * @param progress
      *            a monitor for tracking progress and observing cancellations (never <code>null</code>)
-     * @return a list of provisioned projects (never <code>null</code>)
+     * @return a set of provisioned projects (never <code>null</code>)
      */
-    List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets, BazelWorkspace workspace,
+    Set<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets, BazelWorkspace workspace,
             IProgressMonitor progress) throws CoreException;
 
 }

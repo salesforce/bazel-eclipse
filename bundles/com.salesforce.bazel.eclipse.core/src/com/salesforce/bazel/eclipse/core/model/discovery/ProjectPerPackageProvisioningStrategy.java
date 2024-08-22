@@ -309,7 +309,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     }
 
     @Override
-    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
+    protected Set<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
             throws CoreException {
         // initialize the list of allowed java like rules
         var javaLikeRulesValue = getFileSystemMapper().getBazelWorkspace()
@@ -329,7 +329,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
 
         monitor.setWorkRemaining(targetsByPackage.size() * 3);
 
-        var result = new ArrayList<BazelProject>();
+        var result = new HashSet<BazelProject>();
         for (Entry<BazelPackage, List<BazelTarget>> entry : targetsByPackage.entrySet()) {
             var bazelPackage = entry.getKey();
             var packageTargets = entry.getValue();

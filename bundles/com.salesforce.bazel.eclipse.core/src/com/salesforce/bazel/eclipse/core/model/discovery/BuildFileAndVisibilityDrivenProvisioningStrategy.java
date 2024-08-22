@@ -380,7 +380,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
     }
 
     @Override
-    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
+    protected Set<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
             throws CoreException {
         // group into packages
         Map<BazelPackage, List<BazelTarget>> targetsByPackage =
@@ -388,7 +388,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
 
         monitor.beginTask("Provisioning projects", targetsByPackage.size() * 3);
 
-        var result = new ArrayList<BazelProject>();
+        var result = new HashSet<BazelProject>();
         for (Entry<BazelPackage, List<BazelTarget>> entry : targetsByPackage.entrySet()) {
             var bazelPackage = entry.getKey();
             var packageTargets = entry.getValue();

@@ -13,11 +13,12 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
-import static java.util.List.copyOf;
 import static java.util.Objects.requireNonNull;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Describes visibility information in the Bazel graph.
@@ -32,20 +33,20 @@ public class BazelVisibility {
     public static final String PKG = "__pkg__";
     public static final String SUBPACKAGES = "__subpackages__";
 
-    private final List<String> labels;
+    private final Set<String> labels;
 
     public BazelVisibility(List<String> labels) {
         if ((labels == null) || labels.isEmpty()) {
             throw new IllegalArgumentException("At least one visibility label must be provided!");
         }
-        this.labels = copyOf(requireNonNull(labels));
+        this.labels = new HashSet<>(requireNonNull(labels));
     }
 
     public BazelVisibility(String... labels) {
         if ((labels == null) || (labels.length == 0)) {
             throw new IllegalArgumentException("At least one visibility label must be provided!");
         }
-        this.labels = List.of(labels);
+        this.labels = Set.of(labels);
     }
 
     @Override

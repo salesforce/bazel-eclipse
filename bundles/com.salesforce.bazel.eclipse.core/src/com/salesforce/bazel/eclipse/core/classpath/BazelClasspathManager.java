@@ -331,7 +331,7 @@ public class BazelClasspathManager {
             // update classpath container (this will re-set classpath on JavaProject)
             updateClasspath(
                 bazelProject.getBazelWorkspace(),
-                List.of(bazelProject),
+                Set.of(bazelProject),
                 monitor.split(1, SUPPRESS_ALL_LABELS));
         } finally {
             if (progress != null) {
@@ -387,7 +387,7 @@ public class BazelClasspathManager {
      * @param progress
      * @throws CoreException
      */
-    void updateClasspath(BazelWorkspace bazelWorkspace, List<BazelProject> projects, IProgressMonitor progress)
+    void updateClasspath(BazelWorkspace bazelWorkspace, Set<BazelProject> projects, IProgressMonitor progress)
             throws CoreException {
         try {
             var monitor =

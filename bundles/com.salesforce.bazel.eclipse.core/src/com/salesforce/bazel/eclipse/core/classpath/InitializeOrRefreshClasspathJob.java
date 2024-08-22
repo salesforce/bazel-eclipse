@@ -5,9 +5,10 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.core.resources.IMarker;
@@ -54,7 +55,7 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
         }
     }
 
-    private final Map<BazelWorkspace, List<BazelProject>> bazelProjects;
+    private final Map<BazelWorkspace, Set<BazelProject>> bazelProjects;
     private final BazelClasspathManager classpathManager;
 
     private final boolean forceRefresh;
@@ -101,7 +102,7 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
             } catch (CoreException e) {
                 throw new IllegalStateException(format("Invalid project '%s': %s", p, e.getMessage()), e);
             }
-        }));
+        }, Collectors.toSet()));
         setPriority(Job.BUILD); // process after others
         setRule(getRuleFactory().buildRule()); // ensure not build is running in parallel
     }
@@ -143,7 +144,7 @@ public final class InitializeOrRefreshClasspathJob extends WorkspaceJob {
                     0,
                     "Some Bazel build paths could not be initialized.");
 
-            nextProjectSet: for (Entry<BazelWorkspace, List<BazelProject>> projectSet : bazelProjects.entrySet()) {
+            nextProjectSet: for (Entry<BazelWorkspace, Set<BazelProject>> projectSet : bazelProjects.entrySet()) {
                 try {
                     // we only process projects with a valid workspace
                     if (projectSet.getKey() == null) {

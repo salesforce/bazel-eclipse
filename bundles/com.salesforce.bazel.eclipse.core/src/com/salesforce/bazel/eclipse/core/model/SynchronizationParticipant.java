@@ -13,7 +13,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
-import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -34,11 +34,11 @@ public interface SynchronizationParticipant {
      * @param bazelWorkspace
      *            the Bazel workspace the was synchronized
      * @param bazelProjects
-     *            the list of Bazel projects provisioned/updated during synchronization
+     *            the set of Bazel projects provisioned/updated during synchronization
      * @param monitor
      *            progress monitor for reporting progress and checking for cancellation
      */
-    void afterSynchronizationCompleted(BazelWorkspace bazelWorkspace, List<BazelProject> bazelProjects,
+    void afterSynchronizationCompleted(BazelWorkspace bazelWorkspace, Set<BazelProject> bazelProjects,
             IProgressMonitor monitor) throws CoreException;
 
 }

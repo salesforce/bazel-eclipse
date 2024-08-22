@@ -1171,11 +1171,11 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      *            collection of targets
      * @param monitor
      *            monitor for reporting progress
-     * @return list of provisioned projects
+     * @return set of provisioned projects
      * @throws CoreException
      */
-    protected abstract List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets,
-            TracingSubMonitor monitor) throws CoreException;
+    protected abstract Set<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
+            throws CoreException;
 
     private void ensureFolderLinksToTarget(IFolder folderWhichShouldBeALink, IPath linkTarget, SubMonitor monitor)
             throws CoreException {
@@ -1706,7 +1706,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     @Override
-    public List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets,
+    public Set<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets,
             BazelWorkspace workspace, IProgressMonitor progress) throws CoreException {
         try {
             var monitor = TracingSubMonitor.convert(progress, "Provisioning projects", 3);
