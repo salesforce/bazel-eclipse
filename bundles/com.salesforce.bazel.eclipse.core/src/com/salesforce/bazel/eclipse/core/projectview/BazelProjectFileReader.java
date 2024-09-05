@@ -227,7 +227,7 @@ public class BazelProjectFileReader {
                                 parseSectionBodyAsBoolean(rawSection, builder.deriveTargetsFromDirectories);
                         break;
                     }
-                    case "import": {
+                    case "import", "try_import": {
                         Path fileToImport;
                         try {
                             fileToImport = rawSection.getBodyAsPath();
