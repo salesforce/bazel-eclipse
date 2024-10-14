@@ -1,0 +1,12 @@
+{
+    "projects": [
+        "bundles/com.salesforce.bazel.eclipse.core",
+        "bundles/com.salesforce.bazel.eclipse.jdtls",
+        "bundles/com.salesforce.bazel.eclipse.ui",
+        "bundles/com.salesforce.bazel.importedsource",
+        "bundles/com.salesforce.bazel.logback",
+        "bundles/com.salesforce.bazel.sdk"
+    ],
+
+   "targetPlatform": "releng/target-platform/target-platform-dev.target"
+}
