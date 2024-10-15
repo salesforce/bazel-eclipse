@@ -1,0 +1,8 @@
+{
+	"[java]": {
+		"editor.defaultFormatter": "redhat.java"
+	},
+	"java.format.settings.url": "tools/bazel-eclipse-formatter.xml",
+	"editor.formatOnSave": true,
+	"java.configuration.updateBuildConfiguration": "automatic"
+}
