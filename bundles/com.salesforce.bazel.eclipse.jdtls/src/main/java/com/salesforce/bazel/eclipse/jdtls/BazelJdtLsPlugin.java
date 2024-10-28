@@ -53,7 +53,7 @@ public class BazelJdtLsPlugin extends Plugin implements BazelJdtLsSharedContstan
 
     private static BazelJdtLsPlugin plugin;
 
-    public static BazelJdtLsPlugin getInstabnce() {
+    public static BazelJdtLsPlugin getInstance() {
         return requireNonNull(plugin, "not initialized");
     }
 
