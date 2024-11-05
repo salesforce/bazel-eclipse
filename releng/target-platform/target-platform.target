@@ -1,162 +1,190 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1712715253">
+<target name="bazel-eclipse-feature-target-platform" sequenceNumber="1730127613">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.e4.rcp.feature.group" version="4.30.0.v20231113-1355"/>
-      <unit id="org.eclipse.ecf.core.feature.feature.group" version="1.6.2.v20231021-2127"/>
-      <unit id="org.eclipse.ecf.core.ssl.feature.feature.group" version="1.1.501.v20230507-1921"/>
-      <unit id="org.eclipse.ecf.filetransfer.feature.feature.group" version="3.14.1900.v20230715-1945"/>
-      <unit id="org.eclipse.ecf.filetransfer.httpclient5.feature.feature.group" version="1.1.702.v20231114-1017"/>
-      <unit id="org.eclipse.ecf.filetransfer.ssl.feature.feature.group" version="1.1.402.v20231021-2127"/>
-      <unit id="org.eclipse.emf.common.feature.group" version="2.30.0.v20230916-0637"/>
-      <unit id="org.eclipse.emf.ecore.feature.group" version="2.36.0.v20231002-1156"/>
-      <unit id="org.eclipse.equinox.core.feature.feature.group" version="1.14.200.v20231110-1900"/>
-      <unit id="org.eclipse.equinox.core.sdk.feature.group" version="3.24.200.v20231110-1900"/>
-      <unit id="org.eclipse.equinox.executable" version="3.8.2300.v20231106-1826"/>
-      <unit id="org.eclipse.equinox.executable.feature.group" version="3.8.2300.v20231106-1826"/>
-      <unit id="org.eclipse.equinox.p2.core.feature.source.feature.group" version="1.7.0.v20231112-1314"/>
-      <unit id="org.eclipse.equinox.p2.discovery.feature.feature.group" version="1.3.200.v20231104-1339"/>
-      <unit id="org.eclipse.equinox.sdk.feature.group" version="3.23.1000.v20231114-0937"/>
-      <unit id="org.eclipse.jdt.feature.group" version="3.19.300.v20231201-0110"/>
-      <unit id="org.eclipse.platform.feature.group" version="4.30.0.v20231201-0512"/>
-      <unit id="org.eclipse.rcp.feature.group" version="4.30.0.v20231201-0512"/>
-      <unit id="org.eclipse.sdk.feature.group" version="4.30.0.v20231201-0512"/>
-      <unit id="org.eclipse.sdk.ide" version="4.30.0.I20231201-0110"/>
-      <unit id="org.eclipse.test" version="3.5.400.v20231108-0838"/>
-      <unit id="org.eclipse.jface.text.tests" version="3.13.300.v20231023-1307"/>
-      <unit id="org.eclipse.text.tests" version="3.14.200.v20231023-1307"/>
-      <unit id="org.eclipse.test.feature.group" version="3.8.700.v20231108-0838"/>
+      <unit id="org.eclipse.e4.rcp.feature.group" version="4.33.0.v20240903-0618"/>
+      <unit id="org.eclipse.ecf.core.feature.feature.group" version="1.6.2.v20240812-1535"/>
+      <unit id="org.eclipse.ecf.core.ssl.feature.feature.group" version="1.1.600.v20240812-1535"/>
+      <unit id="org.eclipse.ecf.filetransfer.feature.feature.group" version="3.14.1900.v20240812-1535"/>
+      <unit id="org.eclipse.ecf.filetransfer.httpclient5.feature.feature.group" version="1.1.702.v20240808-1900"/>
+      <unit id="org.eclipse.ecf.filetransfer.ssl.feature.feature.group" version="1.1.402.v20240812-1535"/>
+      <unit id="org.eclipse.emf.common.feature.group" version="2.32.0.v20240731-0952"/>
+      <unit id="org.eclipse.emf.ecore.feature.group" version="2.38.0.v20240721-0802"/>
+      <unit id="org.eclipse.equinox.core.feature.feature.group" version="1.15.200.v20240722-2103"/>
+      <unit id="org.eclipse.equinox.core.sdk.feature.group" version="3.25.200.v20240722-2103"/>
+      <unit id="org.eclipse.equinox.executable" version="3.8.2600.v20240722-2106"/>
+      <unit id="org.eclipse.equinox.executable.feature.group" version="3.8.2600.v20240722-2106"/>
+      <unit id="org.eclipse.equinox.p2.core.feature.source.feature.group" version="1.7.300.v20240801-1024"/>
+      <unit id="org.eclipse.equinox.p2.discovery.feature.feature.group" version="1.3.500.v20240803-1337"/>
+      <unit id="org.eclipse.equinox.sdk.feature.group" version="3.23.1400.v20240820-0604"/>
+      <unit id="org.eclipse.jdt.feature.group" version="3.19.600.v20240903-0240"/>
+      <unit id="org.eclipse.platform.feature.group" version="4.33.0.v20240903-0618"/>
+      <unit id="org.eclipse.rcp.feature.group" version="4.33.0.v20240903-0618"/>
+      <unit id="org.eclipse.sdk.feature.group" version="4.33.0.v20240903-0618"/>
+      <unit id="org.eclipse.sdk.ide" version="4.33.0.I20240903-0240"/>
+      <unit id="org.eclipse.test" version="3.6.100.v20240321-1442"/>
+      <unit id="org.eclipse.jface.text.tests" version="3.13.600.v20240816-1151"/>
+      <unit id="org.eclipse.text.tests" version="3.14.600.v20240607-1132"/>
+      <unit id="org.eclipse.test.feature.group" version="3.8.1000.v20240824-0911"/>
       <unit id="org.apache.aries.spifly.dynamic.bundle" version="1.3.7"/>
-      <unit id="org.objectweb.asm" version="9.6.0"/>
-      <unit id="org.objectweb.asm.commons" version="9.6.0"/>
-      <unit id="org.objectweb.asm.tree" version="9.6.0"/>
-      <unit id="org.objectweb.asm.tree.analysis" version="9.6.0"/>
-      <unit id="org.objectweb.asm.util" version="9.6.0"/>
-      <repository location="https://download.eclipse.org/eclipse/updates/4.30/"/>
+      <unit id="org.objectweb.asm" version="9.7.0"/>
+      <unit id="org.objectweb.asm.commons" version="9.7.0"/>
+      <unit id="org.objectweb.asm.tree" version="9.7.0"/>
+      <unit id="org.objectweb.asm.tree.analysis" version="9.7.0"/>
+      <unit id="org.objectweb.asm.util" version="9.7.0"/>
+      <repository location="https://download.eclipse.org/eclipse/updates/4.33/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="slf4j.api" version="2.0.9"/>
-      <unit id="ch.qos.logback.core" version="1.4.11"/>
-      <unit id="ch.qos.logback.classic" version="1.4.11"/>
+      <unit id="slf4j.api" version="2.0.16"/>
+      <unit id="ch.qos.logback.core" version="1.5.7"/>
+      <unit id="ch.qos.logback.classic" version="1.5.7"/>
       <unit id="jakarta.servlet-api" version="5.0.0"/>
-      <unit id="com.google.errorprone.annotations" version="2.23.0"/>
-      <unit id="com.google.gson" version="2.10.1"/>
-      <unit id="com.google.guava" version="32.1.3.jre"/>
+      <unit id="jakarta.servlet-api" version="6.1.0"/>
+      <unit id="com.google.errorprone.annotations" version="2.30.0"/>
+      <unit id="com.google.gson" version="2.11.0"/>
+      <unit id="com.google.guava" version="33.3.0.jre"/>
       <unit id="com.google.guava.failureaccess" version="1.0.2"/>
-      <unit id="com.google.javascript" version="0.0.20231112.v20231114-0833"/>
-      <unit id="org.apache.commons.lang3" version="3.13.0"/>
+      <unit id="com.google.javascript" version="0.0.20240317.v20240319-0700"/>
+      <unit id="org.apache.commons.lang3" version="3.16.0"/>
       <unit id="org.apache.xerces" version="2.12.2.v20230928-1306"/>
       <unit id="org.apache.xalan" version="2.7.2.v20230928-1302"/>
-      <unit id="org.hamcrest" version="2.2.0"/>
-      <unit id="org.mockito.junit-jupiter" version="5.7.0"/>
-      <unit id="org.mockito.mockito-core" version="5.7.0"/>
+      <unit id="org.hamcrest" version="3.0.0"/>
+      <unit id="org.mockito.junit-jupiter" version="5.12.0"/>
+      <unit id="org.mockito.mockito-core" version="5.12.0"/>
       <unit id="org.jdom" version="1.1.3.v20230812-1600"/>
       <unit id="org.jdom2" version="2.0.6.v20230720-0727"/>
-      <repository location="https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2023-12/"/>
+      <repository location="https://download.eclipse.org/tools/orbit/simrel/orbit-aggregation/2024-09/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.jdt.ls.core" version="1.30.1.202312071447"/>
-      <repository location="https://download.eclipse.org/jdtls/milestones/1.30.1/repository/"/>
+      <unit id="org.eclipse.jdt.ls.core" version="1.40.0.202409261450"/>
+      <repository location="https://download.eclipse.org/jdtls/milestones/1.40.0/repository/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.xtext.xbase.lib" version="2.33.0.v20231121-0955"/>
-      <unit id="org.eclipse.tm4e.feature.feature.group" version="0.6.1.202308132047"/>
-      <repository location="https://download.eclipse.org/releases/2023-12/"/>
+      <unit id="org.eclipse.xtext.xbase.lib" version="2.36.0.v20240825-0714"/>
+      <unit id="org.eclipse.tm4e.feature.feature.group" version="0.13.0.202408262111"/>
+      <repository location="https://download.eclipse.org/releases/2024-09/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.lsp4j.sdk.feature.group" version="0.21.1.v20230829-0014"/>
-      <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.21.1/"/>
+      <unit id="org.eclipse.lsp4j.sdk.feature.group" version="0.23.1.v20240521-1817"/>
+      <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.23.1/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.m2e.feature.feature.group" version="2.4.200.20231119-0901"/>
-      <unit id="org.eclipse.m2e.logback.feature.feature.group" version="2.2.1.20231113-2319"/>
-      <unit id="org.eclipse.m2e.sdk.feature.feature.group" version="2.5.0.20231119-0901"/>
-      <repository location="https://download.eclipse.org/technology/m2e/releases/2.5.0/"/>
+      <unit id="org.eclipse.m2e.feature.feature.group" version="2.6.2.20240828-1954"/>
+      <unit id="org.eclipse.m2e.logback.feature.feature.group" version="2.6.1.20240411-1743"/>
+      <unit id="org.eclipse.m2e.sdk.feature.feature.group" version="2.6.2.20240828-1954"/>
+      <repository location="https://download.eclipse.org/technology/m2e/releases/2.6.2/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.wildwebdeveloper.xml.feature.feature.group" version="1.3.1.202310310352"/>
-      <repository location="https://download.eclipse.org/wildwebdeveloper/releases/1.3.3/"/>
+      <unit id="org.eclipse.wildwebdeveloper.xml.feature.feature.group" version="1.3.5.202408121113"/>
+      <repository location="https://download.eclipse.org/wildwebdeveloper/releases/1.3.7/"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
-      <unit id="org.eclipse.buildship.feature.group" version="3.1.8.v20231117-1734"/>
-      <repository location="https://download.eclipse.org/buildship/updates/e423/releases/3.x/3.1.8.v20231117-1734/"/>
+      <unit id="org.eclipse.buildship.feature.group" version="3.1.10.v20240802-1211"/>
+      <repository location="https://download.eclipse.org/buildship/updates/e431/releases/3.x/3.1.10.v20240802-1211/"/>
+    </location>
+    <location includeDependencyDepth="none" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="ScipMavenDependencies">
+      <feature id="com.salesforce.bazel.scip.dependencies.feature" label="Third-Party Dependencies used by the Bazel SCIP Feature" provider-name="" version="2.0.0.qualifier">
+      </feature>
+      <dependencies>
+        <dependency>
+          <groupId>com.sourcegraph</groupId>
+          <artifactId>scip-java_2.13</artifactId>
+          <version>0.10.3</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>com.sourcegraph</groupId>
+          <artifactId>scip-semanticdb</artifactId>
+          <version>0.10.3</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>com.sourcegraph</groupId>
+          <artifactId>semanticdb-java</artifactId>
+          <version>0.10.3</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>com.sourcegraph</groupId>
+          <artifactId>scip-java-proto</artifactId>
+          <version>0.10.3</version>
+          <type>jar</type>
+        </dependency>
+      </dependencies>
     </location>
     <location includeDependencyDepth="infinite" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven" label="MavenDependencies">
-    <feature id="com.salesforce.bazel.eclipse.dependencies.feature" label="Third-Party Dependencies used by the Bazel Eclipse Feature" provider-name="" version="2.0.0.qualifier">
-    	<description url="http://www.example.com/description">
-    		[Enter Feature Description here.]
-    	</description>
-    	<copyright url="http://www.example.com/copyright">
-    		[Enter Copyright Description here.]
-    	</copyright>
-    	<license url="http://www.example.com/license">
-    		[Enter License Description here.]
-    	</license>
-    </feature>
-    <dependencies>
-    	<dependency>
-    		<groupId>com.github.ben-manes.caffeine</groupId>
-    		<artifactId>caffeine</artifactId>
-    		<version>3.1.8</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>com.google.protobuf</groupId>
-    		<artifactId>protobuf-java</artifactId>
-    		<version>3.22.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>com.googlecode.json-simple</groupId>
-    		<artifactId>json-simple</artifactId>
-    		<version>1.1.1</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.fusesource.jansi</groupId>
-    		<artifactId>jansi</artifactId>
-    		<version>2.4.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>com.google.code.findbugs</groupId>
-    		<artifactId>jsr305</artifactId>
-    		<version>3.0.2</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>com.google.auto.value</groupId>
-    		<artifactId>auto-value</artifactId>
-    		<version>1.10.1</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>com.google.auto.value</groupId>
-    		<artifactId>auto-value-annotations</artifactId>
-    		<version>1.10.1</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>jakarta.servlet</groupId>
-    		<artifactId>jakarta.servlet-api</artifactId>
-    		<version>5.0.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.apache.commons</groupId>
-    		<artifactId>commons-configuration2</artifactId>
-    		<version>2.9.0</version>
-    		<type>jar</type>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.apache.commons</groupId>
-    		<artifactId>commons-text</artifactId>
-    		<version>1.11.0</version>
-    		<type>jar</type>
-    	</dependency>
-    </dependencies>
+      <feature id="com.salesforce.bazel.eclipse.dependencies.feature" label="Third-Party Dependencies used by the Bazel Eclipse Feature" provider-name="" version="2.0.0.qualifier">
+      </feature>
+      <dependencies>
+        <dependency>
+          <groupId>com.github.ben-manes.caffeine</groupId>
+          <artifactId>caffeine</artifactId>
+          <version>3.1.8</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+          <version>3.25.5</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java-util</artifactId>
+          <version>3.25.5</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>com.googlecode.json-simple</groupId>
+          <artifactId>json-simple</artifactId>
+          <version>1.1.1</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.fusesource.jansi</groupId>
+          <artifactId>jansi</artifactId>
+          <version>2.4.1</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+          <version>3.0.2</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>com.google.auto.value</groupId>
+          <artifactId>auto-value</artifactId>
+          <version>1.11.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>com.google.auto.value</groupId>
+          <artifactId>auto-value-annotations</artifactId>
+          <version>1.11.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>jakarta.servlet</groupId>
+          <artifactId>jakarta.servlet-api</artifactId>
+          <version>5.0.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-configuration2</artifactId>
+          <version>2.11.0</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-text</artifactId>
+          <version>1.12.0</version>
+          <type>jar</type>
+        </dependency>
+      </dependencies>
     </location>
   </locations>
   <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17"/>

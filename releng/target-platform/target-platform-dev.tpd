@@ -1,6 +1,6 @@
 target "bazel-eclipse-feature-target-platform-for-development" with source configurePhase requirements
 
-environment JavaSE-17
+environment JavaSE-21
 
 
 // import "build" target platform
@@ -19,19 +19,16 @@ location "https://download.eclipse.org/egit/updates/" {
     org.eclipse.egit.gitflow.feature.feature.group lazy
 }
 
-location "https://download.eclipse.org/releases/2023-12/" {
+location "https://download.eclipse.org/releases/2024-09/" {
     // Docker Tools
     org.eclipse.linuxtools.docker.feature.feature.group lazy
     org.eclipse.linuxtools.docker.editor.ls.feature.feature.group lazy
-}
 
-location "https://download.eclipse.org/mylyn/docs/releases/3.0.48/" {
-	// Mylyn
-    org.eclipse.mylyn.wikitext_feature.feature.group lazy
-    org.eclipse.mylyn.wikitext.editors_feature.feature.group lazy
-    org.eclipse.mylyn.wikitext.sdk.feature.group lazy
-    org.eclipse.mylyn.wikitext.markdown lazy
-    org.eclipse.mylyn.wikitext.markdown.ui lazy
+    // Mylyn Wikitext
+	org.eclipse.mylyn.wikitext.feature.feature.group
+    org.eclipse.mylyn.wikitext.markdown
+    org.eclipse.mylyn.wikitext.markdown.ui
+
 }
 
 location "https://raw.githubusercontent.com/iloveeclipse/plugins/latest/" {
