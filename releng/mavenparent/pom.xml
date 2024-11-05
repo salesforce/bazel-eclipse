@@ -31,7 +31,7 @@
 		<coretest.vmparams></coretest.vmparams>
 		<uitest.vmparams>-Dorg.eclipse.swtbot.search.timeout=30000 -Dorg.eclipse.swtbot.screenshots.dir=target/screenshots</uitest.vmparams>
 
-		<tycho.version>4.0.7</tycho.version>
+		<tycho.version>4.0.9</tycho.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
