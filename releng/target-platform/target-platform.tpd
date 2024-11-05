@@ -1,4 +1,4 @@
-target "bazel-eclipse-feature-target-platform" with source configurePhase requirements environment JavaSE-17
+target "bazel-eclipse-feature-target-platform" with source configurePhase requirements environment JavaSE-21
 
 location "https://download.eclipse.org/eclipse/updates/4.33/" {
 	org.eclipse.e4.rcp.feature.group
