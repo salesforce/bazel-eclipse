@@ -5,13 +5,8 @@ Bundle-SymbolicName: com.salesforce.bazel.importedsource.tests
 Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: Bazel Eclipse Feature
 Fragment-Host: com.salesforce.bazel.importedsource;bundle-version="2.0.0.qualifier"
-Import-Package: net.bytebuddy.agent;version="1.14.0",
- org.junit;version="4.10.0",
- org.junit.jupiter.api;version="5.9.3",
- org.junit.jupiter.api.condition;version="5.9.3",
- org.junit.jupiter.api.function;version="5.9.3",
- org.junit.jupiter.api.io;version="5.9.3",
- org.mockito;version="5.1.1"
+Import-Package: org.junit.jupiter.api;version="[5.11.0,6.0.0)",
+ org.junit.jupiter.api.condition;version="[5.11.0,6.0.0)"
 Automatic-Module-Name: com.salesforce.bazel.java.sdk.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ClassPath: lib/truth-0.31.jar,
