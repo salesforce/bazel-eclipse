@@ -31,7 +31,7 @@ public class TargetExpressionTest {
     @Test
     public void globExpressionShouldYieldGeneralTargetExpression() {
         var target = TargetExpression.fromStringSafe("//package/...");
-        assertThat(target.getClass()).isSameAs(TargetExpression.class);
+        assertThat(target.getClass()).isSameInstanceAs(TargetExpression.class);
     }
 
     @Test

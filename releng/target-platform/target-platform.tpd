@@ -140,6 +140,11 @@ maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=g
 		artifactId="auto-value-annotations"
 		version="1.11.0"
 	}
+	dependency {
+		groupId="com.google.truth"
+		artifactId="truth"
+		version="1.4.4"
+	}
 	dependency { // Logback provides a Servlet Container service which is also loaded and that needs servlet (by default optional)
 		groupId="jakarta.servlet"
 		artifactId="jakarta.servlet-api"
