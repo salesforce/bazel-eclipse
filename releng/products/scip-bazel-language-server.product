@@ -13,7 +13,7 @@
 
    <windowImages/>
 
-   <launcher>
+   <launcher name="scip-bazel-ls">
       <win useIco="false">
          <bmp/>
       </win>
@@ -54,20 +54,9 @@
       <plugin id="org.eclipse.equinox.security.win32"/>
       <plugin id="org.eclipse.jdt.apt.pluggable.core"/>
       <plugin id="org.eclipse.jdt.core"/>
-<!--
-      <plugin id="org.eclipse.jdt.core.javac"/>
--->
       <plugin id="org.eclipse.jdt.launching"/>
       <plugin id="org.eclipse.jdt.launching.macosx"/>
       <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped"/>
-<!--
-      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.linux.aarch64"/>
-      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.linux.x86_64"/>
-      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.macosx.aarch64"/>
-      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.macosx.x86_64"/>
-      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.win32.aarch64"/>
-      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.win32.x86_64"/>
--->
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.compatibility.state"/>
       <plugin id="org.eclipse.osgi.services"/>

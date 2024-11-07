@@ -219,15 +219,7 @@
 						</environment>
 					</environments>
 					<targetDefinitionIncludeSource>honor</targetDefinitionIncludeSource>
-					<executionEnvironment>org.eclipse.justj.openjdk.hotspot.jre.full-21</executionEnvironment>
-					<!--
-					<resolveWithExecutionEnvironmentConstraints>false</resolveWithExecutionEnvironmentConstraints>
-					<dependency-resolution>
-						<profileProperties>
-							<org.eclipse.justj.buildtime>true</org.eclipse.justj.buildtime>
-						</profileProperties>
-					</dependency-resolution>
-					-->
+					<executionEnvironment>org.eclipse.justj.openjdk.hotspot.jre.full.stripped-21</executionEnvironment>
 				</configuration>
 			</plugin>
 			<plugin>
