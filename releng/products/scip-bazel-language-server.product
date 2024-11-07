@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.5"?>
+
+<product name="Scip Bazel Language Server" uid="scip-bazel-language-server.product" id="com.salesforce.bazel.scipls.product.server" application="com.salesforce.bazel.scipls.app.server" version="1.0.0" type="bundles" includeLaunchers="true" autoIncludeRequirements="true">
+
+   <configIni use="default">
+   </configIni>
+
+   <launcherArgs>
+      <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
+      </vmArgsMac>
+   </launcherArgs>
+
+   <windowImages/>
+
+   <launcher>
+      <win useIco="false">
+         <bmp/>
+      </win>
+   </launcher>
+
+   <vm>
+   </vm>
+
+   <plugins>
+      <plugin id="ch.qos.logback.classic"/>
+      <plugin id="ch.qos.logback.core"/>
+      <plugin id="com.salesforce.bazel.importedsource"/>
+      <plugin id="com.salesforce.bazel.logback"/>
+      <plugin id="com.salesforce.bazel.scipls"/>
+      <plugin id="com.salesforce.bazel.sdk"/>
+      <plugin id="jakarta.servlet-api" version="5.0.0"/>
+      <plugin id="org.apache.commons.commons-codec"/>
+      <plugin id="org.apache.felix.scr"/>
+      <plugin id="org.eclipse.ant.core"/>
+      <plugin id="org.eclipse.compare.core"/>
+      <plugin id="org.eclipse.core.commands"/>
+      <plugin id="org.eclipse.core.contenttype"/>
+      <plugin id="org.eclipse.core.expressions"/>
+      <plugin id="org.eclipse.core.filesystem"/>
+      <plugin id="org.eclipse.core.jobs"/>
+      <plugin id="org.eclipse.core.net"/>
+      <plugin id="org.eclipse.core.resources"/>
+      <plugin id="org.eclipse.core.runtime"/>
+      <plugin id="org.eclipse.core.variables"/>
+      <plugin id="org.eclipse.debug.core"/>
+      <plugin id="org.eclipse.equinox.app"/>
+      <plugin id="org.eclipse.equinox.common"/>
+      <plugin id="org.eclipse.equinox.preferences"/>
+      <plugin id="org.eclipse.equinox.registry"/>
+      <plugin id="org.eclipse.equinox.security"/>
+      <plugin id="org.eclipse.equinox.security.linux"/>
+      <plugin id="org.eclipse.equinox.security.macosx"/>
+      <plugin id="org.eclipse.equinox.security.win32"/>
+      <plugin id="org.eclipse.jdt.apt.pluggable.core"/>
+      <plugin id="org.eclipse.jdt.core"/>
+<!--
+      <plugin id="org.eclipse.jdt.core.javac"/>
+-->
+      <plugin id="org.eclipse.jdt.launching"/>
+      <plugin id="org.eclipse.jdt.launching.macosx"/>
+      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped"/>
+<!--
+      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.linux.aarch64"/>
+      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.linux.x86_64"/>
+      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.macosx.aarch64"/>
+      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.macosx.x86_64"/>
+      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.win32.aarch64"/>
+      <plugin id="org.eclipse.justj.openjdk.hotspot.jre.full.stripped.win32.x86_64"/>
+-->
+      <plugin id="org.eclipse.osgi"/>
+      <plugin id="org.eclipse.osgi.compatibility.state"/>
+      <plugin id="org.eclipse.osgi.services"/>
+      <plugin id="org.eclipse.text"/>
+      <plugin id="org.eclipse.xtext.xbase.lib"/>
+   </plugins>
+
+   <configurations>
+      <plugin id="ch.qos.logback.classic" autoStart="true" startLevel="2" />
+      <plugin id="com.salesforce.bazel.scipls" autoStart="true" startLevel="0" />
+      <plugin id="org.apache.aries.spifly.dynamic.bundle" autoStart="true" startLevel="2" />
+      <plugin id="org.apache.felix.scr" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.jdt.core" autoStart="false" startLevel="0" />
+      <plugin id="org.eclipse.jdt.launching" autoStart="false" startLevel="0" />
+   </configurations>
+
+   <preferencesInfo>
+      <targetfile overwrite="false"/>
+   </preferencesInfo>
+
+   <cssInfo>
+   </cssInfo>
+
+</product>

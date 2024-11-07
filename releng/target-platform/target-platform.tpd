@@ -90,6 +90,10 @@ location "https://download.eclipse.org/buildship/updates/e431/releases/3.x/3.1.1
 	org.eclipse.buildship.feature.group
 }
 
+location "https://download.eclipse.org/justj/jres/21/updates/release/21.0.5/" {
+	org.eclipse.justj.openjdk.hotspot.jre.full.stripped
+}
+
 maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=generate includeSources {
 	feature {
 		id="com.salesforce.bazel.eclipse.dependencies.feature"

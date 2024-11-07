@@ -3,7 +3,7 @@
 <plugin>
    <extension
          id="com.salesforce.bazel.scipls.app.server"
-         name="SCIP based Bazel Language Server"
+         name="SCIP Bazel Language Server"
          point="org.eclipse.core.runtime.applications">
       <application
             cardinality="singleton-global"
@@ -13,6 +13,18 @@
                class="com.salesforce.bazel.scipls.app.ServerApplication">
          </run>
       </application>
+   </extension>
+   <extension
+         id="com.salesforce.bazel.scipls.product.server"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="com.salesforce.bazel.scipls.app.server"
+            name="SCIP Bazel Language Server">
+         <property
+               name="appName"
+               value="SCIP Bazel Language Server">
+         </property>
+      </product>
    </extension>
 
 </plugin>

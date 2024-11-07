@@ -47,8 +47,18 @@ jobs:
           path: bazel-eclipse-latest
           skip_unpack: true
 
-      - name: Extract p2 Repository
-        run: unzip bazel-eclipse-latest/p2-repository.zip -d bazel-eclipse-latest
+      - name: Download Products
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          name: products
+          path: bazel-eclipse-latest
+          skip_unpack: true
+
+      - name: Extract downloaded artifacts
+        run: |
+          unzip bazel-eclipse-latest/p2-repository.zip -d bazel-eclipse-latest
+          unzip bazel-eclipse-latest/products.zip -d bazel-eclipse-latest
 
       - name: Assemble pages folder
         run: |

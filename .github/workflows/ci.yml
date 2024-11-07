@@ -104,6 +104,16 @@ jobs:
           name: p2-repository
           path: releng/p2repository/target/repository/
           if-no-files-found: error
+
+      - name: Upload Products
+        uses: actions/upload-artifact@v4
+        if: success() && matrix.os == 'ubuntu-latest'
+        with:
+          name: products
+          path: |
+            releng/products/target/products/*.tar.gz
+            releng/products/target/products/*.zip
+          if-no-files-found: error
             
   event_file:
     name: "Event File" 
