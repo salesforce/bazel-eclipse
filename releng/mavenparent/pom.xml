@@ -29,8 +29,7 @@
 		<surefire-reports-directory>${project.build.directory}/surefire-reports</surefire-reports-directory>
 		<test.vmparams>-Xmx1024m</test.vmparams>
 		<coretest.vmparams></coretest.vmparams>
-		<uitest.vmparams>-Dorg.eclipse.swtbot.search.timeout=30000
-			-Dorg.eclipse.swtbot.screenshots.dir=target/screenshots</uitest.vmparams>
+		<uitest.vmparams>-Dorg.eclipse.swtbot.search.timeout=30000 -Dorg.eclipse.swtbot.screenshots.dir=target/screenshots</uitest.vmparams>
 
 		<tycho.version>4.0.9</tycho.version>
 
@@ -120,8 +119,7 @@
 				</os>
 			</activation>
 			<properties>
-				<ui.test.vmargs>-XstartOnFirstThread ${test.vmparams}
-					${uitest.vmparams}</ui.test.vmargs>
+				<ui.test.vmargs>-XstartOnFirstThread ${test.vmparams} ${uitest.vmparams}</ui.test.vmargs>
 			</properties>
 		</profile>
 		<profile>
