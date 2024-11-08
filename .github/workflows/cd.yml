@@ -59,6 +59,7 @@ jobs:
         run: |
           unzip bazel-eclipse-latest/p2-repository.zip -d bazel-eclipse-latest
           unzip bazel-eclipse-latest/products.zip -d bazel-eclipse-latest
+          rm bazel-eclipse-latest/products.zip
 
       - name: Assemble pages folder
         run: |
