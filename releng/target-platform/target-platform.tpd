@@ -91,7 +91,7 @@ location "https://download.eclipse.org/buildship/updates/e431/releases/3.x/3.1.1
 }
 
 location "https://download.eclipse.org/justj/jres/21/updates/release/21.0.5/" {
-	org.eclipse.justj.openjdk.hotspot.jre.full.stripped
+	org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped
 }
 
 maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=generate includeSources {

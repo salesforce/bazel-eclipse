@@ -218,7 +218,7 @@
 					</environments>
 					<targetDefinitionIncludeSource>honor</targetDefinitionIncludeSource>
 					<executionEnvironment>
-						org.eclipse.justj.openjdk.hotspot.jre.full.stripped-21</executionEnvironment>
+						org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped-21</executionEnvironment>
 				</configuration>
 			</plugin>
 			<plugin>
