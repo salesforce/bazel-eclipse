@@ -42,17 +42,6 @@
 		<jgit.dirtyWorkingTree>error</jgit.dirtyWorkingTree>
 	</properties>
 
-	<!-- common plug-in repos for all modules -->
-	<pluginRepositories>
-		<!--
-    <pluginRepository>
-      <id>tycho-snapshots</id>
-      <url>https://repo.eclipse.org/content/repositories/tycho-snapshots/</url>
-    </pluginRepository>
-    -->
-	</pluginRepositories>
-
-
 	<profiles>
 		<profile>
 			<!-- default buildType when running in CI -->
@@ -101,8 +90,7 @@
 							<artifactId>tycho-compiler-plugin</artifactId>
 							<version>${tycho.version}</version>
 							<configuration>
-								<!-- Note, BREE libraries and toolchain.xml must
-								be setup for this to work (it's done outside) -->
+								<!-- Note, BREE libraries and toolchain.xml must be setup for this to work (it's done outside) -->
 								<useJDK>BREE</useJDK>
 							</configuration>
 						</plugin>
@@ -175,8 +163,7 @@
 				<artifactId>target-platform-configuration</artifactId>
 				<configuration>
 					<target>
-						<!-- use target platform defined in
-						releng/target-platforms Git repo -->
+						<!-- use target platform defined in target-platform module -->
 						<!-- (note: name of target file must match artifactId) -->
 						<artifact>
 							<groupId>${project.groupId}</groupId>
@@ -282,8 +269,7 @@
 						fine in the IDE) -->
 						<compilerArgument>-warn:none</compilerArgument>
 						<compilerArguments>
-							<!-- use compiler settings from project (if
-							available) -->
+							<!-- use compiler settings from project (if available) -->
 							<properties>
 								${project.basedir}/.settings/org.eclipse.jdt.core.prefs</properties>
 							<verbose />
@@ -292,8 +278,6 @@
 							<encoding>${project.build.sourceEncoding}</encoding>
 							<log>${project.build.directory}/@dot.xml</log>
 							<!-- <proceedOnError/> -->
-							<!--
-							<annotationpath>${bazel-eclipse-feature-maven-parent.basedir}/../../.settings/non-null-annotations/</annotationpath> -->
 						</compilerArguments>
 						<showWarnings>true</showWarnings>
 						<excludeResources>
@@ -357,7 +341,7 @@
 					<configuration>
 						<products>
 							<product>
-								<!-- adjust configuration of products (https://github.com/eclipse-tycho/tycho/issues/913#issuecomment-1122529505) -->
+								<!-- adjust configuration of the language server product (https://github.com/eclipse-tycho/tycho/issues/913#issuecomment-1122529505) -->
 								<id>scip-bazel-language-server.product</id>
 								<archiveFileName>scip-bazel-ls</archiveFileName>
 								<rootFolder>scip-bazel-ls</rootFolder>
@@ -452,6 +436,11 @@
 					<groupId>org.jacoco</groupId>
 					<artifactId>jacoco-maven-plugin</artifactId>
 					<version>${jacoco.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>build-helper-maven-plugin</artifactId>
+					<version>3.6.0</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>

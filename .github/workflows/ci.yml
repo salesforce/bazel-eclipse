@@ -111,8 +111,8 @@ jobs:
         with:
           name: products
           path: |
-            releng/products/target/products/*.tar.gz
-            releng/products/target/products/*.zip
+            releng/products/scip-bazel-ls/target/products/*.tar.gz
+            releng/products/scip-bazel-ls/target/products/*.zip
           if-no-files-found: error
             
   event_file:
