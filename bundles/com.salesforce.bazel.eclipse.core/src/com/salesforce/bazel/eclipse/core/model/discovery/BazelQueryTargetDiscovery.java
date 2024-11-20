@@ -134,17 +134,19 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
             throw new IllegalArgumentException("absolute path not allowed!");
         }
 
-        // the root package never is
+        // the root package never is nested in another workspace
         if (packagePath.isEmpty()) {
             return bazelWorkspace.getLocation();
         }
 
         // there should be no other WORKSPACE file in either the package nor any of its parents
-        var locationToCheck = bazelWorkspace.getLocation().append(packagePath);
-        var workspaceFile = findWorkspaceFile(locationToCheck.toPath());
+        var possibleNestedWorkspacePath = bazelWorkspace.getLocation().append(packagePath);
+        var workspaceFile = findWorkspaceFile(possibleNestedWorkspacePath.toPath());
         if (workspaceFile != null) {
-            return locationToCheck;
+            return possibleNestedWorkspacePath;
         }
+
+        // continue checking the parent package for a nested WORKSPACE
         return findWorkspaceLocation(bazelWorkspace, packagePath.removeLastSegments(1));
     }
 }
