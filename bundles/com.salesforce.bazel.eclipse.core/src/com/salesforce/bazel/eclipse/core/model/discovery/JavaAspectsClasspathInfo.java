@@ -597,7 +597,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         return resolveJar(library.libraryArtifact);
     }
 
-    public ClasspathEntry resolveProject(final Label targetLabel) throws CoreException {
+    private ClasspathEntry resolveProject(final Label targetLabel) throws CoreException {
         var workspace = bazelWorkspace;
 
         // check for project mapping (it trumps everything)
@@ -660,6 +660,14 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                     .getBazelTargets()
                     .stream()
                     .anyMatch(t -> t.getTargetName().equals(targetName))) {
+                return newProjectReference(targetLabel, bazelPackage.getBazelProject());
+            }
+
+            // it may be possible that the target is explicitly hidden from IDEs
+            // in this case, it won't match in the above condition, however, we still want to make it a project references
+            // the reason is that we do expect the project to represent the package adequately
+            // design question: this assumes project per package strategy, which is actually the case here
+            if (!bazelTarget.isVisibleToIde()) {
                 return newProjectReference(targetLabel, bazelPackage.getBazelProject());
             }
         }
