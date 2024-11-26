@@ -31,10 +31,18 @@ public record CompileAndRuntimeClasspath(
         private final LinkedHashSet<ClasspathEntry> additionalRuntimeEntries = new LinkedHashSet<>();
 
         public boolean addCompileEntry(ClasspathEntry entry) {
+            // if there is any entry (jar) with the same path, we don't add another one
+            if (compileEntries.parallelStream().anyMatch(e -> e.getPath().equals(entry.getPath()))) {
+                return false;
+            }
             return compileEntries.add(entry);
         }
 
         public boolean addRuntimeEntry(ClasspathEntry entry) {
+            // if there is any entry (jar) with the same path, we don't add another one
+            if (additionalRuntimeEntries.parallelStream().anyMatch(e -> e.getPath().equals(entry.getPath()))) {
+                return false;
+            }
             return additionalRuntimeEntries.add(entry);
         }
 
