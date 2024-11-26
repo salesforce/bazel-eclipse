@@ -22,7 +22,7 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 
 import com.google.idea.blaze.base.model.primitives.Label;
-import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
+import com.salesforce.bazel.eclipse.core.classpath.CompileAndRuntimeClasspath;
 import com.salesforce.bazel.eclipse.core.classpath.InitializeOrRefreshClasspathJob;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
@@ -172,11 +172,13 @@ public class AddDependenciesJob extends WorkspaceJob {
                 }
 
                 if (modified) {
-                    var transitive = Arrays.stream(container.getTransitiveEntries())
+                    var additionalRuntimeEntries = Arrays.stream(container.getAdditionalRuntimeClasspathEntries())
                             .map(ClasspathEntry::fromExisting)
                             .collect(toList());
-                    classpathManager
-                            .patchClasspathContainer(bazelProject, new ClasspathHolder(classpath, transitive), monitor);
+                    classpathManager.patchClasspathContainer(
+                        bazelProject,
+                        new CompileAndRuntimeClasspath(classpath, additionalRuntimeEntries),
+                        monitor);
                 }
                 return Status.OK_STATUS;
             }

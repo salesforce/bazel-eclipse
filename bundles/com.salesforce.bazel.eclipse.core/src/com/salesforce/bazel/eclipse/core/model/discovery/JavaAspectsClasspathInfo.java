@@ -59,8 +59,8 @@ import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.java.JavaBlazeRules;
 import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
-import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
-import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder.ClasspathHolderBuilder;
+import com.salesforce.bazel.eclipse.core.classpath.CompileAndRuntimeClasspath;
+import com.salesforce.bazel.eclipse.core.classpath.CompileAndRuntimeClasspath.Builder;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
@@ -144,7 +144,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
      * part of this set. Allows creating a partial classpath to improve performance on large projects. Null indicates
      * full classpath to be used
      */
-    final /*Nullable*/ Set<BazelLabel> runtimeDependencyIncludes;
+    final Set<BazelLabel> runtimeDependencyIncludes;
 
     public JavaAspectsClasspathInfo(JavaAspectsInfo aspectsInfo, BazelWorkspace bazelWorkspace,
             Set<BazelLabel> runtimeDependencyIncludes, BazelProject bazelProject) throws CoreException {
@@ -313,10 +313,10 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
      * @return the computed classpath
      * @throws CoreException
      */
-    public ClasspathHolder compute() throws CoreException {
+    public CompileAndRuntimeClasspath compute() throws CoreException {
         // the code below is copied and adapted from BlazeJavaWorkspaceImporter
 
-        var classpathBuilder = new ClasspathHolderBuilder(runtimeDependencyIncludes != null);
+        var classpathBuilder = new Builder();
 
         // Collect jars from jdep references
         for (JdepsDependency jdepsDependency : jdepsCompileJars) {
@@ -342,11 +342,11 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                                         PATTERN_EVERYTHING,
                                         IAccessRule.K_DISCOURAGED | IAccessRule.IGNORE_IF_BETTER));
 
-                    // there might be an explicit entry, which we will never want to override!
-                    classpathBuilder.putIfAbsent(entry.getPath(), entry);
+                    // add implicit dependencies as compile entries so ECJ can process them and users get access errors instead of compile errors
+                    classpathBuilder.addCompileEntry(entry);
                 } else {
                     entry.getAccessRules().add(new AccessRule(PATTERN_EVERYTHING, IAccessRule.K_ACCESSIBLE));
-                    classpathBuilder.put(entry.getPath(), entry);
+                    classpathBuilder.addCompileEntry(entry);
                 }
             } else if (LOG.isDebugEnabled()) {
                 LOG.warn("Unable to resolve compile jar: {}", jdepsDependency);
@@ -366,7 +366,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 continue;
             }
             jarEntry.setExported(true); // source jars should be exported
-            classpathBuilder.putIfAbsent(jarEntry.getPath(), jarEntry);
+            classpathBuilder.addCompileEntry(jarEntry);
         }
 
         // Collect jars referenced by direct deps
@@ -374,7 +374,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
             var entries = resolveDependency(targetKey);
             for (ClasspathEntry entry : entries) {
                 if (validateEntry(entry)) {
-                    classpathBuilder.putIfAbsent(entry.getPath(), entry);
+                    classpathBuilder.addCompileEntry(entry);
                 }
             }
         }
@@ -382,7 +382,7 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
         // Collect jars referenced by runtime deps
         for (TargetKey targetKey : runtimeDeps) {
             var entries = resolveDependency(targetKey);
-            var runtimeDependencyAvailable = includeRuntimeDependencyAsCompileDependency(targetKey);
+            var addRuntimeDependencyAsCompileEntry = includeRuntimeDependencyAsProjectCompileDependency(targetKey);
 
             for (ClasspathEntry entry : entries) {
                 if (!validateEntry(entry)) {
@@ -396,10 +396,10 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                             new AccessRule(
                                     PATTERN_EVERYTHING,
                                     IAccessRule.K_DISCOURAGED | IAccessRule.IGNORE_IF_BETTER));
-                if (runtimeDependencyAvailable) {
-                    classpathBuilder.putIfAbsent(entry.getPath(), entry);
+                if (addRuntimeDependencyAsCompileEntry) {
+                    classpathBuilder.addCompileEntry(entry);
                 } else {
-                    classpathBuilder.putUnloadedIfAbsent(entry.getPath(), entry);
+                    classpathBuilder.addRuntimeEntry(entry);
                 }
             }
         }
@@ -480,16 +480,24 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     }
 
     /**
-     * Allows filtering runtime dependencies based on the availability of the dependency in runtimseDependencyIncludes
-     * when it includes elements
+     * Indicates if the specified runtime dependences should be treated as a compile dependency.
+     * <p>
+     * Compile dependencies appear on the compile classpath, runtime dependencies do not in order to improve the Eclipse
+     * performance.
      *
      * @param targetKey
      *            the dependency to check
-     * @return true if runtimeDependencyAvailable is empty or it includes the dependency
+     * @return <code>true</code> if the dependency should be added to the project's compile dependencies,
+     *         <code>false</code> otherwise
      */
-    private boolean includeRuntimeDependencyAsCompileDependency(TargetKey targetKey) {
-        return (runtimeDependencyIncludes == null)
-                || runtimeDependencyIncludes.contains(new BazelLabel(targetKey.getLabel().toString()));
+    private boolean includeRuntimeDependencyAsProjectCompileDependency(TargetKey targetKey) {
+        if (runtimeDependencyIncludes == null) {
+            // filtering is disabled, always include as project dependency
+            return true;
+        }
+
+        // only include when it is in the allow list
+        return runtimeDependencyIncludes.contains(new BazelLabel(targetKey.getLabel().toString()));
     }
 
     private List<JdepsDependency> loadJdeps(TargetIdeInfo targetIdeInfo) throws CoreException {

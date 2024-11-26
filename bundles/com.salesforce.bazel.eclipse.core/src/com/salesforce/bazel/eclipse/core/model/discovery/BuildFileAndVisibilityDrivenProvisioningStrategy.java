@@ -37,7 +37,7 @@ import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.google.idea.blaze.base.model.primitives.WildcardTargetPattern;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
-import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
+import com.salesforce.bazel.eclipse.core.classpath.CompileAndRuntimeClasspath;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
@@ -195,7 +195,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             new TargetDiscoveryAndProvisioningExtensionLookup();
 
     @Override
-    public Map<BazelProject, ClasspathHolder> computeClasspaths(Collection<BazelProject> bazelProjects,
+    public Map<BazelProject, CompileAndRuntimeClasspath> computeClasspaths(Collection<BazelProject> bazelProjects,
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
@@ -239,7 +239,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
             // use the hints to avoid circular dependencies between projects in Eclipse
             var circularDependenciesHelper = new CircularDependenciesHelper(workspace.getBazelProjectView().targets());
 
-            Map<BazelProject, ClasspathHolder> classpathsByProject = new HashMap<>();
+            Map<BazelProject, CompileAndRuntimeClasspath> classpathsByProject = new HashMap<>();
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.subTask("Analyzing: " + bazelProject);
                 monitor.checkCanceled();
@@ -367,7 +367,7 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                     }
                 }
 
-                classpathsByProject.put(bazelProject, new ClasspathHolder(classpath, Collections.emptyList()));
+                classpathsByProject.put(bazelProject, new CompileAndRuntimeClasspath(classpath, Collections.emptyList()));
                 monitor.worked(1);
             }
 

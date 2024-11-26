@@ -33,7 +33,7 @@ import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
-import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
+import com.salesforce.bazel.eclipse.core.classpath.CompileAndRuntimeClasspath;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
@@ -73,7 +73,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
     private final Set<String> additionalJavaLikeRules = new HashSet<>();
 
     @Override
-    public Map<BazelProject, ClasspathHolder> computeClasspaths(Collection<BazelProject> bazelProjects,
+    public Map<BazelProject, CompileAndRuntimeClasspath> computeClasspaths(Collection<BazelProject> bazelProjects,
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
@@ -115,10 +115,10 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     .flatMap(Collection::stream)
                     .map(BazelTarget::getLabel)
                     .collect(toList());
-            var availableDependencies = calculateWorkspaceDependencies(workspace, targets);
+            var allowedAdditionalCompileDependencies = queryForDepsWithClasspathDepth(workspace, targets);
 
             // collect classpaths by project
-            Map<BazelProject, ClasspathHolder> classpathsByProject = new HashMap<>();
+            Map<BazelProject, CompileAndRuntimeClasspath> classpathsByProject = new HashMap<>();
 
             var workspaceRoot = workspace.getLocation().toPath();
 
@@ -189,8 +189,11 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                     subMonitor.checkCanceled();
 
                     // build index of classpath info
-                    var classpathInfo =
-                            new JavaAspectsClasspathInfo(aspectsInfo, workspace, availableDependencies, bazelProject);
+                    var classpathInfo = new JavaAspectsClasspathInfo(
+                            aspectsInfo,
+                            workspace,
+                            allowedAdditionalCompileDependencies,
+                            bazelProject);
                     var buildPathProblems = new ArrayList<IStatus>();
 
                     // add the targets

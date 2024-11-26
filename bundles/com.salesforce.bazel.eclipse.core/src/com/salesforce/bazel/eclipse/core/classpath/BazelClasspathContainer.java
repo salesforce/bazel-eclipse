@@ -52,16 +52,21 @@ import org.eclipse.jdt.core.IClasspathEntry;
  */
 public class BazelClasspathContainer implements IClasspathContainer, Serializable {
 
-    private static final long serialVersionUID = 390898179243551622L;
+    private static final long serialVersionUID = 1010694752435706159L;
 
     private final IPath path;
     private final IClasspathEntry[] classpath;
-    private final IClasspathEntry[] transitiveClasspath;
+    private final IClasspathEntry[] additionalRuntimeClasspath;
 
-    public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath, IClasspathEntry[] transitiveClasspath) {
+    public BazelClasspathContainer(IPath path, IClasspathEntry[] classpath,
+            IClasspathEntry[] additionalRuntimeClasspath) {
         this.path = path;
         this.classpath = requireNonNull(classpath);
-        this.transitiveClasspath = requireNonNull(transitiveClasspath);
+        this.additionalRuntimeClasspath = requireNonNull(additionalRuntimeClasspath);
+    }
+
+    public IClasspathEntry[] getAdditionalRuntimeClasspathEntries() {
+        return additionalRuntimeClasspath;
     }
 
     @Override
@@ -75,11 +80,16 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
     }
 
     public IClasspathEntry[] getFullClasspath() {
-        if (transitiveClasspath.length == 0) {
+        if (additionalRuntimeClasspath.length == 0) {
             return classpath;
         }
-        var fullClasspath = Arrays.copyOf(classpath, classpath.length + transitiveClasspath.length);
-        System.arraycopy(transitiveClasspath, 0, fullClasspath, classpath.length, transitiveClasspath.length);
+        var fullClasspath = Arrays.copyOf(classpath, classpath.length + additionalRuntimeClasspath.length);
+        System.arraycopy(
+            additionalRuntimeClasspath,
+            0,
+            fullClasspath,
+            classpath.length,
+            additionalRuntimeClasspath.length);
         return fullClasspath;
     }
 
@@ -91,14 +101,5 @@ public class BazelClasspathContainer implements IClasspathContainer, Serializabl
     @Override
     public IPath getPath() {
         return path;
-    }
-
-    /**
-     * A array of transitive classpath entries.
-     *
-     * @return
-     */
-    public IClasspathEntry[] getTransitiveEntries() {
-        return transitiveClasspath;
     }
 }

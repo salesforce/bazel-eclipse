@@ -239,7 +239,7 @@ public class BazelClasspathManager {
      * @param monitor
      * @throws CoreException
      */
-    public void patchClasspathContainer(BazelProject bazelProject, ClasspathHolder classpath, IProgressMonitor progress)
+    public void patchClasspathContainer(BazelProject bazelProject, CompileAndRuntimeClasspath classpath, IProgressMonitor progress)
             throws CoreException {
         var monitor = SubMonitor.convert(progress);
         try {
@@ -301,7 +301,7 @@ public class BazelClasspathManager {
                 DEFAULT_CLASSPATH,
                 monitor.split(1, SUPPRESS_ALL_LABELS));
             entries = configureClasspathWithSourceAttachments(
-                classpaths.get(bazelProject).compile(),
+                classpaths.get(bazelProject).compileEntries(),
                 null /* no props */,
                 monitor);
             for (IClasspathEntry entry : entries) {
@@ -340,19 +340,19 @@ public class BazelClasspathManager {
         }
     }
 
-    void saveAndSetContainer(IJavaProject javaProject, ClasspathHolder classpath, IProgressMonitor monitor)
+    void saveAndSetContainer(IJavaProject javaProject, CompileAndRuntimeClasspath classpath, IProgressMonitor monitor)
             throws CoreException, JavaModelException {
         var containerEntry = getBazelContainerEntry(javaProject);
         var path = containerEntry != null ? containerEntry.getPath()
                 : new Path(BazelCoreSharedContstants.CLASSPATH_CONTAINER_ID);
 
         var sourceAttachmentProperties = getSourceAttachmentProperties(javaProject.getProject());
-        var transativeClasspath = classpath.transitive().stream().map(ClasspathEntry::build).collect(toList());
+        var transativeClasspath = classpath.additionalRuntimeEntries().stream().map(ClasspathEntry::build).collect(toList());
 
         var container = new BazelClasspathContainer(
                 path,
                 configureClasspathWithSourceAttachments(
-                    classpath.compile(),
+                    classpath.compileEntries(),
                     sourceAttachmentProperties,
                     monitor.slice(1)),
                 transativeClasspath.toArray(new IClasspathEntry[transativeClasspath.size()]));

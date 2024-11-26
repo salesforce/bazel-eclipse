@@ -625,46 +625,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     /**
-     * Calculates the java_library and java_imports for the provided targets, limited by the depth
-     *
-     * @param workspace
-     *            the bazel workspace
-     * @param targetsToBuild
-     *            a list of targets as part of the build to query their dependencies
-     * @param dependencyDepth
-     *            the depth in the dependency graph to traverse and include in the result
-     * @return a set of java_library and java_imports, or null, if partial classpath is disabled
-     * @throws CoreException
-     */
-    protected final Set<BazelLabel> calculateWorkspaceDependencies(BazelWorkspace workspace,
-            List<BazelLabel> targetsToBuild) throws CoreException {
-
-        var classpathDepth = getClasspathDepthValue(workspace);
-        if (classpathDepth <= 0) {
-            return null;
-        }
-        if (classpathDepth == 1) {
-            return Collections.emptySet();
-        }
-        var targetLabels = targetsToBuild.stream().map(BazelLabel::toString).collect(joining(" + "));
-        return workspace.getCommandExecutor()
-                .runQueryWithoutLock(
-                    new BazelQueryForLabelsCommand(
-                            workspace.getLocation().toPath(),
-                            format(
-                                "kind(java_library, deps(%s, %d)) + kind(java_import, deps(%s, %d))",
-                                targetLabels,
-                                classpathDepth,
-                                targetLabels,
-                                classpathDepth),
-                            true,
-                            format("Querying for depdendencies for projects: %s", targetLabels)))
-                .stream()
-                .map(BazelLabel::new)
-                .collect(toSet());
-    }
-
-    /**
      * Collects base Java information for a given project and the targets it represents.
      * <p>
      * This uses the target info from the model (as returned by <code>bazel query</code>) to discover source directories
@@ -1732,6 +1692,53 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         } finally {
             progress.done();
         }
+    }
+
+    /**
+     * Queries the Bazel graph for java_library and java_imports of the provided targets, limited by the classpath_depth
+     * in the project view.
+     * <p>
+     * The outcome of this method is intended to be used in
+     * {@link #computeClasspaths(Collection, BazelWorkspace, com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope, IProgressMonitor)}
+     * implementation for filtering/reducing the compile classpath.
+     * <p>
+     * A depth of 0 will return <code>null</code>, which indicates unlimited/no filtering. A depth of 1 will return an
+     * empty collection, which indicates "direct dependencies only" for compilation.
+     * </p>
+     *
+     * @param workspace
+     *            the bazel workspace
+     * @param targetsToBuild
+     *            a list of targets as part of the build to query their dependencies
+     * @return a set of java_library and java_imports, or <code>null</code>, if partial classpath is disabled
+     * @throws CoreException
+     */
+    protected final Set<BazelLabel> queryForDepsWithClasspathDepth(BazelWorkspace workspace,
+            List<BazelLabel> targetsToBuild) throws CoreException {
+
+        var classpathDepth = getClasspathDepthValue(workspace);
+        if (classpathDepth <= 0) {
+            return null;
+        }
+        if (classpathDepth == 1) {
+            return Collections.emptySet();
+        }
+        var targetLabels = targetsToBuild.stream().map(BazelLabel::toString).collect(joining(" + "));
+        return workspace.getCommandExecutor()
+                .runQueryWithoutLock(
+                    new BazelQueryForLabelsCommand(
+                            workspace.getLocation().toPath(),
+                            format(
+                                "kind(java_library, deps(%s, %d)) + kind(java_import, deps(%s, %d))",
+                                targetLabels,
+                                classpathDepth,
+                                targetLabels,
+                                classpathDepth),
+                            true,
+                            format("Querying for depdendencies for projects: %s", targetLabels)))
+                .stream()
+                .map(BazelLabel::new)
+                .collect(toSet());
     }
 
     private java.nio.file.Path resolveJavaHome(BazelWorkspace workspace, String javaHome, String description)

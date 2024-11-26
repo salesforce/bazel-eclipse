@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
-import com.salesforce.bazel.eclipse.core.classpath.ClasspathHolder;
+import com.salesforce.bazel.eclipse.core.classpath.CompileAndRuntimeClasspath;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
@@ -53,7 +53,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
     public static final String STRATEGY_NAME = "project-per-target";
 
     @Override
-    public Map<BazelProject, ClasspathHolder> computeClasspaths(Collection<BazelProject> bazelProjects,
+    public Map<BazelProject, CompileAndRuntimeClasspath> computeClasspaths(Collection<BazelProject> bazelProjects,
             BazelWorkspace workspace, BazelClasspathScope scope, IProgressMonitor progress) throws CoreException {
         LOG.debug("Computing classpath for projects: {}", bazelProjects);
         try {
@@ -76,7 +76,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
 
             var workspaceRoot = workspace.getLocation().toPath();
 
-            var availableDependencies = calculateWorkspaceDependencies(workspace, targetsToBuild);
+            var availableDependencies = queryForDepsWithClasspathDepth(workspace, targetsToBuild);
 
             // run the aspect to compute all required information
             var aspects = workspace.getParent().getModelManager().getIntellijAspects();
@@ -107,7 +107,7 @@ public class ProjectPerTargetProvisioningStrategy extends BaseProvisioningStrate
                         monitor.split(1, SUPPRESS_ALL_LABELS));
 
             // populate map from result
-            Map<BazelProject, ClasspathHolder> classpathsByProject = new HashMap<>();
+            Map<BazelProject, CompileAndRuntimeClasspath> classpathsByProject = new HashMap<>();
             var aspectsInfo = new JavaAspectsInfo(result, workspace);
             for (BazelProject bazelProject : bazelProjects) {
                 monitor.subTask(bazelProject.getName());
