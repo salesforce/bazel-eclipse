@@ -14,6 +14,7 @@
 package com.salesforce.bazel.eclipse.core.model.discovery.classpath;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,10 +121,7 @@ public final class ClasspathEntry {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
+        if ((obj == null) || (getClass() != obj.getClass())) {
             return false;
         }
         var other = (ClasspathEntry) obj;
@@ -204,5 +202,55 @@ public final class ClasspathEntry {
         } else {
             getExtraAttributes().remove(IClasspathAttribute.TEST);
         }
+    }
+
+    @Override
+    public String toString() {
+        var buffer = new StringBuilder();
+        buffer.append(String.valueOf(getPath()));
+        buffer.append('[');
+        switch (getEntryKind()) {
+            case IClasspathEntry.CPE_LIBRARY:
+                buffer.append("CPE_LIBRARY");
+                break;
+            case IClasspathEntry.CPE_PROJECT:
+                buffer.append("CPE_PROJECT");
+                break;
+            case IClasspathEntry.CPE_SOURCE:
+                buffer.append("CPE_SOURCE");
+                break;
+            case IClasspathEntry.CPE_VARIABLE:
+                buffer.append("CPE_VARIABLE");
+                break;
+            case IClasspathEntry.CPE_CONTAINER:
+                buffer.append("CPE_CONTAINER");
+                break;
+        }
+        buffer.append(']');
+        if (getSourceAttachmentPath() != null) {
+            buffer.append("[sourcePath:");
+            buffer.append(getSourceAttachmentPath());
+            buffer.append(']');
+        }
+        if (getSourceAttachmentRootPath() != null) {
+            buffer.append("[rootPath:");
+            buffer.append(getSourceAttachmentRootPath());
+            buffer.append(']');
+        }
+        buffer.append("[isExported:");
+        buffer.append(exported);
+        buffer.append(']');
+        if (!accessRules.isEmpty()) {
+            buffer.append('[');
+            buffer.append(accessRules.stream().map(AccessRule::toString).collect(joining(", ")));
+            buffer.append(']');
+        }
+        if (extraAttributes.size() > 0) {
+            buffer.append("[attributes:");
+            buffer.append(
+                extraAttributes.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(joining(", ")));
+            buffer.append(']');
+        }
+        return buffer.toString();
     }
 }
