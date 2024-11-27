@@ -20,7 +20,6 @@ import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.IPath.fromPath;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +51,6 @@ import com.google.idea.blaze.java.JavaBlazeRules;
 import com.google.idea.blaze.java.sync.importer.ExecutionPathHelper;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.core.util.jar.BazelJarFile;
 import com.salesforce.bazel.eclipse.core.util.jar.SourceJarFinder;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects.OutputGroup;
@@ -237,15 +235,6 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
                     .map(this::getLibraryByJdepsRootRelativePath)
                     .filter(Predicate.not(Objects::isNull))
                     .collect(toList());
-        }
-        return null;
-    }
-
-    private Label readTargetLabel(Path jarPath) {
-        try (var jarFile = new BazelJarFile(jarPath)) {
-            return jarFile.getTargetLabel();
-        } catch (IOException e) {
-            LOG.warn("Error inspecting manifest of jar '{}': {}", jarPath, e.getMessage(), e);
         }
         return null;
     }

@@ -89,28 +89,45 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
     private static Logger LOG = LoggerFactory.getLogger(JavaAspectsClasspathInfo.class);
 
     /**
+     * Uses a filename heuristic to guess the location of a class jar corresponding to the given output jar.
+     */
+    private static ArtifactLocation guessClassJarLocation(ArtifactLocation outputJar) {
+        // copied and adapted from BlazeJavaWorkspaceImporter
+        var classJarRelPath = guessJarSiblingPathWithSuffix(outputJar.getRelativePath(), ".jar");
+        if (classJarRelPath == null) {
+            return null;
+        }
+        // we don't check whether the class jar actually exists, to avoid unnecessary file system
+        // operations
+        return ArtifactLocation.Builder.copy(outputJar).setRelativePath(classJarRelPath).build();
+    }
+
+    private static String guessJarSiblingPathWithSuffix(String relPath, String suffix) {
+        // copied and adapted from BlazeJavaWorkspaceImporter
+        if (relPath.endsWith("-hjar.jar")) {
+            return relPath.substring(0, relPath.length() - "-hjar.jar".length()) + suffix;
+        }
+        if (relPath.endsWith("-ijar.jar")) {
+            return relPath.substring(0, relPath.length() - "-ijar.jar".length()) + suffix;
+        }
+        if (relPath.endsWith(".jar")) {
+            return relPath.substring(0, relPath.length() - ".jar".length()) + suffix;
+        }
+        return null;
+    }
+
+    /**
      * Uses a filename heuristic to guess the location of a source jar corresponding to the given output jar.
      */
     private static ArtifactLocation guessSrcJarLocation(ArtifactLocation outputJar) {
-        // copied from BlazeJavaWorkspaceImporter
-        var srcJarRelPath = guessSrcJarRelativePath(outputJar.getRelativePath());
+        // copied and adapted from BlazeJavaWorkspaceImporter
+        var srcJarRelPath = guessJarSiblingPathWithSuffix(outputJar.getRelativePath(), "-src.jar");
         if (srcJarRelPath == null) {
             return null;
         }
         // we don't check whether the source jar actually exists, to avoid unnecessary file system
         // operations
         return ArtifactLocation.Builder.copy(outputJar).setRelativePath(srcJarRelPath).build();
-    }
-
-    private static String guessSrcJarRelativePath(String relPath) {
-        // copied from BlazeJavaWorkspaceImporter
-        if (relPath.endsWith("-hjar.jar")) {
-            return relPath.substring(0, relPath.length() - "-hjar.jar".length()) + "-src.jar";
-        }
-        if (relPath.endsWith("-ijar.jar")) {
-            return relPath.substring(0, relPath.length() - "-ijar.jar".length()) + "-src.jar";
-        }
-        return null;
     }
 
     static boolean isJavaProtoTarget(TargetIdeInfo target) {
@@ -326,9 +343,21 @@ public class JavaAspectsClasspathInfo extends JavaClasspathJarLocationResolver {
                 // It's in the target's jdeps, but our aspect never attached to the target building it.
                 // Perhaps it's an implicit dependency, or not referenced in an attribute we propagate
                 // along. Make a best-effort attempt to add it to the project anyway.
+                var jarPath = decodeArtifactLocation(artifact);
+                var targetLabel = readTargetLabel(jarPath.toPath());
+                if (targetLabel == null) {
+                    LOG.error(
+                        "Unable to resolve compile jar '{}' from jdeps info of '{}'. Not a proper Bazel jar without a target label!",
+                        artifact,
+                        bazelProject);
+                    // still continue to have it on the classpath
+                }
+                var classJar = guessClassJarLocation(artifact);
                 var srcJar = guessSrcJarLocation(artifact);
                 var srcJars = srcJar != null ? List.of(srcJar) : List.<ArtifactLocation> of();
-                library = new BlazeJarLibrary(new LibraryArtifact(artifact, null, srcJars), /* targetKey= */ null);
+                var libraryArtifact = new LibraryArtifact(artifact, classJar, srcJars);
+                var targetKey = targetLabel != null ? TargetKey.forPlainTarget(targetLabel) : null;
+                library = new BlazeJarLibrary(libraryArtifact, targetKey);
             }
             var entry = resolveLibrary(library);
             if (entry != null) {

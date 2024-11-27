@@ -1,10 +1,13 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static java.lang.String.format;
+import static org.eclipse.core.runtime.IPath.forPosix;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +17,7 @@ import com.google.idea.blaze.base.command.buildresult.BlazeArtifact.LocalFileArt
 import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
+import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
 import com.google.idea.blaze.base.sync.workspace.ArtifactLocationDecoder;
 import com.google.idea.blaze.base.sync.workspace.ArtifactLocationDecoderImpl;
@@ -23,6 +27,7 @@ import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspaceBlazeInfo;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
+import com.salesforce.bazel.eclipse.core.util.jar.BazelJarFile;
 
 /**
  * A utility for resolving jar information from Bazel for Eclipse classpath computation.
@@ -42,6 +47,31 @@ public class JavaClasspathJarLocationResolver {
         blazeInfo = new BazelWorkspaceBlazeInfo(bazelWorkspace);
         workspaceRoot = new WorkspaceRoot(bazelWorkspace.getLocation().toPath());
         locationDecoder = new ArtifactLocationDecoderImpl(blazeInfo, new WorkspacePathResolverImpl(workspaceRoot));
+    }
+
+    /**
+     * Convenience method to decode an {@link ArtifactLocation} using the {@link #getLocationDecoder()}.
+     *
+     * @param artifactLocation
+     *            the {@link ArtifactLocation} (must not be <code>null</code>)
+     * @return the absolute location on the file system (never <code>null</code>)
+     * @throws IllegalStateException
+     *             if the artifact location cannot be decoded
+     */
+    protected IPath decodeArtifactLocation(ArtifactLocation artifactLocation) {
+        if (artifactLocation.isMainWorkspaceSourceArtifact()) {
+            return forPosix(locationDecoder.resolveSource(artifactLocation).toString());
+        }
+
+        var blazeArtifact = locationDecoder.resolveOutput(artifactLocation);
+        if (blazeArtifact instanceof LocalFileArtifact localArtifact) {
+            return forPosix(localArtifact.getPath().toString());
+        }
+
+        throw new IllegalStateException(
+                format(
+                    "Unable to decode artifact location '%s'. It's is neither a source nor a local output artifact.",
+                    artifactLocation));
     }
 
     public ArtifactLocation generatedJarLocation(BazelPackage bazelPackage, IPath jar) {
@@ -75,6 +105,15 @@ public class JavaClasspathJarLocationResolver {
         return workspaceRoot;
     }
 
+    protected Label readTargetLabel(Path jarPath) {
+        try (var jarFile = new BazelJarFile(jarPath)) {
+            return jarFile.getTargetLabel();
+        } catch (IOException e) {
+            LOG.warn("Error inspecting manifest of jar '{}': {}", jarPath, e.getMessage(), e);
+        }
+        return null;
+    }
+
     /**
      * Resolves a {@link LibraryArtifact jar} into a {@link ClasspathEntry}.
      * <p>
@@ -90,23 +129,23 @@ public class JavaClasspathJarLocationResolver {
         // prefer the class jar because this is much better in Eclipse when debugging/stepping through code/code navigation/etc.
         var jarArtifactForIde = jar.getClassJar() != null ? jar.getClassJar() : jar.jarForIntellijLibrary();
         if (jarArtifactForIde.isMainWorkspaceSourceArtifact()) {
-            IPath jarPath = new Path(locationDecoder.resolveSource(jarArtifactForIde).toString());
+            var jarPath = forPosix(locationDecoder.resolveSource(jarArtifactForIde).toString());
             var sourceJar = jar.getSourceJars().stream().findFirst();
             if (!sourceJar.isPresent()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(
                         "Found jar for '{}': {} without source",
-                        new Path(jarArtifactForIde.getExecutionRootRelativePath()).lastSegment(),
+                        forPosix(jarArtifactForIde.getExecutionRootRelativePath()).lastSegment(),
                         jarPath);
                 }
                 return ClasspathEntry.newLibraryEntry(jarPath, null, null, false /* test only */);
             }
 
-            IPath srcJarPath = new Path(locationDecoder.resolveSource(sourceJar.get()).toString());
+            var srcJarPath = forPosix(locationDecoder.resolveSource(sourceJar.get()).toString());
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
                     "Found jar for '{}': {} (source {})",
-                    new Path(jarArtifactForIde.getExecutionRootRelativePath()).lastSegment(),
+                    forPosix(jarArtifactForIde.getExecutionRootRelativePath()).lastSegment(),
                     jarPath,
                     srcJarPath);
             }
@@ -114,7 +153,7 @@ public class JavaClasspathJarLocationResolver {
         }
         var jarArtifact = locationDecoder.resolveOutput(jarArtifactForIde);
         if (jarArtifact instanceof LocalFileArtifact localJar) {
-            IPath jarPath = new Path(localJar.getPath().toString());
+            var jarPath = forPosix(localJar.getPath().toString());
             var sourceJar = jar.getSourceJars().stream().findFirst();
             if (!sourceJar.isPresent()) {
                 if (LOG.isDebugEnabled()) {
@@ -124,7 +163,7 @@ public class JavaClasspathJarLocationResolver {
             }
             var srcJarArtifact = locationDecoder.resolveOutput(sourceJar.get());
             if (srcJarArtifact instanceof LocalFileArtifact localSrcJar) {
-                IPath srcJarPath = new Path(localSrcJar.getPath().toString());
+                var srcJarPath = forPosix(localSrcJar.getPath().toString());
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(
                         "Found jar for '{}': {} (source {})",
