@@ -6,8 +6,9 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import com.google.idea.blaze.base.model.primitives.TargetExpression;
+import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
-import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.SynchronizeProjectViewJob;
 
@@ -35,7 +36,8 @@ public interface TargetDiscoveryStrategy {
      * <p>
      * This method is typically called by {@link SynchronizeProjectViewJob} before
      * {@link #discoverTargets(BazelWorkspace, Collection, IProgressMonitor)} is called. However, the list of packages
-     * may be further reduced.
+     * may be further reduced by the caller. Therefore implementors must not expect the return value to be passed to
+     * {@link #discoverTargets(BazelWorkspace, Collection, IProgressMonitor)}.
      * </p>
      *
      * @param bazelWorkspace
@@ -45,7 +47,7 @@ public interface TargetDiscoveryStrategy {
      *            not need to call {@link IProgressMonitor#done()}
      * @return the found packages (never <code>null</code>)
      */
-    Collection<BazelPackage> discoverPackages(BazelWorkspace bazelWorkspace, IProgressMonitor progress)
+    Collection<WorkspacePath> discoverPackages(BazelWorkspace bazelWorkspace, IProgressMonitor progress)
             throws CoreException;
 
     /**
@@ -70,6 +72,6 @@ public interface TargetDiscoveryStrategy {
      *
      * @return the found targets (never <code>null</code>)
      */
-    Collection<BazelTarget> discoverTargets(BazelWorkspace bazelWorkspace, Collection<BazelPackage> bazelPackages,
+    Collection<TargetExpression> discoverTargets(BazelWorkspace bazelWorkspace, Collection<WorkspacePath> bazelPackages,
             IProgressMonitor progress) throws CoreException;
 }

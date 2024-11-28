@@ -11,10 +11,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IClasspathEntry;
 
+import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.classpath.CompileAndRuntimeClasspath;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
-import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.SynchronizeProjectViewJob;
 
@@ -128,7 +128,6 @@ public interface TargetProvisioningStrategy {
      *            a monitor for tracking progress and observing cancellations (never <code>null</code>)
      * @return a list of provisioned projects (never <code>null</code>)
      */
-    List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets, BazelWorkspace workspace,
-            IProgressMonitor progress) throws CoreException;
-
+    List<BazelProject> provisionProjectsForSelectedTargets(Collection<TargetExpression> targets,
+            BazelWorkspace workspace, IProgressMonitor progress) throws CoreException;
 }

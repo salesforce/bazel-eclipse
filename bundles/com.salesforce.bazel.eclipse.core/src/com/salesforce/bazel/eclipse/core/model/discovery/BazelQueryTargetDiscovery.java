@@ -1,10 +1,13 @@
 package com.salesforce.bazel.eclipse.core.model.discovery;
 
 import static com.salesforce.bazel.eclipse.core.model.BazelWorkspace.findWorkspaceFile;
+import static java.lang.String.format;
+import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Objects;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -14,9 +17,11 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.salesforce.bazel.eclipse.core.model.BazelPackage;
-import com.salesforce.bazel.eclipse.core.model.BazelTarget;
+import com.google.idea.blaze.base.model.primitives.Label;
+import com.google.idea.blaze.base.model.primitives.TargetExpression;
+import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
+import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.command.BazelQueryForPackagesCommand;
 
 /**
@@ -34,7 +39,7 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
     private static Logger LOG = LoggerFactory.getLogger(BazelQueryTargetDiscovery.class);
 
     @Override
-    public Collection<BazelPackage> discoverPackages(BazelWorkspace bazelWorkspace, IProgressMonitor progress)
+    public Collection<WorkspacePath> discoverPackages(BazelWorkspace bazelWorkspace, IProgressMonitor progress)
             throws CoreException {
         var monitor = SubMonitor.convert(progress, 100);
 
@@ -50,7 +55,7 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
         monitor.worked(1);
         monitor.setWorkRemaining(labels.size());
 
-        var result = new ArrayList<BazelPackage>();
+        var result = new ArrayList<WorkspacePath>();
         for (String label : labels) {
             monitor.worked(1);
 
@@ -72,41 +77,31 @@ public class BazelQueryTargetDiscovery implements TargetDiscoveryStrategy {
                 continue;
             }
 
-            var bazelPackage = bazelWorkspace.getBazelPackage(packagePath);
-            if (bazelPackage.exists()) {
-                result.add(bazelPackage);
-            }
-
+            result.add(new WorkspacePath(packagePath.toString()));
         }
         return result;
     }
 
     @Override
-    public Collection<BazelTarget> discoverTargets(BazelWorkspace bazelWorkspace,
-            Collection<BazelPackage> bazelPackages, IProgressMonitor progress) throws CoreException {
+    public Collection<TargetExpression> discoverTargets(BazelWorkspace bazelWorkspace,
+            Collection<WorkspacePath> bazelPackages, IProgressMonitor progress) throws CoreException {
         try {
-            var monitor = SubMonitor.convert(progress, "Querying targets", 1 + bazelPackages.size());
+            var monitor = SubMonitor.convert(progress, "Discovering targets", 1 + bazelPackages.size());
 
-            // open all packages at once
-            monitor.subTask("Loading package info");
-            bazelWorkspace.open(bazelPackages);
+            monitor.subTask("Querying for targets");
+            Collection<String> labels = bazelWorkspace.getCommandExecutor()
+                    .runQueryWithoutLock(
+                        new BazelQueryForLabelsCommand(
+                                bazelWorkspace.getLocation().toPath(),
+                                format(
+                                    "let all_target = kind(.*rule, %s) in $all_target - attr(tags, 'no-ide', $all_target)",
+                                    bazelPackages.stream()
+                                            .map(p -> "//" + p.relativePath().toString() + ":all")
+                                            .collect(joining(" + "))),
+                                true,
+                                "Querying for targets to synchronize"));
 
-            // collect targets
-            monitor.subTask("Collecting targets");
-            List<BazelTarget> targets = new ArrayList<>();
-            for (BazelPackage bazelPackage : bazelPackages) {
-                monitor.checkCanceled();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(
-                        "Discovered targets in package '{}': {}",
-                        bazelPackage.getLabel(),
-                        bazelPackage.getBazelTargets());
-                }
-                bazelPackage.getBazelTargets().stream().filter(BazelTarget::isVisibleToIde).forEach(targets::add);
-                monitor.worked(1);
-            }
-
-            return targets;
+            return labels.parallelStream().map(Label::fromStringSafe).filter(not(Objects::isNull)).toList();
         } finally {
             if (progress != null) {
                 progress.done();

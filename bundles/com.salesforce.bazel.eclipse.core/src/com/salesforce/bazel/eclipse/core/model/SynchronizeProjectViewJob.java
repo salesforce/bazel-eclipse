@@ -19,6 +19,7 @@ import static org.eclipse.core.resources.IContainer.INCLUDE_HIDDEN;
 import static org.eclipse.core.resources.IResource.DEPTH_ONE;
 import static org.eclipse.core.resources.IResource.FORCE;
 import static org.eclipse.core.resources.IResource.NEVER_DELETE_PROJECT_CONTENT;
+import static org.eclipse.core.runtime.IPath.forPosix;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -62,6 +63,7 @@ import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
@@ -76,7 +78,6 @@ import com.salesforce.bazel.eclipse.core.util.trace.Trace;
 import com.salesforce.bazel.eclipse.core.util.trace.TraceGraphDumper;
 import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
-import com.salesforce.bazel.sdk.model.BazelLabel;
 import com.salesforce.bazel.sdk.projectview.ImportRoots;
 
 /**
@@ -270,11 +271,11 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         return null;
     }
 
-    private Set<BazelTarget> detectTargetsToMaterializeInEclipse(IProject workspaceProject, TracingSubMonitor monitor,
-            int work) throws CoreException {
+    private Set<TargetExpression> detectTargetsToMaterializeInEclipse(IProject workspaceProject,
+            TracingSubMonitor monitor, int work) throws CoreException {
         monitor = monitor.split(work, "Detecting targets");
 
-        Set<BazelTarget> result = new HashSet<>();
+        Set<TargetExpression> result = new HashSet<>();
 
         if (projectView.deriveTargetsFromDirectories()) {
             // use strategy configured for workspace
@@ -299,7 +300,7 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             // filter packages to remove excludes
             bazelPackages = bazelPackages.stream().filter(bazelPackage -> {
                 // filter packages based in includes
-                var directory = bazelPackage.getWorkspaceRelativePath();
+                var directory = forPosix(bazelPackage.relativePath());
                 if (!includeEverything && !findPathOrAnyParentInSet(directory, allowedDirectories)) {
                     return false;
                 }
@@ -315,8 +316,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             var bazelTargets = targetDiscoveryStrategy.discoverTargets(workspace, bazelPackages, monitor.slice(1));
 
             // add only targets not explicitly excluded
-            for (BazelTarget t : bazelTargets) {
-                if (!importRoots.targetInProject(t.getLabel().toPrimitive())) {
+            for (TargetExpression t : bazelTargets) {
+                if (t instanceof Label l && !importRoots.targetInProject(l)) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Excluding target '{}' per project view exclusion", t);
                     }
@@ -336,8 +337,13 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
                     "Identifying manual specified targets to synchronize");
             Collection<String> labels = workspace.getCommandExecutor().runQueryWithoutLock(queryCommand);
             for (String label : labels) {
-                var bazelLabel = new BazelLabel(label.toString());
-                result.add(workspace.getBazelTarget(bazelLabel));
+                var targetExpression = Label.validate(label) == null ? TargetExpression.fromStringSafe(label)
+                        : TargetExpression.fromStringSafe(label);
+                if (targetExpression != null) {
+                    result.add(targetExpression);
+                }
+                //var bazelLabel = new BazelLabel(label.toString());
+                //result.add(workspace.getBazelTarget(bazelLabel));
             }
         }
 
@@ -529,8 +535,8 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
             lines.stream().collect(joining(System.lineSeparator())));
     }
 
-    private List<BazelProject> provisionProjectsForTarget(Set<BazelTarget> targets, TracingSubMonitor monitor, int work)
-            throws CoreException {
+    private List<BazelProject> provisionProjectsForTarget(Set<TargetExpression> targets, TracingSubMonitor monitor,
+            int work) throws CoreException {
         return getTargetProvisioningStrategy()
                 .provisionProjectsForSelectedTargets(targets, workspace, monitor.split(work, "Provisioning Projects"));
     }

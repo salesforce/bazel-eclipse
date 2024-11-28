@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -88,7 +89,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.Label;
+import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.google.idea.blaze.base.model.primitives.TargetName;
+import com.google.idea.blaze.base.model.primitives.WildcardTargetPattern;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants;
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
@@ -1666,13 +1669,38 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     @Override
-    public List<BazelProject> provisionProjectsForSelectedTargets(Collection<BazelTarget> targets,
+    public List<BazelProject> provisionProjectsForSelectedTargets(Collection<TargetExpression> targetsOrPackages,
             BazelWorkspace workspace, IProgressMonitor progress) throws CoreException {
         try {
             var monitor = TracingSubMonitor.convert(progress, "Provisioning projects", 3);
 
-            // load all packages to be provisioned
-            workspace.open(targets.stream().map(BazelTarget::getBazelPackage).distinct().toList());
+            // open all packages at once
+            monitor.subTask("Loading packages");
+            var bazelPackages = targetsOrPackages.parallelStream().map(e -> {
+                if (e instanceof Label l) {
+                    return new BazelLabel(l.toString());
+                }
+                var w = WildcardTargetPattern.stripWildcardSuffix(e.toString());
+                if (w != null) {
+                    return new BazelLabel(w);
+                }
+                return null;
+            }).filter(Predicate.not(Objects::isNull)).map(workspace::getBazelPackage).distinct().toList();
+            workspace.open(bazelPackages);
+
+            // collect targets
+            monitor.subTask("Collecting targets");
+            List<BazelTarget> targets = new ArrayList<>();
+            for (TargetExpression targetExpression : targetsOrPackages) {
+                if (targetExpression instanceof Label l) {
+                    // we don't check for no-ide tag here because we assume this was done already when discovering targets
+                    targets.add(workspace.getBazelTarget(new BazelLabel(l.toString())));
+                } else {
+                    LOG.warn(
+                        "Ignoring target expression '{}' for provisioning because this is not supported by the current implementation.",
+                        targetExpression);
+                }
+            }
 
             // ensure there is a mapper
             fileSystemMapper = new BazelProjectFileSystemMapper(workspace);
