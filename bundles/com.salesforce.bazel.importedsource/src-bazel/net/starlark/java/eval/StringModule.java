@@ -48,7 +48,7 @@ import net.starlark.java.annot.StarlarkMethod;
             + "# Strings support slicing (negative index starts from the end):\n"
             + "x = \"hello\"[2:4]  # \"ll\"\n"
             + "y = \"hello\"[1:-1]  # \"ell\"\n"
-            + "z = \"hello\"[:4]  # \"hell\""
+            + "z = \"hello\"[:4]  # \"hell\"\n"
             + "# Slice steps can be used, too:\n"
             + "s = \"hello\"[::2] # \"hlo\"\n"
             + "t = \"hello\"[3:0:-1] # \"lle\"\n</pre>"
@@ -184,12 +184,14 @@ final class StringModule implements StarlarkValue {
    * <p>Note that this differs from Python 2.7, which uses ctype.h#isspace(), and from
    * java.lang.Character#isWhitespace(), which does not recognize U+00A0.
    */
-  private static final String LATIN1_WHITESPACE =
-      ("\u0009" + "\n" + "\u000B" + "\u000C" + "\r" + "\u001C" + "\u001D" + "\u001E" + "\u001F"
-          + "\u0020" + "\u0085" + "\u00A0");
+  // TODO(https://github.com/bazelbuild/starlark/issues/112): use the Unicode definition of
+  // whitespace, matching Python 3.
+  private static final CharMatcher LATIN1_WHITESPACE =
+      CharMatcher.anyOf(
+          "\u0009" + "\n" + "\u000B" + "\u000C" + "\r" + "\u001C" + "\u001D" + "\u001E" + "\u001F "
+              + "\u0085" + "\u00A0");
 
-  private static String stringLStrip(String self, String chars) {
-    CharMatcher matcher = CharMatcher.anyOf(chars);
+  private static String stringLStrip(String self, CharMatcher matcher) {
     for (int i = 0; i < self.length(); i++) {
       if (!matcher.matches(self.charAt(i))) {
         return self.substring(i);
@@ -198,8 +200,7 @@ final class StringModule implements StarlarkValue {
     return ""; // All characters were stripped.
   }
 
-  private static String stringRStrip(String self, String chars) {
-    CharMatcher matcher = CharMatcher.anyOf(chars);
+  private static String stringRStrip(String self, CharMatcher matcher) {
     for (int i = self.length() - 1; i >= 0; i--) {
       if (!matcher.matches(self.charAt(i))) {
         return self.substring(0, i + 1);
@@ -208,8 +209,8 @@ final class StringModule implements StarlarkValue {
     return ""; // All characters were stripped.
   }
 
-  private static String stringStrip(String self, String chars) {
-    return stringLStrip(stringRStrip(self, chars), chars);
+  private static String stringStrip(String self, CharMatcher matcher) {
+    return stringLStrip(stringRStrip(self, matcher), matcher);
   }
 
   @StarlarkMethod(
@@ -233,8 +234,9 @@ final class StringModule implements StarlarkValue {
             defaultValue = "None")
       })
   public String lstrip(String self, Object charsOrNone) {
-    String chars = charsOrNone != Starlark.NONE ? (String) charsOrNone : LATIN1_WHITESPACE;
-    return stringLStrip(self, chars);
+    CharMatcher matcher =
+        charsOrNone != Starlark.NONE ? CharMatcher.anyOf((String) charsOrNone) : LATIN1_WHITESPACE;
+    return stringLStrip(self, matcher);
   }
 
   @StarlarkMethod(
@@ -258,8 +260,9 @@ final class StringModule implements StarlarkValue {
             defaultValue = "None")
       })
   public String rstrip(String self, Object charsOrNone) {
-    String chars = charsOrNone != Starlark.NONE ? (String) charsOrNone : LATIN1_WHITESPACE;
-    return stringRStrip(self, chars);
+    CharMatcher matcher =
+        charsOrNone != Starlark.NONE ? CharMatcher.anyOf((String) charsOrNone) : LATIN1_WHITESPACE;
+    return stringRStrip(self, matcher);
   }
 
   @StarlarkMethod(
@@ -284,8 +287,9 @@ final class StringModule implements StarlarkValue {
             defaultValue = "None")
       })
   public String strip(String self, Object charsOrNone) {
-    String chars = charsOrNone != Starlark.NONE ? (String) charsOrNone : LATIN1_WHITESPACE;
-    return stringStrip(self, chars);
+    CharMatcher matcher =
+        charsOrNone != Starlark.NONE ? CharMatcher.anyOf((String) charsOrNone) : LATIN1_WHITESPACE;
+    return stringStrip(self, matcher);
   }
 
   @StarlarkMethod(
@@ -528,15 +532,12 @@ final class StringModule implements StarlarkValue {
     long indices = substringIndices(self, start, end);
     int startpos = lo(indices);
     int endpos = hi(indices);
-    // Unfortunately Java forces us to allocate here in the general case, even
-    // though String has a private indexOf method that accepts indices.
-    // The common cases of a search of the full string or a forward search with
-    // a custom start position do not require allocations.
-    if (forward && endpos == self.length()) {
-      return self.indexOf(sub, startpos);
+    if (forward) {
+      return self.indexOf(sub, startpos, endpos);
     }
-    String substr = self.substring(startpos, endpos);
-    int subpos = forward ? substr.indexOf(sub) : substr.lastIndexOf(sub);
+    // String#lastIndexOf can't be used to implement rfind() because it only
+    // confines the start position of the substring, not the entire substring.
+    int subpos = self.substring(startpos, endpos).lastIndexOf(sub);
     return subpos < 0
         ? subpos //
         : subpos + startpos;

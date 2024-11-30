@@ -177,13 +177,13 @@ final class Parser {
     Parser parser = new Parser(lexer, errors);
 
     StarlarkFile.ParseProfiler profiler = Parser.profiler;
-    Object span = profiler != null ? profiler.start(input.getFile()) : null;
+    long profileStartNanos = profiler != null ? profiler.start() : -1;
     try {
       ImmutableList<Statement> statements = parser.parseFileInput();
       return new ParseResult(lexer.locs, statements, lexer.getComments(), errors);
     } finally {
-      if (profiler != null) {
-        profiler.end(span);
+      if (profileStartNanos != -1) {
+        profiler.end(profileStartNanos, input.getFile());
       }
     }
   }
@@ -418,8 +418,7 @@ final class Parser {
 
     // IDENTIFIER  or  IDENTIFIER = test
     expr = parseTest();
-    if (expr instanceof Identifier) {
-      Identifier id = (Identifier) expr;
+    if (expr instanceof Identifier id) {
       // parse a named argument
       if (token.kind == TokenKind.EQUALS) {
         nextToken();

@@ -50,17 +50,24 @@ public final class StarlarkFunction implements StarlarkCallable {
   // Indexed by Resolver.Binding(FREE).index values.
   private final Tuple freevars;
 
+  // A stable identifier for this function instance.
+  //
+  // This may be mutated by export.
+  private SymbolGenerator.Symbol<?> token;
+
   StarlarkFunction(
       Resolver.Function rfn,
       Module module,
       int[] globalIndex,
       Tuple defaultValues,
-      Tuple freevars) {
+      Tuple freevars,
+      SymbolGenerator.Symbol<?> token) {
     this.rfn = rfn;
     this.module = module;
     this.globalIndex = globalIndex;
     this.defaultValues = defaultValues;
     this.freevars = freevars;
+    this.token = token;
   }
 
   // Sets a global variable, given its index in this function's compiled Program.
@@ -76,6 +83,11 @@ public final class StarlarkFunction implements StarlarkCallable {
 
   boolean isToplevel() {
     return rfn.isToplevel();
+  }
+
+  /** Whether this function is defined at the top level of a file. */
+  public boolean isGlobal() {
+    return module.getGlobal(getName()) == this;
   }
 
   // TODO(adonovan): many functions would be simpler if
@@ -107,11 +119,28 @@ public final class StarlarkFunction implements StarlarkCallable {
   }
 
   /**
-   * Returns the names of this function's parameters. The residual {@code *args} and {@code
-   * **kwargs} parameters, if any, are always last.
+   * Returns the names of this function's parameters.
+   *
+   * <p>The first {@code getNumOrdinaryParameters()} parameters in the returned list are ordinary
+   * (non-residual, non-keyword-only); the following {@code getNumKeywordOnlyParameters()} are
+   * keyword-only; and the residual {@code *args} and {@code **kwargs} parameters, if any, are
+   * always last.
    */
   public ImmutableList<String> getParameterNames() {
     return rfn.getParameterNames();
+  }
+
+  /** Returns the number of ordinary (non-residual, non-keyword-only) parameters. */
+  public int getNumOrdinaryParameters() {
+    return rfn.getParameters().size()
+        - (rfn.hasKwargs() ? 1 : 0)
+        - (rfn.hasVarargs() ? 1 : 0)
+        - rfn.numKeywordOnlyParams();
+  }
+
+  /** Returns the number of non-residual keyword-only parameters. */
+  public int getNumKeywordOnlyParameters() {
+    return rfn.numKeywordOnlyParams();
   }
 
   /**
@@ -145,10 +174,14 @@ public final class StarlarkFunction implements StarlarkCallable {
     return rfn.getName();
   }
 
-  /** Returns the value denoted by the function's doc string literal, or null if absent. */
+  /**
+   * Returns the value denoted by the function's doc string literal (trimmed if necessary), or null
+   * if absent.
+   */
   @Nullable
   public String getDocumentation() {
-    return rfn.getDocumentation();
+    String documentation = rfn.getDocumentation();
+    return documentation != null ? Starlark.trimDocString(documentation) : null;
   }
 
   public Module getModule() {
@@ -177,6 +210,19 @@ public final class StarlarkFunction implements StarlarkCallable {
 
   Cell getFreeVar(int index) {
     return (Cell) freevars.get(index);
+  }
+
+  void export(StarlarkThread thread, String name) {
+    // Checks that thread is the one that defines the StarlarkFunction. It's possible for one
+    // StarlarkFunction to be exported in different places.
+    if (!token.getOwner().equals(thread.getOwner())) {
+      return;
+    }
+    if (token.isGlobal()) {
+      // Keeps only the first token if the same function is exported under multiple aliases.
+      return;
+    }
+    token = token.exportAs(name);
   }
 
   @Override
@@ -223,38 +269,38 @@ public final class StarlarkFunction implements StarlarkCallable {
 
     Object[] locals = new Object[rfn.getLocals().size()];
 
-    // nparams is the number of ordinary parameters.
-    int nparams =
-        rfn.getParameters().size() - (rfn.hasKwargs() ? 1 : 0) - (rfn.hasVarargs() ? 1 : 0);
+    // numOrdinaryParams is the number of ordinary (non-residual, non-kwonly) parameters.
+    int numOrdinaryParams = getNumOrdinaryParameters();
 
-    // numPositionalParams is the number of non-kwonly parameters.
-    int numPositionalParams = nparams - rfn.numKeywordOnlyParams();
+    // nparams is the number of all non-residual parameters.
+    int nparams = numOrdinaryParams + getNumKeywordOnlyParameters();
 
     // Too many positional args?
-    int n = positional.length;
-    if (n > numPositionalParams) {
+    int positionalCount = positional.length;
+    if (positionalCount > numOrdinaryParams) {
       if (!rfn.hasVarargs()) {
-        if (numPositionalParams > 0) {
+        if (numOrdinaryParams > 0) {
           throw Starlark.errorf(
               "%s() accepts no more than %d positional argument%s but got %d",
-              getName(), numPositionalParams, plural(numPositionalParams), n);
+              getName(), numOrdinaryParams, plural(numOrdinaryParams), positionalCount);
         } else {
           throw Starlark.errorf(
-              "%s() does not accept positional arguments, but got %d", getName(), n);
+              "%s() does not accept positional arguments, but got %d", getName(), positionalCount);
         }
       }
-      n = numPositionalParams;
+      positionalCount = numOrdinaryParams;
     }
     // Inv: n is number of positional arguments that are not surplus.
 
     // Bind positional arguments to non-kwonly parameters.
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < positionalCount; i++) {
       locals[i] = positional[i];
     }
 
     // Bind surplus positional arguments to *args parameter.
     if (rfn.hasVarargs()) {
-      locals[nparams] = Tuple.wrap(Arrays.copyOfRange(positional, n, positional.length));
+      locals[nparams] =
+          Tuple.wrap(Arrays.copyOfRange(positional, positionalCount, positional.length));
     }
 
     List<String> unexpected = null;
@@ -313,7 +359,7 @@ public final class StarlarkFunction implements StarlarkCallable {
     int m = nparams - defaultValues.size(); // first default
     List<String> missingPositional = null;
     List<String> missingKwonly = null;
-    for (int i = n; i < nparams; i++) {
+    for (int i = positionalCount; i < nparams; i++) {
       // provided?
       if (locals[i] != null) {
         continue;
@@ -329,7 +375,7 @@ public final class StarlarkFunction implements StarlarkCallable {
       }
 
       // missing
-      if (i < numPositionalParams) {
+      if (i < numOrdinaryParams) {
         if (missingPositional == null) {
           missingPositional = new ArrayList<>();
         }
@@ -378,6 +424,26 @@ public final class StarlarkFunction implements StarlarkCallable {
     }
     out.append(')');
     return out.toString();
+  }
+
+  public SymbolGenerator.Symbol<?> getToken() {
+    return token;
+  }
+
+  @Override
+  public int hashCode() {
+    return token.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+    if (!(obj instanceof StarlarkFunction)) {
+      return false;
+    }
+    return token.equals(((StarlarkFunction) obj).token);
   }
 
   @Override

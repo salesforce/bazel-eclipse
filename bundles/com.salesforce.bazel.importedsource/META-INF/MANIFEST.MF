@@ -66,4 +66,4 @@ Export-Package: com.google.devtools.build.buildjar.proto;uses:="com.google.proto
  net.starlark.java.syntax
 Bundle-Vendor: Bazel Eclipse Feature
 Automatic-Module-Name: com.salesforce.bazel.eclipse.vendoredsource
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
