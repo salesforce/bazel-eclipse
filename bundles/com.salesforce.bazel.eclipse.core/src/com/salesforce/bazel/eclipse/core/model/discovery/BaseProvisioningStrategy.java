@@ -1124,8 +1124,8 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
     }
 
     /**
-     * Called by {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)} after base
-     * workspace information has been detected.
+     * Called by {@link #doProvisionProjects(Collection, BazelWorkspace, TracingSubMonitor)} after packages were opened
+     * and {@link BazelTarget targets} looked up.
      * <p>
      * Implementors are expected to map all of the targets into projects.
      * </p>
@@ -1139,6 +1139,56 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
      */
     protected abstract List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets,
             TracingSubMonitor monitor) throws CoreException;
+
+    /**
+     * Called by {@link #provisionProjectsForSelectedTargets(Collection, BazelWorkspace, IProgressMonitor)} after base
+     * workspace information has been detected.
+     * <p>
+     * The default implementation obtains and opens {@link BazelPackage} and {@link BazelTarget} objects.
+     * </p>
+     *
+     * @param targetsOrPackages
+     *            collection of {@link TargetExpression target or wildcard expressions}
+     * @param workspace
+     *            the Bazel workspace
+     * @param monitor
+     *            monitor for reporting progress
+     * @return list of provisioned projects
+     * @throws CoreException
+     */
+    protected List<BazelProject> doProvisionProjects(Collection<TargetExpression> targetsOrPackages,
+            BazelWorkspace workspace, TracingSubMonitor monitor) throws CoreException {
+        // open all packages at once
+        monitor.subTask("Loading packages");
+        var bazelPackages = targetsOrPackages.parallelStream().map(e -> {
+            if (e instanceof Label l) {
+                return new BazelLabel(l.toString());
+            }
+            var w = WildcardTargetPattern.stripWildcardSuffix(e.toString());
+            if (w != null) {
+                return new BazelLabel(w);
+            }
+            return null;
+        }).filter(Predicate.not(Objects::isNull)).map(workspace::getBazelPackage).distinct().toList();
+        workspace.open(bazelPackages);
+
+        // collect targets
+        monitor.subTask("Collecting targets");
+        List<BazelTarget> targets = new ArrayList<>();
+        for (TargetExpression targetExpression : targetsOrPackages) {
+            if (targetExpression instanceof Label l) {
+                // we don't check for no-ide tag here because we assume this was done already when discovering targets
+                targets.add(workspace.getBazelTarget(new BazelLabel(l.toString())));
+            } else {
+                LOG.warn(
+                    "Ignoring target expression '{}' for provisioning because this is not supported by the current implementation.",
+                    targetExpression);
+            }
+        }
+
+        // create projects
+        return doProvisionProjects(targets, monitor);
+    }
 
     private void ensureFolderLinksToTarget(IFolder folderWhichShouldBeALink, IPath linkTarget, SubMonitor monitor)
             throws CoreException {
@@ -1674,34 +1724,6 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         try {
             var monitor = TracingSubMonitor.convert(progress, "Provisioning projects", 3);
 
-            // open all packages at once
-            monitor.subTask("Loading packages");
-            var bazelPackages = targetsOrPackages.parallelStream().map(e -> {
-                if (e instanceof Label l) {
-                    return new BazelLabel(l.toString());
-                }
-                var w = WildcardTargetPattern.stripWildcardSuffix(e.toString());
-                if (w != null) {
-                    return new BazelLabel(w);
-                }
-                return null;
-            }).filter(Predicate.not(Objects::isNull)).map(workspace::getBazelPackage).distinct().toList();
-            workspace.open(bazelPackages);
-
-            // collect targets
-            monitor.subTask("Collecting targets");
-            List<BazelTarget> targets = new ArrayList<>();
-            for (TargetExpression targetExpression : targetsOrPackages) {
-                if (targetExpression instanceof Label l) {
-                    // we don't check for no-ide tag here because we assume this was done already when discovering targets
-                    targets.add(workspace.getBazelTarget(new BazelLabel(l.toString())));
-                } else {
-                    LOG.warn(
-                        "Ignoring target expression '{}' for provisioning because this is not supported by the current implementation.",
-                        targetExpression);
-                }
-            }
-
             // ensure there is a mapper
             fileSystemMapper = new BazelProjectFileSystemMapper(workspace);
 
@@ -1715,8 +1737,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
             // configure the classpath of the workspace project
             configureRawClasspathOfWorkspaceProject(workspace.getBazelProject().getProject(), monitor.slice(1));
 
-            // create projects
-            return doProvisionProjects(targets, monitor);
+            return doProvisionProjects(targetsOrPackages, workspace, monitor);
         } finally {
             progress.done();
         }

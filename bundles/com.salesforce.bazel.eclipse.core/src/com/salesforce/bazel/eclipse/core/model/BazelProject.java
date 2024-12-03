@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IFile;
@@ -44,6 +45,7 @@ import org.eclipse.core.runtime.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.idea.blaze.base.model.primitives.TargetName;
 import com.salesforce.bazel.eclipse.core.BazelCore;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -592,24 +594,12 @@ public class BazelProject implements IProjectNature {
         return true;
     }
 
+    public void setBazelTargetNames(List<TargetName> targetNames, IProgressMonitor monitor) throws CoreException {
+        writeBazeltargetsFile(targetNames.stream().map(TargetName::toString), monitor);
+    }
+
     public void setBazelTargets(List<BazelTarget> targets, IProgressMonitor monitor) throws CoreException {
-        // the list can become extremely huge
-        // thus, instead of storing it as a persistent property on the project
-        // we put it into the .bazeltargets file
-
-        List<String> lines = new ArrayList<>();
-        lines.add("# targets used to setup the project");
-        lines.add("# (do not modify manually; synchronize projects to update)");
-        targets.stream().map(BazelTarget::getTargetName).distinct().sorted().forEach(lines::add);
-
-        var content = lines.stream().collect(joining(lineSeparator())).getBytes(UTF_8);
-        var bazelTargetsFile = getProject().getFile(FILE_NAME_DOT_BAZELTARGETS);
-        if (!bazelTargetsFile.exists()) {
-            bazelTargetsFile.create(new ByteArrayInputStream(content), IResource.FORCE | IResource.DERIVED, monitor);
-        } else {
-            bazelTargetsFile
-                    .setContents(new ByteArrayInputStream(content), IResource.FORCE | IResource.KEEP_HISTORY, monitor);
-        }
+        writeBazeltargetsFile(targets.stream().map(BazelTarget::getTargetName), monitor);
     }
 
     public void setModel(BazelModel bazelModel) {
@@ -636,5 +626,25 @@ public class BazelProject implements IProjectNature {
         }
         result.append("]");
         return result.toString();
+    }
+
+    private void writeBazeltargetsFile(Stream<String> targetNames, IProgressMonitor monitor) throws CoreException {
+        // the list can become extremely huge
+        // thus, instead of storing it as a persistent property on the project
+        // we put it into the .bazeltargets file
+
+        List<String> lines = new ArrayList<>();
+        lines.add("# targets used to setup the project");
+        lines.add("# (do not modify manually; synchronize projects to update)");
+        targetNames.distinct().sorted().forEach(lines::add);
+
+        var content = lines.stream().collect(joining(lineSeparator())).getBytes(UTF_8);
+        var bazelTargetsFile = getProject().getFile(FILE_NAME_DOT_BAZELTARGETS);
+        if (!bazelTargetsFile.exists()) {
+            bazelTargetsFile.create(new ByteArrayInputStream(content), IResource.FORCE | IResource.DERIVED, monitor);
+        } else {
+            bazelTargetsFile
+                    .setContents(new ByteArrayInputStream(content), IResource.FORCE | IResource.KEEP_HISTORY, monitor);
+        }
     }
 }

@@ -349,7 +349,10 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
             }
 
             // create the project for the package
-            var project = provisionPackageProject(bazelPackage, packageTargets, monitor.slice(1));
+            var project = provisionPackageProject(bazelPackage, monitor.slice(1));
+
+            // remember/update the targets to build for the project
+            project.setBazelTargets(packageTargets, monitor.slice(1));
 
             // build the Java information
             var javaInfo = collectJavaInfo(project, packageTargets, monitor.slice(1));
@@ -453,8 +456,8 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         + " Please check the error log and reach out for help."));
     }
 
-    protected BazelProject provisionPackageProject(BazelPackage bazelPackage, List<BazelTarget> targets,
-            IProgressMonitor monitor) throws CoreException {
+    protected BazelProject provisionPackageProject(BazelPackage bazelPackage, IProgressMonitor monitor)
+            throws CoreException {
         try {
             monitor.beginTask(format("Provisioning project for '//%s'", bazelPackage.getLabel().getPackagePath()), 2);
             if (!bazelPackage.hasBazelProject()) {
@@ -471,18 +474,10 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                 bazelPackage.getBazelProject().getProject();
             }
 
-            // this call is no longer expected to fail now (unless we need to poke the element info cache manually here)
-            var bazelProject = bazelPackage.getBazelProject();
-
-            // remember/update the targets to build for the project
-            bazelProject.setBazelTargets(targets, monitor.slice(1));
-
-            return bazelProject;
+            return bazelPackage.getBazelProject();
         } catch (CoreException e) {
             throw new CoreException(
-                    Status.error(
-                        format("Error provisioning project for package '%s' (targets [%s])", bazelPackage, targets),
-                        e));
+                    Status.error(format("Error provisioning project for package '%s'", bazelPackage), e));
         } finally {
             monitor.done();
         }

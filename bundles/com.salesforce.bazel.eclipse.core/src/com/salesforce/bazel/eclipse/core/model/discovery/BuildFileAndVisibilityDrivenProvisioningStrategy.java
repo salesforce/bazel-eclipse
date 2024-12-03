@@ -5,7 +5,6 @@ import static com.salesforce.bazel.eclipse.core.BazelCoreSharedContstants.BUILDP
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
 import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toCollection;
 import static org.eclipse.core.resources.IResource.DEPTH_ZERO;
@@ -18,7 +17,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
@@ -42,12 +40,8 @@ import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.core.model.buildfile.FunctionCall;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.ExternalLibrariesDiscovery;
-import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
-import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaSourceEntry;
-import com.salesforce.bazel.eclipse.core.util.trace.TracingSubMonitor;
 import com.salesforce.bazel.sdk.command.BazelQueryForLabelsCommand;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
@@ -69,7 +63,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * </ul>
  * </p>
  */
-public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPerPackageProvisioningStrategy {
+public class BuildFileAndVisibilityDrivenProvisioningStrategy extends BuildfileDrivenProvisioningStrategy {
 
     public static class CircularDependenciesHelper {
 
@@ -190,9 +184,6 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
     public static final String STRATEGY_NAME = "build-file-and-visibility-driven";
 
     private static Logger LOG = LoggerFactory.getLogger(BuildFileAndVisibilityDrivenProvisioningStrategy.class);
-
-    private final TargetDiscoveryAndProvisioningExtensionLookup extensionLookup =
-            new TargetDiscoveryAndProvisioningExtensionLookup();
 
     @Override
     public Map<BazelProject, CompileAndRuntimeClasspath> computeClasspaths(Collection<BazelProject> bazelProjects,
@@ -367,7 +358,8 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
                     }
                 }
 
-                classpathsByProject.put(bazelProject, new CompileAndRuntimeClasspath(classpath, Collections.emptyList()));
+                classpathsByProject
+                        .put(bazelProject, new CompileAndRuntimeClasspath(classpath, Collections.emptyList()));
                 monitor.worked(1);
             }
 
@@ -379,120 +371,4 @@ public class BuildFileAndVisibilityDrivenProvisioningStrategy extends ProjectPer
         }
     }
 
-    @Override
-    protected List<BazelProject> doProvisionProjects(Collection<BazelTarget> targets, TracingSubMonitor monitor)
-            throws CoreException {
-        // group into packages
-        Map<BazelPackage, List<BazelTarget>> targetsByPackage =
-                targets.stream().collect(groupingBy(BazelTarget::getBazelPackage));
-
-        monitor.beginTask("Provisioning projects", targetsByPackage.size() * 3);
-
-        var result = new ArrayList<BazelProject>();
-        for (Entry<BazelPackage, List<BazelTarget>> entry : targetsByPackage.entrySet()) {
-            var bazelPackage = entry.getKey();
-            var packageTargets = entry.getValue();
-
-            // skip the root package (not supported)
-            if (bazelPackage.isRoot()) {
-                createBuildPathProblem(
-                    bazelPackage.getBazelWorkspace().getBazelProject(),
-                    Status.warning(
-                        format(
-                            "The root package was skipped during sync because it's not supported by the '%s' strategy. Consider excluding it in the .bazelproject file.",
-                            STRATEGY_NAME)));
-                continue;
-            }
-
-            // get the top-level macro calls
-            var topLevelMacroCalls = bazelPackage.getBazelBuildFile().getTopLevelCalls();
-
-            // build the project information as we traverse the macros
-            var javaInfo = new JavaProjectInfo(bazelPackage);
-            var relevantTargets = new ArrayList<BazelTarget>();
-            for (FunctionCall macroCall : topLevelMacroCalls) {
-                var relevant = processMacroCall(macroCall, javaInfo);
-                if (!relevant) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Skipping not relevant macro call '{}'.", macroCall);
-                    }
-                    continue;
-                }
-                var name = macroCall.getName();
-                if (name != null) {
-                    packageTargets.stream().filter(t -> t.getTargetName().equals(name)).forEach(t -> {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Found relevant target '{}' for macro call '{}'", t, macroCall);
-                        }
-                        relevantTargets.add(t);
-                    });
-                }
-            }
-
-            // create the project for the package
-            var project = provisionPackageProject(bazelPackage, packageTargets, monitor.slice(1));
-
-            // create markers
-            analyzeProjectInfo(project, javaInfo, monitor);
-
-            // sanity check
-            var sourceInfo = javaInfo.getSourceInfo();
-            if (sourceInfo.hasSourceFilesWithoutCommonRoot()) {
-                for (JavaSourceEntry file : sourceInfo.getSourceFilesWithoutCommonRoot()) {
-                    createBuildPathProblem(
-                        project,
-                        Status.warning(
-                            format(
-                                "File '%s' could not be mapped into a common source directory. The project may not build successful in Eclipse.",
-                                file.getPath())));
-                }
-            }
-            if (!sourceInfo.hasSourceDirectories()) {
-                createBuildPathProblem(
-                    project,
-                    Status.error(
-                        format(
-                            "No source directories detected when analyzing package '%s' using targets '%s'",
-                            bazelPackage.getLabel().getPackagePath(),
-                            packageTargets.stream()
-                                    .map(BazelTarget::getLabel)
-                                    .map(BazelLabel::getLabelPath)
-                                    .collect(joining(", ")))));
-            }
-
-            // configure links
-            linkGeneratedSourcesIntoProject(project, javaInfo, monitor.slice(1));
-
-            // configure classpath
-            configureRawClasspath(project, javaInfo, monitor.slice(1));
-
-            result.add(project);
-        }
-        return result;
-    }
-
-    private boolean processMacroCall(FunctionCall macroCall, JavaProjectInfo javaInfo) throws CoreException {
-        var analyzers = extensionLookup.createMacroCallAnalyzers(macroCall.getResolvedFunctionName());
-        if (analyzers.isEmpty()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("No analyzers available for function '{}'", macroCall.getResolvedFunctionName());
-            }
-            return false; // no analyzers
-        }
-
-        for (MacroCallAnalyzer analyzer : analyzers) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Processing macro call '{}' with analyzer '{}'", macroCall, analyzer);
-            }
-            var wasAnalyzed = analyzer.analyze(macroCall, javaInfo);
-            if (wasAnalyzed) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Analyzer '{}' successfully processed macro call '{}'", analyzer.getClass(), macroCall);
-                }
-                return true; // stop processing
-            }
-        }
-
-        return false; // not analyzed
-    }
 }

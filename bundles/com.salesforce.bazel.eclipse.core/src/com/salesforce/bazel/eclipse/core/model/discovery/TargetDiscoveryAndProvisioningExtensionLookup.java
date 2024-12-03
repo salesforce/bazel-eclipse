@@ -14,8 +14,8 @@ import com.salesforce.bazel.eclipse.core.extensions.PriorityAttributeComparator;
 import com.salesforce.bazel.eclipse.core.projectview.BazelProjectView;
 
 /**
- * A simple lookup strategy for {@link TargetDiscoveryStrategy} and {@link TargetProvisioningStrategy} implementations
- * using the Eclipse extension registry.
+ * A simple lookup strategy for {@link TargetDiscoveryStrategy}, {@link TargetProvisioningStrategy} and
+ * {@link MacroCallAnalyzer} implementations using the Eclipse extension registry.
  */
 public final class TargetDiscoveryAndProvisioningExtensionLookup extends EclipseExtensionRegistryLookup {
 

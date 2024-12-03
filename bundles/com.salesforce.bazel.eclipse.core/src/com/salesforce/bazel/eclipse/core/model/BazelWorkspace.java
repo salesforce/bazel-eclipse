@@ -244,7 +244,7 @@ public final class BazelWorkspace extends BazelElement<BazelWorkspaceInfo, Bazel
      */
     public BazelPackage getBazelPackage(BazelLabel label) {
         checkIsRootedAtThisWorkspace(label);
-        return getBazelPackage(new org.eclipse.core.runtime.Path(label.getPackagePath()));
+        return getBazelPackage(IPath.forPosix(label.getPackagePath()));
     }
 
     /**

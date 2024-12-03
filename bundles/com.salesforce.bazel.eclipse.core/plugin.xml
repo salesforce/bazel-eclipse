@@ -120,6 +120,10 @@
             class="com.salesforce.bazel.eclipse.core.model.discovery.ProjectPerPackageProvisioningStrategy"
             name="project-per-package">
       </targetProvisioningStrategy>
+      <targetDiscoveryStrategy
+            class="com.salesforce.bazel.eclipse.core.model.discovery.BazelBuildfileTargetDiscovery"
+            name="buildfiles">
+      </targetDiscoveryStrategy>
       <targetProvisioningStrategy
             class="com.salesforce.bazel.eclipse.core.model.discovery.BuildFileAndVisibilityDrivenProvisioningStrategy"
             name="build-file-and-visibility-driven">
