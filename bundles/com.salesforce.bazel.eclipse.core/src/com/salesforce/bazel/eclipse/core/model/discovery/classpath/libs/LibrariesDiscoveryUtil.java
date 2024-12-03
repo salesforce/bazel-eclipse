@@ -100,12 +100,15 @@ public class LibrariesDiscoveryUtil {
 
     protected List<ArtifactLocation> findJars(Rule rule, String attributeName, boolean generated) {
         List<ArtifactLocation> jars = new ArrayList<>();
-        rule.getAttribute(attributeName).stringListValue().forEach(jar -> {
-            var jarArtifact = jarLabelToArtifactLocation(jar, generated);
-            if (jarArtifact != null) {
-                jars.add(jarArtifact);
+        var attribute = rule.getAttribute(attributeName);
+        if (attribute != null) {
+            for (String jar : attribute.stringListValue()) {
+                var jarArtifact = jarLabelToArtifactLocation(jar, generated);
+                if (jarArtifact != null) {
+                    jars.add(jarArtifact);
+                }
             }
-        });
+        }
         return jars;
     }
 
