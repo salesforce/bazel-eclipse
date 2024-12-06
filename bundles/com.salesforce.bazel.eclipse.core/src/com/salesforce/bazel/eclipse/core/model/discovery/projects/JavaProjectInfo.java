@@ -303,16 +303,10 @@ public class JavaProjectInfo {
      * @return the passed in value or a relative path to a file in this package
      */
     private String relativizeLabelToPackageIfPossible(String srcFileOrLabel) {
-        var myPackagePath = bazelPackage.getLabel().toString();
-
-        var relativePath = srcFileOrLabel;
-        var rootSlashIndex = srcFileOrLabel.indexOf(BazelLabel.BAZEL_ROOT_SLASHES);
-        if (rootSlashIndex > -1) {
-            relativePath = srcFileOrLabel.substring(rootSlashIndex + BazelLabel.BAZEL_ROOT_SLASHES.length());
-        }
-        if (relativePath.startsWith(myPackagePath + BazelLabel.BAZEL_COLON)) {
+        var myPackageLabel = bazelPackage.getLabel().toString();
+        if (srcFileOrLabel.startsWith(myPackageLabel + BazelLabel.BAZEL_COLON)) {
             // drop the package name to identify a reference within package
-            return relativePath.substring(myPackagePath.length() + 1);
+            return srcFileOrLabel.substring(myPackageLabel.length() + 1);
         }
 
         // return original passed in value
