@@ -1,5 +1,6 @@
 package com.salesforce.bazel.eclipse.core.model.discovery.projects;
 
+import static java.nio.file.Files.isRegularFile;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.core.runtime.IPath.forPosix;
@@ -20,6 +21,7 @@ import org.eclipse.core.runtime.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.idea.blaze.base.model.primitives.Label;
 import com.salesforce.bazel.eclipse.core.model.BazelPackage;
 import com.salesforce.bazel.eclipse.core.model.buildfile.GlobInfo;
 import com.salesforce.bazel.sdk.model.BazelLabel;
@@ -289,6 +291,66 @@ public class JavaProjectInfo {
             "Test source info not computed. Did you call analyzeProjectRecommendations?");
     }
 
+    /**
+     * Checks whether the specified string is a label pointing into this package of this project and make it relative in
+     * this case.
+     * <p>
+     * Otherwise the passed in value is returned.
+     * </p>
+     *
+     * @param srcFileOrLabel
+     *            maybe label
+     * @return the passed in value or a relative path to a file in this package
+     */
+    private String relativizeLabelToPackageIfPossible(String srcFileOrLabel) {
+        var myPackagePath = bazelPackage.getLabel().toString();
+
+        var relativePath = srcFileOrLabel;
+        var rootSlashIndex = srcFileOrLabel.indexOf(BazelLabel.BAZEL_ROOT_SLASHES);
+        if (rootSlashIndex > -1) {
+            relativePath = srcFileOrLabel.substring(rootSlashIndex + BazelLabel.BAZEL_ROOT_SLASHES.length());
+        }
+        if (relativePath.startsWith(myPackagePath + BazelLabel.BAZEL_COLON)) {
+            // drop the package name to identify a reference within package
+            return relativePath.substring(myPackagePath.length() + 1);
+        }
+
+        // return original passed in value
+        return srcFileOrLabel;
+    }
+
+    /**
+     * Indicates if the passed in string should be treated as a label (<code>true</code>) or file in this package
+     * (<code>false</code>).
+     *
+     * @param srcFileOrLabel
+     *            path to file or label
+     * @return <code>true</code> if the specified string should be treated as label, <code>false</code> otherwise
+     */
+    private boolean shouldTreatAsLabel(String srcFileOrLabel) {
+        /*
+         *  Treating as file vs label technically requires querying Bazel to be correct.
+         *  However, we would like to avoid querying Bazel because it may have a performance impact.
+         *  Therefore, we apply some heuristics to decide whether if it is a label or a file:
+         *
+         *  It can only be a label if:
+         *  - starts with ':' (relative label) OR
+         *  - starts with '@' or '//' OR
+         *  - it does validate ok as label
+         *     - AND it does not look like a path
+         *     - AND no such a file exists
+         */
+
+        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_COLON)
+                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)
+                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)) {
+            return true;
+        }
+
+        return (Label.validate(srcFileOrLabel) == null) && (srcFileOrLabel.indexOf('/') == -1)
+                && !isRegularFile(bazelPackage.getLocation().append(new Path(srcFileOrLabel)).toPath());
+    }
+
     private GlobEntry toGlobEntry(GlobInfo globInfo) {
         // the first include determines the path
         var includes = globInfo.include();
@@ -331,30 +393,10 @@ public class JavaProjectInfo {
 
     private Entry toJavaSourceFileOrLabelEntry(String srcFileOrLabel) throws CoreException {
         // test if this may be a file in this package
-        var myPackagePath = bazelPackage.getLabel().toString();
-        if (srcFileOrLabel.startsWith(myPackagePath + BazelLabel.BAZEL_COLON)) {
-            // drop the package name to identify a reference within package
-            srcFileOrLabel = srcFileOrLabel.substring(myPackagePath.length() + 1);
-        }
+        srcFileOrLabel = relativizeLabelToPackageIfPossible(srcFileOrLabel);
 
-        // starts with : then it must be treated as label
-        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_COLON)) {
-            return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel.substring(1)).getLabel());
-        }
-
-        // starts with // or @ then it must be treated as label
-        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)
-                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)) {
-            return new LabelEntry(new BazelLabel(srcFileOrLabel));
-        }
-
-        // doesn't start with // but contains one, unlikely a label!
-        if (srcFileOrLabel.indexOf('/') >= 1) {
-            return new JavaSourceEntry(new Path(srcFileOrLabel), bazelPackage.getLocation());
-        }
-
-        // treat as label if package has one matching the name
-        if (bazelPackage.hasBazelTarget(srcFileOrLabel)) {
+        // treat as label if it looks like one
+        if (shouldTreatAsLabel(srcFileOrLabel)) {
             return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel).getLabel());
         }
 
@@ -363,33 +405,10 @@ public class JavaProjectInfo {
     }
 
     private Entry toResourceFileOrLabelEntry(String srcFileOrLabel, String resourceStripPrefix) throws CoreException {
-        // test if this may be a file in this package
-        var myPackagePath = bazelPackage.getLabel().toString();
-        if (srcFileOrLabel.startsWith(myPackagePath + BazelLabel.BAZEL_COLON)) {
-            // drop the package name to identify a reference within package
-            srcFileOrLabel = srcFileOrLabel.substring(myPackagePath.length() + 1);
-        }
+        srcFileOrLabel = relativizeLabelToPackageIfPossible(srcFileOrLabel);
 
-        // starts with : then it must be treated as label
-        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_COLON)) {
-            return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel.substring(1)).getLabel());
-        }
-
-        // starts with // or @ then it must be treated as label
-        if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)
-                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)) {
-            return new LabelEntry(new BazelLabel(srcFileOrLabel));
-        }
-
-        // doesn't start with // but contains one, unlikely a label!
-        if (srcFileOrLabel.indexOf('/') >= 1) {
-            return new ResourceEntry(
-                    forPosix(srcFileOrLabel),
-                    resourceStripPrefix != null ? forPosix(resourceStripPrefix) : IPath.EMPTY);
-        }
-
-        // treat as label if package has one matching the name
-        if (bazelPackage.hasBazelTarget(srcFileOrLabel)) {
+        // treat as label if it looks like one
+        if (shouldTreatAsLabel(srcFileOrLabel)) {
             return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel).getLabel());
         }
 
