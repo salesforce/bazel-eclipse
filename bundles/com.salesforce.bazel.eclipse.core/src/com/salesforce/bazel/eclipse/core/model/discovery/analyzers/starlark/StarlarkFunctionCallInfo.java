@@ -51,6 +51,7 @@ class StarlarkFunctionCallInfo implements StarlarkValue {
     private static final Logger LOG = LoggerFactory.getLogger(StarlarkFunctionCallInfo.class);
 
     private final FunctionCall functionCall;
+    private volatile Dict<String, Object> args;
 
     public StarlarkFunctionCallInfo(FunctionCall functionCall) {
         this.functionCall = functionCall;
@@ -84,7 +85,11 @@ class StarlarkFunctionCallInfo implements StarlarkValue {
 
     @StarlarkMethod(name = "args", structField = true, useStarlarkThread = true)
     public Dict<String, Object> getArgs(StarlarkThread thread) {
-        return evaluateArgs(thread);
+        var args = this.args;
+        if (args != null) {
+            return args;
+        }
+        return this.args = evaluateArgs(thread);
     }
 
     @StarlarkMethod(name = "resolved_function_name", structField = true)

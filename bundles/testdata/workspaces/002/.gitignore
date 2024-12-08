@@ -1,0 +1,11 @@
+# Eclipse metadata
+.classpath
+.project
+.settings/
+.eclipse/
+
+# Bazel folder
+/bazel-*
+
+# ignore the Bazel version file
+.bazelversion
