@@ -64,22 +64,25 @@ import net.starlark.java.syntax.SyntaxError;
  */
 public class StarlarkMacroCallAnalyzer implements MacroCallAnalyzer {
 
+    private static final String FUNCTION_INFO = "function_info";
+
     private static final StarlarkSemantics starlarkSemantics =
             StarlarkSemantics.builder().setBool(StarlarkSemantics.EXPERIMENTAL_ENABLE_STARLARK_SET, true).build();
 
-    private final IPath analyzeFile;
-    private final StarlarkFunction analyzeFunction;
-
-    public StarlarkMacroCallAnalyzer(BazelWorkspace bazelWorkspace, WorkspacePath bzlFile)
+    /**
+     * Parses the given input for an <code>'analyze'</code> function.
+     *
+     * @param input
+     *            the input to parse
+     * @param file
+     *            for error reporting only
+     * @return the parsed function (never <code>null</code>)
+     * @throws CoreException,
+     *             {@link OperationCanceledException}
+     */
+    /* for test only */
+    static StarlarkFunction parseInputAndGetAnalyzeFunction(ParserInput input, String file)
             throws CoreException, OperationCanceledException {
-        analyzeFile = bazelWorkspace.getLocation().append(bzlFile.relativePath());
-        ParserInput input;
-        try {
-            input = ParserInput.readFile(analyzeFile.toOSString());
-        } catch (IOException e) {
-            throw new CoreException(Status.error(format("Failed to read file '%s'", analyzeFile), e));
-        }
-
         try (var mu = Mutability.create("analyzer")) {
             ImmutableMap.Builder<String, Object> env = ImmutableMap.builder();
             //Starlark.addMethods(env, new CqueryDialectGlobals(), starlarkSemantics);
@@ -89,31 +92,52 @@ public class StarlarkMacroCallAnalyzer implements MacroCallAnalyzer {
             Starlark.execFile(input, FileOptions.DEFAULT, module, thread);
             var analyzeFn = module.getGlobal("analyze");
             if (analyzeFn == null) {
-                throw new CoreException(
-                        Status.error(format("File '%s' does not define 'analyze' function", analyzeFile)));
+                throw new CoreException(Status.error(format("File '%s' does not define 'analyze' function", file)));
             }
-            if (!(analyzeFn instanceof StarlarkFunction)) {
+            if (!(analyzeFn instanceof StarlarkFunction analyzeFunction)) {
                 throw new CoreException(
                         Status.error(
                             format(
                                 "File '%s' 'analyze' is not a function. Got '%s'.",
-                                analyzeFile,
+                                file,
                                 Starlark.type(analyzeFn))));
             }
-            analyzeFunction = (StarlarkFunction) analyzeFn;
-            if (analyzeFunction.getParameterNames().size() != 1) {
+            if (!analyzeFunction.getParameterNames().contains(FUNCTION_INFO)
+                    || (analyzeFunction.getParameterNames().size() != 1)) {
                 throw new CoreException(
-                        Status.error(format("File '%s' 'format' function must take exactly 1 argument", analyzeFile)));
+                        Status.error(
+                            format(
+                                "File '%s' 'analyze' function must take exactly 1 named argument 'function_info'",
+                                file)));
             }
+
+            return analyzeFunction;
         } catch (SyntaxError.Exception e) {
-            throw new CoreException(
-                    Status.error(format("Syntax error in file '%s': %s", analyzeFile, e.getMessage()), e));
+            throw new CoreException(Status.error(format("Syntax error in file '%s': %s", file, e.getMessage()), e));
         } catch (EvalException e) {
-            throw new CoreException(
-                    Status.error(format("Evaluation error in file '%s': %s", analyzeFile, e.getMessage()), e));
+            throw new CoreException(Status.error(format("Evaluation error in file '%s': %s", file, e.getMessage()), e));
         } catch (InterruptedException e) {
             throw new OperationCanceledException("Interrupted while executing Starlark");
         }
+    }
+
+    private final IPath analyzeFile;
+
+    private final StarlarkFunction analyzeFunction;
+
+    public StarlarkMacroCallAnalyzer(BazelWorkspace bazelWorkspace, WorkspacePath bzlFile)
+            throws CoreException, OperationCanceledException {
+
+        analyzeFile = bazelWorkspace.getLocation().append(bzlFile.relativePath());
+
+        ParserInput input;
+        try {
+            input = ParserInput.readFile(analyzeFile.toOSString());
+        } catch (IOException e) {
+            throw new CoreException(Status.error(format("Failed to read file '%s'", analyzeFile), e));
+        }
+
+        analyzeFunction = parseInputAndGetAnalyzeFunction(input, analyzeFile.toOSString());
     }
 
     @Override
@@ -122,8 +146,14 @@ public class StarlarkMacroCallAnalyzer implements MacroCallAnalyzer {
             var thread = StarlarkThread.createTransient(Mutability.create("analyze evaluation"), starlarkSemantics);
             thread.setMaxExecutionSteps(500_000L);
 
-            var kwargs = Map.<String, Object> of("macro_info", new StarlarkFunctionCallInfo(macroCall));
+            var kwargs = Map.<String, Object> of(FUNCTION_INFO, new StarlarkFunctionCallInfo(macroCall));
             var result = Starlark.call(thread, analyzeFunction, null, kwargs);
+            if (Starlark.isNullOrNone(result) || !Starlark.truth(result)) {
+                return false;
+            }
+            if (!(result instanceof StarlarkAnalyzeInfo)) {
+                throw Starlark.errorf("Return value is not of type AnalyzeInfo. Got '%s'", result);
+            }
         } catch (EvalException e) {
             throw new CoreException(
                     Status.error(
