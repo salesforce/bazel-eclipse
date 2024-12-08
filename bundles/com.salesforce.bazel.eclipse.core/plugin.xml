@@ -125,6 +125,10 @@
             name="buildfiles">
       </targetDiscoveryStrategy>
       <targetProvisioningStrategy
+            class="com.salesforce.bazel.eclipse.core.model.discovery.BuildfileDrivenProvisioningStrategy"
+            name="project-per-buildfile">
+      </targetProvisioningStrategy>
+      <targetProvisioningStrategy
             class="com.salesforce.bazel.eclipse.core.model.discovery.BuildFileAndVisibilityDrivenProvisioningStrategy"
             name="build-file-and-visibility-driven">
       </targetProvisioningStrategy>
