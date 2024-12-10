@@ -331,17 +331,19 @@ public class JavaProjectInfo {
          *  - starts with ':' (relative label) OR
          *  - starts with '@' or '//' OR
          *  - it does validate ok as label
-         *     - AND it does not look like a path
-         *     - AND no such a file exists
+         *  OTHERWISE it is treated as file if:
+         *     - it does look like a path OR
+         *     - a file exists
          */
 
         if (srcFileOrLabel.startsWith(BazelLabel.BAZEL_COLON)
                 || srcFileOrLabel.startsWith(BazelLabel.BAZEL_ROOT_SLASHES)
-                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)) {
+                || srcFileOrLabel.startsWith(BazelLabel.BAZEL_EXTERNALREPO_AT)
+                || (Label.validate(srcFileOrLabel) == null)) {
             return true;
         }
 
-        return (Label.validate(srcFileOrLabel) == null) && (srcFileOrLabel.indexOf('/') == -1)
+        return (srcFileOrLabel.indexOf('/') == -1)
                 && !isRegularFile(bazelPackage.getLocation().append(new Path(srcFileOrLabel)).toPath());
     }
 
