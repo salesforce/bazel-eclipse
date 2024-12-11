@@ -393,6 +393,12 @@ public class JavaProjectInfo {
 
         // treat as label if it looks like one
         if (shouldTreatAsLabel(srcFileOrLabel)) {
+            // handle absolute labels first
+            var mayBeAbsoluteLaybel = Label.createIfValid(srcFileOrLabel);
+            if (mayBeAbsoluteLaybel != null) {
+                return new LabelEntry(new BazelLabel(mayBeAbsoluteLaybel.toString()));
+            }
+            // treat as relative label
             return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel).getLabel());
         }
 

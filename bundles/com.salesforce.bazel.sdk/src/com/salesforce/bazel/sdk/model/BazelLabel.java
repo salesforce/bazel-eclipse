@@ -476,9 +476,8 @@ public class BazelLabel {
                     getExternalRepositoryName(),
                     new WorkspacePath(getPackagePath()),
                     TargetName.create(getTargetName()));
-            } else {
-                return Label.create(new WorkspacePath(getPackagePath()), TargetName.create(getTargetName()));
             }
+            return Label.create(new WorkspacePath(getPackagePath()), TargetName.create(getTargetName()));
         }
 
         return Label.create(fullLabel);
@@ -488,4 +487,5 @@ public class BazelLabel {
     public String toString() {
         return fullLabel;
     }
+
 }
