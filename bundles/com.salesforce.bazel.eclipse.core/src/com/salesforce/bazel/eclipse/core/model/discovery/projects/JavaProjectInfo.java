@@ -291,6 +291,16 @@ public class JavaProjectInfo {
             "Test source info not computed. Did you call analyzeProjectRecommendations?");
     }
 
+    private Entry newLabelEntry(String relativeOrAbsoluteLabel) {
+        // handle absolute labels first
+        var mayBeAbsoluteLaybel = Label.createIfValid(relativeOrAbsoluteLabel);
+        if (mayBeAbsoluteLaybel != null) {
+            return new LabelEntry(new BazelLabel(mayBeAbsoluteLaybel.toString()));
+        }
+        // treat as relative label
+        return new LabelEntry(bazelPackage.getBazelTarget(relativeOrAbsoluteLabel).getLabel());
+    }
+
     /**
      * Checks whether the specified string is a label pointing into this package of this project and make it relative in
      * this case.
@@ -393,13 +403,7 @@ public class JavaProjectInfo {
 
         // treat as label if it looks like one
         if (shouldTreatAsLabel(srcFileOrLabel)) {
-            // handle absolute labels first
-            var mayBeAbsoluteLaybel = Label.createIfValid(srcFileOrLabel);
-            if (mayBeAbsoluteLaybel != null) {
-                return new LabelEntry(new BazelLabel(mayBeAbsoluteLaybel.toString()));
-            }
-            // treat as relative label
-            return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel).getLabel());
+            return newLabelEntry(srcFileOrLabel);
         }
 
         // treat as file
@@ -411,7 +415,7 @@ public class JavaProjectInfo {
 
         // treat as label if it looks like one
         if (shouldTreatAsLabel(srcFileOrLabel)) {
-            return new LabelEntry(bazelPackage.getBazelTarget(srcFileOrLabel).getLabel());
+            return newLabelEntry(srcFileOrLabel);
         }
 
         // treat as file
