@@ -75,7 +75,7 @@ Does nothing when `derive_targets_from_directories` is not set or set to `false`
 The default value is `default`, which maps to `bazel-query` and will use `bazel query` to discover targets.
 It's possible to add custom strategies via an extension point.
 
-#### `bazel query`
+#### `bazel-query`
 
 This performs a `bazel query` to obtain all list of all `BUILD` files.
 The list is then processed and directory information is translated into a list of Bazel packages.
@@ -85,6 +85,13 @@ Directories with an anchor explicitely excluded will also be discarded.
 The remaining list of packages is queried again using `bazel query` to obtain all possible targets.
 
 See [BazelQueryTargetDiscovery.java](../../bundles/com.salesforce.bazel.eclipse.core/src/com/salesforce/bazel/eclipse/core/model/discovery/BazelQueryTargetDiscovery.java) to read more about default discovery behavior.
+
+#### `buildfiles`
+
+This also performs a `bazel query` but ignores targets.
+It's a perfect combination (and performance optimization) when used with the `project-per-buildfile` target provisioning strategy.
+
+See [BazelBuildfileTargetDiscovery.java](../../bundles/com.salesforce.bazel.eclipse.core/src/com/salesforce/bazel/eclipse/core/model/discovery/BazelBuildfileTargetDiscovery.java) to read more about discovery behavior.
 
 ### `target_provisioning_strategy`
 
@@ -145,6 +152,18 @@ For details please read the JavaDoc (and Java code) of [ProjectPerPackageProvisi
 * Overlapping projects (nested packages) cause issues and will be ignored.
 * It requires running `bazel build` to detect classpath configuration.
 * Is not fully implemented and required help/work/contributions.
+
+#### `project-per-buildfile`
+
+This is an experimental strategy which tries to avoid running Bazel commands for importing projects.
+It does so by parsing `BUILD` files directly.
+Each `BUILD` file is mapped to a single project.
+Nested packages in the same source folder are ignored.
+
+When it discovers an unknown function it can delegate to extensible analyzers for computing project information.
+Analyzers can we written in Java as IDE plug-ins or Starlark functions.
+However, the Starlark dialect is very limited and does not support the full Bazel dialect and built-in functions.
+It purely exists to allow macro/rule implementors to also provide the IDE with necessary information.
 
 ### `target_provisioning_settings`
 
