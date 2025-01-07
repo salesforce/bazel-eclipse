@@ -1,6 +1,30 @@
-###############################################################################
-# Bazel now uses Bzlmod by default to manage external dependencies.
-# Please consider migrating your external dependencies from WORKSPACE to MODULE.bazel.
-#
-# For more details, please check https://github.com/bazelbuild/bazel/issues/18958
-###############################################################################
+module(
+    name = "testdata_workspaces_002",
+)
+
+bazel_dep(name = "rules_java", version = "8.6.3")
+bazel_dep(name = "rules_jvm_external", version = "6.6")
+
+maven_deps = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven_deps.artifact(
+    testonly = True,
+    artifact = "junit",
+    group = "junit",
+    version = "4.13.2",
+)
+maven_deps.install(
+    name = "maven_deps",
+    artifacts = [
+        "com.google.guava:guava:33.4.0-jre",
+        "junit:junit:4.13.2",
+        "org.apache.commons:commons-lang3:jar:3.17.0",
+    ],
+    fail_if_repin_required = True,
+    fetch_sources = True,
+    generate_compat_repositories = False,
+    lock_file = "@//:maven_install.json",  # repin with: REPIN=1 bazel run @maven_deps//:pin
+    resolver = "maven",
+    strict_visibility = True,
+    version_conflict_policy = "pinned",
+)
+use_repo(maven_deps, "maven_deps")
