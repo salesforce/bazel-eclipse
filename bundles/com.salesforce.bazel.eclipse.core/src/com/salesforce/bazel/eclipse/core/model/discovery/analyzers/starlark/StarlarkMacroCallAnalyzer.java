@@ -16,6 +16,7 @@ package com.salesforce.bazel.eclipse.core.model.discovery.analyzers.starlark;
 import static java.lang.String.format;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
@@ -48,7 +49,7 @@ import net.starlark.java.syntax.SyntaxError;
  * though. Bazel specific Starlark globals are not supported.
  * </p>
  * <p>
- * The analyzer must be defined in a <code>.bzl</code> file. The file must define a function named <code>analyze</code>.
+ * The analyzer must be defined in a <code>.scl</code> file. The file must define a function named <code>analyze</code>.
  * The function will be called with the following named parameters:
  * <ul>
  * <li><code>function_info</code> - info about the function call (see {@link StarlarkFunctionCallInfo} for details)</li>
@@ -63,6 +64,8 @@ import net.starlark.java.syntax.SyntaxError;
  * </p>
  */
 public class StarlarkMacroCallAnalyzer implements MacroCallAnalyzer {
+
+    private static final Object[] NO_ARGS = {};
 
     private static final String FUNCTION_INFO = "function_info";
 
@@ -85,7 +88,7 @@ public class StarlarkMacroCallAnalyzer implements MacroCallAnalyzer {
             throws CoreException, OperationCanceledException {
         try (var mu = Mutability.create("analyzer")) {
             ImmutableMap.Builder<String, Object> env = ImmutableMap.builder();
-            //Starlark.addMethods(env, new CqueryDialectGlobals(), starlarkSemantics);
+            Starlark.addMethods(env, new StarlarkAnalyzeInfo(), starlarkSemantics);
             var module = Module.withPredeclared(starlarkSemantics, env.buildOrThrow());
 
             var thread = StarlarkThread.createTransient(mu, starlarkSemantics);
@@ -125,10 +128,10 @@ public class StarlarkMacroCallAnalyzer implements MacroCallAnalyzer {
 
     private final StarlarkFunction analyzeFunction;
 
-    public StarlarkMacroCallAnalyzer(BazelWorkspace bazelWorkspace, WorkspacePath bzlFile)
+    public StarlarkMacroCallAnalyzer(BazelWorkspace bazelWorkspace, WorkspacePath sclFile)
             throws CoreException, OperationCanceledException {
 
-        analyzeFile = bazelWorkspace.getLocation().append(bzlFile.relativePath());
+        analyzeFile = bazelWorkspace.getLocation().append(sclFile.relativePath());
 
         ParserInput input;
         try {
@@ -142,19 +145,23 @@ public class StarlarkMacroCallAnalyzer implements MacroCallAnalyzer {
 
     @Override
     public boolean analyze(FunctionCall macroCall, JavaProjectInfo javaInfo) throws CoreException {
-        try {
-            var thread = StarlarkThread.createTransient(Mutability.create("analyze evaluation"), starlarkSemantics);
+        try (var mu = Mutability.create("analyze evaluation")) {
+            ImmutableMap.Builder<String, Object> env = ImmutableMap.builder();
+            //Starlark.addMethods(env, new CqueryDialectGlobals(), starlarkSemantics);
+            var module = Module.withPredeclared(starlarkSemantics, env.buildOrThrow());
+
+            var thread = StarlarkThread.createTransient(mu, starlarkSemantics);
             thread.setMaxExecutionSteps(500_000L);
 
             var kwargs = Map.<String, Object> of(FUNCTION_INFO, new StarlarkFunctionCallInfo(macroCall));
-            var result = Starlark.call(thread, analyzeFunction, null, kwargs);
+            var result = Starlark.call(thread, analyzeFunction, List.of(), kwargs);
             if (Starlark.isNullOrNone(result) || !Starlark.truth(result)) {
                 return false;
             }
             if (!(result instanceof StarlarkAnalyzeInfo)) {
                 throw Starlark.errorf("Return value is not of type AnalyzeInfo. Got '%s'", result);
             }
-        } catch (EvalException e) {
+        } catch (EvalException | RuntimeException e) {
             throw new CoreException(
                     Status.error(
                         format("Error executiong 'analyze' in file '%s': %s", analyzeFile, e.getMessage()),

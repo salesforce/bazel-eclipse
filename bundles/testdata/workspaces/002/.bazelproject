@@ -14,3 +14,6 @@ java_language_level: 21
 
 target_discovery_strategy: buildfiles
 target_provisioning_strategy: project-per-buildfile
+target_provisioning_settings:
+  macro:my_macro=tools/ide/my_macro_analyzer.scl
+

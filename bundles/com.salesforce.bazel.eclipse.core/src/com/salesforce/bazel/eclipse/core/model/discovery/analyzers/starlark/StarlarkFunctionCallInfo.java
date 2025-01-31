@@ -58,19 +58,16 @@ class StarlarkFunctionCallInfo implements StarlarkValue {
     }
 
     private Dict<String, Object> evaluateArgs(StarlarkThread thread) {
-        var callExpression = functionCall.getCallExpression();
-
         Builder<String, Object> result = Dict.builder();
 
+        var callExpression = functionCall.getCallExpression();
         for (Argument argument : callExpression.getArguments()) {
             if (argument.getName() == null) {
                 continue;
             }
             try {
-
                 var parserInput = ParserInput
                         .fromString(argument.getValue().prettyPrint(), format("argument %s", argument.getName()));
-
                 result.put(argument.getName(), Starlark.eval(parserInput, FileOptions.DEFAULT, predeclared, thread));
             } catch (InterruptedException e) {
                 throw new OperationCanceledException("Interrupted Starlark execution");
