@@ -26,12 +26,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.idea.blaze.base.model.primitives.TargetExpression;
 import com.google.idea.blaze.base.model.primitives.TargetName;
+import com.google.idea.blaze.base.model.primitives.WorkspacePath;
 import com.salesforce.bazel.eclipse.core.classpath.BazelClasspathScope;
 import com.salesforce.bazel.eclipse.core.classpath.CompileAndRuntimeClasspath;
 import com.salesforce.bazel.eclipse.core.model.BazelProject;
 import com.salesforce.bazel.eclipse.core.model.BazelTarget;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
 import com.salesforce.bazel.eclipse.core.model.buildfile.FunctionCall;
+import com.salesforce.bazel.eclipse.core.model.discovery.analyzers.starlark.StarlarkMacroCallAnalyzer;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.ClasspathEntry;
 import com.salesforce.bazel.eclipse.core.model.discovery.classpath.libs.ExternalLibrariesDiscovery;
 import com.salesforce.bazel.eclipse.core.model.discovery.projects.JavaProjectInfo;
@@ -41,7 +43,7 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
  * Implementation of {@link TargetProvisioningStrategy} which provisions projects based on parsing <code>BUILD</code>
- * files directly and computing their classpath based on visibility in the build graph.
+ * files directly.
  * <p>
  * This strategy implements behavior which intentionally deviates from Bazel dominated strategies in favor of a better
  * developer experience in IDEs.
@@ -50,8 +52,6 @@ import com.salesforce.bazel.sdk.model.BazelLabel;
  * <li>The macro translation is extensible so translators for custom macros can be provided and included in the
  * analysis.</li>
  * <li>A heuristic is used to merge <code>java_*</code> targets in the same package into a single Eclipse project.</li>
- * <li>The classpath is computed based on visibility, which eventually allows to compute the deps list by IDEs based on
- * actual use.</li>
  * <li>Projects are created directly in the package location.</li>
  * <li>The root (empty) package <code>//</code> is not supported.</li>
  * </ul>
@@ -153,8 +153,29 @@ public class BuildfileDrivenProvisioningStrategy extends ProjectPerPackageProvis
     protected List<BazelProject> doProvisionProjects(Collection<TargetExpression> targetsOrPackages,
             BazelWorkspace workspace, TracingSubMonitor monitor) throws CoreException {
 
-        // obtain package paths
+        // extract package paths from label to provision
         var packages = targetsOrPackages.parallelStream().map(this::extractPackagePath).distinct().toList();
+
+        // load macro analyzers specified in project view
+        Map<String, StarlarkMacroCallAnalyzer> starlarkAnalyzers = new HashMap<>();
+        for (var settingsEntry : workspace.getBazelProjectView().targetProvisioningSettings().entrySet()) {
+            if (settingsEntry.getKey().startsWith("macro:")) {
+                try {
+                    var macroName = settingsEntry.getKey().substring("macro:".length());
+                    var sclFile = new WorkspacePath(settingsEntry.getValue());
+                    var analyzer = new StarlarkMacroCallAnalyzer(workspace, sclFile);
+                    starlarkAnalyzers.put(macroName, analyzer);
+                } catch (Exception e) {
+                    throw new CoreException(
+                            Status.error(
+                                format(
+                                    "Error loading macro call analyzer for setting '%s': %s",
+                                    settingsEntry,
+                                    e.getMessage()),
+                                e));
+                }
+            }
+        }
 
         monitor.beginTask("Provisioning projects", packages.size() * 3);
         var result = new ArrayList<BazelProject>();
@@ -179,7 +200,7 @@ public class BuildfileDrivenProvisioningStrategy extends ProjectPerPackageProvis
             var javaInfo = new JavaProjectInfo(bazelPackage);
             var relevantTargets = new ArrayList<TargetName>();
             for (FunctionCall macroCall : topLevelMacroCalls) {
-                var relevant = processMacroCall(macroCall, javaInfo);
+                var relevant = processMacroCall(macroCall, javaInfo, starlarkAnalyzers);
                 if (!relevant) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Skipping not relevant macro call '{}'.", macroCall);
@@ -241,13 +262,22 @@ public class BuildfileDrivenProvisioningStrategy extends ProjectPerPackageProvis
         return Path.of(targetExpressionStr.substring(startIndex, colonIndex));
     }
 
-    private boolean processMacroCall(FunctionCall macroCall, JavaProjectInfo javaInfo) throws CoreException {
-        var analyzers = extensionLookup.createMacroCallAnalyzers(macroCall.getResolvedFunctionName());
-        if (analyzers.isEmpty()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("No analyzers available for function '{}'", macroCall.getResolvedFunctionName());
+    private boolean processMacroCall(FunctionCall macroCall, JavaProjectInfo javaInfo,
+            Map<String, ? extends MacroCallAnalyzer> projectViewAnalyzers) throws CoreException {
+        // get the analyzers to check
+        List<MacroCallAnalyzer> analyzers;
+        var projectViewAnalyzer = projectViewAnalyzers.get(macroCall.getResolvedFunctionName());
+        if (projectViewAnalyzer != null) {
+            // any analyzer from project view takes precedences
+            analyzers = List.of(projectViewAnalyzer);
+        } else {
+            analyzers = extensionLookup.createMacroCallAnalyzers(macroCall.getResolvedFunctionName());
+            if (analyzers.isEmpty()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("No analyzers available for function '{}'", macroCall.getResolvedFunctionName());
+                }
+                return false; // no analyzers
             }
-            return false; // no analyzers
         }
 
         for (MacroCallAnalyzer analyzer : analyzers) {
