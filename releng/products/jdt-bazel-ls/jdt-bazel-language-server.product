@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="Scip Bazel Language Server" uid="scip-bazel-ls" id="com.salesforce.bazel.scipls.product.server" application="com.salesforce.bazel.scipls.app.server" version="1.0.0" type="bundles" includeLaunchers="true" autoIncludeRequirements="true">
+<product name="JDT Language Server with Bazel Extension" uid="jdt-bazel-ls" id="org.eclipse.jdt.ls.core.product" application="org.eclipse.jdt.ls.core.id1" version="1.0.0" type="bundles" includeLaunchers="true" autoIncludeRequirements="true">
 
    <configIni use="default">
    </configIni>
@@ -9,13 +9,19 @@
    <launcherArgs>
       <programArgs>-nosplash
       </programArgs>
+      <vmArgs>--add-modules=ALL-SYSTEM
+--add-opens
+java.base/java.util=ALL-UNNAMED
+--add-opens
+java.base/java.lang=ALL-UNNAMED
+      </vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
       </vmArgsMac>
    </launcherArgs>
 
    <windowImages/>
 
-   <launcher name="scip-bazel-ls">
+   <launcher name="jdt-bazel-ls">
       <win useIco="false">
          <bmp/>
       </win>
@@ -27,14 +33,16 @@
    <plugins>
       <plugin id="ch.qos.logback.classic"/>
       <plugin id="ch.qos.logback.core"/>
+      <plugin id="com.salesforce.bazel.eclipse.core"/>
+      <plugin id="com.salesforce.bazel.eclipse.jdtls"/>
       <plugin id="com.salesforce.bazel.importedsource"/>
       <plugin id="com.salesforce.bazel.logback"/>
-      <plugin id="com.salesforce.bazel.scipls"/>
       <plugin id="com.salesforce.bazel.sdk"/>
       <plugin id="jakarta.servlet-api" version="5.0.0"/>
       <plugin id="org.apache.commons.commons-codec"/>
       <plugin id="org.apache.felix.scr"/>
       <plugin id="org.eclipse.ant.core"/>
+      <plugin id="org.eclipse.buildship.core"/>
       <plugin id="org.eclipse.compare.core"/>
       <plugin id="org.eclipse.core.commands"/>
       <plugin id="org.eclipse.core.contenttype"/>
@@ -58,7 +66,15 @@
       <plugin id="org.eclipse.jdt.core"/>
       <plugin id="org.eclipse.jdt.launching"/>
       <plugin id="org.eclipse.jdt.launching.macosx"/>
+      <plugin id="org.eclipse.jdt.ls.core"/>
+      <plugin id="org.eclipse.jdt.ls.filesystem"/>
+      <plugin id="org.eclipse.jdt.ls.logback.appender"/>
       <plugin id="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped"/>
+      <plugin id="org.eclipse.m2e.apt.core"/>
+      <plugin id="org.eclipse.m2e.core"/>
+      <plugin id="org.eclipse.m2e.jdt"/>
+      <plugin id="org.eclipse.m2e.maven.runtime"/>
+      <plugin id="org.eclipse.m2e.workspace.cli"/>
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.compatibility.state"/>
       <plugin id="org.eclipse.osgi.services"/>
@@ -68,13 +84,13 @@
 
    <configurations>
       <plugin id="ch.qos.logback.classic" autoStart="true" startLevel="2" />
-      <plugin id="com.salesforce.bazel.scipls" autoStart="true" startLevel="0" />
       <plugin id="org.apache.aries.spifly.dynamic.bundle" autoStart="true" startLevel="2" />
       <plugin id="org.apache.felix.scr" autoStart="true" startLevel="2" />
       <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
       <plugin id="org.eclipse.jdt.core" autoStart="false" startLevel="0" />
       <plugin id="org.eclipse.jdt.launching" autoStart="false" startLevel="0" />
+      <plugin id="org.eclipse.jdt.ls.core" autoStart="true" startLevel="0" />
    </configurations>
 
    <preferencesInfo>

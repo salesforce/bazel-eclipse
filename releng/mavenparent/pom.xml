@@ -341,10 +341,10 @@
 					<configuration>
 						<products>
 							<product>
-								<!-- adjust configuration of the language server product (https://github.com/eclipse-tycho/tycho/issues/913#issuecomment-1122529505) -->
-								<id>scip-bazel-language-server.product</id>
-								<archiveFileName>scip-bazel-ls</archiveFileName>
-								<rootFolder>scip-bazel-ls</rootFolder>
+								<!-- adjust configuration of the language server product (https://github.com/eclipse-tycho/tycho/issues/913#issuecomment-1126680550) -->
+								<id>${tycho.product.uid}</id>
+								<archiveFileName>${tycho.product.launcher.name}</archiveFileName>
+								<rootFolder>${tycho.product.launcher.name}</rootFolder>
 							</product>
 						</products>
 					</configuration>
