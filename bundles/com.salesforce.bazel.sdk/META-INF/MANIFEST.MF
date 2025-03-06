@@ -4,7 +4,7 @@ Bundle-Name: Bazel Java SDK and IntelliJ Helpers
 Bundle-SymbolicName: com.salesforce.bazel.sdk;singleton:=true
 Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: Bazel Eclipse Feature
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Automatic-Module-Name: com.salesforce.bazel.eclipse.model
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: com.salesforce.bazel.sdk.BazelJavaSdkPlugin

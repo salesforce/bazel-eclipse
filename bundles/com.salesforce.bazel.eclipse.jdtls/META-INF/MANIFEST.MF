@@ -29,6 +29,6 @@ Export-Package: com.salesforce.bazel.eclipse.jdtls,
 Import-Package: org.fusesource.jansi;version="2.4.0",
  org.osgi.service.event;version="1.4.1",
  org.slf4j;version="2.0.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Bundle-ActivationPolicy: lazy
 Service-Component: OSGI-INF/com.salesforce.bazel.eclipse.jdtls.execution.BazelJdtLsSyncStatsOutputComponent.xml
