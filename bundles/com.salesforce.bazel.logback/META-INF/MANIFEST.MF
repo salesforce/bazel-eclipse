@@ -6,5 +6,5 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: Bazel Eclipse Feature
 Fragment-Host: ch.qos.logback.classic;bundle-version="1.4.11"
 Automatic-Module-Name: com.salesforce.bazel.logback
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Require-Bundle: org.eclipse.core.runtime

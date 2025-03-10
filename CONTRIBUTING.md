@@ -19,7 +19,7 @@ Recommended resources
 
 You need:
 - latest version of [Eclipse IDE for Eclipse Committers](https://www.eclipse.org/downloads/packages/)
-- JDK 17
+- JDK 21
 - Bazelisk available as `bazel` binary in `PATH` environment
 
 ### Additional Plug-Ins from the Eclipse Marketplace:
@@ -41,7 +41,7 @@ As a result, modifications in the core plug-in may need adaption in BEF as well 
 **After cloning the repository, follow these steps:**
 
 - Launch the Eclipse IDE for Committers with a **new workspace**
-- Ensure JDK 17 is configured (*Preferences > Java > Installed JREs*)
+- Ensure JDK 21 is configured (*Preferences > Java > Installed JREs*)
 - Click *File > Import > General > Existing Projects into Workspace*
 - Select the `bazel-eclipse` folder as the root directory
 - Select **Search for nested projects** (critical step)
@@ -67,7 +67,7 @@ Once done everything should build.
 This will download the IntelliJ Aspects and puts them into a ZIP file for use.
 We don't distribute them in our source control.
 Note, the shell script requires a working Git and Bazel binary in the `PATH`.
-On MacOS, GNU Tar (`gtar`) is needed as well.
+On MacOS, GNU Tar (`gtar`) is needed as well (`brew install gnu-tar`).
 
 
 ## Debugging
@@ -95,3 +95,20 @@ We use [GitHub Actions](https://github.com/salesforce/bazel-eclipse/actions) for
 
 This is explained in more detail in the [build guide](docs/dev/thebuild.md).
 
+### Command Line Build
+
+To build on the command line quickly, run the following commands:
+
+1. Import IJ Aspects
+
+``` 
+pushd ./bundles/com.salesforce.bazel.sdk/aspects/import
+./import-and-build.sh
+popd
+```
+
+2. Run Maven build
+
+```
+./mvnw clean verify
+```

@@ -6,7 +6,7 @@ Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: Bazel Eclipse Feature
 Fragment-Host: com.salesforce.bazel.eclipse.core;bundle-version="2.0.0"
 Automatic-Module-Name: com.salesforce.bazel.eclipse.core.tests
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Import-Package: org.hamcrest;version="2.2.0",
  org.hamcrest.collection;version="2.2.0",
  org.junit.jupiter.api;version="5.9.2",
