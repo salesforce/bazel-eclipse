@@ -65,6 +65,8 @@ location "https://download.eclipse.org/releases/2024-12/" {
 
 location "https://download.eclipse.org/jdtls/milestones/1.45.0/repository/" {
 	org.eclipse.jdt.ls.core
+	org.eclipse.jdt.ls.filesystem
+	org.eclipse.jdt.ls.logback.appender
 }
 
 // locations below taken from eclipse.jdt.ls project (to allow building the JDT LS in same workspace)
