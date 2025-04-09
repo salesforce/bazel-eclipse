@@ -66,6 +66,7 @@ jobs:
           path: |
             ~/.cache/bazel
             ~/.cache/bazelisk
+            /var/tmp/_bazel_*
           key: ${{ runner.os }}-bazel
         
       - name: Setup Bazelisk
