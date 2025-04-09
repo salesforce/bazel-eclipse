@@ -172,6 +172,11 @@ maven MavenDependencies scope=compile dependencyDepth=none missingManifest=gener
 		artifactId="commons-text"
 		version="1.12.0"
 	}
+	dependency {
+		groupId="org.apache.velocity"
+		artifactId="velocity-engine-core"
+		version="2.4.1"
+	}
 }
 
 maven ScipMavenDependencies scope=compile dependencyDepth=none missingManifest=generate includeSources {

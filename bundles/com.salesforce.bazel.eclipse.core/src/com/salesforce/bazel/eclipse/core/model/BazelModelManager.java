@@ -220,7 +220,6 @@ public class BazelModelManager implements BazelCoreSharedContstants {
 
         // ensure aspects are usable
         aspects = new IntellijAspects(stateLocation.append("intellij-aspects").toPath());
-        aspects.makeAvailable();
 
         // initialize the classpath manager
         classpathManager = new BazelClasspathManager(stateLocation.toFile(), this);

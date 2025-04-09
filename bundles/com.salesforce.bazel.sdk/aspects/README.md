@@ -16,6 +16,4 @@ The update is a bit automated.
 
 ### Notes
 
-If you get a build error about `no such package '@intellij_....//'` copy the relevant `http_archive` entry from the [IJ WORKSPACE file](https://github.com/bazelbuild/intellij/blob/master/WORKSPACE) and add it to `import/WORKSPACE`.
-
-
+Depending on the changes upstream you have to do quite some work to get it back going.

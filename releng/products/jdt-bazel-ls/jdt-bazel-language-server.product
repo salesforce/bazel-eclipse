@@ -41,6 +41,7 @@ java.base/java.lang=ALL-UNNAMED
       <plugin id="jakarta.servlet-api" version="5.0.0"/>
       <plugin id="org.apache.commons.commons-codec"/>
       <plugin id="org.apache.felix.scr"/>
+      <plugin id="org.apache.velocity.engine-core"/>
       <plugin id="org.eclipse.ant.core"/>
       <plugin id="org.eclipse.buildship.core"/>
       <plugin id="org.eclipse.compare.core"/>

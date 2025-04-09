@@ -1,6 +1,6 @@
-# external repo
-intellij/
-intellij_platform_sdk/
+# external repo and outputs
+intellij*
+aspect_*.jar
 
 # bazel symlinks
 bazel-*

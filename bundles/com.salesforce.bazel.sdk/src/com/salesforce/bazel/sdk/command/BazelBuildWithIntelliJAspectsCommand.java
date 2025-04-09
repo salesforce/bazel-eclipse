@@ -15,9 +15,10 @@ import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
 import com.salesforce.bazel.sdk.model.BazelLabel;
 
 /**
- * <code>bazel build --aspects=@intellij_aspect//:intellij_info_bundled.bzl%intellij_info_aspect --output_groups=...</code>
+ * <code>bazel build --aspects=//.eclipse/.intellij_aspects/:intellij_info_bundled.bzl%intellij_info_aspect --output_groups=...</code>
  * <p>
- * Runs a Bazel build with IntelliJ aspects configured and collects any information from the BuildEventStream
+ * Runs a Bazel build with IntelliJ aspects configured and collects any information from the BuildEventStream. The
+ * IntelliJ aspects must be deployed to the workspace before running this command.
  * </p>
  */
 public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
@@ -27,7 +28,8 @@ public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
 
     /**
      * @param workspaceRoot
-     *            the Bazel workspace root
+     *            the Bazel workspace root IJ aspects are expected to be deployed there, this must be done separately
+     *            before executing any command)
      * @param targets
      *            the targets to build
      * @param outputGroupNames
@@ -47,6 +49,9 @@ public class BazelBuildWithIntelliJAspectsCommand extends BazelBuildCommand {
     @Override
     public List<String> prepareCommandLine(BazelVersion bazelVersion) throws IOException {
         var commandLine = super.prepareCommandLine(bazelVersion);
+
+        // copy aspects to the workspace
+        aspects.copyIntoWorkspace(getWorkingDirectory(), bazelVersion);
 
         // enable aspects and request output groups
         commandLine.addAll(aspects.getFlags(bazelVersion));

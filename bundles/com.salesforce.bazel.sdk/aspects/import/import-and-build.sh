@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-# clean-up old left overs
-rm -rf bazel-*
-rm -rf intellij/
-rm -rf intellij_platform_sdk/
-
-# ensure directory exists
-mkdir -p intellij
-mkdir -p intellij_platform_sdk
-
 # use proper tar
 if [ "$(uname)" == "Darwin" ]; then
     tar="gtar"
@@ -31,7 +22,7 @@ fi
 #     1. replace the hash with the one you want to update to
 #     2. check WORKSPACE for any repo that needs updates
 #
-git_sha="76ff4072e0396b1904b819c957fd7aa43199e2b0"
+git_sha="1e99c447ee9af21d984df10ca085dadd37feba9b"
 git_sha_short=${git_sha::6}
 
 # abort if file already exists
@@ -40,11 +31,25 @@ if test -f "../aspects-${git_sha_short}.zip"; then
     exit 0
 fi
 
+# clean-up old left overs
+rm -rf bazel-*
+rm -rf intellij*
+rm -f aspect_*.jar
+
+# ensure directory exists
+mkdir -p intellij
+
 # download repo
 curl -L https://github.com/bazelbuild/intellij/archive/${git_sha}.tar.gz | ${tar} --strip-components 1 -C intellij -xz
-cp -r intellij/intellij_platform_sdk/* intellij_platform_sdk/
+
+# build the aspects
+pushd intellij > /dev/null
+bazel build //aspect:all
+popd > /dev/null
 
 # generate tarball
+cp intellij/bazel-bin/aspect/aspect_lib.jar .
+cp intellij/bazel-bin/aspect/aspect_template_lib.jar .
 bazel build :aspects
 
 # copy to location
