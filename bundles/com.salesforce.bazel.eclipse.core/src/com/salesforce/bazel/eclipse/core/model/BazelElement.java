@@ -142,7 +142,7 @@ public sealed abstract class BazelElement<I extends BazelElementInfo, P extends 
     }
 
     BazelElementInfoCache getInfoCache() {
-        return BazelElementInfoCache.getInstance();
+        return getModel().getModelManager().getModelInfoCache();
     }
 
     /**

@@ -18,8 +18,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.osgi.framework.FrameworkUtil;
 
 import com.salesforce.bazel.eclipse.core.BazelCore;
+import com.salesforce.bazel.eclipse.core.BazelCorePlugin;
 import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
-import com.salesforce.bazel.eclipse.core.model.cache.BazelElementInfoCache;
 import com.salesforce.bazel.sdk.BazelVersion;
 
 /**
@@ -78,7 +78,7 @@ public class BazelWorkspaceExtension implements BeforeAllCallback, AfterAllCallb
 
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
-        BazelElementInfoCache.getInstance().invalidateAll();
+        BazelCorePlugin.getInstance().getBazelModelManager().getModelInfoCache().invalidateAll();
 
         if ((bazelVersion != null) && (workspaceRoot != null)) {
             Files.delete(workspaceRoot.resolve(".bazelversion"));
