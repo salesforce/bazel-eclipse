@@ -515,11 +515,16 @@ public class SynchronizeProjectViewJob extends WorkspaceJob {
         monitor = monitor.split(work, format("Initializing Classpaths for %d projects", projects.size()));
 
         // use the job to properly trigger the classpath manager
-        new InitializeOrRefreshClasspathJob(
+        var status = new InitializeOrRefreshClasspathJob(
                 projects.contains(workspace.getBazelProject()) ? projects.stream()
                         : concat(Stream.of(workspace.getBazelProject()), projects.stream()),
                 workspace.getParent().getModelManager().getClasspathManager(),
                 true).runInWorkspace(monitor);
+
+        // re-throw any error so we get proper reporting in the UI
+        if (status.matches(IStatus.ERROR)) {
+            throw new CoreException(status);
+        }
     }
 
     private void logSyncStats(String workspaceName, Duration duration, int projectsCount, int targetsCount,
