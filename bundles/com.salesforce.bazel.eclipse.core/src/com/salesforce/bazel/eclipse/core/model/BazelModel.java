@@ -13,6 +13,8 @@
  */
 package com.salesforce.bazel.eclipse.core.model;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -105,7 +107,9 @@ public final class BazelModel extends BazelElement<BazelModelInfo, BazelElement<
      * @return the owning model manager
      */
     public BazelModelManager getModelManager() {
-        return modelManager;
+        return requireNonNull(
+            modelManager,
+            "not initialized properly; allowed only in unit tests, then mocking is required");
     }
 
     @Override
