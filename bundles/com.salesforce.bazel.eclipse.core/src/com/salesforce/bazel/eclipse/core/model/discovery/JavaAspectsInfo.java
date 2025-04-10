@@ -74,6 +74,7 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
     }
 
     final ParsedBepOutput aspectsBuildResult;
+    final IntellijAspects intellijAspects;
 
     /** index of all aspects loaded from the build output */
     final Map<TargetKey, TargetIdeInfo> ideInfoByTargetKey;
@@ -84,9 +85,11 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
     /** index of jars based on their root relative path, which allows lookup of jdeps entries */
     final Map<String, BlazeJarLibrary> libraryByJdepsRootRelativePath;
 
-    public JavaAspectsInfo(ParsedBepOutput aspectsBuildResult, BazelWorkspace bazelWorkspace) throws CoreException {
+    public JavaAspectsInfo(ParsedBepOutput aspectsBuildResult, BazelWorkspace bazelWorkspace,
+            IntellijAspects intellijAspects) throws CoreException {
         super(bazelWorkspace);
         this.aspectsBuildResult = aspectsBuildResult;
+        this.intellijAspects = intellijAspects;
 
         // build maps
         ideInfoByTargetKey = new HashMap<>();
@@ -102,7 +105,7 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Processing aspect: {}", outputArtifact);
                 }
-                var targetIdeInfo = TargetIdeInfo.fromProto(getAspects().readAspectFile(outputArtifact));
+                var targetIdeInfo = TargetIdeInfo.fromProto(intellijAspects.readAspectFile(outputArtifact));
                 if (targetIdeInfo == null) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Skipping empty aspect: {}", outputArtifact);
@@ -208,10 +211,6 @@ public class JavaAspectsInfo extends JavaClasspathJarLocationResolver {
 
     public TargetIdeInfo get(TargetKey targetKey) {
         return ideInfoByTargetKey.get(targetKey);
-    }
-
-    public IntellijAspects getAspects() {
-        return bazelWorkspace.getParent().getModelManager().getIntellijAspects();
     }
 
     public List<BlazeJarLibrary> getLibraries(TargetKey targetKey) {

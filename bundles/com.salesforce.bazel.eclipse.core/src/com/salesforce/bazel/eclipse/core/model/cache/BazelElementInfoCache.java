@@ -13,10 +13,7 @@
  */
 package com.salesforce.bazel.eclipse.core.model.cache;
 
-import static java.util.Objects.requireNonNull;
-
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicReference;
 
 import com.salesforce.bazel.eclipse.core.model.BazelElement;
 import com.salesforce.bazel.eclipse.core.model.BazelElementInfo;
@@ -35,37 +32,6 @@ import com.salesforce.bazel.eclipse.core.model.BazelWorkspace;
  * </p>
  */
 public abstract sealed class BazelElementInfoCache permits CaffeineBasedBazelElementInfoCache {
-
-    private static final AtomicReference<BazelElementInfoCache> cacheRef = new AtomicReference<>();
-
-    /**
-     * Returns the singleton cache instance
-     *
-     * @return the singleton cache instance (never <code>null</code>)
-     * @throws IllegalStateException
-     *             if the cache has not been initalized yet
-     */
-    public static final BazelElementInfoCache getInstance() throws IllegalStateException {
-        var cache = cacheRef.get();
-        if (cache == null) {
-            throw new IllegalStateException("BazelElementInfoCache not initialized.");
-        }
-        return cache;
-    }
-
-    /**
-     * Initializes the singleton instance.
-     *
-     * @param cache
-     *            the singleton instance
-     * @throws IllegalStateException
-     *             if the singleton cache instance was already initialized
-     */
-    public static final void setInstance(BazelElementInfoCache cache) throws IllegalStateException {
-        if (!cacheRef.compareAndSet(null, requireNonNull(cache, "Cannot initialize NULL instance"))) {
-            throw new IllegalStateException("The cache was already initialized. Cannot initialize multiple times!");
-        }
-    }
 
     /**
      * Collects all elements available in the cache for the given workspace.

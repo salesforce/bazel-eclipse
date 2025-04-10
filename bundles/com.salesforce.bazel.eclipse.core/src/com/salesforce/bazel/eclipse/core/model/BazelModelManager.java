@@ -51,6 +51,10 @@ import com.salesforce.bazel.sdk.aspects.intellij.IntellijAspects;
  * It's intended to be used as a singleton. There must only be one instance during the entire lifetime of the IDE. This
  * instance is managed by {@link BazelCorePlugin}.
  * </p>
+ * <p>
+ * In general the model manager is considered an internal manager to the model. It should only be interacted with from
+ * within the model. Please reach out if you have a different use case.
+ * </p>
  */
 public class BazelModelManager implements BazelCoreSharedContstants {
 
@@ -121,16 +125,16 @@ public class BazelModelManager implements BazelCoreSharedContstants {
             // TODO: save all existing Bazel mappings
         }
     };
-    private final IPath stateLocation;
 
+    private final IPath stateLocation;
     private final BazelModel model;
 
     private final JobsBasedExecutionService executionService =
             new JobsBasedExecutionService(new ExtensibleCommandExecutor());
 
-    private BazelClasspathManager classpathManager;
-
-    private IntellijAspects aspects;
+    private volatile BazelClasspathManager classpathManager;
+    private volatile BazelElementInfoCache cache;
+    private volatile IntellijAspects aspects;
 
     /**
      * Creates a new model manager instance
@@ -140,7 +144,7 @@ public class BazelModelManager implements BazelCoreSharedContstants {
      */
     public BazelModelManager(IPath stateLocation) {
         this.stateLocation = stateLocation;
-        this.model = new BazelModel(this);
+        model = new BazelModel(this);
         resourceChangeProcessor = new ResourceChangeProcessor(this);
     }
 
@@ -152,7 +156,7 @@ public class BazelModelManager implements BazelCoreSharedContstants {
      * @return the classpath manager used by this model manager
      */
     public BazelClasspathManager getClasspathManager() {
-        return requireNonNull(classpathManager, "not initialized");
+        return requireNonNull(classpathManager, "The model manager is not initialized!");
     }
 
     /**
@@ -166,7 +170,7 @@ public class BazelModelManager implements BazelCoreSharedContstants {
      * {@return the aspects used by the model}
      */
     public IntellijAspects getIntellijAspects() {
-        return requireNonNull(aspects, "Not initialized!");
+        return requireNonNull(aspects, "The model manager is not initialized!");
     }
 
     public BazelModel getModel() {
@@ -174,7 +178,14 @@ public class BazelModelManager implements BazelCoreSharedContstants {
     }
 
     /**
-     * @return the resource change processor
+     * {@return the singleton instance of the {@link BazelElementInfoCache} used by the model}
+     */
+    public BazelElementInfoCache getModelInfoCache() {
+        return requireNonNull(cache, "The model manager is not initialized!");
+    }
+
+    /**
+     * {@return the resource change processor}
      */
     ResourceChangeProcessor getResourceChangeProcessor() {
         return resourceChangeProcessor;
@@ -205,12 +216,10 @@ public class BazelModelManager implements BazelCoreSharedContstants {
         }
 
         // configure cache
-        BazelElementInfoCache.setInstance(
-            new CaffeineBasedBazelElementInfoCache(getCacheMaximumSize(), getCacheExpireAfterAccessDuration()));
+        cache = new CaffeineBasedBazelElementInfoCache(getCacheMaximumSize(), getCacheExpireAfterAccessDuration());
 
         // ensure aspects are usable
         aspects = new IntellijAspects(stateLocation.append("intellij-aspects").toPath());
-        aspects.makeAvailable();
 
         // initialize the classpath manager
         classpathManager = new BazelClasspathManager(stateLocation.toFile(), this);
@@ -281,5 +290,10 @@ public class BazelModelManager implements BazelCoreSharedContstants {
         }
         workspace.removeResourceChangeListener(resourceChangeProcessor);
         workspace.removeSaveParticipant(PLUGIN_ID);
+
+        // unset references
+        cache = null;
+        aspects = null;
+        classpathManager = null;
     }
 }

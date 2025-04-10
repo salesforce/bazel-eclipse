@@ -96,7 +96,7 @@ location "https://download.eclipse.org/justj/jres/21/updates/release/21.0.6/" {
 	org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped
 }
 
-maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=generate includeSources {
+maven MavenDependencies scope=compile dependencyDepth=none missingManifest=generate includeSources {
 	feature {
 		id="com.salesforce.bazel.eclipse.dependencies.feature"
 		name="Third-Party Dependencies used by the Bazel Eclipse Feature"
@@ -105,17 +105,27 @@ maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=g
 	dependency {
 		groupId="com.github.ben-manes.caffeine"
 		artifactId="caffeine"
-		version="3.1.8"
+		version="3.2.0"
+	}
+	dependency {
+		groupId="com.github.ben-manes.caffeine"
+		artifactId="guava"
+		version="3.2.0"
+	}
+	dependency {
+		groupId="com.google.guava"
+		artifactId="guava"
+		version="32.1.3-jre"
 	}
 	dependency {
 		groupId="com.google.protobuf"
 		artifactId="protobuf-java"
-		version="3.25.5"
+		version="3.25.6"
 	}
 	dependency {
 		groupId="com.google.protobuf"
 		artifactId="protobuf-java-util"
-		version="3.25.5"
+		version="3.25.6"
 	}
 	dependency {
 		groupId="com.googlecode.json-simple"
@@ -161,6 +171,11 @@ maven MavenDependencies scope=compile dependencyDepth=infinite missingManifest=g
 		groupId="org.apache.commons"
 		artifactId="commons-text"
 		version="1.12.0"
+	}
+	dependency {
+		groupId="org.apache.velocity"
+		artifactId="velocity-engine-core"
+		version="2.4.1"
 	}
 }
 

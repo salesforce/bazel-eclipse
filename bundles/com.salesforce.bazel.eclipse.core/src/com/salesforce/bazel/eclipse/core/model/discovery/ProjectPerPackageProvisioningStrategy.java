@@ -183,7 +183,7 @@ public class ProjectPerPackageProvisioningStrategy extends BaseProvisioningStrat
                         currentShardCount,
                         shardsToBuild.size(),
                         targetsToBuild.size()));
-                var aspectsInfo = new JavaAspectsInfo(result, workspace);
+                var aspectsInfo = new JavaAspectsInfo(result, workspace, aspects);
                 for (BazelProject bazelProject : shard.keySet()) {
                     subMonitor.subTask(bazelProject.getName());
                     subMonitor.checkCanceled();
