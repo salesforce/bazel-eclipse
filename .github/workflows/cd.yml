@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Download p2 Repository
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v11
         with:
           run_id: ${{ github.event.workflow_run.id }}
           name: p2-repository
@@ -48,7 +48,7 @@ jobs:
           skip_unpack: true
 
       - name: Download Products
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v11
         with:
           run_id: ${{ github.event.workflow_run.id }}
           name: products
