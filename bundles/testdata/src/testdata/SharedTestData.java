@@ -10,6 +10,8 @@ public interface SharedTestData {
 
     String WORKSPACE_001 = "/workspaces/001";
 
+    String WORKSPACE_002 = "/workspaces/001";
+
     IPath BAZELPROJECT_FILE = new Path(".bazelproject");
 
 }

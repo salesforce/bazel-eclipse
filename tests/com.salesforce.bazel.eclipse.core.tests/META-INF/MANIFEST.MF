@@ -9,8 +9,9 @@ Automatic-Module-Name: com.salesforce.bazel.eclipse.core.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Import-Package: org.hamcrest;version="2.2.0",
  org.hamcrest.collection;version="2.2.0",
- org.junit.jupiter.api;version="5.9.2",
- org.junit.jupiter.api.extension;version="5.9.2",
- org.junit.jupiter.api.io;version="5.9.2"
+ org.junit.jupiter.api;version="[5.11.0,6.0.0)",
+ org.junit.jupiter.api.extension;version="[5.11.0,6.0.0)",
+ org.junit.jupiter.api.function;version="[5.11.0,6.0.0)",
+ org.junit.jupiter.api.io;version="[5.11.0,6.0.0)"
 Require-Bundle: testdata;bundle-version="1.0.0",
  com.salesforce.bazel.sdk

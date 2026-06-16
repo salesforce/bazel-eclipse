@@ -1655,7 +1655,7 @@ public abstract class BaseProvisioningStrategy implements TargetProvisioningStra
         Set<IFile> linkedFiles = new HashSet<>();
         for (JavaSourceEntry fileEntry : files) {
             // peek at Java package to find proper "root"
-            var packagePath = fileEntry.getDetectedPackagePath();
+            var packagePath = fileEntry.hasDetectedPackagePath() ? fileEntry.getDetectedPackagePath() : IPath.EMPTY;
             var packageFolder = virtualSourceFolder.getFolder(packagePath);
             if (!packageFolder.exists()) {
                 createFolderAndParents(packageFolder, monitor.split(1));

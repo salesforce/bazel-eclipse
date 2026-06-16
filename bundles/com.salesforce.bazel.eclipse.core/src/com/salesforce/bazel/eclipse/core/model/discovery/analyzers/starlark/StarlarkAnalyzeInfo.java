@@ -26,12 +26,13 @@ import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Sequence;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * A data type for returning information from the <code>analyze</code> function
  */
 @StarlarkBuiltin(name = "AnalyzeInfo", documented = false)
-public class StarlarkAnalyzeInfo {
+public class StarlarkAnalyzeInfo implements StarlarkValue {
 
     private List<String> convertToStringList(Sequence<?> exclude, String nameForErrorMessage) throws EvalException {
         List<String> stringList = new ArrayList<>();
@@ -54,12 +55,11 @@ public class StarlarkAnalyzeInfo {
                     @ParamType(type = Sequence.class, generic1 = String.class) }, defaultValue = "[]", named = true, documented = false),
             @Param(name = "exclude_directories", defaultValue = "1", named = true, documented = false),
             @Param(name = "allow_empty", defaultValue = "unbound", named = true, documented = false) })
-    StarlarkGlobInfo glob(Sequence<?> include, Sequence<?> exclude, StarlarkInt excludeDirectories, Object allowEmpty)
-            throws EvalException, InterruptedException {
+    StarlarkGlobInfo ProjectInfo(Sequence<?> include, Sequence<?> exclude, StarlarkInt excludeDirectories,
+            Object allowEmpty) throws EvalException, InterruptedException {
 
         var includeStringList = convertToStringList(include, "include");
         var excludeStringList = convertToStringList(exclude, "exclude");
         return new StarlarkGlobInfo(new GlobInfo(includeStringList, excludeStringList));
-
     }
 }
